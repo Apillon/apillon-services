@@ -31,6 +31,7 @@ import { SerMessage, SerMessageLog, SerMessageMessageOutput } from '@phala/sdk';
 import { ClusterTransactionLog } from '../modules/accounting/cluster-transaction-log.model';
 import { Keyring } from '@polkadot/api';
 import { ClusterWallet } from '../modules/computing/models/cluster-wallet.model';
+import { Contract } from '../modules/computing/models/contract.model';
 
 /**
  * Phala has its own worker because beside normal transactions (transmitted by our wallet) we also need to fetch
@@ -116,8 +117,10 @@ export class PhalaLogWorker extends BaseQueueWorker {
         } else {
           await this.processOtherTransaction(
             transaction.project_uuid,
+            transaction.contract_id,
             clusterWallet.walletAddress,
             transaction.transaction_id,
+            transaction.transactionType,
             transaction.transactionHash,
             transaction.transactionNonce,
             transaction.contractData.clusterId,
@@ -156,15 +159,18 @@ export class PhalaLogWorker extends BaseQueueWorker {
       },
       this.context,
     );
-    const { records } = (await new BlockchainMicroservice(
+    const { data } = (await new BlockchainMicroservice(
       this.context,
     ).getPhalaLogRecordsAndGasPrice(blockchainServiceRequest)) as {
-      records: SerMessageLog[];
-      gasPrice: number;
+      data: {
+        records: SerMessageLog[];
+        gasPrice: number;
+      };
     };
+    console.log('Received response for getPhalaLogRecordsAndGasPrice:', data);
     const record = (await this.getRecordFromLogs(
       transactionHash,
-      records,
+      data.records,
     )) as SerMessageLog;
     if (!record) {
       return;
@@ -198,8 +204,10 @@ export class PhalaLogWorker extends BaseQueueWorker {
 
   protected async processOtherTransaction(
     project_uuid: string,
+    contract_id: number,
     walletAddress: string,
     transaction_id: number,
+    transactionType: TransactionType,
     transactionHash: string,
     transactionNonce: string,
     clusterId: string,
@@ -210,15 +218,18 @@ export class PhalaLogWorker extends BaseQueueWorker {
       type: 'MessageOutput',
       nonce: transactionNonce,
     });
-    const { records, gasPrice } = (await new BlockchainMicroservice(
+    const { data } = (await new BlockchainMicroservice(
       this.context,
     ).getPhalaLogRecordsAndGasPrice(blockchainServiceRequest)) as {
-      records: SerMessageMessageOutput[];
-      gasPrice: number;
+      data: {
+        records: SerMessageMessageOutput[];
+        gasPrice: number;
+      };
     };
+    console.log('Received response for getPhalaLogRecordsAndGasPrice:', data);
     const record = (await this.getRecordFromLogs(
       transactionHash,
-      records,
+      data.records,
     )) as SerMessageMessageOutput;
     if (!record) {
       return;
@@ -230,16 +241,32 @@ export class PhalaLogWorker extends BaseQueueWorker {
     }
 
     // update transaction status in computing
-    let transactionStatus = ComputingTransactionStatus.WORKER_FAILED;
-    if (
+    const workerSuccess =
       'ok' in record.output.result &&
-      record.output.result.ok.flags.length === 0
-    ) {
-      transactionStatus = ComputingTransactionStatus.WORKER_SUCCESS;
-    }
+      record.output.result.ok.flags.length === 0;
+    const transactionStatus = workerSuccess
+      ? ComputingTransactionStatus.WORKER_SUCCESS
+      : ComputingTransactionStatus.WORKER_FAILED;
+    console.log(
+      `Updating transaction status to ${transactionStatus} based on log records:`,
+      record,
+    );
     await this.updateTransaction(transaction_id, transactionStatus);
 
-    const gasFee = record.output.gasConsumed.refTime * gasPrice;
+    // update contract
+    if (transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP) {
+      const contract = await new Contract({}, this.context).populateById(
+        contract_id,
+      );
+      if (contract.contractStatus === ContractStatus.TRANSFERRING) {
+        contract.contractStatus = workerSuccess
+          ? ContractStatus.TRANSFERRED
+          : ContractStatus.DEPLOYED;
+        await contract.update();
+      }
+    }
+
+    const gasFee = record.output.gasConsumed.refTime * data.gasPrice;
     const storageFee = record.output.storageDeposit.charge;
     const totalFee = gasFee + storageFee;
 
@@ -340,12 +367,12 @@ export class PhalaLogWorker extends BaseQueueWorker {
       },
       this.context,
     );
-    const { total, free } = await new BlockchainMicroservice(
+    const { data } = await new BlockchainMicroservice(
       this.context,
     ).getPhalaClusterWalletBalance(blockchainServiceRequest);
 
-    clusterWallet.totalBalance = total;
-    clusterWallet.currentBalance = free;
+    clusterWallet.totalBalance = data.total;
+    clusterWallet.currentBalance = data.free;
     await clusterWallet.update();
 
     const formattedWalletAddress = formatWalletAddress(

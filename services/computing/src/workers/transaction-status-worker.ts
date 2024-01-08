@@ -59,11 +59,12 @@ export class TransactionStatusWorker extends BaseQueueWorker {
       50,
       this.context,
       async (res: TransactionWebhookDataDto, ctx) => {
-        const computingTransaction = await new Transaction(
+        // update transaction status in computing
+        const transaction = await new Transaction(
           {},
           ctx,
         ).populateByTransactionHash(res.transactionHash);
-        if (!computingTransaction.exists()) {
+        if (!transaction.exists()) {
           await this.writeEventLog({
             logType: LogType.ERROR,
             message: `Computing transaction with hash ${res.transactionHash} not found.`,
@@ -79,60 +80,47 @@ export class TransactionStatusWorker extends BaseQueueWorker {
           service: ServiceName.COMPUTING,
           data: res,
         });
-        computingTransaction.transactionStatus = mapTransactionStatus(
+        transaction.transactionStatus = mapTransactionStatus(
           res.transactionStatus,
         );
-        await computingTransaction.update();
+        await transaction.update();
+
+        // update contract
         if (
-          computingTransaction.transactionStatus ===
-            ComputingTransactionStatus.CONFIRMED &&
-          [
-            TransactionType.DEPLOY_CONTRACT,
-            TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-          ].includes(computingTransaction.transactionType)
+          transaction.transactionStatus === ComputingTransactionStatus.CONFIRMED
         ) {
-          await this.updateContract(
-            computingTransaction.contract_id,
-            computingTransaction.transactionType,
-            computingTransaction.transactionHash,
-            res.data,
+          const contract = await new Contract({}, this.context).populateById(
+            transaction.contract_id,
           );
+          let updated = false;
+          switch (transaction.transactionType) {
+            case TransactionType.DEPLOY_CONTRACT:
+              contract.contractStatus = ContractStatus.DEPLOYING;
+              contract.contractAddress = res.data;
+              contract.transactionHash = transaction.transactionHash;
+              updated = true;
+              break;
+            case TransactionType.TRANSFER_CONTRACT_OWNERSHIP:
+              contract.contractStatus = ContractStatus.TRANSFERRING;
+              updated = true;
+              break;
+          }
+          if (updated) {
+            await contract.update();
+            await this.writeEventLog({
+              logType: LogType.INFO,
+              project_uuid: contract?.project_uuid,
+              message: `Contract ${contract.contractAddress} status updated to ${contract.contractStatus}.`,
+              service: ServiceName.COMPUTING,
+              data: {
+                collection_uuid: contract.contract_uuid,
+                contractStatus: contract.contractStatus,
+                updateTime: contract.updateTime,
+              },
+            });
+          }
         }
       },
     );
-  }
-
-  private async updateContract(
-    contract_id: number,
-    transactionType: TransactionType,
-    transactionHash: string,
-    contractAddress: string,
-  ) {
-    const contract = await new Contract({}, this.context).populateById(
-      contract_id,
-    );
-
-    if (transactionType === TransactionType.DEPLOY_CONTRACT) {
-      contract.contractStatus = ContractStatus.DEPLOYING;
-      contract.contractAddress = contractAddress;
-      contract.transactionHash = transactionHash;
-    } else if (
-      transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP
-    ) {
-      contract.contractStatus = ContractStatus.TRANSFERRED;
-    }
-    await contract.update();
-
-    await this.writeEventLog({
-      logType: LogType.INFO,
-      project_uuid: contract?.project_uuid,
-      message: `Contract ${contract.name} status updated`,
-      service: ServiceName.COMPUTING,
-      data: {
-        collection_uuid: contract.contract_uuid,
-        contractStatus: contract.contractStatus,
-        updateTime: contract.updateTime,
-      },
-    });
   }
 }
