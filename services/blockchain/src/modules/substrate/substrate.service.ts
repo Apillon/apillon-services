@@ -27,6 +27,10 @@ import { SubstrateRpcApi } from './rpc-api';
 import { OnChainRegistry, types as PhalaTypesBundle } from '@phala/sdk';
 import { substrateChainToWorkerName } from '../../lib/helpers';
 
+function removeObjectKeysWithNullValue(obj: any) {
+  return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null));
+}
+
 export class SubstrateService {
   static async createTransaction(
     {
@@ -255,7 +259,7 @@ export class SubstrateService {
       console.log(`Retrieved gas price=${gasPrice}.`);
       const { records } = await phatRegistry.loggerContract.tail(
         100,
-        phalaLogFilter,
+        removeObjectKeysWithNullValue(phalaLogFilter),
       );
       console.log(`Retrieved ${records.length} log records.`);
       return { records, gasPrice };
