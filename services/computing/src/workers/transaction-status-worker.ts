@@ -92,6 +92,18 @@ export class TransactionStatusWorker extends BaseQueueWorker {
           const contract = await new Contract({}, this.context).populateById(
             transaction.contract_id,
           );
+          if (!contract.exists()) {
+            await this.writeEventLog({
+              logType: LogType.ERROR,
+              message: `Computing contract with id ${transaction.contract_id} not found.`,
+              service: ServiceName.COMPUTING,
+              data: {
+                transaction_id: transaction.id,
+                contract_id: transaction.contract_id,
+              },
+            });
+            return;
+          }
           let updated = false;
           switch (transaction.transactionType) {
             case TransactionType.DEPLOY_CONTRACT:

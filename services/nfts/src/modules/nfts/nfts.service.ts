@@ -391,6 +391,7 @@ export class NftsService {
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
         tx,
         spendCredit.referenceId,
+        46000,
       ),
     );
 
@@ -545,6 +546,7 @@ export class NftsService {
         TransactionType.MINT_NFT,
         tx,
         spendCredit.referenceId,
+        260000,
       ),
     );
 
@@ -907,6 +909,7 @@ export class NftsService {
     transactionType: TransactionType,
     tx: UnsignedTransaction,
     transaction_uuid: string,
+    minimumGas?: number,
   ): Promise<{ data: TransactionDto }> {
     const conn = await context.mysql.start();
     try {
@@ -920,6 +923,7 @@ export class NftsService {
           referenceTable: DbTables.COLLECTION,
           referenceId: collection.id,
           project_uuid: collection.project_uuid,
+          minimumGas,
         }),
       );
 

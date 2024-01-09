@@ -4,7 +4,7 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { MySql, env, getEnvSecrets } from '@apillon/lib';
+import { env, getEnvSecrets, MySql } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { TransactionLogWorker } from '../../workers/transaction-log-worker';
 import { DbTables } from '../../config/types';
@@ -17,7 +17,7 @@ async function run() {
       params: { FunctionName: 'local' },
     },
     'create-wallet-deposits-script',
-    { parameters: { batchLimit: 200 } },
+    { parameters: {} },
   );
   await getEnvSecrets();
 

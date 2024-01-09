@@ -51,11 +51,11 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     for (const w of this.wallets) {
       const wallet = new Wallet(w, this.context);
 
-      // TODO: There was range calculation here, which I am not
-      // sure is relevant to be honest. Maybe if there are
-      // a shitton transactions at once, this could break. Let's see
       const fromBlock: number = wallet.lastParsedBlock;
-      const toBlock: number = blockHeight;
+      const toBlock =
+        wallet.lastParsedBlock + wallet.blockParseSize < blockHeight
+          ? wallet.lastParsedBlock + wallet.blockParseSize
+          : blockHeight;
 
       console.log(this.indexer.toString());
 
