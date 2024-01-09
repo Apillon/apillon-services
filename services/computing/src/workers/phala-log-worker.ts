@@ -387,6 +387,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
       );
     }
   }
+
   private async updateTransaction(
     transaction_id: number,
     transactionStatus: ComputingTransactionStatus,
