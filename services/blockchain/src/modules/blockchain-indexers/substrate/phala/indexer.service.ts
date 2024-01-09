@@ -20,8 +20,7 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
   public async getAllSystemEvents(
     account: string,
     fromBlock: number,
-    toBlock?: number,
-    limit?: number,
+    toBlock: number,
   ): Promise<SystemEvent[]> {
     const data = await this.graphQlClient.request<{ systems: SystemEvent[] }>(
       gql`
@@ -31,7 +30,6 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
         account,
         fromBlock,
         toBlock,
-        limit,
       },
     );
 
@@ -94,17 +92,19 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
 
   public async getAccountBalanceTransfersForTxs(
     account: string,
-    hashes: string[],
+    fromBlock: number,
+    toBlock: number,
   ): Promise<{
     transfers: TransferTransaction[];
   }> {
     return await this.graphQlClient.request(
       gql`
-        ${PhalaGqlQueries.ACCOUNT_TRANSFERS_BY_TX_HASHES_QUERY}
+        ${PhalaGqlQueries.ACCOUNT_TRANSFERS_BY_BLOCKS}
       `,
       {
         account,
-        hashes,
+        fromBlock,
+        toBlock,
       },
     );
   }

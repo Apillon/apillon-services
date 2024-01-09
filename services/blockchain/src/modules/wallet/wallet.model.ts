@@ -188,6 +188,37 @@ export class Wallet extends AdvancedSQLModel {
   public lastParsedBlockUpdateTime: Date;
 
   /**
+   * lastLoggedBlock
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public lastLoggedBlock: number;
+
+  @prop({
+    parser: { resolver: dateParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public lastLoggedBlockUpdateTime: Date;
+
+  /**
    * maxParsedBlock
    */
   @prop({
@@ -487,6 +518,27 @@ export class Wallet extends AdvancedSQLModel {
       conn,
     );
     this.lastParsedBlock = lastParsedBlock;
+  }
+
+  public async updateLastLoggedBlock(
+    lastLoggedBlock: number,
+    conn?: PoolConnection,
+  ) {
+    await this.getContext().mysql.paramExecute(
+      `
+        UPDATE \`${DbTables.WALLET}\`
+        SET lastLoggedBlockUpdateTime = CASE
+                                          WHEN lastLoggedBlock <> @lastLoggedBlock
+                                            THEN NOW()
+                                          ELSE lastLoggedBlockUpdateTime
+          END,
+            lastLoggedBlock           = @lastLoggedBlock
+        WHERE id = @id;
+      `,
+      { lastLoggedBlock, id: this.id },
+      conn,
+    );
+    this.lastLoggedBlock = lastLoggedBlock;
   }
 
   // always iterate inside a transaction
