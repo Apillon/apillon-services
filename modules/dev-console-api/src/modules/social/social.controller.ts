@@ -60,7 +60,7 @@ export class SocialController {
     return await this.socialService.getSpace(context, space_uuid);
   }
 
-  @Post('space')
+  @Post('spaces')
   @Validation({ dto: CreateSpaceDto })
   @UseGuards(ValidationGuard)
   @Permissions(
@@ -101,7 +101,7 @@ export class SocialController {
     return await this.socialService.getPost(context, post_uuid);
   }
 
-  @Post('spaces/:space_uuid/post')
+  @Post('spaces/:space_uuid/posts')
   @Validation({ dto: CreatePostDto })
   @UseGuards(ValidationGuard)
   @Permissions(

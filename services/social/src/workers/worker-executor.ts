@@ -12,9 +12,6 @@ import { Context, env } from '@apillon/lib';
 import { Scheduler } from './scheduler';
 import { TransactionStatusWorker } from './transaction-status-worker';
 
-// get global mysql connection
-// global['mysql'] = global['mysql'] || new MySql(env);
-
 export enum WorkerName {
   TEST_WORKER = 'TestWorker',
   SCHEDULER = 'scheduler',

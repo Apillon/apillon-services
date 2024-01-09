@@ -291,7 +291,8 @@ export enum ServiceCode {
   REFERRAL = '11',
   NFTS = '12',
   BLOCKCHAIN = '16',
-  COMPUTING = '19',
+  COMPUTING = '18',
+  SOCIAL = '19',
 }
 
 export enum AppEnvironment {

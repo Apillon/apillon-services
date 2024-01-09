@@ -6,12 +6,11 @@ import {
   ValidationException,
 } from '@apillon/lib';
 import { SocialErrorCode } from '../config/types';
-import { ServiceContext } from '@apillon/service-lib';
 
 export class SocialCodeException extends CodeException {
   constructor(options: ErrorOptions) {
     super({
-      sourceModule: ServiceName.NFTS,
+      sourceModule: ServiceName.SOCIAL,
       errorCodes: SocialErrorCode,
       errorMessage: options.errorMessage || SocialErrorCode[options.code],
       ...options,
