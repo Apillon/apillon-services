@@ -105,47 +105,6 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
     return data;
   }
 
-  // TODO Vinko: Add comments what these do.
-  public async getAccountMarketFileOrderSuccess(
-    account: string,
-    fromBlock: number,
-    toBlock: number,
-  ): Promise<TransferTransaction[]> {
-    const data: any = await this.graphQlClient.request(
-      gql`
-        ${CrustGQLQueries.ACCOUNT_STORAGE_ORDER_QUERY}
-      `,
-      {
-        account,
-        fromBlock,
-        toBlock,
-        transactionType: CrustTransactionType.MARKET_ORDER_FILE_SUCCESS,
-      },
-    );
-
-    return data.marketFileOrders;
-  }
-
-  public async getAccountMarketFileRenewSuccess(
-    account: string,
-    fromBlock: number,
-    toBlock: number,
-  ): Promise<TransferTransaction[]> {
-    const data: any = await this.graphQlClient.request(
-      gql`
-        ${CrustGQLQueries.ACCOUNT_STORAGE_ORDER_QUERY}
-      `,
-      {
-        account,
-        fromBlock,
-        toBlock,
-        transactionType: CrustTransactionType.MARKET_FILE_RENEW_SUCCESS,
-      },
-    );
-
-    return data.marketFileOrders;
-  }
-
   public async getAccountTransactionsByHash(
     address: string,
     extrinsicHash: string,

@@ -18,6 +18,7 @@ export enum SubstrateChain {
   PHALA = 4,
   POLKADOT = 5,
   SUBSOCIAL = 6,
+  XSOCIAL = 7,
 }
 
 export enum EvmChain {
@@ -249,6 +250,15 @@ export enum ReferralEventType {
   ADD_PROMO_CODE_CREDITS = 'add-promo-code-credits',
 }
 
+export enum SocialEventType {
+  CREATE_SPACE = 'create-space',
+  LIST_SPACES = 'list-spaces',
+  GET_SPACE = 'get-space',
+  CREATE_POST = 'create-post',
+  LIST_POSTS = 'list-posts',
+  GET_POST = 'get-post',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
@@ -263,6 +273,7 @@ export enum ServiceName {
   BLOCKCHAIN = 'BLOCKCHAIN',
   CONFIG = 'CONFIG',
   COMPUTING = 'COMPUTING',
+  SOCIAL = 'SOCIAL',
 }
 
 export enum ServiceCode {
@@ -281,6 +292,7 @@ export enum ServiceCode {
   NFTS = '12',
   BLOCKCHAIN = '16',
   COMPUTING = '18',
+  SOCIAL = '19',
 }
 
 export enum AppEnvironment {
@@ -328,6 +340,7 @@ export enum AttachedServiceType {
   NFT = 3,
   HOSTING = 4,
   COMPUTING = 5,
+  SOCIAL = 6,
   SYSTEM = 999,
 }
 
@@ -413,6 +426,7 @@ export enum DefaultPermission {
   NFTS = 3,
   AUTHENTICATION = 4,
   COMPUTING = 5,
+  SOCIAL = 6,
 }
 
 //#endregion
@@ -575,6 +589,7 @@ export enum ValidatorErrorCode {
   QUOTA_CODE_NOT_VALID = 42200149,
   INVALID_FILES_LENGTH = 42200150,
   CID_NOT_PRESENT = 42200160,
+  REQUIRED_DATA_NOT_PRESENT = 42200161,
 
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
@@ -742,6 +757,8 @@ export enum CacheKeyPrefix {
   ADMIN_WEBSITE_LIST = 'admin-website-list',
   ADMIN_NFTS_COLLECTION_LIST = 'admin-nfts-collection-list',
   ADMIN_GENERAL_SEARCH = 'admin-general-search',
+  SOCIAL_SPACE_LIST = 'social-space-list',
+  SOCIAL_POST_LIST = 'social-post-list',
 }
 
 export enum CacheKeyTTL {
@@ -799,6 +816,9 @@ export enum ProductCode {
   NFT_ASTAR_SET_BASE_URI = 19,
 
   KILT_IDENTITY = 20,
+
+  SOCIAL_SPACE = 21,
+  SOCIAL_POST = 22,
 }
 
 export enum ProductService {

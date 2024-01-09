@@ -212,7 +212,9 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
   ) {
     // Update SUCCESSFUL transactions
     const successTransactions: any = transactions
-      .filter((t: any) => t.status == TransactionIndexerStatus.SUCCESS)
+      .filter(
+        (t: any) => t.status == TransactionIndexerStatus.SUCCESS && !t.error,
+      )
       .map((t: any): string => t.extrinsicHash);
     await this.updateTransactions(
       successTransactions,
@@ -222,7 +224,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
     // Update FAILED transactions
     const failedTransactions: string[] = transactions
-      .filter((t: any) => t.status == TransactionIndexerStatus.FAIL)
+      .filter((t: any) => t.status == TransactionIndexerStatus.FAIL || t.error)
       .map((t: any): string => t.extrinsicHash);
     await this.updateTransactions(
       failedTransactions,

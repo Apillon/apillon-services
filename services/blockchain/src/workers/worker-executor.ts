@@ -23,6 +23,7 @@ import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transac
 import { EvmTransactionWorker } from './evm-transaction-worker';
 import { SubstrateTransactionWorker } from './substrate-transaction-worker';
 import { PhalaTransactionWorker } from './phala-transaction-worker';
+import { SubsocialTransactionWorker } from './subsocial-transaction-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -38,6 +39,7 @@ export enum WorkerName {
   VERIFY_CRUST_TRANSACTIONS = 'VerifyCrustTransactions',
   VERIFY_KILT_TRANSACTIONS = 'VerifyKiltTransactions',
   VERIFY_PHALA_TRANSACTIONS = 'VerifyPhalaTransactions',
+  VERIFY_SUBSOCIAL_TRANSACTIONS = 'VerifySubsocialTransactions',
   VERIFY_MOONBEAM_TRANSACTIONS = 'VerifyMoonbeamTransactions',
   VERIFY_MOONBASE_TRANSACTIONS = 'VerifyMoonbaseTransactions',
   VERIFY_ASTAR_TRANSACTIONS = 'VerifyAstarTransactions',
@@ -157,6 +159,9 @@ export async function handleLambdaEvent(
       break;
     case WorkerName.VERIFY_PHALA_TRANSACTIONS:
       await new PhalaTransactionWorker(workerDefinition, context).run();
+      break;
+    case WorkerName.VERIFY_SUBSOCIAL_TRANSACTIONS:
+      await new SubsocialTransactionWorker(workerDefinition, context).run();
       break;
     // --- EVM ---
     case WorkerName.VERIFY_MOONBEAM_TRANSACTIONS:
