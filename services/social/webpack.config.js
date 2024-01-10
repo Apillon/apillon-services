@@ -24,6 +24,8 @@ module.exports = {
       aws4: false,
       'mongodb-client-encryption': false,
       cardinal: false,
+      'electron-fetch': false,
+      'electron': false,
       // '@nestjs/websockets/socket-module': false,
       // 'cache-manager': false,
       // 'class-validator': false,
