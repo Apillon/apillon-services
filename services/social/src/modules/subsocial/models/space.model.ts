@@ -162,6 +162,7 @@ export class Space extends UuidSqlModel {
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,

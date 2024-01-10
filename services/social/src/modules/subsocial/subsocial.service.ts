@@ -11,9 +11,10 @@ import {
 } from '@apillon/lib';
 import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
-import { DbTables, PostType } from '../../config/types';
+import { DbTables, PostType, SocialErrorCode } from '../../config/types';
 import { Post } from './models/post.model';
 import { Space } from './models/space.model';
+import { SocialCodeException } from '../../lib/exceptions';
 
 export class SubsocialService {
   static async listSpaces(
@@ -88,6 +89,14 @@ export class SubsocialService {
     const space = await new Space({}, context).populateByUuidAndCheckAccess(
       params.body.space_uuid,
     );
+
+    if (!space.spaceId || space.status != SqlModelStatus.ACTIVE) {
+      throw new SocialCodeException({
+        status: 500,
+        code: SocialErrorCode.SPACE_IS_NOT_ACTIVE,
+      });
+    }
+
     const post = new Post(
       {
         ...params.body,
@@ -99,7 +108,6 @@ export class SubsocialService {
       },
       context,
     );
-    //TODO spend credit action
 
     const spendCredit: SpendCreditDto = new SpendCreditDto(
       {
