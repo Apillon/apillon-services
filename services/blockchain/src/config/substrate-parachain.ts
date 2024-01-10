@@ -34,4 +34,11 @@ export const ParachainConfig = {
     sqsUrl: env.SOCIAL_AWS_WORKER_SQS_URL,
     indexer: SubsocialBlockchainIndexer,
   },
+  SUBSOCIAL: {
+    id: SubstrateChain.SUBSOCIAL,
+    name: 'SUBSOCIAL',
+    webhookWorkerName: 'TransactionStatusWorker',
+    sqsUrl: env.SOCIAL_AWS_WORKER_SQS_URL,
+    indexer: SubsocialBlockchainIndexer,
+  },
 };

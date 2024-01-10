@@ -80,7 +80,8 @@ export class SubstrateService {
         typesBundle = PhalaTypesBundle;
         break;
       }
-      case SubstrateChain.XSOCIAL: {
+      case SubstrateChain.XSOCIAL:
+      case SubstrateChain.SUBSOCIAL: {
         keyring = new Keyring({ type: 'sr25519' });
         typesBundle = SubsocialTypesBundle;
         break;
@@ -371,7 +372,8 @@ export class SubstrateService {
         typesBundle = PhalaTypesBundle;
         break;
       }
-      case SubstrateChain.XSOCIAL: {
+      case SubstrateChain.XSOCIAL:
+      case SubstrateChain.SUBSOCIAL: {
         typesBundle = SubsocialTypesBundle;
         break;
       }
