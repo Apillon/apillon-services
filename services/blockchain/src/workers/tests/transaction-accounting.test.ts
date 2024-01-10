@@ -6,7 +6,7 @@ import {
 } from '@apillon/workers-lib';
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { Wallet } from '../../modules/wallet/wallet.model';
-import { DbTables, TxAction } from '../../config/types';
+import { DbTables, TxAction, TxDirection } from '../../config/types';
 import { TransactionLogWorker } from '../transaction-log-worker';
 
 import { TransactionLog } from '../../modules/accounting/transaction-log.model';
@@ -61,7 +61,7 @@ describe('Transaction Accounting unit tests', () => {
         params: { FunctionName: 'test' },
       },
       'test-crust-transaction-worker',
-      { parameters: { batchLimit: 200 } },
+      { parameters: {} },
     );
     worker = new TransactionLogWorker(
       wd,
@@ -79,66 +79,73 @@ describe('Transaction Accounting unit tests', () => {
       new TransactionLog(
         {
           action: TxAction.DEPOSIT,
+          direction: TxDirection.INCOME,
           wallet: '0x25Cd0fE6953F5799AEbDa9ee445287CFb101972E',
-          hash: '123',
+          hash: '1',
           amount: 100_000_000,
         },
         stage.context,
-      ),
+      ).calculateTotalPrice(),
       new TransactionLog(
         {
           action: TxAction.DEPOSIT,
+          direction: TxDirection.INCOME,
           wallet: '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
-          hash: '456',
-          amount: 50_000_000,
+          hash: '2',
+          amount: 200_000_000,
         },
         stage.context,
-      ),
+      ).calculateTotalPrice(),
       new TransactionLog(
         {
           action: TxAction.TRANSACTION,
+          direction: TxDirection.COST,
           wallet: '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
-          hash: '456',
+          hash: '3',
           amount: 30_000_000,
         },
         stage.context,
-      ),
+      ).calculateTotalPrice(),
       new TransactionLog(
         {
           action: TxAction.TRANSACTION,
+          direction: TxDirection.COST,
           wallet: '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
-          hash: '123',
+          hash: '4',
           amount: 30_000_000,
         },
         stage.context,
-      ),
+      ).calculateTotalPrice(),
       new TransactionLog(
         {
           action: TxAction.DEPOSIT,
+          direction: TxDirection.INCOME,
           wallet: '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
-          hash: '456',
-          amount: 60_000_000,
+          hash: '5',
+          amount: 150_000_000,
         },
         stage.context,
-      ),
+      ).calculateTotalPrice(),
       new TransactionLog(
         {
           action: TxAction.TRANSACTION,
+          direction: TxDirection.COST,
           wallet: '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
-          hash: '123',
+          hash: '6',
           amount: 20_000_000,
         },
         stage.context,
-      ),
+      ).calculateTotalPrice(),
       new TransactionLog(
         {
           action: TxAction.TRANSACTION,
+          direction: TxDirection.COST,
           wallet: '0x25Cd0fE6953F5799AEbDa9ee445287CFb101972E',
-          hash: '123',
+          hash: '7',
           amount: 30_000_000,
         },
         stage.context,
-      ),
+      ).calculateTotalPrice(),
     ];
 
     await worker.processWalletDepositAmounts(crustWallet, transactions);
@@ -152,8 +159,8 @@ describe('Transaction Accounting unit tests', () => {
     expect(walletDeposits[0].depositAmount).toBeTruthy();
     expect(walletDeposits[0].wallet_id).toEqual(crustWallet.id);
 
-    expect(walletDeposits[0].currentAmount).toEqual(70);
-    expect(walletDeposits[1].currentAmount).toEqual(0);
-    expect(walletDeposits[2].currentAmount).toEqual(30);
+    expect(walletDeposits[0].currentAmount).toEqual(70000000);
+    expect(walletDeposits[1].currentAmount).toEqual(200000000);
+    expect(walletDeposits[2].currentAmount).toEqual(150000000);
   });
 });

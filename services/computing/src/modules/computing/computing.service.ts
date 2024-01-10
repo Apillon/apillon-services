@@ -281,7 +281,8 @@ export class ComputingService {
       transactions.find(
         (x) =>
           x.transactionStatus == ComputingTransactionStatus.PENDING ||
-          x.transactionStatus == ComputingTransactionStatus.CONFIRMED,
+          x.transactionStatus == ComputingTransactionStatus.CONFIRMED ||
+          x.transactionStatus == ComputingTransactionStatus.WORKER_SUCCESS,
       )
     ) {
       throw new ComputingCodeException({

@@ -28,9 +28,13 @@ import {
   TxDirection,
 } from '../config/types';
 import { SerMessage, SerMessageLog, SerMessageMessageOutput } from '@phala/sdk';
-import { ClusterTransactionLog } from '../modules/accounting/cluster-transaction-log.model';
+import {
+  ClusterTransactionLog
+} from '../modules/accounting/cluster-transaction-log.model';
 import { Keyring } from '@polkadot/api';
-import { ClusterWallet } from '../modules/computing/models/cluster-wallet.model';
+import {
+  ClusterWallet
+} from '../modules/computing/models/cluster-wallet.model';
 import { Contract } from '../modules/computing/models/contract.model';
 
 /**
@@ -108,6 +112,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
         if (isDeployContract) {
           await this.processContractTransaction(
             transaction.project_uuid,
+            clusterWallet.walletAddress,
             transaction.contract_id,
             transaction.contractAddress,
             transaction.contractData.clusterId,
@@ -144,6 +149,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
 
   protected async processContractTransaction(
     project_uuid: string,
+    walletAddress: string,
     contract_id: number,
     contractAddress: string,
     clusterId: string,
@@ -167,7 +173,10 @@ export class PhalaLogWorker extends BaseQueueWorker {
         gasPrice: number;
       };
     };
-    console.log('Received response for getPhalaLogRecordsAndGasPrice:', data);
+    console.log(
+      'Received response for Log from getPhalaLogRecordsAndGasPrice:',
+      data,
+    );
     const record = (await this.getRecordFromLogs(
       transactionHash,
       data.records,
@@ -175,6 +184,12 @@ export class PhalaLogWorker extends BaseQueueWorker {
     if (!record) {
       return;
     }
+    await this.checkLogRecordForErrors(
+      record.message,
+      transaction_id,
+      clusterId,
+      walletAddress,
+    );
 
     // update contract and transaction status
     const isInstantiated = record.message === 'instantiated';
@@ -186,7 +201,11 @@ export class PhalaLogWorker extends BaseQueueWorker {
     const transactionStatus = isInstantiated
       ? ComputingTransactionStatus.WORKER_SUCCESS
       : ComputingTransactionStatus.WORKER_FAILED;
-    await this.updateTransaction(transaction_id, transactionStatus);
+    await this.updateTransaction(
+      transaction_id,
+      transactionStatus,
+      record.message,
+    );
     await new ClusterTransactionLog(
       {
         // TODO: should we store clusterWallet id or at least clusterId (but we have no wallet)
@@ -226,7 +245,10 @@ export class PhalaLogWorker extends BaseQueueWorker {
         gasPrice: number;
       };
     };
-    console.log('Received response for getPhalaLogRecordsAndGasPrice:', data);
+    console.log(
+      'Received response for MessageOutput for getPhalaLogRecordsAndGasPrice:',
+      data,
+    );
     const record = (await this.getRecordFromLogs(
       transactionHash,
       data.records,
@@ -241,9 +263,13 @@ export class PhalaLogWorker extends BaseQueueWorker {
     }
 
     // update transaction status in computing
-    const workerSuccess =
-      'ok' in record.output.result &&
-      record.output.result.ok.flags.length === 0;
+    let workerSuccess = false;
+    let message = null;
+    if ('ok' in record.output.result) {
+      const flags = record.output.result.ok.flags;
+      workerSuccess = record.output.result.ok.flags.length === 0;
+      message = workerSuccess ? null : flags.join(',');
+    }
     const transactionStatus = workerSuccess
       ? ComputingTransactionStatus.WORKER_SUCCESS
       : ComputingTransactionStatus.WORKER_FAILED;
@@ -251,13 +277,25 @@ export class PhalaLogWorker extends BaseQueueWorker {
       `Updating transaction status to ${transactionStatus} based on log records:`,
       record,
     );
-    await this.updateTransaction(transaction_id, transactionStatus);
+    await this.updateTransaction(transaction_id, transactionStatus, message);
 
     // update contract
     if (transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP) {
       const contract = await new Contract({}, this.context).populateById(
         contract_id,
       );
+      if (!contract.exists()) {
+        await this.writeEventLog({
+          logType: LogType.ERROR,
+          message: `Computing contract with id ${contract_id} not found.`,
+          service: ServiceName.COMPUTING,
+          data: {
+            transaction_id: transaction_id,
+            contract_id: contract_id,
+          },
+        });
+        return;
+      }
       if (contract.contractStatus === ContractStatus.TRANSFERRING) {
         contract.contractStatus = workerSuccess
           ? ContractStatus.TRANSFERRED
@@ -327,17 +365,43 @@ export class PhalaLogWorker extends BaseQueueWorker {
     }
   }
 
+  private async checkLogRecordForErrors(
+    message: string | null | undefined,
+    transaction_id: number,
+    clusterId: string,
+    walletAddress: string,
+  ) {
+    if (message && message.includes('InsufficientBalance')) {
+      await this.writeEventLog(
+        {
+          logType: LogType.ALERT,
+          message: `Wallet address ${walletAddress} has insufficient balance on cluster ${clusterId} to process transaction with id ${transaction_id}.`,
+          service: ServiceName.COMPUTING,
+          data: {
+            message,
+            walletAddress,
+            clusterId,
+          },
+        },
+        LogOutput.NOTIFY_ALERT,
+      );
+    }
+  }
+
   private async updateTransaction(
     transaction_id: number,
     transactionStatus: ComputingTransactionStatus,
+    message: string,
   ) {
     await this.context.mysql.paramExecute(
       `UPDATE \`${DbTables.TRANSACTION}\`
-       SET transactionStatus = @transactionStatus
+       SET transactionStatus       = @transactionStatus,
+           transactionStatusMessage=@message
        WHERE id = @transaction_id`,
       {
         transaction_id,
         transactionStatus,
+        message,
       },
     );
   }
