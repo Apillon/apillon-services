@@ -57,9 +57,13 @@ export async function getTokenPriceUsd(token: string) {
     const { data } = await axios.get(
       `https://api.coingecko.com/api/v3/simple/price?ids=${networkName}&vs_currencies=USD`,
     );
+    console.log('Retrieved response from coingecko', data);
     return data?.[networkName]?.usd;
   } catch (err) {
-    console.error(`Failed to retrieve price for token ${token}:`, err);
+    console.error(
+      `Failed to retrieve price for token ${token} from coingecko:`,
+      err,
+    );
     return 0;
   }
 }
