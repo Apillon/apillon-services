@@ -24,24 +24,24 @@ export async function handler(event: any) {
   const options = {
     host:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.NFTS_MYSQL_HOST_TEST
-        : env.NFTS_MYSQL_HOST,
+        ? env.SOCIAL_MYSQL_HOST_TEST
+        : env.SOCIAL_MYSQL_HOST,
     port:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.NFTS_MYSQL_PORT_TEST
-        : env.NFTS_MYSQL_PORT,
+        ? env.SOCIAL_MYSQL_PORT_TEST
+        : env.SOCIAL_MYSQL_PORT,
     database:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.NFTS_MYSQL_DATABASE_TEST
-        : env.NFTS_MYSQL_DATABASE,
+        ? env.SOCIAL_MYSQL_DATABASE_TEST
+        : env.SOCIAL_MYSQL_DATABASE,
     user:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.NFTS_MYSQL_USER_TEST
-        : env.NFTS_MYSQL_USER,
+        ? env.SOCIAL_MYSQL_USER_TEST
+        : env.SOCIAL_MYSQL_USER,
     password:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.NFTS_MYSQL_PASSWORD_TEST
-        : env.NFTS_MYSQL_PASSWORD,
+        ? env.SOCIAL_MYSQL_PASSWORD_TEST
+        : env.SOCIAL_MYSQL_PASSWORD,
   };
 
   const mysql = new MySql(options);
@@ -52,7 +52,7 @@ export async function handler(event: any) {
   const serviceDef = {
     type: ServiceDefinitionType.LAMBDA,
     config: { region: env.AWS_REGION },
-    params: { FunctionName: env.NFTS_AWS_WORKER_LAMBDA_NAME },
+    params: { FunctionName: env.SOCIAL_AWS_WORKER_LAMBDA_NAME },
   };
 
   console.info(`EVENT: ${JSON.stringify(event)}`);
