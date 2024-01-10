@@ -31,15 +31,14 @@
     "@middy/core": "^2.5.7",
     "@subsocial/api": "^0.8.14",
     "@subsocial/types": "^0.6.8",
+    "@polkadot/api": "^10.9.1",
+    "@polkadot/keyring": "^12.3.2",
+    "@polkadot/util": "^12.3.2",
     "@types/uuid": "^8.3.4",
-    "ethers": "^5.7.2",
     "node-fetch": "2.6.7"
   },
   "devDependencies": {
     "eslint-config-common": "*",
     "tsconfig": "*"
-  },
-  "overrides": {
-    "ipfs-utils": "9.0.6"
   }
 }
