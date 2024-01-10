@@ -7,6 +7,7 @@
   "private": true,
   "scripts": {
     "prebuild": "rimraf dist",
+    "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit --verbose",
     "test-service": "jest --passWithNoTests",
     "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60010",
     "build": "tsc",
@@ -39,6 +40,32 @@
   },
   "devDependencies": {
     "eslint-config-common": "*",
-    "tsconfig": "*"
+    "tsconfig": "*",
+    "@apillon/tests-lib": "*"
+  },
+  "jest": {
+    "testTimeout": 1800000,
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "rootDir": "src",
+    "testPathIgnorePatterns": [
+      "dist/*"
+    ],
+    "testRegex": ".*\\.test\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "preset": "ts-jest",
+    "verbose": true
   }
 }

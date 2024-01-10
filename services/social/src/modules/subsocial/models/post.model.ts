@@ -13,7 +13,7 @@ import {
   prop,
   selectAndCountQuery,
 } from '@apillon/lib';
-import { DbTables, SocialErrorCode } from '../../../config/types';
+import { DbTables, PostType, SocialErrorCode } from '../../../config/types';
 
 import { stringParser, integerParser } from '@rawmodel/parsers';
 import { Space } from './space.model';
@@ -22,6 +22,7 @@ import {
   SocialValidationException,
 } from '../../../lib/exceptions';
 import { SubsocialProvider } from '../subsocial.provider';
+import { v4 as uuidV4 } from 'uuid';
 
 export class Post extends UuidSqlModel {
   public readonly tableName = DbTables.POST;
@@ -47,6 +48,7 @@ export class Post extends UuidSqlModel {
         code: SocialErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
+    fakeValue: uuidV4(),
   })
   public post_uuid: string;
 
@@ -129,6 +131,7 @@ export class Post extends UuidSqlModel {
         code: SocialErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
+    fakeValue: PostType.REGULAR,
   })
   public postType: number;
 
@@ -150,6 +153,7 @@ export class Post extends UuidSqlModel {
         code: SocialErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
+    fakeValue: 'Fake post',
   })
   public title: string;
 
@@ -171,6 +175,7 @@ export class Post extends UuidSqlModel {
         code: SocialErrorCode.POST_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
+    fakeValue: 'Fake post body',
   })
   public body: string;
 

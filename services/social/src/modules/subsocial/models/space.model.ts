@@ -21,6 +21,7 @@ import {
   SocialValidationException,
 } from '../../../lib/exceptions';
 import { SubsocialProvider } from '../subsocial.provider';
+import { v4 as uuidV4 } from 'uuid';
 
 export class Space extends UuidSqlModel {
   public readonly tableName = DbTables.SPACE;
@@ -46,6 +47,7 @@ export class Space extends UuidSqlModel {
         code: SocialErrorCode.SPACE_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
+    fakeValue: uuidV4(),
   })
   public space_uuid: string;
 
@@ -111,6 +113,7 @@ export class Space extends UuidSqlModel {
         code: SocialErrorCode.SPACE_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
+    fakeValue: 'Test space',
   })
   public name: string;
 
