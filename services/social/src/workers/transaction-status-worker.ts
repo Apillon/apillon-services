@@ -35,10 +35,11 @@ export class TransactionStatusWorker extends BaseQueueWorker {
   }): Promise<any> {
     console.info('RUN EXECUTOR (TransactionStatusWorker). data: ', input);
 
-    await runWithWorkers(input.data, 50, this.context, async (data, ctx) => {
-      if (data.referenceTable == DbTables.SPACE) {
+    await runWithWorkers(input.data, 50, this.context, async (tx, ctx) => {
+      if (tx.referenceTable == DbTables.SPACE) {
         const space = await new Space({}, this.context).populateByUUID(
-          data.referenceId,
+          tx.referenceId,
+          'space_uuid',
         );
         if (!space.exists()) {
           await this.writeEventLog(
@@ -47,22 +48,23 @@ export class TransactionStatusWorker extends BaseQueueWorker {
               message: 'No space matching reference found.',
               service: ServiceName.SOCIAL,
               data: {
-                data,
+                tx,
               },
             },
             LogOutput.SYS_WARN,
           );
         } else {
-          space.spaceId = data.data;
+          space.spaceId = tx.data;
           space.status =
-            data.transactionStatus == TransactionStatus.CONFIRMED
+            tx.transactionStatus == TransactionStatus.CONFIRMED
               ? SqlModelStatus.ACTIVE
               : 100;
           await space.update();
         }
-      } else if (data.referenceTable == DbTables.POST) {
+      } else if (tx.referenceTable == DbTables.POST) {
         const post = await new Post({}, this.context).populateByUUID(
-          data.referenceId,
+          tx.referenceId,
+          'post_uuid',
         );
         if (!post.exists()) {
           await this.writeEventLog(
@@ -71,15 +73,15 @@ export class TransactionStatusWorker extends BaseQueueWorker {
               message: 'No post matching reference found.',
               service: ServiceName.SOCIAL,
               data: {
-                data,
+                tx,
               },
             },
             LogOutput.SYS_WARN,
           );
         } else {
-          post.postId = data.postId;
+          post.postId = tx.data;
           post.status =
-            data.transactionStatus == TransactionStatus.CONFIRMED
+            tx.transactionStatus == TransactionStatus.CONFIRMED
               ? SqlModelStatus.ACTIVE
               : 100;
         }
@@ -90,7 +92,7 @@ export class TransactionStatusWorker extends BaseQueueWorker {
             message: 'Got message without reference',
             service: ServiceName.SOCIAL,
             data: {
-              data,
+              tx,
             },
           },
           LogOutput.SYS_WARN,
