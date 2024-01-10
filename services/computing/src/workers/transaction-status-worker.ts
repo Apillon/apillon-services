@@ -85,8 +85,9 @@ export class TransactionStatusWorker extends BaseQueueWorker {
         );
         await transaction.update();
 
-        // update contract
+        // update contract if transaction was made on contract
         if (
+          transaction.contract_id &&
           transaction.transactionStatus === ComputingTransactionStatus.CONFIRMED
         ) {
           const contract = await new Contract({}, this.context).populateById(
