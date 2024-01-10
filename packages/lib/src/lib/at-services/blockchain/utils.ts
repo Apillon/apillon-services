@@ -59,6 +59,7 @@ export async function getTokenPriceUsd(token: string) {
     );
     return data?.[networkName]?.usd;
   } catch (err) {
+    console.error(`Failed to retrieve price for token ${token}:`, err);
     return 0;
   }
 }
