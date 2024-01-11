@@ -24,7 +24,7 @@ export class TransactionStatusWorker extends BaseQueueWorker {
     context: Context,
     type: QueueWorkerType,
   ) {
-    super(workerDefinition, context, type, env.STORAGE_AWS_WORKER_SQS_URL);
+    super(workerDefinition, context, type, env.SOCIAL_AWS_WORKER_SQS_URL);
   }
 
   public async runPlanner(): Promise<any[]> {
@@ -35,68 +35,77 @@ export class TransactionStatusWorker extends BaseQueueWorker {
   }): Promise<any> {
     console.info('RUN EXECUTOR (TransactionStatusWorker). data: ', input);
 
-    await runWithWorkers(input.data, 50, this.context, async (data, ctx) => {
-      if (data.referenceTable == DbTables.SPACE) {
-        const space = await new Space({}, this.context).populateByUUID(
-          data.referenceId,
-        );
-        if (!space.exists()) {
+    await runWithWorkers(
+      input.data,
+      50,
+      this.context,
+      async (tx: TransactionWebhookDataDto, ctx) => {
+        if (tx.referenceTable == DbTables.SPACE) {
+          const space = await new Space({}, ctx).populateByUUID(
+            tx.referenceId,
+            'space_uuid',
+          );
+          if (!space.exists()) {
+            await this.writeEventLog(
+              {
+                logType: LogType.WARN,
+                message: 'No space matching reference found.',
+                service: ServiceName.SOCIAL,
+                data: {
+                  tx,
+                },
+              },
+              LogOutput.SYS_WARN,
+            );
+          } else {
+            space.spaceId = tx.data;
+            space.status =
+              tx.transactionStatus == TransactionStatus.CONFIRMED
+                ? SqlModelStatus.ACTIVE
+                : 100;
+            await space.update();
+          }
+        } else if (tx.referenceTable == DbTables.POST) {
+          const post = await new Post({}, ctx).populateByUUID(
+            tx.referenceId,
+            'post_uuid',
+          );
+          if (!post.exists()) {
+            await this.writeEventLog(
+              {
+                logType: LogType.WARN,
+                message: 'No post matching reference found.',
+                service: ServiceName.SOCIAL,
+                data: {
+                  tx,
+                },
+              },
+              LogOutput.SYS_WARN,
+            );
+          } else {
+            post.postId = tx.data;
+            post.status =
+              tx.transactionStatus == TransactionStatus.CONFIRMED
+                ? SqlModelStatus.ACTIVE
+                : 100;
+
+            await post.update();
+          }
+        } else {
           await this.writeEventLog(
             {
               logType: LogType.WARN,
-              message: 'No space matching reference found.',
+              message: 'Got message without reference',
               service: ServiceName.SOCIAL,
               data: {
-                data,
+                tx,
               },
             },
             LogOutput.SYS_WARN,
           );
-        } else {
-          space.spaceId = data.data;
-          space.status =
-            data.transactionStatus == TransactionStatus.CONFIRMED
-              ? SqlModelStatus.ACTIVE
-              : 100;
-          await space.update();
         }
-      } else if (data.referenceTable == DbTables.POST) {
-        const post = await new Post({}, this.context).populateByUUID(
-          data.referenceId,
-        );
-        if (!post.exists()) {
-          await this.writeEventLog(
-            {
-              logType: LogType.WARN,
-              message: 'No post matching reference found.',
-              service: ServiceName.SOCIAL,
-              data: {
-                data,
-              },
-            },
-            LogOutput.SYS_WARN,
-          );
-        } else {
-          post.postId = data.postId;
-          post.status =
-            data.transactionStatus == TransactionStatus.CONFIRMED
-              ? SqlModelStatus.ACTIVE
-              : 100;
-        }
-      } else {
-        await this.writeEventLog(
-          {
-            logType: LogType.WARN,
-            message: 'Got message without reference',
-            service: ServiceName.SOCIAL,
-            data: {
-              data,
-            },
-          },
-          LogOutput.SYS_WARN,
-        );
-      }
-    });
+      },
+    );
 
     return true;
   }
