@@ -6,7 +6,7 @@ export interface PhatContractsInstantiatingTransaction extends BaseTransaction {
   readonly contract?: string | undefined;
 }
 
-export interface ClusterTransferTransaction extends BaseTransaction {
+export interface PhatContractTransfer extends BaseTransaction {
   readonly from?: string | undefined;
   readonly to?: string | undefined;
   readonly clusterId?: string | undefined;

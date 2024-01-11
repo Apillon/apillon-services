@@ -4,9 +4,9 @@ import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
 import { PhalaGqlQueries } from './graphql-queries';
 import { SystemEvent, TransferTransaction } from '../data-models';
 import {
-  ClusterTransferTransaction,
   PhatContractsInstantiatedTransaction,
   PhatContractsInstantiatingTransaction,
+  PhatContractTransfer,
 } from './data-models';
 
 export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
@@ -96,7 +96,7 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
     hashes: string[],
   ) {
     const data = await this.graphQlClient.request<{
-      clusterTransfers: ClusterTransferTransaction[];
+      phatContractsTransfereds: PhatContractTransfer[];
     }>(
       gql`
         ${PhalaGqlQueries.CLUSTER_DEPOSIT_BY_HASH_QUERY}
@@ -107,7 +107,7 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
       },
     );
 
-    return data.clusterTransfers;
+    return data.phatContractsTransfereds;
   }
 
   public async getAccountBalanceTransfersForTxs(
