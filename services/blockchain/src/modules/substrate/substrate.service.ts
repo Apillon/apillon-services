@@ -2,6 +2,7 @@ import { Keyring } from '@polkadot/keyring';
 import { Wallet } from '../wallet/wallet.model';
 import {
   ChainType,
+  ClusterDepositTransaction,
   env,
   getEnumKey,
   IsolationLevel,
@@ -27,6 +28,7 @@ import { SubstrateRpcApi } from './rpc-api';
 import { OnChainRegistry, types as PhalaTypesBundle } from '@phala/sdk';
 import { substrateChainToWorkerName } from '../../lib/helpers';
 import { typesBundle as SubsocialTypesBundle } from '@subsocial/types';
+import { PhalaBlockchainIndexer } from '../blockchain-indexers/substrate/phala/indexer.service';
 
 function removeObjectKeysWithNullValue(obj: any) {
   return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null));
@@ -332,6 +334,20 @@ export class SubstrateService {
     } finally {
       await api.destroy();
     }
+  }
+
+  static async getPhalaClusterDepositTransaction(
+    event: {
+      clusterDepositTransaction: ClusterDepositTransaction;
+    },
+    _context: ServiceContext,
+  ) {
+    const transactions =
+      await new PhalaBlockchainIndexer().getClusterDepositTransactions(
+        event.clusterDepositTransaction.account,
+        [event.clusterDepositTransaction.transactionHash],
+      );
+    return transactions.length > 0 ? transactions[0] : null;
   }
 
   /**

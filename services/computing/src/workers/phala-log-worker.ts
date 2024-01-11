@@ -1,6 +1,7 @@
 import {
   BlockchainMicroservice,
   ChainType,
+  ClusterDepositTransaction,
   Context,
   env,
   formatTokenWithDecimals,
@@ -28,13 +29,9 @@ import {
   TxDirection,
 } from '../config/types';
 import { SerMessage, SerMessageLog, SerMessageMessageOutput } from '@phala/sdk';
-import {
-  ClusterTransactionLog
-} from '../modules/accounting/cluster-transaction-log.model';
+import { ClusterTransactionLog } from '../modules/accounting/cluster-transaction-log.model';
 import { Keyring } from '@polkadot/api';
-import {
-  ClusterWallet
-} from '../modules/computing/models/cluster-wallet.model';
+import { ClusterWallet } from '../modules/computing/models/cluster-wallet.model';
 import { Contract } from '../modules/computing/models/contract.model';
 
 /**
@@ -110,7 +107,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
 
       try {
         if (isDeployContract) {
-          await this.processContractTransaction(
+          await this.processContractDeployTransaction(
             transaction.project_uuid,
             clusterWallet.walletAddress,
             transaction.contract_id,
@@ -119,8 +116,8 @@ export class PhalaLogWorker extends BaseQueueWorker {
             transaction.transaction_id,
             transaction.transactionHash,
           );
-        } else {
-          await this.processOtherTransaction(
+        } else if (transaction.transactionNonce && transaction.contractData) {
+          await this.processContractTransaction(
             transaction.project_uuid,
             transaction.contract_id,
             clusterWallet.walletAddress,
@@ -131,13 +128,37 @@ export class PhalaLogWorker extends BaseQueueWorker {
             transaction.contractData.clusterId,
             tokenPrice,
           );
+        } else if (
+          transaction.transactionType ===
+          TransactionType.DEPOSIT_TO_CONTRACT_CLUSTER
+        ) {
+          await this.processClusterTransaction(
+            transaction.project_uuid,
+            transaction.transaction_id,
+            transaction.transactionHash,
+            transaction.walletAddress,
+            tokenPrice,
+          );
+        } else {
+          await this.writeEventLog(
+            {
+              logType: LogType.WARN,
+              message: `No handler for logging transaction with id ${transaction.transaction_id} of type ${transaction.transactionType}.`,
+              service: ServiceName.BLOCKCHAIN,
+              data: {
+                transaction_id: transaction.transaction_id,
+                transactionType: transaction.transactionType,
+              },
+            },
+            LogOutput.EVENT_WARN,
+          );
         }
       } catch (error) {
         await this.writeEventLog(
           {
             logType: LogType.ERROR,
             message: `Error parsing log for transaction ${transaction.transactionHash} and contract ${transaction.contractAddress}.`,
-            service: ServiceName.BLOCKCHAIN,
+            service: ServiceName.COMPUTING,
             err: error,
           },
           LogOutput.SYS_ERROR,
@@ -147,7 +168,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
     await this.checkClusterBalance(clusterWallet);
   }
 
-  protected async processContractTransaction(
+  protected async processContractDeployTransaction(
     project_uuid: string,
     walletAddress: string,
     contract_id: number,
@@ -221,7 +242,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
     ).insert();
   }
 
-  protected async processOtherTransaction(
+  protected async processContractTransaction(
     project_uuid: string,
     contract_id: number,
     walletAddress: string,
@@ -487,5 +508,66 @@ export class PhalaLogWorker extends BaseQueueWorker {
         LogOutput.NOTIFY_WARN,
       );
     }
+  }
+
+  private async processClusterTransaction(
+    project_uuid: string,
+    transaction_id: number,
+    transactionHash: string,
+    walletAddress: string,
+    tokenPrice: number,
+  ) {
+    const { data } = await new BlockchainMicroservice(
+      this.context,
+    ).getPhalaClusterDepositTransaction(
+      new ClusterDepositTransaction({
+        account: walletAddress,
+        transactionHash: transactionHash,
+      }),
+    );
+    console.log(
+      'Received response for getPhalaClusterDepositTransaction:',
+      data,
+    );
+    if (!data) {
+      await this.writeEventLog(
+        {
+          logType: LogType.WARN,
+          message: `No cluster deposit transaction was found by indexer for account ${walletAddress} and transaction hash ${transactionHash}.`,
+          service: ServiceName.COMPUTING,
+          data: {
+            project_uuid,
+            walletAddress,
+            transactionHash,
+            transaction_id,
+          },
+        },
+        LogOutput.NOTIFY_WARN,
+      );
+      return;
+    }
+
+    const fee = data.fee;
+    const amount = data.amount;
+    await new ClusterTransactionLog(
+      {
+        project_uuid: project_uuid,
+        status: ComputingTransactionStatus.CONFIRMED,
+        action: TxAction.DEPOSIT,
+        blockId: data.blockNumber,
+        direction: TxDirection.INCOME,
+        // TODO: should we store clusterWallet id or at least clusterId instead of wallet?
+        wallet: data.to,
+        clusterId: data.clusterId,
+        hash: transactionHash,
+        transaction_id: transaction_id,
+        fee,
+        amount: `${amount}`,
+        totalPrice: `${amount + fee}`,
+        value: (amount + fee) * tokenPrice,
+        addressFrom: data.from,
+      },
+      this.context,
+    ).insert();
   }
 }
