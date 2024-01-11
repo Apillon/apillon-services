@@ -19,6 +19,25 @@ export class Transaction extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION;
 
   @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ComputingErrorCode.FIELD_NOT_PRESENT,
+      },
+    ],
+  })
+  public walletAddress: string;
+
+  @prop({
     parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
@@ -211,6 +230,7 @@ export class Transaction extends AdvancedSQLModel {
                t.transactionType AS transactionType,
                t.transactionHash AS transactionHash,
                t.nonce           AS transactionNonce,
+               t.walletAddress AS walletAddress,
                c.id              AS contract_id,
                c.project_uuid    AS project_uuid,
                c.contractAddress AS contractAddress,
@@ -239,6 +259,7 @@ export class Transaction extends AdvancedSQLModel {
       transactionType: TransactionType;
       transactionHash: string;
       transactionNonce: string;
+      walletAddress: string;
       contract_id: number;
       contractAddress: string;
       contractData: { clusterId: string };
