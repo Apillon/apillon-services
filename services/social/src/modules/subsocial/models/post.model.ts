@@ -120,10 +120,7 @@ export class Post extends UuidSqlModel {
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
-      SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {

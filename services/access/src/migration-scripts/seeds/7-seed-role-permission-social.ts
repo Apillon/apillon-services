@@ -17,7 +17,7 @@ export async function downgrade(
 ): Promise<void> {
   await queryFn(`
     DELETE FROM ${DbTables.ROLE_PERMISSION}
-    WHERE permission_id IN (${DefaultPermission.SOCIAL})
-    AND role_id IN (${DefaultUserRole.USER});
+    WHERE permission_id = ${DefaultPermission.SOCIAL}
+    AND role_id = ${DefaultUserRole.USER};
   `);
 }

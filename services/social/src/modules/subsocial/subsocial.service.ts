@@ -93,7 +93,7 @@ export class SubsocialService {
     if (!space.spaceId || space.status != SqlModelStatus.ACTIVE) {
       throw new SocialCodeException({
         status: 500,
-        code: SocialErrorCode.SPACE_IS_NOT_ACTIVE,
+        code: SocialErrorCode.SPACE_IN_INVALID_STATE,
       });
     }
 
