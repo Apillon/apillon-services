@@ -1,7 +1,7 @@
 import { BaseGQLQueries } from '../base-queries';
 
 export class PhalaGqlQueries extends BaseGQLQueries {
-  static ACCOUNT_CLUSTER_TRANSFER_EVENTS_QUERY = `query getAccountClusterTransferEvents(
+  static ACCOUNT_CLUSTER_DEPOSIT_EVENTS_QUERY = `query getAccountClusterDepositEvents(
     $account: String!,
     $fromBlock: Int!,
     $toBlock: Int!
@@ -11,9 +11,7 @@ export class PhalaGqlQueries extends BaseGQLQueries {
         AND: {
           blockNumber_gt: $fromBlock,
           blockNumber_lte: $toBlock,
-          AND: {
-            OR: [{from_eq: $account}, {to_eq: $account}]
-          }
+          to_eq: $account
         }
       }
     ) {

@@ -81,7 +81,7 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
       fromBlock,
       toBlock,
     );
-    const clusterTransactions = await this.indexer.getClusterTransferEvents(
+    const clusterTransactions = await this.indexer.getClusterDepositEvents(
       address,
       fromBlock,
       toBlock,
