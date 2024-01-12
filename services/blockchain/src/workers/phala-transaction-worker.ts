@@ -86,6 +86,9 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
       fromBlock,
       toBlock,
     );
+    console.log(
+      `Fetched ${transactions.length} transactions and ${clusterTransactions.length} cluster deposits.`,
+    );
 
     const transactionsArray: Array<any> = [
       ...Object.values(clusterTransactions),
