@@ -169,7 +169,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       fromBlock,
       toBlock,
     );
-
+    console.log(`Fetched ${transactions.length} transactions.`);
     const transactionsArray: Array<any> = Object.values(transactions);
     return transactionsArray.length > 0 ? transactionsArray.flat(Infinity) : [];
   }
