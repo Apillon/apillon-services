@@ -42,7 +42,9 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
     fromBlock: number,
     toBlock: number,
   ): Promise<SystemEvent[]> {
-    const data = await this.graphQlClient.request<{ systems: SystemEvent[] }>(
+    const data = await this.graphQlClient.request<{
+      phatContractsTransfereds: PhatContractTransfer[];
+    }>(
       gql`
         ${PhalaGqlQueries.ACCOUNT_CLUSTER_DEPOSIT_EVENTS_QUERY}
       `,
@@ -53,7 +55,7 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
       },
     );
 
-    return data.systems;
+    return data.phatContractsTransfereds;
   }
 
   /**
