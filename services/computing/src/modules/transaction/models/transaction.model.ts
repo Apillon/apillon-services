@@ -223,7 +223,7 @@ export class Transaction extends AdvancedSQLModel {
    * (we ignore X hours old so we don't keep processing them if we were not able to obtain them)
    * @param clusterId
    */
-  public async getNonExecutedTransactions(clusterId: string) {
+  public async getContractTransactionsNotLogged(clusterId: string) {
     return (await this.getContext().mysql.paramExecute(
       `
         SELECT t.id              AS transaction_id,
