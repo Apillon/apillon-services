@@ -28,6 +28,7 @@ import {
 } from '../../config/types';
 import { expect } from '@jest/globals';
 import { ClusterTransactionLog } from '../../modules/accounting/cluster-transaction-log.model';
+import { ServiceContext } from '@apillon/service-lib';
 
 const mockAxios = new MockAdapter(axios);
 
@@ -60,8 +61,8 @@ describe('Log worker tests', () => {
   let transaction: Transaction;
   let contractAbi: ContractAbi;
   let contract: Contract;
-  let getPhalaLogsMock: jest.SpyInstance;
-  let getClusterWalletBalanceMock: jest.SpyInstance;
+  let getPhalaLogsMock: jest.SpyInstance,
+    getClusterWalletBalanceMock: jest.SpyInstance;
 
   beforeAll(async () => {
     stage = await setupTest();
@@ -136,6 +137,7 @@ describe('Log worker tests', () => {
       const transactionHash = 'contractTransactionHash1';
       transaction = await new Transaction(
         {
+          walletAddress: WALLET_ADDRESS,
           contract_id: contract.id,
           transactionType: TransactionType.DEPLOY_CONTRACT,
           transactionHash,
@@ -144,13 +146,7 @@ describe('Log worker tests', () => {
         stage.context,
       ).insert();
 
-      const logWorker = new PhalaLogWorker(
-        WORKER_DEFINITION,
-        stage.context,
-        QueueWorkerType.PLANNER,
-      );
-      const plans = await logWorker.runPlanner();
-      await logWorker.runExecutor(plans[0]);
+      await runPhalaLogWorker(stage.context);
 
       expect(mockAxios.history.get.length).toBe(1);
       expect(mockAxios.history.get[0].url).toBe(
@@ -206,6 +202,7 @@ describe('Log worker tests', () => {
       const transactionHash = 'contractTransactionHash2';
       transaction = await new Transaction(
         {
+          walletAddress: WALLET_ADDRESS,
           contract_id: contract.id,
           transactionType: TransactionType.DEPLOY_CONTRACT,
           transactionHash,
@@ -214,13 +211,7 @@ describe('Log worker tests', () => {
         stage.context,
       ).insert();
 
-      const logWorker = new PhalaLogWorker(
-        WORKER_DEFINITION,
-        stage.context,
-        QueueWorkerType.PLANNER,
-      );
-      const plans = await logWorker.runPlanner();
-      await logWorker.runExecutor(plans[0]);
+      await runPhalaLogWorker(stage.context);
 
       expect(mockAxios.history.get.length).toBe(1);
       expect(mockAxios.history.get[0].url).toBe(
@@ -278,6 +269,7 @@ describe('Log worker tests', () => {
       const transactionHash = 'transactionHash1';
       transaction = await new Transaction(
         {
+          walletAddress: WALLET_ADDRESS,
           contract_id: contract.id,
           transactionType: TransactionType.ASSIGN_CID_TO_NFT,
           transactionHash,
@@ -287,13 +279,7 @@ describe('Log worker tests', () => {
         stage.context,
       ).insert();
 
-      const logWorker = new PhalaLogWorker(
-        WORKER_DEFINITION,
-        stage.context,
-        QueueWorkerType.PLANNER,
-      );
-      const plans = await logWorker.runPlanner();
-      await logWorker.runExecutor(plans[0]);
+      await runPhalaLogWorker(stage.context);
 
       expect(mockAxios.history.get.length).toBe(1);
       expect(mockAxios.history.get[0].url).toBe(
@@ -344,12 +330,13 @@ describe('Log worker tests', () => {
       );
     });
 
-    test('Phala log worker should update failed transactions and balance', async () => {
+    test('phala log worker should update failed transactions and balance', async () => {
       mockGetPhalaLogs(getPhalaLogsMock, ['failed']);
       mockGetClusterWalletBalance(getClusterWalletBalanceMock);
       const transactionHash = 'transactionHash2';
       transaction = await new Transaction(
         {
+          walletAddress: WALLET_ADDRESS,
           contract_id: contract.id,
           transactionType: TransactionType.ASSIGN_CID_TO_NFT,
           transactionHash,
@@ -359,13 +346,7 @@ describe('Log worker tests', () => {
         stage.context,
       ).insert();
 
-      const logWorker = new PhalaLogWorker(
-        WORKER_DEFINITION,
-        stage.context,
-        QueueWorkerType.PLANNER,
-      );
-      const plans = await logWorker.runPlanner();
-      await logWorker.runExecutor(plans[0]);
+      await runPhalaLogWorker(stage.context);
 
       expect(mockAxios.history.get.length).toBe(1);
       expect(mockAxios.history.get[0].url).toBe(
@@ -512,4 +493,14 @@ async function getTransaction(stage: Stage, transactionId: number) {
     )
   )[0];
   return new Transaction(data, stage.context);
+}
+
+async function runPhalaLogWorker(context: ServiceContext) {
+  const logWorker = new PhalaLogWorker(
+    WORKER_DEFINITION,
+    context,
+    QueueWorkerType.PLANNER,
+  );
+  const plans = await logWorker.runPlanner();
+  await logWorker.runExecutor(plans[0]);
 }
