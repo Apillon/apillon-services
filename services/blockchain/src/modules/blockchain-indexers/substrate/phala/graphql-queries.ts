@@ -95,15 +95,13 @@ export class PhalaGqlQueries extends BaseGQLQueries {
       }
     ) {
       ${this.BASE_SUBSTRATE_FIELDS}
-      amount
-      clusterId
+      account
+      cluster
+      contract
+      deployer
       fee
-      from
-      to
     }
-  }
-  `;
-
+  }`;
   static CLUSTER_DEPOSIT_BY_HASH_QUERY = `query getClusterDepositTransactions($account: String!, $hashes: [String!]!) {
     phatContractsTransfereds(where: {to_eq: $account, extrinsicHash_in: $hashes}) {
       ${this.BASE_SUBSTRATE_FIELDS}
