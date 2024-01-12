@@ -1,6 +1,18 @@
 import { BaseGQLQueries } from '../base-queries';
 
 export class PhalaGqlQueries extends BaseGQLQueries {
+  static ACCOUNT_CLUSTER_TRANSFER_EVENTS_QUERY = `query getClusterEvents($account: String!, $fromBlock: Int!, $toBlock: Int!) {
+    phatContractsTransfereds(where: {AND: {blockNumber_gt: $fromBlock, blockNumber_lte: $toBlock, AND: {OR: [{from_eq: $account}, {to_eq: $account}]}}}) {
+      ${this.BASE_SUBSTRATE_FIELDS}
+        amount
+        clusterId
+        fee
+        from
+        to
+    }
+  }
+  `;
+
   static ACCOUNT_ALL_TRANSACTIONS_QUERY = `query getAccountTransactions(
     $account: String!
     $fromBlock: Int!,
