@@ -28,9 +28,14 @@ import {
   TxDirection,
 } from '../config/types';
 import { SerMessage, SerMessageLog, SerMessageMessageOutput } from '@phala/sdk';
-import { ClusterTransactionLog } from '../modules/accounting/cluster-transaction-log.model';
+import {
+  ClusterTransactionLog
+} from '../modules/accounting/cluster-transaction-log.model';
 import { Keyring } from '@polkadot/api';
-import { ClusterWallet } from '../modules/computing/models/cluster-wallet.model';
+import {
+  ClusterWallet
+} from '../modules/computing/models/cluster-wallet.model';
+import { Contract } from '../modules/computing/models/contract.model';
 
 /**
  * Phala has its own worker because beside normal transactions (transmitted by our wallet) we also need to fetch
@@ -69,14 +74,14 @@ export class PhalaLogWorker extends BaseQueueWorker {
     const transactions = await new Transaction(
       {},
       this.context,
-    ).getNonExecutedTransactions(clusterWallet.clusterId);
+    ).getContractTransactionsNotLogged(clusterWallet.clusterId);
 
     if (transactions.length <= 0) {
       await this.writeEventLog(
         {
           logType: LogType.INFO,
           message: `No transactions found for cluster ${clusterWallet.clusterId}.`,
-          service: ServiceName.BLOCKCHAIN,
+          service: ServiceName.COMPUTING,
           data: {
             clusterId: clusterWallet.clusterId,
           },
@@ -105,23 +110,42 @@ export class PhalaLogWorker extends BaseQueueWorker {
 
       try {
         if (isDeployContract) {
-          await this.processContractTransaction(
+          await this.processContractDeployTransaction(
             transaction.project_uuid,
+            clusterWallet.walletAddress,
             transaction.contract_id,
             transaction.contractAddress,
             transaction.contractData.clusterId,
             transaction.transaction_id,
             transaction.transactionHash,
           );
-        } else {
-          await this.processOtherTransaction(
+        } else if (
+          transaction.transactionNonce &&
+          transaction.contractData.clusterId
+        ) {
+          await this.processContractTransaction(
             transaction.project_uuid,
+            transaction.contract_id,
             clusterWallet.walletAddress,
             transaction.transaction_id,
+            transaction.transactionType,
             transaction.transactionHash,
             transaction.transactionNonce,
             transaction.contractData.clusterId,
             tokenPrice,
+          );
+        } else {
+          await this.writeEventLog(
+            {
+              logType: LogType.WARN,
+              message: `Transaction of type ${transaction.transactionType} with id ${transaction.transaction_id} was not handled.`,
+              service: ServiceName.COMPUTING,
+              data: {
+                transaction_id: transaction.transaction_id,
+                transactionType: transaction.transactionType,
+              },
+            },
+            LogOutput.EVENT_WARN,
           );
         }
       } catch (error) {
@@ -129,7 +153,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
           {
             logType: LogType.ERROR,
             message: `Error parsing log for transaction ${transaction.transactionHash} and contract ${transaction.contractAddress}.`,
-            service: ServiceName.BLOCKCHAIN,
+            service: ServiceName.COMPUTING,
             err: error,
           },
           LogOutput.SYS_ERROR,
@@ -139,8 +163,9 @@ export class PhalaLogWorker extends BaseQueueWorker {
     await this.checkClusterBalance(clusterWallet);
   }
 
-  protected async processContractTransaction(
+  protected async processContractDeployTransaction(
     project_uuid: string,
+    walletAddress: string,
     contract_id: number,
     contractAddress: string,
     clusterId: string,
@@ -156,19 +181,31 @@ export class PhalaLogWorker extends BaseQueueWorker {
       },
       this.context,
     );
-    const { records } = (await new BlockchainMicroservice(
+    const { data } = (await new BlockchainMicroservice(
       this.context,
     ).getPhalaLogRecordsAndGasPrice(blockchainServiceRequest)) as {
-      records: SerMessageLog[];
-      gasPrice: number;
+      data: {
+        records: SerMessageLog[];
+        gasPrice: number;
+      };
     };
+    console.log(
+      'Received response for Log from getPhalaLogRecordsAndGasPrice:',
+      data,
+    );
     const record = (await this.getRecordFromLogs(
       transactionHash,
-      records,
+      data.records,
     )) as SerMessageLog;
     if (!record) {
       return;
     }
+    await this.checkLogRecordForErrors(
+      record.message,
+      transaction_id,
+      clusterId,
+      walletAddress,
+    );
 
     // update contract and transaction status
     const isInstantiated = record.message === 'instantiated';
@@ -180,7 +217,11 @@ export class PhalaLogWorker extends BaseQueueWorker {
     const transactionStatus = isInstantiated
       ? ComputingTransactionStatus.WORKER_SUCCESS
       : ComputingTransactionStatus.WORKER_FAILED;
-    await this.updateTransaction(transaction_id, transactionStatus);
+    await this.updateTransaction(
+      transaction_id,
+      transactionStatus,
+      record.message,
+    );
     await new ClusterTransactionLog(
       {
         // TODO: should we store clusterWallet id or at least clusterId (but we have no wallet)
@@ -196,10 +237,12 @@ export class PhalaLogWorker extends BaseQueueWorker {
     ).insert();
   }
 
-  protected async processOtherTransaction(
+  protected async processContractTransaction(
     project_uuid: string,
+    contract_id: number,
     walletAddress: string,
     transaction_id: number,
+    transactionType: TransactionType,
     transactionHash: string,
     transactionNonce: string,
     clusterId: string,
@@ -210,15 +253,21 @@ export class PhalaLogWorker extends BaseQueueWorker {
       type: 'MessageOutput',
       nonce: transactionNonce,
     });
-    const { records, gasPrice } = (await new BlockchainMicroservice(
+    const { data } = (await new BlockchainMicroservice(
       this.context,
     ).getPhalaLogRecordsAndGasPrice(blockchainServiceRequest)) as {
-      records: SerMessageMessageOutput[];
-      gasPrice: number;
+      data: {
+        records: SerMessageMessageOutput[];
+        gasPrice: number;
+      };
     };
+    console.log(
+      'Received response for MessageOutput for getPhalaLogRecordsAndGasPrice:',
+      data,
+    );
     const record = (await this.getRecordFromLogs(
       transactionHash,
-      records,
+      data.records,
     )) as SerMessageMessageOutput;
     if (!record) {
       return;
@@ -230,16 +279,48 @@ export class PhalaLogWorker extends BaseQueueWorker {
     }
 
     // update transaction status in computing
-    let transactionStatus = ComputingTransactionStatus.WORKER_FAILED;
-    if (
-      'ok' in record.output.result &&
-      record.output.result.ok.flags.length === 0
-    ) {
-      transactionStatus = ComputingTransactionStatus.WORKER_SUCCESS;
+    let workerSuccess = false;
+    let message = null;
+    if ('ok' in record.output.result) {
+      const flags = record.output.result.ok.flags;
+      workerSuccess = record.output.result.ok.flags.length === 0;
+      message = workerSuccess ? null : flags.join(',');
     }
-    await this.updateTransaction(transaction_id, transactionStatus);
+    const transactionStatus = workerSuccess
+      ? ComputingTransactionStatus.WORKER_SUCCESS
+      : ComputingTransactionStatus.WORKER_FAILED;
+    console.log(
+      `Updating transaction status to ${transactionStatus} based on log records:`,
+      record,
+    );
+    await this.updateTransaction(transaction_id, transactionStatus, message);
 
-    const gasFee = record.output.gasConsumed.refTime * gasPrice;
+    // update contract
+    if (transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP) {
+      const contract = await new Contract({}, this.context).populateById(
+        contract_id,
+      );
+      if (!contract.exists()) {
+        await this.writeEventLog({
+          logType: LogType.ERROR,
+          message: `Computing contract with id ${contract_id} not found.`,
+          service: ServiceName.COMPUTING,
+          data: {
+            transaction_id: transaction_id,
+            contract_id: contract_id,
+          },
+        });
+        return;
+      }
+      if (contract.contractStatus === ContractStatus.TRANSFERRING) {
+        contract.contractStatus = workerSuccess
+          ? ContractStatus.TRANSFERRED
+          : ContractStatus.DEPLOYED;
+        await contract.update();
+      }
+    }
+
+    const gasFee = record.output.gasConsumed.refTime * data.gasPrice;
     const storageFee = record.output.storageDeposit.charge;
     const totalFee = gasFee + storageFee;
 
@@ -276,7 +357,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
         {
           logType: LogType.WARN,
           message: `More than one record found when checking logs for transaction ${transactionHash}).`,
-          service: ServiceName.BLOCKCHAIN,
+          service: ServiceName.COMPUTING,
           data: {
             transactionHash,
           },
@@ -289,7 +370,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
         {
           logType: LogType.INFO,
           message: `No records found when checking logs for transaction ${transactionHash}).`,
-          service: ServiceName.BLOCKCHAIN,
+          service: ServiceName.COMPUTING,
           data: {
             transactionHash,
           },
@@ -300,17 +381,43 @@ export class PhalaLogWorker extends BaseQueueWorker {
     }
   }
 
+  private async checkLogRecordForErrors(
+    message: string | null | undefined,
+    transaction_id: number,
+    clusterId: string,
+    walletAddress: string,
+  ) {
+    if (message && message.includes('InsufficientBalance')) {
+      await this.writeEventLog(
+        {
+          logType: LogType.ALERT,
+          message: `Wallet address ${walletAddress} has insufficient balance on cluster ${clusterId} to process transaction with id ${transaction_id}.`,
+          service: ServiceName.COMPUTING,
+          data: {
+            message,
+            walletAddress,
+            clusterId,
+          },
+        },
+        LogOutput.NOTIFY_ALERT,
+      );
+    }
+  }
+
   private async updateTransaction(
     transaction_id: number,
     transactionStatus: ComputingTransactionStatus,
+    message: string,
   ) {
     await this.context.mysql.paramExecute(
       `UPDATE \`${DbTables.TRANSACTION}\`
-       SET transactionStatus = @transactionStatus
+       SET transactionStatus       = @transactionStatus,
+           transactionStatusMessage=@message
        WHERE id = @transaction_id`,
       {
         transaction_id,
         transactionStatus,
+        message,
       },
     );
   }
@@ -340,12 +447,12 @@ export class PhalaLogWorker extends BaseQueueWorker {
       },
       this.context,
     );
-    const { total, free } = await new BlockchainMicroservice(
+    const { data } = await new BlockchainMicroservice(
       this.context,
     ).getPhalaClusterWalletBalance(blockchainServiceRequest);
 
-    clusterWallet.totalBalance = total;
-    clusterWallet.currentBalance = free;
+    clusterWallet.totalBalance = data.total;
+    clusterWallet.currentBalance = data.free;
     await clusterWallet.update();
 
     const formattedWalletAddress = formatWalletAddress(

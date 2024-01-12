@@ -52,7 +52,13 @@ describe('Evm service unit test', () => {
     const serialized = ethers.utils.serializeTransaction(transaction);
 
     const res = await EvmService.createTransaction(
-      { params: { transaction: serialized, chain: EvmChain.MOONBASE } },
+      {
+        params: {
+          transaction: serialized,
+          chain: EvmChain.MOONBASE,
+          minimumGas: 260000,
+        },
+      },
       stage.context,
     );
     console.log('res: ', res);

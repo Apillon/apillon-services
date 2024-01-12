@@ -2,6 +2,7 @@ import { env, SubstrateChain } from '@apillon/lib';
 import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate/crust/indexer.service';
 import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/indexer.service';
 import { PhalaBlockchainIndexer } from '../modules/blockchain-indexers/substrate/phala/indexer.service';
+import { SubsocialBlockchainIndexer } from '../modules/blockchain-indexers/substrate/subsocial/indexer.service';
 
 // TODO: Maybe move worker name to env, so it can be configurable
 export const ParachainConfig = {
@@ -25,5 +26,19 @@ export const ParachainConfig = {
     webhookWorkerName: 'TransactionStatusWorker',
     sqsUrl: env.COMPUTING_AWS_WORKER_SQS_URL,
     indexer: PhalaBlockchainIndexer,
+  },
+  XSOCIAL: {
+    id: SubstrateChain.XSOCIAL,
+    name: 'XSOCIAL',
+    webhookWorkerName: 'TransactionStatusWorker',
+    sqsUrl: env.SOCIAL_AWS_WORKER_SQS_URL,
+    indexer: SubsocialBlockchainIndexer,
+  },
+  SUBSOCIAL: {
+    id: SubstrateChain.SUBSOCIAL,
+    name: 'SUBSOCIAL',
+    webhookWorkerName: 'TransactionStatusWorker',
+    sqsUrl: env.SOCIAL_AWS_WORKER_SQS_URL,
+    indexer: SubsocialBlockchainIndexer,
   },
 };

@@ -231,6 +231,7 @@ export interface IEnv {
   BLOCKCHAIN_CRUST_GRAPHQL_SERVER: string;
   BLOCKCHAIN_KILT_GRAPHQL_SERVER: string;
   BLOCKCHAIN_PHALA_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER: string;
   BLOCKCHAIN_SECRETS: string;
 
   /**
@@ -502,6 +503,45 @@ export interface IEnv {
    */
   MAILERLITE_API_KEY: string;
 
+  /************************************************************
+   * Social - Apillon social Service
+   ************************************************************/
+  /**
+   *  function name
+   */
+  SOCIAL_FUNCTION_NAME: string;
+  SOCIAL_FUNCTION_NAME_TEST: string;
+
+  /**
+   * SOCIAL dev server port
+   */
+  SOCIAL_SOCKET_PORT: number;
+  SOCIAL_SOCKET_PORT_TEST: number;
+
+  /**
+   * SOCIAL Database config
+   */
+
+  SOCIAL_MYSQL_HOST: string;
+  SOCIAL_MYSQL_PORT: number;
+  SOCIAL_MYSQL_USER: string;
+  SOCIAL_MYSQL_PASSWORD: string;
+  SOCIAL_MYSQL_DEPLOY_USER: string;
+  SOCIAL_MYSQL_DEPLOY_PASSWORD: string;
+  SOCIAL_MYSQL_DATABASE: string;
+
+  // TEST
+  SOCIAL_MYSQL_HOST_TEST: string;
+  SOCIAL_MYSQL_PORT_TEST: number;
+  SOCIAL_MYSQL_USER_TEST: string;
+  SOCIAL_MYSQL_PASSWORD_TEST: string;
+  SOCIAL_MYSQL_DATABASE_TEST: string;
+
+  /**
+   * SOCIAL workers config
+   */
+  SOCIAL_AWS_WORKER_SQS_URL: string;
+  SOCIAL_AWS_WORKER_LAMBDA_NAME: string;
   /**
    * NOWPAYMENTS
    */
@@ -679,6 +719,8 @@ export let env: IEnv = {
     process.env['BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER'],
   BLOCKCHAIN_ASTAR_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_ASTAR_GRAPHQL_SERVER'],
+  BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER'],
 
   BLOCKCHAIN_SECRETS: process.env['BLOCKCHAIN_SECRETS'],
 
@@ -872,7 +914,7 @@ export let env: IEnv = {
   /** COMPUTING */
   COMPUTING_FUNCTION_NAME: process.env['COMPUTING_FUNCTION_NAME'],
   COMPUTING_FUNCTION_NAME_TEST: process.env['COMPUTING_FUNCTION_NAME_TEST'],
-  COMPUTING_SOCKET_PORT: parseInt(process.env['COMPUTING_SOCKET_PORT']) || 6901,
+  COMPUTING_SOCKET_PORT: parseInt(process.env['COMPUTING_SOCKET_PORT']) || 6102,
   COMPUTING_MYSQL_HOST: process.env['COMPUTING_MYSQL_HOST'],
   COMPUTING_MYSQL_PORT: parseInt(process.env['COMPUTING_MYSQL_PORT']) || 3306,
   COMPUTING_MYSQL_DATABASE: process.env['COMPUTING_MYSQL_DATABASE'],
@@ -883,7 +925,7 @@ export let env: IEnv = {
     process.env['COMPUTING_MYSQL_DEPLOY_PASSWORD'],
 
   COMPUTING_SOCKET_PORT_TEST:
-    parseInt(process.env['COMPUTING_SOCKET_PORT_TEST']) || 7901,
+    parseInt(process.env['COMPUTING_SOCKET_PORT_TEST']) || 7102,
   COMPUTING_MYSQL_HOST_TEST: process.env['COMPUTING_MYSQL_HOST_TEST'],
   COMPUTING_MYSQL_PORT_TEST:
     parseInt(process.env['COMPUTING_MYSQL_PORT_TEST']) || 3306,
@@ -894,6 +936,30 @@ export let env: IEnv = {
   COMPUTING_AWS_WORKER_SQS_URL: process.env['COMPUTING_AWS_WORKER_SQS_URL'],
   COMPUTING_AWS_WORKER_LAMBDA_NAME:
     process.env['COMPUTING_AWS_WORKER_LAMBDA_NAME'],
+
+  /** SOCIAL */
+  SOCIAL_FUNCTION_NAME: process.env['SOCIAL_FUNCTION_NAME'],
+  SOCIAL_FUNCTION_NAME_TEST: process.env['SOCIAL_FUNCTION_NAME_TEST'],
+  SOCIAL_SOCKET_PORT: parseInt(process.env['SOCIAL_SOCKET_PORT']) || 6202,
+  SOCIAL_MYSQL_HOST: process.env['SOCIAL_MYSQL_HOST'],
+  SOCIAL_MYSQL_PORT: parseInt(process.env['SOCIAL_MYSQL_PORT']) || 3306,
+  SOCIAL_MYSQL_DATABASE: process.env['SOCIAL_MYSQL_DATABASE'],
+  SOCIAL_MYSQL_USER: process.env['SOCIAL_MYSQL_USER'],
+  SOCIAL_MYSQL_PASSWORD: process.env['SOCIAL_MYSQL_PASSWORD'],
+  SOCIAL_MYSQL_DEPLOY_USER: process.env['SOCIAL_MYSQL_DEPLOY_USER'],
+  SOCIAL_MYSQL_DEPLOY_PASSWORD: process.env['SOCIAL_MYSQL_DEPLOY_PASSWORD'],
+
+  SOCIAL_SOCKET_PORT_TEST:
+    parseInt(process.env['SOCIAL_SOCKET_PORT_TEST']) || 7202,
+  SOCIAL_MYSQL_HOST_TEST: process.env['SOCIAL_MYSQL_HOST_TEST'],
+  SOCIAL_MYSQL_PORT_TEST:
+    parseInt(process.env['SOCIAL_MYSQL_PORT_TEST']) || 3306,
+  SOCIAL_MYSQL_DATABASE_TEST: process.env['SOCIAL_MYSQL_DATABASE_TEST'],
+  SOCIAL_MYSQL_USER_TEST: process.env['SOCIAL_MYSQL_USER_TEST'],
+  SOCIAL_MYSQL_PASSWORD_TEST: process.env['SOCIAL_MYSQL_PASSWORD_TEST'],
+
+  SOCIAL_AWS_WORKER_SQS_URL: process.env['SOCIAL_AWS_WORKER_SQS_URL'],
+  SOCIAL_AWS_WORKER_LAMBDA_NAME: process.env['SOCIAL_AWS_WORKER_LAMBDA_NAME'],
 
   /** DISCORD */
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',

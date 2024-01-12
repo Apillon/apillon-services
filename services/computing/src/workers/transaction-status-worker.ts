@@ -1,6 +1,9 @@
 import {
+  BlockchainMicroservice,
+  ClusterDepositTransaction,
   Context,
   env,
+  getTokenPriceUsd,
   LogType,
   runWithWorkers,
   ServiceName,
@@ -9,6 +12,7 @@ import {
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
+  LogOutput,
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
@@ -16,9 +20,12 @@ import {
   ComputingTransactionStatus,
   ContractStatus,
   TransactionType,
+  TxAction,
+  TxDirection,
 } from '../config/types';
 import { Transaction } from '../modules/transaction/models/transaction.model';
 import { Contract } from '../modules/computing/models/contract.model';
+import { ClusterTransactionLog } from '../modules/accounting/cluster-transaction-log.model';
 
 function mapTransactionStatus(transactionStatus: TransactionStatus) {
   switch (transactionStatus) {
@@ -59,11 +66,12 @@ export class TransactionStatusWorker extends BaseQueueWorker {
       50,
       this.context,
       async (res: TransactionWebhookDataDto, ctx) => {
-        const computingTransaction = await new Transaction(
+        // update transaction status in computing
+        const transaction = await new Transaction(
           {},
           ctx,
         ).populateByTransactionHash(res.transactionHash);
-        if (!computingTransaction.exists()) {
+        if (!transaction.exists()) {
           await this.writeEventLog({
             logType: LogType.ERROR,
             message: `Computing transaction with hash ${res.transactionHash} not found.`,
@@ -79,60 +87,135 @@ export class TransactionStatusWorker extends BaseQueueWorker {
           service: ServiceName.COMPUTING,
           data: res,
         });
-        computingTransaction.transactionStatus = mapTransactionStatus(
+        transaction.transactionStatus = mapTransactionStatus(
           res.transactionStatus,
         );
-        await computingTransaction.update();
+        await transaction.update();
+
+        // update contract if transaction was made on contract
         if (
-          computingTransaction.transactionStatus ===
-            ComputingTransactionStatus.CONFIRMED &&
-          [
-            TransactionType.DEPLOY_CONTRACT,
-            TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-          ].includes(computingTransaction.transactionType)
+          transaction.contract_id &&
+          transaction.transactionStatus === ComputingTransactionStatus.CONFIRMED
         ) {
-          await this.updateContract(
-            computingTransaction.contract_id,
-            computingTransaction.transactionType,
-            computingTransaction.transactionHash,
-            res.data,
+          const contract = await new Contract({}, this.context).populateById(
+            transaction.contract_id,
+          );
+          if (!contract.exists()) {
+            await this.writeEventLog({
+              logType: LogType.ERROR,
+              message: `Computing contract with id ${transaction.contract_id} not found.`,
+              service: ServiceName.COMPUTING,
+              data: {
+                transaction_id: transaction.id,
+                contract_id: transaction.contract_id,
+              },
+            });
+            return;
+          }
+          let updated = false;
+          switch (transaction.transactionType) {
+            case TransactionType.DEPLOY_CONTRACT:
+              contract.contractStatus = ContractStatus.DEPLOYING;
+              contract.contractAddress = res.data;
+              contract.transactionHash = transaction.transactionHash;
+              updated = true;
+              break;
+            case TransactionType.TRANSFER_CONTRACT_OWNERSHIP:
+              contract.contractStatus = ContractStatus.TRANSFERRING;
+              updated = true;
+              break;
+          }
+          if (updated) {
+            await contract.update();
+            await this.writeEventLog({
+              logType: LogType.INFO,
+              project_uuid: contract?.project_uuid,
+              message: `Contract ${contract.contractAddress} status updated to ${contract.contractStatus}.`,
+              service: ServiceName.COMPUTING,
+              data: {
+                collection_uuid: contract.contract_uuid,
+                contractStatus: contract.contractStatus,
+                updateTime: contract.updateTime,
+              },
+            });
+          }
+        } else if (
+          transaction.transactionType ===
+          TransactionType.DEPOSIT_TO_CONTRACT_CLUSTER
+        ) {
+          await this.writeEventLog({
+            logType: LogType.INFO,
+            message: `Processing cluster deposit for transaction with hash ${res.transactionHash}.`,
+            service: ServiceName.COMPUTING,
+            data: res,
+          });
+          const tokenPrice = await getTokenPriceUsd('PHA');
+          await this.processClusterTransaction(
+            transaction.id,
+            transaction.transactionHash,
+            transaction.walletAddress,
+            tokenPrice,
           );
         }
       },
     );
   }
 
-  private async updateContract(
-    contract_id: number,
-    transactionType: TransactionType,
+  private async processClusterTransaction(
+    transaction_id: number,
     transactionHash: string,
-    contractAddress: string,
+    walletAddress: string,
+    tokenPrice: number,
   ) {
-    const contract = await new Contract({}, this.context).populateById(
-      contract_id,
+    const { data } = await new BlockchainMicroservice(
+      this.context,
+    ).getPhalaClusterDepositTransaction(
+      new ClusterDepositTransaction({
+        account: walletAddress,
+        transactionHash: transactionHash,
+      }),
     );
-
-    if (transactionType === TransactionType.DEPLOY_CONTRACT) {
-      contract.contractStatus = ContractStatus.DEPLOYING;
-      contract.contractAddress = contractAddress;
-      contract.transactionHash = transactionHash;
-    } else if (
-      transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP
-    ) {
-      contract.contractStatus = ContractStatus.TRANSFERRED;
+    console.log(
+      'Received response for getPhalaClusterDepositTransaction:',
+      data,
+    );
+    if (!data) {
+      await this.writeEventLog(
+        {
+          logType: LogType.WARN,
+          message: `No cluster deposit transaction was found by indexer for account ${walletAddress} and transaction hash ${transactionHash}.`,
+          service: ServiceName.COMPUTING,
+          data: {
+            walletAddress,
+            transactionHash,
+            transaction_id,
+          },
+        },
+        LogOutput.NOTIFY_WARN,
+      );
+      return;
     }
-    await contract.update();
 
-    await this.writeEventLog({
-      logType: LogType.INFO,
-      project_uuid: contract?.project_uuid,
-      message: `Contract ${contract.name} status updated`,
-      service: ServiceName.COMPUTING,
-      data: {
-        collection_uuid: contract.contract_uuid,
-        contractStatus: contract.contractStatus,
-        updateTime: contract.updateTime,
+    const fee = data.fee;
+    const amount = data.amount;
+    await new ClusterTransactionLog(
+      {
+        status: ComputingTransactionStatus.CONFIRMED,
+        action: TxAction.DEPOSIT,
+        blockId: data.blockNumber,
+        direction: TxDirection.INCOME,
+        // TODO: should we store clusterWallet id or at least clusterId instead of wallet?
+        wallet: data.to,
+        clusterId: data.clusterId,
+        hash: transactionHash,
+        transaction_id: transaction_id,
+        fee,
+        amount: `${amount}`,
+        totalPrice: `${amount + fee}`,
+        value: (amount + fee) * tokenPrice,
+        addressFrom: data.from,
       },
-    });
+      this.context,
+    ).insert();
   }
 }

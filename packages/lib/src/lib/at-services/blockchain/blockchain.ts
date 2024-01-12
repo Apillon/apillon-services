@@ -10,6 +10,7 @@ import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import {
+  ClusterDepositTransaction,
   CreateEvmTransactionDto,
   CreateSubstrateTransactionDto,
   PhalaClusterWalletDto,
@@ -175,6 +176,16 @@ export class BlockchainMicroservice extends BaseService {
     const data = {
       eventName: BlockchainEventType.GET_PHALA_CLUSTER_WALLET_BALANCE,
       phalaClusterWallet,
+    };
+    return await this.callService(data);
+  }
+
+  public async getPhalaClusterDepositTransaction(
+    clusterDepositTransaction: ClusterDepositTransaction,
+  ) {
+    const data = {
+      eventName: BlockchainEventType.GET_PHALA_CLUSTER_DEPOSIT_TRANSACTION,
+      clusterDepositTransaction,
     };
     return await this.callService(data);
   }

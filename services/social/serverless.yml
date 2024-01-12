@@ -1,0 +1,69 @@
+# console: true
+# org: apillonadmin
+# app: apillon-v2
+service: apillon-social-service-${opt:stage, 'dev'}
+frameworkVersion: '3'
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      modeModulesRelativeDir: '../../'
+      forceExclude:
+        - aws-sdk
+    packagerOptions:
+      lockFile: '../../package-lock.json'
+    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
+
+plugins:
+  - serverless-webpack
+  # - serverless-plugin-typescript
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  region: eu-west-1
+  stage: ${opt:stage, 'dev'}
+  iam:
+    role: arn:aws:iam::018021943180:role/serverless-workers-executor
+  vpc:
+    securityGroupIds:
+      - sg-091bc1ce7424a7921
+    subnetIds:
+      - subnet-0bea6dd0c2a5ecc61
+      - subnet-085447b898128fc92
+      - subnet-0ed148d48e931f5fa
+
+  environment:
+    ${file(../../bin/deploy/env/env.yml)}
+    # ACCESS_FUNCTION_NAME: 'apillon-social-service-${self:provider.stage}'
+    # MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
+
+# you can add packaging information here
+package:
+  patterns:
+    - '!dist/**'
+  excludeDevDependencies: true
+
+functions:
+  social-service:
+    handler: ./src/handler.handler
+    name: 'apillon-social-service-${self:provider.stage}'
+    description: Apillon social Service
+    memorySize: 512
+    timeout: 30
+  social-service-worker:
+    handler: ./src/workers/worker-executor.handler
+    name: apillon-social-service-worker-${self:provider.stage}
+    description: Serverless workers for Apillon social microservice
+    memorySize: 512
+    timeout: 900
+    reservedConcurrency: 30
+    environment:
+      AWS_WORKER_LAMBDA_NAME: ${self:functions.social-service-worker.name}
+    events:
+      - sqs:
+          arn: ${env:WORKER_SQS_ARN}
+          batchSize: 4
+          maximumBatchingWindow: 5
+          functionResponseType: ReportBatchItemFailures

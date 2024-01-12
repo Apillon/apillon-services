@@ -28,17 +28,19 @@ import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/
 import { WalletDeposit } from '../modules/accounting/wallet-deposit.model';
 import { ethers } from 'ethers';
 import { PhalaBlockchainIndexer } from '../modules/blockchain-indexers/substrate/phala/indexer.service';
+import {
+  SystemEvent,
+  TransferTransaction,
+} from '../modules/blockchain-indexers/substrate/data-models';
+import { StorageOrderTransaction } from '../modules/blockchain-indexers/substrate/crust/data-models';
 
 export class TransactionLogWorker extends BaseQueueWorker {
-  private batchLimit: number;
-
   public constructor(
     workerDefinition: WorkerDefinition,
     context: Context,
     type: QueueWorkerType,
   ) {
     super(workerDefinition, context, type, env.BLOCKCHAIN_AWS_WORKER_SQS_URL);
-    this.batchLimit = workerDefinition?.parameters?.batchLimit || 100;
   }
   async runPlanner(_data?: any): Promise<any[]> {
     const wallets = await new Wallet({}, this.context).getWallets();
@@ -53,7 +55,6 @@ export class TransactionLogWorker extends BaseQueueWorker {
         chainType: w.chainType,
         seed: w.seed,
       },
-      batchLimit: this.batchLimit,
     }));
   }
 
@@ -66,7 +67,6 @@ export class TransactionLogWorker extends BaseQueueWorker {
     const transactions = await this.getTransactionsForWallet(
       wallet,
       lastBlock || 1,
-      data.batchLimit,
     );
 
     await this.logTransactions(transactions);
@@ -121,14 +121,23 @@ export class TransactionLogWorker extends BaseQueueWorker {
   private async getTransactionsForWallet(
     wallet: Wallet,
     lastBlock: number,
-    limit = 100,
   ): Promise<Array<TransactionLog>> {
     const options = {
       [ChainType.EVM]: async () => {
         // get EVM transactions from indexer
-        const res = await new EvmBlockchainIndexer(
-          wallet.chain as EvmChain,
-        ).getWalletTransactions(wallet.address, lastBlock, limit);
+        const indexer = new EvmBlockchainIndexer(wallet.chain as EvmChain);
+        const blockHeight = await indexer.getBlockHeight();
+        const toBlock =
+          wallet.lastLoggedBlock + wallet.blockParseSize < blockHeight
+            ? wallet.lastLoggedBlock + wallet.blockParseSize
+            : blockHeight;
+        const res = await indexer.getWalletTransactions(
+          wallet.address,
+          lastBlock,
+          toBlock,
+        );
+
+        await wallet.updateLastLoggedBlock(toBlock);
 
         // console.log(`Got ${res.transactions.length} EVM transactions!`);
         return res.transactions.map((x) =>
@@ -145,25 +154,50 @@ export class TransactionLogWorker extends BaseQueueWorker {
         const subOptions = {
           [SubstrateChain.CRUST]: async () => {
             const indexer = new CrustBlockchainIndexer();
-
+            const blockHeight = await indexer.getBlockHeight();
+            const toBlock =
+              wallet.lastLoggedBlock + wallet.blockParseSize < blockHeight
+                ? wallet.lastLoggedBlock + wallet.blockParseSize
+                : blockHeight;
             const systems = await indexer.getAllSystemEvents(
               wallet.address,
               lastBlock,
-              undefined,
-              limit,
+              toBlock,
             );
 
             console.log(`Got ${systems.length} Crust system events!`);
             const { transfers, storageOrders } =
               await indexer.getAccountBalanceTransfersForTxs(
                 wallet.address,
-                systems.map((x) => x.extrinsicHash),
+                lastBlock,
+                toBlock,
               );
             console.log(
               `Got ${transfers.length} Crust transfers and ${storageOrders.length} storage orders!`,
             );
             // prepare transfer data
-            const data = [];
+            const data: {
+              system: SystemEvent;
+              transfers: TransferTransaction[];
+              storageOrder: StorageOrderTransaction;
+            }[] = [];
+            // collect transfers without system events (deposits)
+            for (const transfer of transfers) {
+              const systemEvent = systems.find(
+                (s) =>
+                  transfer.blockNumber === s.blockNumber &&
+                  transfer.extrinsicHash === s.extrinsicHash,
+              );
+              if (systemEvent) {
+                continue;
+              }
+              data.push({
+                system: null,
+                transfers: [transfer],
+                storageOrder: null,
+              });
+            }
+            // collect transfers with system events
             for (const s of systems) {
               const filteredTransfers = transfers.filter(
                 (t) =>
@@ -182,64 +216,121 @@ export class TransactionLogWorker extends BaseQueueWorker {
                 storageOrder,
               });
             }
-            return data.map((x) =>
+
+            const transacionLogs = data.map((x) =>
               new TransactionLog({}, this.context).createFromCrustIndexerData(
                 x,
                 wallet,
               ),
             );
+
+            await wallet.updateLastLoggedBlock(toBlock);
+
+            return transacionLogs;
           },
 
           [SubstrateChain.KILT]: async () => {
             const indexer = new KiltBlockchainIndexer();
-
+            const blockHeight = await indexer.getBlockHeight();
+            const toBlock =
+              wallet.lastLoggedBlock + wallet.blockParseSize < blockHeight
+                ? wallet.lastLoggedBlock + wallet.blockParseSize
+                : blockHeight;
             const systems = await indexer.getAllSystemEvents(
               wallet.address,
               lastBlock,
-              undefined,
-              limit,
+              toBlock,
             );
             console.log(`Got ${systems.length} Kilt system events!`);
             const transfers = await indexer.getAccountBalanceTransfersForTxs(
               wallet.address,
-              systems.map((x) => x.extrinsicHash),
+              lastBlock,
+              toBlock,
             );
             console.log(`Got ${transfers.length} Kilt transfers!`);
             // prepare transfer data
-            const data = [];
+            const data: {
+              system: SystemEvent;
+              transfer: TransferTransaction;
+            }[] = [];
+            // collect transfers without system events (deposits)
+            for (const transfer of transfers) {
+              const systemEvent = systems.find(
+                (s) =>
+                  transfer.blockNumber === s.blockNumber &&
+                  transfer.extrinsicHash === s.extrinsicHash,
+              );
+              if (systemEvent) {
+                continue;
+              }
+              data.push({
+                system: null,
+                transfer,
+              });
+            }
+            // collect transfers with system events
             for (const s of systems) {
               const transfer = transfers.find(
                 (t) =>
                   t.blockNumber === s.blockNumber &&
                   t.extrinsicHash === s.extrinsicHash,
               );
-
               data.push({ system: s, transfer });
             }
-            return data.map((x) =>
+            const transactionLogs = data.map((x) =>
               new TransactionLog({}, this.context).createFromKiltIndexerData(
                 x,
                 wallet,
               ),
             );
+
+            await wallet.updateLastLoggedBlock(toBlock);
+
+            return transactionLogs;
           },
           [SubstrateChain.PHALA]: async () => {
             const indexer = new PhalaBlockchainIndexer();
+            const blockHeight = await indexer.getBlockHeight();
+            const toBlock =
+              wallet.lastLoggedBlock + wallet.blockParseSize < blockHeight
+                ? wallet.lastLoggedBlock + wallet.blockParseSize
+                : blockHeight;
             const systems = await indexer.getAllSystemEvents(
               wallet.address,
               lastBlock,
-              undefined,
-              limit,
+              toBlock,
             );
             console.log(`Got ${systems.length} Phala system events!`);
             const { transfers } =
               await indexer.getAccountBalanceTransfersForTxs(
                 wallet.address,
-                systems.map((x) => x.extrinsicHash),
+                lastBlock,
+                toBlock,
               );
             console.log(`Got ${transfers.length} Phala transfers!`);
             // prepare transfer data
             const transactionLogs: TransactionLog[] = [];
+            // collect transfers without system events (deposits)
+            for (const transfer of transfers) {
+              const systemEvent = systems.find(
+                (s) =>
+                  transfer.blockNumber === s.blockNumber &&
+                  transfer.extrinsicHash === s.extrinsicHash,
+              );
+              if (systemEvent) {
+                continue;
+              }
+              transactionLogs.push(
+                new TransactionLog({}, this.context).createFromPhalaIndexerData(
+                  {
+                    system: null,
+                    transfer,
+                  },
+                  wallet,
+                ),
+              );
+            }
+            // collect transfers with system events
             for (const s of systems) {
               const transfer = transfers.find(
                 (t) =>
@@ -256,6 +347,9 @@ export class TransactionLogWorker extends BaseQueueWorker {
                 ),
               );
             }
+
+            await wallet.updateLastLoggedBlock(toBlock);
+
             return transactionLogs;
           },
         };
