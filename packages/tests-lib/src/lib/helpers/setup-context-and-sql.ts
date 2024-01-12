@@ -136,6 +136,21 @@ export async function setupTestContextAndSql(): Promise<Stage> {
     const blockchainContext = new TestContext();
     blockchainContext.mysql = blockchainSql;
 
+    /********************** Social MS **************************/
+    const socialConfig = {
+      host: env.SOCIAL_MYSQL_HOST_TEST,
+      database: env.SOCIAL_MYSQL_DATABASE_TEST,
+      password: env.SOCIAL_MYSQL_PASSWORD_TEST,
+      port: env.SOCIAL_MYSQL_PORT_TEST,
+      user: env.SOCIAL_MYSQL_USER_TEST,
+    };
+
+    const socialSql = new MySql(socialConfig);
+    await socialSql.connect();
+
+    const socialContext = new TestContext();
+    socialContext.mysql = socialSql;
+
     return {
       http: undefined,
       app: undefined,
@@ -157,6 +172,8 @@ export async function setupTestContextAndSql(): Promise<Stage> {
       nftsSql: nftsSql,
       blockchainContext,
       blockchainSql,
+      socialContext,
+      socialSql,
     };
   } catch (e) {
     console.error(e);
