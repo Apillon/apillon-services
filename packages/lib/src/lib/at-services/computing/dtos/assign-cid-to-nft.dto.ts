@@ -1,7 +1,8 @@
 import { prop } from '@rawmodel/core';
-import { stringParser } from '@rawmodel/parsers';
-import { PopulateFrom } from '../../../../config/types';
+import { integerParser, stringParser } from '@rawmodel/parsers';
+import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
+import { presenceValidator } from '../../../validators';
 
 export class AssignCidToNft extends ModelBase {
   @prop({
@@ -14,14 +15,24 @@ export class AssignCidToNft extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
   })
   public cid: string;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
   })
   public nftId: number;
 }
