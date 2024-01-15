@@ -190,6 +190,7 @@ export async function assignCidToNft(
       transactionType: TransactionType.ASSIGN_CID_TO_NFT,
       contract_id: contract_id,
       transactionHash: response.data.transactionHash,
+      nonce,
       transactionStatus: ComputingTransactionStatus.PENDING,
     },
     context,
