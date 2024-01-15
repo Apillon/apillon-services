@@ -23,7 +23,7 @@ export class DeployCollectionWorker extends BaseQueueWorker {
     context: Context,
     type: QueueWorkerType,
   ) {
-    super(workerDefinition, context, type, env.STORAGE_AWS_WORKER_SQS_URL);
+    super(workerDefinition, context, type, env.NFTS_AWS_WORKER_SQS_URL);
   }
 
   public async runPlanner(): Promise<any[]> {
