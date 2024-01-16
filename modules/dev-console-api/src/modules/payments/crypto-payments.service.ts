@@ -168,7 +168,7 @@ export class CryptoPaymentsService {
             mailAddresses: [projectOwner.email],
             templateName: EmailTemplate.CRYPTO_PAYMENT_SUCCESSFUL,
             templateData: { package_id },
-            attachmentTemplate: 'invoice',
+            attachmentTemplate: 'crypto-payment-invoice',
           }),
         ),
         new Lmas().writeLog({
