@@ -21,6 +21,7 @@ import { DirectoryModule } from './modules/storage/directory/directory.module';
 import { IpnsModule } from './modules/storage/ipns/ipns.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { UserModule } from './modules/user/user.module';
+import { SocialModule } from './modules/social/social.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { UserModule } from './modules/user/user.module';
     ComputingModule,
     PaymentsModule,
     PublicModule,
+    SocialModule,
   ],
   controllers: [],
   providers: [],
@@ -63,7 +65,8 @@ export class AppModule {
         { path: 'users/validate-email', method: RequestMethod.POST },
         { path: 'users/password-reset', method: RequestMethod.POST },
         { path: 'users/password-reset-request', method: RequestMethod.POST },
-        { path: 'payments/stripe-webhook', method: RequestMethod.POST },
+        { path: 'payments/stripe/webhook', method: RequestMethod.POST },
+        { path: 'payments/crypto/webhook', method: RequestMethod.POST },
         { path: 'public/contact-us', method: RequestMethod.POST },
         {
           path: 'websites/:website_uuid/deployments/:deployment_uuid/approve',

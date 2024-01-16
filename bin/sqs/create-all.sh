@@ -83,3 +83,16 @@ aws sqs create-queue --queue-name apillon-config-queue-production --attributes f
 
 aws sqs create-queue --queue-name apillon-config-queue-test-dlq --attributes file://test/config-queue-test-dlq.json --region eu-west-1
 aws sqs create-queue --queue-name apillon-config-queue-test --attributes file://test/config-queue-test.json  --region eu-west-1
+
+
+aws sqs create-queue --queue-name apillon-social-queue-dev-dlq --attributes file://dev/social-queue-dev-dlq.json --region eu-west-1
+aws sqs create-queue --queue-name apillon-social-queue-dev --attributes file://dev/social-queue-dev.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-social-queue-staging-dlq --attributes file://staging/social-queue-staging-dlq.json  --region eu-west-1
+aws sqs create-queue --queue-name apillon-social-queue-staging --attributes file://staging/social-queue-staging.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-social-queue-production-dlq --attributes file://production/social-queue-production-dlq.json  --region eu-west-1
+aws sqs create-queue --queue-name apillon-social-queue-production --attributes file://production/social-queue-production.json  --region eu-west-1
+
+aws sqs create-queue --queue-name apillon-social-queue-test-dlq --attributes file://test/social-queue-test-dlq.json --region eu-west-1
+aws sqs create-queue --queue-name apillon-social-queue-test --attributes file://test/social-queue-test.json  --region eu-west-1

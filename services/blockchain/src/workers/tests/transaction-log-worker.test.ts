@@ -1,4 +1,4 @@
-import { ChainType, EvmChain, SubstrateChain } from '@apillon/lib';
+import { ChainType, env, EvmChain, SubstrateChain } from '@apillon/lib';
 import {
   QueueWorkerType,
   ServiceDefinitionType,
@@ -11,12 +11,10 @@ import { TransactionLogWorker } from '../transaction-log-worker';
 
 import * as fs from 'fs/promises';
 import { Endpoint } from '../../common/models/endpoint';
-import { env } from '@apillon/lib';
 
 describe('Transaction Log Worker unit test', () => {
   let stage: Stage;
   let crustWallet: Wallet;
-  let crustLogCount: number;
 
   let moonbaseWallet: Wallet;
   let moonbaseLogCount: number;
@@ -28,7 +26,6 @@ describe('Transaction Log Worker unit test', () => {
   let kiltLogCount: number;
 
   let worker: TransactionLogWorker;
-  const batchLimit = 200;
 
   beforeAll(async () => {
     stage = await setupTest();
@@ -43,6 +40,7 @@ describe('Transaction Log Worker unit test', () => {
         seed: '1',
         minBalance: '5000000000000',
         decimals: 12,
+        blockParseSize: 10_952_561,
       },
       stage.context,
     );
@@ -67,6 +65,7 @@ describe('Transaction Log Worker unit test', () => {
         seed: '2',
         minBalance: '14549118925859030048',
         decimals: 18,
+        blockParseSize: 5_771_620,
       },
       stage.context,
     );
@@ -115,6 +114,7 @@ describe('Transaction Log Worker unit test', () => {
         minBalance: '2000000000000000',
         seed: '4',
         decimals: 12,
+        blockParseSize: 4_277_559,
       },
       stage.context,
     );
@@ -145,7 +145,7 @@ describe('Transaction Log Worker unit test', () => {
         params: { FunctionName: 'test' },
       },
       'test-crust-transaction-worker',
-      { parameters: { batchLimit } },
+      { parameters: {} },
     );
     worker = new TransactionLogWorker(
       wd,
@@ -194,11 +194,7 @@ describe('Transaction Log Worker unit test', () => {
       `,
       { address: crustWallet.address },
     );
-
-    crustLogCount = logs[0].cnt;
-    expect(crustLogCount).toBeGreaterThan(0);
-    expect(crustLogCount).toBeLessThanOrEqual(batchLimit);
-    console.log(crustLogCount);
+    expect(logs[0].cnt).toBe(65);
   });
 
   test('Test Crust Wallet Logging 2nd run', async () => {
@@ -222,39 +218,38 @@ describe('Transaction Log Worker unit test', () => {
       { address: crustWallet.address },
     );
 
-    expect(logs[0].cnt).toBeGreaterThan(crustLogCount);
+    expect(logs[0].cnt).toBe(465);
     console.log(logs[0].cnt);
   });
 
-  // test('Test Moonbase Wallet Logging', async () => {
-  //   const data = await worker.runPlanner();
-  //   expect(data.length).toBe(4);
+  test('Test Moonbase Wallet Logging', async () => {
+    const data = await worker.runPlanner();
+    expect(data.length).toBe(4);
 
-  //   const walletData = data.find(
-  //     (x) =>
-  //       x.wallet.address === moonbaseWallet.address.toLowerCase() ||
-  //       x.wallet.address === moonbaseWallet.address,
-  //   );
-  //   expect(walletData.wallet.address).toBe(
-  //     moonbaseWallet.address.toLowerCase(),
-  //   );
+    const walletData = data.find(
+      (x) =>
+        x.wallet.address === moonbaseWallet.address.toLowerCase() ||
+        x.wallet.address === moonbaseWallet.address,
+    );
+    expect(walletData.wallet.address).toBe(
+      moonbaseWallet.address.toLowerCase(),
+    );
 
-  //   await worker.runExecutor(walletData);
+    await worker.runExecutor(walletData);
 
-  //   const logs = await stage.db.paramExecute(
-  //     `
-  //     SELECT COUNT(*) AS cnt
-  //     FROM \`${DbTables.TRANSACTION_LOG}\`
-  //     WHERE wallet = @address
-  //     `,
-  //     { address: moonbaseWallet.address },
-  //   );
+    const logs = await stage.db.paramExecute(
+      `
+        SELECT COUNT(*) AS cnt
+        FROM \`${DbTables.TRANSACTION_LOG}\`
+        WHERE wallet = @address
+      `,
+      { address: moonbaseWallet.address },
+    );
 
-  //   moonbaseLogCount = logs[0].cnt;
-  //   expect(moonbaseLogCount).toBeGreaterThan(0);
-  //   expect(moonbaseLogCount).toBeLessThanOrEqual(batchLimit);
-  //   console.log(moonbaseLogCount);
-  // });
+    moonbaseLogCount = logs[0].cnt;
+    expect(moonbaseLogCount).toBe(68);
+    console.log(moonbaseLogCount);
+  });
 
   // test('Test Moonbase Wallet Logging 2nd run', async () => {
   //   const data = await worker.runPlanner();
@@ -315,43 +310,52 @@ describe('Transaction Log Worker unit test', () => {
   //   console.log(astarLogCount);
   // });
 
-  // test('Test Kilt Wallet Logging', async () => {
-  //   const data = await worker.runPlanner();
-  //   expect(data.length).toBe(4);
+  test('Test Kilt Wallet Logging', async () => {
+    const data = await worker.runPlanner();
+    expect(data.length).toBe(4);
 
-  //   const walletData = data.find(
-  //     (x) => x.wallet.address === kiltWallet.address,
-  //   );
-  //   expect(walletData.wallet.address === kiltWallet.address).toBeTruthy();
+    const walletData = data.find(
+      (x) => x.wallet.address === kiltWallet.address,
+    );
+    expect(walletData.wallet.address === kiltWallet.address).toBeTruthy();
 
-  //   await worker.runExecutor(walletData);
+    await worker.runExecutor(walletData);
 
-  //   const logs = await stage.db.paramExecute(
-  //     `
-  //     SELECT COUNT(*) AS cnt
-  //     FROM \`${DbTables.TRANSACTION_LOG}\`
-  //     WHERE wallet = @address
-  //     `,
-  //     { address: kiltWallet.address },
-  //   );
+    const logs = await stage.db.paramExecute(
+      `
+        SELECT COUNT(*) AS cnt
+        FROM \`${DbTables.TRANSACTION_LOG}\`
+        WHERE wallet = @address
+      `,
+      { address: kiltWallet.address },
+    );
 
-  //   kiltLogCount = logs[0].cnt;
-  //   expect(kiltLogCount).toBeGreaterThan(0);
-  //   expect(kiltLogCount).toBeLessThanOrEqual(batchLimit);
-  //   console.log(kiltLogCount);
+    kiltLogCount = logs[0].cnt;
+    expect(kiltLogCount).toBe(121);
+    console.log(kiltLogCount);
 
-  //   const fees = await stage.db.paramExecute(
-  //     `
-  //     SELECT COUNT(*) AS cnt
-  //     FROM \`${DbTables.TRANSACTION_LOG}\`
-  //     WHERE wallet = @address
-  //     AND fee = 0
-  //     AND status = 5
-  //     `,
-  //     { address: kiltWallet.address },
-  //   );
+    const deposits = await stage.db.paramExecute(
+      `
+        SELECT COUNT(*) AS cnt
+        FROM \`${DbTables.TRANSACTION_LOG}\`
+        WHERE wallet = @address
+          AND action ='DEPOSIT'
+          AND status = 5
+      `,
+      { address: kiltWallet.address },
+    );
+    expect(deposits[0].cnt).toBe(3);
 
-  //   console.log(fees[0].cnt);
-  //   expect(fees[0].cnt).toBe(0);
-  // });
+    const otherTransactions = await stage.db.paramExecute(
+      `
+        SELECT COUNT(*) AS cnt
+        FROM \`${DbTables.TRANSACTION_LOG}\`
+        WHERE wallet = @address
+          AND action !='DEPOSIT'
+          AND status = 5
+      `,
+      { address: kiltWallet.address },
+    );
+    expect(otherTransactions[0].cnt).toBe(49);
+  });
 });

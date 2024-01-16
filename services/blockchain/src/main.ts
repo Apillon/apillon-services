@@ -28,6 +28,8 @@ export async function processEvent(
       SubstrateService.getPhalaLogRecordsAndGasPrice,
     [BlockchainEventType.GET_PHALA_CLUSTER_WALLET_BALANCE]:
       SubstrateService.getPhalaClusterWalletBalance,
+    [BlockchainEventType.GET_PHALA_CLUSTER_DEPOSIT_TRANSACTION]:
+      SubstrateService.getPhalaClusterDepositTransaction,
     [BlockchainEventType.EVM_SIGN_TRANSACTION]: EvmService.createTransaction,
     [BlockchainEventType.EVM_GET_TRANSACTION]: EvmService.getTransactionById,
     [BlockchainEventType.GET_CHAIN_ENDPOINT]: CommonService.getChainEndpoint,

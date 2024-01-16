@@ -1,0 +1,71 @@
+{
+  "name": "@apillon/social",
+  "version": "1.0.1",
+  "author": "Kalmia d.o.o.",
+  "license": "UNLICENSED",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit --verbose",
+    "test-service": "jest --passWithNoTests",
+    "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60010",
+    "build": "tsc",
+    "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60010",
+    "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "deploy:prod": "serverless deploy --stage production",
+    "deploy:staging": "serverless deploy --stage staging",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:test": "serverless deploy --stage test",
+    "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
+    "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
+    "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
+    "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
+    "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
+    "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
+    "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
+  },
+  "dependencies": {
+    "@apillon/lib": "*",
+    "@apillon/service-lib": "*",
+    "@apillon/workers-lib": "*",
+    "@middy/core": "^2.5.7",
+    "@subsocial/api": "^0.8.14",
+    "@subsocial/types": "^0.6.8",
+    "@polkadot/api": "^10.9.1",
+    "@polkadot/keyring": "^12.3.2",
+    "@polkadot/util": "^12.3.2",
+    "@types/uuid": "^8.3.4",
+    "node-fetch": "2.6.7"
+  },
+  "devDependencies": {
+    "eslint-config-common": "*",
+    "tsconfig": "*",
+    "@apillon/tests-lib": "*"
+  },
+  "jest": {
+    "testTimeout": 1800000,
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "rootDir": "src",
+    "testPathIgnorePatterns": [
+      "dist/*"
+    ],
+    "testRegex": ".*\\.test\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "preset": "ts-jest",
+    "verbose": true
+  }
+}

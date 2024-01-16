@@ -29,6 +29,8 @@ let dbComputingSeed: Migration = null;
 let dbBcsMigration: Migration = null;
 let dbBcsSeed: Migration = null;
 
+let dbSocialMigration: Migration = null;
+
 export async function setupTestDatabase(): Promise<void> {
   await upgradeTestDatabases();
 }
@@ -67,6 +69,10 @@ async function initMigrations() {
 
   if (!dbBcsMigration) {
     await initBcsTestMigrations();
+  }
+
+  if (!dbSocialMigration) {
+    await initSocialTestMigrations();
   }
 }
 
@@ -115,6 +121,7 @@ export async function upgradeTestDatabases(): Promise<void> {
       dbNftsMigration.up(),
       dbComputingMigration.up(),
       dbBcsMigration.up(),
+      dbSocialMigration.up(),
     ]);
   } catch (err) {
     console.error('error at migrations.up()', err);
@@ -137,6 +144,7 @@ export async function downgradeTestDatabases(): Promise<void> {
       dbNftsMigration.down(-1),
       dbComputingMigration.down(-1),
       dbBcsMigration.down(-1),
+      dbSocialMigration.down(-1),
     ]);
   } catch (err) {
     console.error('error at migrations.down()', err);
@@ -217,6 +225,9 @@ export async function destroyTestMigrations(): Promise<void> {
   if (dbBcsMigration) {
     promises.push(dbBcsMigration.destroy());
   }
+  if (dbSocialMigration) {
+    promises.push(dbSocialMigration.destroy());
+  }
 
   await Promise.all(promises);
   dbConsoleMigration = null;
@@ -228,6 +239,7 @@ export async function destroyTestMigrations(): Promise<void> {
   dbNftsMigration = null;
   dbComputingMigration = null;
   dbBcsMigration = null;
+  dbSocialMigration = null;
 }
 
 export async function destroyTestSeeds(): Promise<void> {
@@ -292,6 +304,7 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbNftsMigration.reset(),
       dbComputingMigration.reset(),
       dbBcsMigration.reset(),
+      dbSocialMigration.reset(),
     ]);
     for (const res of migrationResults) {
       if (res.status === 'rejected') {
@@ -915,4 +928,33 @@ async function initBcsTestSeed() {
     console.error('Error at initBcsTestSeed', err);
     throw err;
   }
+}
+
+async function initSocialTestMigrations() {
+  env.APP_ENV = AppEnvironment.TEST;
+
+  const poolSocial: ConnectionOptions = {
+    host: env.SOCIAL_MYSQL_HOST_TEST,
+    database: env.SOCIAL_MYSQL_DATABASE_TEST,
+    password: env.SOCIAL_MYSQL_PASSWORD_TEST,
+    port: env.SOCIAL_MYSQL_PORT_TEST,
+    user: env.SOCIAL_MYSQL_USER_TEST,
+    // debug: true,
+    connectionLimit: 1,
+  };
+
+  if (!/(test|testing)/i.test(poolSocial.database)) {
+    throw new Error(`Blockchain: NO TEST DATABASE!`);
+  }
+
+  const pool = createPool(poolSocial);
+
+  dbSocialMigration = new Migration({
+    conn: pool as unknown as MigrationConnection,
+    tableName: 'migrations',
+    dir: '../../services/social/src/migration-scripts/migrations',
+    silent: env.APP_ENV === AppEnvironment.TEST,
+  });
+
+  await dbSocialMigration.initialize();
 }

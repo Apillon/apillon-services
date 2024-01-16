@@ -1,5 +1,7 @@
+import { CryptoPaymentsService } from './crypto-payments.service';
 import { Ctx, Validation } from '@apillon/modules-lib';
 import {
+  Body,
   Controller,
   Get,
   Param,
@@ -18,12 +20,14 @@ import { PaymentSessionDto } from './dto/payment-session.dto';
 import { PricelistQueryFilter, ValidateFor } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { StripeService } from './stripe.service';
+import { CryptoPayment } from './dto/crypto-payment';
 
 @Controller('payments')
 export class PaymentsController {
   constructor(
     private paymentsService: PaymentsService,
     private stripeService: StripeService,
+    private cryptoPaymentsService: CryptoPaymentsService,
   ) {}
 
   @Get('stripe/credit-session-url')
@@ -67,7 +71,7 @@ export class PaymentsController {
   }
 
   @Post('stripe/webhook')
-  async postWebhook(
+  async handleStripeWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') stripeSignature: string,
   ): Promise<any> {
@@ -107,5 +111,35 @@ export class PaymentsController {
     @Param('id', ParseIntPipe) product_id: number,
   ) {
     return this.paymentsService.getProductPrice(context, product_id);
+  }
+
+  @Post('crypto/payment')
+  @Validation({ dto: PaymentSessionDto, validateFor: ValidateFor.BODY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async createCryptoPaymentSession(
+    @Body() paymentSessionDto: PaymentSessionDto,
+    @Ctx() context: DevConsoleApiContext,
+  ): Promise<any> {
+    return await this.cryptoPaymentsService.createCryptoPaymentSession(
+      context,
+      paymentSessionDto,
+    );
+  }
+
+  @Get('crypto/payment/:id')
+  @UseGuards(AuthGuard)
+  async getCryptoPayment(@Param('id') paymentId: string): Promise<any> {
+    return await this.cryptoPaymentsService.getCryptoPayment(paymentId);
+  }
+
+  @Post('crypto/webhook')
+  async handleCryptoPaymentWebhook(
+    @Body() body: CryptoPayment,
+    @Headers('x-nowpayments-sig') cryptoSignature: string,
+  ): Promise<any> {
+    await this.cryptoPaymentsService.handleCryptoPaymentWebhook(
+      body,
+      cryptoSignature,
+    );
   }
 }

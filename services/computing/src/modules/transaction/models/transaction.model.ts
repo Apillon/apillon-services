@@ -19,6 +19,25 @@ export class Transaction extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION;
 
   @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ComputingErrorCode.FIELD_NOT_PRESENT,
+      },
+    ],
+  })
+  public walletAddress: string;
+
+  @prop({
     parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
@@ -80,6 +99,27 @@ export class Transaction extends AdvancedSQLModel {
     defaultValue: ComputingTransactionStatus.PENDING,
   })
   public transactionStatus: ComputingTransactionStatus;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
+  })
+  public transactionStatusMessage: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -178,13 +218,19 @@ export class Transaction extends AdvancedSQLModel {
     return res;
   }
 
-  public async getNonExecutedTransactions(clusterId: string) {
+  /**
+   * Gets non executed contract transactions that are less than X hours old
+   * (we ignore X hours old so we don't keep processing them if we were not able to obtain them)
+   * @param clusterId
+   */
+  public async getContractTransactionsNotLogged(clusterId: string) {
     return (await this.getContext().mysql.paramExecute(
       `
         SELECT t.id              AS transaction_id,
                t.transactionType AS transactionType,
                t.transactionHash AS transactionHash,
                t.nonce           AS transactionNonce,
+               t.walletAddress AS walletAddress,
                c.id              AS contract_id,
                c.project_uuid    AS project_uuid,
                c.contractAddress AS contractAddress,
@@ -199,6 +245,8 @@ export class Transaction extends AdvancedSQLModel {
            c.contractAddress IS NOT NULL)
             OR t.transactionType
           != @transactionType)
+          AND t.createTime
+            > NOW() - INTERVAL 2 HOUR
       `,
       {
         clusterId,
@@ -211,6 +259,7 @@ export class Transaction extends AdvancedSQLModel {
       transactionType: TransactionType;
       transactionHash: string;
       transactionNonce: string;
+      walletAddress: string;
       contract_id: number;
       contractAddress: string;
       contractData: { clusterId: string };

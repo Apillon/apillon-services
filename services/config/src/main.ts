@@ -52,7 +52,7 @@ export async function processEvent(
     [ScsEventType.GET_SUBSCRIPTION_PACKAGES]:
       SubscriptionService.getSubscriptionPackages,
 
-    [ScsEventType.HANDLE_STRIPE_WEBHOOK_DATA]:
+    [ScsEventType.HANDLE_PAYMENT_WEBHOOK_DATA]:
       InvoiceService.handleStripeWebhookData,
 
     [ScsEventType.LIST_INVOICES]: InvoiceService.listInvoices,

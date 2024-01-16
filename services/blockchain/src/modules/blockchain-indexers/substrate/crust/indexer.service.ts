@@ -45,8 +45,7 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
   public async getAllSystemEvents(
     account: string,
     fromBlock: number,
-    toBlock?: number,
-    limit?: number,
+    toBlock: number,
   ): Promise<SystemEvent[]> {
     const data: any = await this.graphQlClient.request(
       gql`
@@ -56,7 +55,6 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
         account,
         fromBlock,
         toBlock,
-        limit,
       },
     );
 
@@ -87,63 +85,24 @@ export class CrustBlockchainIndexer extends BaseBlockchainIndexer {
   /* These indicate a balance transfer from one account -> another */
   public async getAccountBalanceTransfersForTxs(
     account: string,
-    hashes: string[],
+    fromBlock: number,
+    toBlock: number,
   ): Promise<{
     transfers: TransferTransaction[];
     storageOrders: StorageOrderTransaction[];
   }> {
     const data: any = await this.graphQlClient.request(
       gql`
-        ${CrustGQLQueries.ACCOUNT_TRANSFERS_BY_TX_HASHES_QUERY}
+        ${CrustGQLQueries.ACCOUNT_TRANSFERS_BY_BLOCKS}
       `,
       {
         account,
-        hashes,
+        fromBlock,
+        toBlock,
       },
     );
 
     return data;
-  }
-
-  // TODO Vinko: Add comments what these do.
-  public async getAccountMarketFileOrderSuccess(
-    account: string,
-    fromBlock: number,
-    toBlock: number,
-  ): Promise<TransferTransaction[]> {
-    const data: any = await this.graphQlClient.request(
-      gql`
-        ${CrustGQLQueries.ACCOUNT_STORAGE_ORDER_QUERY}
-      `,
-      {
-        account,
-        fromBlock,
-        toBlock,
-        transactionType: CrustTransactionType.MARKET_ORDER_FILE_SUCCESS,
-      },
-    );
-
-    return data.marketFileOrders;
-  }
-
-  public async getAccountMarketFileRenewSuccess(
-    account: string,
-    fromBlock: number,
-    toBlock: number,
-  ): Promise<TransferTransaction[]> {
-    const data: any = await this.graphQlClient.request(
-      gql`
-        ${CrustGQLQueries.ACCOUNT_STORAGE_ORDER_QUERY}
-      `,
-      {
-        account,
-        fromBlock,
-        toBlock,
-        transactionType: CrustTransactionType.MARKET_FILE_RENEW_SUCCESS,
-      },
-    );
-
-    return data.marketFileOrders;
   }
 
   public async getAccountTransactionsByHash(

@@ -36,3 +36,6 @@ aws codebuild create-webhook --cli-input-json file://blockchain-webhook-dev.json
 
 aws codebuild create-project --cli-input-json file://computing-config-dev.json --profile apillon
 aws codebuild create-webhook --cli-input-json file://computing-webhook-dev.json --profile apillon
+
+aws codebuild create-project --cli-input-json file://social-config-dev.json --profile apillon
+aws codebuild create-webhook --cli-input-json file://social-webhook-dev.json --profile apillon

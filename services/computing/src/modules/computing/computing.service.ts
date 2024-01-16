@@ -248,10 +248,14 @@ export class ComputingService {
     contract: Contract,
     newOwnerAddress: string,
   ) {
-    if (contract.contractStatus == ContractStatus.TRANSFERRED) {
+    if (
+      [ContractStatus.TRANSFERRING, ContractStatus.TRANSFERRED].includes(
+        contract.contractStatus,
+      )
+    ) {
       throw new ComputingCodeException({
         status: 500,
-        code: ComputingErrorCode.CONTRACT_ALREADY_TRANSFERED,
+        code: ComputingErrorCode.CONTRACT_TRANSFERING_OR_ALREADY_TRANSFERED,
         context,
         sourceFunction,
       });
@@ -277,7 +281,8 @@ export class ComputingService {
       transactions.find(
         (x) =>
           x.transactionStatus == ComputingTransactionStatus.PENDING ||
-          x.transactionStatus == ComputingTransactionStatus.CONFIRMED,
+          x.transactionStatus == ComputingTransactionStatus.CONFIRMED ||
+          x.transactionStatus == ComputingTransactionStatus.WORKER_SUCCESS,
       )
     ) {
       throw new ComputingCodeException({

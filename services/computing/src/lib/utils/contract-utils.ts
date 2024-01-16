@@ -47,6 +47,7 @@ export async function deployPhalaContract(
 
   const dbTxRecord = new Transaction({}, context);
   dbTxRecord.populate({
+    walletAddress: response.data.address,
     transactionType: TransactionType.DEPLOY_CONTRACT,
     contract_id: contract.id,
     transactionHash: response.data.transactionHash,
@@ -84,6 +85,7 @@ export async function depositToPhalaCluster(
   ).createSubstrateTransaction(blockchainServiceRequest);
   const dbTxRecord = new Transaction(
     {
+      walletAddress: response.data.address,
       transactionType: TransactionType.DEPOSIT_TO_CONTRACT_CLUSTER,
       transactionHash: response.data.transactionHash,
       transactionStatus: ComputingTransactionStatus.PENDING,
@@ -125,6 +127,7 @@ export async function transferContractOwnership(
   ).createSubstrateTransaction(blockchainServiceRequest);
   const dbTxRecord = new Transaction(
     {
+      walletAddress: response.data.address,
       transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       contract_id: contract_id,
       transactionHash: response.data.transactionHash,
@@ -183,9 +186,11 @@ export async function assignCidToNft(
   ).createSubstrateTransaction(blockchainServiceRequest);
   const dbTxRecord = new Transaction(
     {
+      walletAddress: response.data.address,
       transactionType: TransactionType.ASSIGN_CID_TO_NFT,
       contract_id: contract_id,
       transactionHash: response.data.transactionHash,
+      nonce,
       transactionStatus: ComputingTransactionStatus.PENDING,
     },
     context,

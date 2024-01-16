@@ -23,6 +23,7 @@ import {
   ValidationException,
   ReferralMicroservice,
   writeLog,
+  BaseQueryFilter,
   EmailDataDto,
   EmailTemplate,
 } from '@apillon/lib';
@@ -37,7 +38,6 @@ import { FileService } from '../file/file.service';
 import { File } from '../file/models/file.model';
 import { User } from '../user/models/user.model';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
-import { ProjectUserFilter } from './dtos/project_user-query-filter.dto';
 import { ProjectUserUpdateRoleDto } from './dtos/project_user-update-role.dto';
 import { ProjectUserPendingInvitation } from './models/project-user-pending-invitation.model';
 import { ProjectUser } from './models/project-user.model';
@@ -231,7 +231,7 @@ export class ProjectService {
   async getProjectUsers(
     context: DevConsoleApiContext,
     project_uuid: string,
-    query: ProjectUserFilter,
+    query: BaseQueryFilter,
   ) {
     return await new ProjectUser({}, context).getProjectUsers(
       context,

@@ -95,6 +95,19 @@ export class StorageController {
     return await this.storageService.listBuckets(context, query);
   }
 
+  @Get('buckets/:bucketUuid')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.STORAGE,
+  })
+  @UseGuards(AuthGuard)
+  async getBucket(
+    @Ctx() context: ApillonApiContext,
+    @Param('bucketUuid') bucket_uuid: string,
+  ) {
+    return await this.storageService.getBucket(context, bucket_uuid);
+  }
+
   @Post('buckets')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_WRITE,
