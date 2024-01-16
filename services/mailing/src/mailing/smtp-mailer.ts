@@ -15,7 +15,7 @@ import { generateTemplateData } from './template-data';
 import * as handlebars from 'handlebars';
 import { MailCodeException } from '../lib/exceptions';
 import { MailErrorCode } from '../config/types';
-
+import { generatePdf } from 'html-pdf-node';
 /**
  * Send email via SMTP server
  * @param {MailOptions} mail
@@ -156,6 +156,17 @@ export async function SMTPsendDefaultTemplate(
     html: body(templateData),
     attachments: emailData.attachments || [],
   };
+
+  if (emailData.attachmentTemplate) {
+    const attachmentTemplate = MailTemplates.getTemplate(
+      emailData.attachmentTemplate,
+    )(templateData);
+
+    mail.attachments.push({
+      filename: 'Invoice.pdf',
+      content: await generatePdf({ content: attachmentTemplate }, {}),
+    });
+  }
 
   return await SMTPsend(mail, context);
 }

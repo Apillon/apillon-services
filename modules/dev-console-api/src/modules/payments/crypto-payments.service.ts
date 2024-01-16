@@ -3,15 +3,12 @@ import {
   CodeException,
   EmailDataDto,
   EmailTemplate,
-  JwtTokenType,
   Lmas,
   LogType,
   Mailing,
   Scs,
   ServiceName,
   env,
-  generateJwtToken,
-  parseJwtToken,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { PaymentSessionDto } from './dto/payment-session.dto';
@@ -171,6 +168,7 @@ export class CryptoPaymentsService {
             mailAddresses: [projectOwner.email],
             templateName: EmailTemplate.CRYPTO_PAYMENT_SUCCESSFUL,
             templateData: { package_id },
+            attachmentTemplate: 'invoice',
           }),
         ),
         new Lmas().writeLog({
