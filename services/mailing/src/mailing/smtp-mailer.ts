@@ -1,18 +1,25 @@
 import * as nodemailer from 'nodemailer';
 import { Options, MailOptions } from 'nodemailer/lib/smtp-transport';
 import { MailTemplates } from './mail-templates';
-import { Attachment } from 'nodemailer/lib/mailer';
-import { env, getEnvSecrets, Lmas, LogType, ServiceName } from '@apillon/lib';
+import {
+  EmailDataDto,
+  env,
+  getEnvSecrets,
+  Lmas,
+  LogType,
+  ServiceName,
+  writeLog,
+} from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { generateTemplateData } from './template-data';
 import * as handlebars from 'handlebars';
+import { MailCodeException } from '../lib/exceptions';
+import { MailErrorCode } from '../config/types';
 
 /**
  * Send email via SMTP server
- *
- * @export
  * @param {MailOptions} mail
- * @returns {Promise<boolean>}
+ * @returns {Promise<boolean>} - if email sent successfully
  */
 export async function SMTPsend(
   mail: MailOptions,
@@ -35,89 +42,66 @@ export async function SMTPsend(
   try {
     const res = await transporter.sendMail(mail);
 
-    if (res.accepted && res.accepted.length) {
+    if (res.accepted?.length) {
       await new Lmas().writeLog({
         context,
         logType: LogType.INFO,
-        location: 'lib/mailing/smtp-mailer',
+        location: 'mailing/smtp-mailer',
         service: ServiceName.MAIL,
         message: 'SMTPsendTemplate request - success',
-        // data: mail,
+        data: { subject: mail.subject },
       });
       return true;
-    } else {
-      console.log('SMTP send failed! Response: ', res);
-      await new Lmas().writeLog({
-        context,
-        logType: LogType.ERROR,
-        location: 'lib/mailing/smtp-mailer',
-        service: ServiceName.MAIL,
-        message: 'SMTPsendTemplate request - failed',
-        data: {
-          res: res,
-          // mail: mail,
-        },
-      });
-      return false;
     }
-  } catch (err) {
-    console.error(err);
     await new Lmas().writeLog({
       context,
       logType: LogType.ERROR,
       location: 'lib/mailing/smtp-mailer',
       service: ServiceName.MAIL,
-      message: 'SMTPsendTemplate request - error' + err,
-      data: {
-        error: err,
-        // mail: mail,
-      },
+      message: 'SMTPsendTemplate request - failed',
+      data: { res, subject: mail.subject },
     });
-    throw err;
+    return false;
+  } catch (err) {
+    throw await new MailCodeException({
+      code: MailErrorCode.ERROR_SENDING_EMAIL,
+      status: 500,
+      context,
+      sourceFunction: 'SMTPSend()',
+      sourceModule: 'smtp-mailer',
+    }).writeToMonitor({
+      context,
+      user_uuid: context.user?.user_uuid,
+      data: { err, subject: mail.subject },
+    });
   }
 }
 
 /**
  * Send email via SMTP server with template
- *
- * @export
- * @param {string[]} mailAddresses
- * @param {string} subject
- * @param {string} templateName
- * @param {object} templateData
- * @param {string} [senderName]
- * @param {object} attachments
- * @returns {Promise<boolean>}
+ * @param {EmailDataDto} emailData
+ * @returns {Promise<boolean>} - if email sent successfully
  */
 export async function SMTPsendTemplate(
   context: ServiceContext,
-  mailAddresses: string[],
-  subject: string,
-  templateName: string,
-  templateData: any,
-  senderName?: string,
-  attachments?: Attachment[],
+  emailData: EmailDataDto,
 ): Promise<boolean> {
-  const template = MailTemplates.getTemplate(templateName);
+  const template = MailTemplates.getTemplate(emailData.templateName);
 
   if (!template) {
-    await new Lmas().writeLog({
+    throw new MailCodeException({
+      code: MailErrorCode.TEMPLATE_NOT_FOUND,
+      status: 404,
       context,
-      logType: LogType.ERROR,
-      location: 'lib/mailing/smtp-mailer',
-      service: ServiceName.MAIL,
-      message:
-        'SMTPsendTemplate request - Template not found: ${templateName}!',
+      sourceFunction: 'SMTPSendTemplate()',
+      sourceModule: 'smtp-mailer',
     });
-
-    console.log(`Template not found: ${templateName}!`);
-    // return false;
-    throw new Error(`Template not found: ${templateName} !`);
   }
 
-  templateData = {
+  const { senderName, mailAddresses, subject } = emailData;
+  const templateData = {
     APP_URL: env.APP_URL,
-    ...templateData,
+    ...emailData.templateData,
   };
 
   const mail = {
@@ -125,33 +109,22 @@ export async function SMTPsendTemplate(
       env.SMTP_EMAIL_FROM
     }>`,
     to: mailAddresses.join(';'),
-    subject: subject,
+    subject,
     html: template(templateData),
-    attachments: attachments || [],
+    attachments: emailData.attachments || [],
   };
 
   return await SMTPsend(mail, context);
 }
 
 /**
- * Send email via SMTP server with template
- *
- * @export
- * @param {string[]} mailAddresses
- * @param {string} subject
- * @param {string} templateName
- * @param {object} templateData
- * @param {string} [senderName]
- * @param {object} attachments
- * @returns {Promise<boolean>}
+ * Send email via SMTP server with default template
+ * @param {EmailDataDto} emailData
+ * @returns {Promise<boolean>} - if email sent successfully
  */
 export async function SMTPsendDefaultTemplate(
   context: ServiceContext,
-  mailAddresses: string[],
-  templateName: string,
-  templateData: any,
-  senderName?: string,
-  attachments?: Attachment[],
+  emailData: EmailDataDto,
 ): Promise<boolean> {
   const header = MailTemplates.getTemplate('head');
   const footer = MailTemplates.getTemplate('footer');
@@ -160,24 +133,20 @@ export async function SMTPsendDefaultTemplate(
   handlebars.registerPartial('footer', footer({}));
 
   if (!header || !footer || !body) {
-    await new Lmas().writeLog({
+    throw new MailCodeException({
+      code: MailErrorCode.TEMPLATE_NOT_FOUND,
+      status: 404,
       context,
-      logType: LogType.ERROR,
-      location: 'lib/mailing/smtp-mailer',
-      service: ServiceName.MAIL,
-      message:
-        'SMTPsendDefaultTemplate request - Templates not found (header/body/footer)!',
+      sourceFunction: 'SMTPSendTemplate()',
+      sourceModule: 'smtp-mailer',
     });
-
-    console.log(`Template not found: ${templateName}!`);
-    // return false;
-    throw new Error(`Template not found: ${templateName} !`);
   }
 
-  templateData = {
+  const { templateName, senderName, mailAddresses } = emailData;
+  const templateData = {
     APP_URL: env.APP_URL,
-    ...generateTemplateData(templateName, templateData),
-    ...templateData,
+    ...generateTemplateData(templateName, emailData.templateData),
+    ...emailData.templateData,
   };
 
   const mail = {
@@ -187,7 +156,7 @@ export async function SMTPsendDefaultTemplate(
     to: mailAddresses.join(';'),
     subject: templateData.subject,
     html: body(templateData),
-    attachments: attachments || [],
+    attachments: emailData.attachments || [],
   };
 
   return await SMTPsend(mail, context);
@@ -195,8 +164,6 @@ export async function SMTPsendDefaultTemplate(
 
 /**
  * Verify connection with SMTP server
- *
- * @export
  * @returns {Promise<boolean>}
  */
 export async function SMTPverify(): Promise<boolean> {
@@ -215,7 +182,7 @@ export async function SMTPverify(): Promise<boolean> {
   try {
     await transporter.verify();
   } catch (err) {
-    console.log(`SMTP mailer error: ${err}`);
+    writeLog(LogType.ERROR, `SMTP mailer error: ${err}`);
     // await new Lmas().writeLog({
     //   logType: LogType.ERROR,
     //   location: 'lib/mailing/smtp-mailer',

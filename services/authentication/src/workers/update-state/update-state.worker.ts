@@ -1,4 +1,6 @@
 import {
+  EmailDataDto,
+  EmailTemplate,
   LogType,
   Mailing,
   ServiceName,
@@ -14,7 +16,6 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import {
-  AuthApiEmailType,
   IdentityConfigKey,
   IdentityJobState,
   IdentityState,
@@ -192,13 +193,15 @@ export class UpdateStateWorker extends BaseQueueWorker {
                   '10min',
                 );
 
-                await new Mailing(ctx).sendMail({
-                  emails: [email],
-                  template: AuthApiEmailType.DOWNLOAD_IDENTITY,
-                  data: {
-                    actionUrl: `${env.AUTH_APP_URL}/restore/?token=${token}&email=${email}&type=${AuthApiEmailType.DOWNLOAD_IDENTITY}`,
-                  },
-                });
+                await new Mailing(ctx).sendMail(
+                  new EmailDataDto({
+                    mailAddresses: [email],
+                    templateName: EmailTemplate.DOWNLOAD_IDENTITY,
+                    templateData: {
+                      actionUrl: `${env.AUTH_APP_URL}/restore/?token=${token}&email=${email}&type=${EmailTemplate.DOWNLOAD_IDENTITY}`,
+                    },
+                  }),
+                );
               } else if (
                 identityJob.finalState == IdentityJobState.ACC_DID_LINK
               ) {

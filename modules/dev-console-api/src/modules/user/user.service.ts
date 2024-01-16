@@ -18,6 +18,8 @@ import {
   CacheKeyPrefix,
   checkCaptcha,
   parseJwtToken,
+  EmailDataDto,
+  EmailTemplate,
 } from '@apillon/lib';
 import { getDiscordProfile } from '@apillon/modules-lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -209,13 +211,15 @@ export class UserService {
       '1h',
     );
 
-    await new Mailing(context).sendMail({
-      emails: [email],
-      template: 'welcome',
-      data: {
-        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
-      },
-    });
+    await new Mailing(context).sendMail(
+      new EmailDataDto({
+        mailAddresses: [email],
+        templateName: EmailTemplate.WELCOME,
+        templateData: {
+          actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
+        },
+      }),
+    );
 
     return emailResult;
   }
@@ -358,14 +362,15 @@ export class UserService {
       emailResult.authUser.password ? emailResult.authUser.password : undefined,
     );
 
-    await new Mailing(context).sendMail({
-      emails: [email],
-      // subject: 'Apillon password reset',
-      template: 'reset-password',
-      data: {
-        actionUrl: `${env.APP_URL}/register/reset-password/?token=${token}`,
-      },
-    });
+    await new Mailing(context).sendMail(
+      new EmailDataDto({
+        mailAddresses: [email],
+        templateName: EmailTemplate.RESET_PASSWORD,
+        templateData: {
+          actionUrl: `${env.APP_URL}/register/reset-password/?token=${token}`,
+        },
+      }),
+    );
 
     return true;
   }

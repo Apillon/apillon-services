@@ -836,3 +836,20 @@ export enum ProductCategory {
   ASTAR_NFT = 'ASTAR_NFT',
   KILT_IDENTITY = 'KILT_IDENTITY',
 }
+
+export enum EmailTemplate {
+  WELCOME = 'welcome',
+  RESET_PASSWORD = 'reset-password',
+  NEW_USER_ADDED_TO_PROJECT = 'new-user-added-to-project',
+  USER_ADDED_TO_PROJECT = 'user-added-to-project',
+
+  CONTACT_US_FORM = 'contact-us-form',
+
+  WEBSITE_DEPLOYMENT_REJECTED = 'website-deployment-rejected',
+  STORAGE_QUOTA_EXCEEDED = 'storage-quota-exceeded',
+
+  GENERATE_IDENTITY = 'generate-identity',
+  RESTORE_CREDENTIAL = 'restore-credential',
+  REVOKE_DID = 'revoke-did',
+  DOWNLOAD_IDENTITY = 'download-identity',
+}

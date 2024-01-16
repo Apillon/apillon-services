@@ -113,10 +113,13 @@ export * from './lib/at-services/ams/dtos/user-wallet-auth.dto';
 export * from './lib/at-services/nfts/nfts';
 export * from './lib/at-services/nfts/dtos/deploy-collection.dto';
 
+// #REGION mailing
+export * from './lib/at-services/mailing/dto/email-data.dto';
+
 export * from './lib/database/sql-migrator';
 export * from './lib/at-services/ams/ams';
 export * from './lib/at-services/lmas/lmas';
-export * from './lib/at-services/mailing';
+export * from './lib/at-services/mailing/mailing';
 export * from './lib/aws/aws-secrets';
 export * from './lib/database/mongo';
 export * from './lib/database/mysql';
