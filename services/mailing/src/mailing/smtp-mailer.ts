@@ -150,9 +150,7 @@ export async function SMTPsendDefaultTemplate(
   };
 
   const mail = {
-    from: `${senderName ? senderName : env.SMTP_NAME_FROM} <${
-      env.SMTP_EMAIL_FROM
-    }>`,
+    from: `${senderName || env.SMTP_NAME_FROM} <${env.SMTP_EMAIL_FROM}>`,
     to: mailAddresses.join(';'),
     subject: templateData.subject,
     html: body(templateData),

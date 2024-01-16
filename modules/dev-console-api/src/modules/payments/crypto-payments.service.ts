@@ -1,10 +1,17 @@
 import {
+  Ams,
   CodeException,
+  EmailDataDto,
+  EmailTemplate,
+  JwtTokenType,
   Lmas,
   LogType,
+  Mailing,
   Scs,
   ServiceName,
   env,
+  generateJwtToken,
+  parseJwtToken,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { PaymentSessionDto } from './dto/payment-session.dto';
@@ -13,6 +20,7 @@ import { PaymentsService } from './payments.service';
 import {
   BadRequestErrorCode,
   ResourceNotFoundErrorCode,
+  ServerErrorCode,
 } from '../../config/types';
 import axios from 'axios';
 import { CryptoPaymentSession, CryptoPayment } from './dto/crypto-payment';
@@ -60,6 +68,7 @@ export class CryptoPaymentsService {
           price_currency: 'usd',
           pay_currency: 'dot',
           ipn_callback_url: env.IPN_CALLBACK_URL,
+          // Encode order_id for brevity
           order_id: `${project_uuid}#${creditPackage.id}`,
           order_description: creditPackage.description,
           success_url: paymentSessionDto.returnUrl,
@@ -69,22 +78,17 @@ export class CryptoPaymentsService {
       );
       return data;
     } catch (err) {
-      await new Lmas().writeLog({
-        context,
-        project_uuid,
+      throw await new CodeException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        code: ServerErrorCode.ERROR_CREATING_CRYPTO_PAYMENT_SESSION,
+        errorCodes: ServerErrorCode,
+        errorMessage: `Error creating crypto payment session: ${err}`,
+        sourceModule: ServiceName.DEV_CONSOLE,
+        sourceFunction: 'CryptoPaymentsService/createCryptoPaymentSession',
+      }).writeToMonitor({
         logType: LogType.ERROR,
-        message: `Error creating crypto payment session: ${err}`,
-        user_uuid: context.user.user_uuid,
-        location: 'DevConsole/CryptoPaymentsService/createCryptoPaymentSession',
-        service: ServiceName.DEV_CONSOLE,
-        data: {
-          paymentSessionDto,
-          creditPackage,
-          err,
-        },
-        sendAdminAlert: true,
+        data: { paymentSessionDto, creditPackage, err },
       });
-      throw err;
     }
   }
 
@@ -119,47 +123,78 @@ export class CryptoPaymentsService {
       });
     }
 
-    const [project_uuid, package_id] = payment.order_id.split('#');
-    if (
-      [
-        'waiting',
-        'confirming',
-        'confirmed',
-        'partially_paid',
-        'failed',
-      ].includes(payment.payment_status)
-    ) {
-      await new Lmas().writeLog({
+    try {
+      const [project_uuid, package_id] = payment.order_id.split('#');
+
+      if (
+        [
+          'waiting',
+          'confirming',
+          'confirmed',
+          'partially_paid',
+          'failed',
+        ].includes(payment.payment_status)
+      ) {
+        await new Lmas().writeLog({
+          project_uuid,
+          logType: LogType.INFO,
+          message: `Received crypto payment in status ${payment.payment_status}`,
+          location: 'DevConsole/CryptoPaymentsService/handlePaymentWebhook',
+          service: ServiceName.DEV_CONSOLE,
+          data: payment,
+        });
+      }
+
+      if (payment.payment_status !== 'confirmed') {
+        // Only add credits if payment is confirmed
+        return;
+      }
+
+      const { data: projectOwner } = await new Ams(null).getProjectOwner(
         project_uuid,
-        logType: LogType.INFO,
-        message: `Received crypto payment in status ${payment.payment_status}`,
-        location: 'DevConsole/CryptoPaymentsService/handlePaymentWebhook',
-        service: ServiceName.DEV_CONSOLE,
-        data: payment,
+      );
+
+      await new Scs().handlePaymentWebhookData({
+        isCreditPurchase: true,
+        project_uuid,
+        package_id: +package_id,
+        subtotalAmount: payment.pay_amount,
+        totalAmount: payment.actually_paid,
+        currency: payment.pay_currency,
+        clientEmail: projectOwner.email,
+        clientName: projectOwner.name,
+      });
+
+      await Promise.all([
+        new Mailing().sendMail(
+          new EmailDataDto({
+            mailAddresses: [projectOwner.email],
+            templateName: EmailTemplate.CRYPTO_PAYMENT_SUCCESSFUL,
+            templateData: { package_id },
+          }),
+        ),
+        new Lmas().writeLog({
+          project_uuid,
+          logType: LogType.INFO,
+          message: `Crypto payment settled and credits added`,
+          location: 'DevConsole/CryptoPaymentsService/handlePaymentWebhook',
+          service: ServiceName.DEV_CONSOLE,
+          data: payment,
+        }),
+      ]);
+    } catch (err) {
+      throw await new CodeException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        code: ServerErrorCode.ERROR_HANDLING_CRYPTO_WEBHOOK,
+        errorCodes: ServerErrorCode,
+        errorMessage: `Error handling crypto payment webhook: ${err}`,
+        sourceModule: ServiceName.DEV_CONSOLE,
+        sourceFunction: 'CryptoPaymentsService/handleCryptoPaymentWebhook',
+      }).writeToMonitor({
+        logType: LogType.ERROR,
+        data: { ...payment },
+        sendAdminAlert: true,
       });
     }
-
-    if (payment.payment_status !== 'confirmed') {
-      // Only add credits if payment is confirmed
-      return;
-    }
-
-    await new Scs().handlePaymentWebhookData({
-      isCreditPurchase: true,
-      project_uuid,
-      package_id: +package_id,
-      subtotalAmount: payment.pay_amount,
-      totalAmount: payment.actually_paid,
-      currency: payment.pay_currency,
-    });
-
-    await new Lmas().writeLog({
-      project_uuid,
-      logType: LogType.INFO,
-      message: `Crypto payment settled and credits added`,
-      location: 'DevConsole/CryptoPaymentsService/handlePaymentWebhook',
-      service: ServiceName.DEV_CONSOLE,
-      data: payment,
-    });
   }
 }
