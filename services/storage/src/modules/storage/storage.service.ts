@@ -779,6 +779,7 @@ export class StorageService {
       ipnsGateway: ipfsCluster.subdomainGateway
         ? `https://<IPNS>.${ipfsCluster.subdomainGateway}`
         : ipfsCluster.ipnsGateway,
+      loadBalancerIp: ipfsCluster.loadBalancerIp,
     };
   }
 
