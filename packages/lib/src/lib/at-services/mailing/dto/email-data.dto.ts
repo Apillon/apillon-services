@@ -58,4 +58,10 @@ export class EmailDataDto extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
   public attachmentTemplate: string;
+
+  @prop({
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public attachmentFileName: string;
 }

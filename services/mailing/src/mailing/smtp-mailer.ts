@@ -105,9 +105,7 @@ export async function SMTPsendTemplate(
   };
 
   const mail = {
-    from: `${senderName ? senderName : env.SMTP_NAME_FROM} <${
-      env.SMTP_EMAIL_FROM
-    }>`,
+    from: `${senderName || env.SMTP_NAME_FROM}>`,
     to: mailAddresses.join(';'),
     subject,
     html: template(templateData),
@@ -163,7 +161,7 @@ export async function SMTPsendDefaultTemplate(
     )(templateData);
 
     mail.attachments.push({
-      filename: 'Invoice.pdf',
+      filename: emailData.attachmentFileName,
       content: await generatePdf({ content: attachmentTemplate }, {}),
     });
   }

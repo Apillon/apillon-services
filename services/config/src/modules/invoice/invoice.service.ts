@@ -19,6 +19,7 @@ import { CreditService } from '../credit/credit.service';
 import { ScsCodeException, ScsValidationException } from '../../lib/exceptions';
 import { CreditPackage } from '../credit/models/credit-package.model';
 import { Subscription } from '../subscription/models/subscription.model';
+import { v4 as uuidV4 } from 'uuid';
 
 export class InvoiceService {
   /**
@@ -53,22 +54,22 @@ export class InvoiceService {
       >;
     },
     context: ServiceContext,
-  ): Promise<boolean> {
+  ): Promise<Invoice> {
     // Contains all subscription/credit and invoice create data
     const webhookData = event.data as any;
     const conn = await context.mysql.start();
-
+    let invoice: Invoice;
     try {
-      if (webhookData.isCreditPurchase) {
-        await InvoiceService.handleCreditPurchase(webhookData, context, conn);
-      } else {
-        await InvoiceService.handleSubscriptionPurchase(
-          webhookData,
-          context,
-          conn,
-        );
-      }
+      invoice = webhookData.isCreditPurchase
+        ? await InvoiceService.handleCreditPurchase(webhookData, context, conn)
+        : await InvoiceService.handleSubscriptionPurchase(
+            webhookData,
+            context,
+            conn,
+          );
       await context.mysql.commit(conn);
+
+      return invoice;
     } catch (err) {
       await context.mysql.rollback(conn);
       if (
@@ -91,7 +92,6 @@ export class InvoiceService {
         });
       }
     }
-    return true;
   }
 
   static async handleCreditPurchase(
@@ -101,7 +101,7 @@ export class InvoiceService {
     >,
     context: ServiceContext,
     conn: PoolConnection,
-  ) {
+  ): Promise<Invoice> {
     const creditPackage = await new CreditPackage({}, context).populateById(
       webhookData.package_id,
       conn,
@@ -141,6 +141,8 @@ export class InvoiceService {
       context,
       conn,
     );
+
+    return invoice;
   }
 
   static async handleSubscriptionPurchase(
@@ -150,14 +152,14 @@ export class InvoiceService {
     >,
     context: ServiceContext,
     conn: PoolConnection,
-  ) {
+  ): Promise<Invoice> {
     {
       const subscription = await SubscriptionService.createSubscription(
         new CreateSubscriptionDto(webhookData),
         context,
         conn,
       );
-      await InvoiceService.createInvoice(
+      return await InvoiceService.createInvoice(
         new CreateInvoiceDto({
           ...webhookData,
           referenceTable: DbTables.SUBSCRIPTION,
@@ -183,6 +185,7 @@ export class InvoiceService {
   ): Promise<Invoice> {
     const invoice = new Invoice(
       {
+        invoice_uuid: uuidV4(),
         ...createInvoiceDto,
         stripeId: createInvoiceDto.invoiceStripeId,
       },

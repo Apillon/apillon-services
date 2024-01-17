@@ -250,7 +250,7 @@ export function generateTemplateData(key: string, data: any) {
       text: `
       <p>Dear Apillon User,</p><br>
 
-      <p>Thank you for purchasing the credit package ${data.package_id}</p><br>
+      <p>Thank you for purchasing the credit package ${data.description}</p><br>
 
       <p>Please find atttached the invoice for your payment.</p><br>`,
     },

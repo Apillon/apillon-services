@@ -1,5 +1,4 @@
 import {
-  Ams,
   CodeException,
   EmailDataDto,
   EmailTemplate,
@@ -65,9 +64,12 @@ export class CryptoPaymentsService {
           price_currency: 'usd',
           pay_currency: 'dot',
           ipn_callback_url: env.IPN_CALLBACK_URL,
-          // Encode order_id for brevity
           order_id: `${project_uuid}#${creditPackage.id}`,
-          order_description: creditPackage.description,
+          order_description: [
+            creditPackage.description,
+            context.user.email,
+            context.user.name,
+          ].join(' - '),
           success_url: paymentSessionDto.returnUrl,
           cancel_url: paymentSessionDto.returnUrl,
         },
@@ -122,6 +124,7 @@ export class CryptoPaymentsService {
 
     try {
       const [project_uuid, package_id] = payment.order_id.split('#');
+      const [description, email, name] = payment.order_description.split(' - ');
 
       if (
         [
@@ -147,28 +150,33 @@ export class CryptoPaymentsService {
         return;
       }
 
-      const { data: projectOwner } = await new Ams(null).getProjectOwner(
-        project_uuid,
-      );
-
-      await new Scs().handlePaymentWebhookData({
+      const { data: invoice } = await new Scs().handlePaymentWebhookData({
         isCreditPurchase: true,
         project_uuid,
         package_id: +package_id,
         subtotalAmount: payment.pay_amount,
         totalAmount: payment.actually_paid,
         currency: payment.pay_currency,
-        clientEmail: projectOwner.email,
-        clientName: projectOwner.name,
+        clientEmail: email,
+        clientName: name,
       });
 
       await Promise.all([
         new Mailing().sendMail(
           new EmailDataDto({
-            mailAddresses: [projectOwner.email],
+            mailAddresses: [email],
             templateName: EmailTemplate.CRYPTO_PAYMENT_SUCCESSFUL,
-            templateData: { package_id },
+            templateData: {
+              email,
+              name,
+              description,
+              date: new Date().toLocaleDateString(),
+              price: payment.pay_amount,
+              currency: payment.pay_currency?.toLocaleUpperCase(),
+              invoiceNumber: invoice.invoice_uuid,
+            },
             attachmentTemplate: 'crypto-payment-invoice',
+            attachmentFileName: `Invoice-${invoice.invoice_uuid}.pdf`,
           }),
         ),
         new Lmas().writeLog({
