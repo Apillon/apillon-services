@@ -48,6 +48,9 @@ export class ComputingService {
         params.body.project_uuid,
       )
     ).data;
+    const ipfsGatewayUrl = ipfsCluster.ipfsGateway.endsWith('/')
+      ? ipfsCluster.ipfsGateway.slice(0, -1)
+      : ipfsCluster.ipfsGateway;
 
     const contractType = ComputingContractType.SCHRODINGER;
     const contractAbi = await new ContractAbi({}, context).getLatest(
@@ -71,7 +74,7 @@ export class ComputingService {
         nftContractAddress: params.body.nftContractAddress,
         nftChainRpcUrl: params.body.nftChainRpcUrl,
         restrictToOwner: params.body.restrictToOwner,
-        ipfsGatewayUrl: ipfsCluster.ipfsGateway,
+        ipfsGatewayUrl,
       },
     });
 
