@@ -20,6 +20,8 @@ export async function processEvent(event: any, context: Context): Promise<any> {
       ComputingService.transferContractOwnership,
     [ComputingEventType.ENCRYPT_CONTENT]: ComputingService.encryptContent,
     [ComputingEventType.ASSIGN_CID_TO_NFT]: ComputingService.assignCidToNft,
+    [ComputingEventType.LIST_CLUSTER_WALLETS]:
+      ComputingService.listClusterWallets,
   };
 
   return await processors[event.eventName](event, context);

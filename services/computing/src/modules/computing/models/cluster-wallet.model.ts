@@ -1,16 +1,20 @@
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
+  ClusterWalletQueryFilter,
   Context,
+  getQueryParams,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
+  selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
 import { ComputingErrorCode, DbTables } from '../../../config/types';
 import { ethers } from 'ethers';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class ClusterWallet extends AdvancedSQLModel {
   public readonly tableName = DbTables.CLUSTER_WALLET;
@@ -193,5 +197,42 @@ export class ClusterWallet extends AdvancedSQLModel {
       {},
       conn,
     );
+  }
+
+  public async getList(
+    context: ServiceContext,
+    filter: ClusterWalletQueryFilter,
+  ) {
+    // TODO: authorize?
+    // this.canAccess(context);
+    const fieldMap = {
+      id: 'cw.id',
+    };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'cw',
+      fieldMap,
+      filter.serialize(),
+    );
+    const selectFields = this.generateSelectFields(
+      'cw',
+      '',
+      SerializeFor.SELECT_DB,
+    );
+    const sqlQuery = {
+      qSelect: `
+        SELECT ${selectFields}
+        `,
+      qFrom: `
+        FROM \`${this.tableName}\` cw
+        WHERE @walletAddress = cw.walletAddress
+      `,
+      qFilter: `
+        ORDER BY ${filters.orderStr}
+        LIMIT ${filters.limit} OFFSET ${filters.offset};
+      `,
+    };
+
+    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'cw.id');
   }
 }

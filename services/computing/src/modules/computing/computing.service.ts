@@ -1,5 +1,6 @@
 import {
   AssignCidToNft,
+  ClusterWalletQueryFilter,
   ComputingContractType,
   ContractQueryFilter,
   CreateContractDto,
@@ -35,6 +36,7 @@ import {
 import { Contract } from './models/contract.model';
 import { Transaction } from '../transaction/models/transaction.model';
 import { ContractAbi } from './models/contractAbi.model';
+import { ClusterWallet } from './models/cluster-wallet.model';
 
 export class ComputingService {
   static async createContract(
@@ -390,5 +392,15 @@ export class ComputingService {
     });
 
     return { success: true };
+  }
+
+  static async listClusterWallets(
+    event: { query: ClusterWalletQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new ClusterWallet({}, context).getList(
+      context,
+      new ClusterWalletQueryFilter(event.query),
+    );
   }
 }
