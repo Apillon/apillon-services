@@ -203,8 +203,6 @@ export class ClusterWallet extends AdvancedSQLModel {
     context: ServiceContext,
     filter: ClusterWalletQueryFilter,
   ) {
-    // TODO: authorize?
-    // this.canAccess(context);
     const fieldMap = {
       id: 'cw.id',
     };
