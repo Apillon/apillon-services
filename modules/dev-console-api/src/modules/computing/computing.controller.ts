@@ -1,5 +1,6 @@
 import {
   AssignCidToNft,
+  ComputingTransactionQueryFilter,
   ContractQueryFilter,
   CreateContractDto,
   DefaultPermission,
@@ -63,6 +64,19 @@ export class ComputingController {
     @Param('uuid') uuid: string,
   ) {
     return await this.computingService.getContract(context, uuid);
+  }
+
+  @Get('contracts/:contract_id/transactions')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({ dto: ContractQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async listContractTransactions(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('contract_id') contract_id: number,
+    @Query() query: ComputingTransactionQueryFilter,
+  ) {
+    query.contract_id = contract_id;
+    return await this.computingService.listTransactions(context, query);
   }
 
   @Post('contracts/:uuid/transfer-ownership')

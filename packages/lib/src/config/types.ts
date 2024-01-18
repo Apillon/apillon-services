@@ -229,6 +229,7 @@ export enum ComputingEventType {
   CREATE_CONTRACT = 'create-contract',
   LIST_CONTRACTS = 'list-contract',
   GET_CONTRACT_BY_UUID = 'get-contract-by-uuid',
+  LIST_TRANSACTIONS = 'list-transactions',
   DEPOSIT_TO_PHALA_CLUSTER = 'fund-contract-cluster',
   TRANSFER_CONTRACT_OWNERSHIP = 'transfer-contract-ownership',
   ENCRYPT_CONTENT = 'encrypt-content',

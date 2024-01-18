@@ -2,6 +2,7 @@ import {
   AssignCidToNft,
   ClusterWalletQueryFilter,
   ComputingContractType,
+  ComputingTransactionQueryFilter,
   ContractQueryFilter,
   CreateContractDto,
   DepositToClusterDto,
@@ -149,6 +150,16 @@ export class ComputingService {
     contract.canAccess(context);
 
     return contract.serialize(getSerializationStrategy(context));
+  }
+
+  static async listTransactions(
+    event: { query: ComputingTransactionQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new Transaction(
+      { project_uuid: event.query.project_uuid },
+      context,
+    ).getList(context, new ComputingTransactionQueryFilter(event.query));
   }
 
   static async depositToPhalaCluster(

@@ -9,6 +9,7 @@ import { TransferOwnershipDto } from './dtos/transfer-ownership.dto';
 import { EncryptContentDto } from './dtos/encrypt-content.dto';
 import { AssignCidToNft } from './dtos/assign-cid-to-nft.dto';
 import { ClusterWalletQueryFilter } from './dtos/cluster-wallet-query-filter.dto';
+import { ComputingTransactionQueryFilter } from './dtos/computing-transaction-query-filter.dto';
 
 export class ComputingMicroservice extends BaseService {
   lambdaFunctionName =
@@ -46,6 +47,14 @@ export class ComputingMicroservice extends BaseService {
     const data = {
       eventName: ComputingEventType.GET_CONTRACT_BY_UUID,
       uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async listTransactions(params: ComputingTransactionQueryFilter) {
+    const data = {
+      eventName: ComputingEventType.LIST_TRANSACTIONS,
+      query: params.serialize(),
     };
     return await this.callService(data);
   }
