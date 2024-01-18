@@ -2,13 +2,13 @@ import {
   ApillonApiCreateBucketDto,
   ApillonApiCreateS3UrlsForUploadDto,
   ApillonApiDirectoryContentQueryFilter,
+  ApillonApiFilesQueryFilter,
   AttachedServiceType,
   BaseProjectQueryFilter,
   BucketQueryFilter,
   CreateIpnsDto,
   DefaultApiKeyRole,
   EndFileUploadSessionDto,
-  FilesQueryFilter,
   IpnsQueryFilter,
   PublishIpnsDto,
   ValidateFor,
@@ -223,14 +223,14 @@ export class StorageController {
     serviceType: AttachedServiceType.STORAGE,
   })
   @Validation({
-    dto: FilesQueryFilter,
+    dto: ApillonApiFilesQueryFilter,
     validateFor: ValidateFor.QUERY,
   })
   @UseGuards(AuthGuard, ValidationGuard)
   async listFiles(
     @Ctx() context: ApillonApiContext,
     @Param('bucketUuid') bucket_uuid: string,
-    @Query() query: FilesQueryFilter,
+    @Query() query: ApillonApiFilesQueryFilter,
   ) {
     return await this.storageService.listFiles(context, bucket_uuid, query);
   }
