@@ -539,7 +539,7 @@ export class NftsService {
       context,
     );
 
-    await spendCreditAction(context, spendCredit, () =>
+    const { data } = await spendCreditAction(context, spendCredit, () =>
       NftsService.sendEvmTransaction(
         context,
         collection,
@@ -562,7 +562,7 @@ export class NftsService {
       },
     });
 
-    return { success: true };
+    return { success: true, transactionHash: data.transactionHash };
   }
 
   static async nestMintNftTo(
@@ -641,7 +641,7 @@ export class NftsService {
       },
       context,
     );
-    await spendCreditAction(context, spendCredit, () =>
+    const { data } = await spendCreditAction(context, spendCredit, () =>
       NftsService.sendEvmTransaction(
         context,
         childCollection,
@@ -664,7 +664,7 @@ export class NftsService {
       },
     });
 
-    return { success: true };
+    return { success: true, transactionHash: data.transactionHash };
   }
 
   static async burnNftToken(
@@ -706,7 +706,7 @@ export class NftsService {
       },
       context,
     );
-    await spendCreditAction(context, spendCredit, () =>
+    const { data } = await spendCreditAction(context, spendCredit, () =>
       NftsService.sendEvmTransaction(
         context,
         collection,
@@ -729,7 +729,7 @@ export class NftsService {
       },
     });
 
-    return { success: true };
+    return { success: true, transactionHash: data.transactionHash };
   }
 
   private static async checkCollection(
