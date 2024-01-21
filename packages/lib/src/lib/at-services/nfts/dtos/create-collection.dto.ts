@@ -118,7 +118,7 @@ export class CreateCollectionDTOBase extends ModelBase {
         code: ValidatorErrorCode.NFT_DEPLOY_BASE_EXTENSION_NOT_PRESENT,
       },
       {
-        resolver: stringLengthValidator({ minOrEqual: 1, maxOrEqual: 10 }),
+        resolver: stringLengthValidator({ minOrEqual: 1, maxOrEqual: 2000 }),
         code: ValidatorErrorCode.NFT_DEPLOY_BASE_EXTENSION_NOT_VALID,
       },
     ],
