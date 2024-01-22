@@ -1,7 +1,7 @@
 export enum DbTables {
   TRANSACTION = 'transaction',
   COLLECTION = 'collection',
-  COLLECTION_METADATA = 'collection_metadata',
+  CONTRACT_VERSION = 'contract_version',
 }
 
 export enum NftsErrorCode {
@@ -32,6 +32,7 @@ export enum NftsErrorCode {
   COLLECTION_METADATA_IMAGES_SESSION_NOT_PRESENT = 42212009,
   COLLECTION_TYPE_NOT_PRESENT = 42212010,
   COLLECTION_TYPE_NOT_VALID = 42212011,
+  CONTRACT_VERSION_NOT_PRESENT = 42212012,
 
   //500
   GENERAL_SERVER_ERROR = 50012000,
