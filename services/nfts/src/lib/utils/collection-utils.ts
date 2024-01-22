@@ -80,11 +80,12 @@ export async function deployNFTCollectionContract(
 /**
  * Returns smart contract ABI or bytecode based on NFT collection type
  * @param collectionType NFTCollectionType
+ * @param artifactType - Indicates whether to get contract ABI or bytecode
  */
 export async function getNftContractArtifact(
   context: ServiceContext,
   collectionType: NFTCollectionType,
-  dataType: 'abi' | 'bytecode' = 'abi',
+  artifactType: 'abi' | 'bytecode' = 'abi',
 ) {
   try {
     const latestTypeVersion = await new ContractVersion(
@@ -93,20 +94,24 @@ export async function getNftContractArtifact(
     ).getDefaultVersion(collectionType);
 
     // eslint-disable-next-line security/detect-non-literal-fs-filename
-    return fs.readFileSync(
+    const artifact = fs.readFileSync(
       path.join(
         __dirname,
-        `../contracts/${dataType}/${NFTCollectionType[
+        `../contracts/${artifactType}/${NFTCollectionType[
           collectionType
         ].toLowerCase()}`,
-        `/v${latestTypeVersion}`,
+        `/v${latestTypeVersion}.${artifactType === 'abi' ? 'json' : 'txt'}`,
       ),
       'utf8',
     );
+    if (!artifact) {
+      throw new Error(`Invalid ${artifactType} read`);
+    }
+    return artifact;
   } catch (err) {
     throw await new NftsCodeException({
       status: 500,
-      errorMessage: `Error getting NFT contract ${dataType} for type ${collectionType}: ${err}`,
+      errorMessage: `Error getting NFT contract ${artifactType} for type ${collectionType}: ${err}`,
       code: NftsErrorCode.GENERAL_SERVER_ERROR,
     }).writeToMonitor({
       context,
