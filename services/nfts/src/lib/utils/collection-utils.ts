@@ -1,6 +1,7 @@
 import {
   BlockchainMicroservice,
   CreateEvmTransactionDto,
+  LogType,
   NFTCollectionType,
   PoolConnection,
   SerializeFor,
@@ -18,13 +19,10 @@ import { Transaction } from '../../modules/transaction/models/transaction.model'
 import { TransactionService } from '../../modules/transaction/transaction.service';
 import { WalletService } from '../../modules/wallet/wallet.service';
 import { ethers, UnsignedTransaction } from 'ethers';
-import {
-  EvmNftABI,
-  EvmNftBytecode,
-  EvmNftNestableABI,
-  EvmNftNestableBytecode,
-} from '../contracts/deployed-nft-contract';
 import { NftsCodeException } from '../exceptions';
+import { ContractVersion } from '../../modules/nfts/models/contractVersion.model';
+import * as path from 'path';
+import * as fs from 'fs';
 
 export async function deployNFTCollectionContract(
   context: ServiceContext,
@@ -35,6 +33,7 @@ export async function deployNFTCollectionContract(
 
   // Create transaction request to be sent on blockchain
   const tx: UnsignedTransaction = await walletService.createDeployTransaction(
+    context,
     collection,
   );
 
@@ -79,37 +78,40 @@ export async function deployNFTCollectionContract(
 }
 
 /**
- * Returns smart contract ABI based on NFT collection type
+ * Returns smart contract ABI or bytecode based on NFT collection type
  * @param collectionType NFTCollectionType
  */
-export function getNftContractAbi(collectionType: NFTCollectionType) {
-  switch (collectionType) {
-    case NFTCollectionType.GENERIC:
-      return EvmNftABI;
-    case NFTCollectionType.NESTABLE:
-      return EvmNftNestableABI;
-    default:
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.GENERAL_SERVER_ERROR,
-      });
-  }
-}
+export async function getNftContractArtifact(
+  context: ServiceContext,
+  collectionType: NFTCollectionType,
+  dataType: 'abi' | 'bytecode' = 'abi',
+) {
+  try {
+    const latestTypeVersion = await new ContractVersion(
+      {},
+      context,
+    ).getDefaultVersion(collectionType);
 
-/**
- * Returns smart contract bytecode based on NFT collection type
- * @param collectionType NFTCollectionType
- */
-export function getNftContractBytecode(collectionType: NFTCollectionType) {
-  switch (collectionType) {
-    case NFTCollectionType.GENERIC:
-      return EvmNftBytecode;
-    case NFTCollectionType.NESTABLE:
-      return EvmNftNestableBytecode;
-    default:
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.GENERAL_SERVER_ERROR,
-      });
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    return fs.readFileSync(
+      path.join(
+        __dirname,
+        `../contracts/${dataType}/${NFTCollectionType[
+          collectionType
+        ].toLowerCase()}`,
+        `/v${latestTypeVersion}`,
+      ),
+      'utf8',
+    );
+  } catch (err) {
+    throw await new NftsCodeException({
+      status: 500,
+      errorMessage: `Error getting NFT contract ${dataType} for type ${collectionType}: ${err}`,
+      code: NftsErrorCode.GENERAL_SERVER_ERROR,
+    }).writeToMonitor({
+      context,
+      logType: LogType.ERROR,
+      data: { err, collectionType },
+    });
   }
 }

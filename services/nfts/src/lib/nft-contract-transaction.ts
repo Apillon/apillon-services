@@ -10,10 +10,8 @@ import { TransactionUtils } from './utils/transaction-utils';
 import { Collection } from '../modules/nfts/models/collection.model';
 import { NftsCodeException } from './exceptions';
 import { NftsErrorCode } from '../config/types';
-import {
-  getNftContractAbi,
-  getNftContractBytecode,
-} from './utils/collection-utils';
+import { getNftContractArtifact } from './utils/collection-utils';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class NftTransaction {
   /**
@@ -21,6 +19,7 @@ export class NftTransaction {
    * @returns UnsignedTransaction
    */
   static async createDeployContractTransaction(
+    context: ServiceContext,
     params: Collection,
   ): Promise<UnsignedTransaction> {
     console.log(
@@ -31,8 +30,17 @@ export class NftTransaction {
       }, parameters=${JSON.stringify(params)}`,
     );
 
-    const nftContractAbi = getNftContractAbi(params.collectionType);
-    const nftContractBytecode = getNftContractBytecode(params.collectionType);
+    const nftContractAbi = await getNftContractArtifact(
+      context,
+      params.collectionType,
+    );
+
+    const nftContractBytecode = await getNftContractArtifact(
+      context,
+      params.collectionType,
+      'bytecode',
+    );
+
     const nftContract = new ContractFactory(
       nftContractAbi,
       nftContractBytecode,
@@ -97,6 +105,7 @@ export class NftTransaction {
    * @returns UnsignedTransaction
    */
   static async createTransferOwnershipTransaction(
+    context: ServiceContext,
     chain: EvmChain,
     contractAddress: string,
     newOwner: string,
@@ -105,7 +114,10 @@ export class NftTransaction {
     console.log(
       `[${EvmChain[chain]}] Creating NFT transfer ownership (NFT contract address=${contractAddress}, collection type=${collectionType}) transaction to wallet address: ${newOwner}`,
     );
-    const nftContractAbi = getNftContractAbi(collectionType);
+    const nftContractAbi = await getNftContractArtifact(
+      context,
+      collectionType,
+    );
     const nftContract = new Contract(contractAddress, nftContractAbi);
 
     const txData: PopulatedTransaction =
@@ -126,6 +138,7 @@ export class NftTransaction {
    * @returns UnsignedTransaction
    */
   static async createSetNftBaseUriTransaction(
+    context: ServiceContext,
     chain: EvmChain,
     contractAddress: string,
     collectionType: NFTCollectionType,
@@ -135,7 +148,10 @@ export class NftTransaction {
       `[${EvmChain[chain]}] Creating NFT set base token URI transaction (contract=${contractAddress}, uri=${uri}, collection type=${collectionType}).`,
     );
 
-    const nftContractAbi = getNftContractAbi(collectionType);
+    const nftContractAbi = await getNftContractArtifact(
+      context,
+      collectionType,
+    );
     const nftContract: Contract = new Contract(contractAddress, nftContractAbi);
 
     const txData: PopulatedTransaction =
@@ -156,6 +172,7 @@ export class NftTransaction {
    * @returns UnsignedTransaction
    */
   static async createMintToTransaction(
+    context: ServiceContext,
     chain: EvmChain,
     contractAddress: string,
     collectionType: NFTCollectionType,
@@ -165,7 +182,10 @@ export class NftTransaction {
       `[${EvmChain[chain]}] Creating NFT (NFT contract=${contractAddress}) mint transaction (toAddress=${params.receivingAddress}, collection type=${collectionType}).`,
     );
 
-    const nftContractAbi = getNftContractAbi(collectionType);
+    const nftContractAbi = await getNftContractArtifact(
+      context,
+      collectionType,
+    );
     const nftContract: Contract = new Contract(contractAddress, nftContractAbi);
 
     const txData: PopulatedTransaction =
@@ -190,6 +210,7 @@ export class NftTransaction {
    * @returns UnsignedTransaction
    */
   static async createNestMintToTransaction(
+    context: ServiceContext,
     chain: EvmChain,
     parentCollectionAddress: string,
     parentNftId: number,
@@ -201,7 +222,10 @@ export class NftTransaction {
       `[${EvmChain[chain]}] Creating NFT (NFT contract=${childCollectionAddress}) nest mint transaction (toAddress=${parentCollectionAddress}, collection type=${childCollectionType}).`,
     );
 
-    const nftContractAbi = getNftContractAbi(childCollectionType);
+    const nftContractAbi = await getNftContractArtifact(
+      context,
+      childCollectionType,
+    );
     const nftContract: Contract = new Contract(
       childCollectionAddress,
       nftContractAbi,
@@ -229,6 +253,7 @@ export class NftTransaction {
    * @returns UnsignedTransaction
    */
   static async createBurnNftTransaction(
+    context: ServiceContext,
     chain: EvmChain,
     contractAddress: string,
     collectionType: NFTCollectionType,
@@ -238,7 +263,10 @@ export class NftTransaction {
       `[${EvmChain[chain]}] Creating NFT (NFT contract=${contractAddress}) burn NFT transaction (tokenId=${tokenId}, collection type=${collectionType}).`,
     );
 
-    const nftContractAbi = getNftContractAbi(collectionType);
+    const nftContractAbi = await getNftContractArtifact(
+      context,
+      collectionType,
+    );
     const nftContract: Contract = new Contract(contractAddress, nftContractAbi);
 
     const txData =

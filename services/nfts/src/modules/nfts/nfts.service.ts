@@ -360,6 +360,7 @@ export class NftsService {
     await NftsService.checkTransferConditions(body, context, collection);
 
     const tx = await walletService.createTransferOwnershipTransaction(
+      context,
       collection.contractAddress,
       body.address,
       collection.collectionType,
@@ -433,6 +434,7 @@ export class NftsService {
     );
 
     const tx = await walletService.createSetNftBaseUriTransaction(
+      context,
       collection.contractAddress,
       body.uri,
       collection.collectionType,
@@ -515,6 +517,7 @@ export class NftsService {
     );
 
     const tx = await walletService.createMintToTransaction(
+      context,
       collection.contractAddress,
       collection.collectionType,
       body,
@@ -617,6 +620,7 @@ export class NftsService {
     );
 
     const tx = await walletService.createNestMintToTransaction(
+      context,
       parentCollection.contractAddress,
       body.parentNftId,
       childCollection.contractAddress,
@@ -684,6 +688,7 @@ export class NftsService {
     await NftsService.checkCollection(collection, 'burnNftToken()', context);
 
     const tx = await walletService.createBurnNftTransaction(
+      context,
       collection.contractAddress,
       collection.collectionType,
       body.tokenId,
@@ -764,7 +769,10 @@ export class NftsService {
       return true;
     }
 
-    const minted = await walletService.getNumberOfMintedNfts(collection);
+    const minted = await walletService.getNumberOfMintedNfts(
+      context,
+      collection,
+    );
 
     if (minted + params.quantity > collection.maxSupply) {
       throw new NftsCodeException({
@@ -792,6 +800,7 @@ export class NftsService {
     walletService: WalletService,
   ) {
     const isChildNestable = await walletService.implementsRmrkInterface(
+      context,
       childCollection.collectionType,
       childCollection.contractAddress,
     );
@@ -808,7 +817,10 @@ export class NftsService {
       return true;
     }
 
-    const minted = await walletService.getNumberOfMintedNfts(childCollection);
+    const minted = await walletService.getNumberOfMintedNfts(
+      context,
+      childCollection,
+    );
 
     if (minted + params.quantity > childCollection.maxSupply) {
       throw new NftsCodeException({
