@@ -207,7 +207,7 @@ export class Transaction extends AdvancedSQLModel {
       `
         SELECT t.*
         FROM \`${this.tableName}\` as t
-               JOIN contract as c ON (c.id = t.contract_id)
+               JOIN ${DbTables.CONTRACT} as c ON (c.id = t.contract_id)
         WHERE t.status <> ${SqlModelStatus.DELETED}
           AND (@transactionStatus IS NULL OR
                t.transactionStatus = @transactionStatus)
@@ -245,7 +245,7 @@ export class Transaction extends AdvancedSQLModel {
                c.contractAddress AS contractAddress,
                c.data            AS contractData
         FROM \`${this.tableName}\` as t
-               JOIN contract as c ON (c.id = t.contract_id)
+               JOIN ${DbTables.CONTRACT} as c ON (c.id = t.contract_id)
         WHERE t.status <> ${SqlModelStatus.DELETED}
           AND t.transactionStatus = @transactionStatus
           AND JSON_EXTRACT(c.data, "$.clusterId") = @clusterId
@@ -302,11 +302,12 @@ export class Transaction extends AdvancedSQLModel {
         `,
       qFrom: `
         FROM \`${this.tableName}\` t
-        WHERE status <> ${SqlModelStatus.DELETED}
-        AND (@contract_id IS null OR t.contract_id = @contract_id)
+        JOIN ${DbTables.CONTRACT} AS c ON (c.id = t.contract_id)
+        WHERE t.status <> ${SqlModelStatus.DELETED}
+        AND (@contract_uuid IS null OR c.contract_uuid = @contract_uuid)
         AND (@transactionStatus IS null OR t.transactionStatus = @transactionStatus)
         AND (@transactionType IS null OR t.transactionType = @transactionType)
-        AND (@search IS null OR transactionHash LIKE CONCAT('%', @search, '%'))
+        AND (@search IS null OR t.transactionHash LIKE CONCAT('%', @search, '%'))
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}
