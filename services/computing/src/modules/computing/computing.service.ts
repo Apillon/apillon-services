@@ -4,6 +4,7 @@ import {
   ComputingContractType,
   ComputingTransactionQueryFilter,
   ContractQueryFilter,
+  CreateBucketDto,
   CreateContractDto,
   DepositToClusterDto,
   EncryptContentDto,
@@ -46,6 +47,39 @@ export class ComputingService {
   ) {
     console.log(`Creating computing contract: ${JSON.stringify(params.body)}`);
 
+    let bucket_uuid = params.body.bucket_uuid;
+    if (bucket_uuid) {
+      try {
+        await new StorageMicroservice(context).getBucket(bucket_uuid);
+      } catch (e) {
+        if (e.status === 404) {
+          throw await new ComputingCodeException({
+            status: 404,
+            code: ComputingErrorCode.BUCKET_NOT_FOUND,
+            context: context,
+            sourceFunction: 'createContract()',
+            errorMessage: `Bucket with UUID ${bucket_uuid} not found.`,
+          }).writeToMonitor({});
+        } else {
+          throw e;
+        }
+      }
+    } else {
+      console.log(
+        `Creating bucket for computing contract with name ${params.body.name}.`,
+      );
+      const bucket = (
+        await new StorageMicroservice(context).createBucket(
+          new CreateBucketDto().populate({
+            project_uuid: params.body.project_uuid,
+            bucketType: 3,
+            name: `${params.body.name} bucket`,
+          }),
+        )
+      ).data;
+      bucket_uuid = bucket.bucket_uuid;
+    }
+
     const ipfsCluster = (
       await new StorageMicroservice(context).getProjectIpfsCluster(
         params.body.project_uuid,
@@ -71,6 +105,7 @@ export class ComputingService {
 
     const contract = new Contract(params.body, context).populate({
       contract_uuid: uuidV4(),
+      bucket_uuid,
       status: SqlModelStatus.INCOMPLETE,
       contractAbi_id: contractAbi.id,
       data: {
