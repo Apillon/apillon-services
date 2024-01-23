@@ -145,7 +145,7 @@ export class CryptoPaymentsService {
         });
       }
 
-      if (payment.payment_status !== 'confirmed') {
+      if (payment.payment_status !== 'finished') {
         // Only add credits if payment is confirmed
         return;
       }
@@ -174,9 +174,11 @@ export class CryptoPaymentsService {
               price: payment.pay_amount,
               currency: payment.pay_currency?.toLocaleUpperCase(),
               invoiceNumber: invoice.invoice_uuid,
+              usdAmount: payment.price_amount,
             },
             attachmentTemplate: 'crypto-payment-invoice',
             attachmentFileName: `Invoice-${invoice.invoice_uuid}.pdf`,
+            bccEmail: env.NOWPAYMENTS_INVOICE_EMAIL,
           }),
         ),
         new Lmas().writeLog({

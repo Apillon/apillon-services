@@ -110,6 +110,7 @@ export async function SMTPsendTemplate(
     subject,
     html: template(templateData),
     attachments: emailData.attachments || [],
+    bcc: emailData.bccEmail,
   };
 
   return await SMTPsend(mail, context);
@@ -153,6 +154,7 @@ export async function SMTPsendDefaultTemplate(
     subject: templateData.subject,
     html: body(templateData),
     attachments: emailData.attachments || [],
+    bcc: emailData.bccEmail,
   };
 
   if (emailData.attachmentTemplate) {

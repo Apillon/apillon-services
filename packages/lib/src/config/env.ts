@@ -548,6 +548,7 @@ export interface IEnv {
   NOWPAYMENTS_API_KEY: string;
   IPN_CALLBACK_URL: string;
   IPN_SECRET_KEY: string;
+  NOWPAYMENTS_INVOICE_EMAIL: string;
 }
 
 // dotenv.config();
@@ -986,6 +987,7 @@ export let env: IEnv = {
   NOWPAYMENTS_API_KEY: process.env['NOWPAYMENTS_API_KEY'],
   IPN_CALLBACK_URL: process.env['IPN_CALLBACK_URL'],
   IPN_SECRET_KEY: process.env['IPN_SECRET_KEY'],
+  NOWPAYMENTS_INVOICE_EMAIL: process.env['NOWPAYMENTS_INVOICE_EMAIL'],
 };
 
 export let isEnvReady = false;
