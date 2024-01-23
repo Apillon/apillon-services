@@ -800,6 +800,15 @@ export class NftsService {
         sourceFunction: 'mintNftTo()',
       });
     }
+
+    if (params.idsToMint.length !== params.quantity) {
+      throw new NftsCodeException({
+        status: 422,
+        code: NftsErrorCode.MINT_IDS_LENGTH_NOT_VALID,
+        context,
+        sourceFunction: 'mintNftTo()',
+      });
+    }
   }
 
   private static async checkNestMintConditions(

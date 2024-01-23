@@ -737,6 +737,36 @@ describe('Apillon API NFTs tests', () => {
     });
   });
 
+  describe('NFT Collection versioning and ID mint tests', () => {
+    let collectionUuid;
+    test('Create collection with isAutoIncrement set to false', async () => {
+      const collection = await createTestNFTCollection(
+        testUser,
+        stage.nftsContext,
+        nestableProject,
+        SqlModelStatus.ACTIVE,
+        CollectionStatus.CREATED,
+        { collectionType: 1 },
+      );
+      expect(collection.isAutoIncrement).toBeFalsy();
+      expect(collection.contractVersion).toBeGreaterThanOrEqual(2); // Current default contract version from contract_version table
+
+      collectionUuid = collection.collection_uuid;
+    });
+
+    test('Mint an NFT with custom token IDs', async () => {
+      const response = await postRequest(
+        `/nfts/collections/${collectionUuid}/mint`,
+        {
+          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+          quantity: 2,
+          idsToMint: [5, 10],
+        },
+      );
+      expect(response.status).toBe(200);
+    });
+  });
+
   afterAll(async () => {
     await blockchain.stop();
     await releaseStage(stage);
