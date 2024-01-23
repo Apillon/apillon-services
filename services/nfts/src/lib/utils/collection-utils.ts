@@ -1,5 +1,6 @@
 import {
   BlockchainMicroservice,
+  ChainType,
   CreateEvmTransactionDto,
   LogType,
   NFTCollectionType,
@@ -86,6 +87,7 @@ export async function getNftContractArtifact(
   context: ServiceContext,
   collectionType: NFTCollectionType,
   artifactType: 'abi' | 'bytecode' = 'abi',
+  chainType: ChainType = ChainType.EVM,
 ) {
   try {
     const latestTypeVersion = await new ContractVersion(
@@ -93,14 +95,16 @@ export async function getNftContractArtifact(
       context,
     ).getDefaultVersion(collectionType);
 
+    const chainTypeFolder = ChainType[chainType].toLowerCase();
+    const collectionTypeFolder =
+      NFTCollectionType[collectionType].toLowerCase();
+    const artifactExtension = artifactType === 'abi' ? 'json' : 'txt';
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     const artifact = fs.readFileSync(
       path.join(
         __dirname,
-        `../contracts/${artifactType}/${NFTCollectionType[
-          collectionType
-        ].toLowerCase()}`,
-        `/v${latestTypeVersion}.${artifactType === 'abi' ? 'json' : 'txt'}`,
+        `../contracts/${chainTypeFolder}/${artifactType}/${collectionTypeFolder}`,
+        `/v${latestTypeVersion}.${artifactExtension}`,
       ),
       'utf8',
     );

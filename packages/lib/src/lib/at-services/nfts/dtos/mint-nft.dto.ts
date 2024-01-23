@@ -1,5 +1,5 @@
 import { prop } from '@rawmodel/core';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { arrayParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   ethAddressValidator,
   numberSizeValidator,
@@ -40,6 +40,15 @@ export class MintNftDTO extends ModelBase {
     ],
   })
   public quantity: number;
+
+  /**
+   * If minting custom token IDs - only when collection.isAutoIncrement=false
+   */
+  @prop({
+    parser: { resolver: arrayParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+  })
+  public idsToMint: number[];
 
   @prop({
     parser: { resolver: stringParser() },

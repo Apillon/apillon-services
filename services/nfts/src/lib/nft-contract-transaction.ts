@@ -57,7 +57,12 @@ export class NftTransaction {
           params.symbol,
           params.baseUri,
           params.baseExtension,
-          [params.drop, params.isSoulbound, params.isRevokable],
+          [
+            params.drop,
+            params.isSoulbound,
+            params.isRevokable,
+            params.isAutoIncrement,
+          ],
           TransactionUtils.convertBaseToGwei(params.dropPrice),
           params.dropStart,
           maxSupply,
@@ -72,7 +77,12 @@ export class NftTransaction {
           params.symbol,
           params.baseUri,
           params.baseExtension,
-          [params.drop, params.isSoulbound, params.isRevokable],
+          [
+            params.drop,
+            params.isSoulbound,
+            params.isRevokable,
+            params.isAutoIncrement,
+          ],
           params.dropStart,
           params.dropReserve,
           {
@@ -189,10 +199,12 @@ export class NftTransaction {
     const nftContract: Contract = new Contract(contractAddress, nftContractAbi);
 
     const txData: PopulatedTransaction =
-      await nftContract.populateTransaction.ownerMint(
+      await nftContract.populateTransaction.ownerMintIds(
         params.receivingAddress,
         params.quantity,
+        params.idsToMint,
       );
+
     return {
       to: contractAddress,
       data: txData.data,

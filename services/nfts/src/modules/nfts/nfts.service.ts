@@ -791,6 +791,15 @@ export class NftsService {
         sourceFunction: 'mintNftTo()',
       });
     }
+
+    if (!collection.isAutoIncrement && !params.idsToMint?.length) {
+      throw new NftsCodeException({
+        status: 422,
+        code: NftsErrorCode.MINT_IDS_NOT_PRESENT,
+        context,
+        sourceFunction: 'mintNftTo()',
+      });
+    }
   }
 
   private static async checkNestMintConditions(
