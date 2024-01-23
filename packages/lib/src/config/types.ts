@@ -229,10 +229,12 @@ export enum ComputingEventType {
   CREATE_CONTRACT = 'create-contract',
   LIST_CONTRACTS = 'list-contract',
   GET_CONTRACT_BY_UUID = 'get-contract-by-uuid',
+  LIST_TRANSACTIONS = 'list-transactions',
   DEPOSIT_TO_PHALA_CLUSTER = 'fund-contract-cluster',
   TRANSFER_CONTRACT_OWNERSHIP = 'transfer-contract-ownership',
   ENCRYPT_CONTENT = 'encrypt-content',
   ASSIGN_CID_TO_NFT = 'assign-cid-to-nft',
+  LIST_CLUSTER_WALLETS = 'list-cluster-wallets',
 }
 
 export enum ReferralEventType {

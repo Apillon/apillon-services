@@ -14,12 +14,15 @@ export async function processEvent(event: any, context: Context): Promise<any> {
     [ComputingEventType.LIST_CONTRACTS]: ComputingService.listContracts,
     [ComputingEventType.GET_CONTRACT_BY_UUID]:
       ComputingService.getContractByUuid,
+    [ComputingEventType.LIST_TRANSACTIONS]: ComputingService.listTransactions,
     [ComputingEventType.DEPOSIT_TO_PHALA_CLUSTER]:
       ComputingService.depositToPhalaCluster,
     [ComputingEventType.TRANSFER_CONTRACT_OWNERSHIP]:
       ComputingService.transferContractOwnership,
     [ComputingEventType.ENCRYPT_CONTENT]: ComputingService.encryptContent,
     [ComputingEventType.ASSIGN_CID_TO_NFT]: ComputingService.assignCidToNft,
+    [ComputingEventType.LIST_CLUSTER_WALLETS]:
+      ComputingService.listClusterWallets,
   };
 
   return await processors[event.eventName](event, context);
