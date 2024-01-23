@@ -222,7 +222,7 @@ export class ClusterWallet extends AdvancedSQLModel {
         SELECT ${selectFields}
         `,
       qFrom: `
-        FROM \`${this.tableName}\` cw
+        FROM \`${DbTables.CLUSTER_WALLET}\` cw
         WHERE @walletAddress = cw.walletAddress
       `,
       qFilter: `

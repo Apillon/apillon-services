@@ -72,7 +72,7 @@ export class ComputingService {
         await new StorageMicroservice(context).createBucket(
           new CreateBucketDto().populate({
             project_uuid: params.body.project_uuid,
-            bucketType: 3,
+            bucketType: 1,
             name: `${params.body.name} bucket`,
           }),
         )

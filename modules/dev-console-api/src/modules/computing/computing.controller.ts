@@ -66,16 +66,16 @@ export class ComputingController {
     return await this.computingService.getContract(context, uuid);
   }
 
-  @Get('contracts/:contract_uuid/transactions')
+  @Get('contracts/:uuid/transactions')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: ContractQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async listContractTransactions(
     @Ctx() context: DevConsoleApiContext,
-    @Param('contract_uuid') contract_uuid: number,
+    @Param('uuid') uuid: number,
     @Query() query: ComputingTransactionQueryFilter,
   ) {
-    query.contract_uuid = contract_uuid;
+    query.contract_uuid = uuid;
     return await this.computingService.listTransactions(context, query);
   }
 
