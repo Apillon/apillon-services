@@ -9,5 +9,5 @@ export class ComputingTransactionQueryFilter extends BaseProjectQueryFilter {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public contract_uuid: number;
+  public contract_uuid: string;
 }
