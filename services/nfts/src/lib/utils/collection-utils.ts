@@ -70,11 +70,15 @@ export async function deployNFTCollectionContract(
     conn,
   );
 
-  //Update collection status
+  // Update collection data
   collection.collectionStatus = CollectionStatus.DEPLOYING;
   collection.contractAddress = response.data.data;
   collection.deployerAddress = response.data.address;
   collection.transactionHash = response.data.transactionHash;
+  collection.contractVersion = await new ContractVersion(
+    {},
+    context,
+  ).getDefaultVersion(collection.collectionType);
   await collection.update(SerializeFor.UPDATE_DB, conn);
 }
 
