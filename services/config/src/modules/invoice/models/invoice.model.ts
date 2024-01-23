@@ -13,6 +13,7 @@ import {
 } from '@apillon/lib';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
+import { v4 as uuidV4 } from 'uuid';
 
 export class Invoice extends AdvancedSQLModel {
   public readonly tableName = DbTables.INVOICE;
@@ -36,6 +37,27 @@ export class Invoice extends AdvancedSQLModel {
     ],
   })
   public project_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ConfigErrorCode.INVOICE_UUID_NOT_PRESENT,
+      },
+    ],
+    fakeValue: () => uuidV4(),
+  })
+  public invoice_uuid: string;
 
   @prop({
     parser: { resolver: floatParser() },

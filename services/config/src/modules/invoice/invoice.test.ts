@@ -55,7 +55,7 @@ describe('Invoice unit tests', () => {
         },
       };
 
-      const result = await InvoiceService.handleStripeWebhookData(
+      const result = await InvoiceService.handlePaymentWebhookData(
         event,
         stage.context,
       );
@@ -92,7 +92,7 @@ describe('Invoice unit tests', () => {
         },
       };
 
-      const result = await InvoiceService.handleStripeWebhookData(
+      const result = await InvoiceService.handlePaymentWebhookData(
         event,
         stage.context,
       );

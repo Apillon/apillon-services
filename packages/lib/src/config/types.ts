@@ -714,6 +714,7 @@ export enum JwtTokenType {
   OAUTH_TOKEN = 'oauth-token',
   // Website review token
   WEBSITE_REVIEW_TOKEN = 'website-review',
+  CRYPTO_PAYMENT_DATA = 'crypto-payment-data',
 }
 
 /**
@@ -854,4 +855,6 @@ export enum EmailTemplate {
   RESTORE_CREDENTIAL = 'restore-credential',
   REVOKE_DID = 'revoke-did',
   DOWNLOAD_IDENTITY = 'download-identity',
+
+  CRYPTO_PAYMENT_SUCCESSFUL = 'crypto-payment-successful',
 }
