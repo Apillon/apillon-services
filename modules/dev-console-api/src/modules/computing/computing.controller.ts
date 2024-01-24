@@ -72,7 +72,7 @@ export class ComputingController {
   @UseGuards(ValidationGuard, AuthGuard)
   async listContractTransactions(
     @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') uuid: number,
+    @Param('uuid') uuid: string,
     @Query() query: ComputingTransactionQueryFilter,
   ) {
     query.contract_uuid = uuid;
