@@ -11,6 +11,8 @@ import {
   SerializeFor,
   SqlModelStatus,
   LogType,
+  runCachedFunction,
+  CacheKeyPrefix,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { NftsErrorCode, DbTables } from '../../../config/types';
@@ -115,23 +117,31 @@ export class ContractVersion extends AdvancedSQLModel {
     chainType: ChainType = ChainType.EVM,
   ): Promise<ContractVersion> {
     try {
-      const data = await this.getContext().mysql.paramExecute(
-        `
-        SELECT ${this.generateSelectFields()}
-        FROM \`${DbTables.CONTRACT_VERSION}\`
-        WHERE collectionType = @collectionType
-        AND chainType = @chainType
-        ${version_id ? 'AND id = @version' : ''}
-        AND status = ${SqlModelStatus.ACTIVE}
-        ${version_id ? '' : 'ORDER BY version DESC LIMIT 1'}
-        ;
-      `,
-        { collectionType, chainType },
+      const contractVersion = await runCachedFunction(
+        `${CacheKeyPrefix.CONTRACT_VERSION}:${[
+          collectionType,
+          version_id,
+          chainType,
+        ].join(':')}`,
+        async () => {
+          const data = await this.getContext().mysql.paramExecute(
+            `
+            SELECT ${this.generateSelectFields()}
+            FROM \`${DbTables.CONTRACT_VERSION}\`
+            WHERE collectionType = @collectionType
+            AND chainType = @chainType
+            ${version_id ? 'AND id = @version' : ''}
+            AND status = ${SqlModelStatus.ACTIVE}
+            ${version_id ? '' : 'ORDER BY version DESC LIMIT 1'}
+            ;
+        `,
+            { collectionType, chainType },
+          );
+          return data?.length
+            ? this.populate(data[0], PopulateFrom.DB)
+            : this.reset();
+        },
       );
-      const contractVersion = data?.length
-        ? this.populate(data[0], PopulateFrom.DB)
-        : this.reset();
-
       if (!contractVersion.exists()) {
         throw new Error(`Contract artifacts not found`);
       }

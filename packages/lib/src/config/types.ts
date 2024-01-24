@@ -755,15 +755,21 @@ export enum OauthLinkType {
 
 export enum CacheKeyPrefix {
   BUCKET_LIST = 'bucket-list',
+
+  AUTH_USER_DATA = 'auth-user-data',
+
   ADMIN_USER_LIST = 'admin-user-list',
   ADMIN_PROJECT_LIST = 'admin-project-list',
-  AUTH_USER_DATA = 'auth-user-data',
   ADMIN_BUCKET_LIST = 'admin-bucket-list',
   ADMIN_WEBSITE_LIST = 'admin-website-list',
   ADMIN_NFTS_COLLECTION_LIST = 'admin-nfts-collection-list',
   ADMIN_GENERAL_SEARCH = 'admin-general-search',
+
   SOCIAL_SPACE_LIST = 'social-space-list',
   SOCIAL_POST_LIST = 'social-post-list',
+
+  CONTRACT_VERSION = 'contract-version',
+  BLOCKCHAIN_ENDPOINT = 'blockchain-endpoint',
 }
 
 export enum CacheKeyTTL {
