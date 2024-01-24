@@ -33,7 +33,7 @@ export class NftTransaction {
     const { abi, bytecode } = await new ContractVersion(
       {},
       context,
-    ).geContractVersion(params.collectionType);
+    ).getContractVersion(params.collectionType);
 
     const nftContract = new ContractFactory(abi, bytecode);
 
@@ -116,7 +116,7 @@ export class NftTransaction {
       `[${EvmChain[chain]}] Creating NFT transfer ownership (NFT contract address=${contractAddress}, collection type=${collectionType}) transaction to wallet address: ${newOwner}`,
     );
 
-    const { abi } = await new ContractVersion({}, context).geContractVersion(
+    const { abi } = await new ContractVersion({}, context).getContractVersion(
       collectionType,
       contractVersion_id,
     );
@@ -150,7 +150,7 @@ export class NftTransaction {
       `[${EvmChain[chain]}] Creating NFT set base token URI transaction (contract=${contractAddress}, uri=${uri}, collection type=${collectionType}).`,
     );
 
-    const { abi } = await new ContractVersion({}, context).geContractVersion(
+    const { abi } = await new ContractVersion({}, context).getContractVersion(
       collectionType,
       contractVersion_id,
     );
@@ -185,7 +185,7 @@ export class NftTransaction {
       `[${EvmChain[chain]}] Creating NFT (NFT contract=${contractAddress}) mint transaction (toAddress=${params.receivingAddress}, collection type=${collectionType}).`,
     );
 
-    const { abi } = await new ContractVersion({}, context).geContractVersion(
+    const { abi } = await new ContractVersion({}, context).getContractVersion(
       collectionType,
       contractVersion_id,
     );
@@ -229,7 +229,7 @@ export class NftTransaction {
       `[${EvmChain[chain]}] Creating NFT (NFT contract=${contractAddress}) nest mint transaction (toAddress=${parentCollectionAddress}, collection type=${collectionType}).`,
     );
 
-    const { abi } = await new ContractVersion({}, context).geContractVersion(
+    const { abi } = await new ContractVersion({}, context).getContractVersion(
       collectionType,
       contractVersion_id,
     );
@@ -268,7 +268,7 @@ export class NftTransaction {
       `[${EvmChain[chain]}] Creating NFT (NFT contract=${contractAddress}) burn NFT transaction (tokenId=${tokenId}, collection type=${collectionType}).`,
     );
 
-    const { abi } = await new ContractVersion({}, context).geContractVersion(
+    const { abi } = await new ContractVersion({}, context).getContractVersion(
       collectionType,
       contractVersion_id,
     );

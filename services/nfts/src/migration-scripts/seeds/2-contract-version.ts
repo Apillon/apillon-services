@@ -1,16 +1,23 @@
-import { NFTCollectionType } from '@apillon/lib';
+import { ChainType, NFTCollectionType } from '@apillon/lib';
 import { DbTables } from '../../config/types';
 
 export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<Array<any>>,
 ): Promise<void> {
   await queryFn(
+    // ABI and bytecode will be manually inserted into DB
     `
-      INSERT INTO \`${DbTables.CONTRACT_VERSION}\` (\`status\`, \`collectionType\`, \`version\`)
+      INSERT INTO \`${DbTables.CONTRACT_VERSION}\` (\`id\`, \`status\`, \`collectionType\`, \`chainType\`, \`version\`, \`abi\`, \`bytecode\`)
       VALUES
-      (5, '${NFTCollectionType.GENERIC}', 2),
-      (5, '${NFTCollectionType.NESTABLE}', 1)
-      ;`,
+      (1, 5, ${NFTCollectionType.GENERIC}, ${ChainType.EVM}, 1, '{}', ''),
+      (2, 5, ${NFTCollectionType.GENERIC}, ${ChainType.EVM}, 2, '{}', ''),
+      (3, 5, ${NFTCollectionType.NESTABLE}, ${ChainType.EVM}, 1, '{}', '')
+      ;
+    `,
+  );
+
+  await queryFn(
+    `UPDATE \`${DbTables.COLLECTION}\` SET contractVersion_id = 1;`,
   );
 }
 
@@ -20,6 +27,6 @@ export async function downgrade(
   await queryFn(`
     DELETE
     FROM \`${DbTables.CONTRACT_VERSION}\`
-    WHERE (collectionType = '${NFTCollectionType.GENERIC}' AND version = 2) OR (collectionType = '${NFTCollectionType.NESTABLE}' AND version = 1);
+    WHERE id <=3;
   `);
 }

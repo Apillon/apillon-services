@@ -143,7 +143,7 @@ export class WalletService {
     await this.initializeProvider();
     const { contractAddress, collectionType, contractVersion_id } = collection;
 
-    const { abi } = await new ContractVersion({}, context).geContractVersion(
+    const { abi } = await new ContractVersion({}, context).getContractVersion(
       collectionType,
       contractVersion_id,
     );
@@ -174,7 +174,7 @@ export class WalletService {
     }
 
     await this.initializeProvider();
-    const { abi } = await new ContractVersion({}, context).geContractVersion(
+    const { abi } = await new ContractVersion({}, context).getContractVersion(
       collection.collectionType,
       collection.contractVersion_id,
     );
@@ -200,7 +200,7 @@ export class WalletService {
     await this.initializeProvider();
     const { contractAddress, collectionType, contractVersion_id } = collection;
 
-    const { abi } = await new ContractVersion({}, context).geContractVersion(
+    const { abi } = await new ContractVersion({}, context).getContractVersion(
       collectionType,
       contractVersion_id,
     );

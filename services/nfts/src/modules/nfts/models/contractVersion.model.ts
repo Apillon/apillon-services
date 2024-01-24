@@ -111,7 +111,7 @@ export class ContractVersion extends AdvancedSQLModel {
    * @returns Promise<{ version: string } & { [key in ContractArtifact]: string }>
    * @throws NftsCodeException - if contract artifact has not been found for given version
    */
-  public async geContractVersion(
+  public async getContractVersion(
     collectionType: NFTCollectionType,
     version_id: number = null,
     chainType: ChainType = ChainType.EVM,
