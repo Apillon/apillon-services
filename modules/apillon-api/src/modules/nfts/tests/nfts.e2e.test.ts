@@ -34,12 +34,11 @@ import {
   postRequestFactory,
 } from '@apillon/tests-lib/src/lib/helpers/requests';
 import { ethers } from 'ethers';
-import { EvmNftNestableABI } from '@apillon/nfts/src/lib/contracts/deployed-nft-contract';
 
 const TEST_COLLECTION_BASE_URI =
   'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/';
 
-const NESTABLE_NFT_INTERFACE = new ethers.utils.Interface(EvmNftNestableABI);
+let NESTABLE_NFT_INTERFACE;
 
 describe('Apillon API NFTs tests', () => {
   const CHAIN_ID = EvmChain.MOONBASE;
@@ -154,6 +153,16 @@ describe('Apillon API NFTs tests', () => {
         serviceType_id: AttachedServiceType.NFT,
       }),
     );
+
+    const data = await stage.nftsContext.mysql.paramExecute(`
+      SELECT abi
+      FROM \`contract_version\`
+      WHERE collectionType = 2
+      AND chainType = 1
+      AND status = ${SqlModelStatus.ACTIVE}
+      ORDER BY version DESC LIMIT 1
+    `);
+    NESTABLE_NFT_INTERFACE = new ethers.utils.Interface(data[0].abi);
   });
 
   describe('Moonbeam NFT Collection tests', () => {
@@ -749,7 +758,7 @@ describe('Apillon API NFTs tests', () => {
         { collectionType: 1 },
       );
       expect(collection.isAutoIncrement).toBeFalsy();
-      expect(collection.contractVersion).toBeGreaterThanOrEqual(2); // Current default contract version from contract_version table
+      expect(collection.contractVersion_id).toBeGreaterThanOrEqual(1); // Current default contract version from contract_version table
 
       collectionUuid = collection.collection_uuid;
     });
