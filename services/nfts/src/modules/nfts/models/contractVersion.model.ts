@@ -103,15 +103,15 @@ export class ContractVersion extends AdvancedSQLModel {
   /**
    * Returns contract artifact from latest version of contract
    * @param collectionType - NFT Collection type
-   * @param version - version of contract to get. If null, get latest version
+   * @param version_id - id of contract version to get. If null, get latest version
    * @param contractArtifact - Get ABI or get bytecode
    * @param chainType - chain type of NFT
    * @returns Promise<{ version: string } & { [key in ContractArtifact]: string }>
    * @throws NftsCodeException - if contract artifact has not been found for given version
    */
-  public async geContractVersionArtifacts(
+  public async geContractVersion(
     collectionType: NFTCollectionType,
-    version: number = null,
+    version_id: number = null,
     chainType: ChainType = ChainType.EVM,
   ): Promise<ContractVersion> {
     try {
@@ -121,9 +121,9 @@ export class ContractVersion extends AdvancedSQLModel {
         FROM \`${DbTables.CONTRACT_VERSION}\`
         WHERE collectionType = @collectionType
         AND chainType = @chainType
-        ${version ? 'AND version = @version' : ''}
+        ${version_id ? 'AND id = @version' : ''}
         AND status = ${SqlModelStatus.ACTIVE}
-        ${version ? '' : 'ORDER BY version DESC LIMIT 1'}
+        ${version_id ? '' : 'ORDER BY version DESC LIMIT 1'}
         ;
       `,
         { collectionType, chainType },
@@ -139,12 +139,12 @@ export class ContractVersion extends AdvancedSQLModel {
     } catch (err) {
       throw await new NftsCodeException({
         status: 500,
-        errorMessage: `Error getting NFT contract artifacts for type ${collectionType} and version ${version}`,
+        errorMessage: `Error getting NFT contract artifacts for type ${collectionType} and version ${version_id}`,
         code: NftsErrorCode.GENERAL_SERVER_ERROR,
       }).writeToMonitor({
         context: this.getContext(),
         logType: LogType.ERROR,
-        data: { err, collectionType, chainType, version },
+        data: { err, collectionType, chainType, version: version_id },
       });
     }
   }

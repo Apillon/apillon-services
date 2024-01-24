@@ -361,9 +361,8 @@ export class NftsService {
 
     const tx = await walletService.createTransferOwnershipTransaction(
       context,
-      collection.contractAddress,
+      collection,
       body.address,
-      collection.collectionType,
     );
 
     const product_id = {
@@ -435,9 +434,8 @@ export class NftsService {
 
     const tx = await walletService.createSetNftBaseUriTransaction(
       context,
-      collection.contractAddress,
+      collection,
       body.uri,
-      collection.collectionType,
     );
 
     const product_id = {
@@ -518,8 +516,7 @@ export class NftsService {
 
     const tx = await walletService.createMintToTransaction(
       context,
-      collection.contractAddress,
-      collection.collectionType,
+      collection,
       body,
     );
 
@@ -623,8 +620,7 @@ export class NftsService {
       context,
       parentCollection.contractAddress,
       body.parentNftId,
-      childCollection.contractAddress,
-      childCollection.collectionType,
+      childCollection,
       body.quantity,
     );
 
@@ -689,8 +685,7 @@ export class NftsService {
 
     const tx = await walletService.createBurnNftTransaction(
       context,
-      collection.contractAddress,
-      collection.collectionType,
+      collection,
       body.tokenId,
     );
 
@@ -819,8 +814,7 @@ export class NftsService {
   ) {
     const isChildNestable = await walletService.implementsRmrkInterface(
       context,
-      childCollection.collectionType,
-      childCollection.contractAddress,
+      childCollection,
     );
     if (!isChildNestable) {
       throw new NftsCodeException({

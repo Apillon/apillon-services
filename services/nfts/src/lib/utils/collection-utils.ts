@@ -68,10 +68,10 @@ export async function deployNFTCollectionContract(
   collection.contractAddress = response.data.data;
   collection.deployerAddress = response.data.address;
   collection.transactionHash = response.data.transactionHash;
-  const { id } = await new ContractVersion(
-    {},
-    context,
-  ).geContractVersionArtifacts(collection.collectionType);
+  const { id } = await new ContractVersion({}, context).geContractVersion(
+    collection.collectionType,
+  );
   collection.contractVersion_id = id;
+
   await collection.update(SerializeFor.UPDATE_DB, conn);
 }
