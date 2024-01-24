@@ -1,6 +1,7 @@
 import {
   Ams,
   CacheKeyPrefix,
+  CacheKeyTTL,
   CodeException,
   Context,
   UnauthorizedErrorCodes,
@@ -20,6 +21,7 @@ export class ApillonApiContext extends Context {
           apiKey,
           apiKeySecret,
         }),
+      CacheKeyTTL.EXTRA_LONG,
     );
 
     if (apiKeyData?.data.id) {

@@ -9,6 +9,7 @@ import {
   SqlModelStatus,
   runCachedFunction,
   CacheKeyPrefix,
+  CacheKeyTTL,
 } from '@apillon/lib';
 import { Chain, DbTables } from '../../config/types';
 
@@ -90,27 +91,27 @@ export class Endpoint extends AdvancedSQLModel {
     chain: Chain,
     type: ChainType,
     priority: number = null,
-  ): Promise<this> {
+  ): Promise<Endpoint> {
     if (!chain) {
       throw new Error('chain should not be null');
     }
 
-    return await runCachedFunction(
+    const data = await runCachedFunction(
       `${CacheKeyPrefix.BLOCKCHAIN_ENDPOINT}:${[chain, type, priority].join(
         ':',
       )}`,
       async () => {
         const data = await this.getContext().mysql.paramExecute(
           `
-      SELECT *
-      FROM \`${DbTables.ENDPOINT}\`
-      WHERE
-      chainType = @type
-      AND chain = @chain
-      AND status <> ${SqlModelStatus.DELETED}
-      AND (@priority IS NULL OR @priority = priority)
-      LIMIT 1;
-      `,
+            SELECT *
+            FROM \`${DbTables.ENDPOINT}\`
+            WHERE
+            chainType = @type
+            AND chain = @chain
+            AND status <> ${SqlModelStatus.DELETED}
+            AND (@priority IS NULL OR @priority = priority)
+            LIMIT 1;
+          `,
           { chain, type, priority },
         );
 
@@ -118,6 +119,8 @@ export class Endpoint extends AdvancedSQLModel {
           ? this.populate(data[0], PopulateFrom.DB)
           : this.reset();
       },
+      CacheKeyTTL.EXTRA_LONG,
     );
+    return new Endpoint(data, this.getContext());
   }
 }

@@ -47,6 +47,7 @@ export class MintNftDTO extends ModelBase {
   @prop({
     parser: { resolver: arrayParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    defaultValue: [],
   })
   public idsToMint: number[];
 

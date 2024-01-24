@@ -13,6 +13,7 @@ import {
   LogType,
   runCachedFunction,
   CacheKeyPrefix,
+  CacheKeyTTL,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { NftsErrorCode, DbTables } from '../../../config/types';
@@ -23,11 +24,7 @@ export class ContractVersion extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.SELECT_DB,
-      SerializeFor.UPDATE_DB,
-    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.SELECT_DB],
     validators: [
       {
         resolver: presenceValidator(),
@@ -46,11 +43,7 @@ export class ContractVersion extends AdvancedSQLModel {
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
 
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.SELECT_DB,
-      SerializeFor.UPDATE_DB,
-    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.SELECT_DB],
     validators: [
       {
         resolver: presenceValidator(),
@@ -68,11 +61,7 @@ export class ContractVersion extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.SELECT_DB,
-      SerializeFor.UPDATE_DB,
-    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.SELECT_DB],
     validators: [
       {
         resolver: presenceValidator(),
@@ -117,7 +106,7 @@ export class ContractVersion extends AdvancedSQLModel {
     chainType: ChainType = ChainType.EVM,
   ): Promise<ContractVersion> {
     try {
-      const contractVersion = await runCachedFunction(
+      const data = await runCachedFunction(
         `${CacheKeyPrefix.CONTRACT_VERSION}:${[
           collectionType,
           version_id,
@@ -130,18 +119,20 @@ export class ContractVersion extends AdvancedSQLModel {
             FROM \`${DbTables.CONTRACT_VERSION}\`
             WHERE collectionType = @collectionType
             AND chainType = @chainType
-            ${version_id ? 'AND id = @version' : ''}
+            ${version_id ? 'AND id = @version_id' : ''}
             AND status = ${SqlModelStatus.ACTIVE}
             ${version_id ? '' : 'ORDER BY version DESC LIMIT 1'}
             ;
         `,
-            { collectionType, chainType },
+            { collectionType, chainType, version_id },
           );
           return data?.length
             ? this.populate(data[0], PopulateFrom.DB)
             : this.reset();
         },
+        CacheKeyTTL.EXTRA_LONG,
       );
+      const contractVersion = new ContractVersion(data, this.getContext());
       if (!contractVersion.exists()) {
         throw new Error(`Contract artifacts not found`);
       }

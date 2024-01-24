@@ -495,6 +495,7 @@ export class NftsService {
     { body }: { body: MintNftDTO },
     context: ServiceContext,
   ) {
+    body.idsToMint ||= [];
     console.log(
       `Minting NFT Collection to wallet address: ${body.receivingAddress}`,
     );
@@ -787,16 +788,10 @@ export class NftsService {
       });
     }
 
-    if (!collection.isAutoIncrement && !params.idsToMint?.length) {
-      throw new NftsCodeException({
-        status: 422,
-        code: NftsErrorCode.MINT_IDS_NOT_PRESENT,
-        context,
-        sourceFunction: 'mintNftTo()',
-      });
-    }
-
-    if (params.idsToMint.length !== params.quantity) {
+    if (
+      !collection.isAutoIncrement &&
+      params.idsToMint?.length !== params.quantity
+    ) {
       throw new NftsCodeException({
         status: 422,
         code: NftsErrorCode.MINT_IDS_LENGTH_NOT_VALID,
