@@ -1,3 +1,4 @@
+import { ContractVersion } from './../nfts/models/contractVersion.model';
 import {
   BlockchainMicroservice,
   ChainType,
@@ -12,7 +13,6 @@ import { NftTransaction } from '../../lib/nft-contract-transaction';
 import { Collection } from '../nfts/models/collection.model';
 import { CollectionStatus } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
-import { getNftContractArtifact } from '../../lib/utils/collection-utils';
 
 export class WalletService {
   private readonly evmChain: EvmChain;
@@ -157,9 +157,14 @@ export class WalletService {
     contractAddress: string,
   ) {
     await this.initializeProvider();
+    const { abi } = await new ContractVersion(
+      {},
+      context,
+    ).geContractVersionArtifacts(collectionType);
+
     const nftContract: Contract = new Contract(
       contractAddress,
-      await getNftContractArtifact(context, collectionType),
+      abi,
       this.provider,
     );
     return await nftContract.owner();
@@ -183,9 +188,14 @@ export class WalletService {
     }
 
     await this.initializeProvider();
+    const { abi } = await new ContractVersion(
+      {},
+      context,
+    ).geContractVersionArtifacts(collection.collectionType);
+
     const nftContract: Contract = new Contract(
       collection.contractAddress,
-      await getNftContractArtifact(context, collection.collectionType),
+      abi,
       this.provider,
     );
     const totalSupply = await nftContract.totalSupply();
@@ -204,7 +214,11 @@ export class WalletService {
   ): Promise<boolean> {
     await this.initializeProvider();
 
-    const abi = await getNftContractArtifact(context, collectionType);
+    const { abi } = await new ContractVersion(
+      {},
+      context,
+    ).geContractVersionArtifacts(collectionType);
+
     const nftContract: Contract = new Contract(
       contractAddress,
       abi,

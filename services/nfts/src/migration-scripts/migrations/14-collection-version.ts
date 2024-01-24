@@ -6,7 +6,12 @@ export async function upgrade(
   await queryFn(`
     ALTER TABLE \`${DbTables.COLLECTION}\`
     ADD COLUMN \`isAutoIncrement\` BOOLEAN NOT NULL DEFAULT true,
-    ADD COLUMN \`contractVersion\` INT NOT NULL DEFAULT 1;
+    ADD COLUMN \`contractVersion_id\` INT NULL,
+    ADD CONSTRAINT \`fk_collection_contract_version\`
+        FOREIGN KEY (\`contractVersion_id\`)
+        REFERENCES \`contract_version\` (\`id\`)
+        ON DELETE CASCADE
+        ON UPDATE NO ACTION;
   `);
 }
 
@@ -16,6 +21,7 @@ export async function downgrade(
   await queryFn(`
     ALTER TABLE \`${DbTables.COLLECTION}\`
     DROP COLUMN \`isAutoIncrement\`,
+    DROP FOREIGN KEY \`fk_collection_contract_version\`,
     DROP COLUMN \`contractVersion\`;
   `);
 }

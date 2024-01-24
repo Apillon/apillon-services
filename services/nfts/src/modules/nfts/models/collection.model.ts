@@ -612,23 +612,16 @@ export class Collection extends ProjectAccessModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
   })
-  public contractVersion: number;
+  public contractVersion_id: number;
 
   /***************************************************
    * Info properties

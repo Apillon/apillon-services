@@ -1,9 +1,6 @@
 import {
   BlockchainMicroservice,
-  ChainType,
   CreateEvmTransactionDto,
-  LogType,
-  NFTCollectionType,
   PoolConnection,
   SerializeFor,
   TransactionStatus,
@@ -11,7 +8,6 @@ import {
 import {
   CollectionStatus,
   DbTables,
-  NftsErrorCode,
   TransactionType,
 } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -20,10 +16,7 @@ import { Transaction } from '../../modules/transaction/models/transaction.model'
 import { TransactionService } from '../../modules/transaction/transaction.service';
 import { WalletService } from '../../modules/wallet/wallet.service';
 import { ethers, UnsignedTransaction } from 'ethers';
-import { NftsCodeException } from '../exceptions';
 import { ContractVersion } from '../../modules/nfts/models/contractVersion.model';
-import * as path from 'path';
-import * as fs from 'fs';
 
 export async function deployNFTCollectionContract(
   context: ServiceContext,
@@ -75,56 +68,10 @@ export async function deployNFTCollectionContract(
   collection.contractAddress = response.data.data;
   collection.deployerAddress = response.data.address;
   collection.transactionHash = response.data.transactionHash;
-  collection.contractVersion = await new ContractVersion(
+  const { id } = await new ContractVersion(
     {},
     context,
-  ).getDefaultVersion(collection.collectionType);
+  ).geContractVersionArtifacts(collection.collectionType);
+  collection.contractVersion_id = id;
   await collection.update(SerializeFor.UPDATE_DB, conn);
-}
-
-/**
- * Returns smart contract ABI or bytecode based on NFT collection type
- * @param collectionType NFTCollectionType
- * @param artifactType - Indicates whether to get contract ABI or bytecode
- */
-export async function getNftContractArtifact(
-  context: ServiceContext,
-  collectionType: NFTCollectionType,
-  artifactType: 'abi' | 'bytecode' = 'abi',
-  chainType: ChainType = ChainType.EVM,
-) {
-  try {
-    const latestTypeVersion = await new ContractVersion(
-      {},
-      context,
-    ).getDefaultVersion(collectionType);
-
-    const chainTypeFolder = ChainType[chainType].toLowerCase();
-    const collectionTypeFolder =
-      NFTCollectionType[collectionType].toLowerCase();
-    const artifactExtension = artifactType === 'abi' ? 'json' : 'txt';
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
-    const artifact = fs.readFileSync(
-      path.join(
-        __dirname,
-        `../contracts/${chainTypeFolder}/${artifactType}/${collectionTypeFolder}`,
-        `/v${latestTypeVersion}.${artifactExtension}`,
-      ),
-      'utf8',
-    );
-    if (!artifact) {
-      throw new Error(`Invalid ${artifactType} read`);
-    }
-    return artifact;
-  } catch (err) {
-    throw await new NftsCodeException({
-      status: 500,
-      errorMessage: `Error getting NFT contract ${artifactType} for type ${collectionType}: ${err}`,
-      code: NftsErrorCode.GENERAL_SERVER_ERROR,
-    }).writeToMonitor({
-      context,
-      logType: LogType.ERROR,
-      data: { err, collectionType },
-    });
-  }
 }

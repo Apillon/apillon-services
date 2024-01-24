@@ -10,15 +10,18 @@ export async function upgrade(
         \`status\` INT NULL,
 
         \`collectionType\` INT NOT NULL,
+        \`chainType\` INT NOT NULL,
         \`version\` INT NOT NULL,
+        \`abi\` JSON NOT NULL,
+        \`bytecode\` TEXT NOT NULL,
 
         \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
         \`createUser\` INT NULL,
-        \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
+        \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         \`updateUser\` INT NULL,
+
         PRIMARY KEY (\`id\`),
-        UNIQUE KEY \`contract_version_unique_key\` (\`collectionType\`,\`version\`)
+        UNIQUE KEY \`contract_version_unique_key\` (\`collectionType\`, \`chainType\`, \`version\`)
       );`,
   );
 }
