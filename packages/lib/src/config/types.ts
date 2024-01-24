@@ -229,10 +229,12 @@ export enum ComputingEventType {
   CREATE_CONTRACT = 'create-contract',
   LIST_CONTRACTS = 'list-contract',
   GET_CONTRACT_BY_UUID = 'get-contract-by-uuid',
+  LIST_TRANSACTIONS = 'list-transactions',
   DEPOSIT_TO_PHALA_CLUSTER = 'fund-contract-cluster',
   TRANSFER_CONTRACT_OWNERSHIP = 'transfer-contract-ownership',
   ENCRYPT_CONTENT = 'encrypt-content',
   ASSIGN_CID_TO_NFT = 'assign-cid-to-nft',
+  LIST_CLUSTER_WALLETS = 'list-cluster-wallets',
 }
 
 export enum ReferralEventType {
@@ -712,6 +714,7 @@ export enum JwtTokenType {
   OAUTH_TOKEN = 'oauth-token',
   // Website review token
   WEBSITE_REVIEW_TOKEN = 'website-review',
+  CRYPTO_PAYMENT_DATA = 'crypto-payment-data',
 }
 
 /**
@@ -852,4 +855,6 @@ export enum EmailTemplate {
   RESTORE_CREDENTIAL = 'restore-credential',
   REVOKE_DID = 'revoke-did',
   DOWNLOAD_IDENTITY = 'download-identity',
+
+  CRYPTO_PAYMENT_SUCCESSFUL = 'crypto-payment-successful',
 }

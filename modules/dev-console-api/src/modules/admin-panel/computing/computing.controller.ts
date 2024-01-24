@@ -1,5 +1,18 @@
-import { DefaultUserRole, DepositToClusterDto } from '@apillon/lib';
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {
+  ClusterWalletQueryFilter,
+  DefaultUserRole,
+  DepositToClusterDto,
+  ValidateFor,
+} from '@apillon/lib';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { AuthGuard } from '../../../guards/auth.guard';
 import { DevConsoleApiContext } from '../../../context';
@@ -20,5 +33,18 @@ export class ComputingController {
     @Body() body: DepositToClusterDto,
   ) {
     return await this.computingService.depositToPhalaCluster(context, body);
+  }
+
+  @Get('phala/wallets/:walletAddress/clusters')
+  @Permissions({ role: DefaultUserRole.ADMIN })
+  @Validation({ dto: ClusterWalletQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard)
+  async listClusterWallets(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('walletAddress') walletAddress: string,
+    @Query() query: ClusterWalletQueryFilter,
+  ) {
+    query.walletAddress = walletAddress;
+    return await this.computingService.listClusterWallets(context, query);
   }
 }

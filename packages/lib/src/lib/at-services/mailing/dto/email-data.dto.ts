@@ -48,4 +48,26 @@ export class EmailDataDto extends ModelBase {
   })
   // typeof nodemailer/lib/mailer.Attachment
   public attachments: any[];
+
+  /**
+   * If an attachment needs to be generated from an HTML template,
+   * populate this property with the name of the template.
+   */
+  @prop({
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public attachmentTemplate: string;
+
+  @prop({
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public attachmentFileName: string;
+
+  @prop({
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public bccEmail: string;
 }

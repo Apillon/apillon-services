@@ -15,7 +15,7 @@ import { generateTemplateData } from './template-data';
 import * as handlebars from 'handlebars';
 import { MailCodeException } from '../lib/exceptions';
 import { MailErrorCode } from '../config/types';
-
+import { generatePdf } from 'html-pdf-node';
 /**
  * Send email via SMTP server
  * @param {MailOptions} mail
@@ -105,13 +105,12 @@ export async function SMTPsendTemplate(
   };
 
   const mail = {
-    from: `${senderName ? senderName : env.SMTP_NAME_FROM} <${
-      env.SMTP_EMAIL_FROM
-    }>`,
+    from: `${senderName || env.SMTP_NAME_FROM}>`,
     to: mailAddresses.join(';'),
     subject,
     html: template(templateData),
     attachments: emailData.attachments || [],
+    bcc: emailData.bccEmail,
   };
 
   return await SMTPsend(mail, context);
@@ -150,14 +149,24 @@ export async function SMTPsendDefaultTemplate(
   };
 
   const mail = {
-    from: `${senderName ? senderName : env.SMTP_NAME_FROM} <${
-      env.SMTP_EMAIL_FROM
-    }>`,
+    from: `${senderName || env.SMTP_NAME_FROM} <${env.SMTP_EMAIL_FROM}>`,
     to: mailAddresses.join(';'),
     subject: templateData.subject,
     html: body(templateData),
     attachments: emailData.attachments || [],
+    bcc: emailData.bccEmail,
   };
+
+  if (emailData.attachmentTemplate) {
+    const attachmentTemplate = MailTemplates.getTemplate(
+      emailData.attachmentTemplate,
+    )(templateData);
+
+    mail.attachments.push({
+      filename: emailData.attachmentFileName,
+      content: await generatePdf({ content: attachmentTemplate }, {}),
+    });
+  }
 
   return await SMTPsend(mail, context);
 }

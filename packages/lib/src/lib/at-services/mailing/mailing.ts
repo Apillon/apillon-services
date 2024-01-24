@@ -18,7 +18,7 @@ export class Mailing extends BaseService {
       : env.MAIL_SOCKET_PORT;
   serviceName = 'MAIL';
 
-  constructor(context: Context) {
+  constructor(context?: Context) {
     super(context);
     this.isDefaultAsync = true;
   }
