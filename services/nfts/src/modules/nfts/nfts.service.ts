@@ -360,9 +360,9 @@ export class NftsService {
     await NftsService.checkTransferConditions(body, context, collection);
 
     const tx = await walletService.createTransferOwnershipTransaction(
-      collection.contractAddress,
+      context,
+      collection,
       body.address,
-      collection.collectionType,
     );
 
     const product_id = {
@@ -433,9 +433,9 @@ export class NftsService {
     );
 
     const tx = await walletService.createSetNftBaseUriTransaction(
-      collection.contractAddress,
+      context,
+      collection,
       body.uri,
-      collection.collectionType,
     );
 
     const product_id = {
@@ -495,6 +495,7 @@ export class NftsService {
     { body }: { body: MintNftDTO },
     context: ServiceContext,
   ) {
+    body.idsToMint ||= [];
     console.log(
       `Minting NFT Collection to wallet address: ${body.receivingAddress}`,
     );
@@ -515,8 +516,8 @@ export class NftsService {
     );
 
     const tx = await walletService.createMintToTransaction(
-      collection.contractAddress,
-      collection.collectionType,
+      context,
+      collection,
       body,
     );
 
@@ -617,10 +618,10 @@ export class NftsService {
     );
 
     const tx = await walletService.createNestMintToTransaction(
+      context,
       parentCollection.contractAddress,
       body.parentNftId,
-      childCollection.contractAddress,
-      childCollection.collectionType,
+      childCollection,
       body.quantity,
     );
 
@@ -684,8 +685,8 @@ export class NftsService {
     await NftsService.checkCollection(collection, 'burnNftToken()', context);
 
     const tx = await walletService.createBurnNftTransaction(
-      collection.contractAddress,
-      collection.collectionType,
+      context,
+      collection,
       body.tokenId,
     );
 
@@ -764,7 +765,10 @@ export class NftsService {
       return true;
     }
 
-    const minted = await walletService.getNumberOfMintedNfts(collection);
+    const minted = await walletService.getNumberOfMintedNfts(
+      context,
+      collection,
+    );
 
     if (minted + params.quantity > collection.maxSupply) {
       throw new NftsCodeException({
@@ -783,6 +787,18 @@ export class NftsService {
         sourceFunction: 'mintNftTo()',
       });
     }
+
+    if (
+      !collection.isAutoIncrement &&
+      params.idsToMint?.length !== params.quantity
+    ) {
+      throw new NftsCodeException({
+        status: 422,
+        code: NftsErrorCode.MINT_IDS_LENGTH_NOT_VALID,
+        context,
+        sourceFunction: 'mintNftTo()',
+      });
+    }
   }
 
   private static async checkNestMintConditions(
@@ -792,8 +808,8 @@ export class NftsService {
     walletService: WalletService,
   ) {
     const isChildNestable = await walletService.implementsRmrkInterface(
-      childCollection.collectionType,
-      childCollection.contractAddress,
+      context,
+      childCollection,
     );
     if (!isChildNestable) {
       throw new NftsCodeException({
@@ -808,7 +824,10 @@ export class NftsService {
       return true;
     }
 
-    const minted = await walletService.getNumberOfMintedNfts(childCollection);
+    const minted = await walletService.getNumberOfMintedNfts(
+      context,
+      childCollection,
+    );
 
     if (minted + params.quantity > childCollection.maxSupply) {
       throw new NftsCodeException({

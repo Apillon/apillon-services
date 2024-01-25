@@ -67,6 +67,10 @@ Environment variables that has to be set:
   NFTS_AWS_WORKER_LAMBDA_NAME: string;
 ```
 
+## NFT Collection Contract versioning
+The underlying smart contracts for the NFT Collections are versioned such that if there are ever new breaking changes introduces to the smart contract, it will not break the functionality of previously created collections.
+For each collection type and corresponding chain type, there is an entry in the `contract_version` table which contains all the versions for that collection and chain type. By default, when creating a new collection, the highest version is considered. For example: If the record for collectionType=1 (generic) has value version=3, the collection will use the ABI and bytecode from that contract_version record for deployment and all other actions.
+
 ## Deployment
 
 Please read [Deployment](../../docs/deployment.md) documentation.

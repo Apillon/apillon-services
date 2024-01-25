@@ -1,18 +1,17 @@
+import { ContractVersion } from './../nfts/models/contractVersion.model';
 import {
   BlockchainMicroservice,
   ChainType,
   Context,
   EvmChain,
   MintNftDTO,
-  NFTCollectionType,
 } from '@apillon/lib';
 import { TransactionReceipt } from '@ethersproject/providers';
 import { Contract, ethers, UnsignedTransaction } from 'ethers';
-import { EvmNftABI } from '../../lib/contracts/deployed-nft-contract';
 import { NftTransaction } from '../../lib/nft-contract-transaction';
 import { Collection } from '../nfts/models/collection.model';
 import { CollectionStatus } from '../../config/types';
-import { getNftContractAbi } from '../../lib/utils/collection-utils';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class WalletService {
   private readonly evmChain: EvmChain;
@@ -43,82 +42,86 @@ export class WalletService {
   }
 
   async createDeployTransaction(
+    context: ServiceContext,
     params: Collection,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
-    return await NftTransaction.createDeployContractTransaction(params);
+    return await NftTransaction.createDeployContractTransaction(
+      context,
+      params,
+    );
   }
 
   async createTransferOwnershipTransaction(
-    contract: string,
+    context: ServiceContext,
+    collection: Collection,
     newOwner: string,
-    collectionType: NFTCollectionType,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createTransferOwnershipTransaction(
+      context,
       this.evmChain,
-      contract,
+      collection,
       newOwner,
-      collectionType,
     );
   }
 
   async createSetNftBaseUriTransaction(
-    contract: string,
+    context: ServiceContext,
+    collection: Collection,
     uri: string,
-    collectionType: NFTCollectionType,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createSetNftBaseUriTransaction(
+      context,
       this.evmChain,
-      contract,
-      collectionType,
+      collection,
       uri,
     );
   }
 
   async createMintToTransaction(
-    contract: string,
-    collectionType: NFTCollectionType,
+    context: ServiceContext,
+    collection: Collection,
     params: MintNftDTO,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createMintToTransaction(
+      context,
       this.evmChain,
-      contract,
-      collectionType,
+      collection,
       params,
     );
   }
 
   async createNestMintToTransaction(
+    context: ServiceContext,
     parentCollectionAddress: string,
     parentNftId: number,
-    childCollectionAddress: string,
-    childCollectionType: NFTCollectionType,
+    childCollection: Collection,
     quantity: number,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createNestMintToTransaction(
+      context,
       this.evmChain,
       parentCollectionAddress,
       parentNftId,
-      childCollectionAddress,
-      childCollectionType,
+      childCollection,
       quantity,
     );
   }
 
   async createBurnNftTransaction(
-    contract: string,
-    collectionType: NFTCollectionType,
+    context: ServiceContext,
+    collection: Collection,
     tokenId: number,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createBurnNftTransaction(
+      context,
       this.evmChain,
-      contract,
-      collectionType,
+      collection,
       tokenId,
     );
   }
@@ -136,11 +139,18 @@ export class WalletService {
     return false;
   }
 
-  async getContractOwner(contractAddress: string) {
+  async getContractOwner(context: ServiceContext, collection: Collection) {
     await this.initializeProvider();
+    const { contractAddress, collectionType, contractVersion_id } = collection;
+
+    const abi = await new ContractVersion({}, context).getContractAbi(
+      collectionType,
+      contractVersion_id,
+    );
+
     const nftContract: Contract = new Contract(
       contractAddress,
-      EvmNftABI,
+      abi,
       this.provider,
     );
     return await nftContract.owner();
@@ -151,7 +161,10 @@ export class WalletService {
    * @param collection
    * @returns
    */
-  async getNumberOfMintedNfts(collection: Collection): Promise<number> {
+  async getNumberOfMintedNfts(
+    context: ServiceContext,
+    collection: Collection,
+  ): Promise<number> {
     if (
       (collection.collectionStatus != CollectionStatus.DEPLOYED &&
         collection.collectionStatus != CollectionStatus.TRANSFERED) ||
@@ -161,9 +174,14 @@ export class WalletService {
     }
 
     await this.initializeProvider();
+    const abi = await new ContractVersion({}, context).getContractAbi(
+      collection.collectionType,
+      collection.contractVersion_id,
+    );
+
     const nftContract: Contract = new Contract(
       collection.contractAddress,
-      EvmNftABI,
+      abi,
       this.provider,
     );
     const totalSupply = await nftContract.totalSupply();
@@ -172,16 +190,21 @@ export class WalletService {
 
   /**
    * Checks if collection implements RMRK interface
-   * @param collectionType NFTCollectionType
+   * @param collection - The NFT collection
    * @param contractAddress address where collection is deployed
    */
   async implementsRmrkInterface(
-    collectionType: NFTCollectionType,
-    contractAddress: string,
+    context: ServiceContext,
+    collection: Collection,
   ): Promise<boolean> {
     await this.initializeProvider();
+    const { contractAddress, collectionType, contractVersion_id } = collection;
 
-    const abi = getNftContractAbi(collectionType);
+    const abi = await new ContractVersion({}, context).getContractAbi(
+      collectionType,
+      contractVersion_id,
+    );
+
     const nftContract: Contract = new Contract(
       contractAddress,
       abi,
