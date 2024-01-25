@@ -192,12 +192,16 @@ export class NftTransaction {
 
     const nftContract: Contract = new Contract(contractAddress, abi);
 
-    const txData: PopulatedTransaction =
-      await nftContract.populateTransaction.ownerMintIds(
-        params.receivingAddress,
-        params.quantity,
-        params.idsToMint,
-      );
+    const txData: PopulatedTransaction = collection.isAutoIncrement
+      ? await nftContract.populateTransaction.ownerMint(
+          params.receivingAddress,
+          params.quantity,
+        )
+      : await nftContract.populateTransaction.ownerMintIds(
+          params.receivingAddress,
+          params.quantity,
+          params.idsToMint,
+        );
 
     return {
       to: contractAddress,
