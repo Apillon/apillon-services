@@ -769,6 +769,7 @@ export enum CacheKeyPrefix {
   SOCIAL_POST_LIST = 'social-post-list',
 
   CONTRACT_VERSION = 'contract-version',
+  CONTRACT_ABI = 'contract-abi',
   BLOCKCHAIN_ENDPOINT = 'blockchain-endpoint',
 }
 

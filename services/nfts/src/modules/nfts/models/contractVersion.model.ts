@@ -92,13 +92,12 @@ export class ContractVersion extends AdvancedSQLModel {
   }
 
   /**
-   * Returns contract artifact from latest version of contract
+   * Returns contract version from latest version_id of contract
    * @param collectionType - NFT Collection type
    * @param version_id - id of contract version to get. If null, get latest version
-   * @param contractArtifact - Get ABI or get bytecode
    * @param chainType - chain type of NFT
-   * @returns Promise<{ version: string } & { [key in ContractArtifact]: string }>
-   * @throws NftsCodeException - if contract artifact has not been found for given version
+   * @returns Promise<ContractVersion>
+   * @throws NftsCodeException - if contract version has not been found for given params
    */
   public async getContractVersion(
     collectionType: NFTCollectionType,
@@ -134,18 +133,74 @@ export class ContractVersion extends AdvancedSQLModel {
       );
       const contractVersion = new ContractVersion(data, this.getContext());
       if (!contractVersion.exists()) {
-        throw new Error(`Contract artifacts not found`);
+        throw new Error(`Contract version not found`);
       }
       return contractVersion;
     } catch (err) {
       throw await new NftsCodeException({
         status: 500,
-        errorMessage: `Error getting NFT contract artifacts for type ${collectionType} and version ${version_id}`,
+        errorMessage: `Error getting NFT contract version for type ${collectionType} and version ${version_id}`,
         code: NftsErrorCode.GENERAL_SERVER_ERROR,
       }).writeToMonitor({
         context: this.getContext(),
         logType: LogType.ERROR,
         data: { err, collectionType, chainType, version: version_id },
+        sendAdminAlert: true,
+      });
+    }
+  }
+
+  /**
+   * Returns contract ABI from latest version of contract
+   * @param collectionType - NFT Collection type
+   * @param version_id - id of contract version to get. If null, get latest version
+   * @param chainType - chain type of NFT
+   * @returns Promise<string>
+   * @throws NftsCodeException - if contract ABI has not been found for given params
+   */
+  public async getContractAbi(
+    collectionType: NFTCollectionType,
+    version_id: number = null,
+    chainType: ChainType = ChainType.EVM,
+  ): Promise<string> {
+    try {
+      const abi = await runCachedFunction(
+        `${CacheKeyPrefix.CONTRACT_ABI}:${[
+          collectionType,
+          version_id,
+          chainType,
+        ].join(':')}`,
+        async () => {
+          const data = await this.getContext().mysql.paramExecute(
+            `
+              SELECT abi
+              FROM \`${DbTables.CONTRACT_VERSION}\`
+              WHERE collectionType = @collectionType
+              AND chainType = @chainType
+              AND id = @version_id
+              AND status = ${SqlModelStatus.ACTIVE}
+              ;
+          `,
+            { collectionType, chainType, version_id },
+          );
+          return data?.length ? data[0].abi : null;
+        },
+        CacheKeyTTL.EXTRA_LONG,
+      );
+      if (!abi) {
+        throw new Error(`ABI not found`);
+      }
+      return abi;
+    } catch (err) {
+      throw await new NftsCodeException({
+        status: 500,
+        errorMessage: `Error getting NFT contract ABI for type ${collectionType} and version ${version_id}`,
+        code: NftsErrorCode.GENERAL_SERVER_ERROR,
+      }).writeToMonitor({
+        context: this.getContext(),
+        logType: LogType.ERROR,
+        data: { err, collectionType, chainType, version: version_id },
+        sendAdminAlert: true,
       });
     }
   }
