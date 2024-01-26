@@ -417,7 +417,10 @@ export class EvmService {
               await eventLogger(
                 {
                   logType: LogType.ERROR,
-                  message: 'Could not repair last success nonce.',
+                  message: `Could not repair last success nonce for chain ${getEnumKey(
+                    EvmChain,
+                    _event.chain,
+                  )} and wallet address ${wallet.address}.`,
                   service: ServiceName.BLOCKCHAIN,
                   data: {
                     wallet: wallet.address,
