@@ -3,18 +3,18 @@ import { EmailTemplate } from '@apillon/lib';
 export function generateTemplateData(key: string, data: any) {
   const templateData = {
     [EmailTemplate.WELCOME]: {
-      subject: 'Welcome to Apillon!',
+      subject: 'One more step...',
       title: 'Welcome to Apillon!',
       text: `
       <p>
-       We're excited that you recognized the value of Web3 building and what Apillon brings to the table.
+       We're excited that you recognize the value of Web3 building and what Apillon brings to the table.
       </p>
       `,
       actionUrl: data.actionUrl,
       actionText: 'Complete the registration',
       text2: `
       <p>
-        If you need additional assistance, or you received this email in error, please contact <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
         <br/><br/><br/>
         Cheers,<br/>
         The Apillon team
@@ -22,7 +22,7 @@ export function generateTemplateData(key: string, data: any) {
       `,
     },
     [EmailTemplate.GENERATE_IDENTITY]: {
-      subject: 'Verify your identity!',
+      subject: 'Your identity awaits!',
       title: 'Welcome to Apillon, please verify your identity!',
       text: `
       <p>
@@ -35,7 +35,7 @@ export function generateTemplateData(key: string, data: any) {
       text2: `
       <p>
         This process also creates a decentralized identity.
-        If you need additional assistance, or you received this email in error, please contact <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
         <br/><br/><br/>
         Cheers,<br/>
         The Apillon team
@@ -43,18 +43,18 @@ export function generateTemplateData(key: string, data: any) {
       `,
     },
     [EmailTemplate.RESTORE_CREDENTIAL]: {
-      subject: 'Apillon credential restore!',
-      title: 'Dear Apillon User',
+      subject: 'Credentials restoration',
+      title: 'Dear Apillonian,',
       text: `
       <p>
-        We have received your request to restore your authentication credential
+        We have received your request to restore your authentication credentials.
       </p>
       `,
       actionUrl: data.actionUrl,
-      actionText: 'Restore your credential',
+      actionText: 'Restore your credentials',
       text2: `
       <p>
-        If you need additional assistance, or you received this email in error, please contact <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
         <br/><br/><br/>
         Cheers,<br/>
         The Apillon team
@@ -62,8 +62,8 @@ export function generateTemplateData(key: string, data: any) {
       `,
     },
     [EmailTemplate.REVOKE_DID]: {
-      subject: 'Apillon Identity Revoke!',
-      title: 'Dear Apillon User',
+      subject: 'Identity Revoke',
+      title: 'Dear Apillonian,',
       text: `
       <p>
         We have received your request for identity revokation.
@@ -81,11 +81,11 @@ export function generateTemplateData(key: string, data: any) {
       `,
     },
     [EmailTemplate.DOWNLOAD_IDENTITY]: {
-      subject: 'Apillon Identity Delivery!',
-      title: 'Dear Apillon User',
+      subject: 'Download your identity',
+      title: 'Dear Apillonian,',
       text: `
       <p>
-        Your decentralized identity is ready. You can download your identity by clicking on the following link at the bottom.
+        Your decentralized identity is ready. You can download your identity by clicking on the following link on the button.
         Please note that the link is only valid for 24 hours. After that, you will have to initiate the recovery process.
       </p>
       `,
@@ -93,7 +93,7 @@ export function generateTemplateData(key: string, data: any) {
       actionText: 'Download your decentralized identity',
       text2: `
       <p>
-        If you need additional assistance, or you received this email in error, please contact <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
         <br/><br/><br/>
         Cheers,<br/>
         The Apillon team
@@ -101,18 +101,18 @@ export function generateTemplateData(key: string, data: any) {
       `,
     },
     [EmailTemplate.RESET_PASSWORD]: {
-      subject: 'Apillon password reset!',
-      title: 'Dear Apillon User',
+      subject: 'Forgot your password?',
+      title: 'Dear Apillonian,',
       text: `
       <p>
-        We have received your request to reset your password.
+        Let's get you a new password.
       </p>
       `,
       actionUrl: data.actionUrl,
-      actionText: 'Change your password',
+      actionText: 'Reset your password',
       text2: `
       <p>
-        If you need additional assistance, or you received this email in error, please contact <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
         <br/><br/><br/>
         Cheers,<br/>
         The Apillon team
@@ -120,18 +120,18 @@ export function generateTemplateData(key: string, data: any) {
       `,
     },
     [EmailTemplate.NEW_USER_ADDED_TO_PROJECT]: {
-      subject: 'You are invited to join the Apillon project!',
-      title: 'Welcome to Apillon.io!',
+      subject: 'Join a project on Apillon!',
+      title: 'Welcome to Apillon!',
       text: `
       <p>
-        You have been invited to help on the project ${data.projectName}!
+        You have been invited to help on the project ${data.projectName}! But first, let's make you an account.
       </p>
       `,
       actionUrl: data.actionUrl,
       actionText: 'Create Apillon account',
       text2: `
       <p>
-        If you need additional assistance, or you received this email in error, please contact <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
         <br/><br/><br/>
         Cheers,<br/>
         The Apillon team
@@ -140,17 +140,17 @@ export function generateTemplateData(key: string, data: any) {
     },
     [EmailTemplate.USER_ADDED_TO_PROJECT]: {
       subject: `Welcome aboard the ${data.projectName} project!`,
-      title: 'Dear Apillon User',
+      title: 'Dear Apillonian,',
       text: `
       <p>
-        You have been invited to help on the project ${data.projectName}!
+        You have been invited to join in on the project ${data.projectName}!
       </p>
       `,
       actionUrl: data.actionUrl,
       actionText: 'Visit Apillon dashboard',
       text2: `
       <p>
-        If you need additional assistance, or you received this email in error, please contact <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
         <br/><br/><br/>
         Cheers,<br/>
         The Apillon team
@@ -185,26 +185,25 @@ export function generateTemplateData(key: string, data: any) {
       `,
     },
     [EmailTemplate.WEBSITE_DEPLOYMENT_REJECTED]: {
-      subject:
-        'Urgent: Action Required Regarding Your Recent Apillon Deployment',
+      subject: 'Urgent: Action required regarding your recent deployment',
       title: 'Website deployment has been rejected',
       text: `
       <p>
-        Dear Apillon user,
+        Dear Apillonian,
         <br/><br/>
-        We hope this email finds you well. We regret to inform you that one of your recent deployments to the Apillon hosting and storage service has been automatically blocked due to a violation of our general terms and conditions.
+        We regret to inform you that one of your recent deployments to the Apillon hosting and storage service has been automatically blocked due to a violation of Apillon's general terms and conditions.
       </p>
       <p>
         <br/>
-        What to Do:
+        What to do:
         <br/>
         We kindly request that you promptly review the content of your last deployment. If you believe this action was taken in error, please respond to this email or reach out to us on Discord at your earliest convenience.
       </p>
       <p>
         <br/>
-        Preventing Future Incidents:
+        Preventing future incidents:
         <br/>
-        To ensure the continued use of our platform, we urge you to refrain from deploying any content that may be considered potentially malicious or otherwise unacceptable. Failure to comply with our terms and conditions may result in the disabling of your account.
+        To ensure the continued use of our platform, we urge you to refrain from deploying any content that may be considered potentially malicious or otherwise unacceptable. Failure to comply with Apillon's terms and conditions may result in the disabling of your account.
       </p>
       <p>
         <br/><br/>
@@ -217,42 +216,48 @@ export function generateTemplateData(key: string, data: any) {
       `,
     },
     [EmailTemplate.STORAGE_QUOTA_EXCEEDED]: {
-      subject: `Important Notice: Your Account Quota is Exceeding Limit`,
-      title: `Your Account Quota is Exceeding Limit`,
+      subject: `Important: Your account quota is exceeding limit`,
+      title: `Your account quota is exceeding limit`,
       text: `
-      <p>Dear Apillon User,</p><br>
+      <p>Dear Apillonian,</p><br>
 
       <p>Your subscription to our platform has expired and has not been automatically renewed, or has been downgraded.</p><br>
 
       <p>The change in the subscription plan directly affects your account’s limits and quotas and may lead to breaking changes on your services, so please review the current status.</p><br>
 
       <p><strong>What does this change mean?</strong></p><br>
-      <p>If your current usage continues to exceed the reduced quota, we will be unable to accommodate your storage or hosting needs. We will automatically remove and unpin your excess storage files 30 days after your subscription expires. To prevent any loss of data, please review the status of your files and limits.</p><br>
+      <p>If your current usage continues to exceed the reduced quota, we will be unable to accommodate your storage or hosting needs. Your excess storage files will automatically removed and unpinned 30 days after your subscription expires. To prevent any loss of data, please review the status of your files and limits.</p><br>
 
       <p><strong>What can you do to prevent data loss?</strong></p><br>
-      <p>We understand that this may not be the news you were hoping for. However, we encourage you to take immediate action to prevent any potential data loss. Here are a few options:</p><br>
+      <p>We understand this may not be the news you were hoping for. However, we encourage you to take immediate action to prevent any potential data loss. Here are a few options:</p><br>
       <ul>
         <li>Renew your subscription to restore your previous quota amount.</li>
         <li>Free up storage space by deleting unnecessary files.</li>
       </ul><br>
       <p>Renewing your subscription is the quickest and easiest solution. It will not only restore your full storage quota but also provide you with all the premium features that come with an active subscription.</p><br>
 
-      <p>On the other hand, if you choose not to renew, please ensure that you have enough storage space to accommodate your current usage. You can do this by regularly deleting unnecessary files from your storage.</p><br>
+      <p>On the other hand, if you choose not to renew, make sure you have enough storage space to accommodate your current usage. You can do this by regularly deleting unnecessary files from your storage.</p><br>
 
-      <p>We hope that you will consider these options and take action soon. Your satisfaction is our top priority, and we are here to assist you in any way we can.</p><br>
+      <p>We hope you will consider these options and take action soon. Your satisfaction is our top priority, and we are here to assist you in any way we can.</p><br>
 
       <p>Thank you for choosing Apillon. We appreciate your understanding and cooperation.</p>
 `,
     },
     [EmailTemplate.CRYPTO_PAYMENT_SUCCESSFUL]: {
-      subject: `Crypto payment successful`,
-      title: `Crypto payment successful`,
+      subject: `DOT Payment Confirmation`,
+      title: `DOT Payment Confirmation`,
       text: `
-      <p>Dear Apillon User,</p><br>
+      <p>Thank you for choosing Apillon services and making a successful payment using DOT.</p>
 
-      <p>Thank you for purchasing the credit package ${data.description}</p><br>
+      <p>We are pleased to confirm that your payment for the credit package <strong>${data.description}</strong> was a success.</p><br>
 
-      <p>Please find atttached the invoice for your payment.</p><br>`,
+      <p>Atttached you can find the invoice for your payment.</p><br>
+
+      <p>If you have any questions or need further assistance, please do not hesitate to contact our support team at support@apillon.com.</p><br>
+
+      <p>Sincerely,</p>
+      <p>The Apillon Team</p>
+`,
     },
   };
 

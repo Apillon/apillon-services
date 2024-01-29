@@ -42,6 +42,7 @@ export async function generateMongoLogsQuery(
         '/discord-bot/user-list',
         '/storage/blacklist',
         '/system',
+        '/auth/session-token',
       ];
       // System routes, conditionally hide from results if showSystemRequests is false
       mongoQuery[property] = {
