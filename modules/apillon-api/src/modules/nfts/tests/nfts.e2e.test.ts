@@ -34,12 +34,11 @@ import {
   postRequestFactory,
 } from '@apillon/tests-lib/src/lib/helpers/requests';
 import { ethers } from 'ethers';
-import { EvmNftNestableABI } from '@apillon/nfts/src/lib/contracts/deployed-nft-contract';
 
 const TEST_COLLECTION_BASE_URI =
   'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/';
 
-const NESTABLE_NFT_INTERFACE = new ethers.utils.Interface(EvmNftNestableABI);
+let NESTABLE_NFT_INTERFACE;
 
 describe('Apillon API NFTs tests', () => {
   const CHAIN_ID = EvmChain.MOONBASE;
@@ -154,6 +153,16 @@ describe('Apillon API NFTs tests', () => {
         serviceType_id: AttachedServiceType.NFT,
       }),
     );
+
+    const data = await stage.nftsContext.mysql.paramExecute(`
+      SELECT abi
+      FROM \`contract_version\`
+      WHERE collectionType = 2
+      AND chainType = 1
+      AND status = ${SqlModelStatus.ACTIVE}
+      ORDER BY version DESC LIMIT 1
+    `);
+    NESTABLE_NFT_INTERFACE = new ethers.utils.Interface(data[0].abi);
   });
 
   describe('Moonbeam NFT Collection tests', () => {
@@ -734,6 +743,36 @@ describe('Apillon API NFTs tests', () => {
       );
       const mintdReceipt = await blockchain.getTransactionReceipt(mintTxHash);
       expect(mintdReceipt.status).toBe('0x1');
+    });
+  });
+
+  describe('NFT Collection versioning and ID mint tests', () => {
+    let collectionUuid;
+    test('Create collection with isAutoIncrement set to false', async () => {
+      const collection = await createTestNFTCollection(
+        testUser,
+        stage.nftsContext,
+        nestableProject,
+        SqlModelStatus.ACTIVE,
+        CollectionStatus.CREATED,
+        { collectionType: 1 },
+      );
+      expect(collection.isAutoIncrement).toBeFalsy();
+      expect(collection.contractVersion_id).toBeGreaterThanOrEqual(1); // Current default contract version from contract_version table
+
+      collectionUuid = collection.collection_uuid;
+    });
+
+    test('Mint an NFT with custom token IDs', async () => {
+      const response = await postRequest(
+        `/nfts/collections/${collectionUuid}/mint`,
+        {
+          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+          quantity: 2,
+          idsToMint: [5, 10],
+        },
+      );
+      expect(response.status).toBe(200);
     });
   });
 
