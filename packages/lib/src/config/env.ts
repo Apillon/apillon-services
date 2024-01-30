@@ -106,6 +106,8 @@ export interface IEnv {
    */
   MAIL_FUNCTION_NAME: string;
   MAIL_FUNCTION_NAME_TEST: string;
+  GENERATE_PDF_FUNCTION_NAME: string;
+
   /**
    * LMAS dev server port
    */
@@ -736,6 +738,7 @@ export let env: IEnv = {
   /** MAILING */
   MAIL_FUNCTION_NAME: process.env['MAIL_FUNCTION_NAME'],
   MAIL_FUNCTION_NAME_TEST: process.env['MAIL_FUNCTION_NAME_TEST'],
+  GENERATE_PDF_FUNCTION_NAME: process.env['GENERATE_PDF_FUNCTION_NAME'],
 
   MAIL_SOCKET_PORT: parseInt(process.env['MAIL_SOCKET_PORT_TEST']) || 6401,
   MAIL_SOCKET_PORT_TEST: parseInt(process.env['MAIL_SOCKET_PORT_TEST']) || 7401,

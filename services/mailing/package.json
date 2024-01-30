@@ -23,7 +23,6 @@
     "@middy/core": "^2.5.7",
     "axios": "^1.6.2",
     "handlebars": "^4.7.7",
-    "html-pdf-node": "^1.0.8",
     "nodemailer": "^6.8.0"
   },
   "devDependencies": {

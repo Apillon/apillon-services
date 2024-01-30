@@ -4,4 +4,5 @@ export enum MailErrorCode {
 
   // 500 - Internal Error
   ERROR_SENDING_EMAIL = 50008001,
+  GENERATE_PDF_ERROR = 50008002,
 }
