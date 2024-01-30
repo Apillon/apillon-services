@@ -229,5 +229,6 @@ async function generatePdfFromTemplate(
       data: { ...templateData },
       sendAdminAlert: true,
     });
+    throw err;
   }
 }
