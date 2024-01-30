@@ -15,7 +15,9 @@ import { generateTemplateData } from './template-data';
 import * as handlebars from 'handlebars';
 import { MailCodeException } from '../lib/exceptions';
 import { MailErrorCode } from '../config/types';
-import { generatePdf } from 'html-pdf-node';
+import { GeneratePdfMicroservice } from '../lib/generate-pdf';
+import axios from 'axios';
+
 /**
  * Send email via SMTP server
  * @param {MailOptions} mail
@@ -158,14 +160,8 @@ export async function SMTPsendDefaultTemplate(
   };
 
   if (emailData.attachmentTemplate) {
-    const attachmentTemplate = MailTemplates.getTemplate(
-      emailData.attachmentTemplate,
-    )(templateData);
-
-    mail.attachments.push({
-      filename: emailData.attachmentFileName,
-      content: await generatePdf({ content: attachmentTemplate }, {}),
-    });
+    const file = await generatePdfFromTemplate(emailData, templateData);
+    mail.attachments.push(file);
   }
 
   return await SMTPsend(mail, context);
@@ -202,4 +198,37 @@ export async function SMTPverify(): Promise<boolean> {
   }
 
   return true;
+}
+
+async function generatePdfFromTemplate(
+  emailData: EmailDataDto,
+  templateData: any,
+): Promise<{ filename: string; content: Buffer }> {
+  const attachmentTemplate = MailTemplates.getTemplate(
+    emailData.attachmentTemplate,
+  )(templateData);
+
+  try {
+    const pdfUrl = await new GeneratePdfMicroservice(
+      this.getContext(),
+    ).generatePdf(attachmentTemplate);
+    // Fetch the file content using Axios
+    const response = await axios.get(pdfUrl, {
+      responseType: 'arraybuffer',
+    });
+
+    return {
+      filename: emailData.attachmentFileName,
+      content: Buffer.from(response.data),
+    };
+  } catch (err) {
+    await new Lmas().writeLog({
+      logType: LogType.ERROR,
+      location: 'smtp-mailer/SMTPsendDefaultTemplate',
+      message: `Error generating PDF attachment from HTML: ${err}`,
+      data: { ...templateData },
+      context: this.getContext(),
+      sendAdminAlert: true,
+    });
+  }
 }
