@@ -30,6 +30,7 @@ export class GeneratePdfMicroservice extends BaseService {
         status: 500,
         sourceFunction: 'GeneratePdfMicroservice/generatePdf',
         errorMessage: `Error generating PDF: ${err}`,
+        details: err,
       }).writeToMonitor({ data: { html, err } });
     }
   }

@@ -114,12 +114,12 @@ export class CryptoPaymentsService {
     hmac.update(JSON.stringify(sortObject(payment)));
     // Verify that webhook source is authentic through signature provided in request header
     if (signature !== hmac.digest('hex')) {
-      // throw new CodeException({
-      //   status: HttpStatus.BAD_REQUEST,
-      //   code: BadRequestErrorCode.INVALID_WEBHOOK_SIGNATURE,
-      //   errorCodes: BadRequestErrorCode,
-      //   errorMessage: 'Invalid webhook signature',
-      // });
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: BadRequestErrorCode.INVALID_WEBHOOK_SIGNATURE,
+        errorCodes: BadRequestErrorCode,
+        errorMessage: 'Invalid webhook signature',
+      });
     }
 
     try {

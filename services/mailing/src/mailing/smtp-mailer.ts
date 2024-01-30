@@ -209,9 +209,9 @@ async function generatePdfFromTemplate(
   )(templateData);
 
   try {
-    const pdfUrl = await new GeneratePdfMicroservice(
-      null,
-    ).generatePdf(attachmentTemplate);
+    const pdfUrl = await new GeneratePdfMicroservice(null).generatePdf(
+      attachmentTemplate,
+    );
     // Fetch the file content using Axios
     const response = await axios.get(pdfUrl, {
       responseType: 'arraybuffer',
