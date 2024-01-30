@@ -210,7 +210,7 @@ async function generatePdfFromTemplate(
 
   try {
     const pdfUrl = await new GeneratePdfMicroservice(
-      this.getContext(),
+      null,
     ).generatePdf(attachmentTemplate);
     // Fetch the file content using Axios
     const response = await axios.get(pdfUrl, {
@@ -227,7 +227,6 @@ async function generatePdfFromTemplate(
       location: 'smtp-mailer/SMTPsendDefaultTemplate',
       message: `Error generating PDF attachment from HTML: ${err}`,
       data: { ...templateData },
-      context: this.getContext(),
       sendAdminAlert: true,
     });
   }
