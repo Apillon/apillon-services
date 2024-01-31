@@ -178,12 +178,13 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
       return;
     }
 
-    const confirmedTxs: string[] = await this.updateEvmTransactionsByStatus(
-      outgoingTxs,
-      TransactionStatus.CONFIRMED,
-      wallet,
-      conn,
-    );
+    const confirmedTxs: string[] =
+      (await this.updateEvmTransactionsByStatus(
+        outgoingTxs,
+        TransactionStatus.CONFIRMED,
+        wallet,
+        conn,
+      )) || [];
 
     const failedTxs: string[] = await this.updateEvmTransactionsByStatus(
       outgoingTxs,
@@ -265,7 +266,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
     );
 
     if (!bcTxsByStatus.size) {
-      return;
+      return [];
     }
 
     const outgoingTxHashes: string[] = [...bcTxsByStatus.keys()];
