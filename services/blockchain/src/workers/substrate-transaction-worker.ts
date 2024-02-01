@@ -70,10 +70,12 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       try {
         await this.setTransactionsState(transactions, conn);
 
-        // If block height is the same and not updated for the past 5 minutes
+        const minutes = Math.round(wallet.minutesSinceLastParsedBlock);
+        // If block height is the same and not updated for the past 15 minutes
         if (
           wallet.lastParsedBlock === toBlock &&
-          wallet.minutesSinceLastParsedBlock >= 5
+          !!minutes &&
+          minutes % 15 == 0
         ) {
           await this.writeEventLog(
             {

@@ -49,11 +49,11 @@ export async function refundCredit(
  * @param spendCreditDto
  * @param action
  */
-export async function spendCreditAction(
+export async function spendCreditAction<T>(
   context: any,
   spendCreditDto: SpendCreditDto,
-  action: () => Promise<any>,
-) {
+  action: () => Promise<T>,
+): Promise<T> {
   //Validate input
   try {
     await spendCreditDto.validate();
@@ -68,14 +68,14 @@ export async function spendCreditAction(
     throw new CodeException({
       code: err.code,
       status: err.status,
-      context: context,
+      context,
       errorMessage: err.message,
     });
   });
 
   try {
-    //Execute action
-    await action();
+    //Execute action and return result
+    return await action();
   } catch (err) {
     //If action fails, refund credit
     await refundCredit(

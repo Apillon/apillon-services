@@ -87,10 +87,12 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
         );
         await this.handleIncomingEvmTxs(wallet, walletTxs.incomingTxs);
 
-        // If block height is the same and not updated for the past 5 minutes
+        const minutes = Math.round(wallet.minutesSinceLastParsedBlock);
+        // If block height is the same and not updated for the past 15 minutes
         if (
           wallet.lastParsedBlock === toBlock &&
-          wallet.minutesSinceLastParsedBlock >= 5
+          !!minutes &&
+          minutes % 15 == 0
         ) {
           await this.writeEventLog(
             {
@@ -176,12 +178,13 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
       return;
     }
 
-    const confirmedTxs: string[] = await this.updateEvmTransactionsByStatus(
-      outgoingTxs,
-      TransactionStatus.CONFIRMED,
-      wallet,
-      conn,
-    );
+    const confirmedTxs: string[] =
+      (await this.updateEvmTransactionsByStatus(
+        outgoingTxs,
+        TransactionStatus.CONFIRMED,
+        wallet,
+        conn,
+      )) || [];
 
     const failedTxs: string[] = await this.updateEvmTransactionsByStatus(
       outgoingTxs,
@@ -263,7 +266,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
     );
 
     if (!bcTxsByStatus.size) {
-      return;
+      return [];
     }
 
     const outgoingTxHashes: string[] = [...bcTxsByStatus.keys()];
