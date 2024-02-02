@@ -1,16 +1,15 @@
 import {
   AssignCidToNft,
+  AttachedServiceType,
   ComputingTransactionQueryFilter,
   ContractQueryFilter,
   CreateContractDto,
-  DefaultPermission,
-  DefaultUserRole,
+  DefaultApiKeyRole,
   EncryptContentDto,
-  RoleGroup,
   TransferOwnershipDto,
   ValidateFor,
 } from '@apillon/lib';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -20,57 +19,65 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { ComputingService } from './computing.service';
+import { ApillonApiContext } from '../../context';
 
 @Controller('computing')
-@Permissions({ permission: DefaultPermission.COMPUTING })
 export class ComputingController {
   constructor(private readonly computingService: ComputingService) {}
 
   @Post('contracts')
   @Validation({ dto: CreateContractDto })
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
   @UseGuards(AuthGuard, ValidationGuard)
   async createContract(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Body() body: CreateContractDto,
   ) {
     return await this.computingService.createContract(context, body);
   }
 
   @Get('contracts')
-  @Permissions({ role: RoleGroup.ProjectAccess })
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
   @Validation({ dto: ContractQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
   async listComputingContracts(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Query() query: ContractQueryFilter,
   ) {
     return await this.computingService.listContracts(context, query);
   }
 
   @Get('contracts/:uuid')
-  @Permissions({ role: RoleGroup.ProjectAccess })
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
   @UseGuards(AuthGuard)
   async getContract(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Param('uuid') uuid: string,
   ) {
     return await this.computingService.getContract(context, uuid);
   }
 
   @Get('contracts/:uuid/transactions')
-  @Permissions({ role: RoleGroup.ProjectAccess })
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
   @Validation({ dto: ContractQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
   async listContractTransactions(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Param('uuid') uuid: string,
     @Query() query: ComputingTransactionQueryFilter,
   ) {
@@ -80,13 +87,13 @@ export class ComputingController {
 
   @Post('contracts/:uuid/transfer-ownership')
   @Validation({ dto: TransferOwnershipDto })
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
   @UseGuards(AuthGuard, ValidationGuard)
   async transferOwnership(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Param('uuid') uuid: string,
     @Body() body: TransferOwnershipDto,
   ) {
@@ -96,14 +103,13 @@ export class ComputingController {
 
   @Post('contracts/:uuid/encrypt')
   @Validation({ dto: EncryptContentDto })
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
   @UseGuards(AuthGuard, ValidationGuard)
   async encryptContent(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Param('uuid') uuid: string,
     @Body() body: EncryptContentDto,
   ) {
@@ -113,14 +119,13 @@ export class ComputingController {
 
   @Post('contracts/:uuid/assign-cid-to-nft')
   @Validation({ dto: AssignCidToNft })
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
   @UseGuards(AuthGuard, ValidationGuard)
   async assignCidToNft(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Param('uuid') uuid: string,
     @Body() body: AssignCidToNft,
   ) {
