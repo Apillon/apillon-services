@@ -1,7 +1,5 @@
-import { CID } from 'ipfs-http-client';
-
 export interface uploadItemsToIPFSRes {
-  parentDirCID: CID;
-  ipfsDirectories: { path: string; cid: CID }[];
+  parentDirCID: string;
+  ipfsDirectories: { path: string; cid: string }[];
   size: number;
 }

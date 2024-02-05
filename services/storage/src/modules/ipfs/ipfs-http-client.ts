@@ -5,7 +5,11 @@ const FormData = require('form-data');
 export interface IAddResult {
   cid: string;
   size: number;
-  path: string;
+}
+
+export interface IObject {
+  Hash: string;
+  Links: IEntry[];
 }
 
 export interface IClientError {
@@ -21,6 +25,19 @@ export interface IStat {
   path: string;
 }
 
+export interface IEntry {
+  Name: string;
+  /**
+   * 0 = file, 1 = directory
+   */
+  Type: number;
+  Hash: string;
+  /**
+   * 0 if directory, greater otherwise
+   */
+  Size: number;
+}
+
 export interface IKeyGenResult {
   Id: string;
   Name: string;
@@ -33,17 +50,6 @@ export interface INamePublishResult {
 //#endregion
 
 //#region classes
-export class AddResult implements IAddResult {
-  cid: string;
-  size: number;
-  path: string;
-
-  constructor(cid: string, size: number, path: string) {
-    this.cid = cid;
-    this.size = size;
-    this.path = path;
-  }
-}
 
 export class ClientError implements IClientError {
   status: number;
@@ -53,10 +59,14 @@ export class ClientError implements IClientError {
 
   constructor(err: any) {
     console.error(err);
+    this.error = err;
     this.status = this.error.response.status;
     this.statusText = this.error.response.statusText;
     this.message = this.error.response.data?.Message;
-    this.error = err;
+
+    if (!this.message && typeof this.error.response.data === 'string') {
+      this.message = this.error.response.data;
+    }
   }
 }
 //#endregion
@@ -67,22 +77,24 @@ export class IpfsKuboRpcHttpClient {
   public files: Files;
   public key: Key;
   public name: Name;
+  public pin: Pin;
 
   constructor(url: string) {
     this.url = url;
     this.files = new Files(url);
     this.key = new Key(url);
     this.name = new Name(url);
+    this.pin = new Pin(url);
   }
 
-  public async add(params: { content: any; path: string }): Promise<AddResult> {
+  public async add(params: { content: any }): Promise<IAddResult> {
     try {
       const form = new FormData();
-      form.append('file', params.content, { filepath: params.path });
+      form.append('file', params.content);
 
       const res = await axios.post(`${this.url}/add?cid-version=1`, form);
 
-      return new AddResult(res.data.Hash, +res.data.Size, res.data.Name);
+      return { cid: res.data.Hash, size: +res.data.Size };
     } catch (err) {
       throw new ClientError(err);
     }
@@ -117,19 +129,19 @@ export class Files {
     }
   }
 
-  public async listDirectories(params: { path: string }) {
+  public async ls(params: { path: string }): Promise<IEntry[]> {
     try {
       const res = await axios.post(
         `${this.url}/files/ls?arg=${params.path}&long=1`,
       );
       console.info(res);
-      return res;
+      return res.data.Entries;
     } catch (err) {
       throw new ClientError(err);
     }
   }
 
-  public async list(params: { path: string }): Promise<IStat> {
+  public async stat(params: { path: string }): Promise<IStat> {
     try {
       const objectStat = (
         await axios.post(`${this.url}/files/stat?arg=${params.path}`)
@@ -155,7 +167,7 @@ export class Key {
   public async gen(params: {
     name: string;
     type?: string;
-    size?: string;
+    size?: number;
   }): Promise<IKeyGenResult> {
     let urlParameters = '';
     urlParameters += params.type ? `&type=${params.type}` : '';
@@ -196,6 +208,63 @@ export class Name {
       );
       console.info(res);
       return res.data;
+    } catch (err) {
+      throw new ClientError(err);
+    }
+  }
+}
+
+export class Pin {
+  private url: string;
+  constructor(url: string) {
+    this.url = url;
+  }
+
+  public async add(params: {
+    /**
+     * Path to object(s) to be pinned
+     */
+    cids: string[];
+  }): Promise<boolean> {
+    try {
+      const res = await axios.post(
+        `${this.url}/pin/add`,
+        {},
+        { params: { arg: params.cids }, paramsSerializer: { indexes: null } },
+      );
+      console.info(res);
+      return true;
+    } catch (err) {
+      throw new ClientError(err);
+    }
+  }
+
+  public async ls(params: { cid?: string }): Promise<any> {
+    try {
+      const res = await axios.post(
+        `${this.url}/pin/ls${params.cid ? '?arg=' + params.cid : ''}`,
+      );
+      console.info(res);
+      return res.data.Keys;
+    } catch (err) {
+      throw new ClientError(err);
+    }
+  }
+
+  public async rm(params: {
+    /**
+     * Path to object(s) to be unpinned
+     */
+    cids: string[];
+  }): Promise<boolean> {
+    try {
+      const res = await axios.post(
+        `${this.url}/pin/rm`,
+        {},
+        { params: { arg: params.cids }, paramsSerializer: { indexes: null } },
+      );
+      console.info(res);
+      return true;
     } catch (err) {
       throw new ClientError(err);
     }

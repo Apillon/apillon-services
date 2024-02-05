@@ -14,7 +14,6 @@ import {
   AdvancedSQLModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { CID } from 'ipfs-http-client';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { StorageCodeException } from '../../../lib/exceptions';
@@ -233,7 +232,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
     serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
     validators: [],
   })
-  public CID: CID;
+  public CID: string;
 
   @prop({
     parser: { resolver: integerParser() },

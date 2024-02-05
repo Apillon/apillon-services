@@ -53,7 +53,6 @@ import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
 import { IpfsBandwidth } from '../ipfs/models/ipfs-bandwidth';
 import { generateJwtSecret } from '../../lib/ipfs-utils';
-import { CID } from 'ipfs-http-client';
 import { Directory } from '../directory/models/directory.model';
 
 export class StorageService {
@@ -794,7 +793,7 @@ export class StorageService {
   ) {
     let isIpns = false;
     try {
-      CID.parse(event.cid);
+      event.cid;
     } catch (err) {
       isIpns = true;
     }

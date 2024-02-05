@@ -12,7 +12,6 @@ import {
   LogOutput,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { CID } from 'ipfs-http-client';
 import { CrustPinningStatus } from '../config/types';
 import { CrustService } from '../modules/crust/crust.service';
 import { PinToCrustRequest } from '../modules/crust/models/pin-to-crust-request.model';
@@ -59,7 +58,7 @@ export class PinToCrustWorker extends BaseWorker {
         try {
           await CrustService.placeStorageOrderToCRUST(
             {
-              cid: CID.parse(pinToCrustRequest.cid),
+              cid: pinToCrustRequest.cid,
               size: pinToCrustRequest.size,
               isDirectory: pinToCrustRequest.isDirectory,
               refTable: pinToCrustRequest.refTable,

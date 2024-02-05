@@ -4,13 +4,11 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { CID } from 'ipfs-http-client';
 import { PinToCrustRequest } from '../modules/crust/models/pin-to-crust-request.model';
 import { File } from '../modules/storage/models/file.model';
 import { PinToCrustWorker } from '../workers/pin-to-crust-worker';
 import { WorkerName } from '../workers/worker-executor';
 import { CrustPinningStatus, DbTables, FileStatus } from '../config/types';
-import { Directory } from '../modules/directory/models/directory.model';
 
 /**
  * Function to create PinToCrustRequest
@@ -20,27 +18,17 @@ import { Directory } from '../modules/directory/models/directory.model';
 export async function pinFileToCRUST(
   context,
   bucket_uuid,
-  CID: CID,
+  cid: string,
   size: number,
   isDirectory: boolean,
   refId: string,
   refTable: string,
 ) {
-  console.info('Create PinToCrust request', {
-    params: {
-      bucket_uuid,
-      CID,
-      size,
-      isDirectory,
-      cidV0: CID.toV0().toString(),
-    },
-  });
-
   //Check if PinToCrustRequest with same CID already exists
   let pinToCrustRequest: PinToCrustRequest = await new PinToCrustRequest(
     {},
     context,
-  ).populateByCid(CID.toV0().toString());
+  ).populateByCid(cid);
 
   if (pinToCrustRequest.exists()) {
     //Request for pin already exists
@@ -63,7 +51,7 @@ export async function pinFileToCRUST(
   } else {
     pinToCrustRequest = new PinToCrustRequest({}, context).populate({
       bucket_uuid: bucket_uuid,
-      cid: CID.toV0().toString(),
+      cid,
       size: size,
       isDirectory: isDirectory,
       refId: refId,

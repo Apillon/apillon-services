@@ -39,16 +39,12 @@
     "@polkadot/keyring": "^10.1.9",
     "@polkadot/util": "^10.1.10",
     "@types/uuid": "^8.3.4",
-    "axios": "^1.2.0",
-    "ipfs-http-client": "^56.0.3"
+    "axios": "^1.2.0"
   },
   "devDependencies": {
+    "@apillon/tests-lib": "*",
     "eslint-config-common": "*",
-    "tsconfig": "*",
-    "@apillon/tests-lib": "*"
-  },
-  "overrides": {
-    "ipfs-utils": "9.0.6"
+    "tsconfig": "*"
   },
   "jest": {
     "testTimeout": 1800000,

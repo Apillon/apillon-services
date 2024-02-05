@@ -1,38 +1,34 @@
-import { AddResult, IpfsKuboRpcHttpClient } from '../ipfs-http-client';
+import { IpfsKuboRpcHttpClient } from '../ipfs-http-client';
 
 describe('Ipfs http client integration test', () => {
+  const client = new IpfsKuboRpcHttpClient(
+    'http://ipfs-eu1-0.apillon.io:5001/api/v0',
+  );
   test('Test add', async () => {
-    const client = new IpfsKuboRpcHttpClient(
-      'http://ipfs-eu1-0.apillon.io:5001/api/v0',
-    );
-    const res: AddResult = await client.add({
+    const res = await client.add({
       content: 'Some test content',
-      path: 'test.txt',
     });
     expect(res.cid).toBeTruthy();
     expect(res.size).toBeGreaterThan(0);
   });
   describe('Mutable file system tests', () => {
-    test('Test list MFS directories', async () => {
-      const client = new IpfsKuboRpcHttpClient(
-        'http://ipfs-eu1-0.apillon.io:5001/api/v0',
-      );
-      const res = await client.files.listDirectories({ path: '/' });
+    test('Test list MFS entries', async () => {
+      const res = await client.files.ls({ path: '/' });
       expect(res).toBeTruthy();
+      expect(res.length).toBeGreaterThan(0);
+      expect(res[0].Hash).toBeTruthy();
+      expect(res[0].Type).toBeTruthy();
     });
 
     test('Test list MFS files', async () => {
-      const client = new IpfsKuboRpcHttpClient(
-        'http://ipfs-eu1-0.apillon.io:5001/api/v0',
-      );
-      const res = await client.files.list({ path: '/' });
+      const res = await client.files.stat({ path: '/' });
       expect(res).toBeTruthy();
+      expect(res.cid).toBeTruthy();
+      expect(res.size).toBeTruthy();
+      expect(res.path).toBeTruthy();
     });
 
     test('Test write MFS file', async () => {
-      const client = new IpfsKuboRpcHttpClient(
-        'http://ipfs-eu1-0.apillon.io:5001/api/v0',
-      );
       const res = await client.files.write({
         content: 'This is file in MFS',
         path: '/My MFS test file.txt',
@@ -40,13 +36,10 @@ describe('Ipfs http client integration test', () => {
       expect(res).toBeTruthy();
     });
   });
-  describe.only('Key & IPNS Name tests', () => {
+  describe('Key & IPNS Name tests', () => {
     const key = 'test key ' + new Date().toString();
 
     test('Test generate new key', async () => {
-      const client = new IpfsKuboRpcHttpClient(
-        'http://ipfs-eu1-0.apillon.io:5001/api/v0',
-      );
       const res = await client.key.gen({
         name: key,
       });
@@ -56,9 +49,6 @@ describe('Ipfs http client integration test', () => {
     });
 
     test('Test publish name', async () => {
-      const client = new IpfsKuboRpcHttpClient(
-        'http://ipfs-eu1-0.apillon.io:5001/api/v0',
-      );
       const res = await client.name.publish({
         cid: 'bafkreiakrvel4n4dd3jirros2dbow7jvtrdtfq2pbj6i7g6qpf64krmqfe',
         key,
@@ -69,6 +59,32 @@ describe('Ipfs http client integration test', () => {
       expect(res.Value).toContain(
         'bafkreiakrvel4n4dd3jirros2dbow7jvtrdtfq2pbj6i7g6qpf64krmqfe',
       );
+    });
+  });
+
+  describe('Pin tests', () => {
+    test.only('Test add new pins', async () => {
+      const res = await client.pin.add({
+        cids: ['bafkreiakrvel4n4dd3jirros2dbow7jvtrdtfq2pbj6i7g6qpf64krmqfe'],
+      });
+      expect(res).toBeTruthy();
+    });
+
+    test('Test list pins', async () => {
+      const res = await client.pin.ls({
+        cid: 'bafkreiakrvel4n4dd3jirros2dbow7jvtrdtfq2pbj6i7g6qpf64krmqfe',
+      });
+      expect(res).toBeTruthy();
+      expect(
+        res['bafkreiakrvel4n4dd3jirros2dbow7jvtrdtfq2pbj6i7g6qpf64krmqfe'],
+      ).toBeTruthy();
+    });
+
+    test('Test remove pins', async () => {
+      const res = await client.pin.rm({
+        cids: ['bafkreiakrvel4n4dd3jirros2dbow7jvtrdtfq2pbj6i7g6qpf64krmqfe'],
+      });
+      expect(res).toBeTruthy();
     });
   });
 });

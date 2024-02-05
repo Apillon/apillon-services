@@ -7,7 +7,6 @@ import {
   prop,
 } from '@apillon/lib';
 import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
-import { CID } from 'ipfs-http-client';
 import { v4 as uuidV4 } from 'uuid';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
@@ -314,7 +313,6 @@ export class IpfsCluster extends AdvancedSQLModel {
     path?: string,
   ) {
     let link = '';
-    cid = isIpns ? cid : CID.parse(cid).toV1().toString();
 
     if (this.subdomainGateway) {
       link =
