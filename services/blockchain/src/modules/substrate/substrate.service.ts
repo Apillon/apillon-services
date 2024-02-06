@@ -50,6 +50,7 @@ export class SubstrateService {
     },
     context: ServiceContext,
   ) {
+    console.info('SubstrateService.createTransaction. Params: ', params);
     // connect to chain
     // TODO: Add logic if endpoint is unavailable to fetch the backup one.
     const endpoint = await new Endpoint({}, context).populateByChain(
