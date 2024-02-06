@@ -86,6 +86,7 @@ export class Contract extends UuidSqlModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -194,7 +195,7 @@ export class Contract extends UuidSqlModel {
     ],
     defaultValue: ContractStatus.CREATED,
   })
-  public contractStatus: number;
+  public contractStatus: ContractStatus;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -209,8 +210,6 @@ export class Contract extends UuidSqlModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
   })
@@ -222,11 +221,7 @@ export class Contract extends UuidSqlModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
     ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
+    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
   })
   public contractAbi: ContractAbi;
 

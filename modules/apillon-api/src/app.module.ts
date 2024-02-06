@@ -11,6 +11,7 @@ import { SystemModule } from './modules/system/system.module';
 import { NftModule } from './modules/nfts/nft.module';
 import { AppController } from './app.controller';
 import { IdentityModule } from './modules/wallet-identity/wallet-identity.module';
+import { ComputingModule } from './modules/computing/computing.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { IdentityModule } from './modules/wallet-identity/wallet-identity.module
     AuthModule,
     SystemModule,
     IdentityModule,
+    ComputingModule,
   ],
   controllers: [AppController],
   providers: [],
