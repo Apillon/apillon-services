@@ -136,11 +136,18 @@ export class ComputingService {
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.DEPLOY_CONTRACT_ERROR,
-        context: context,
+        context,
         sourceFunction: 'createContract()',
-        errorMessage: 'Error creating contract',
+        errorMessage: `Error creating contract: ${err}`,
         details: err,
-      }).writeToMonitor({});
+      }).writeToMonitor({
+        logType: LogType.ERROR,
+        service: ServiceName.COMPUTING,
+        data: {
+          dto: params.body,
+          err,
+        },
+      });
     }
 
     await new Lmas().writeLog({
