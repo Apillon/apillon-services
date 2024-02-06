@@ -252,7 +252,7 @@ export class Space extends UuidSqlModel {
     try {
       await this.insert(SerializeFor.INSERT_DB, conn);
 
-      const provider = new SubsocialProvider(context, SubstrateChain.XSOCIAL);
+      const provider = new SubsocialProvider(context, SubstrateChain.SUBSOCIAL);
       await provider.initializeApi();
       await provider.createSpace(this);
 

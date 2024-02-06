@@ -114,7 +114,7 @@ describe('Substrate service unit test', () => {
     // console.log('res2: ', res2);
   });
 
-  describe.only('Test create and transmit subsocial transactions (space)', () => {
+  /*describe('Test create and transmit subsocial(xsocial) transactions (space)', () => {
     let nonce, transaction, wallet;
 
     test('Test create substrate xsocial transaction (space)', async () => {
@@ -206,7 +206,7 @@ describe('Substrate service unit test', () => {
       );
     });
   });
-  describe('Test create and transmit subsocial transactions (post)', () => {
+  describe('Test create and transmit subsocial(xsocial) transactions (post)', () => {
     let nonce, transaction, wallet;
     test('Test create substrate xsocial transaction (post)', async () => {
       await new Endpoint(
@@ -225,12 +225,6 @@ describe('Substrate service unit test', () => {
         offchainUrl: 'https://api.subsocial.network',
       };
       const api: SubsocialApi = await SubsocialApi.create(config);
-
-      /*const authHeader =
-        'c3ViLTVGQTluUURWZzI2N0RFZDhtMVp5cFhMQm52TjdTRnhZd1Y3bmRxU1lHaU45VFRwdToweDEwMmQ3ZmJhYWQwZGUwNzFjNDFmM2NjYzQzYmQ0NzIxNzFkZGFiYWM0MzEzZTc5YTY3ZWExOWM0OWFlNjgyZjY0YWUxMmRlY2YyNzhjNTEwZGY4YzZjZTZhYzdlZTEwNzY2N2YzYTBjZjM5OGUxN2VhMzAyMmRkNmEyYjc1OTBi';
-      api.ipfs.setWriteHeaders({
-        authorization: 'Basic ' + authHeader,
-      });*/
 
       const postIpfsData = {
         title: 'Test post',
@@ -303,6 +297,162 @@ describe('Substrate service unit test', () => {
         stage.context,
       ).populateById(wallet.id);
       expect(updatedXSocialWallet.lastProcessedNonce).toEqual(
+        transaction.nonce,
+      );
+    });
+  });*/
+
+  describe('Test create and transmit subsocial transactions', () => {
+    let nonce, transaction, wallet, api: SubsocialApi;
+
+    beforeAll(async () => {
+      const config = {
+        substrateNodeUrl: 'wss://para.f3joule.space',
+        ipfsNodeUrl: 'https://ipfs.subsocial.network',
+        offchainUrl: 'https://api.subsocial.network',
+      };
+      api = await SubsocialApi.create(config);
+      const substrateApi = await api.substrateApi;
+
+      await new Endpoint(
+        {
+          url: 'wss://para.f3joule.space',
+          chain: SubstrateChain.SUBSOCIAL,
+          chainType: ChainType.SUBSTRATE,
+          status: 5,
+        },
+        stage.context,
+      ).insert();
+
+      nonce = await substrateApi.rpc.system.accountNextIndex(
+        '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
+      );
+
+      console.info(substrateApi.rpc.system.chain);
+      const account = await substrateApi.query.system.account(
+        '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
+      );
+      console.info(account.data.free.toString());
+      wallet = await new Wallet(
+        {
+          chain: SubstrateChain.SUBSOCIAL,
+          chainType: ChainType.SUBSTRATE,
+          seed: 'disorder reveal crumble deer axis slush unique answer catalog junk hazard damp',
+          address: '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
+          nextNonce: nonce.toNumber(),
+        },
+        stage.context,
+      ).insert();
+    });
+
+    test('Test create substrate subsocial transaction (space)', async () => {
+      const spaceIpfsData = {
+        about: 'My Test space created on ' + new Date().toString(),
+        image: null, // ipfsImageCid = await api.subsocial.ipfs.saveFile(file)
+        name: 'Test space',
+        tags: [],
+        email: null,
+        links: [],
+      };
+
+      const cid = await api.ipfs.saveContentToOffchain(spaceIpfsData);
+
+      const substrateApi = await api.substrateApi;
+      const tx = substrateApi.tx.spaces.createSpace(IpfsContent(cid), null);
+
+      const serialize = tx.toHex();
+
+      const res = await SubstrateService.createTransaction(
+        { params: { transaction: serialize, chain: SubstrateChain.SUBSOCIAL } },
+        stage.context,
+      );
+      console.log('res: ', res);
+
+      transaction = await new Transaction({}, stage.context).populateById(
+        res.id,
+      );
+      expect(transaction.exists()).toBeTruthy();
+
+      console.log('transaction: ', transaction);
+    });
+
+    test('Test transmit substrate subsocial transaction (space)', async () => {
+      expect(transaction).toBeTruthy();
+
+      await SubstrateService.transmitTransactions(
+        { chain: SubstrateChain.SUBSOCIAL },
+        stage.context,
+        async () => {
+          return;
+        },
+      );
+
+      const updatedSubsocialWallet = await new Wallet(
+        {},
+        stage.context,
+      ).populateById(wallet.id);
+      expect(updatedSubsocialWallet.lastProcessedNonce).toEqual(
+        transaction.nonce,
+      );
+    });
+    test('Test create substrate subsocial transaction (post)', async () => {
+      /*const authHeader =
+        'c3ViLTVGQTluUURWZzI2N0RFZDhtMVp5cFhMQm52TjdTRnhZd1Y3bmRxU1lHaU45VFRwdToweDEwMmQ3ZmJhYWQwZGUwNzFjNDFmM2NjYzQzYmQ0NzIxNzFkZGFiYWM0MzEzZTc5YTY3ZWExOWM0OWFlNjgyZjY0YWUxMmRlY2YyNzhjNTEwZGY4YzZjZTZhYzdlZTEwNzY2N2YzYTBjZjM5OGUxN2VhMzAyMmRkNmEyYjc1OTBi';
+      api.ipfs.setWriteHeaders({
+        authorization: 'Basic ' + authHeader,
+      });*/
+
+      const postIpfsData = {
+        title: 'Test post',
+        //image: 'QmcWWpR176oFao49jrLHUoH3R9MCziE5d77fdD8qdoiinx',
+        tags: [],
+        body:
+          'Test create subsocial post. Current date: ' + new Date().toString(),
+      };
+
+      //const cid = await api.ipfs.saveContent(postIpfsData);
+      const cid = await api.ipfs.saveContentToOffchain(postIpfsData);
+
+      const substrateApi = await api.substrateApi;
+
+      const tx = substrateApi.tx.posts.createPost(
+        12648,
+        { RegularPost: null },
+        IpfsContent(cid),
+      );
+
+      const serialize = tx.toHex();
+
+      const res = await SubstrateService.createTransaction(
+        { params: { transaction: serialize, chain: SubstrateChain.SUBSOCIAL } },
+        stage.context,
+      );
+      console.log('res: ', res);
+
+      transaction = await new Transaction({}, stage.context).populateById(
+        res.id,
+      );
+      expect(transaction.exists()).toBeTruthy();
+
+      console.log('transaction: ', transaction);
+    });
+
+    test('Test transmit substrate subsocial transaction (post)', async () => {
+      expect(transaction).toBeTruthy();
+
+      await SubstrateService.transmitTransactions(
+        { chain: SubstrateChain.SUBSOCIAL },
+        stage.context,
+        async () => {
+          return;
+        },
+      );
+
+      const updatedSubsocialWallet = await new Wallet(
+        {},
+        stage.context,
+      ).populateById(wallet.id);
+      expect(updatedSubsocialWallet.lastProcessedNonce).toEqual(
         transaction.nonce,
       );
     });
