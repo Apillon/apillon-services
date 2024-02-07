@@ -165,7 +165,7 @@ export class IPFSService {
 
     await runWithWorkers(
       event.fileUploadRequests,
-      10,
+      50,
       context,
       async (fileUploadReq: FileUploadRequest) => {
         console.info(
