@@ -1,11 +1,9 @@
 import {
-  AWS_S3,
   CacheKeyPrefix,
   EndFileUploadSessionDto,
   Lmas,
   LogType,
   ServiceName,
-  env,
   invalidateCacheMatch,
   runWithWorkers,
   writeLog,
@@ -15,7 +13,6 @@ import {
   FileStatus,
   FileUploadRequestFileStatus,
   FileUploadSessionStatus,
-  StorageErrorCode,
 } from '../config/types';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { Directory } from '../modules/directory/models/directory.model';
@@ -23,7 +20,6 @@ import { FileUploadRequest } from '../modules/storage/models/file-upload-request
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { File } from '../modules/storage/models/file.model';
 import { StorageService } from '../modules/storage/storage.service';
-import { StorageCodeException } from './exceptions';
 import { getSessionFilesOnS3 } from './file-upload-session-s3-files';
 import {
   generateDirectoriesForFUR,
@@ -65,8 +61,6 @@ export async function processSessionFiles(
     {},
     context,
   ).populateDirectoriesInBucket(bucket.id, context);
-
-  const s3FilesToDelete: string[] = [];
 
   if (params.directoryPath) {
     await generateDirectoriesFromPath(
@@ -110,16 +104,6 @@ export async function processSessionFiles(
             directories,
             fur,
             bucket,
-          );
-
-          //check if file already exists
-          const existingFile = await new File(
-            {},
-            context,
-          ).populateByNameAndDirectory(
-            bucket.id,
-            fur.fileName,
-            fileDirectory?.id,
           );
 
           //Create new file
@@ -167,9 +151,9 @@ export async function processSessionFiles(
 
           throw err;
         }
-        //update file-upload-request status
-        fur.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_S3;
-        await fur.update();
+        //update file-upload-request status --> Commented out, because this is only informational and can be skipped for sake of optimization
+        /*fur.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_S3;
+        await fur.update();*/
       }
     },
   );

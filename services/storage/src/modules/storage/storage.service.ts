@@ -221,30 +221,35 @@ export class StorageService {
     const s3Client: AWS_S3 = new AWS_S3();
 
     const files = [];
-    await runWithWorkers(event.body.files, 5, context, async (fileMetadata) => {
-      //NOTE - session uuid is added to s3File key.
-      /*File key structure:
-       * Bucket type(STORAGE, STORAGE_sessions, HOSTING)/bucket id/session uuid if present/path/filename
-       */
-      const s3FileKey = `${BucketType[bucket.bucketType]}${
-        session?.session_uuid ? '_sessions' : ''
-      }/${bucket.id}${
-        session?.session_uuid ? '/' + session.session_uuid : ''
-      }/${
-        (fileMetadata.path ? fileMetadata.path : '') + fileMetadata.fileName
-      }`;
+    await runWithWorkers(
+      event.body.files,
+      20,
+      context,
+      async (fileMetadata) => {
+        //NOTE - session uuid is added to s3File key.
+        /*File key structure:
+         * Bucket type(STORAGE, STORAGE_sessions, HOSTING)/bucket id/session uuid if present/path/filename
+         */
+        const s3FileKey = `${BucketType[bucket.bucketType]}${
+          session?.session_uuid ? '_sessions' : ''
+        }/${bucket.id}${
+          session?.session_uuid ? '/' + session.session_uuid : ''
+        }/${
+          (fileMetadata.path ? fileMetadata.path : '') + fileMetadata.fileName
+        }`;
 
-      files.push(
-        await createFURAndS3Url(
-          context,
-          s3FileKey,
-          fileMetadata,
-          session,
-          bucket,
-          s3Client,
-        ),
-      );
-    });
+        files.push(
+          await createFURAndS3Url(
+            context,
+            s3FileKey,
+            fileMetadata,
+            session,
+            bucket,
+            s3Client,
+          ),
+        );
+      },
+    );
 
     await new Lmas().writeLog({
       context: context,
