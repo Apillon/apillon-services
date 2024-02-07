@@ -22,6 +22,7 @@ import {
   DbTables,
   KiltTransactionType,
   PhalaTransactionType,
+  SubstrateTransactionType,
   TxAction,
   TxDirection,
   TxStatus,
@@ -514,6 +515,59 @@ export class TransactionLog extends AdvancedSQLModel {
       this.action =
         data?.transfer?.transactionType ===
         PhalaTransactionType.BALANCE_TRANSFER
+          ? TxAction.DEPOSIT
+          : TxAction.TRANSACTION;
+
+      if (this.action === TxAction.DEPOSIT) {
+        // income fee should not be logged (payed by other wallet)
+        this.fee = '0';
+      }
+    } else {
+      this.action = TxAction.UNKNOWN;
+      this.direction = TxDirection.UNKNOWN;
+    }
+
+    this.calculateTotalPrice();
+
+    return this;
+  }
+
+  public createFromSubstrateIndexerData(data: {
+    system: SystemEvent;
+    transfer: TransferTransaction;
+  },
+  wallet: Wallet,)
+  {
+    this.ts = data?.system?.createdAt ?? data.transfer.createdAt;
+    this.blockId = data?.system?.blockNumber;
+    this.addressFrom = data?.transfer?.from ?? data?.system?.account;
+    this.addressTo = data?.transfer?.to;
+    this.amount = data?.transfer?.amount?.toString() || '0';
+
+    this.hash = data?.system?.extrinsicHash ?? data?.transfer?.extrinsicHash;
+    this.wallet = wallet.address;
+
+    const status = data?.system?.status ?? data?.transfer?.status;
+    this.status = status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
+    this.chainType = wallet.chainType;
+    this.chain = wallet.chain;
+    this.token = wallet.token as TxToken;
+    this.fee = data?.system?.fee?.toString() || data?.transfer?.fee?.toString();
+
+    if (this.addressFrom === this.wallet) {
+      this.direction = TxDirection.COST;
+
+      this.action =
+        data?.transfer?.transactionType ===
+        SubstrateTransactionType.BALANCE_TRANSFER
+          ? TxAction.WITHDRAWAL
+          : TxAction.TRANSACTION;
+    } else if (this.addressTo === this.wallet) {
+      this.direction = TxDirection.INCOME;
+
+      this.action =
+        data?.transfer?.transactionType ===
+        SubstrateTransactionType.BALANCE_TRANSFER
           ? TxAction.DEPOSIT
           : TxAction.TRANSACTION;
 
