@@ -5,7 +5,6 @@ import {
   presenceValidator,
   prop,
   SerializeFor,
-  SqlModelStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, StorageErrorCode } from '../../../config/types';

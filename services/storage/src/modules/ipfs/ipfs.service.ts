@@ -367,6 +367,7 @@ export class IPFSService {
       ipnsRes = await this.client.name.publish(cid, {
         key: ipfsKey,
         resolve: false,
+        ttl: '0h5m0s',
       });
     } catch (err) {
       if (err.message == 'no key by the given name was found') {
@@ -377,6 +378,7 @@ export class IPFSService {
         ipnsRes = await this.client.name.publish(cid, {
           key: ipfsKey,
           resolve: false,
+          ttl: '0h5m0s',
         });
       } else {
         throw err;
@@ -408,6 +410,7 @@ export class IPFSService {
     ipnsRes = await this.client.name.publish(cid, {
       key: ipfsKey,
       resolve: false,
+      ttl: '0h5m0s',
     });
 
     return ipnsRes;

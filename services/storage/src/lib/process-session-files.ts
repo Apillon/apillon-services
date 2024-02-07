@@ -122,37 +122,21 @@ export async function processSessionFiles(
             fileDirectory?.id,
           );
 
-          if (existingFile.exists()) {
-            if (existingFile.s3FileKey != fur.s3FileKey) {
-              s3FilesToDelete.push(existingFile.s3FileKey);
-            }
-            //Update existing file
-            existingFile.populate({
+          //Create new file
+          await new File({}, context)
+            .populate({
+              file_uuid: fur.file_uuid,
               s3FileKey: fur.s3FileKey,
               name: fur.fileName,
               contentType: fur.contentType,
+              project_uuid: bucket.project_uuid,
+              bucket_id: bucket.id,
+              path: fur.path,
+              directory_id: fileDirectory?.id,
               size: s3File.Size,
               fileStatus: FileStatus.UPLOADED_TO_S3,
-            });
-
-            await existingFile.update();
-          } else {
-            //Create new file
-            await new File({}, context)
-              .populate({
-                file_uuid: fur.file_uuid,
-                s3FileKey: fur.s3FileKey,
-                name: fur.fileName,
-                contentType: fur.contentType,
-                project_uuid: bucket.project_uuid,
-                bucket_id: bucket.id,
-                path: fur.path,
-                directory_id: fileDirectory?.id,
-                size: s3File.Size,
-                fileStatus: FileStatus.UPLOADED_TO_S3,
-              })
-              .insert();
-          }
+            })
+            .insert();
         } catch (err) {
           await new Lmas().writeLog({
             context: context,
@@ -189,24 +173,6 @@ export async function processSessionFiles(
       }
     },
   );
-
-  try {
-    const s3Client: AWS_S3 = new AWS_S3();
-    await s3Client.removeFiles(
-      env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-      s3FilesToDelete.map((x) => {
-        return { Key: x };
-      }),
-    );
-  } catch (err) {
-    writeLog(
-      LogType.ERROR,
-      'Error removing files from s3, that were overwritten',
-      'hosting-bucket-process-session-files.ts',
-      'hostingBucketProcessSessionFiles',
-      err,
-    );
-  }
 
   //update session
   session.sessionStatus = FileUploadSessionStatus.PROCESSED;

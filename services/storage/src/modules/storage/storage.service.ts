@@ -154,11 +154,6 @@ export class StorageService {
         code: StorageErrorCode.BUCKET_NOT_FOUND,
         status: 404,
       });
-    } else if (bucket.status == SqlModelStatus.MARKED_FOR_DELETION) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_IS_MARKED_FOR_DELETION,
-        status: 404,
-      });
     }
     bucket.canAccess(context);
 
@@ -198,7 +193,7 @@ export class StorageService {
           },
           context,
         );
-        await session.insert();
+        await session.insert(SerializeFor.INSERT_DB, undefined, true);
       } else if (session.bucket_id != bucket.id) {
         throw new StorageCodeException({
           code: StorageErrorCode.SESSION_UUID_BELONGS_TO_OTHER_BUCKET,
@@ -220,7 +215,7 @@ export class StorageService {
         },
         context,
       );
-      await session.insert();
+      await session.insert(SerializeFor.INSERT_DB, undefined, true);
     }
 
     const s3Client: AWS_S3 = new AWS_S3();

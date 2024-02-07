@@ -28,9 +28,6 @@ export async function createFURAndS3Url(
     });
 
     await fur.insert();
-  } else {
-    //Update existing File upload request
-    await fur.update();
   }
   fileMetadata.file_uuid = fur.file_uuid;
 
