@@ -43,6 +43,7 @@ import { registerUser } from './utils/authentication-utils';
 import { getOauthSessionToken } from './utils/oauth-utils';
 import { UserConsentDto, UserConsentStatus } from './dtos/user-consent.dto';
 import { DiscordCodeDto } from './dtos/discord-code.dto';
+import { Identity } from '@apillon/sdk';
 @Injectable()
 export class UserService {
   constructor(private readonly projectService: ProjectService) {}
@@ -66,6 +67,7 @@ export class UserService {
     user.userRoles = context.user.userRoles;
     user.userPermissions = context.user.userPermissions;
     user.wallet = context.user.authUser.wallet;
+    user.evmWallet = context.user.authUser.evmWallet;
 
     return user.serialize(SerializeFor.PROFILE);
   }
@@ -313,12 +315,16 @@ export class UserService {
       });
     }
 
-    const { message } = this.getAuthMessage(userAuth.timestamp);
-    const { isValid } = signatureVerify(
-      message,
-      userAuth.signature,
-      userAuth.wallet,
-    );
+    const { signature, wallet, timestamp, isEvmWallet } = userAuth;
+
+    const { message } = this.getAuthMessage(timestamp);
+    const { isValid } = isEvmWallet
+      ? new Identity(null).validateEvmWalletSignature({
+          message,
+          signature,
+          walletAddress: wallet,
+        })
+      : signatureVerify(message, signature, wallet);
 
     if (!isValid) {
       throw new CodeException({
@@ -331,7 +337,7 @@ export class UserService {
 
     const resp = await new Ams(context).updateAuthUser({
       user_uuid: context.user.user_uuid,
-      wallet: userAuth.wallet,
+      [isEvmWallet ? 'evmWallet' : 'wallet']: wallet,
     });
 
     context.user.populate(resp.data);
