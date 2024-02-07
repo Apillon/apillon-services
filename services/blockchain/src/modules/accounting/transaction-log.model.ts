@@ -485,7 +485,7 @@ export class TransactionLog extends AdvancedSQLModel {
     wallet: Wallet,
   ) {
     this.ts = data?.system?.createdAt ?? data.transfer.createdAt;
-    this.blockId = data?.system?.blockNumber;
+    this.blockId = data?.system?.blockNumber ?? data?.transfer?.blockNumber;
     this.addressFrom = data?.transfer?.from ?? data?.system?.account;
     this.addressTo = data?.transfer?.to;
     this.amount = data?.transfer?.amount?.toString() || '0';
