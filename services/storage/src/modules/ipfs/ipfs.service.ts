@@ -25,7 +25,7 @@ import { File } from '../storage/models/file.model';
 import { uploadItemsToIPFSRes } from './interfaces/upload-items-to-ipfs-res.interface';
 import { IpfsCluster } from './models/ipfs-cluster.model';
 import { IpfsBandwidth } from './models/ipfs-bandwidth';
-import { IpfsKuboRpcHttpClient } from './ipfs-http-client';
+import { INamePublishResult, IpfsKuboRpcHttpClient } from './ipfs-http-client';
 
 export class IPFSService {
   //private client: IPFSHTTPClient;
@@ -98,7 +98,7 @@ export class IPFSService {
       content: file.Body as any,
     });
 
-    await this.pinCidToCluster(filesOnIPFS.cid);
+    await this.pinCidToCluster(filesOnIPFS.Hash);
 
     try {
       (file.Body as any).destroy();
@@ -116,16 +116,16 @@ export class IPFSService {
       data: {
         fileUploadRequest: event.fileUploadRequest.serialize(),
         ipfsResponse: {
-          cidV0: filesOnIPFS.cid,
+          cidV0: filesOnIPFS.Hash,
           filesOnIPFS,
         },
       },
     });
 
     return {
-      cidV0: filesOnIPFS.cid,
-      cidV1: filesOnIPFS.cid,
-      size: filesOnIPFS.size,
+      cidV0: filesOnIPFS.Hash,
+      cidV1: filesOnIPFS.Hash,
+      size: filesOnIPFS.Size,
     };
   }
 
@@ -222,7 +222,7 @@ export class IPFSService {
     const mfsDirectoryCID = await this.kubRpcApiClient.files.stat({
       path: mfsDirectoryPath,
     });
-    console.info('DIR CID: ', mfsDirectoryCID.cid);
+    console.info('DIR CID: ', mfsDirectoryCID.Hash);
 
     /**Directories on IPFS - each dir on IPFS gets CID */
     const ipfsDirectories = [];
@@ -249,9 +249,9 @@ export class IPFSService {
       }
     }
 
-    if (mfsDirectoryCID?.cid) {
+    if (mfsDirectoryCID?.Hash) {
       //It's probably enough to pin just the parent folder - content should be automatically pinned
-      await this.pinCidToCluster(mfsDirectoryCID?.cid);
+      await this.pinCidToCluster(mfsDirectoryCID?.Hash);
     }
 
     //Write log to LMAS
@@ -263,12 +263,12 @@ export class IPFSService {
       service: ServiceName.STORAGE,
       data: {
         session_id: event.fileUploadRequests[0].session_id,
-        mfsDirectoryCID: mfsDirectoryCID.cid,
+        mfsDirectoryCID: mfsDirectoryCID.Hash,
       },
     });
 
     return {
-      parentDirCID: mfsDirectoryCID?.cid,
+      parentDirCID: mfsDirectoryCID?.Hash,
       ipfsDirectories: ipfsDirectories,
       size: totalSizeOfFiles,
     };
@@ -368,7 +368,7 @@ export class IPFSService {
     //Initialize IPFS client
     await this.initializeIPFSClient();
 
-    let ipnsRes = undefined;
+    let ipnsRes: INamePublishResult = undefined;
     try {
       ipnsRes = await this.kubRpcApiClient.name.publish({
         cid,
@@ -391,7 +391,7 @@ export class IPFSService {
         throw err;
       }
     }
-    return ipnsRes;
+    return { name: ipnsRes.Name, value: ipnsRes.Value };
   }
 
   /**
@@ -421,7 +421,7 @@ export class IPFSService {
       resolve: false,
     });
 
-    return ipnsRes;
+    return { name: ipnsRes.Name, value: ipnsRes.Value };
   }
 
   /**
@@ -535,8 +535,8 @@ export class IPFSService {
     });
 
     return {
-      cidV0: fileOnIPFS.cid,
-      cidV1: fileOnIPFS.cid,
+      cidV0: fileOnIPFS.Hash,
+      cidV1: fileOnIPFS.Hash,
     };
   }
 

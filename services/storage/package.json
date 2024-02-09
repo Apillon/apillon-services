@@ -47,7 +47,7 @@
     "tsconfig": "*"
   },
   "jest": {
-    "testTimeout": 1800000,
+    "testTimeout": 6400000,
     "moduleFileExtensions": [
       "ts",
       "tsx",

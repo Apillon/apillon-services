@@ -1,10 +1,10 @@
 import axios from 'axios';
-const FormData = require('form-data');
+import FormData from 'form-data';
 
 //#region interfaces
 export interface IAddResult {
-  cid: string;
-  size: number;
+  Hash: string;
+  Size: number;
 }
 
 export interface IObject {
@@ -20,9 +20,13 @@ export interface IClientError {
 }
 
 export interface IStat {
-  cid: string;
-  size: number;
-  path: string;
+  Hash: string;
+  Size: number;
+  CumulativeSize: number;
+  /**
+   * file, directory
+   */
+  Type: string;
 }
 
 export interface IEntry {
@@ -94,7 +98,7 @@ export class IpfsKuboRpcHttpClient {
 
       const res = await axios.post(`${this.url}/add?cid-version=1`, form);
 
-      return { cid: res.data.Hash, size: +res.data.Size };
+      return res.data;
     } catch (err) {
       throw new ClientError(err);
     }
@@ -129,29 +133,36 @@ export class Files {
     }
   }
 
-  public async ls(params: { path: string }): Promise<IEntry[]> {
+  /**
+   * List all entries (files and directories) for path
+   * @param params
+   * @returns
+   */
+  public async ls(params: { path?: string }): Promise<IEntry[]> {
     try {
       const res = await axios.post(
-        `${this.url}/files/ls?arg=${params.path}&long=1`,
+        `${this.url}/files/ls?long=1${
+          params.path ? '&arg=' + params.path : ''
+        }`,
       );
-      console.info(res);
       return res.data.Entries;
     } catch (err) {
       throw new ClientError(err);
     }
   }
 
+  /**
+   * Get properties of a object in given path
+   * @param params
+   * @returns
+   */
   public async stat(params: { path: string }): Promise<IStat> {
     try {
       const objectStat = (
         await axios.post(`${this.url}/files/stat?arg=${params.path}`)
       ).data;
       console.info(objectStat);
-      return {
-        cid: objectStat.Hash,
-        path: params.path,
-        size: objectStat.CumulativeSize,
-      };
+      return objectStat;
     } catch (err) {
       throw new ClientError(err);
     }
