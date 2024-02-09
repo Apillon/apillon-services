@@ -25,139 +25,235 @@ export class AirdropTask extends AdvancedSQLModel {
         code: ReferralErrorCode.USER_UUID_NOT_PRESENT,
       },
     ],
+    defaultValue: false,
   })
   public user_uuid: string;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public projectCreated: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public bucketCreated: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public fileUploaded: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public websiteCreated: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public ipnsCreated: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public onSubscriptionPlan: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public creditsPurchased: boolean;
 
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: 0,
   })
   public creditsSpent: number;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public grillChatCreated: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public nftCollectionCreated: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public domainLinked: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public websiteUploadedApi: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public fileUploadedApi: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public computingContractCreated: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public collaboratorAdded: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public kiltIdentityCreated: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public identitySdkUsed: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: false,
   })
   public nftMintedApi: boolean;
 
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
+    defaultValue: 0,
   })
   public usersReferred: number;
 
@@ -174,5 +270,23 @@ export class AirdropTask extends AdvancedSQLModel {
     return data?.length
       ? this.populate(data[0], PopulateFrom.DB)
       : this.reset();
+  }
+
+  public async saveOrUpdate(): Promise<void> {
+    const serializedData = this.serialize(SerializeFor.INSERT_DB);
+    ['status', 'createUser', 'updateUser', 'createTime', 'updateTime'].forEach(
+      (p) => delete serializedData[p],
+    );
+
+    const updateFields = Object.keys(serializedData)
+      .map((key) => `${key} = @${key}`)
+      .join(', ');
+
+    const query = `
+      INSERT INTO \`${this.tableName}\` SET ${updateFields}
+      ON DUPLICATE KEY UPDATE ${updateFields};
+    `;
+
+    await this.getContext().mysql.paramExecute(query, serializedData);
   }
 }

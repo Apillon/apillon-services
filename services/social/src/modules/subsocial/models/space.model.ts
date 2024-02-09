@@ -3,6 +3,7 @@ import {
   BaseProjectQueryFilter,
   Context,
   ErrorCode,
+  LogType,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
@@ -210,10 +211,10 @@ export class Space extends UuidSqlModel {
     );
     const sqlQuery = {
       qSelect: `
-        SELECT ${selectFields}, 
+        SELECT ${selectFields},
         (
-          SELECT COUNT(*) 
-          FROM \`${DbTables.POST}\` p 
+          SELECT COUNT(*)
+          FROM \`${DbTables.POST}\` p
           WHERE p.space_id = s.id
         ) as numOfPosts
         `,
@@ -269,7 +270,7 @@ export class Space extends UuidSqlModel {
           err,
           space: this.serialize(),
         },
-      }).writeToMonitor({ sendAdminAlert: true });
+      }).writeToMonitor({ logType: LogType.ERROR, sendAdminAlert: true });
     }
   }
 }

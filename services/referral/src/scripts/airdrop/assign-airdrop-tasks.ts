@@ -1,5 +1,8 @@
 import { Mongo, MySql, SqlModelStatus, env } from '@apillon/lib';
 import { AirdropTask } from '../../modules/airdrop/models/airdrop-task.model';
+import { ServiceContext } from '@apillon/service-lib';
+
+let referralContext: ServiceContext;
 
 async function setupDatabases() {
   const devConsoleSql = new MySql({
@@ -90,6 +93,18 @@ async function setupDatabases() {
   });
   await computingSql.connect();
 
+  const authSql = new MySql({
+    host: env.AUTH_API_MYSQL_HOST,
+    database: env.AUTH_API_MYSQL_DATABASE,
+    password: env.AUTH_API_MYSQL_PASSWORD,
+    port: env.AUTH_API_MYSQL_PORT,
+    user: env.AUTH_API_MYSQL_USER,
+  });
+  await authSql.connect();
+
+  referralContext = new ServiceContext();
+  referralContext.setMySql(referralSql);
+
   return {
     devConsoleSql,
     amsSql,
@@ -101,42 +116,13 @@ async function setupDatabases() {
     blockchainSql,
     socialSql,
     computingSql,
+    authSql,
+    referralContext,
   };
 }
 
-enum NCTRAction {
-  PROJECT_CREATED = 'project_created',
-  BUCKET_CREATED = 'bucket_created',
-  FILE_UPLOADED = 'file_uploaded_to_ipfs',
-  REFERRED_FRIEND = 'referred_friend',
-  WEBSITE_CREATED = 'hosting_page_created',
-  DOMAIN_LINKED = 'domain_linked',
-  NFT_CREATED = 'nft_collection_deployed',
-  SUBSCRIPTION_PLAN = 'subscription_plan',
-  BOUGHT_CREDITS = 'bought_credits',
-  SPENT_CREDITS = 'spent_credits',
-  SPACE_CREATED = 'chat_integration',
-  SCHRODINGERS_DEPLOY = 'schrodingers_deploy',
-  API_CALL = 'api_call',
-}
-
-const pointsMapping: { [key in NCTRAction]: number } = {
-  [NCTRAction.PROJECT_CREATED]: 1,
-  [NCTRAction.BUCKET_CREATED]: 1,
-  [NCTRAction.FILE_UPLOADED]: 1,
-  [NCTRAction.API_CALL]: 10,
-  [NCTRAction.REFERRED_FRIEND]: 2,
-  [NCTRAction.WEBSITE_CREATED]: 1,
-  [NCTRAction.DOMAIN_LINKED]: 10,
-  [NCTRAction.SUBSCRIPTION_PLAN]: 20,
-  [NCTRAction.BOUGHT_CREDITS]: 5,
-  [NCTRAction.SPENT_CREDITS]: 1,
-  [NCTRAction.SPACE_CREATED]: 1,
-  [NCTRAction.SCHRODINGERS_DEPLOY]: 1,
-  [NCTRAction.NFT_CREATED]: 1,
-};
-
 let projects: any[];
+let projectUsers: any[];
 let buckets: any[];
 let files: any[];
 let ipns: any[];
@@ -147,14 +133,18 @@ let subscriptions: any[];
 let creditTransactions: any[];
 let spaces: any[];
 let computingContracts: any[];
+let identities: any[];
 
 async function main() {
   const databases = await setupDatabases();
   const users = await databases.devConsoleSql.paramExecute(
-    `SELECT * FROM user WHERE status = ${SqlModelStatus.ACTIVE} AND user_uuid = '00f147dd-b502-40d4-abeb-c4ed73c7b783'`,
+    `SELECT * FROM user WHERE status = ${SqlModelStatus.ACTIVE}`,
   );
   projects = await databases.devConsoleSql.paramExecute(
     `SELECT * FROM project WHERE status = ${SqlModelStatus.ACTIVE}`,
+  );
+  projectUsers = await databases.devConsoleSql.paramExecute(
+    `SELECT * FROM project_user WHERE status = ${SqlModelStatus.ACTIVE}`,
   );
   buckets = await databases.storageSql.paramExecute(
     `SELECT * FROM bucket WHERE bucketType = 1 AND status = ${SqlModelStatus.ACTIVE}`,
@@ -169,7 +159,7 @@ async function main() {
     `SELECT * FROM website WHERE status = ${SqlModelStatus.ACTIVE}`,
   );
   nfts = await databases.nftsSql.paramExecute(
-    `SELECT * FROM collection WHERE status = ${SqlModelStatus.ACTIVE}`,
+    `SELECT * FROM collection WHERE collectionStatus = 3 AND status = ${SqlModelStatus.ACTIVE}`,
   );
   subscriptions = await databases.configSql.paramExecute(
     `
@@ -184,67 +174,56 @@ async function main() {
   computingContracts = await databases.computingSql.paramExecute(
     `SELECT * FROM contract`,
   );
+  identities = await databases.authSql.paramExecute(
+    `SELECT * FROM identity WHERE state = 'attested' AND status = ${SqlModelStatus.ACTIVE}`,
+  );
 
-  const pts = await calculateUserPoints(users[0] as any);
-  console.log(pts);
+  await Promise.all(users.map((user) => assignAirdropTasks(user)));
+  console.info('Finished assigning airdrop tasks');
 }
 
-async function calculateUserPoints(user: any) {
+async function assignAirdropTasks(user: any): Promise<void> {
   const userProjects = projects.filter((p) => p.createUser === user.id);
   if (!userProjects.length) {
     return;
   }
-  const airdropTasks = new AirdropTask({
-    user_uuid: user.user_uuid,
-    projectCreated: true,
-  });
+  const user_uuid: string = user.user_uuid;
+  const airdropTasks = new AirdropTask(
+    { user_uuid, projectCreated: true },
+    referralContext,
+  );
   const projectUuids = userProjects.map((p) => p.project_uuid);
+  const projectIds = userProjects.map((p) => p.id);
 
-  const userBuckets = buckets.filter((p) =>
-    projectUuids.includes(p.project_uuid),
-  );
+  const own: (collection: any[]) => any[] = (collection: any[]) =>
+    collection.filter((p) => projectUuids.includes(p.project_uuid));
+  const ownAny: (collection: any[]) => boolean = (collection: any[]) =>
+    own(collection).length > 0;
 
-  airdropTasks.bucketCreated = userBuckets.length > 0;
+  airdropTasks.populate({
+    collaboratorAdded:
+      projectUsers.filter((p) => projectIds.includes(p.project_id)).length > 1,
+    bucketCreated: ownAny(buckets),
+    fileUploaded: ownAny(files),
+    ipnsCreated: ownAny(ipns),
+    websiteCreated: ownAny(websites),
+    domainLinked: ownAny(websites.filter((w) => !!w.domain)),
+    nftCollectionCreated: ownAny(nfts),
+    onSubscriptionPlan: ownAny(subscriptions),
+    grillChatCreated: ownAny(spaces),
+    computingContractCreated: ownAny(computingContracts),
+    kiltIdentityCreated: ownAny(identities),
+    creditsPurchased:
+      own(creditTransactions).filter(
+        (p) => p.direction == 1 && p.referenceTable === 'invoice',
+      ).length > 0,
+    creditsSpent: own(creditTransactions)
+      .filter((p) => p.direction == 2)
+      .reduce((total, current) => total + current.amount, 0),
+  });
 
-  airdropTasks.fileUploaded =
-    files.filter((p) => userBuckets.map((b) => b.id).includes(p.bucket_id))
-      .length > 0;
-
-  airdropTasks.ipnsCreated =
-    ipns.filter((p) => projectUuids.includes(p.project_uuid)).length > 0;
-
-  const userWebsites = websites.filter((p) =>
-    projectUuids.includes(p.project_uuid),
-  );
-  airdropTasks.websiteCreated = userWebsites.length > 0;
-
-  airdropTasks.domainLinked = userWebsites.filter((w) => !!w.domain).length > 0;
-
-  airdropTasks.nftCollectionCreated =
-    nfts.filter((p) => projectUuids.includes(p.project_uuid)).length > 0;
-
-  airdropTasks.onSubscriptionPlan =
-    subscriptions.filter((p) => projectUuids.includes(p.project_uuid)).length >
-    0;
-
-  airdropTasks.creditsPurchased =
-    creditTransactions.filter(
-      (p) =>
-        projectUuids.includes(p.project_uuid) &&
-        p.direction === 1 &&
-        p.referenceTable === 'invoice',
-    ).length > 0;
-
-  airdropTasks.creditsSpent = creditTransactions
-    .filter((p) => projectUuids.includes(p.project_uuid) && p.direction === 2)
-    .reduce((a, b) => a.amount + b.amount, 0);
-
-  airdropTasks.grillChatCreated =
-    spaces.filter((p) => projectUuids.includes(p.project_uuid)).length > 0;
-
-  airdropTasks.computingContractCreated =
-    computingContracts.filter((p) => projectUuids.includes(p.project_uuid))
-      .length > 0;
+  await airdropTasks.saveOrUpdate();
+  console.info(`Assigned airdrop tasks for user ${user_uuid}`);
 }
 
 main();
