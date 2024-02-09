@@ -1,7 +1,5 @@
-import { env } from '../config/env';
-import { SqlModelStatus } from '../config/types';
-import { Mongo } from '../lib/database/mongo';
-import { MySql } from '../lib/database/mysql';
+import { Mongo, MySql, SqlModelStatus, env } from '@apillon/lib';
+import { AirdropTask } from '../../modules/airdrop/models/airdrop-task.model';
 
 async function setupDatabases() {
   const devConsoleSql = new MySql({
@@ -141,13 +139,14 @@ const pointsMapping: { [key in NCTRAction]: number } = {
 let projects: any[];
 let buckets: any[];
 let files: any[];
+let ipns: any[];
 let referrals: any[];
 let websites: any[];
 let nfts: any[];
 let subscriptions: any[];
 let creditTransactions: any[];
 let spaces: any[];
-let schrodingers: any[];
+let computingContracts: any[];
 
 async function main() {
   const databases = await setupDatabases();
@@ -162,6 +161,9 @@ async function main() {
   );
   files = await databases.storageSql.paramExecute(
     `SELECT * FROM file WHERE status = ${SqlModelStatus.ACTIVE}`,
+  );
+  ipns = await databases.storageSql.paramExecute(
+    `SELECT * FROM ipns WHERE status = ${SqlModelStatus.ACTIVE}`,
   );
   websites = await databases.storageSql.paramExecute(
     `SELECT * FROM website WHERE status = ${SqlModelStatus.ACTIVE}`,
@@ -179,7 +181,7 @@ async function main() {
     `SELECT * FROM creditTransaction`,
   );
   spaces = await databases.socialSql.paramExecute(`SELECT * FROM space`);
-  schrodingers = await databases.computingSql.paramExecute(
+  computingContracts = await databases.computingSql.paramExecute(
     `SELECT * FROM contract`,
   );
 
@@ -190,66 +192,59 @@ async function main() {
 async function calculateUserPoints(user: any) {
   const userProjects = projects.filter((p) => p.createUser === user.id);
   if (!userProjects.length) {
-    return 0;
+    return;
   }
+  const airdropTasks = new AirdropTask({
+    user_uuid: user.user_uuid,
+    projectCreated: true,
+  });
   const projectUuids = userProjects.map((p) => p.project_uuid);
-
-  let totalPoints = 0;
 
   const userBuckets = buckets.filter((p) =>
     projectUuids.includes(p.project_uuid),
   );
-  userBuckets.forEach(
-    () => (totalPoints += pointsMapping[NCTRAction.BUCKET_CREATED]),
-  );
 
-  files
-    .filter((p) => userBuckets.map((b) => b.id).includes(p.bucket_id))
-    .forEach(() => (totalPoints += pointsMapping[NCTRAction.FILE_UPLOADED]));
+  airdropTasks.bucketCreated = userBuckets.length > 0;
+
+  airdropTasks.fileUploaded =
+    files.filter((p) => userBuckets.map((b) => b.id).includes(p.bucket_id))
+      .length > 0;
+
+  airdropTasks.ipnsCreated =
+    ipns.filter((p) => projectUuids.includes(p.project_uuid)).length > 0;
 
   const userWebsites = websites.filter((p) =>
     projectUuids.includes(p.project_uuid),
   );
-  userWebsites.forEach(
-    () => (totalPoints += pointsMapping[NCTRAction.WEBSITE_CREATED]),
-  );
-  userWebsites
-    .filter((w) => !!w.domain)
-    .forEach(() => (totalPoints += pointsMapping[NCTRAction.DOMAIN_LINKED]));
+  airdropTasks.websiteCreated = userWebsites.length > 0;
 
-  nfts
-    .filter((p) => projectUuids.includes(p.project_uuid))
-    .forEach(() => (totalPoints += pointsMapping[NCTRAction.NFT_CREATED]));
+  airdropTasks.domainLinked = userWebsites.filter((w) => !!w.domain).length > 0;
 
-  subscriptions
-    .filter((p) => projectUuids.includes(p.project_uuid))
-    .forEach(
-      () => (totalPoints += pointsMapping[NCTRAction.SUBSCRIPTION_PLAN]),
-    );
+  airdropTasks.nftCollectionCreated =
+    nfts.filter((p) => projectUuids.includes(p.project_uuid)).length > 0;
 
-  creditTransactions
-    .filter((p) => projectUuids.includes(p.project_uuid))
-    .forEach(
-      (c) =>
-        (totalPoints +=
-          pointsMapping[
-            c.direction === 1
-              ? NCTRAction.BOUGHT_CREDITS
-              : NCTRAction.SPENT_CREDITS
-          ]),
-    );
+  airdropTasks.onSubscriptionPlan =
+    subscriptions.filter((p) => projectUuids.includes(p.project_uuid)).length >
+    0;
 
-  spaces
-    .filter((p) => projectUuids.includes(p.project_uuid))
-    .forEach(() => (totalPoints += pointsMapping[NCTRAction.SPACE_CREATED]));
+  airdropTasks.creditsPurchased =
+    creditTransactions.filter(
+      (p) =>
+        projectUuids.includes(p.project_uuid) &&
+        p.direction === 1 &&
+        p.referenceTable === 'invoice',
+    ).length > 0;
 
-  schrodingers
-    .filter((p) => projectUuids.includes(p.project_uuid))
-    .forEach(
-      () => (totalPoints += pointsMapping[NCTRAction.SCHRODINGERS_DEPLOY]),
-    );
+  airdropTasks.creditsSpent = creditTransactions
+    .filter((p) => projectUuids.includes(p.project_uuid) && p.direction === 2)
+    .reduce((a, b) => a.amount + b.amount, 0);
 
-  return totalPoints;
+  airdropTasks.grillChatCreated =
+    spaces.filter((p) => projectUuids.includes(p.project_uuid)).length > 0;
+
+  airdropTasks.computingContractCreated =
+    computingContracts.filter((p) => projectUuids.includes(p.project_uuid))
+      .length > 0;
 }
 
 main();
