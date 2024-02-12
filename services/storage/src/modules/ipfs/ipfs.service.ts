@@ -25,7 +25,10 @@ import { File } from '../storage/models/file.model';
 import { uploadItemsToIPFSRes } from './interfaces/upload-items-to-ipfs-res.interface';
 import { IpfsCluster } from './models/ipfs-cluster.model';
 import { IpfsBandwidth } from './models/ipfs-bandwidth';
-import { INamePublishResult, IpfsKuboRpcHttpClient } from './ipfs-http-client';
+import {
+  INamePublishResult,
+  IpfsKuboRpcHttpClient,
+} from '@apillon/ipfs-kubo-rpc-http-client';
 
 export class IPFSService {
   //private client: IPFSHTTPClient;

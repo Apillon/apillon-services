@@ -1,5 +1,5 @@
 import { runWithWorkers } from '@apillon/lib';
-import { IpfsKuboRpcHttpClient } from '../ipfs-http-client';
+import { IpfsKuboRpcHttpClient } from '@apillon/ipfs-kubo-rpc-http-client';
 import fs from 'fs';
 
 describe('Ipfs http client integration test', () => {

@@ -28,6 +28,7 @@
     "fill-cids-v1": "node -r ts-node/register ./src/scripts/utils/fill-missing-v1-cids"
   },
   "dependencies": {
+    "@apillon/ipfs-kubo-rpc-http-client": "github:Apillon/ipfs-kubo-rpc-http-client",
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
