@@ -566,6 +566,8 @@ export class Deployment extends AdvancedSQLModel {
       website.website_uuid,
     );
 
+    console.info('Preparing message for slack...');
+
     //Send message to slack
     const jwt = generateJwtToken(
       JwtTokenType.WEBSITE_REVIEW_TOKEN,
@@ -616,6 +618,8 @@ export class Deployment extends AdvancedSQLModel {
       blocks,
       channel: env.SLACK_CHANNEL_FOR_WEBSITE_REVIEWS,
     };
+
+    console.info('Sending message to slack...', msgParams);
 
     await new Lmas().sendMessageToSlack(msgParams);
 

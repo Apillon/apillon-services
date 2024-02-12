@@ -329,6 +329,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         },
       });
     } catch (err) {
+      console.error(err);
       await this.writeEventLog(
         {
           logType: LogType.ERROR,
