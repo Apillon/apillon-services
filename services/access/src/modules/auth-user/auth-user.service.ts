@@ -27,6 +27,7 @@ import { signatureVerify } from '@polkadot/util-crypto';
 import { TokenExpiresInStr } from '../../config/types';
 import { CryptoHash } from '../../lib/hash-with-crypto';
 import { ApiKeyService } from '../api-key/api-key.service';
+import { Identity } from '@apillon/sdk';
 
 /**
  * AuthUserService class handles user authentication and related operations, such as registration, login, password reset, and email verification.
@@ -510,12 +511,14 @@ export class AuthUserService {
     if (!event?.message) {
       throw await new AmsBadRequestException(context, event).writeToMonitor();
     }
-
-    const { isValid } = signatureVerify(
-      event.message,
-      authData.signature,
-      authData.wallet,
-    );
+    const { signature, wallet, timestamp, isEvmWallet } = authData;
+    const { isValid } = isEvmWallet
+      ? new Identity(null).validateEvmWalletSignature({
+          message: event.message,
+          signature,
+          walletAddress: wallet,
+        })
+      : signatureVerify(event.message, signature, wallet);
 
     if (!isValid) {
       throw await new AmsCodeException({
@@ -530,7 +533,7 @@ export class AuthUserService {
     }
 
     const authUser = await new AuthUser({}, context).populateByWalletAddress(
-      authData.wallet,
+      wallet,
     );
 
     if (!authUser.exists()) {
@@ -551,10 +554,7 @@ export class AuthUserService {
       JwtTokenType.USER_AUTHENTICATION,
     );
 
-    if (
-      authToken.exists() &&
-      authToken?.updateTime?.getTime() > authData.timestamp
-    ) {
+    if (authToken.exists() && authToken?.updateTime?.getTime() > timestamp) {
       throw await new AmsCodeException({
         status: 400,
         code: AmsErrorCode.WALLET_SIGNATURE_ALREADY_USED,
