@@ -128,4 +128,11 @@ export class ReferralController {
   ) {
     return await this.referralService.confirmRetweet(context, body);
   }
+
+  @Get('airdrop-tasks')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(AuthGuard)
+  async getAirdropTasks(@Ctx() context: DevConsoleApiContext) {
+    return await this.referralService.getAirdropTasks(context);
+  }
 }
