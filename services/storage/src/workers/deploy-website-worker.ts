@@ -154,7 +154,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           !(await checkProjectSubscription(this.context, website.project_uuid))
         ) {
           //if project is on freemium, website goes to review
-          await deployment.sendToReview(website);
+          await deployment.sendToReview(website, data.user_uuid);
           return;
         }
 
