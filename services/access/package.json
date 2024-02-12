@@ -28,14 +28,15 @@
   },
   "dependencies": {
     "@apillon/lib": "*",
+    "@apillon/sdk": "^2.0.0",
     "@apillon/service-lib": "*",
     "@middy/core": "^3.3.1",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
     "@types/uuid": "^8.3.4",
-    "bcryptjs": "^2.4.3",
-    "axios": "^1.2.0"
+    "axios": "^1.2.0",
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
