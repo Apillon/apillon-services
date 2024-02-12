@@ -1,4 +1,4 @@
-import { Mongo, MySql, SqlModelStatus, env } from '@apillon/lib';
+import { Mongo, MySql, SerializeFor, SqlModelStatus, env } from '@apillon/lib';
 import { AirdropTask } from '../../modules/airdrop/models/airdrop-task.model';
 import { ServiceContext } from '@apillon/service-lib';
 
@@ -183,13 +183,17 @@ async function main() {
 }
 
 async function assignAirdropTasks(user: any): Promise<void> {
+  const user_uuid: string = user.user_uuid;
+
   const userProjects = projects.filter((p) => p.createUser === user.id);
   if (!userProjects.length) {
-    return;
+    return await saveAirdropTasks(
+      // Assign 10 points for registering
+      new AirdropTask({ user_uuid, totalPoints: 10 }, referralContext),
+    );
   }
-  const user_uuid: string = user.user_uuid;
   const airdropTasks = new AirdropTask(
-    { user_uuid, projectCreated: true },
+    { user_uuid, projectCreated: true, totalPoints: 10 },
     referralContext,
   );
   const projectUuids = userProjects.map((p) => p.project_uuid);
@@ -222,8 +226,42 @@ async function assignAirdropTasks(user: any): Promise<void> {
       .reduce((total, current) => total + current.amount, 0),
   });
 
-  await airdropTasks.saveOrUpdate();
-  console.info(`Assigned airdrop tasks for user ${user_uuid}`);
+  for (const [task, isCompleted] of Object.entries(
+    airdropTasks.serialize(SerializeFor.PROFILE),
+  )) {
+    if (task === 'creditsSpent') {
+      airdropTasks.totalPoints += Math.floor(airdropTasks.creditsSpent / 3000);
+    } else if (task === 'usersReferred') {
+      airdropTasks.totalPoints += airdropTasks.usersReferred * 2;
+    } else if (isCompleted) {
+      airdropTasks.totalPoints += taskPoints[task] || 0;
+    }
+  }
+
+  await saveAirdropTasks(airdropTasks);
 }
 
-main();
+async function saveAirdropTasks(airdropTasks: AirdropTask) {
+  await airdropTasks.saveOrUpdate();
+  console.info(`Assigned airdrop tasks for user ${airdropTasks.user_uuid}`);
+}
+
+// Define a mapping for tasks to points
+const taskPoints = {
+  projectCreated: 1,
+  bucketCreated: 1,
+  fileUploaded: 1,
+  ipnsCreated: 1,
+  websiteCreated: 1,
+  domainLinked: 10,
+  nftCollectionCreated: 10,
+  onSubscriptionPlan: 20,
+  creditsPurchased: 5,
+  grillChatCreated: 1,
+  computingContractCreated: 0,
+  kiltIdentityCreated: 10,
+  collaboratorAdded: 1,
+};
+
+// TODO: Remove and create worker
+void main();

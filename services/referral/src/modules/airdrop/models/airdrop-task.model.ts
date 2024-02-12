@@ -18,6 +18,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -36,6 +37,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -48,6 +50,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -60,6 +63,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -72,6 +76,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -84,6 +89,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -96,6 +102,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -108,22 +115,11 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
   public creditsPurchased: boolean;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.INSERT_DB,
-    ],
-    defaultValue: 0,
-  })
-  public creditsSpent: number;
 
   @prop({
     parser: { resolver: booleanParser() },
@@ -132,6 +128,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -144,6 +141,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -156,6 +154,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -168,6 +167,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -180,6 +180,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -192,6 +193,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -204,6 +206,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -216,6 +219,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -228,6 +232,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -240,6 +245,7 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: false,
   })
@@ -252,10 +258,37 @@ export class AirdropTask extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: 0,
   })
   public usersReferred: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+    defaultValue: 0,
+  })
+  public creditsSpent: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+    defaultValue: 0,
+  })
+  public totalPoints: number;
 
   public async populateByUserUuid(user_uuid: string) {
     if (!user_uuid) {
