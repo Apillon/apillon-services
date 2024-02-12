@@ -5,6 +5,7 @@ import {
   ValidateFor,
   PopulateFrom,
   SqlModelStatus,
+  WalletDepositsQueryFilter,
 } from '@apillon/lib';
 import {
   Body,
@@ -73,6 +74,21 @@ export class BlockchainController {
       query,
       walletId,
     );
+  }
+
+  @Get('wallets/:id/deposits')
+  @Validation({
+    dto: WalletDepositsQueryFilter,
+    validateFor: ValidateFor.QUERY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
+  async listWalletDeposits(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: WalletDepositsQueryFilter,
+    @Param('id', ParseIntPipe) walletId: number,
+  ) {
+    return this.blockchainService.listWalletDeposits(context, query, walletId);
   }
 
   @Patch('wallets/:id/transactions/:tid')

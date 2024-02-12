@@ -1,7 +1,10 @@
 import {
   AssignCidToNft,
+  ClusterWalletQueryFilter,
   ComputingContractType,
+  ComputingTransactionQueryFilter,
   ContractQueryFilter,
+  CreateBucketDto,
   CreateContractDto,
   DepositToClusterDto,
   EncryptContentDto,
@@ -11,13 +14,13 @@ import {
   ServiceName,
   SqlModelStatus,
   StorageMicroservice,
-  TransactionStatus,
   TransferOwnershipDto,
 } from '@apillon/lib';
 import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import {
   ComputingErrorCode,
+  ComputingTransactionStatus,
   ContractStatus,
   TransactionType,
 } from '../../config/types';
@@ -35,6 +38,7 @@ import {
 import { Contract } from './models/contract.model';
 import { Transaction } from '../transaction/models/transaction.model';
 import { ContractAbi } from './models/contractAbi.model';
+import { ClusterWallet } from './models/cluster-wallet.model';
 
 export class ComputingService {
   static async createContract(
@@ -43,11 +47,47 @@ export class ComputingService {
   ) {
     console.log(`Creating computing contract: ${JSON.stringify(params.body)}`);
 
+    let bucket_uuid = params.body.bucket_uuid;
+    if (bucket_uuid) {
+      try {
+        await new StorageMicroservice(context).getBucket(bucket_uuid);
+      } catch (e) {
+        if (e.status === 404) {
+          throw await new ComputingCodeException({
+            status: 404,
+            code: ComputingErrorCode.BUCKET_NOT_FOUND,
+            context: context,
+            sourceFunction: 'createContract()',
+            errorMessage: `Bucket with UUID ${bucket_uuid} not found.`,
+          }).writeToMonitor({});
+        } else {
+          throw e;
+        }
+      }
+    } else {
+      console.log(
+        `Creating bucket for computing contract with name ${params.body.name}.`,
+      );
+      const bucket = (
+        await new StorageMicroservice(context).createBucket(
+          new CreateBucketDto().populate({
+            project_uuid: params.body.project_uuid,
+            bucketType: 1,
+            name: `${params.body.name} bucket`,
+          }),
+        )
+      ).data;
+      bucket_uuid = bucket.bucket_uuid;
+    }
+
     const ipfsCluster = (
       await new StorageMicroservice(context).getProjectIpfsCluster(
         params.body.project_uuid,
       )
     ).data;
+    const ipfsGatewayUrl = ipfsCluster.ipfsGateway.endsWith('/')
+      ? ipfsCluster.ipfsGateway.slice(0, -1)
+      : ipfsCluster.ipfsGateway;
 
     const contractType = ComputingContractType.SCHRODINGER;
     const contractAbi = await new ContractAbi({}, context).getLatest(
@@ -65,13 +105,14 @@ export class ComputingService {
 
     const contract = new Contract(params.body, context).populate({
       contract_uuid: uuidV4(),
+      bucket_uuid,
       status: SqlModelStatus.INCOMPLETE,
       contractAbi_id: contractAbi.id,
       data: {
         nftContractAddress: params.body.nftContractAddress,
         nftChainRpcUrl: params.body.nftChainRpcUrl,
         restrictToOwner: params.body.restrictToOwner,
-        ipfsGatewayUrl: ipfsCluster.ipfsGateway,
+        ipfsGatewayUrl,
       },
     });
 
@@ -95,11 +136,18 @@ export class ComputingService {
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.DEPLOY_CONTRACT_ERROR,
-        context: context,
+        context,
         sourceFunction: 'createContract()',
-        errorMessage: 'Error creating contract',
+        errorMessage: `Error creating contract: ${err}`,
         details: err,
-      }).writeToMonitor({});
+      }).writeToMonitor({
+        logType: LogType.ERROR,
+        service: ServiceName.COMPUTING,
+        data: {
+          dto: params.body,
+          err,
+        },
+      });
     }
 
     await new Lmas().writeLog({
@@ -144,6 +192,16 @@ export class ComputingService {
     contract.canAccess(context);
 
     return contract.serialize(getSerializationStrategy(context));
+  }
+
+  static async listTransactions(
+    event: { query: ComputingTransactionQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new Transaction(
+      { project_uuid: event.query.project_uuid },
+      context,
+    ).getList(context, new ComputingTransactionQueryFilter(event.query));
   }
 
   static async depositToPhalaCluster(
@@ -248,10 +306,14 @@ export class ComputingService {
     contract: Contract,
     newOwnerAddress: string,
   ) {
-    if (contract.contractStatus == ContractStatus.TRANSFERRED) {
+    if (
+      [ContractStatus.TRANSFERRING, ContractStatus.TRANSFERRED].includes(
+        contract.contractStatus,
+      )
+    ) {
       throw new ComputingCodeException({
         status: 500,
-        code: ComputingErrorCode.CONTRACT_ALREADY_TRANSFERED,
+        code: ComputingErrorCode.CONTRACT_TRANSFERING_OR_ALREADY_TRANSFERED,
         context,
         sourceFunction,
       });
@@ -276,8 +338,9 @@ export class ComputingService {
     if (
       transactions.find(
         (x) =>
-          x.transactionStatus == TransactionStatus.PENDING ||
-          x.transactionStatus == TransactionStatus.CONFIRMED,
+          x.transactionStatus == ComputingTransactionStatus.PENDING ||
+          x.transactionStatus == ComputingTransactionStatus.CONFIRMED ||
+          x.transactionStatus == ComputingTransactionStatus.WORKER_SUCCESS,
       )
     ) {
       throw new ComputingCodeException({
@@ -382,5 +445,15 @@ export class ComputingService {
     });
 
     return { success: true };
+  }
+
+  static async listClusterWallets(
+    event: { query: ClusterWalletQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new ClusterWallet({}, context).getList(
+      context,
+      new ClusterWalletQueryFilter(event.query),
+    );
   }
 }

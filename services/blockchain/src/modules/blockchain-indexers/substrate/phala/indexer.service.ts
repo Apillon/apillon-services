@@ -6,6 +6,7 @@ import { SystemEvent, TransferTransaction } from '../data-models';
 import {
   PhatContractsInstantiatedTransaction,
   PhatContractsInstantiatingTransaction,
+  PhatContractTransfer,
 } from './data-models';
 
 export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
@@ -20,8 +21,7 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
   public async getAllSystemEvents(
     account: string,
     fromBlock: number,
-    toBlock?: number,
-    limit?: number,
+    toBlock: number,
   ): Promise<SystemEvent[]> {
     const data = await this.graphQlClient.request<{ systems: SystemEvent[] }>(
       gql`
@@ -31,11 +31,31 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
         account,
         fromBlock,
         toBlock,
-        limit,
       },
     );
 
     return data.systems;
+  }
+
+  public async getClusterDepositEvents(
+    account: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<SystemEvent[]> {
+    const data = await this.graphQlClient.request<{
+      phatContractsTransfereds: PhatContractTransfer[];
+    }>(
+      gql`
+        ${PhalaGqlQueries.ACCOUNT_CLUSTER_DEPOSIT_EVENTS_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+      },
+    );
+
+    return data.phatContractsTransfereds;
   }
 
   /**
@@ -92,40 +112,40 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
     return data.phatContractsInstantiatings;
   }
 
-  public async getContractsInstantiatedTransactions(
-    deployer: string,
-    fromBlock: number,
-    toBlock: number,
+  public async getClusterDepositTransactions(
+    account: string,
+    hashes: string[],
   ) {
     const data = await this.graphQlClient.request<{
-      phatContractsInstantiateds: PhatContractsInstantiatedTransaction[];
+      phatContractsTransfereds: PhatContractTransfer[];
     }>(
       gql`
-        ${PhalaGqlQueries.INSTANTIATED_CONTRACTS_BY_DEPLOYER_AND_BLOCK}
+        ${PhalaGqlQueries.CLUSTER_DEPOSIT_BY_HASH_QUERY}
       `,
       {
-        deployer,
-        fromBlock,
-        toBlock,
+        account,
+        hashes,
       },
     );
 
-    return data.phatContractsInstantiateds;
+    return data.phatContractsTransfereds;
   }
 
   public async getAccountBalanceTransfersForTxs(
     account: string,
-    hashes: string[],
+    fromBlock: number,
+    toBlock: number,
   ): Promise<{
     transfers: TransferTransaction[];
   }> {
     return await this.graphQlClient.request(
       gql`
-        ${PhalaGqlQueries.ACCOUNT_TRANSFERS_BY_TX_HASHES_QUERY}
+        ${PhalaGqlQueries.ACCOUNT_TRANSFERS_BY_BLOCKS}
       `,
       {
         account,
-        hashes,
+        fromBlock,
+        toBlock,
       },
     );
   }

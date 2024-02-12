@@ -8,6 +8,8 @@ import { DepositToClusterDto } from './dtos/deposit-to-cluster.dto';
 import { TransferOwnershipDto } from './dtos/transfer-ownership.dto';
 import { EncryptContentDto } from './dtos/encrypt-content.dto';
 import { AssignCidToNft } from './dtos/assign-cid-to-nft.dto';
+import { ClusterWalletQueryFilter } from './dtos/cluster-wallet-query-filter.dto';
+import { ComputingTransactionQueryFilter } from './dtos/computing-transaction-query-filter.dto';
 
 export class ComputingMicroservice extends BaseService {
   lambdaFunctionName =
@@ -49,6 +51,14 @@ export class ComputingMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async listTransactions(params: ComputingTransactionQueryFilter) {
+    const data = {
+      eventName: ComputingEventType.LIST_TRANSACTIONS,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
   public async depositToPhalaCluster(body: DepositToClusterDto) {
     const data = {
       eventName: ComputingEventType.DEPOSIT_TO_PHALA_CLUSTER,
@@ -77,6 +87,14 @@ export class ComputingMicroservice extends BaseService {
     const data = {
       eventName: ComputingEventType.ASSIGN_CID_TO_NFT,
       body: body.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async listClusterWallets(body: ClusterWalletQueryFilter) {
+    const data = {
+      eventName: ComputingEventType.LIST_CLUSTER_WALLETS,
+      query: body.serialize(),
     };
     return await this.callService(data);
   }

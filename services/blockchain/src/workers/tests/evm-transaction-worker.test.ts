@@ -1,5 +1,5 @@
-import { ChainType, EvmChain, TransactionStatus, env } from '@apillon/lib';
-import { Stage, releaseStage, setupTest } from '../../../test/setup';
+import { ChainType, env, EvmChain, TransactionStatus } from '@apillon/lib';
+import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { Wallet } from '../../modules/wallet/wallet.model';
 import { Transaction } from '../../common/models/transaction';
 import { ServiceDefinitionType, WorkerDefinition } from '@apillon/workers-lib';
@@ -11,20 +11,17 @@ describe('Handle evm transactions', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    env.BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER =
-      'http://18.203.251.180:8083/graphql';
-    const address = '0xba01526c6d80378a9a95f1687e9960857593983b';
-    const chain = EvmChain.MOONBEAM;
+    env.BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER = 'http://3.251.2.33:8083/graphql';
+    const chain = EvmChain.MOONBASE;
     const chainType = ChainType.EVM;
-    const fromBlock = 3608736;
     wallet = await new Wallet(
       {
         chain,
         chainType,
-        address,
+        address: '0xba01526c6d80378a9a95f1687e9960857593983b',
         seed: 'neki neki neki neki neki neki druzga pet dva tri stiri',
-        lastParsedBlock: fromBlock,
-        blockParseSize: 50000,
+        lastParsedBlock: 5_722_450,
+        blockParseSize: 50_000,
       },
       stage.context,
     ).insert();
@@ -35,132 +32,75 @@ describe('Handle evm transactions', () => {
   });
 
   test('Evm single wallet transactions', async () => {
-    const address = '0xba01526c6d80378a9a95f1687e9960857593983b';
-    const chain = EvmChain.MOONBEAM;
+    const chain = EvmChain.MOONBASE;
     const chainType = ChainType.EVM;
 
     await new Transaction(
       {
-        address,
+        address: wallet.address,
         chain,
         chainType,
         transactionStatus: TransactionStatus.PENDING,
         nonce: 1,
         rawTransaction: 'blablablablablablablablablablablalba',
         transactionHash:
-          '0x0da1158a73d7dd99871f865a7cfb1a01f88df56fa73db69d17a446be719ae28b',
+          '0x91ccb62d93777411de3126b4687ca9f24f40ef95890580b7be6b3f0ca4b0fa03',
       },
       stage.context,
     ).insert();
 
     await new Transaction(
       {
-        address,
-        chain,
-        chainType,
-        transactionStatus: TransactionStatus.PENDING,
-        nonce: 2,
-        rawTransaction: 'blablablablablablablablablablablalba',
-        transactionHash:
-          '0xd77a7023487e476c13a8b0de0cdc6c1cddea5dee9a95532afde347f977f0d768',
-      },
-      stage.context,
-    ).insert();
-
-    await new Transaction(
-      {
-        address,
+        address: wallet.address,
         chain,
         chainType,
         transactionStatus: TransactionStatus.PENDING,
         nonce: 3,
         rawTransaction: 'blablablablablablablablablablablalba',
         transactionHash:
-          '0xa517c9b7efa3d6df34f4944812efc284c0fc0ae968a1cf83ea07ba5400755f6b',
+          '0x9357c063719ac34946b159d76551e56bf2a79e399082cee446909705359f95de',
       },
       stage.context,
     ).insert();
 
     await new Transaction(
       {
-        address,
-        chain,
-        chainType,
-        transactionStatus: TransactionStatus.PENDING,
-        nonce: 4,
-        rawTransaction: 'blablablablablablablablablablablalba',
-        transactionHash:
-          '0xe7050b07ebdf1800ed7fe7d11095948e539299b229ff85fec4372f7f0c5fb0a9',
-      },
-      stage.context,
-    ).insert();
-
-    await new Transaction(
-      {
-        address,
+        address: wallet.address,
         chain,
         chainType,
         transactionStatus: TransactionStatus.PENDING,
         nonce: 5,
         rawTransaction: 'blablablablablablablablablablablalba',
         transactionHash:
-          '0x4c5f0d5f29cde4d06fc16702d0e7b11209900698f2c51e6ce0e359bd2f54bb35',
+          '0xfa677a1ad0ff9d90f9211f4cb001085fe1b5b85b9e6e2794fbdb435d4d7f4f44',
       },
       stage.context,
     ).insert();
 
     await new Transaction(
       {
-        address,
-        chain,
-        chainType,
-        transactionStatus: TransactionStatus.PENDING,
-        nonce: 6,
-        rawTransaction: 'blablablablablablablablablablablalba',
-        transactionHash:
-          '0xc86bdd59ebce93664ecc0eb2c529faf6dfb47884225087adac231946471d5cec',
-      },
-      stage.context,
-    ).insert();
-
-    await new Transaction(
-      {
-        address,
+        address: wallet.address,
         chain,
         chainType,
         transactionStatus: TransactionStatus.PENDING,
         nonce: 7,
         rawTransaction: 'blablablablablablablablablablablalba',
         transactionHash:
-          '0xc2de112399837d0a26e603bb64cfb9d88d85e3f5ba6a71510b0f46e267a426c7',
+          '0x4131cbc163f0ae6a25bc2d16b5d6539e7b3178b100f1315f5419c7f4fb25f3e4',
       },
       stage.context,
     ).insert();
 
     await new Transaction(
       {
-        address,
-        chain,
-        chainType,
-        transactionStatus: TransactionStatus.PENDING,
-        nonce: 8,
-        rawTransaction: 'blablablablablablablablablablablalba',
-        transactionHash:
-          '0xd82621809c21848d773aecd1b94d6313c9d765f60495de94626d00338ca66495',
-      },
-      stage.context,
-    ).insert();
-
-    await new Transaction(
-      {
-        address,
+        address: wallet.address,
         chain,
         chainType,
         transactionStatus: TransactionStatus.PENDING,
         nonce: 9,
         rawTransaction: 'blablablablablablablablablablablalba',
         transactionHash:
-          '0x42d977fbe234cc027ce4a7a092a9f8fa36351ba1c0d6fba2ca11d13d1e49fdbe',
+          '0x1260c8df833e63ce8cf7b29416af00c8bc65c193ff2c97430a5681907e54f779',
       },
       stage.context,
     ).insert();
@@ -175,13 +115,13 @@ describe('Handle evm transactions', () => {
       {},
     );
     await new EvmTransactionWorker(workerDefinition, stage.context).runExecutor(
-      { executeArg: EvmChain.MOONBEAM },
+      { chain: EvmChain.MOONBASE },
     );
 
     const txs: Transaction[] = await new Transaction({}, stage.context).getList(
       chain,
       chainType,
-      address,
+      wallet.address,
       0,
     );
 
@@ -192,7 +132,7 @@ describe('Handle evm transactions', () => {
       }
     });
 
-    expect(txs.length).toBe(9);
+    expect(txs.length).toBe(5);
     expect(confirmed).toBe(true);
   });
 });

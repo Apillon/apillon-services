@@ -7,6 +7,7 @@ export interface IEnv {
    * runtime environment
    */
   APP_URL: string;
+  ADMIN_APP_URL: string;
   APP_ENV: string;
   LOG_TARGET: string;
   LOG_LEVEL: string;
@@ -105,6 +106,8 @@ export interface IEnv {
    */
   MAIL_FUNCTION_NAME: string;
   MAIL_FUNCTION_NAME_TEST: string;
+  GENERATE_PDF_FUNCTION_NAME: string;
+
   /**
    * LMAS dev server port
    */
@@ -147,6 +150,11 @@ export interface IEnv {
   DEV_CONSOLE_API_HOST_TEST: string;
   DEV_CONSOLE_API_PORT_TEST: number;
 
+  /**
+   * Project, which is used for admin panel (access to ipfs, generation of tokens ...)
+   */
+  DEV_CONSOLE_API_DEFAULT_PROJECT_UUID: string;
+
   /************************************************************
    * ADMIN-CONSOLE-API - Apillon Admin Console API
    ************************************************************/
@@ -171,7 +179,6 @@ export interface IEnv {
   STORAGE_CRUST_SEED_PHRASE: string;
   STORAGE_CRUST_SEED_PHRASE_TEST: string;
   STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
-  STORAGE_DELETE_AFTER_INTERVAL: number;
   URL_SCREENSHOT_FUNCTION_NAME: string;
   URL_SCREENSHOT_API_URL: string;
   SEND_WEBSITES_TO_REVIEW: number;
@@ -226,6 +233,7 @@ export interface IEnv {
   BLOCKCHAIN_CRUST_GRAPHQL_SERVER: string;
   BLOCKCHAIN_KILT_GRAPHQL_SERVER: string;
   BLOCKCHAIN_PHALA_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER: string;
   BLOCKCHAIN_SECRETS: string;
 
   /**
@@ -496,6 +504,53 @@ export interface IEnv {
    * MAILERLITE
    */
   MAILERLITE_API_KEY: string;
+
+  /************************************************************
+   * Social - Apillon social Service
+   ************************************************************/
+  /**
+   *  function name
+   */
+  SOCIAL_FUNCTION_NAME: string;
+  SOCIAL_FUNCTION_NAME_TEST: string;
+
+  /**
+   * SOCIAL dev server port
+   */
+  SOCIAL_SOCKET_PORT: number;
+  SOCIAL_SOCKET_PORT_TEST: number;
+
+  /**
+   * SOCIAL Database config
+   */
+
+  SOCIAL_MYSQL_HOST: string;
+  SOCIAL_MYSQL_PORT: number;
+  SOCIAL_MYSQL_USER: string;
+  SOCIAL_MYSQL_PASSWORD: string;
+  SOCIAL_MYSQL_DEPLOY_USER: string;
+  SOCIAL_MYSQL_DEPLOY_PASSWORD: string;
+  SOCIAL_MYSQL_DATABASE: string;
+
+  // TEST
+  SOCIAL_MYSQL_HOST_TEST: string;
+  SOCIAL_MYSQL_PORT_TEST: number;
+  SOCIAL_MYSQL_USER_TEST: string;
+  SOCIAL_MYSQL_PASSWORD_TEST: string;
+  SOCIAL_MYSQL_DATABASE_TEST: string;
+
+  /**
+   * SOCIAL workers config
+   */
+  SOCIAL_AWS_WORKER_SQS_URL: string;
+  SOCIAL_AWS_WORKER_LAMBDA_NAME: string;
+  /**
+   * NOWPAYMENTS
+   */
+  NOWPAYMENTS_API_KEY: string;
+  IPN_CALLBACK_URL: string;
+  IPN_SECRET_KEY: string;
+  NOWPAYMENTS_INVOICE_EMAIL: string;
 }
 
 // dotenv.config();
@@ -513,8 +568,8 @@ export let env: IEnv = {
   AWS_BUCKET: process.env['AWS_BUCKET'],
   AWS_ENDPOINT: process.env['AWS_ENDPOINT'],
   APP_SECRET: process.env['APP_SECRET'] || 'Du7Rvyqt7u38naZ2',
-  CONSOLE_API_URL:
-    process.env['CONSOLE_API_URL'] || 'https://console-api-dev.apillon.io/',
+  CONSOLE_API_URL: process.env['CONSOLE_API_URL'],
+  ADMIN_APP_URL: process.env['ADMIN_APP_URL'],
 
   /** AMS */
   ACCESS_FUNCTION_NAME: process.env['ACCESS_FUNCTION_NAME'],
@@ -586,6 +641,9 @@ export let env: IEnv = {
     process.env['DEV_CONSOLE_API_HOST_TEST'] || 'localhost',
   DEV_CONSOLE_API_PORT_TEST:
     parseInt(process.env['DEV_CONSOLE_API_PORT_TEST']) || 7001,
+  DEV_CONSOLE_API_DEFAULT_PROJECT_UUID:
+    process.env['DEV_CONSOLE_API_DEFAULT_PROJECT_UUID'] ||
+    '22a9788a-f043-4d4c-8f47-d07a0509c645',
 
   ADMIN_CONSOLE_API_HOST: process.env['ADMIN_CONSOLE_API_HOST'] || 'localhost',
   ADMIN_CONSOLE_API_PORT:
@@ -607,8 +665,6 @@ export let env: IEnv = {
   STORAGE_CRUST_SEED_PHRASE: process.env['STORAGE_CRUST_SEED_PHRASE'],
   STORAGE_CRUST_SEED_PHRASE_TEST: process.env['STORAGE_CRUST_SEED_PHRASE_TEST'],
   STORAGE_AWS_IPFS_QUEUE_BUCKET: process.env['STORAGE_AWS_IPFS_QUEUE_BUCKET'],
-  STORAGE_DELETE_AFTER_INTERVAL:
-    parseInt(process.env['STORAGE_DELETE_AFTER_INTERVAL']) || 90,
   URL_SCREENSHOT_FUNCTION_NAME: process.env['URL_SCREENSHOT_FUNCTION_NAME'],
   URL_SCREENSHOT_API_URL: process.env['URL_SCREENSHOT_API_URL'],
   SEND_WEBSITES_TO_REVIEW:
@@ -666,6 +722,8 @@ export let env: IEnv = {
     process.env['BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER'],
   BLOCKCHAIN_ASTAR_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_ASTAR_GRAPHQL_SERVER'],
+  BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER'],
 
   BLOCKCHAIN_SECRETS: process.env['BLOCKCHAIN_SECRETS'],
 
@@ -680,6 +738,7 @@ export let env: IEnv = {
   /** MAILING */
   MAIL_FUNCTION_NAME: process.env['MAIL_FUNCTION_NAME'],
   MAIL_FUNCTION_NAME_TEST: process.env['MAIL_FUNCTION_NAME_TEST'],
+  GENERATE_PDF_FUNCTION_NAME: process.env['GENERATE_PDF_FUNCTION_NAME'],
 
   MAIL_SOCKET_PORT: parseInt(process.env['MAIL_SOCKET_PORT_TEST']) || 6401,
   MAIL_SOCKET_PORT_TEST: parseInt(process.env['MAIL_SOCKET_PORT_TEST']) || 7401,
@@ -859,7 +918,7 @@ export let env: IEnv = {
   /** COMPUTING */
   COMPUTING_FUNCTION_NAME: process.env['COMPUTING_FUNCTION_NAME'],
   COMPUTING_FUNCTION_NAME_TEST: process.env['COMPUTING_FUNCTION_NAME_TEST'],
-  COMPUTING_SOCKET_PORT: parseInt(process.env['COMPUTING_SOCKET_PORT']) || 7001,
+  COMPUTING_SOCKET_PORT: parseInt(process.env['COMPUTING_SOCKET_PORT']) || 6102,
   COMPUTING_MYSQL_HOST: process.env['COMPUTING_MYSQL_HOST'],
   COMPUTING_MYSQL_PORT: parseInt(process.env['COMPUTING_MYSQL_PORT']) || 3306,
   COMPUTING_MYSQL_DATABASE: process.env['COMPUTING_MYSQL_DATABASE'],
@@ -870,7 +929,7 @@ export let env: IEnv = {
     process.env['COMPUTING_MYSQL_DEPLOY_PASSWORD'],
 
   COMPUTING_SOCKET_PORT_TEST:
-    parseInt(process.env['COMPUTING_SOCKET_PORT_TEST']) || 7701,
+    parseInt(process.env['COMPUTING_SOCKET_PORT_TEST']) || 7102,
   COMPUTING_MYSQL_HOST_TEST: process.env['COMPUTING_MYSQL_HOST_TEST'],
   COMPUTING_MYSQL_PORT_TEST:
     parseInt(process.env['COMPUTING_MYSQL_PORT_TEST']) || 3306,
@@ -881,6 +940,30 @@ export let env: IEnv = {
   COMPUTING_AWS_WORKER_SQS_URL: process.env['COMPUTING_AWS_WORKER_SQS_URL'],
   COMPUTING_AWS_WORKER_LAMBDA_NAME:
     process.env['COMPUTING_AWS_WORKER_LAMBDA_NAME'],
+
+  /** SOCIAL */
+  SOCIAL_FUNCTION_NAME: process.env['SOCIAL_FUNCTION_NAME'],
+  SOCIAL_FUNCTION_NAME_TEST: process.env['SOCIAL_FUNCTION_NAME_TEST'],
+  SOCIAL_SOCKET_PORT: parseInt(process.env['SOCIAL_SOCKET_PORT']) || 6202,
+  SOCIAL_MYSQL_HOST: process.env['SOCIAL_MYSQL_HOST'],
+  SOCIAL_MYSQL_PORT: parseInt(process.env['SOCIAL_MYSQL_PORT']) || 3306,
+  SOCIAL_MYSQL_DATABASE: process.env['SOCIAL_MYSQL_DATABASE'],
+  SOCIAL_MYSQL_USER: process.env['SOCIAL_MYSQL_USER'],
+  SOCIAL_MYSQL_PASSWORD: process.env['SOCIAL_MYSQL_PASSWORD'],
+  SOCIAL_MYSQL_DEPLOY_USER: process.env['SOCIAL_MYSQL_DEPLOY_USER'],
+  SOCIAL_MYSQL_DEPLOY_PASSWORD: process.env['SOCIAL_MYSQL_DEPLOY_PASSWORD'],
+
+  SOCIAL_SOCKET_PORT_TEST:
+    parseInt(process.env['SOCIAL_SOCKET_PORT_TEST']) || 7202,
+  SOCIAL_MYSQL_HOST_TEST: process.env['SOCIAL_MYSQL_HOST_TEST'],
+  SOCIAL_MYSQL_PORT_TEST:
+    parseInt(process.env['SOCIAL_MYSQL_PORT_TEST']) || 3306,
+  SOCIAL_MYSQL_DATABASE_TEST: process.env['SOCIAL_MYSQL_DATABASE_TEST'],
+  SOCIAL_MYSQL_USER_TEST: process.env['SOCIAL_MYSQL_USER_TEST'],
+  SOCIAL_MYSQL_PASSWORD_TEST: process.env['SOCIAL_MYSQL_PASSWORD_TEST'],
+
+  SOCIAL_AWS_WORKER_SQS_URL: process.env['SOCIAL_AWS_WORKER_SQS_URL'],
+  SOCIAL_AWS_WORKER_LAMBDA_NAME: process.env['SOCIAL_AWS_WORKER_LAMBDA_NAME'],
 
   /** DISCORD */
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
@@ -902,6 +985,12 @@ export let env: IEnv = {
 
   /** MAILERLITE */
   MAILERLITE_API_KEY: process.env['MAILERLITE_API_KEY'],
+
+  /** NOWPAYMENTS */
+  NOWPAYMENTS_API_KEY: process.env['NOWPAYMENTS_API_KEY'],
+  IPN_CALLBACK_URL: process.env['IPN_CALLBACK_URL'],
+  IPN_SECRET_KEY: process.env['IPN_SECRET_KEY'],
+  NOWPAYMENTS_INVOICE_EMAIL: process.env['NOWPAYMENTS_INVOICE_EMAIL'],
 };
 
 export let isEnvReady = false;

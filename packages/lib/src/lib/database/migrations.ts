@@ -2,6 +2,7 @@ import { Migration, MigrationConnection } from 'ts-mysql-migrate';
 import { ConnectionOptions, createPool } from 'mysql2';
 import { AppEnvironment } from '../../config/types';
 import { env } from '../../config/env';
+import fs from 'fs';
 
 let dbMigration: Migration = null;
 let seedMigration: Migration = null;
@@ -174,6 +175,11 @@ async function initMigrations(
     silent: env.APP_ENV === AppEnvironment.TEST,
     // silent: false,
   });
+
+  //If there are no seeds, seeds folder doesn't exists (GIT ignores it), and seedMigration initialization fails.
+  if (!fs.existsSync('./src/migration-scripts/seeds')) {
+    fs.mkdirSync('./src/migration-scripts/seeds');
+  }
 
   seedMigration = new Migration({
     conn: pool as unknown as MigrationConnection,

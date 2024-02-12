@@ -1,4 +1,10 @@
-import { Context, env, LogType, ServiceName } from '@apillon/lib';
+import {
+  Context,
+  EndFileUploadSessionDto,
+  env,
+  LogType,
+  ServiceName,
+} from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -16,6 +22,7 @@ import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-t
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
+import { processSessionFiles } from '../lib/process-session-files';
 
 export class SyncToIPFSWorker extends BaseQueueWorker {
   public constructor(
@@ -32,6 +39,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
   public async runExecutor(data: any): Promise<any> {
     console.info('RUN EXECUTOR (SyncToIPFSWorker). data: ', data);
 
+    const processFilesInSyncWorker = data?.processFilesInSyncWorker;
     const session_uuid = data?.session_uuid;
     let files = [];
     let bucket: Bucket = undefined;
@@ -53,6 +61,19 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       bucket = await new Bucket({}, this.context).populateById(
         session.bucket_id,
       );
+
+      if (processFilesInSyncWorker) {
+        //Files were not processed in endSession endpoint. Because of large amount of files in session, execute file process here
+        await processSessionFiles(
+          this.context,
+          bucket,
+          session,
+          new EndFileUploadSessionDto().populate({
+            wrapWithDirectory: data?.wrapWithDirectory,
+            directoryPath: data?.wrappingDirectoryPath,
+          }),
+        );
+      }
 
       //Get files in session (fileStatus must be of status 1)
       files = (

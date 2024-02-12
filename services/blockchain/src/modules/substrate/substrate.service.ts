@@ -2,11 +2,14 @@ import { Keyring } from '@polkadot/keyring';
 import { Wallet } from '../wallet/wallet.model';
 import {
   ChainType,
+  ClusterDepositTransaction,
   env,
   getEnumKey,
   IsolationLevel,
   Lmas,
   LogType,
+  PhalaClusterWalletDto,
+  PhalaLogFilterDto,
   SerializeFor,
   ServiceName,
   SubstrateChain,
@@ -19,12 +22,17 @@ import { Transaction } from '../../common/models/transaction';
 import { typesBundleForPolkadot as CrustTypesBundle } from '@crustio/type-definitions';
 import { typesBundle as KiltTypesBundle } from '@kiltprotocol/type-definitions';
 import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
-import { WorkerName } from '../../workers/worker-executor';
 import { ServiceContext } from '@apillon/service-lib';
 import { getWalletSeed } from '../../lib/seed';
 import { SubstrateRpcApi } from './rpc-api';
-import { types as PhalaTypesBundle } from '@phala/sdk';
+import { OnChainRegistry, types as PhalaTypesBundle } from '@phala/sdk';
 import { substrateChainToWorkerName } from '../../lib/helpers';
+import { typesBundle as SubsocialTypesBundle } from '@subsocial/types';
+import { PhalaBlockchainIndexer } from '../blockchain-indexers/substrate/phala/indexer.service';
+
+function removeObjectKeysWithNullValue(obj: any) {
+  return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null));
+}
 
 export class SubstrateService {
   static async createTransaction(
@@ -42,6 +50,7 @@ export class SubstrateService {
     },
     context: ServiceContext,
   ) {
+    console.info('SubstrateService.createTransaction. Params: ', params);
     // connect to chain
     // TODO: Add logic if endpoint is unavailable to fetch the backup one.
     const endpoint = await new Endpoint({}, context).populateByChain(
@@ -72,6 +81,12 @@ export class SubstrateService {
       case SubstrateChain.PHALA: {
         keyring = new Keyring({ type: 'sr25519' });
         typesBundle = PhalaTypesBundle;
+        break;
+      }
+      case SubstrateChain.XSOCIAL:
+      case SubstrateChain.SUBSOCIAL: {
+        keyring = new Keyring({ type: 'sr25519' });
+        typesBundle = SubsocialTypesBundle;
         break;
       }
       default: {
@@ -230,6 +245,112 @@ export class SubstrateService {
     return transaction.serialize(SerializeFor.PROFILE);
   }
 
+  static async getPhalaLogRecordsAndGasPrice(
+    event: {
+      phalaLogFilter: PhalaLogFilterDto;
+    },
+    context: ServiceContext,
+  ) {
+    const phalaLogFilter = event.phalaLogFilter;
+    const endpoint = await new Endpoint({}, context).populateByChain(
+      SubstrateChain.PHALA,
+      ChainType.SUBSTRATE,
+    );
+    console.log('Fetching gas price and logs with filter: ', {
+      ...phalaLogFilter,
+      endpoint: endpoint.url,
+    });
+    const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
+    try {
+      const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
+        clusterId: phalaLogFilter.clusterId,
+      });
+      const gasPrice = phatRegistry.gasPrice.toNumber();
+      console.log(`Retrieved gas price=${gasPrice}.`);
+      const { records } = await phatRegistry.loggerContract.tail(
+        100,
+        removeObjectKeysWithNullValue(phalaLogFilter),
+      );
+      console.log(`Retrieved ${records.length} log records.`);
+      return { records, gasPrice };
+    } catch (e: unknown) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        message: `Error fetching phala logs or gas price.`,
+        location: 'SubstrateService.getPhalaClusterWalletBalance',
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          error: e,
+          clusterId: phalaLogFilter.clusterId,
+          contract: phalaLogFilter.contract,
+          nonce: phalaLogFilter.nonce,
+          type: phalaLogFilter.type,
+        },
+      });
+      throw e;
+    } finally {
+      await api.destroy();
+    }
+  }
+
+  static async getPhalaClusterWalletBalance(
+    event: {
+      phalaClusterWallet: PhalaClusterWalletDto;
+    },
+    context: ServiceContext,
+  ) {
+    const endpoint = await new Endpoint({}, context).populateByChain(
+      SubstrateChain.PHALA,
+      ChainType.SUBSTRATE,
+    );
+    const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
+    try {
+      const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
+        clusterId: event.phalaClusterWallet.clusterId,
+      });
+      const balance = await phatRegistry.getClusterBalance(
+        event.phalaClusterWallet.walletAddress,
+      );
+
+      console.log(
+        `Retrieved balance total ${balance.total} and free ${balance.free}`,
+      );
+      return {
+        total: balance.total.toNumber(),
+        free: balance.free.toNumber(),
+      };
+    } catch (e: unknown) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        message: `Error fetching cluster ${event.phalaClusterWallet.walletAddress} balance.`,
+        location: 'SubstrateService.getPhalaClusterWalletBalance',
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          error: e,
+          clusterId: event.phalaClusterWallet.clusterId,
+          walletAddress: event.phalaClusterWallet.walletAddress,
+        },
+      });
+      throw e;
+    } finally {
+      await api.destroy();
+    }
+  }
+
+  static async getPhalaClusterDepositTransaction(
+    event: {
+      clusterDepositTransaction: ClusterDepositTransaction;
+    },
+    _context: ServiceContext,
+  ) {
+    const transactions =
+      await new PhalaBlockchainIndexer().getClusterDepositTransactions(
+        event.clusterDepositTransaction.account,
+        [event.clusterDepositTransaction.transactionHash],
+      );
+    return transactions.length > 0 ? transactions[0] : null;
+  }
+
   /**
    * @dev Ensure that only once instance of this method is running at the same time.
    * Should be called from worker
@@ -262,6 +383,15 @@ export class SubstrateService {
       }
       case SubstrateChain.CRUST: {
         typesBundle = CrustTypesBundle;
+        break;
+      }
+      case SubstrateChain.PHALA: {
+        typesBundle = PhalaTypesBundle;
+        break;
+      }
+      case SubstrateChain.XSOCIAL:
+      case SubstrateChain.SUBSOCIAL: {
+        typesBundle = SubsocialTypesBundle;
         break;
       }
       default: {
@@ -347,7 +477,10 @@ export class SubstrateService {
               await eventLogger(
                 {
                   logType: LogType.ERROR,
-                  message: 'Could not repair last success nonce.',
+                  message: `Could not repair last success nonce for chain ${getEnumKey(
+                    SubstrateChain,
+                    _event.chain,
+                  )} and wallet address ${wallet.address}.`,
                   service: ServiceName.BLOCKCHAIN,
                   data: {
                     wallet: wallet.address,

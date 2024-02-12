@@ -20,9 +20,18 @@ export class FilesQueryFilter extends BaseQueryFilter {
   public fileStatus: number;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public status: number;
+  public session_uuid: string;
+}
+
+export class ApillonApiFilesQueryFilter extends FilesQueryFilter {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public sessionUuid: string;
 }

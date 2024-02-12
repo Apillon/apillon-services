@@ -3,6 +3,7 @@ import {
   AttachedServiceType,
   CodeException,
   ComputingMicroservice,
+  ComputingTransactionQueryFilter,
   ContractQueryFilter,
   CreateContractDto,
   EncryptContentDto,
@@ -72,6 +73,14 @@ export class ComputingService {
 
   async getContract(context: DevConsoleApiContext, uuid: string) {
     return (await new ComputingMicroservice(context).getContract(uuid)).data;
+  }
+
+  async listTransactions(
+    context: DevConsoleApiContext,
+    query: ComputingTransactionQueryFilter,
+  ) {
+    return (await new ComputingMicroservice(context).listTransactions(query))
+      .data;
   }
 
   async transferContractOwnership(

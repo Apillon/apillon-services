@@ -51,13 +51,17 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     for (const w of this.wallets) {
       const wallet = new Wallet(w, this.context);
 
-      // TODO: There was range calculation here, which I am not
-      // sure is relevant to be honest. Maybe if there are
-      // a shitton transactions at once, this could break. Let's see
       const fromBlock: number = wallet.lastParsedBlock;
-      const toBlock: number = blockHeight;
+      const toBlock =
+        wallet.lastParsedBlock + wallet.blockParseSize < blockHeight
+          ? wallet.lastParsedBlock + wallet.blockParseSize
+          : blockHeight;
 
-      console.log(this.indexer.toString());
+      console.log(
+        `${this.indexer.toString()} fetching transactions from block number ${fromBlock} to ${toBlock} for wallet ${
+          wallet.address
+        }`,
+      );
 
       // Get all transactions from the indexer
       const transactions = await this.fetchAllResolvedTransactions(
@@ -68,7 +72,9 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
 
       const conn = await this.context.mysql.start();
       try {
-        await this.setTransactionsState(transactions, conn);
+        if (transactions?.length) {
+          await this.setTransactionsState(transactions, wallet.address, conn);
+        }
 
         const minutes = Math.round(wallet.minutesSinceLastParsedBlock);
         // If block height is the same and not updated for the past 15 minutes
@@ -165,7 +171,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       fromBlock,
       toBlock,
     );
-
+    console.log(`Fetched ${transactions.length} transactions.`);
     const transactionsArray: Array<any> = Object.values(transactions);
     return transactionsArray.length > 0 ? transactionsArray.flat(Infinity) : [];
   }
@@ -205,25 +211,17 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     );
   }
 
-  private async setTransactionsState(
+  protected async setTransactionsState(
     transactions: any[],
+    _walletAddress: string,
     conn: PoolConnection,
   ) {
-    if (!transactions?.length) {
-      return;
-    }
-
-    const successTransactions: any = transactions
-      .filter((t: any) => t.status == TransactionIndexerStatus.SUCCESS)
-      .map((t: any): string => t.extrinsicHash);
-
-    console.log('Success transactions ', successTransactions);
-
-    const failedTransactions: string[] = transactions
-      .filter((t: any) => t.status == TransactionIndexerStatus.FAIL)
-      .map((t: any): string => t.extrinsicHash);
-
     // Update SUCCESSFUL transactions
+    const successTransactions: any = transactions
+      .filter(
+        (t: any) => t.status == TransactionIndexerStatus.SUCCESS && !t.error,
+      )
+      .map((t: any): string => t.extrinsicHash);
     await this.updateTransactions(
       successTransactions,
       TransactionStatus.CONFIRMED,
@@ -231,6 +229,9 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
     );
 
     // Update FAILED transactions
+    const failedTransactions: string[] = transactions
+      .filter((t: any) => t.status == TransactionIndexerStatus.FAIL || t.error)
+      .map((t: any): string => t.extrinsicHash);
     await this.updateTransactions(
       failedTransactions,
       TransactionStatus.FAILED,

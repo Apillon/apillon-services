@@ -288,6 +288,29 @@ export class IpfsCluster extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.IPFS_CLUSTER_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public secret: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -298,7 +321,7 @@ export class IpfsCluster extends AdvancedSQLModel {
       },
     ],
   })
-  public secret: string;
+  public loadBalancerIp: string;
 
   /**
    * Generate link to CID/IPNS on IPFS gateway for this project

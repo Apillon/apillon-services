@@ -1,11 +1,9 @@
 import {
-  AWS_S3,
   CacheKeyPrefix,
   EndFileUploadSessionDto,
   Lmas,
   LogType,
   ServiceName,
-  env,
   invalidateCacheMatch,
   runWithWorkers,
   writeLog,
@@ -15,7 +13,6 @@ import {
   FileStatus,
   FileUploadRequestFileStatus,
   FileUploadSessionStatus,
-  StorageErrorCode,
 } from '../config/types';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { Directory } from '../modules/directory/models/directory.model';
@@ -23,7 +20,6 @@ import { FileUploadRequest } from '../modules/storage/models/file-upload-request
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { File } from '../modules/storage/models/file.model';
 import { StorageService } from '../modules/storage/storage.service';
-import { StorageCodeException } from './exceptions';
 import { getSessionFilesOnS3 } from './file-upload-session-s3-files';
 import {
   generateDirectoriesForFUR,
@@ -54,24 +50,17 @@ export async function processSessionFiles(
   const filesOnS3 = await getSessionFilesOnS3(bucket, session?.session_uuid);
 
   //Check used storage
-  const storageInfo = await StorageService.getStorageInfo(
-    { project_uuid: bucket.project_uuid },
+  await StorageService.checkStorageSpace(
     context,
+    bucket.project_uuid,
+    filesOnS3.size,
   );
-  if (storageInfo.usedStorage + filesOnS3.size > storageInfo.availableStorage) {
-    throw new StorageCodeException({
-      code: StorageErrorCode.NOT_ENOUGH_STORAGE_SPACE,
-      status: 400,
-    });
-  }
 
   //get directories in bucket
   const directories = await new Directory(
     {},
     context,
   ).populateDirectoriesInBucket(bucket.id, context);
-
-  const s3FilesToDelete: string[] = [];
 
   if (params.directoryPath) {
     await generateDirectoriesFromPath(
@@ -117,47 +106,21 @@ export async function processSessionFiles(
             bucket,
           );
 
-          //check if file already exists
-          const existingFile = await new File(
-            {},
-            context,
-          ).populateByNameAndDirectory(
-            bucket.id,
-            fur.fileName,
-            fileDirectory?.id,
-          );
-
-          if (existingFile.exists()) {
-            if (existingFile.s3FileKey != fur.s3FileKey) {
-              s3FilesToDelete.push(existingFile.s3FileKey);
-            }
-            //Update existing file
-            existingFile.populate({
+          //Create new file
+          await new File({}, context)
+            .populate({
+              file_uuid: fur.file_uuid,
               s3FileKey: fur.s3FileKey,
               name: fur.fileName,
               contentType: fur.contentType,
+              project_uuid: bucket.project_uuid,
+              bucket_id: bucket.id,
+              path: fur.path,
+              directory_id: fileDirectory?.id,
               size: s3File.Size,
               fileStatus: FileStatus.UPLOADED_TO_S3,
-            });
-
-            await existingFile.update();
-          } else {
-            //Create new file
-            await new File({}, context)
-              .populate({
-                file_uuid: fur.file_uuid,
-                s3FileKey: fur.s3FileKey,
-                name: fur.fileName,
-                contentType: fur.contentType,
-                project_uuid: bucket.project_uuid,
-                bucket_id: bucket.id,
-                path: fur.path,
-                directory_id: fileDirectory?.id,
-                size: s3File.Size,
-                fileStatus: FileStatus.UPLOADED_TO_S3,
-              })
-              .insert();
-          }
+            })
+            .insert();
         } catch (err) {
           await new Lmas().writeLog({
             context: context,
@@ -188,30 +151,12 @@ export async function processSessionFiles(
 
           throw err;
         }
-        //update file-upload-request status
-        fur.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_S3;
-        await fur.update();
+        //update file-upload-request status --> Commented out, because this is only informational and can be skipped for sake of optimization
+        /*fur.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_S3;
+        await fur.update();*/
       }
     },
   );
-
-  try {
-    const s3Client: AWS_S3 = new AWS_S3();
-    await s3Client.removeFiles(
-      env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-      s3FilesToDelete.map((x) => {
-        return { Key: x };
-      }),
-    );
-  } catch (err) {
-    writeLog(
-      LogType.ERROR,
-      'Error removing files from s3, that were overwritten',
-      'hosting-bucket-process-session-files.ts',
-      'hostingBucketProcessSessionFiles',
-      err,
-    );
-  }
 
   //update session
   session.sessionStatus = FileUploadSessionStatus.PROCESSED;

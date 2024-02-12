@@ -4,6 +4,7 @@
     "author": "Kalmia d.o.o.",
     "license": "UNLICENSED",
     "description": "",
+    "main": "index.js",
     "private": true,
     "scripts": {
         "prebuild": "rimraf dist",
@@ -29,14 +30,42 @@
         "@apillon/service-lib": "*",
         "@apillon/workers-lib": "*",
         "@middy/core": "^2.5.7",
-        "@phala/sdk": "^0.5.6",
+      "@phala/sdk": "^0.5.8",
         "@polkadot/api": "^10.9.1",
         "node-fetch": "2.6.7"
     },
     "devDependencies": {
-        "@phala/typedefs": "^0.2.33",
         "@types/uuid": "^8.3.4",
+        "@types/jest": "^29.5.1",
         "eslint-config-common": "*",
+        "jest": "29.5.0",
+        "ts-jest": "29.1.0",
+        "ts-loader": "^9.2.3",
         "tsconfig": "*"
+    },
+    "jest": {
+        "testTimeout": 1800000,
+        "moduleFileExtensions": [
+            "ts",
+            "tsx",
+            "js",
+            "json"
+        ],
+        "rootDir": "src",
+        "testPathIgnorePatterns": [
+            "dist/*"
+        ],
+        "testRegex": ".*\\.test\\.ts$",
+        "transform": {
+            "^.+\\.(t|j)s$": "ts-jest"
+        },
+        "collectCoverage": false,
+        "collectCoverageFrom": [
+            "**/*.(t|j)s"
+        ],
+        "coverageDirectory": "../coverage",
+        "testEnvironment": "node",
+        "preset": "ts-jest",
+        "verbose": true
     }
 }

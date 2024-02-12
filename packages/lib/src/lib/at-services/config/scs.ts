@@ -120,7 +120,7 @@ export class Scs extends BaseService {
   public async addCredit(addCreditDto: AddCreditDto): Promise<any> {
     const data = {
       eventName: ScsEventType.ADD_CREDIT,
-      body: addCreditDto,
+      body: addCreditDto.serialize(),
     };
 
     return await this.callService(data);
@@ -185,14 +185,14 @@ export class Scs extends BaseService {
 
   //#region subscriptions
 
-  public async handleStripeWebhookData(
+  public async handlePaymentWebhookData(
     data: Merge<
       Partial<CreateSubscriptionDto> & Partial<AddCreditDto>,
       Partial<CreateInvoiceDto>
     >,
   ) {
     return await this.callService({
-      eventName: ScsEventType.HANDLE_STRIPE_WEBHOOK_DATA,
+      eventName: ScsEventType.HANDLE_PAYMENT_WEBHOOK_DATA,
       data,
     });
   }
@@ -228,6 +228,15 @@ export class Scs extends BaseService {
     return await this.callService({
       eventName: ScsEventType.LIST_SUBSCRIPTIONS,
       query,
+    });
+  }
+
+  public async getProjectsWithActiveSubscription(
+    subscriptionPackageId?: number,
+  ) {
+    return await this.callService({
+      eventName: ScsEventType.GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION,
+      subscriptionPackageId,
     });
   }
 

@@ -23,6 +23,7 @@ import { TransmitSubstrateTransactionWorker } from './transmit-substrate-transac
 import { EvmTransactionWorker } from './evm-transaction-worker';
 import { SubstrateTransactionWorker } from './substrate-transaction-worker';
 import { PhalaTransactionWorker } from './phala-transaction-worker';
+import { SubsocialTransactionWorker } from './subsocial-transaction-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -34,10 +35,14 @@ export enum WorkerName {
   TRANSMIT_PHALA_TRANSACTIONS = 'TransmitPhalaTransactions',
   TRANSMIT_MOONBEAM_TRANSACTIONS = 'TransmitMoonbeamTransactions',
   TRANSMIT_MOONBASE_TRANSACTIONS = 'TransmitMoonbaseTransactions',
+  TRANSMIT_XSOCIAL_TRANSACTION = 'TransmitXsocialTransactions',
+  TRANSMIT_SUBSOCIAL_TRANSACTION = 'TransmitSubsocialTransactions',
   TRANSMIT_ASTAR_TRANSACTIONS = 'TransmitAstarTransactions',
   VERIFY_CRUST_TRANSACTIONS = 'VerifyCrustTransactions',
   VERIFY_KILT_TRANSACTIONS = 'VerifyKiltTransactions',
   VERIFY_PHALA_TRANSACTIONS = 'VerifyPhalaTransactions',
+  VERIFY_SUBSOCIAL_TRANSACTIONS = 'VerifySubsocialTransactions',
+  VERIFY_XSOCIAL_TRANSACTIONS = 'VerifyXsocialTransactions',
   VERIFY_MOONBEAM_TRANSACTIONS = 'VerifyMoonbeamTransactions',
   VERIFY_MOONBASE_TRANSACTIONS = 'VerifyMoonbaseTransactions',
   VERIFY_ASTAR_TRANSACTIONS = 'VerifyAstarTransactions',
@@ -142,6 +147,8 @@ export async function handleLambdaEvent(
     case WorkerName.TRANSMIT_CRUST_TRANSACTIONS:
     case WorkerName.TRANSMIT_KILT_TRANSACTIONS:
     case WorkerName.TRANSMIT_PHALA_TRANSACTIONS:
+    case WorkerName.TRANSMIT_SUBSOCIAL_TRANSACTION:
+    case WorkerName.TRANSMIT_XSOCIAL_TRANSACTION:
       await new TransmitSubstrateTransactionWorker(
         workerDefinition,
         context,
@@ -157,6 +164,10 @@ export async function handleLambdaEvent(
       break;
     case WorkerName.VERIFY_PHALA_TRANSACTIONS:
       await new PhalaTransactionWorker(workerDefinition, context).run();
+      break;
+    case WorkerName.VERIFY_SUBSOCIAL_TRANSACTIONS:
+    case WorkerName.VERIFY_XSOCIAL_TRANSACTIONS:
+      await new SubsocialTransactionWorker(workerDefinition, context).run();
       break;
     // --- EVM ---
     case WorkerName.VERIFY_MOONBEAM_TRANSACTIONS:

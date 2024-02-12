@@ -145,18 +145,18 @@ export class StorageService {
   }
 
   /**
-   * Retrieves list of files that are going to be removed from storage
+   * Retrieves list of files that were deleted, but are still pinned on CRUST
    * @param {DevConsoleApiContext} context - An object containing information about user session.
    * @param {string} bucket_uuid - An UUID of the bucket the files are in.
    * @param {FilesQueryFilter} query - An object for filtering the results.
-   * @returns - A list of files marked for deletion
+   * @returns - A list of deleted files
    */
-  async listFilesMarkedForDeletion(
+  async listDeletedFiles(
     context: DevConsoleApiContext,
     bucket_uuid: string,
     query: FilesQueryFilter,
   ) {
-    query.populate({ bucket_uuid, status: SqlModelStatus.MARKED_FOR_DELETION });
+    query.populate({ bucket_uuid, status: SqlModelStatus.DELETED });
     return (await new StorageMicroservice(context).listFiles(query)).data;
   }
 
@@ -171,14 +171,13 @@ export class StorageService {
   }
 
   /**
-   * Cancels deletion of a file from the storage.
+   * Set file back to active
    * @param {DevConsoleApiContext} context - An object containing information about user session.
    * @param {string} id - The ID of the file
    * @returns - Service response
    */
-  async cancelFileDeletion(context: DevConsoleApiContext, id: string) {
-    return (await new StorageMicroservice(context).cancelFileDeletion({ id }))
-      .data;
+  async restoreFile(context: DevConsoleApiContext, id: string) {
+    return (await new StorageMicroservice(context).restoreFile({ id })).data;
   }
 
   async testCrustProvider(

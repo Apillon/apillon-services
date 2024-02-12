@@ -20,7 +20,6 @@ import { Transaction } from '../../common/models/transaction';
 
 const CHAIN_TYPE = ChainType.SUBSTRATE;
 const CHAIN = SubstrateChain.PHALA;
-const TRANSACTION_QUERY_LIMIT = 13;
 const TRANSACTION_HASHES = [
   '0x760c028db1e102bde247969e87395b5e9ad2dfac21f37ad68c0dd332cf06dad6',
   '0xd723363ab2542e9d6e56f5b547fecf349a273dd77f03595fdfd57826ca2e8a5e',
@@ -233,6 +232,7 @@ describe('Phala transaction Log Worker unit test', () => {
         minBalance: '5000000000000',
         currentBalance: '0',
         decimals: 12,
+        blockParseSize: 3_648_936,
       },
       stage.context,
     );
@@ -271,7 +271,7 @@ describe('Phala transaction Log Worker unit test', () => {
         params: { FunctionName: 'test' },
       },
       'test-phala-transaction-worker',
-      { parameters: { batchLimit: TRANSACTION_QUERY_LIMIT } },
+      { parameters: {} },
     );
     worker = new TransactionLogWorker(
       wd,

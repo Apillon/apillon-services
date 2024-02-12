@@ -6,6 +6,7 @@ import {
   PopulateFrom,
   presenceValidator,
   prop,
+  SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
 import { integerParser } from '@rawmodel/parsers';
@@ -17,7 +18,7 @@ export class ContractAbi extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [],
+    serializable: [SerializeFor.INSERT_DB],
     validators: [
       {
         resolver: presenceValidator(),
@@ -35,11 +36,11 @@ export class ContractAbi extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [],
+    serializable: [SerializeFor.INSERT_DB],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ComputingErrorCode.CONTRACT_REQUIRED_DATA_NOT_PRESENT,
+        code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
     fakeValue: 1,
@@ -48,7 +49,7 @@ export class ContractAbi extends AdvancedSQLModel {
 
   @prop({
     populatable: [PopulateFrom.DB],
-    serializable: [],
+    serializable: [SerializeFor.INSERT_DB],
   })
   public abi: {
     source: { hash: string };
