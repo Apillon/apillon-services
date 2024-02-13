@@ -263,7 +263,7 @@ export class Player extends AdvancedSQLModel {
     serializable: [SerializeFor.ADMIN, SerializeFor.PROFILE],
     validators: [],
   })
-  public referrals: any;
+  public referrals: (this & { [x: string]: any })[];
 
   /**
    * Populates model fields by loading the document with the provided user id from the database.
@@ -289,12 +289,9 @@ export class Player extends AdvancedSQLModel {
       conn,
     );
 
-    if (data && data.length) {
-      this.populate(data[0], PopulateFrom.DB);
-      return this;
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async populateSubmodels() {
@@ -458,8 +455,9 @@ export class Player extends AdvancedSQLModel {
           '@',
           SUBSTRING_INDEX(ref.userEmail,'@',-1)
         ) AS name,
-        IF(ref.github_id,1,0) has_github,
-        ref.createTime AS joined
+      IF(ref.github_id,1,0) has_github,
+      ref.createTime AS joined,
+      user_uuid
       FROM \`${DbTables.PLAYER}\` ref
       WHERE ref.referrer_id = @player_id
       GROUP BY ref.id;

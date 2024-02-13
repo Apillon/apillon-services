@@ -1,6 +1,7 @@
 import { Mongo, MySql, SerializeFor, SqlModelStatus, env } from '@apillon/lib';
 import { AirdropTask } from '../../modules/airdrop/models/airdrop-task.model';
 import { ServiceContext } from '@apillon/service-lib';
+import { Player } from '../../modules/referral/models/player.model';
 
 let referralContext: ServiceContext;
 
@@ -126,7 +127,6 @@ let projectUsers: any[];
 let buckets: any[];
 let files: any[];
 let ipns: any[];
-let referrals: any[];
 let websites: any[];
 let nfts: any[];
 let subscriptions: any[];
@@ -134,6 +134,7 @@ let creditTransactions: any[];
 let spaces: any[];
 let computingContracts: any[];
 let identities: any[];
+// let referrals: any[];
 
 async function main() {
   const databases = await setupDatabases();
@@ -177,25 +178,33 @@ async function main() {
   identities = await databases.authSql.paramExecute(
     `SELECT * FROM identity WHERE state = 'attested' AND status = ${SqlModelStatus.ACTIVE}`,
   );
+  // referrals = await databases.referralSql.paramExecute(
+  //   `SELECT * FROM ${DbTables.PLAYER}`,
+  // );
 
-  await Promise.all(users.map((user) => assignAirdropTasks(user)));
+  const userAirdropTasks = await Promise.all(
+    users.map((user) => assignAirdropTasks(user)),
+  );
+
+  await Promise.all(
+    users.map((user) => assignReferredUsers(user, userAirdropTasks)),
+  );
   console.info('Finished assigning airdrop tasks');
 }
 
-async function assignAirdropTasks(user: any): Promise<void> {
+async function assignAirdropTasks(user: any): Promise<AirdropTask> {
   const user_uuid: string = user.user_uuid;
 
-  const userProjects = projects.filter((p) => p.createUser === user.id);
-  if (!userProjects.length) {
-    return await saveAirdropTasks(
-      // Assign 10 points for registering
-      new AirdropTask({ user_uuid, totalPoints: 10 }, referralContext),
-    );
-  }
   const airdropTasks = new AirdropTask(
-    { user_uuid, projectCreated: true, totalPoints: 10 },
+    // Assign 10 points for registering
+    { user_uuid, totalPoints: 10 },
     referralContext,
   );
+  const userProjects = projects.filter((p) => p.createUser === user.id);
+  if (!userProjects.length) {
+    return await saveAirdropTasks(airdropTasks);
+  }
+
   const projectUuids = userProjects.map((p) => p.project_uuid);
   const projectIds = userProjects.map((p) => p.id);
 
@@ -205,8 +214,7 @@ async function assignAirdropTasks(user: any): Promise<void> {
     own(collection).length > 0;
 
   airdropTasks.populate({
-    collaboratorAdded:
-      projectUsers.filter((p) => projectIds.includes(p.project_id)).length > 1,
+    projectCreated: true,
     bucketCreated: ownAny(buckets),
     fileUploaded: ownAny(files),
     ipnsCreated: ownAny(ipns),
@@ -217,6 +225,8 @@ async function assignAirdropTasks(user: any): Promise<void> {
     grillChatCreated: ownAny(spaces),
     computingContractCreated: ownAny(computingContracts),
     kiltIdentityCreated: ownAny(identities),
+    collaboratorAdded:
+      projectUsers.filter((p) => projectIds.includes(p.project_id)).length > 1,
     creditsPurchased:
       own(creditTransactions).filter(
         (p) => p.direction == 1 && p.referenceTable === 'invoice',
@@ -231,19 +241,38 @@ async function assignAirdropTasks(user: any): Promise<void> {
   )) {
     if (task === 'creditsSpent') {
       airdropTasks.totalPoints += Math.floor(airdropTasks.creditsSpent / 3000);
-    } else if (task === 'usersReferred') {
-      airdropTasks.totalPoints += airdropTasks.usersReferred * 2;
     } else if (isCompleted) {
       airdropTasks.totalPoints += taskPoints[task] || 0;
     }
   }
 
-  await saveAirdropTasks(airdropTasks);
+  return await saveAirdropTasks(airdropTasks);
+}
+
+async function assignReferredUsers(user: any, airdropTasks: AirdropTask[]) {
+  const referredUsers = await new Player({}, referralContext)
+    .populateByUserUuid(user.user_uuid)
+    .then((player) => player.getReferredUsers());
+  const referrerAirdropTasks = airdropTasks.find(
+    (u) => u.user_uuid === user.user_uuid,
+  );
+  for (const referredUser of referredUsers) {
+    const referredAirdropTasks = airdropTasks.find(
+      (u) => u.user_uuid === referredUser.user_uuid,
+    );
+    // Only count referred users if they have more than 15 points
+    if (referredAirdropTasks?.totalPoints > 15) {
+      referrerAirdropTasks.usersReferred += 1;
+      referrerAirdropTasks.totalPoints += taskPoints['usersReferred'];
+      await referrerAirdropTasks.saveOrUpdate();
+    }
+  }
 }
 
 async function saveAirdropTasks(airdropTasks: AirdropTask) {
   await airdropTasks.saveOrUpdate();
   console.info(`Assigned airdrop tasks for user ${airdropTasks.user_uuid}`);
+  return airdropTasks;
 }
 
 // Define a mapping for tasks to points
@@ -261,6 +290,7 @@ const taskPoints = {
   computingContractCreated: 0,
   kiltIdentityCreated: 10,
   collaboratorAdded: 1,
+  usersReferred: 2,
 };
 
 // TODO: Remove and create worker
