@@ -3,9 +3,7 @@ import { IpfsKuboRpcHttpClient } from '@apillon/ipfs-kubo-rpc-http-client';
 import fs from 'fs';
 
 describe('Ipfs http client integration test', () => {
-  const client = new IpfsKuboRpcHttpClient(
-    'http://ipfs-eu1-0.apillon.io:5001/api/v0',
-  );
+  const client = new IpfsKuboRpcHttpClient(process.env.RPC_API_URL);
   test('Test add', async () => {
     const res = await client.add({
       content: 'Some test content',
@@ -41,19 +39,19 @@ describe('Ipfs http client integration test', () => {
       expect(res.Type).toBeTruthy();
     });
 
-    /*test('Test write all files from local directory to MFS', async () => {
+    test.only('Test write all files from local directory to MFS', async () => {
       const testFolder = './test/test-files/';
 
       const files = await fs.readdirSync(testFolder);
       await runWithWorkers(files, 20, undefined, async (file) => {
         await client.files.write({
           content: fs.readFileSync(testFolder + file),
-          path: '/test-path/' + file,
+          path: '/test-path/pink-metadata/' + file,
         });
       });
-    });*/
+    });
   });
-  describe.only('Key & IPNS Name tests', () => {
+  describe('Key & IPNS Name tests', () => {
     const key = 'test key ' + new Date().toString();
 
     test('Test generate new key', async () => {
