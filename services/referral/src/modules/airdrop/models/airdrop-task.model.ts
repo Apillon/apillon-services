@@ -27,7 +27,6 @@ export class AirdropTask extends AdvancedSQLModel {
         code: ReferralErrorCode.USER_UUID_NOT_PRESENT,
       },
     ],
-    defaultValue: false,
   })
   public user_uuid: string;
 

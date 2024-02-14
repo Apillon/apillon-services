@@ -225,6 +225,8 @@ async function assignAirdropTasks(user: any): Promise<AirdropTask> {
   const ownAny: (collection: any[]) => boolean = (collection: any[]) =>
     own(collection).length > 0;
 
+  // Populate tasks for user based on their data in the database
+  // from each of their projects
   airdropTasks.populate({
     projectCreated: true,
     bucketCreated: ownAny(buckets),
@@ -249,6 +251,7 @@ async function assignAirdropTasks(user: any): Promise<AirdropTask> {
     ...(await assignApiTasks(own(apiKeys).map((a) => a.apiKey))),
   });
 
+  // Calculate total points based on the completed tasks
   for (const [task, isCompleted] of Object.entries(
     airdropTasks.serialize(SerializeFor.PROFILE),
   )) {
@@ -262,6 +265,7 @@ async function assignAirdropTasks(user: any): Promise<AirdropTask> {
   return await saveAirdropTasks(airdropTasks);
 }
 
+// Add total points based on users they have referred which meet totalPoints criteria
 async function assignReferredUsers(user: any, airdropTasks: AirdropTask[]) {
   const referredUsers = await new Player({}, referralContext)
     .populateByUserUuid(user.user_uuid)
@@ -282,6 +286,7 @@ async function assignReferredUsers(user: any, airdropTasks: AirdropTask[]) {
   }
 }
 
+// Assign tasks which are checked on mongoDB (API calls)
 async function assignApiTasks(apiKeys: any[]) {
   const collection = mongo.db.collection(MongoCollections.API_REQUEST_LOGS);
 
