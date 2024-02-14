@@ -386,7 +386,10 @@ export class TransactionLogWorker extends BaseQueueWorker {
                 continue;
               }
               transactionLogs.push(
-                new TransactionLog({}, this.context).createFromSubstrateIndexerData(
+                new TransactionLog(
+                  {},
+                  this.context,
+                ).createFromSubstrateIndexerData(
                   {
                     system: null,
                     transfer,
@@ -403,7 +406,10 @@ export class TransactionLogWorker extends BaseQueueWorker {
                   t.extrinsicHash === s.extrinsicHash,
               );
               transactionLogs.push(
-                new TransactionLog({}, this.context).createFromPhalaIndexerData(
+                new TransactionLog(
+                  {},
+                  this.context,
+                ).createFromSubstrateIndexerData(
                   {
                     system: s,
                     transfer,
