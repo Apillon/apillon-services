@@ -506,6 +506,7 @@ export class Deployment extends AdvancedSQLModel {
       const parameters = {
         deployment_uuid: this.deployment_uuid,
         clearBucketForUpload: this.clearBucketForUpload,
+        user_uuid: this.getContext().user?.user_uuid
       };
       const wd = new WorkerDefinition(
         serviceDef,
@@ -523,6 +524,7 @@ export class Deployment extends AdvancedSQLModel {
       await worker.runExecutor({
         deployment_uuid: this.deployment_uuid,
         clearBucketForUpload: this.clearBucketForUpload,
+        user_uuid: this.getContext().user?.user_uuid
       });
     } else {
       //send message to SQS
@@ -533,6 +535,7 @@ export class Deployment extends AdvancedSQLModel {
           {
             deployment_uuid: this.deployment_uuid,
             clearBucketForUpload: this.clearBucketForUpload,
+            user_uuid: this.getContext().user?.user_uuid
           },
         ],
         null,
@@ -544,8 +547,9 @@ export class Deployment extends AdvancedSQLModel {
   /**
    * Update deployment status, get deployment(hosted on IPFS) screenshot and send message to slack (screenshot + url + approve/reject button)
    * @param website
+   * @param user_uuid In workers, context.user is not initialized. So user need to be passed separately. 
    */
-  public async sendToReview(website: Website) {
+  public async sendToReview(website: Website, user_uuid: string) {
     //Send website to review
     this.deploymentStatus = DeploymentStatus.IN_REVIEW;
 
@@ -565,6 +569,8 @@ export class Deployment extends AdvancedSQLModel {
       ipfsCluster.generateLink(website.project_uuid, this.cid),
       website.website_uuid,
     );
+
+    console.info('Preparing message for slack...');
 
     //Send message to slack
     const jwt = generateJwtToken(
@@ -599,7 +605,7 @@ export class Deployment extends AdvancedSQLModel {
           type: 'button',
           text: { text: 'Open dashboard', type: 'plain_text' },
           url: `${env.ADMIN_APP_URL}/dashboard/users/${
-            this.getContext().user.user_uuid
+            user_uuid
           }`,
         },
       ],
@@ -610,12 +616,14 @@ export class Deployment extends AdvancedSQLModel {
       New website deployment for review.\n   
       URL: ${ipfsCluster.generateLink(website.project_uuid, this.cid)} \n
       Project: ${website.project_uuid} \n
-      User: ${this.getContext().user.user_uuid}
+      User: ${user_uuid}
       `,
       service: ServiceName.STORAGE,
       blocks,
       channel: env.SLACK_CHANNEL_FOR_WEBSITE_REVIEWS,
     };
+
+    console.info('Sending message to slack...', msgParams);
 
     await new Lmas().sendMessageToSlack(msgParams);
 

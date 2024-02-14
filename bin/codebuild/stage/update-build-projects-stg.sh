@@ -37,6 +37,9 @@ aws codebuild update-webhook --cli-input-json file://blockchain-webhook-stg.json
 aws codebuild update-project --cli-input-json file://computing-config-stg.json --profile apillon
 aws codebuild update-webhook --cli-input-json file://computing-webhook-stg.json --profile apillon
 
+aws codebuild update-project --cli-input-json file://social-config-stg.json --profile apillon
+aws codebuild update-webhook --cli-input-json file://social-webhook-stg.json --profile apillon
+
 # FRONTEND:
 aws codebuild update-project --cli-input-json file://apillon-app-config-stg.json --profile apillon
 aws codebuild update-webhook --cli-input-json file://apillon-app-webhook-stg.json --profile apillon

@@ -9,10 +9,10 @@ export async function upgrade(
     VALUES
     (${ProductCode.SOCIAL_SPACE}, '${
     ProductCode[ProductCode.SOCIAL_SPACE]
-  }', 'Creation of new space', ${SqlModelStatus.ACTIVE}),
+  }', 'Creation of new hub', ${SqlModelStatus.ACTIVE}),
     (${ProductCode.SOCIAL_POST}, '${
     ProductCode[ProductCode.SOCIAL_POST]
-  }', 'Creation of new post', ${SqlModelStatus.ACTIVE})
+  }', 'Creation of new channel', ${SqlModelStatus.ACTIVE})
 ;`);
 
   await queryFn(`

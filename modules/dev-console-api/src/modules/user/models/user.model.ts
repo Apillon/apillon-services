@@ -112,7 +112,7 @@ export class User extends AdvancedSQLModel {
   /*************************************************INFO properties - not part of DB table */
 
   /**
-   * web3 wallet
+   * Polkadot wallet
    * virtual field populated from access service
    */
   @prop({
@@ -126,6 +126,22 @@ export class User extends AdvancedSQLModel {
     ],
   })
   public wallet: string;
+
+  /**
+   * EVM wallet
+   * virtual field populated from access service
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.SERVICE, //
+    ],
+    serializable: [
+      SerializeFor.PROFILE, //
+      SerializeFor.ADMIN,
+    ],
+  })
+  public evmWallet: string;
 
   /** user roles */
   @prop({

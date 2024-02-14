@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
@@ -40,16 +40,10 @@ export class UserWalletAuthDto extends ModelBase {
   })
   public timestamp: number;
 
-  // @prop({
-  //   parser: { resolver: stringParser() },
-  //   populatable: [PopulateFrom.PROFILE],
-  //   validators: [
-  //     {
-  //       resolver: stringLengthValidator({ maxOrEqual: 60 }),
-  //       code: ValidatorErrorCode.USER_REFERRAL_NOT_VALID,
-  //     },
-  //   ],
-  //   defaultValue: null,
-  // })
-  // public referral: string;
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE],
+    defaultValue: false,
+  })
+  public isEvmWallet: boolean;
 }

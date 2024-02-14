@@ -154,11 +154,6 @@ export class StorageService {
         code: StorageErrorCode.BUCKET_NOT_FOUND,
         status: 404,
       });
-    } else if (bucket.status == SqlModelStatus.MARKED_FOR_DELETION) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_IS_MARKED_FOR_DELETION,
-        status: 404,
-      });
     }
     bucket.canAccess(context);
 
@@ -198,7 +193,7 @@ export class StorageService {
           },
           context,
         );
-        await session.insert();
+        await session.insert(SerializeFor.INSERT_DB, undefined, true);
       } else if (session.bucket_id != bucket.id) {
         throw new StorageCodeException({
           code: StorageErrorCode.SESSION_UUID_BELONGS_TO_OTHER_BUCKET,
@@ -220,7 +215,7 @@ export class StorageService {
         },
         context,
       );
-      await session.insert();
+      await session.insert(SerializeFor.INSERT_DB, undefined, true);
     }
 
     const s3Client: AWS_S3 = new AWS_S3();
@@ -228,7 +223,7 @@ export class StorageService {
     const files = [];
     await runWithWorkers(
       event.body.files,
-      50,
+      20,
       context,
       async (fileMetadata) => {
         //NOTE - session uuid is added to s3File key.
@@ -310,7 +305,13 @@ export class StorageService {
       bucket.bucketType == BucketType.STORAGE ||
       bucket.bucketType == BucketType.NFT_METADATA
     ) {
-      if (session.sessionStatus == FileUploadSessionStatus.CREATED) {
+      //If more than 1000 files in session, initial file generation should be performed in worker, otherwise timeout can occur.
+      const processFilesInSyncWorker =
+        (await session.getNumOfFilesInSession()) > 1000;
+      if (
+        session.sessionStatus == FileUploadSessionStatus.CREATED &&
+        !processFilesInSyncWorker
+      ) {
         await processSessionFiles(context, bucket, session, event.body);
       }
       if (
@@ -328,6 +329,7 @@ export class StorageService {
             session_uuid: session.session_uuid,
             wrapWithDirectory: event.body.wrapWithDirectory,
             wrappingDirectoryPath: event.body.directoryPath,
+            processFilesInSyncWorker,
           };
           const wd = new WorkerDefinition(
             serviceDef,
@@ -346,6 +348,7 @@ export class StorageService {
             session_uuid: session.session_uuid,
             wrapWithDirectory: event.body.wrapWithDirectory,
             wrappingDirectoryName: event.body.directoryPath,
+            processFilesInSyncWorker,
           });
         }
       } else {
@@ -358,6 +361,7 @@ export class StorageService {
               session_uuid: session.session_uuid,
               wrapWithDirectory: event.body.wrapWithDirectory,
               wrappingDirectoryName: event.body.directoryPath,
+              processFilesInSyncWorker,
             },
           ],
           null,

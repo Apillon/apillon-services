@@ -11,3 +11,4 @@ aws codebuild create-project --cli-input-json file://blockchain-config-prod.json
 aws codebuild create-project --cli-input-json file://auth-api-config-prod.json --profile apillon
 aws codebuild create-project --cli-input-json file://auth-config-prod.json --profile apillon
 aws codebuild create-project --cli-input-json file://computing-config-prod.json --profile apillon
+aws codebuild create-project --cli-input-json file://social-config-prod.json --profile apillon

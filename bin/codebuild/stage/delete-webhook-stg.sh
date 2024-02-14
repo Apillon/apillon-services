@@ -11,5 +11,6 @@ aws codebuild delete-webhook --project-name apillon-referral-staging --profile a
 aws codebuild delete-webhook --project-name apillon-nfts-staging --profile apillon
 aws codebuild delete-webhook --project-name apillon-blockchain-staging --profile apillon
 aws codebuild delete-webhook --project-name apillon-computing-staging --profile apillon
+aws codebuild delete-webhook --project-name apillon-social-staging --profile apillon
 
 aws codebuild delete-webhook --project-name apillon-app-staging --profile apillon
