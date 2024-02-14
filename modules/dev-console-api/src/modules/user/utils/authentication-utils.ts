@@ -10,14 +10,22 @@ import {
   UnauthorizedErrorCodes,
   ValidationException,
   ValidatorErrorCode,
+  isEVMWallet,
   parseJwtToken,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../../context';
 import { User } from '../models/user.model';
 import { HttpStatus } from '@nestjs/common';
 import { ProjectService } from '../../project/project.service';
+import { RegisterUserDto } from '../dtos/register-user.dto';
 
-export async function registerUser(params: any, context: DevConsoleApiContext) {
+export async function registerUser(
+  params: RegisterUserDto & {
+    projectService: ProjectService;
+    tokenType: string;
+  },
+  context: DevConsoleApiContext,
+) {
   const tokenData = parseJwtToken(params.tokenType, params.token);
 
   const user = await createUser(tokenData, context);
@@ -27,10 +35,12 @@ export async function registerUser(params: any, context: DevConsoleApiContext) {
   let amsResponse;
   try {
     await user.insert(SerializeFor.INSERT_DB, conn);
+    const walletAddress = tokenData.walletAddress;
     amsResponse = await new Ams(context).register({
       user_uuid: user.user_uuid,
       email,
       password: params.password,
+      [isEVMWallet(walletAddress) ? 'evmWallet' : 'wallet']: walletAddress,
     });
 
     user.setUserRolesAndPermissionsFromAmsResponse(amsResponse);
@@ -63,15 +73,15 @@ async function createUser(
   tokenData: any,
   context: DevConsoleApiContext,
 ): Promise<User> {
-  if (!tokenData?.email) {
+  const email = tokenData?.email;
+
+  if (!email) {
     throw new CodeException({
       status: HttpStatus.UNAUTHORIZED,
       code: UnauthorizedErrorCodes.INVALID_TOKEN,
       errorCodes: UnauthorizedErrorCodes,
     });
   }
-
-  const email = tokenData.email;
 
   // this handles security recommendation for single use token at registration!
   const emailCheckResult = await new Ams(context).emailExists(email);
