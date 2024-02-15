@@ -2,7 +2,7 @@ import { env } from '@apillon/lib';
 import { gql } from 'graphql-request';
 
 import { BaseBlockchainIndexer } from '../base-blockchain-indexer';
-import { SystemEvent } from '../data-models';
+import { SystemEvent, TransferTransaction } from '../data-models';
 import { SubsocialGQLQueries } from './graphql-queries';
 
 export class SubsocialBlockchainIndexer extends BaseBlockchainIndexer {
@@ -94,5 +94,24 @@ export class SubsocialBlockchainIndexer extends BaseBlockchainIndexer {
     );
 
     return data;
+  }
+
+  public async getAccountBalanceTransfersForTxs(
+    account: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<{
+    transfers: TransferTransaction[];
+  }> {
+    return await this.graphQlClient.request(
+      gql`
+        ${SubsocialGQLQueries.ACCOUNT_TRANSFERS_BY_BLOCKS}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+      },
+    );
   }
 }

@@ -57,6 +57,10 @@ export enum PhalaTransactionType {
   // SYSTEM_EVENTS_FAIL = 'system-event-fail',
 }
 
+export enum SubstrateTransactionType{
+  BALANCE_TRANSFER = 'balances-transfer',
+}
+
 /**
  * Error codes
  * code format : HTTPCODE|MODULE_CODE|MODULE_INTERNAL_ERROR_CODE

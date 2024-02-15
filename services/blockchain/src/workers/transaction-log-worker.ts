@@ -33,6 +33,7 @@ import {
   TransferTransaction,
 } from '../modules/blockchain-indexers/substrate/data-models';
 import { StorageOrderTransaction } from '../modules/blockchain-indexers/substrate/crust/data-models';
+import { SubsocialBlockchainIndexer } from '../modules/blockchain-indexers/substrate/subsocial/indexer.service';
 
 export class TransactionLogWorker extends BaseQueueWorker {
   public constructor(
@@ -339,6 +340,76 @@ export class TransactionLogWorker extends BaseQueueWorker {
               );
               transactionLogs.push(
                 new TransactionLog({}, this.context).createFromPhalaIndexerData(
+                  {
+                    system: s,
+                    transfer,
+                  },
+                  wallet,
+                ),
+              );
+            }
+
+            await wallet.updateLastLoggedBlock(toBlock);
+
+            return transactionLogs;
+          },
+          [SubstrateChain.SUBSOCIAL]: async () => {
+            const indexer = new SubsocialBlockchainIndexer();
+            const blockHeight = await indexer.getBlockHeight();
+            const toBlock =
+              wallet.lastLoggedBlock + wallet.blockParseSize < blockHeight
+                ? wallet.lastLoggedBlock + wallet.blockParseSize
+                : blockHeight;
+            const systems = await indexer.getAllSystemEvents(
+              wallet.address,
+              lastBlock,
+              toBlock,
+            );
+            console.log(`Got ${systems.length} Subsocial system events!`);
+            const { transfers } =
+              await indexer.getAccountBalanceTransfersForTxs(
+                wallet.address,
+                lastBlock,
+                toBlock,
+              );
+            console.log(`Got ${transfers.length} Subsocial transfers!`);
+            // prepare transfer data
+            const transactionLogs: TransactionLog[] = [];
+            // collect transfers without system events (deposits)
+            for (const transfer of transfers) {
+              const systemEvent = systems.find(
+                (s) =>
+                  transfer.blockNumber === s.blockNumber &&
+                  transfer.extrinsicHash === s.extrinsicHash,
+              );
+              if (systemEvent) {
+                continue;
+              }
+              transactionLogs.push(
+                new TransactionLog(
+                  {},
+                  this.context,
+                ).createFromSubstrateIndexerData(
+                  {
+                    system: null,
+                    transfer,
+                  },
+                  wallet,
+                ),
+              );
+            }
+            // collect transfers with system events
+            for (const s of systems) {
+              const transfer = transfers.find(
+                (t) =>
+                  t.blockNumber === s.blockNumber &&
+                  t.extrinsicHash === s.extrinsicHash,
+              );
+              transactionLogs.push(
+                new TransactionLog(
+                  {},
+                  this.context,
+                ).createFromSubstrateIndexerData(
                   {
                     system: s,
                     transfer,

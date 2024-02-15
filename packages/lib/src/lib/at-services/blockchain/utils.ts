@@ -51,6 +51,7 @@ export async function getTokenPriceUsd(token: string) {
     PHA: 'pha',
     GLMR: 'moonbeam',
     DEV: 'moonbase',
+    SUB: 'subsocial',
   };
   const networkName = networkTokenMap[token];
   try {
