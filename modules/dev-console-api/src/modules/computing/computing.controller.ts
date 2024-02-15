@@ -1,5 +1,6 @@
 import {
   AssignCidToNft,
+  ComputingTransactionQueryFilter,
   ContractQueryFilter,
   CreateContractDto,
   DefaultPermission,
@@ -31,12 +32,11 @@ export class ComputingController {
 
   @Post('contracts')
   @Validation({ dto: CreateContractDto })
-  @UseGuards(ValidationGuard)
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ValidationGuard)
   async createContract(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateContractDto,
@@ -47,7 +47,7 @@ export class ComputingController {
   @Get('contracts')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: ContractQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @UseGuards(AuthGuard, ValidationGuard)
   async listComputingContracts(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: ContractQueryFilter,
@@ -65,14 +65,26 @@ export class ComputingController {
     return await this.computingService.getContract(context, uuid);
   }
 
+  @Get('contracts/:uuid/transactions')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({ dto: ContractQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async listContractTransactions(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+    @Query() query: ComputingTransactionQueryFilter,
+  ) {
+    query.contract_uuid = uuid;
+    return await this.computingService.listTransactions(context, query);
+  }
+
   @Post('contracts/:uuid/transfer-ownership')
   @Validation({ dto: TransferOwnershipDto })
-  @UseGuards(ValidationGuard)
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ValidationGuard)
   async transferOwnership(
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') uuid: string,
@@ -84,13 +96,12 @@ export class ComputingController {
 
   @Post('contracts/:uuid/encrypt')
   @Validation({ dto: EncryptContentDto })
-  @UseGuards(ValidationGuard)
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
     { role: DefaultUserRole.PROJECT_USER },
   )
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ValidationGuard)
   async encryptContent(
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') uuid: string,
@@ -102,13 +113,12 @@ export class ComputingController {
 
   @Post('contracts/:uuid/assign-cid-to-nft')
   @Validation({ dto: AssignCidToNft })
-  @UseGuards(ValidationGuard)
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
     { role: DefaultUserRole.PROJECT_USER },
   )
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ValidationGuard)
   async assignCidToNft(
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') uuid: string,

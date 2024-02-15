@@ -1,5 +1,5 @@
 import { getEnvSecrets } from '../../config/env';
-import { AppEnvironment } from '../../config/types';
+import { ApiName, AppEnvironment } from '../../config/types';
 import * as Net from 'net';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import { safeJsonParse } from '../utils';
@@ -17,12 +17,14 @@ export abstract class BaseService {
   private requestId: string;
   private user: any;
   private apiKey: any;
+  private apiName: ApiName;
 
   constructor(context?: Context) {
     this.securityToken = this.generateSecurityToken();
     this.requestId = context?.requestId;
     this.user = context?.user;
     this.apiKey = context?.apiKey;
+    this.apiName = context?.apiName;
   }
 
   private generateSecurityToken() {
@@ -48,6 +50,7 @@ export abstract class BaseService {
       requestId: this.requestId,
       user: this.user,
       apiKey: this.apiKey,
+      apiName: this.apiName,
       ...payload,
     };
 
@@ -59,51 +62,49 @@ export abstract class BaseService {
       !process.env.CODEBUILD_CI
     ) {
       result = await this.callDevService(payload, isAsync);
+    } else if (queueUrl) {
+      // send msg to SQS
+      const sqs = new SQSClient({
+        // credentials: {
+        //   accessKeyId: env.AWS_KEY,
+        //   secretAccessKey: env.AWS_SECRET,
+        // },
+        region: env.AWS_REGION,
+      });
+      const message: SendMessageCommandInput = {
+        // Remove DelaySeconds parameter and value for FIFO queues
+        //  DelaySeconds: 10,
+        MessageBody: JSON.stringify(payload),
+        // MessageDeduplicationId: 'TheWhistler',  // Required for FIFO queues
+        // MessageGroupId: 'Group1',  // Required for FIFO queues
+        QueueUrl: queueUrl,
+      };
+      try {
+        const command = new SendMessageCommand(message);
+        result = await sqs.send(command);
+      } catch (err) {
+        console.error('Apillon MS: Error sending SQS message!', err);
+      }
     } else {
-      if (queueUrl) {
-        // send msg to SQS
-        const sqs = new SQSClient({
-          // credentials: {
-          //   accessKeyId: env.AWS_KEY,
-          //   secretAccessKey: env.AWS_SECRET,
-          // },
-          region: env.AWS_REGION,
-        });
-        const message: SendMessageCommandInput = {
-          // Remove DelaySeconds parameter and value for FIFO queues
-          //  DelaySeconds: 10,
-          MessageBody: JSON.stringify(payload),
-          // MessageDeduplicationId: 'TheWhistler',  // Required for FIFO queues
-          // MessageGroupId: 'Group1',  // Required for FIFO queues
-          QueueUrl: queueUrl,
-        };
-        try {
-          const command = new SendMessageCommand(message);
-          result = await sqs.send(command);
-        } catch (err) {
-          console.error('Apillon MS: Error sending SQS message!', err);
-        }
-      } else {
-        // invoke lambda
-        const lambda = new LambdaClient({
-          // credentials: {
-          //   accessKeyId: env.AWS_KEY,
-          //   secretAccessKey: env.AWS_SECRET,
-          // },
-          region: env.AWS_REGION,
-        });
-        const command = new InvokeCommand({
-          FunctionName: this.lambdaFunctionName,
-          InvocationType: isAsync ? 'Event' : 'RequestResponse',
-          Payload: Buffer.from(JSON.stringify(payload)),
-        });
+      // invoke lambda
+      const lambda = new LambdaClient({
+        // credentials: {
+        //   accessKeyId: env.AWS_KEY,
+        //   secretAccessKey: env.AWS_SECRET,
+        // },
+        region: env.AWS_REGION,
+      });
+      const command = new InvokeCommand({
+        FunctionName: this.lambdaFunctionName,
+        InvocationType: isAsync ? 'Event' : 'RequestResponse',
+        Payload: Buffer.from(JSON.stringify(payload)),
+      });
 
-        try {
-          const { Payload } = await lambda.send(command);
-          result = safeJsonParse(Buffer.from(Payload).toString());
-        } catch (err) {
-          console.error('Error invoking lambda!', err);
-        }
+      try {
+        const { Payload } = await lambda.send(command);
+        result = safeJsonParse(Buffer.from(Payload).toString());
+      } catch (err) {
+        console.error('Error invoking lambda!', err);
       }
     }
     // console.log(result);

@@ -127,21 +127,14 @@ export class BucketService {
     return b.serialize(SerializeFor.PROFILE);
   }
 
-  static async markBucketForDeletion(
+  static async deleteBucket(
     event: { bucket_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const b: Bucket = await new Bucket({}, context).populateById(
-      event.bucket_uuid,
-    );
+    const b = await new Bucket({}, context).populateById(event.bucket_uuid);
 
     if (!b.exists()) {
       throw new StorageNotFoundException();
-    } else if (b.status == SqlModelStatus.MARKED_FOR_DELETION) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_ALREADY_MARKED_FOR_DELETION,
-        status: 400,
-      });
     } else if (b.bucketType == BucketType.HOSTING) {
       throw new StorageCodeException({
         code: StorageErrorCode.CANNOT_DELETE_HOSTING_BUCKET,
@@ -150,35 +143,17 @@ export class BucketService {
     }
     b.canModify(context);
 
-    await b.markForDeletion();
-    await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
-      project_uuid: b.project_uuid,
-    });
-
-    return b.serialize(SerializeFor.PROFILE);
-  }
-
-  static async unmarkBucketForDeletion(
-    event: { bucket_uuid: string },
-    context: ServiceContext,
-  ): Promise<any> {
-    const b: Bucket = await new Bucket({}, context).populateById(
-      event.bucket_uuid,
-    );
-
-    if (!b.exists()) {
-      throw new StorageNotFoundException();
-    } else if (b.status != SqlModelStatus.MARKED_FOR_DELETION) {
+    //Bucket cannot be deleted if there are files in it
+    if (await b.containsFiles()) {
       throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_NOT_MARKED_FOR_DELETION,
+        code: StorageErrorCode.CANNOT_DELETE_BUCKET_WITH_FILES,
         status: 400,
       });
     }
-    b.canModify(context);
 
-    b.status = SqlModelStatus.ACTIVE;
-    await b.update();
-    return b.serialize(SerializeFor.PROFILE);
+    await b.markDeleted();
+
+    return true;
   }
 
   static async clearBucketContent(

@@ -114,7 +114,7 @@ export class AuthUser extends AdvancedSQLModel {
   public password: string;
 
   /**
-   * User's wallet
+   * User's Polkadot wallet
    */
   @prop({
     parser: { resolver: stringParser() },
@@ -127,14 +127,25 @@ export class AuthUser extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SERVICE,
     ],
-    validators: [
-      // {
-      //   resolver: presenceValidator(),
-      //   code: AmsErrorCode.USER_PASSWORD_NOT_PRESENT,
-      // },
-    ],
   })
   public wallet: string;
+
+  /**
+   * User's EVM wallet
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB, //
+      PopulateFrom.SERVICE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB, //
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public evmWallet: string;
 
   /**
    * auth user roles
@@ -235,6 +246,7 @@ export class AuthUser extends AdvancedSQLModel {
       `
       SELECT * FROM authUser
       WHERE wallet = @wallet
+      OR evmWallet = @wallet
     `,
       { wallet },
       conn,

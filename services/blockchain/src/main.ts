@@ -8,6 +8,7 @@ import '@polkadot/api-augment';
 import '@polkadot/rpc-augment';
 import '@polkadot/types-augment';
 import { WalletIdentityService } from './modules/wallet/wallet-identity.service';
+
 /**
  * Processing lambda event with appropriate service function based on event name
  * @param event lambda event
@@ -23,6 +24,12 @@ export async function processEvent(
       SubstrateService.createTransaction,
     [BlockchainEventType.SUBSTRATE_GET_TRANSACTION]:
       SubstrateService.getTransactionById,
+    [BlockchainEventType.GET_PHALA_LOG_RECORDS_AND_GAS_PRICE]:
+      SubstrateService.getPhalaLogRecordsAndGasPrice,
+    [BlockchainEventType.GET_PHALA_CLUSTER_WALLET_BALANCE]:
+      SubstrateService.getPhalaClusterWalletBalance,
+    [BlockchainEventType.GET_PHALA_CLUSTER_DEPOSIT_TRANSACTION]:
+      SubstrateService.getPhalaClusterDepositTransaction,
     [BlockchainEventType.EVM_SIGN_TRANSACTION]: EvmService.createTransaction,
     [BlockchainEventType.EVM_GET_TRANSACTION]: EvmService.getTransactionById,
     [BlockchainEventType.GET_CHAIN_ENDPOINT]: CommonService.getChainEndpoint,
@@ -30,8 +37,10 @@ export async function processEvent(
     [BlockchainEventType.GET_WALLET]: WalletService.getWallet,
     [BlockchainEventType.UPDATE_WALLET]: WalletService.updateWallet,
     [BlockchainEventType.GET_WALLET_TRANSACTIONS]:
-      WalletService.getWalletTransactions,
+      WalletService.listWalletTransactions,
     [BlockchainEventType.UPDATE_TRANSACTION]: WalletService.updateTransaction,
+    [BlockchainEventType.LIST_WALLET_DEPOSITS]:
+      WalletService.listWalletDeposits,
     [BlockchainEventType.GET_WALLET_IDENTITY]:
       WalletIdentityService.getWalletIdentityData,
   };

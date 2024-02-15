@@ -35,4 +35,11 @@ export class RequestLogsQueryFilter extends BaseLogsQueryFilter {
     defaultValue: false,
   })
   public showSystemRequests: boolean;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.ADMIN],
+    serializable: [SerializeFor.ADMIN],
+  })
+  public method: string;
 }

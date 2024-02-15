@@ -1,23 +1,32 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { DevConsoleApiContext } from '../../../context';
-import { Project } from '../../project/models/project.model';
+import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
 import {
+  AddCreditDto,
+  Ams,
+  ApiKeyQueryFilterDto,
   BaseQueryFilter,
   CodeException,
   CreateQuotaOverrideDto,
-  QuotaOverrideDto,
-  Scs,
-  StorageMicroservice,
+  GetQuotaDto,
+  Lmas,
   NftsMicroservice,
   QuotaDto,
-  ApiKeyQueryFilterDto,
-  Ams,
+  QuotaOverrideDto,
+  Scs,
+  SerializeFor,
+  StorageMicroservice,
+  ValidationException,
 } from '@apillon/lib';
-import { ResourceNotFoundErrorCode } from '../../../config/types';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { UUID } from 'crypto';
-import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
-import { Lmas } from '@apillon/lib';
-import { GetQuotaDto } from '@apillon/lib';
+import { v4 as uuidV4 } from 'uuid';
+import {
+  ResourceNotFoundErrorCode,
+  ValidatorErrorCode,
+} from '../../../config/types';
+import { DevConsoleApiContext } from '../../../context';
+import { Project } from '../../project/models/project.model';
+import { ProjectsQueryFilter } from './dtos/projects-query-filter.dto';
+import { ProjectUser } from '../../project/models/project-user.model';
 
 @Injectable()
 export class ProjectService {
@@ -28,7 +37,7 @@ export class ProjectService {
    */
   async getProjectList(
     context: DevConsoleApiContext,
-    filter: BaseQueryFilter,
+    filter: ProjectsQueryFilter,
   ): Promise<any> {
     return await new Project({}, context).listProjects(context, filter);
   }
@@ -43,14 +52,7 @@ export class ProjectService {
   async getProject(
     context: DevConsoleApiContext,
     project_uuid: UUID,
-  ): Promise<
-    Project & {
-      totalBucketSize: number;
-      numOfWebsites: number;
-      numOfBuckets: number;
-      numOfCollections: number;
-    }
-  > {
+  ): Promise<any> {
     const project: Project = await new Project({}, context).populateByUUID(
       project_uuid,
     );
@@ -61,6 +63,16 @@ export class ProjectService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
+
+    const { items: projectUsers } = await new ProjectUser(
+      {},
+      context,
+    ).getProjectUsers(
+      context,
+      project_uuid,
+      new BaseQueryFilter({ limit: 1000 }),
+    );
+
     const { data: projectStorageDetails } = await new StorageMicroservice(
       context,
     ).getProjectStorageDetails(project_uuid);
@@ -69,10 +81,16 @@ export class ProjectService {
       context,
     ).getProjectCollectionDetails(project_uuid);
 
+    const { data: projectCredit } = await new Scs(context).getProjectCredit(
+      project_uuid,
+    );
+
     return {
-      ...project,
+      ...project.serialize(SerializeFor.ADMIN),
+      projectUsers,
       ...projectStorageDetails,
       ...projectCollectionDetails,
+      creditBalance: projectCredit.balance,
     };
   }
 
@@ -134,5 +152,19 @@ export class ProjectService {
       (key: any) => (key.usageCount = usageCounts[key.apiKey]),
     );
     return data;
+  }
+
+  async addCreditsToProject(context: DevConsoleApiContext, data: AddCreditDto) {
+    data.referenceTable = 'manually_added';
+    data.referenceId = uuidV4();
+    try {
+      await data.validate();
+    } catch (err) {
+      await data.handle(err);
+      if (!data.isValid()) {
+        throw new ValidationException(data, ValidatorErrorCode);
+      }
+    }
+    return (await new Scs(context).addCredit(data)).data;
   }
 }

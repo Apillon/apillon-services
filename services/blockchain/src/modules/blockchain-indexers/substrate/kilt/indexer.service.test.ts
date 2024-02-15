@@ -29,7 +29,6 @@ describe('Testing indexer data-fetch', () => {
       address,
       fromBlock,
       toBlock,
-      5,
     );
     expect(systemsWithLimit.length).toEqual(5);
 

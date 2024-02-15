@@ -35,17 +35,27 @@ export async function generateMongoLogsQuery(
       }),
   );
 
-  if (query instanceof RequestLogsQueryFilter && !query.showSystemRequests) {
-    // System routes, conditionally hide from results if showSystemRequests is false
-    const skipRoutes = [
-      '/hosting/domains',
-      '/auth/session-token',
-      '/discord-bot/user-list',
-    ];
-    mongoQuery[property] = {
-      ...(mongoQuery[property] || {}),
-      $nin: skipRoutes,
-    };
+  if (query instanceof RequestLogsQueryFilter) {
+    if (!query.showSystemRequests) {
+      const systemRoutes = [
+        '/hosting/domains',
+        '/discord-bot/user-list',
+        '/storage/blacklist',
+        '/system',
+        '/auth/session-token',
+      ];
+      // System routes, conditionally hide from results if showSystemRequests is false
+      mongoQuery[property] = {
+        ...(mongoQuery[property] || {}),
+        $not: {
+          $regex: systemRoutes.join('|'),
+        },
+      };
+    }
+
+    if (query.method) {
+      mongoQuery.method = { $eq: query.method.toUpperCase() };
+    }
   }
 
   if (query.dateFrom) {

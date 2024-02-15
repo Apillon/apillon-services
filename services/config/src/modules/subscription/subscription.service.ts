@@ -20,6 +20,7 @@ import {
 } from '../../lib/exceptions';
 import { ConfigErrorCode, DbTables } from '../../config/types';
 import { CreditService } from '../credit/credit.service';
+import { InvoiceService } from '../invoice/invoice.service';
 
 export class SubscriptionService {
   /**
@@ -255,6 +256,7 @@ export class SubscriptionService {
       }
 
       if (package_id !== subscription.package_id) {
+        // If package has been upgraded or downgraded, create a new one and set current to inactive
         const newSubscription = new Subscription(
           subscription.serialize(SerializeFor.INSERT_DB),
           context,
@@ -269,23 +271,42 @@ export class SubscriptionService {
             context,
           ).populateById(subscription.package_id);
           // Subscription package upgraded, give additional credits from higher package
-          await SubscriptionService.giveCreditsForSubscription(
-            context,
-            {
-              package_id,
-              project_uuid: newSubscription.project_uuid,
-              subscriptionId: async () =>
-                (
-                  await newSubscription.insert(SerializeFor.INSERT_DB, conn)
-                ).id,
-              creditAmount:
-                subscriptionPackage.creditAmount - previousPackage.creditAmount,
-            },
-            conn,
-          );
+          await Promise.all([
+            SubscriptionService.giveCreditsForSubscription(
+              context,
+              {
+                package_id,
+                project_uuid: newSubscription.project_uuid,
+                subscriptionId: async () =>
+                  (
+                    await newSubscription.insert(SerializeFor.INSERT_DB, conn)
+                  ).id,
+                creditAmount:
+                  subscriptionPackage.creditAmount -
+                  previousPackage.creditAmount,
+              },
+              conn,
+            ),
+            await InvoiceService.createOnSubscriptionUpdate(
+              context,
+              subscription,
+              updateSubscriptionDto,
+              conn,
+            ),
+          ]);
         } else {
           await newSubscription.insert(SerializeFor.INSERT_DB, conn);
         }
+      } else if (
+        new Date(updateSubscriptionDto.expiresOn) >
+        new Date(subscription.expiresOn)
+      ) {
+        await InvoiceService.createOnSubscriptionUpdate(
+          context,
+          subscription,
+          updateSubscriptionDto,
+          conn,
+        );
       }
 
       await subscription.update(SerializeFor.UPDATE_DB, conn);
@@ -328,6 +349,22 @@ export class SubscriptionService {
     return await new Subscription({
       project_uuid: event.query.project_uuid,
     }).getList(event.query, context);
+  }
+
+  /**
+   * Get all active subscriptions
+   * @param event
+   * @param context
+   * @returns
+   */
+  static async getProjectsWithActiveSubscription(
+    event: { subscriptionPackageId?: number },
+    context: ServiceContext,
+  ) {
+    return await new Subscription(
+      {},
+      context,
+    ).getProjectsWithActiveSubscription(event.subscriptionPackageId);
   }
 
   private static async checkForActiveSubscription(

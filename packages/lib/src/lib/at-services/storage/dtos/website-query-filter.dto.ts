@@ -17,11 +17,4 @@ export class WebsiteQueryFilter extends BaseQueryFilter {
     ],
   })
   public project_uuid: string;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
-  })
-  public status: number;
 }

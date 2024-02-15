@@ -86,15 +86,27 @@ export * from './lib/at-services/computing/dtos/deposit-to-cluster.dto';
 export * from './lib/at-services/computing/dtos/transfer-ownership.dto';
 export * from './lib/at-services/computing/dtos/encrypt-content.dto';
 export * from './lib/at-services/computing/dtos/assign-cid-to-nft.dto';
+export * from './lib/at-services/computing/dtos/phala-log-filter.dto';
+export * from './lib/at-services/computing/dtos/phala-cluster-wallet.dto';
+export * from './lib/at-services/computing/dtos/phala-cluster-deposit-transaction.dto';
+export * from './lib/at-services/computing/dtos/cluster-wallet-query-filter.dto';
+export * from './lib/at-services/computing/dtos/computing-transaction-query-filter.dto';
 
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';
+export * from './lib/at-services/blockchain/utils';
 export * from './lib/at-services/blockchain/dtos/create-substrate-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/create-evm-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/transaction.dto';
 export * from './lib/at-services/blockchain/dtos/transaction-webhook-data.dto';
 export * from './lib/at-services/blockchain/dtos/update-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/wallet-transactions-query-filter';
+export * from './lib/at-services/blockchain/dtos/wallet-deposits-query-filter';
+
+//#REGION Social
+export * from './lib/at-services/social/social';
+export * from './lib/at-services/social/dtos/create-space.dto';
+export * from './lib/at-services/social/dtos/create-post.dto';
 
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';
@@ -103,10 +115,13 @@ export * from './lib/at-services/ams/dtos/user-wallet-auth.dto';
 export * from './lib/at-services/nfts/nfts';
 export * from './lib/at-services/nfts/dtos/deploy-collection.dto';
 
+// #REGION mailing
+export * from './lib/at-services/mailing/dto/email-data.dto';
+
 export * from './lib/database/sql-migrator';
 export * from './lib/at-services/ams/ams';
 export * from './lib/at-services/lmas/lmas';
-export * from './lib/at-services/mailing';
+export * from './lib/at-services/mailing/mailing';
 export * from './lib/aws/aws-secrets';
 export * from './lib/database/mongo';
 export * from './lib/database/mysql';

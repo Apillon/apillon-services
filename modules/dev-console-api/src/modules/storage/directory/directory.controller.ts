@@ -63,23 +63,6 @@ export class DirectoryController {
     );
   }
 
-  @Patch(':directory_uuid/cancel-deletion')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
-  @UseGuards(AuthGuard)
-  async cancelDirectoryDeletion(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('directory_uuid') directory_uuid: string,
-  ) {
-    return await this.directoryService.cancelDirectoryDeletion(
-      context,
-      directory_uuid,
-    );
-  }
-
   @Delete(':directory_uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },

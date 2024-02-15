@@ -4,9 +4,13 @@ import {
   PoolConnection,
   SerializeFor,
   SubstrateChain,
-  TransactionStatus,
 } from '@apillon/lib';
-import { ContractStatus, DbTables, TransactionType } from '../../config/types';
+import {
+  ComputingTransactionStatus,
+  ContractStatus,
+  DbTables,
+  TransactionType,
+} from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Contract } from '../../modules/computing/models/contract.model';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
@@ -43,10 +47,11 @@ export async function deployPhalaContract(
 
   const dbTxRecord = new Transaction({}, context);
   dbTxRecord.populate({
+    walletAddress: response.data.address,
     transactionType: TransactionType.DEPLOY_CONTRACT,
-    contractId: contract.id,
+    contract_id: contract.id,
     transactionHash: response.data.transactionHash,
-    transactionStatus: TransactionStatus.PENDING,
+    transactionStatus: ComputingTransactionStatus.PENDING,
   });
 
   //Insert to DB
@@ -80,9 +85,10 @@ export async function depositToPhalaCluster(
   ).createSubstrateTransaction(blockchainServiceRequest);
   const dbTxRecord = new Transaction(
     {
+      walletAddress: response.data.address,
       transactionType: TransactionType.DEPOSIT_TO_CONTRACT_CLUSTER,
       transactionHash: response.data.transactionHash,
-      transactionStatus: TransactionStatus.PENDING,
+      transactionStatus: ComputingTransactionStatus.PENDING,
     },
     context,
   );
@@ -92,15 +98,18 @@ export async function depositToPhalaCluster(
 export async function transferContractOwnership(
   context: ServiceContext,
   projectUuid: string,
-  contractId: number,
+  contract_id: number,
   contractAbi: { [key: string]: any },
   contractAddress: string,
   newOwnerAddress: string,
 ) {
-  const phalaClient = new PhalaClient(context);
-  const transaction = await phalaClient.createTransferOwnershipTransaction(
+  const nonce = PhalaClient.getRandomNonce();
+  const transaction = await new PhalaClient(
+    context,
+  ).createTransferOwnershipTransaction(
     contractAbi,
     contractAddress,
+    nonce,
     newOwnerAddress,
   );
   const blockchainServiceRequest = new CreateSubstrateTransactionDto(
@@ -108,7 +117,7 @@ export async function transferContractOwnership(
       chain: SubstrateChain.PHALA,
       transaction: transaction.toHex(),
       referenceTable: DbTables.CONTRACT,
-      referenceId: contractId,
+      referenceId: contract_id,
       project_uuid: projectUuid,
     },
     context,
@@ -118,10 +127,12 @@ export async function transferContractOwnership(
   ).createSubstrateTransaction(blockchainServiceRequest);
   const dbTxRecord = new Transaction(
     {
+      walletAddress: response.data.address,
       transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-      contractId,
+      contract_id: contract_id,
       transactionHash: response.data.transactionHash,
-      transactionStatus: TransactionStatus.PENDING,
+      nonce,
+      transactionStatus: ComputingTransactionStatus.PENDING,
     },
     context,
   );
@@ -144,21 +155,28 @@ export async function encryptContent(
 export async function assignCidToNft(
   context: ServiceContext,
   projectUuid: string,
-  contractId: number,
+  contract_id: number,
   contractAbi: { [key: string]: any },
   contractAddress: string,
   cid: string,
   nftId: number,
 ) {
+  const nonce = PhalaClient.getRandomNonce();
   const transaction = await new PhalaClient(
     context,
-  ).createAssignCidToNftTransaction(contractAbi, contractAddress, cid, nftId);
+  ).createAssignCidToNftTransaction(
+    contractAbi,
+    contractAddress,
+    nonce,
+    cid,
+    nftId,
+  );
   const blockchainServiceRequest = new CreateSubstrateTransactionDto(
     {
       chain: SubstrateChain.PHALA,
       transaction: transaction.toHex(),
       referenceTable: DbTables.CONTRACT,
-      referenceId: contractId,
+      referenceId: contract_id,
       project_uuid: projectUuid,
     },
     context,
@@ -168,10 +186,12 @@ export async function assignCidToNft(
   ).createSubstrateTransaction(blockchainServiceRequest);
   const dbTxRecord = new Transaction(
     {
+      walletAddress: response.data.address,
       transactionType: TransactionType.ASSIGN_CID_TO_NFT,
-      contractId,
+      contract_id: contract_id,
       transactionHash: response.data.transactionHash,
-      transactionStatus: TransactionStatus.PENDING,
+      nonce,
+      transactionStatus: ComputingTransactionStatus.PENDING,
     },
     context,
   );

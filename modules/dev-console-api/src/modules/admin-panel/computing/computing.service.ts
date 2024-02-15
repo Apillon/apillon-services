@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../../context';
-import { ComputingMicroservice, DepositToClusterDto } from '@apillon/lib';
+import {
+  ClusterWalletQueryFilter,
+  ComputingMicroservice,
+  DepositToClusterDto,
+} from '@apillon/lib';
 
 @Injectable()
 export class ComputingService {
@@ -11,5 +15,13 @@ export class ComputingService {
     return (
       await new ComputingMicroservice(context).depositToPhalaCluster(body)
     ).data;
+  }
+
+  async listClusterWallets(
+    context: DevConsoleApiContext,
+    query: ClusterWalletQueryFilter,
+  ) {
+    return (await new ComputingMicroservice(context).listClusterWallets(query))
+      .data;
   }
 }

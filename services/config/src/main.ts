@@ -47,11 +47,13 @@ export async function processEvent(
     [ScsEventType.GET_ACTIVE_SUBSCRIPTION]:
       SubscriptionService.getProjectActiveSubscription,
     [ScsEventType.LIST_SUBSCRIPTIONS]: SubscriptionService.listSubscriptions,
+    [ScsEventType.GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION]:
+      SubscriptionService.getProjectsWithActiveSubscription,
     [ScsEventType.GET_SUBSCRIPTION_PACKAGES]:
       SubscriptionService.getSubscriptionPackages,
 
-    [ScsEventType.HANDLE_STRIPE_WEBHOOK_DATA]:
-      InvoiceService.handleStripeWebhookData,
+    [ScsEventType.HANDLE_PAYMENT_WEBHOOK_DATA]:
+      InvoiceService.handlePaymentWebhookData,
 
     [ScsEventType.LIST_INVOICES]: InvoiceService.listInvoices,
   };

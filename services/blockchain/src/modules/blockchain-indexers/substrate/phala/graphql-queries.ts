@@ -1,6 +1,30 @@
 import { BaseGQLQueries } from '../base-queries';
 
 export class PhalaGqlQueries extends BaseGQLQueries {
+  static ACCOUNT_CLUSTER_DEPOSIT_EVENTS_QUERY = `query getAccountClusterDepositEvents(
+    $account: String!,
+    $fromBlock: Int!,
+    $toBlock: Int!
+  ) {
+    phatContractsTransfereds(
+      where: {
+        AND: {
+          blockNumber_gt: $fromBlock,
+          blockNumber_lte: $toBlock,
+          to_eq: $account
+        }
+      }
+    ) {
+      ${this.BASE_SUBSTRATE_FIELDS}
+        amount
+        clusterId
+        fee
+        from
+        to
+    }
+  }
+  `;
+
   static ACCOUNT_ALL_TRANSACTIONS_QUERY = `query getAccountTransactions(
     $account: String!
     $fromBlock: Int!,
@@ -78,20 +102,16 @@ export class PhalaGqlQueries extends BaseGQLQueries {
       fee
     }
   }`;
-  static INSTANTIATED_CONTRACTS_BY_DEPLOYER_AND_BLOCK = `
-    query getContractInstantiatedTransactions(
-      $deployer: String!,
-      $fromBlock: Int!,
-      $toBlock: Int
-    ) {
-      phatContractsInstantiateds(where: {AND: {blockNumber_gte: $fromBlock, blockNumber_lt: $toBlock, deployer_eq: $deployer}}) {
-        ${this.BASE_SUBSTRATE_FIELDS}
-        account
-        cluster
-        contract
-        deployer
-      }
+  static CLUSTER_DEPOSIT_BY_HASH_QUERY = `query getClusterDepositTransactions($account: String!, $hashes: [String!]!) {
+    phatContractsTransfereds(where: {to_eq: $account, extrinsicHash_in: $hashes}) {
+      ${this.BASE_SUBSTRATE_FIELDS}
+      amount
+      clusterId
+      fee
+      from
+      to
     }
+  }
   `;
 
   static ACCOUNT_TRANSACTION_BY_HASH = `

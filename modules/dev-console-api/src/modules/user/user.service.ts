@@ -18,6 +18,8 @@ import {
   CacheKeyPrefix,
   checkCaptcha,
   parseJwtToken,
+  EmailDataDto,
+  EmailTemplate,
 } from '@apillon/lib';
 import { getDiscordProfile } from '@apillon/modules-lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -41,6 +43,7 @@ import { registerUser } from './utils/authentication-utils';
 import { getOauthSessionToken } from './utils/oauth-utils';
 import { UserConsentDto, UserConsentStatus } from './dtos/user-consent.dto';
 import { DiscordCodeDto } from './dtos/discord-code.dto';
+import { Identity } from '@apillon/sdk';
 @Injectable()
 export class UserService {
   constructor(private readonly projectService: ProjectService) {}
@@ -64,6 +67,7 @@ export class UserService {
     user.userRoles = context.user.userRoles;
     user.userPermissions = context.user.userPermissions;
     user.wallet = context.user.authUser.wallet;
+    user.evmWallet = context.user.authUser.evmWallet;
 
     return user.serialize(SerializeFor.PROFILE);
   }
@@ -209,13 +213,15 @@ export class UserService {
       '1h',
     );
 
-    await new Mailing(context).sendMail({
-      emails: [email],
-      template: 'welcome',
-      data: {
-        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
-      },
-    });
+    await new Mailing(context).sendMail(
+      new EmailDataDto({
+        mailAddresses: [email],
+        templateName: EmailTemplate.WELCOME,
+        templateData: {
+          actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
+        },
+      }),
+    );
 
     return emailResult;
   }
@@ -309,12 +315,16 @@ export class UserService {
       });
     }
 
-    const { message } = this.getAuthMessage(userAuth.timestamp);
-    const { isValid } = signatureVerify(
-      message,
-      userAuth.signature,
-      userAuth.wallet,
-    );
+    const { signature, wallet, timestamp, isEvmWallet } = userAuth;
+
+    const { message } = this.getAuthMessage(timestamp);
+    const { isValid } = isEvmWallet
+      ? new Identity(null).validateEvmWalletSignature({
+          message,
+          signature,
+          walletAddress: wallet,
+        })
+      : signatureVerify(message, signature, wallet);
 
     if (!isValid) {
       throw new CodeException({
@@ -327,7 +337,7 @@ export class UserService {
 
     const resp = await new Ams(context).updateAuthUser({
       user_uuid: context.user.user_uuid,
-      wallet: userAuth.wallet,
+      [isEvmWallet ? 'evmWallet' : 'wallet']: wallet,
     });
 
     context.user.populate(resp.data);
@@ -358,14 +368,15 @@ export class UserService {
       emailResult.authUser.password ? emailResult.authUser.password : undefined,
     );
 
-    await new Mailing(context).sendMail({
-      emails: [email],
-      // subject: 'Apillon password reset',
-      template: 'reset-password',
-      data: {
-        actionUrl: `${env.APP_URL}/register/reset-password/?token=${token}`,
-      },
-    });
+    await new Mailing(context).sendMail(
+      new EmailDataDto({
+        mailAddresses: [email],
+        templateName: EmailTemplate.RESET_PASSWORD,
+        templateData: {
+          actionUrl: `${env.APP_URL}/register/reset-password/?token=${token}`,
+        },
+      }),
+    );
 
     return true;
   }

@@ -27,6 +27,7 @@ import { signatureVerify } from '@polkadot/util-crypto';
 import { TokenExpiresInStr } from '../../config/types';
 import { CryptoHash } from '../../lib/hash-with-crypto';
 import { ApiKeyService } from '../api-key/api-key.service';
+import { Identity } from '@apillon/sdk';
 
 /**
  * AuthUserService class handles user authentication and related operations, such as registration, login, password reset, and email verification.
@@ -133,7 +134,12 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
-      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+      }).writeToMonitor({
+        logType: LogType.WARN,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
     }
 
     await authUser.loginUser();
@@ -198,6 +204,7 @@ export class AuthUserService {
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
       }).writeToMonitor({
+        logType: LogType.WARN,
         context,
         user_uuid: event?.user_uuid,
         data: event,
@@ -298,6 +305,7 @@ export class AuthUserService {
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
       }).writeToMonitor({
+        logType: LogType.WARN,
         context,
         user_uuid: event?.user_uuid,
         data: event,
@@ -318,6 +326,7 @@ export class AuthUserService {
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
       }).writeToMonitor({
+        logType: LogType.WARN,
         context,
         user_uuid: event?.user_uuid,
         data: event,
@@ -344,6 +353,7 @@ export class AuthUserService {
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
       }).writeToMonitor({
+        logType: LogType.WARN,
         context,
         user_uuid: event?.user_uuid,
         data: event,
@@ -409,7 +419,12 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
-      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+      }).writeToMonitor({
+        logType: LogType.WARN,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
     }
 
     //Use authUser password to parse and verify token
@@ -496,18 +511,21 @@ export class AuthUserService {
     if (!event?.message) {
       throw await new AmsBadRequestException(context, event).writeToMonitor();
     }
-
-    const { isValid } = signatureVerify(
-      event.message,
-      authData.signature,
-      authData.wallet,
-    );
+    const { signature, wallet, timestamp, isEvmWallet } = authData;
+    const { isValid } = isEvmWallet
+      ? new Identity(null).validateEvmWalletSignature({
+          message: event.message,
+          signature,
+          walletAddress: wallet,
+        })
+      : signatureVerify(event.message, signature, wallet);
 
     if (!isValid) {
       throw await new AmsCodeException({
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
       }).writeToMonitor({
+        logType: LogType.WARN,
         context,
         user_uuid: event?.user_uuid,
         data: event,
@@ -515,14 +533,19 @@ export class AuthUserService {
     }
 
     const authUser = await new AuthUser({}, context).populateByWalletAddress(
-      authData.wallet,
+      wallet,
     );
 
     if (!authUser.exists()) {
       throw await new AmsCodeException({
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
-      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+      }).writeToMonitor({
+        logType: LogType.WARN,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
     }
 
     //If login token with greater timestamp exists, throw error - signature was already used for login
@@ -531,10 +554,7 @@ export class AuthUserService {
       JwtTokenType.USER_AUTHENTICATION,
     );
 
-    if (
-      authToken.exists() &&
-      authToken?.updateTime?.getTime() > authData.timestamp
-    ) {
+    if (authToken.exists() && authToken?.updateTime?.getTime() > timestamp) {
       throw await new AmsCodeException({
         status: 400,
         code: AmsErrorCode.WALLET_SIGNATURE_ALREADY_USED,

@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import Stripe from 'stripe';
 import { AppEnvironment, env, getEnvSecrets } from '@apillon/lib';
 import { StripeService } from './stripe.service';
+import { CryptoPaymentsService } from './crypto-payments.service';
 
 @Module({
   imports: [],
@@ -11,6 +12,7 @@ import { StripeService } from './stripe.service';
   providers: [
     StripeService,
     PaymentsService,
+    CryptoPaymentsService,
     {
       provide: Stripe,
       useFactory: async (): Promise<Stripe> => {
@@ -19,7 +21,7 @@ import { StripeService } from './stripe.service';
           env.APP_ENV === AppEnvironment.PROD
             ? env.STRIPE_SECRET
             : env.STRIPE_SECRET_TEST,
-          { apiVersion: '2023-08-16' },
+          { apiVersion: '2023-10-16' },
         );
       },
     },

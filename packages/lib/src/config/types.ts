@@ -18,6 +18,7 @@ export enum SubstrateChain {
   PHALA = 4,
   POLKADOT = 5,
   SUBSOCIAL = 6,
+  XSOCIAL = 7,
 }
 
 export enum EvmChain {
@@ -85,6 +86,9 @@ export enum LmasEventType {
 export enum BlockchainEventType {
   SUBSTRATE_SIGN_TRANSACTION = 'substrate-sign-transaction',
   SUBSTRATE_GET_TRANSACTION = 'substrate-get-transaction',
+  GET_PHALA_LOG_RECORDS_AND_GAS_PRICE = 'get-phala-log-records-and-gas-price',
+  GET_PHALA_CLUSTER_WALLET_BALANCE = 'get-phala-cluster-wallet-balance',
+  GET_PHALA_CLUSTER_DEPOSIT_TRANSACTION = 'get-phala-cluster-deposit-transaction',
   EVM_SIGN_TRANSACTION = 'evm-sign-transaction',
   EVM_GET_TRANSACTION = 'evm-get-transaction',
   GET_CHAIN_ENDPOINT = 'get-chain-endpoint',
@@ -93,6 +97,7 @@ export enum BlockchainEventType {
   UPDATE_WALLET = 'update-wallet',
   GET_WALLET_TRANSACTIONS = 'get-wallet-transactions',
   UPDATE_TRANSACTION = 'update-transaction',
+  LIST_WALLET_DEPOSITS = 'list-wallet-deposits',
   GET_WALLET_IDENTITY = 'get-wallet-identity',
 }
 
@@ -116,7 +121,7 @@ export enum StorageEventType {
   LIST_FILES = 'list-files',
   GET_FILE_DETAILS = 'get-file-details',
   FILE_DELETE = 'delete-file',
-  CANCEL_FILE_DELETE = 'cancel-delete-file',
+  RESTORE_FILE = 'restore-file',
   BUCKET_WEBHOOK_GET = 'get-bucket-webhook',
   BUCKET_WEBHOOK_CREATE = 'create-bucket-webhook',
   BUCKET_WEBHOOK_UPDATE = 'update-bucket-webhook',
@@ -188,7 +193,7 @@ export enum ScsEventType {
   GET_CREDIT_TRANSACTIONS = 'get-project-transactions',
   GET_CREDIT_PACKAGES = 'get-credit-packages',
   ADD_FREEMIUM_CREDITS = 'add-freemium-credits',
-  HANDLE_STRIPE_WEBHOOK_DATA = 'handle-stripe-webhook-data',
+  HANDLE_PAYMENT_WEBHOOK_DATA = 'handle-payment-webhook-data',
   GET_SUBSCRIPTION_PACKAGE_STRIPE_ID = 'get-subscription-package-stripe-id',
   GET_CREDIT_PACKAGE_STRIPE_ID = 'get-credit-package-stripe-id',
   UPDATE_SUBSCRIPTION = 'update-subscription',
@@ -198,6 +203,7 @@ export enum ScsEventType {
   LIST_INVOICES = 'list-invoices',
   GET_PRODUCT_PRICELIST = 'get-product-pricelist',
   GET_PRODUCT_PRICE = 'get-product-price',
+  GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION = 'get-projects-with-active-subscription',
 }
 
 export enum NftsEventType {
@@ -223,10 +229,12 @@ export enum ComputingEventType {
   CREATE_CONTRACT = 'create-contract',
   LIST_CONTRACTS = 'list-contract',
   GET_CONTRACT_BY_UUID = 'get-contract-by-uuid',
+  LIST_TRANSACTIONS = 'list-transactions',
   DEPOSIT_TO_PHALA_CLUSTER = 'fund-contract-cluster',
   TRANSFER_CONTRACT_OWNERSHIP = 'transfer-contract-ownership',
   ENCRYPT_CONTENT = 'encrypt-content',
   ASSIGN_CID_TO_NFT = 'assign-cid-to-nft',
+  LIST_CLUSTER_WALLETS = 'list-cluster-wallets',
 }
 
 export enum ReferralEventType {
@@ -245,6 +253,15 @@ export enum ReferralEventType {
   ADD_PROMO_CODE_CREDITS = 'add-promo-code-credits',
 }
 
+export enum SocialEventType {
+  CREATE_SPACE = 'create-space',
+  LIST_SPACES = 'list-spaces',
+  GET_SPACE = 'get-space',
+  CREATE_POST = 'create-post',
+  LIST_POSTS = 'list-posts',
+  GET_POST = 'get-post',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
@@ -259,6 +276,7 @@ export enum ServiceName {
   BLOCKCHAIN = 'BLOCKCHAIN',
   CONFIG = 'CONFIG',
   COMPUTING = 'COMPUTING',
+  SOCIAL = 'SOCIAL',
 }
 
 export enum ServiceCode {
@@ -275,7 +293,9 @@ export enum ServiceCode {
   CONFIG = '10',
   REFERRAL = '11',
   NFTS = '12',
-  BLOCKCHAIN = '13',
+  BLOCKCHAIN = '16',
+  COMPUTING = '18',
+  SOCIAL = '19',
 }
 
 export enum AppEnvironment {
@@ -323,6 +343,7 @@ export enum AttachedServiceType {
   NFT = 3,
   HOSTING = 4,
   COMPUTING = 5,
+  SOCIAL = 6,
   SYSTEM = 999,
 }
 
@@ -347,6 +368,7 @@ export enum SerializeFor {
   INSERT_DB = 'insert_db',
   UPDATE_DB = 'update_db',
   SELECT_DB = 'select_db',
+  ADMIN_SELECT_DB = 'admin_select_db',
   ADMIN = 'admin',
   WORKER = 'worker',
   SERVICE = 'service',
@@ -407,6 +429,7 @@ export enum DefaultPermission {
   NFTS = 3,
   AUTHENTICATION = 4,
   COMPUTING = 5,
+  SOCIAL = 6,
 }
 
 //#endregion
@@ -569,6 +592,7 @@ export enum ValidatorErrorCode {
   QUOTA_CODE_NOT_VALID = 42200149,
   INVALID_FILES_LENGTH = 42200150,
   CID_NOT_PRESENT = 42200160,
+  REQUIRED_DATA_NOT_PRESENT = 42200161,
 
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
@@ -582,6 +606,7 @@ export enum ValidatorErrorCode {
   COMPUTING_ACCOUNT_ADDRESS_NOT_VALID = 42200209,
   COMPUTING_DEPOSIT_AMOUNT_NOT_VALID = 42200210,
   COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID = 42200211,
+  COMPUTING_FIELD_NOT_PRESENT = 42200212,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
@@ -689,6 +714,7 @@ export enum JwtTokenType {
   OAUTH_TOKEN = 'oauth-token',
   // Website review token
   WEBSITE_REVIEW_TOKEN = 'website-review',
+  CRYPTO_PAYMENT_DATA = 'crypto-payment-data',
 }
 
 /**
@@ -802,6 +828,9 @@ export enum ProductCode {
   NFT_ASTAR_SET_BASE_URI = 19,
 
   KILT_IDENTITY = 20,
+
+  SOCIAL_SPACE = 21,
+  SOCIAL_POST = 22,
 }
 
 export enum ProductService {
@@ -816,4 +845,23 @@ export enum ProductCategory {
   MOONBEAM_NFT = 'MOONBEAM_NFT',
   ASTAR_NFT = 'ASTAR_NFT',
   KILT_IDENTITY = 'KILT_IDENTITY',
+}
+
+export enum EmailTemplate {
+  WELCOME = 'welcome',
+  RESET_PASSWORD = 'reset-password',
+  NEW_USER_ADDED_TO_PROJECT = 'new-user-added-to-project',
+  USER_ADDED_TO_PROJECT = 'user-added-to-project',
+
+  CONTACT_US_FORM = 'contact-us-form',
+
+  WEBSITE_DEPLOYMENT_REJECTED = 'website-deployment-rejected',
+  STORAGE_QUOTA_EXCEEDED = 'storage-quota-exceeded',
+
+  GENERATE_IDENTITY = 'generate-identity',
+  RESTORE_CREDENTIAL = 'restore-credential',
+  REVOKE_DID = 'revoke-did',
+  DOWNLOAD_IDENTITY = 'download-identity',
+
+  CRYPTO_PAYMENT_SUCCESSFUL = 'crypto-payment-successful',
 }

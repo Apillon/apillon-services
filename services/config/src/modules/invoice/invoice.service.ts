@@ -7,6 +7,9 @@ import {
   SerializeFor,
   ServiceName,
   InvoicesQueryFilter,
+  UpdateSubscriptionDto,
+  Lmas,
+  LogType,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { Invoice } from './models/invoice.model';
@@ -15,6 +18,8 @@ import { ConfigErrorCode, DbTables } from '../../config/types';
 import { CreditService } from '../credit/credit.service';
 import { ScsCodeException, ScsValidationException } from '../../lib/exceptions';
 import { CreditPackage } from '../credit/models/credit-package.model';
+import { Subscription } from '../subscription/models/subscription.model';
+import { v4 as uuidV4 } from 'uuid';
 
 export class InvoiceService {
   /**
@@ -31,19 +36,17 @@ export class InvoiceService {
   }
 
   /**
-   * Handle stripe purchases, either credit purchase or subscription
+   * Handle stripe or crypto payments, either credit purchase or subscription
    * Creates new subscription/credit records and a new invoice
    * @async
-   * @param {{
-        data: Merge<
+   * @param - data: Merge<
           Partial<CreateSubscriptionDto> & Partial<AddCreditDto>,
           Partial<CreateInvoiceDto>
-        >;
-      }} event - Stripe webhook data
+        > event - Stripe webhook data
    * @param {ServiceContext} context
    * @returns {Promise<boolean>}
    */
-  static async handleStripeWebhookData(
+  static async handlePaymentWebhookData(
     event: {
       data: Merge<
         Partial<CreateSubscriptionDto> & Partial<AddCreditDto>,
@@ -51,22 +54,22 @@ export class InvoiceService {
       >;
     },
     context: ServiceContext,
-  ): Promise<boolean> {
+  ): Promise<Invoice> {
     // Contains all subscription/credit and invoice create data
     const webhookData = event.data as any;
     const conn = await context.mysql.start();
-
+    let invoice: Invoice;
     try {
-      if (webhookData.isCreditPurchase) {
-        await InvoiceService.handleCreditPurchase(webhookData, context, conn);
-      } else {
-        await InvoiceService.handleSubscriptionPurchase(
-          webhookData,
-          context,
-          conn,
-        );
-      }
+      invoice = webhookData.isCreditPurchase
+        ? await InvoiceService.handleCreditPurchase(webhookData, context, conn)
+        : await InvoiceService.handleSubscriptionPurchase(
+            webhookData,
+            context,
+            conn,
+          );
       await context.mysql.commit(conn);
+
+      return invoice;
     } catch (err) {
       await context.mysql.rollback(conn);
       if (
@@ -89,7 +92,6 @@ export class InvoiceService {
         });
       }
     }
-    return true;
   }
 
   static async handleCreditPurchase(
@@ -99,7 +101,7 @@ export class InvoiceService {
     >,
     context: ServiceContext,
     conn: PoolConnection,
-  ) {
+  ): Promise<Invoice> {
     const creditPackage = await new CreditPackage({}, context).populateById(
       webhookData.package_id,
       conn,
@@ -119,9 +121,9 @@ export class InvoiceService {
 
     const invoice = await InvoiceService.createInvoice(
       {
-        ...webhookData,
+        ...(webhookData as any),
         referenceTable: DbTables.CREDIT_PACKAGE,
-        referenceId: creditPackage.id,
+        referenceId: `${creditPackage.id}`,
       },
       context,
       conn,
@@ -139,6 +141,8 @@ export class InvoiceService {
       context,
       conn,
     );
+
+    return invoice;
   }
 
   static async handleSubscriptionPurchase(
@@ -148,14 +152,14 @@ export class InvoiceService {
     >,
     context: ServiceContext,
     conn: PoolConnection,
-  ) {
+  ): Promise<Invoice> {
     {
       const subscription = await SubscriptionService.createSubscription(
         new CreateSubscriptionDto(webhookData),
         context,
         conn,
       );
-      await InvoiceService.createInvoice(
+      return await InvoiceService.createInvoice(
         new CreateInvoiceDto({
           ...webhookData,
           referenceTable: DbTables.SUBSCRIPTION,
@@ -169,18 +173,19 @@ export class InvoiceService {
 
   /**
    * Inserts a new invoice in the DB
-   * @param {(CreateInvoiceDto | any)} createInvoiceDto
+   * @param {(CreateInvoiceDto)} createInvoiceDto
    * @param {ServiceContext} context
    * @param {PoolConnection} conn
    * @returns {Promise<Invoice>}
    */
   static async createInvoice(
-    createInvoiceDto: CreateInvoiceDto | any,
+    createInvoiceDto: CreateInvoiceDto,
     context: ServiceContext,
     conn: PoolConnection,
   ): Promise<Invoice> {
     const invoice = new Invoice(
       {
+        invoice_uuid: uuidV4(),
         ...createInvoiceDto,
         stripeId: createInvoiceDto.invoiceStripeId,
       },
@@ -196,5 +201,57 @@ export class InvoiceService {
     }
     await invoice.insert(SerializeFor.INSERT_DB, conn);
     return invoice.serialize(SerializeFor.SERVICE) as Invoice;
+  }
+
+  /**
+   * If same subscription package has been renewed or upgraded
+   * Create cloned invoice with new data
+   * @param {ServiceContext} context
+   * @param {Subscription} subscription - Existing subscription
+   * @param {UpdateSubscriptionDto} updateSubscriptionDto - DTO with updated data for subscription
+   * @param {?PoolConnection} [conn]
+   * @returns {*}
+   */
+  static async createOnSubscriptionUpdate(
+    context: ServiceContext,
+    subscription: Subscription,
+    updateSubscriptionDto: UpdateSubscriptionDto,
+    conn?: PoolConnection,
+  ) {
+    const existingInvoice = await new Invoice(
+      {},
+      context,
+    ).populateByProjectSubscription(subscription.project_uuid, conn);
+
+    if (existingInvoice.exists()) {
+      // Create clone of existing invoice with updated data
+      existingInvoice.populate({
+        stripeId:
+          updateSubscriptionDto.invoiceStripeId || existingInvoice.stripeId,
+        totalAmount:
+          updateSubscriptionDto.amount || existingInvoice.totalAmount,
+        subtotalAmount:
+          updateSubscriptionDto.amount || existingInvoice.subtotalAmount,
+        referenceId: subscription.id,
+      });
+      await existingInvoice.insert(SerializeFor.INSERT_DB, conn);
+    } else {
+      // Existing invoice for existing subscription must always exist, send alert if that is not the case
+      await new Lmas().writeLog({
+        context,
+        logType: LogType.WARN,
+        message: `New invoice not created for subscription renewal`,
+        location: 'SCS/SubscriptionService/updateSubscription',
+        project_uuid: subscription.project_uuid,
+        service: ServiceName.CONFIG,
+        data: {
+          subcription: subscription.serialize(SerializeFor.SERVICE),
+          updateSubscriptionDto: new UpdateSubscriptionDto(
+            updateSubscriptionDto,
+          ).serialize(),
+        },
+        sendAdminAlert: true,
+      });
+    }
   }
 }

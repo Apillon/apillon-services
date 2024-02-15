@@ -23,4 +23,6 @@ export interface Stage {
   nftsSql: MySql;
   blockchainContext: TestContext;
   blockchainSql: MySql;
+  socialContext: TestContext;
+  socialSql: MySql;
 }

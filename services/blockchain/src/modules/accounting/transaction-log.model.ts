@@ -377,8 +377,8 @@ export class TransactionLog extends AdvancedSQLModel {
     },
     wallet: Wallet,
   ) {
-    this.ts = data?.system?.createdAt;
-    this.blockId = data?.system?.blockNumber;
+    this.ts = data?.system?.createdAt ?? data?.transfers[0]?.createdAt;
+    this.blockId = data?.system?.blockNumber ?? data?.transfers[0]?.blockNumber;
     this.addressFrom = data?.transfers[0]?.from;
     this.addressTo = data?.transfers[0]?.to;
     this.amount = '0';
@@ -387,11 +387,12 @@ export class TransactionLog extends AdvancedSQLModel {
       this.addToAmount(transfer?.amount?.toString() || '0');
     }
 
-    this.hash = data?.system?.extrinsicHash;
+    this.hash =
+      data?.system?.extrinsicHash ?? data?.transfers[0]?.extrinsicHash;
     this.wallet = wallet.address;
 
-    this.status =
-      data?.system?.status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
+    const status = data?.system?.status ?? data?.transfers[0]?.status;
+    this.status = status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
     this.chainType = wallet.chainType;
     this.chain = wallet.chain;
     this.token = TxToken.CRUST_TOKEN;
@@ -429,17 +430,17 @@ export class TransactionLog extends AdvancedSQLModel {
     data: { system: SystemEvent; transfer: TransferTransaction },
     wallet: Wallet,
   ) {
-    this.ts = data?.system?.createdAt;
-    this.blockId = data?.system?.blockNumber;
+    this.ts = data?.system?.createdAt ?? data?.transfer?.createdAt;
+    this.blockId = data?.system?.blockNumber ?? data?.transfer?.blockNumber;
     this.addressFrom = data?.transfer?.from;
     this.addressTo = data?.transfer?.to;
     this.amount = data?.transfer?.amount?.toString() || '0';
 
-    this.hash = data?.system?.extrinsicHash;
+    this.hash = data?.system?.extrinsicHash ?? data?.transfer?.extrinsicHash;
     this.wallet = wallet.address;
 
-    this.status =
-      data?.system?.status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
+    const status = data?.system?.status ?? data?.transfer?.status;
+    this.status = status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
     this.chainType = wallet.chainType;
     this.chain = wallet.chain;
     this.token = TxToken.KILT_TOKEN;
@@ -484,7 +485,7 @@ export class TransactionLog extends AdvancedSQLModel {
     wallet: Wallet,
   ) {
     this.ts = data?.system?.createdAt ?? data.transfer.createdAt;
-    this.blockId = data?.system?.blockNumber;
+    this.blockId = data?.system?.blockNumber ?? data?.transfer?.blockNumber;
     this.addressFrom = data?.transfer?.from ?? data?.system?.account;
     this.addressTo = data?.transfer?.to;
     this.amount = data?.transfer?.amount?.toString() || '0';
@@ -492,8 +493,8 @@ export class TransactionLog extends AdvancedSQLModel {
     this.hash = data?.system?.extrinsicHash ?? data?.transfer?.extrinsicHash;
     this.wallet = wallet.address;
 
-    this.status =
-      data?.system?.status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
+    const status = data?.system?.status ?? data?.transfer?.status;
+    this.status = status === 1 ? TxStatus.COMPLETED : TxStatus.FAILED;
     this.chainType = wallet.chainType;
     this.chain = wallet.chain;
     this.token = TxToken.PHALA_TOKEN;

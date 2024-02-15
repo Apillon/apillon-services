@@ -4,7 +4,6 @@ import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model'
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
 import { IPFSService } from '@apillon/storage/src/modules/ipfs/ipfs.service';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
-import { executeDeleteBucketDirectoryFileWorker } from '@apillon/storage/src/scripts/serverless-workers/execute-delete-bucket-dir-file-worker';
 import {
   createTestBucket,
   createTestBucketDirectory,
@@ -292,65 +291,10 @@ describe('Storage directory tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
 
-      const d: Directory = await new Directory(
-        {},
-        stage.storageContext,
-      ).populateByUUID(response.body.data.directory_uuid);
-      expect(d.exists()).toBeTruthy();
-      expect(d.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
-    });
-
-    test('User should be able to cancel directory deletion', async () => {
-      const testDirectoryToCancelDeletion = await createTestBucketDirectory(
-        stage.storageContext,
-        testProject,
-        testBucket,
-        true,
-        undefined,
-        'My directory to delete',
-        undefined,
-        SqlModelStatus.MARKED_FOR_DELETION,
-      );
-
-      const response = await request(stage.http)
-        .patch(
-          `/directories/${testDirectoryToCancelDeletion.directory_uuid}/cancel-deletion`,
-        )
-        .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(200);
-
-      const d: Directory = await new Directory(
-        {},
-        stage.storageContext,
-      ).populateByUUID(testDirectoryToCancelDeletion.directory_uuid);
-      expect(d.exists()).toBeTruthy();
-      expect(d.status).toBe(SqlModelStatus.ACTIVE);
-    });
-
-    test('Storage delete worker should NOT delete directory if directory is not long enough in status 8 (marked for delete)', async () => {
-      await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
-      const d: Directory = await new Directory(
-        {},
-        stage.storageContext,
-      ).populateById(testDirectoryToDelete.id);
-      expect(d.status).toBe(SqlModelStatus.MARKED_FOR_DELETION);
-    });
-
-    test('Storage delete worker should delete directory if directory is long enough in status 8 (marked for delete)', async () => {
       let d: Directory = await new Directory(
         {},
         stage.storageContext,
-      ).populateById(testDirectoryToDelete.id);
-      d.markedForDeletionTime = new Date();
-      d.markedForDeletionTime.setFullYear(
-        d.markedForDeletionTime.getFullYear() - 1,
-      );
-      await d.update();
-
-      await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
-      d = await new Directory({}, stage.storageContext).populateById(
-        testDirectoryToDelete.id,
-      );
+      ).populateByUUID(testDirectoryToDelete.directory_uuid);
       expect(d.exists()).toBeFalsy();
 
       //Check if other directories and files are still active
@@ -360,10 +304,8 @@ describe('Storage directory tests', () => {
       expect(d.exists()).toBeTruthy();
     });
 
-    test('Storage delete worker should delete directory and subdirectories and files in directory', async () => {
+    test('User should be able to delete directory and subdirectories and files in directory', async () => {
       //Dir with subdirs and files in it
-      const date = new Date();
-      date.setDate(date.getDate() - env.STORAGE_DELETE_AFTER_INTERVAL - 1);
       const testDirectoryWithSubdirectories: Directory = new Directory(
         {},
         stage.storageContext,
@@ -373,8 +315,7 @@ describe('Storage directory tests', () => {
           project_uuid: testProject.project_uuid,
           bucket_id: testBucket.id,
           name: 'dir with subdirs',
-          markedForDeletionTime: date,
-          status: SqlModelStatus.MARKED_FOR_DELETION,
+          status: SqlModelStatus.ACTIVE,
         });
 
       await testDirectoryWithSubdirectories.insert();
@@ -392,10 +333,6 @@ describe('Storage directory tests', () => {
         stage.storageContext,
         testProject.project_uuid,
       );
-
-      expect(
-        await ipfsService.isCIDPinned(deleteBucketTestFile1.CID),
-      ).toBeTruthy();
 
       //Subdir
       const testDirectorySubDir = await createTestBucketDirectory(
@@ -416,8 +353,13 @@ describe('Storage directory tests', () => {
         testDirectorySubDir.id,
       );
 
-      //Execute worker
-      await executeDeleteBucketDirectoryFileWorker(stage.storageContext);
+      //Execute delete
+      const response = await request(stage.http)
+        .delete(
+          `/directories/${testDirectoryWithSubdirectories.directory_uuid}`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
 
       //Test variables
       let d = await new Directory({}, stage.storageContext).populateById(
@@ -442,9 +384,6 @@ describe('Storage directory tests', () => {
         deleteBucketTestFile2.id,
       );
       expect(f.exists()).toBeFalsy();
-      expect(
-        await ipfsService.isCIDPinned(deleteBucketTestFile1.CID),
-      ).toBeFalsy();
 
       //Check if bucket size was decreased
       const tmpB: Bucket = await new Bucket(
@@ -465,6 +404,62 @@ describe('Storage directory tests', () => {
       );
       expect(f.exists()).toBeTruthy();
       expect(await ipfsService.isCIDPinned(testDirectoryFile.CID)).toBeTruthy();
+    });
+
+    test('User should be able to delete restore files and its parent directories', async () => {
+      //Dir with subdirs and files in it
+      const parentDirectory = await new Directory({}, stage.storageContext)
+        .fake()
+        .populate({
+          project_uuid: testProject.project_uuid,
+          bucket_id: testBucket.id,
+          name: 'Parent directory',
+          status: SqlModelStatus.ACTIVE,
+        })
+        .insert();
+
+      //Add files
+      const file = await createTestBucketFile(
+        stage.storageContext,
+        testBucket,
+        'deleteMe.txt',
+        'text/plain',
+        true,
+        parentDirectory.id,
+      );
+
+      //Execute delete
+      const deleteResponse = await request(stage.http)
+        .delete(`/directories/${parentDirectory.directory_uuid}`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(deleteResponse.status).toBe(200);
+
+      let tmpParentDirectory = await new Directory(
+        {},
+        stage.storageContext,
+      ).populateById(parentDirectory.id);
+      expect(tmpParentDirectory.exists()).toBeFalsy();
+
+      let tmpFile = await new File({}, stage.storageContext).populateById(
+        file.id,
+      );
+      expect(tmpFile.exists()).toBeFalsy();
+
+      //Restore file - this should restore file and its parent directories
+
+      const restoreResponse = await request(stage.http)
+        .patch(`/storage/${testBucket.bucket_uuid}/file/${file.id}/restore`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(restoreResponse.status).toBe(200);
+
+      tmpFile = await new File({}, stage.storageContext).populateById(file.id);
+      expect(tmpFile.exists()).toBeTruthy();
+
+      tmpParentDirectory = await new Directory(
+        {},
+        stage.storageContext,
+      ).populateById(parentDirectory.id);
+      expect(tmpParentDirectory.exists()).toBeTruthy();
     });
   });
 });

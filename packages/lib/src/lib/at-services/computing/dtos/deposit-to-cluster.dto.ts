@@ -14,7 +14,12 @@ export class DepositToClusterDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.COMPUTING_FIELD_NOT_PRESENT,
+      },
+    ],
   })
   public clusterId: string;
 

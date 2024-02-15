@@ -176,19 +176,6 @@ export class BucketController {
     return await this.bucketService.updateBucket(context, bucket_uuid, body);
   }
 
-  @Patch(':bucket_uuid/cancel-deletion')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
-  @UseGuards(AuthGuard)
-  async cancelBucketDeletion(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('bucket_uuid') bucket_uuid: string,
-  ) {
-    return await this.bucketService.cancelBucketDeletion(context, bucket_uuid);
-  }
-
   @Delete(':bucket_uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },

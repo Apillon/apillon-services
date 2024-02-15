@@ -1,6 +1,7 @@
 import {
   ApillonApiCreateS3UrlsForUploadDto,
   ApillonApiDirectoryContentQueryFilter,
+  ApillonApiFilesQueryFilter,
   BaseProjectQueryFilter,
   BucketQueryFilter,
   CreateBucketDto,
@@ -9,7 +10,6 @@ import {
   DirectoryContentQueryFilter,
   EndFileUploadSessionDto,
   FileDetailsQueryFilter,
-  FilesQueryFilter,
   IpnsQueryFilter,
   PublishIpnsDto,
   SqlModelStatus,
@@ -53,6 +53,10 @@ export class StorageService {
 
   async listBuckets(context: ApillonApiContext, query: BucketQueryFilter) {
     return (await new StorageMicroservice(context).listBuckets(query)).data;
+  }
+
+  async getBucket(context: ApillonApiContext, bucket_uuid: string) {
+    return (await new StorageMicroservice(context).getBucket(bucket_uuid)).data;
   }
 
   async createBucket(context: ApillonApiContext, body: CreateBucketDto) {
@@ -158,9 +162,13 @@ export class StorageService {
   async listFiles(
     context: ApillonApiContext,
     bucket_uuid: string,
-    query: FilesQueryFilter,
+    query: ApillonApiFilesQueryFilter,
   ) {
-    query.populate({ bucket_uuid, status: SqlModelStatus.ACTIVE });
+    query.populate({
+      bucket_uuid,
+      status: SqlModelStatus.ACTIVE,
+      session_uuid: query.sessionUuid,
+    });
     return (await new StorageMicroservice(context).listFiles(query)).data;
   }
 
