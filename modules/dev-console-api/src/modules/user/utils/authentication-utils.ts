@@ -9,7 +9,7 @@ import {
   SerializeFor,
   UnauthorizedErrorCodes,
   ValidationException,
-  ValidatorErrorCode,
+  generateRandomCode,
   isEVMWallet,
   parseJwtToken,
 } from '@apillon/lib';
@@ -18,6 +18,7 @@ import { User } from '../models/user.model';
 import { HttpStatus } from '@nestjs/common';
 import { ProjectService } from '../../project/project.service';
 import { RegisterUserDto } from '../dtos/register-user.dto';
+import { ValidatorErrorCode } from '../../../config/types';
 
 export async function registerUser(
   params: RegisterUserDto & {
@@ -29,13 +30,26 @@ export async function registerUser(
   const tokenData = parseJwtToken(params.tokenType, params.token);
 
   const user = await createUser(tokenData, context);
-  const email = tokenData.email;
+  const { email, walletAddress, refCode } = tokenData;
+
+  if (walletAddress) {
+    // If user has registered with wallet, generate a random password
+    params.password = generateRandomCode(
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%',
+      15,
+    );
+  } else if (!params.password) {
+    throw new CodeException({
+      status: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: ValidatorErrorCode.USER_PASSWORD_NOT_PRESENT,
+      errorCodes: ValidatorErrorCode,
+    });
+  }
 
   const conn = await context.mysql.start();
   let amsResponse;
   try {
     await user.insert(SerializeFor.INSERT_DB, conn);
-    const walletAddress = tokenData.walletAddress;
     amsResponse = await new Ams(context).register({
       user_uuid: user.user_uuid,
       email,
@@ -61,7 +75,7 @@ export async function registerUser(
     );
   }
 
-  await createReferralPlayer(tokenData.refCode, user, context);
+  await createReferralPlayer(refCode, user, context);
 
   return {
     ...user.serialize(SerializeFor.PROFILE),

@@ -177,7 +177,7 @@ export class UserService {
       tokenType: JwtTokenType.OAUTH_TOKEN,
     };
 
-    return registerUser(params, context);
+    return registerUser(params as any, context);
   }
 
   /**
