@@ -196,8 +196,8 @@ export class TransactionStatusWorker extends BaseQueueWorker {
       return;
     }
 
-    const fee = data.fee;
-    const amount = data.amount;
+    const fee = parseInt(data.fee);
+    const amount = parseInt(data.amount);
     await new ClusterTransactionLog(
       {
         status: ComputingTransactionStatus.CONFIRMED,
