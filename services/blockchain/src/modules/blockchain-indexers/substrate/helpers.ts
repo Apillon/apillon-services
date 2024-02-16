@@ -5,6 +5,7 @@ import { Wallet } from '../../wallet/wallet.model';
 import { CrustBlockchainIndexer } from './crust/indexer.service';
 import { KiltBlockchainIndexer } from './kilt/indexer.service';
 import { PhalaBlockchainIndexer } from './phala/indexer.service';
+import { SubsocialBlockchainIndexer } from './subsocial/indexer.service';
 
 /**
  * Checks indexer to determine if transaction exists (is indexed).
@@ -45,11 +46,18 @@ export async function isTransactionIndexed(
           transactionHash,
         );
       break;
+    case SubstrateChain.SUBSOCIAL:
+      transactions =
+        await new SubsocialBlockchainIndexer().getAccountTransactionsByHash(
+          wallet.address,
+          transactionHash,
+        );
+      break;
     default:
       throw new BlockchainCodeException({
         code: BlockchainErrorCode.INVALID_CHAIN,
         status: 400,
-        errorMessage: `Chain ${wallet.chain} is not supported.`,
+        errorMessage: `Chain ${wallet.chain} is not supported in function isTransactionIndexed.`,
       });
   }
   return Object.values(transactions).reduce(
