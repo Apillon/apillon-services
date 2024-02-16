@@ -57,7 +57,7 @@ export async function isTransactionIndexed(
       throw new BlockchainCodeException({
         code: BlockchainErrorCode.INVALID_CHAIN,
         status: 400,
-        errorMessage: `Chain ${wallet.chain} is not supported in isTransactionIndexed method.`,
+        errorMessage: `Chain ${wallet.chain} is not supported in function isTransactionIndexed.`,
       });
   }
   return Object.values(transactions).reduce(
