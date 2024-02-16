@@ -3,8 +3,10 @@ import {
   BaseProjectQueryFilter,
   Context,
   ErrorCode,
+  Lmas,
   PopulateFrom,
   SerializeFor,
+  ServiceName,
   SqlModelStatus,
   SubstrateChain,
   UuidSqlModel,
@@ -257,6 +259,15 @@ export class Space extends UuidSqlModel {
       await provider.createSpace(this);
 
       await context.mysql.commit(conn);
+
+      await new Lmas().writeLog({
+        context,
+        project_uuid: this.project_uuid,
+        location: 'Space.createSpace',
+        message: 'New social space(hub) created',
+        service: ServiceName.SOCIAL,
+        data: this.serialize()
+      });
     } catch (err) {
       await context.mysql.rollback(conn);
 

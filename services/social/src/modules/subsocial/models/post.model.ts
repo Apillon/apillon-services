@@ -3,8 +3,10 @@ import {
   BaseQueryFilter,
   Context,
   ErrorCode,
+  Lmas,
   PopulateFrom,
   SerializeFor,
+  ServiceName,
   SqlModelStatus,
   SubstrateChain,
   UuidSqlModel,
@@ -302,6 +304,15 @@ export class Post extends UuidSqlModel {
       await provider.createPost(this);
 
       await context.mysql.commit(conn);
+
+      await new Lmas().writeLog({
+        context,
+        project_uuid: this.project_uuid,
+        location: 'Post.createPost',
+        message: 'New social post(channel) created',
+        service: ServiceName.SOCIAL,
+        data: this.serialize()
+      });
     } catch (err) {
       await context.mysql.rollback(conn);
 
