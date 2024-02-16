@@ -186,7 +186,7 @@ export function isEVMWallet(walletAddress: string): boolean {
   return evmAddressRegex.test(walletAddress);
 }
 
-export function generateRandomCode(characters: string, length: number) {
+export function generateRandomCode(characters: string, length: number): string {
   let code = '';
   for (let i = 0; i < length; i++) {
     code += characters.charAt(Math.floor(Math.random() * characters.length));

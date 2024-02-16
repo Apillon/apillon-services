@@ -220,7 +220,9 @@ export class UserService {
         mailAddresses: [email],
         templateName: EmailTemplate.WELCOME,
         templateData: {
-          actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
+          actionUrl: `${env.APP_URL}/register/confirmed${
+            walletAddress ? '-wallet' : ''
+          }?token=${token}`,
         },
       }),
     );

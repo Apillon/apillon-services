@@ -87,7 +87,7 @@ async function createUser(
   tokenData: any,
   context: DevConsoleApiContext,
 ): Promise<User> {
-  const email = tokenData?.email;
+  const { email, metadata } = tokenData;
 
   if (!email) {
     throw new CodeException({
@@ -98,8 +98,8 @@ async function createUser(
   }
 
   // this handles security recommendation for single use token at registration!
-  const emailCheckResult = await new Ams(context).emailExists(email);
-  if (emailCheckResult.data.result === true) {
+  const { data: emailCheckResult } = await new Ams(context).emailExists(email);
+  if (emailCheckResult.result === true) {
     throw new CodeException({
       status: HttpStatus.UNPROCESSABLE_ENTITY,
       code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
@@ -109,10 +109,9 @@ async function createUser(
 
   const user: User = new User({}, context).populate({
     user_uuid: uuidV4(),
-    email: tokenData.email,
-    metadata: tokenData.metadata,
+    email,
+    metadata,
   });
-
   try {
     await user.validate();
   } catch (err) {
