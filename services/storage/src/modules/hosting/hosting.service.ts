@@ -2,7 +2,6 @@ import {
   Ams,
   ApillonHostingApiCreateS3UrlsForUploadDto,
   AWS_S3,
-  CacheKeyPrefix,
   CreateS3UrlsForUploadDto,
   CreateWebsiteDto,
   DeploymentQueryFilter,
@@ -11,7 +10,6 @@ import {
   EmailDataDto,
   EmailTemplate,
   env,
-  invalidateCacheMatch,
   Lmas,
   LogType,
   Mailing,
@@ -35,13 +33,11 @@ import {
   DeploymentStatus,
   StorageErrorCode,
 } from '../../config/types';
-import { deleteDirectory } from '../../lib/delete-directory';
 import {
   StorageCodeException,
   StorageValidationException,
 } from '../../lib/exceptions';
 import { Bucket } from '../bucket/models/bucket.model';
-import { Directory } from '../directory/models/directory.model';
 import { IPFSService } from '../ipfs/ipfs.service';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
