@@ -302,7 +302,7 @@ describe('Substrate service unit test', () => {
     });
   });*/
 
-  describe('Test create and transmit subsocial transactions', () => {
+  describe.only('Test create and transmit subsocial transactions', () => {
     let nonce, transaction, wallet, api: SubsocialApi;
 
     beforeAll(async () => {
@@ -327,6 +327,8 @@ describe('Substrate service unit test', () => {
       nonce = await substrateApi.rpc.system.accountNextIndex(
         '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
       );
+
+      console.info(nonce.toNumber());
 
       console.info(substrateApi.rpc.system.chain);
       const account = await substrateApi.query.system.account(

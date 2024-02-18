@@ -369,6 +369,7 @@ export class StorageService {
         );
       }
     } else if (bucket.bucketType == BucketType.HOSTING) {
+      await HostingService.clearBucketContent({ bucket }, context);
       await processSessionFiles(context, bucket, session, event.body);
       //Increase size of bucket - files on website source bucket will never be transferred to ipfs, so the size of bucket won't be increased.
       const filesOnS3 = await getSessionFilesOnS3(
