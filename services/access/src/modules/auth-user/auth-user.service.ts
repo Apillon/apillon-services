@@ -523,7 +523,7 @@ export class AuthUserService {
     if (!isValid) {
       throw await new AmsCodeException({
         status: 401,
-        code: AmsErrorCode.INVALID_WALLET_ADDRESS,
+        code: AmsErrorCode.INVALID_WALLET_SIGNATURE,
       }).writeToMonitor({
         logType: LogType.WARN,
         context,

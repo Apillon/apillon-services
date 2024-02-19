@@ -366,7 +366,7 @@ export class ProjectService {
             templateName: EmailTemplate.NEW_USER_ADDED_TO_PROJECT,
             templateData: {
               projectName: project.name,
-              actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
+              actionUrl: `${env.APP_URL}/register/confirmed?token=${token}`,
             },
           }),
         );

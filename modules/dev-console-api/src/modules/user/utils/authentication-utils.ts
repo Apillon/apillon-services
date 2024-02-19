@@ -44,6 +44,12 @@ export async function registerUser(
       code: ValidatorErrorCode.USER_PASSWORD_NOT_PRESENT,
       errorCodes: ValidatorErrorCode,
     });
+  } else if (params.password.length < 12) {
+    throw new CodeException({
+      status: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: ValidatorErrorCode.USER_PASSWORD_TOO_SHORT,
+      errorCodes: ValidatorErrorCode,
+    });
   }
 
   const conn = await context.mysql.start();
