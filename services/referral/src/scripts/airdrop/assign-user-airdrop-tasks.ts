@@ -6,9 +6,10 @@ import {
   SqlModelStatus,
   env,
 } from '@apillon/lib';
-import { AirdropTask } from '../../modules/airdrop/models/airdrop-task.model';
+import { UserAirdropTask } from '../../modules/airdrop/models/user-airdrop-task.model';
 import { ServiceContext } from '@apillon/service-lib';
 import { Player } from '../../modules/referral/models/player.model';
+import { DbTables } from '../../config/types';
 
 let referralContext: ServiceContext;
 let mongo: Mongo;
@@ -143,75 +144,84 @@ let spaces: any[];
 let computingContracts: any[];
 let identities: any[];
 let apiKeys: any[];
-// let referrals: any[];
+let referrals: any[];
 
 async function main() {
   const databases = await setupDatabases();
   const users = await databases.devConsoleSql.paramExecute(
-    `SELECT * FROM user WHERE status = ${SqlModelStatus.ACTIVE}`,
+    `SELECT id, user_uuid FROM user WHERE status = ${SqlModelStatus.ACTIVE}`,
   );
   projects = await databases.devConsoleSql.paramExecute(
-    `SELECT * FROM project WHERE status = ${SqlModelStatus.ACTIVE}`,
+    `SELECT id, project_uuid FROM project WHERE status = ${SqlModelStatus.ACTIVE}`,
   );
   projectUsers = await databases.devConsoleSql.paramExecute(
-    `SELECT * FROM project_user WHERE status = ${SqlModelStatus.ACTIVE}`,
+    `SELECT project_id, user_id FROM project_user WHERE status = ${SqlModelStatus.ACTIVE}`,
   );
   buckets = await databases.storageSql.paramExecute(
-    `SELECT * FROM bucket WHERE bucketType = 1 AND status = ${SqlModelStatus.ACTIVE}`,
+    `SELECT DISTINCT project_uuid FROM bucket WHERE bucketType = 1 AND status = ${SqlModelStatus.ACTIVE}`,
   );
   files = await databases.storageSql.paramExecute(
-    `SELECT * FROM file WHERE status = ${SqlModelStatus.ACTIVE}`,
+    `
+    SELECT DISTINCT f.project_uuid
+    FROM file f
+    JOIN bucket b ON b.id = f.bucket_id
+    WHERE b.bucketType = 1 AND f.status = ${SqlModelStatus.ACTIVE}
+    `,
   );
   ipns = await databases.storageSql.paramExecute(
-    `SELECT * FROM ipns WHERE status = ${SqlModelStatus.ACTIVE}`,
+    `SELECT DISTINCT project_uuid FROM ipns WHERE status = ${SqlModelStatus.ACTIVE}`,
   );
   websites = await databases.storageSql.paramExecute(
-    `SELECT * FROM website WHERE status = ${SqlModelStatus.ACTIVE}`,
+    `SELECT project_uuid, domain FROM website WHERE status = ${SqlModelStatus.ACTIVE}`,
   );
   nfts = await databases.nftsSql.paramExecute(
-    `SELECT * FROM collection WHERE collectionStatus = 3 AND status = ${SqlModelStatus.ACTIVE}`,
+    `SELECT DISTINCT project_uuid FROM collection WHERE collectionStatus = 3 AND status = ${SqlModelStatus.ACTIVE}`,
   );
   subscriptions = await databases.configSql.paramExecute(
     `
-    SELECT * FROM subscription WHERE expiresOn > NOW()
+    SELECT DISTINCT project_uuid FROM subscription WHERE expiresOn > NOW()
     AND status = ${SqlModelStatus.ACTIVE}
     `,
   );
   creditTransactions = await databases.configSql.paramExecute(
-    `SELECT * FROM creditTransaction`,
+    `SELECT project_uuid,direction, referenceTable, amount FROM creditTransaction`,
   );
-  spaces = await databases.socialSql.paramExecute(`SELECT * FROM space`);
+  spaces = await databases.socialSql.paramExecute(
+    `SELECT DISTINCT project_uuid FROM space`,
+  );
   computingContracts = await databases.computingSql.paramExecute(
-    `SELECT * FROM contract`,
+    `SELECT DISTINCT project_uuid FROM contract`,
   );
   identities = await databases.authSql.paramExecute(
-    `SELECT * FROM identity WHERE state = 'attested' AND status = ${SqlModelStatus.ACTIVE}`,
+    `SELECT DISTINCT project_uuid FROM identity WHERE state = 'attested' AND status = ${SqlModelStatus.ACTIVE}`,
   );
   apiKeys = await databases.accessSql.paramExecute(
-    `SELECT * FROM apiKey WHERE status = ${SqlModelStatus.ACTIVE}`,
+    `SELECT project_uuid, apiKey FROM apiKey WHERE status = ${SqlModelStatus.ACTIVE}`,
   );
-  // referrals = await databases.referralSql.paramExecute(
-  //   `SELECT * FROM ${DbTables.PLAYER}`,
-  // );
+  referrals = await databases.referralSql.paramExecute(
+    `SELECT user_uuid, referrer_id FROM ${DbTables.PLAYER}`,
+  );
 
   const userAirdropTasks = await Promise.all(
-    users.map((user) => assignAirdropTasks(user)),
+    users.map((user) => assignUserAirdropTasks(user)),
   );
 
   await Promise.all(
     users.map((user) => assignReferredUsers(user, userAirdropTasks)),
   );
+
   console.info('Finished assigning airdrop tasks');
 }
 
-async function assignAirdropTasks(user: any): Promise<AirdropTask> {
+async function assignUserAirdropTasks(user: any): Promise<UserAirdropTask> {
   const user_uuid: string = user.user_uuid;
 
-  const airdropTasks = new AirdropTask(
+  const airdropTasks = new UserAirdropTask(
     // Assign 10 points for registering
-    { user_uuid, totalPoints: 10 },
+    { user_uuid, totalPoints: taskPoints.register },
     referralContext,
   );
+
   const userProjects = projects.filter((p) => p.createUser === user.id);
   if (!userProjects.length) {
     return await saveAirdropTasks(airdropTasks);
@@ -266,13 +276,18 @@ async function assignAirdropTasks(user: any): Promise<AirdropTask> {
 }
 
 // Add total points based on users they have referred which meet totalPoints criteria
-async function assignReferredUsers(user: any, airdropTasks: AirdropTask[]) {
-  const referredUsers = await new Player({}, referralContext)
-    .populateByUserUuid(user.user_uuid)
-    .then((player) => player.getReferredUsers());
+async function assignReferredUsers(user: any, airdropTasks: UserAirdropTask[]) {
+  const referrer = await new Player({}, referralContext).populateByUserUuid(
+    user.user_uuid,
+  );
+
+  const referredUsers = referrals.filter(
+    (r) => !!r.referrer_id && r.referrer_id === referrer.id,
+  );
   const referrerAirdropTasks = airdropTasks.find(
     (u) => u.user_uuid === user.user_uuid,
   );
+
   for (const referredUser of referredUsers) {
     const referredAirdropTasks = airdropTasks.find(
       (u) => u.user_uuid === referredUser.user_uuid,
@@ -280,8 +295,8 @@ async function assignReferredUsers(user: any, airdropTasks: AirdropTask[]) {
     // Only count referred users if they have more than 15 points
     if (referredAirdropTasks?.totalPoints > 15) {
       referrerAirdropTasks.usersReferred += 1;
-      referrerAirdropTasks.totalPoints += taskPoints['usersReferred'];
-      await referrerAirdropTasks.saveOrUpdate();
+      referrerAirdropTasks.totalPoints += taskPoints.usersReferred;
+      await referrerAirdropTasks.insertOrUpdate();
     }
   }
 }
@@ -296,21 +311,22 @@ async function assignApiTasks(apiKeys: any[]) {
       .then((c) => c > 0);
 
   return {
-    websiteUploadedApi: await checkApiCalled(/^\/hosting.*upload/),
+    websiteUploadedViaApi: await checkApiCalled(/^\/hosting.*upload/),
     identitySdkUsed: await checkApiCalled(/^\/wallet-identity.*$/),
-    fileUploadedApi: await checkApiCalled(/^\/storage\/buckets.*upload/),
+    fileUploadedViaApi: await checkApiCalled(/^\/storage\/buckets.*upload/),
     nftMintedApi: await checkApiCalled(/^\/nfts\/collections.*mint/),
   };
 }
 
-async function saveAirdropTasks(airdropTasks: AirdropTask) {
-  await airdropTasks.saveOrUpdate();
+async function saveAirdropTasks(airdropTasks: UserAirdropTask) {
+  await airdropTasks.insertOrUpdate();
   console.info(`Assigned airdrop tasks for user ${airdropTasks.user_uuid}`);
   return airdropTasks;
 }
 
 // Define a mapping for tasks to points
 const taskPoints = {
+  register: 10,
   projectCreated: 1,
   bucketCreated: 1,
   fileUploaded: 1,
@@ -325,9 +341,9 @@ const taskPoints = {
   kiltIdentityCreated: 10,
   collaboratorAdded: 1,
   usersReferred: 2,
-  websiteUploadedApi: 5,
+  websiteUploadedViaApi: 5,
   identitySdkUsed: 2,
-  fileUploadedApi: 5,
+  fileUploadedViaApi: 5,
   nftMintedApi: 5,
 };
 

@@ -138,7 +138,7 @@ export class ReferralService {
    * Get completed airdrop tasks and total points for a user
    *
    * @param {DevConsoleApiContext} context - Dev Console API context object.
-   * @returns {Promise<any>} - AirdropTask model from Referral MS
+   * @returns {Promise<any>} - UserAirdropTask model from Referral MS
    */
   async getAirdropTasks(context: DevConsoleApiContext): Promise<any> {
     return (

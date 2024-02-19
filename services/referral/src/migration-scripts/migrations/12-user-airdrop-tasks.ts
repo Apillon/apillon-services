@@ -4,7 +4,7 @@ export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    CREATE TABLE IF NOT EXISTS \`${DbTables.AIRDROP_TASK}\` (
+    CREATE TABLE IF NOT EXISTS \`${DbTables.USER_AIRDROP_TASK}\` (
       \`user_uuid\` VARCHAR(36) NOT NULL,
       \`totalPoints\` INT NOT NULL DEFAULT 0,
       \`creditsSpent\` INT NOT NULL DEFAULT 0,
@@ -19,8 +19,8 @@ export async function upgrade(
       \`grillChatCreated\` BOOLEAN NOT NULL DEFAULT FALSE,
       \`nftCollectionCreated\` BOOLEAN NOT NULL DEFAULT FALSE,
       \`domainLinked\` BOOLEAN NOT NULL DEFAULT FALSE,
-      \`websiteUploadedApi\` BOOLEAN NOT NULL DEFAULT FALSE,
-      \`fileUploadedApi\` BOOLEAN NOT NULL DEFAULT FALSE,
+      \`websiteUploadedViaApi\` BOOLEAN NOT NULL DEFAULT FALSE,
+      \`fileUploadedViaApi\` BOOLEAN NOT NULL DEFAULT FALSE,
       \`computingContractCreated\` BOOLEAN NOT NULL DEFAULT FALSE,
       \`collaboratorAdded\` BOOLEAN NOT NULL DEFAULT FALSE,
       \`kiltIdentityCreated\` BOOLEAN NOT NULL DEFAULT FALSE,
@@ -37,6 +37,6 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    DROP TABLE IF EXISTS \`${DbTables.AIRDROP_TASK}\`;
+    DROP TABLE IF EXISTS \`${DbTables.USER_AIRDROP_TASK}\`;
   `);
 }

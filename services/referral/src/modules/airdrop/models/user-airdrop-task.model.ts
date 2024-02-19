@@ -1,5 +1,5 @@
 import {
-  AdvancedSQLModel,
+  BaseSQLModel,
   PopulateFrom,
   SerializeFor,
   presenceValidator,
@@ -8,8 +8,8 @@ import {
 import { booleanParser, stringParser, integerParser } from '@rawmodel/parsers';
 import { DbTables, ReferralErrorCode } from '../../../config/types';
 
-export class AirdropTask extends AdvancedSQLModel {
-  public readonly tableName = DbTables.AIRDROP_TASK;
+export class UserAirdropTask extends BaseSQLModel {
+  public readonly tableName = DbTables.USER_AIRDROP_TASK;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -182,7 +182,7 @@ export class AirdropTask extends AdvancedSQLModel {
     ],
     defaultValue: false,
   })
-  public websiteUploadedApi: boolean;
+  public websiteUploadedViaApi: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
@@ -196,7 +196,7 @@ export class AirdropTask extends AdvancedSQLModel {
     ],
     defaultValue: false,
   })
-  public fileUploadedApi: boolean;
+  public fileUploadedViaApi: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },
@@ -310,6 +310,10 @@ export class AirdropTask extends AdvancedSQLModel {
   })
   public totalPoints: number;
 
+  exists(): boolean {
+    return !!this.user_uuid;
+  }
+
   public async populateByUserUuid(user_uuid: string) {
     if (!user_uuid) {
       throw new Error('user_uuid should not be null');
@@ -317,7 +321,7 @@ export class AirdropTask extends AdvancedSQLModel {
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT *
-        FROM \`${DbTables.AIRDROP_TASK}\`
+        FROM \`${DbTables.USER_AIRDROP_TASK}\`
         WHERE user_uuid = @user_uuid LIMIT 1;
       `,
       { user_uuid },
@@ -328,18 +332,15 @@ export class AirdropTask extends AdvancedSQLModel {
       : this.reset();
   }
 
-  public async saveOrUpdate(): Promise<void> {
+  public async insertOrUpdate(): Promise<void> {
     const serializedData = this.serialize(SerializeFor.INSERT_DB);
-    ['status', 'createUser', 'updateUser', 'createTime', 'updateTime'].forEach(
-      (p) => delete serializedData[p],
-    );
 
     const updateFields = Object.keys(serializedData)
       .map((key) => `${key} = @${key}`)
       .join(', ');
 
     const query = `
-      INSERT INTO \`${this.tableName}\` SET ${updateFields}
+      INSERT INTO \`${DbTables.USER_AIRDROP_TASK}\` SET ${updateFields}
       ON DUPLICATE KEY UPDATE ${updateFields};
     `;
 

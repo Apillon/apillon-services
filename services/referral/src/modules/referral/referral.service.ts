@@ -24,7 +24,7 @@ import { Twitter } from '../../lib/twitter';
 import { Product } from './models/product.model';
 import { PromoCodeUser } from '../promo-code/models/promo-code-user.model';
 import { PromoCode } from '../promo-code/models/promo-code.model';
-import { AirdropTask } from '../airdrop/models/airdrop-task.model';
+import { UserAirdropTask } from '../airdrop/models/user-airdrop-task.model';
 
 export class ReferralService {
   static async createPlayer(
@@ -319,13 +319,13 @@ export class ReferralService {
    * Get completed airdrop tasks and total points for a user
    *
    * @param {user_uuid} - UUID of the user requesting the airdrop tasks
-   * @returns {AirdropTask} - AirdropTask model from Referral MS
+   * @returns {UserAirdropTask} - UserAirdropTask model from Referral MS
    */
   static async getAirdropTasks(
     event: { user_uuid: string },
     context: ServiceContext,
   ) {
-    return await new AirdropTask({}, context).populateByUserUuid(
+    return await new UserAirdropTask({}, context).populateByUserUuid(
       event.user_uuid,
     );
   }

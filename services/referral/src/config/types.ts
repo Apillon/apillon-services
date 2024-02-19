@@ -10,7 +10,7 @@ export enum DbTables {
   BALANCE = 'balance',
   PROMO_CODE = 'promo_code',
   PROMO_CODE_USER = 'promo_code_user',
-  AIRDROP_TASK = 'airdrop_task',
+  USER_AIRDROP_TASK = 'user_airdrop_task',
 }
 
 export enum ReferralErrorCode {
