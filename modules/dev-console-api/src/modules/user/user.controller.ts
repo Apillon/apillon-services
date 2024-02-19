@@ -163,11 +163,11 @@ export class UserController {
   @HttpCode(200)
   @Validation({ dto: UserWalletAuthDto })
   @UseGuards(ValidationGuard)
-  walletLogin(
+  loginWithWallet(
     @Body() body: UserWalletAuthDto,
     @Ctx() context: DevConsoleApiContext,
   ): any {
-    return this.userService.walletLogin(body, context);
+    return this.userService.loginWithWallet(body, context);
   }
 
   @Post('wallet-connect')

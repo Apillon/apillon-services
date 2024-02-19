@@ -40,4 +40,14 @@ export class ValidateEmailDto extends ModelBase {
     validators: [],
   })
   public metadata: any;
+
+  /**
+   * In case user registers with wallet
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+    validators: [],
+  })
+  public walletAddress: string;
 }

@@ -9,19 +9,48 @@ import {
   SerializeFor,
   UnauthorizedErrorCodes,
   ValidationException,
-  ValidatorErrorCode,
+  generateRandomCode,
+  isEVMWallet,
   parseJwtToken,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../../context';
 import { User } from '../models/user.model';
 import { HttpStatus } from '@nestjs/common';
 import { ProjectService } from '../../project/project.service';
+import { RegisterUserDto } from '../dtos/register-user.dto';
+import { ValidatorErrorCode } from '../../../config/types';
 
-export async function registerUser(params: any, context: DevConsoleApiContext) {
+export async function registerUser(
+  params: RegisterUserDto & {
+    projectService: ProjectService;
+    tokenType: string;
+  },
+  context: DevConsoleApiContext,
+) {
   const tokenData = parseJwtToken(params.tokenType, params.token);
 
   const user = await createUser(tokenData, context);
-  const email = tokenData.email;
+  const { email, walletAddress, refCode } = tokenData;
+
+  if (walletAddress) {
+    // If user has registered with wallet, generate a random password
+    params.password = generateRandomCode(
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%',
+      15,
+    );
+  } else if (!params.password) {
+    throw new CodeException({
+      status: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: ValidatorErrorCode.USER_PASSWORD_NOT_PRESENT,
+      errorCodes: ValidatorErrorCode,
+    });
+  } else if (params.password.length < 12) {
+    throw new CodeException({
+      status: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: ValidatorErrorCode.USER_PASSWORD_TOO_SHORT,
+      errorCodes: ValidatorErrorCode,
+    });
+  }
 
   const conn = await context.mysql.start();
   let amsResponse;
@@ -31,6 +60,7 @@ export async function registerUser(params: any, context: DevConsoleApiContext) {
       user_uuid: user.user_uuid,
       email,
       password: params.password,
+      [isEVMWallet(walletAddress) ? 'evmWallet' : 'wallet']: walletAddress,
     });
 
     user.setUserRolesAndPermissionsFromAmsResponse(amsResponse);
@@ -51,7 +81,7 @@ export async function registerUser(params: any, context: DevConsoleApiContext) {
     );
   }
 
-  await createReferralPlayer(tokenData.refCode, user, context);
+  await createReferralPlayer(refCode, user, context);
 
   return {
     ...user.serialize(SerializeFor.PROFILE),
@@ -63,7 +93,9 @@ async function createUser(
   tokenData: any,
   context: DevConsoleApiContext,
 ): Promise<User> {
-  if (!tokenData?.email) {
+  const { email, metadata } = tokenData;
+
+  if (!email) {
     throw new CodeException({
       status: HttpStatus.UNAUTHORIZED,
       code: UnauthorizedErrorCodes.INVALID_TOKEN,
@@ -71,11 +103,9 @@ async function createUser(
     });
   }
 
-  const email = tokenData.email;
-
   // this handles security recommendation for single use token at registration!
-  const emailCheckResult = await new Ams(context).emailExists(email);
-  if (emailCheckResult.data.result === true) {
+  const { data: emailCheckResult } = await new Ams(context).emailExists(email);
+  if (emailCheckResult.result === true) {
     throw new CodeException({
       status: HttpStatus.UNPROCESSABLE_ENTITY,
       code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
@@ -85,10 +115,9 @@ async function createUser(
 
   const user: User = new User({}, context).populate({
     user_uuid: uuidV4(),
-    email: tokenData.email,
-    metadata: tokenData.metadata,
+    email,
+    metadata,
   });
-
   try {
     await user.validate();
   } catch (err) {
