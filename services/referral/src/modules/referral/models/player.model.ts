@@ -263,6 +263,8 @@ export class Player extends AdvancedSQLModel {
     serializable: [SerializeFor.ADMIN, SerializeFor.PROFILE],
     validators: [],
   })
+  // Offers autocomplete for existing fields of Player model,
+  // with ability to pass in other arbitrary fields because of custom SQL query fields
   public referrals: (this & { [x: string]: any })[];
 
   /**
