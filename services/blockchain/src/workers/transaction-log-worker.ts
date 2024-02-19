@@ -476,7 +476,6 @@ export class TransactionLogWorker extends BaseQueueWorker {
     wallet: Wallet,
     transactions: TransactionLog[],
   ) {
-    const tokenPriceUsd = await getTokenPriceUsd(wallet.token);
     // Process wallet deposits
     const deposits = transactions
       .filter(
@@ -490,6 +489,10 @@ export class TransactionLogWorker extends BaseQueueWorker {
       `Found ${deposits.length} deposits for wallet ${wallet.seed}|${wallet.address}`,
     );
 
+    let tokenPriceUsd: number;
+    if (deposits.length > 0) {
+      tokenPriceUsd = await getTokenPriceUsd(wallet.token);
+    }
     for (const deposit of deposits) {
       const conn = await this.context.mysql.start();
       try {

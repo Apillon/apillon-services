@@ -28,13 +28,9 @@ import {
   TxDirection,
 } from '../config/types';
 import { SerMessage, SerMessageLog, SerMessageMessageOutput } from '@phala/sdk';
-import {
-  ClusterTransactionLog
-} from '../modules/accounting/cluster-transaction-log.model';
+import { ClusterTransactionLog } from '../modules/accounting/cluster-transaction-log.model';
 import { Keyring } from '@polkadot/api';
-import {
-  ClusterWallet
-} from '../modules/computing/models/cluster-wallet.model';
+import { ClusterWallet } from '../modules/computing/models/cluster-wallet.model';
 import { Contract } from '../modules/computing/models/contract.model';
 
 /**
@@ -70,7 +66,6 @@ export class PhalaLogWorker extends BaseQueueWorker {
       {},
       this.context,
     ).populateById(data.clusterWalletId);
-    const tokenPrice = await getTokenPriceUsd(clusterWallet.token);
     const transactions = await new Transaction(
       {},
       this.context,
@@ -83,6 +78,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
       return;
     }
 
+    let tokenPrice: number = null;
     for (const transaction of transactions) {
       const isDeployContract =
         transaction.transactionType === TransactionType.DEPLOY_CONTRACT;
@@ -115,6 +111,9 @@ export class PhalaLogWorker extends BaseQueueWorker {
           transaction.transactionNonce &&
           transaction.contractData.clusterId
         ) {
+          if (tokenPrice === null) {
+            tokenPrice = await getTokenPriceUsd(clusterWallet.token);
+          }
           await this.processContractTransaction(
             transaction.project_uuid,
             transaction.contract_id,
