@@ -46,7 +46,7 @@ describe('Storage with custom IPFS node tests', () => {
         ipfsApi: 'http://34.253.247.44:5001/api/v0',
         ipfsGateway: 'https://ipfs-staging.apillon.io/ipfs/',
         ipnsGateway: 'https://ipfs-staging.apillon.io/ipns/',
-        subdomainGateway: 'web3approved.com/',
+        subdomainGateway: 'web3approved.com',
         domain: 'ipfs.apillon.io',
         private: false,
         region: 'EU',
@@ -129,16 +129,14 @@ describe('Storage with custom IPFS node tests', () => {
       expect(response.body.data.CID).toBe(testFile.CID);
       expect(response.body.data.name).toBe(testFile.name);
       expect(response.body.data.size).toBeGreaterThan(0);
-      expect(response.body.data.link).toBe(
-        `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}`,
+      expect(response.body.data.link).toMatch(
+        `https://${testFile.CID}.ipfs.web3approved.com/`,
       );
     });
 
     test('User should be able to download uploaded file from custom apillon ipfs gateway', async () => {
       expect(testFile).toBeTruthy();
-      const response = await request(
-        `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}`,
-      ).get('');
+      const response = await request(testFile.link).get('');
       expect(response.status).toBe(200);
     });
 
@@ -151,8 +149,8 @@ describe('Storage with custom IPFS node tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(1);
       expect(response.body.data.items[0]?.name).toBe('myTestFile.txt');
-      expect(response.body.data.items[0]?.link).toBe(
-        `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}`,
+      expect(response.body.data.items[0]?.link).toMatch(
+        `https://${testFile.CID}.ipfs.web3approved.com/`,
       );
     });
   });
@@ -178,8 +176,8 @@ describe('Storage with custom IPFS node tests', () => {
       expect(response.body.data.name).toBe(testFile.name);
       expect(response.body.data.size).toBeGreaterThan(0);
 
-      expect(response.body.data.link).toContain(
-        `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}?token=`,
+      expect(response.body.data.link).toMatch(
+        `https://${testFile.CID}.ipfs.web3approved.com/?token=`,
       );
 
       //Verify token
@@ -192,14 +190,7 @@ describe('Storage with custom IPFS node tests', () => {
 
     test('User should be able to download uploaded file from custom apillon ipfs gateway', async () => {
       expect(testFile).toBeTruthy();
-      const response = await request(
-        addJwtToIPFSUrl(
-          `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}`,
-          testProject.project_uuid,
-          testFile.CID,
-          customCluster,
-        ),
-      ).get('');
+      const response = await request(testFile.link).get('');
       expect(response.status).toBe(200);
     });
 
@@ -212,8 +203,8 @@ describe('Storage with custom IPFS node tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(1);
       expect(response.body.data.items[0]?.name).toBe('myTestFile.txt');
-      expect(response.body.data.items[0]?.link).toContain(
-        `https://ipfs-staging.apillon.io/ipfs/${testFile.CID}?token=`,
+      expect(response.body.data.items[0]?.link).toMatch(
+        `https://${testFile.CID}.ipfs.web3approved.com/?token=`,
       );
     });
   });
