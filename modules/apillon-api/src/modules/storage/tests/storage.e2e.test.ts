@@ -625,7 +625,7 @@ describe('Apillon API storage tests', () => {
       test('Application should be able to get link on ipfs for IPNS', async () => {
         const response = await request(stage.http)
           .get(
-            `/storage/link-on-ipfs/k2k4r8lqt07ls9uyz141ofqcl99k4b8e63ns1fh52ib1bwh09z0k6vjk`,
+            `/storage/link-on-ipfs/k2k4r8lqt07ls9uyz141ofqcl99k4b8e63ns1fh52ib1bwh09z0k6vjk?type=ipns`,
           )
           .set(
             'Authorization',

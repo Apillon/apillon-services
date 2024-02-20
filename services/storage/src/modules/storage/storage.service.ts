@@ -806,7 +806,7 @@ export class StorageService {
       link: ipfsCluster.generateLink(
         event.project_uuid,
         event.cid,
-        event.type == 'IPNS',
+        event.type == 'ipns',
       ),
     };
   }

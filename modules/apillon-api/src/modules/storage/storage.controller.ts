@@ -74,7 +74,11 @@ export class StorageController {
     @Param('cid') cid: string,
     @Query('type') type: string,
   ) {
-    return await this.storageService.getLink(context, cid, type ? type : 'CID');
+    return await this.storageService.getLink(
+      context,
+      cid,
+      type ? type.toLowerCase() : 'cid',
+    );
   }
 
   @Get('buckets')

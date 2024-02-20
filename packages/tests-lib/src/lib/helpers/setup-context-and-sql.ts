@@ -206,7 +206,11 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
     }
   }
 
-  await dropTestDatabases();
+  try {
+    await dropTestDatabases();
+  } catch (err) {
+    console.error('Error dropTestDatabases', err);
+  }
   if (stage.devConsoleSql) {
     try {
       await stage.devConsoleSql.close();
