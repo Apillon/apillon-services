@@ -148,7 +148,8 @@ export async function storageBucketSyncFilesToIPFS(
       ),
       20,
       context,
-      async (file) => {
+      async (file: FileUploadRequest) => {
+        file = new FileUploadRequest(file, context);
         try {
           //check if file already exists
           const existingFile = await new File({}, context).populateByUUID(
