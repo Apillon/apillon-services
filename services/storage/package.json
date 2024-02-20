@@ -7,7 +7,7 @@
   "private": true,
   "scripts": {
     "prebuild": "rimraf dist",
-    "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit --verbose",
+    "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit --verbose --silent",
     "test:logging": "cross-env APP_ENV=test LOG_TARGET=console jest --detectOpenHandles --runInBand --forceExit",
     "test-service": "jest --passWithNoTests",
     "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60004",
