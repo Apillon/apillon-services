@@ -7,6 +7,9 @@ import {
 } from '@apillon/lib';
 import { DbTables, TransactionIndexerStatus } from '../config/types';
 import { LogOutput } from '@apillon/workers-lib';
+import {
+  PhalaBlockchainIndexer
+} from '../modules/blockchain-indexers/substrate/phala/indexer.service';
 
 /**
  * Phala has its own worker because beside normal transactions (transmitted by
@@ -15,6 +18,7 @@ import { LogOutput } from '@apillon/workers-lib';
  * workers on successful instantiation)
  */
 export class PhalaTransactionWorker extends SubstrateTransactionWorker {
+  protected indexer: PhalaBlockchainIndexer;
   protected async setTransactionsState(
     transactions: any[],
     walletAddress: string,
@@ -65,6 +69,32 @@ export class PhalaTransactionWorker extends SubstrateTransactionWorker {
       TransactionStatus.FAILED,
       conn,
     );
+  }
+
+  protected async fetchAllResolvedTransactions(
+    address: string,
+    fromBlock: number,
+    toBlock: number,
+  ) {
+    const transactions = await this.indexer.getAllSystemEvents(
+      address,
+      fromBlock,
+      toBlock,
+    );
+    const clusterTransactions = await this.indexer.getClusterDepositEvents(
+      address,
+      fromBlock,
+      toBlock,
+    );
+    console.log(
+      `Fetched ${transactions.length} transactions and ${clusterTransactions.length} cluster deposits.`,
+    );
+
+    const transactionsArray: Array<any> = [
+      ...Object.values(clusterTransactions),
+      ...Object.values(transactions),
+    ];
+    return transactionsArray.length > 0 ? transactionsArray.flat(Infinity) : [];
   }
 
   protected async updateContractInstantiatedTransaction(

@@ -180,3 +180,16 @@ export function sortObject(obj) {
       return result;
     }, {});
 }
+
+export function isEVMWallet(walletAddress: string): boolean {
+  const evmAddressRegex = /^(0x)?[0-9a-fA-F]{40}$/; // Regular expression for EVM addresses
+  return evmAddressRegex.test(walletAddress);
+}
+
+export function generateRandomCode(characters: string, length: number): string {
+  let code = '';
+  for (let i = 0; i < length; i++) {
+    code += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return code;
+}

@@ -66,7 +66,7 @@ export class SubsocialProvider {
       },
       this.context,
     );
-    console.info('createSubstrateTransaction...');
+    console.info('createSubstrateTransaction...', dto);
 
     return await new BlockchainMicroservice(
       this.context,

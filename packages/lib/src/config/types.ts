@@ -229,10 +229,12 @@ export enum ComputingEventType {
   CREATE_CONTRACT = 'create-contract',
   LIST_CONTRACTS = 'list-contract',
   GET_CONTRACT_BY_UUID = 'get-contract-by-uuid',
+  LIST_TRANSACTIONS = 'list-transactions',
   DEPOSIT_TO_PHALA_CLUSTER = 'fund-contract-cluster',
   TRANSFER_CONTRACT_OWNERSHIP = 'transfer-contract-ownership',
   ENCRYPT_CONTENT = 'encrypt-content',
   ASSIGN_CID_TO_NFT = 'assign-cid-to-nft',
+  LIST_CLUSTER_WALLETS = 'list-cluster-wallets',
 }
 
 export enum ReferralEventType {
@@ -712,6 +714,7 @@ export enum JwtTokenType {
   OAUTH_TOKEN = 'oauth-token',
   // Website review token
   WEBSITE_REVIEW_TOKEN = 'website-review',
+  CRYPTO_PAYMENT_DATA = 'crypto-payment-data',
 }
 
 /**
@@ -752,15 +755,22 @@ export enum OauthLinkType {
 
 export enum CacheKeyPrefix {
   BUCKET_LIST = 'bucket-list',
+
+  AUTH_USER_DATA = 'auth-user-data',
+
   ADMIN_USER_LIST = 'admin-user-list',
   ADMIN_PROJECT_LIST = 'admin-project-list',
-  AUTH_USER_DATA = 'auth-user-data',
   ADMIN_BUCKET_LIST = 'admin-bucket-list',
   ADMIN_WEBSITE_LIST = 'admin-website-list',
   ADMIN_NFTS_COLLECTION_LIST = 'admin-nfts-collection-list',
   ADMIN_GENERAL_SEARCH = 'admin-general-search',
+
   SOCIAL_SPACE_LIST = 'social-space-list',
   SOCIAL_POST_LIST = 'social-post-list',
+
+  CONTRACT_VERSION = 'contract-version',
+  CONTRACT_ABI = 'contract-abi',
+  BLOCKCHAIN_ENDPOINT = 'blockchain-endpoint',
 }
 
 export enum CacheKeyTTL {
@@ -835,4 +845,23 @@ export enum ProductCategory {
   MOONBEAM_NFT = 'MOONBEAM_NFT',
   ASTAR_NFT = 'ASTAR_NFT',
   KILT_IDENTITY = 'KILT_IDENTITY',
+}
+
+export enum EmailTemplate {
+  WELCOME = 'welcome',
+  RESET_PASSWORD = 'reset-password',
+  NEW_USER_ADDED_TO_PROJECT = 'new-user-added-to-project',
+  USER_ADDED_TO_PROJECT = 'user-added-to-project',
+
+  CONTACT_US_FORM = 'contact-us-form',
+
+  WEBSITE_DEPLOYMENT_REJECTED = 'website-deployment-rejected',
+  STORAGE_QUOTA_EXCEEDED = 'storage-quota-exceeded',
+
+  GENERATE_IDENTITY = 'generate-identity',
+  RESTORE_CREDENTIAL = 'restore-credential',
+  REVOKE_DID = 'revoke-did',
+  DOWNLOAD_IDENTITY = 'download-identity',
+
+  CRYPTO_PAYMENT_SUCCESSFUL = 'crypto-payment-successful',
 }

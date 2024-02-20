@@ -77,16 +77,8 @@ export class PhalaLogWorker extends BaseQueueWorker {
     ).getContractTransactionsNotLogged(clusterWallet.clusterId);
 
     if (transactions.length <= 0) {
-      await this.writeEventLog(
-        {
-          logType: LogType.INFO,
-          message: `No transactions found for cluster ${clusterWallet.clusterId}.`,
-          service: ServiceName.COMPUTING,
-          data: {
-            clusterId: clusterWallet.clusterId,
-          },
-        },
-        LogOutput.EVENT_INFO,
+      console.log(
+        `No transactions found for cluster ${clusterWallet.clusterId}.`,
       );
       return;
     }

@@ -50,6 +50,7 @@ export class SubstrateService {
     },
     context: ServiceContext,
   ) {
+    console.info('SubstrateService.createTransaction. Params: ', params);
     // connect to chain
     // TODO: Add logic if endpoint is unavailable to fetch the backup one.
     const endpoint = await new Endpoint({}, context).populateByChain(
@@ -476,7 +477,10 @@ export class SubstrateService {
               await eventLogger(
                 {
                   logType: LogType.ERROR,
-                  message: 'Could not repair last success nonce.',
+                  message: `Could not repair last success nonce for chain ${getEnumKey(
+                    SubstrateChain,
+                    _event.chain,
+                  )} and wallet address ${wallet.address}.`,
                   service: ServiceName.BLOCKCHAIN,
                   data: {
                     wallet: wallet.address,

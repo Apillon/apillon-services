@@ -37,6 +37,27 @@ export class PhalaBlockchainIndexer extends BaseBlockchainIndexer {
     return data.systems;
   }
 
+  public async getClusterDepositEvents(
+    account: string,
+    fromBlock: number,
+    toBlock: number,
+  ): Promise<SystemEvent[]> {
+    const data = await this.graphQlClient.request<{
+      phatContractsTransfereds: PhatContractTransfer[];
+    }>(
+      gql`
+        ${PhalaGqlQueries.ACCOUNT_CLUSTER_DEPOSIT_EVENTS_QUERY}
+      `,
+      {
+        account,
+        fromBlock,
+        toBlock,
+      },
+    );
+
+    return data.phatContractsTransfereds;
+  }
+
   /**
    * Method is not used in code, only used in tests
    * @param account

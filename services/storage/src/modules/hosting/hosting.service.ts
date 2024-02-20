@@ -2,14 +2,14 @@ import {
   Ams,
   ApillonHostingApiCreateS3UrlsForUploadDto,
   AWS_S3,
-  CacheKeyPrefix,
   CreateS3UrlsForUploadDto,
   CreateWebsiteDto,
   DeploymentQueryFilter,
   DeployWebsiteDto,
   DomainQueryFilter,
+  EmailDataDto,
+  EmailTemplate,
   env,
-  invalidateCacheMatch,
   Lmas,
   LogType,
   Mailing,
@@ -33,13 +33,11 @@ import {
   DeploymentStatus,
   StorageErrorCode,
 } from '../../config/types';
-import { deleteDirectory } from '../../lib/delete-directory';
 import {
   StorageCodeException,
   StorageValidationException,
 } from '../../lib/exceptions';
 import { Bucket } from '../bucket/models/bucket.model';
-import { Directory } from '../directory/models/directory.model';
 import { IPFSService } from '../ipfs/ipfs.service';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
@@ -521,11 +519,12 @@ export class HostingService {
 
     if (projectOwner?.email) {
       //send email
-      await new Mailing(context).sendMail({
-        emails: [projectOwner.email],
-        template: 'website-deployment-rejected',
-        data: {},
-      });
+      await new Mailing(context).sendMail(
+        new EmailDataDto({
+          mailAddresses: [projectOwner.email],
+          templateName: EmailTemplate.WEBSITE_DEPLOYMENT_REJECTED,
+        }),
+      );
     }
 
     return true;

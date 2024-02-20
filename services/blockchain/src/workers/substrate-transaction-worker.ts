@@ -57,7 +57,11 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
           ? wallet.lastParsedBlock + wallet.blockParseSize
           : blockHeight;
 
-      console.log(this.indexer.toString());
+      console.log(
+        `${this.indexer.toString()} fetching transactions from block number ${fromBlock} to ${toBlock} for wallet ${
+          wallet.address
+        }`,
+      );
 
       // Get all transactions from the indexer
       const transactions = await this.fetchAllResolvedTransactions(
@@ -72,10 +76,12 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
           await this.setTransactionsState(transactions, wallet.address, conn);
         }
 
-        // If block height is the same and not updated for the past 5 minutes
+        const minutes = Math.round(wallet.minutesSinceLastParsedBlock);
+        // If block height is the same and not updated for the past 15 minutes
         if (
           wallet.lastParsedBlock === toBlock &&
-          wallet.minutesSinceLastParsedBlock >= 5
+          !!minutes &&
+          minutes % 15 == 0
         ) {
           await this.writeEventLog(
             {
@@ -165,7 +171,7 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
       fromBlock,
       toBlock,
     );
-
+    console.log(`Fetched ${transactions.length} transactions.`);
     const transactionsArray: Array<any> = Object.values(transactions);
     return transactionsArray.length > 0 ? transactionsArray.flat(Infinity) : [];
   }

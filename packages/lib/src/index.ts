@@ -89,6 +89,8 @@ export * from './lib/at-services/computing/dtos/assign-cid-to-nft.dto';
 export * from './lib/at-services/computing/dtos/phala-log-filter.dto';
 export * from './lib/at-services/computing/dtos/phala-cluster-wallet.dto';
 export * from './lib/at-services/computing/dtos/phala-cluster-deposit-transaction.dto';
+export * from './lib/at-services/computing/dtos/cluster-wallet-query-filter.dto';
+export * from './lib/at-services/computing/dtos/computing-transaction-query-filter.dto';
 
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';
@@ -113,10 +115,13 @@ export * from './lib/at-services/ams/dtos/user-wallet-auth.dto';
 export * from './lib/at-services/nfts/nfts';
 export * from './lib/at-services/nfts/dtos/deploy-collection.dto';
 
+// #REGION mailing
+export * from './lib/at-services/mailing/dto/email-data.dto';
+
 export * from './lib/database/sql-migrator';
 export * from './lib/at-services/ams/ams';
 export * from './lib/at-services/lmas/lmas';
-export * from './lib/at-services/mailing';
+export * from './lib/at-services/mailing/mailing';
 export * from './lib/aws/aws-secrets';
 export * from './lib/database/mongo';
 export * from './lib/database/mysql';

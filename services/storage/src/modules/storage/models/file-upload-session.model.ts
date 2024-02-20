@@ -5,7 +5,6 @@ import {
   presenceValidator,
   prop,
   SerializeFor,
-  SqlModelStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, StorageErrorCode } from '../../../config/types';
@@ -84,5 +83,18 @@ export class FileUploadSession extends AdvancedSQLModel {
 
   public override async populateByUUID(uuid: string): Promise<this> {
     return super.populateByUUID(uuid, 'session_uuid');
+  }
+
+  public async getNumOfFilesInSession(): Promise<number> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(id) as numOfFiles
+      FROM \`${DbTables.FILE_UPLOAD_REQUEST}\`
+      WHERE session_id = @session_id;
+      `,
+      { session_id: this.id },
+    );
+
+    return data[0].numOfFiles;
   }
 }

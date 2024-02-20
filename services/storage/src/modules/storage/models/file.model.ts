@@ -394,9 +394,12 @@ export class File extends UuidSqlModel {
       qFrom: `
         FROM \`${DbTables.FILE}\` f
         INNER JOIN \`${DbTables.BUCKET}\` b ON f.bucket_id = b.id
+        LEFT JOIN \`${DbTables.FILE_UPLOAD_REQUEST}\` fur ON f.file_uuid = fur.file_uuid
+        LEFT JOIN \`${DbTables.FILE_UPLOAD_SESSION}\` fus ON fus.id = fur.session_id
         WHERE b.bucket_uuid = @bucket_uuid
         AND (@search IS null OR CONCAT(IFNULL(f.path, ""), f.name) LIKE CONCAT('%', @search, '%') OR @search = f.CID)
         AND (@fileStatus IS NULL OR f.fileStatus = @fileStatus)
+        AND (@session_uuid IS NULL OR fus.session_uuid = @session_uuid)
         AND f.status = @status
         `,
       qFilter: `

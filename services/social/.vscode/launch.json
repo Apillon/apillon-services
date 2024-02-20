@@ -7,14 +7,11 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "NFTs",
+      "name": "Social",
       "runtimeExecutable": "nodemon",
-      "runtimeArgs": [
-        "./src/scripts/dev/run-server.ts",
-        "--inspect=9235",
-      ],
+      "runtimeArgs": ["./src/scripts/dev/run-server.ts", "--inspect=9235"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
-    },
+    }
   ]
 }

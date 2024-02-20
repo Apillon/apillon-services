@@ -1,7 +1,8 @@
-import { env } from '../../config/env';
-import { AppEnvironment, MailEventType } from '../../config/types';
-import { Context } from '../context';
-import { BaseService } from './base-service';
+import { env } from '../../../config/env';
+import { AppEnvironment, MailEventType } from '../../../config/types';
+import { Context } from '../../context';
+import { BaseService } from '../base-service';
+import { EmailDataDto } from './dto/email-data.dto';
 
 /**
  * Access Management Service client
@@ -17,23 +18,17 @@ export class Mailing extends BaseService {
       : env.MAIL_SOCKET_PORT;
   serviceName = 'MAIL';
 
-  constructor(context: Context) {
+  constructor(context?: Context) {
     super(context);
     this.isDefaultAsync = true;
   }
 
-  public async sendMail(params: {
-    emails: string[];
-    template: string;
-    data?: any;
-  }) {
-    //TODO: dtos for params
+  public async sendMail(emailData: EmailDataDto) {
     const data = {
       eventName: MailEventType.SEND_MAIL,
-      ...params,
+      emailData: emailData.serialize(),
     };
 
-    // eslint-disable-next-line sonarjs/prefer-immediate-return
     const mailResponse = await this.callService(data);
 
     return {
@@ -41,19 +36,12 @@ export class Mailing extends BaseService {
     };
   }
 
-  public async sendCustomMail(params: {
-    emails: string[];
-    subject: string;
-    template: string;
-    data?: any;
-  }) {
-    //TODO: dtos for params
+  public async sendCustomMail(emailData: EmailDataDto) {
     const data = {
       eventName: MailEventType.SEND_CUSTOM_MAIL,
-      ...params,
+      emailData: emailData.serialize(),
     };
 
-    // eslint-disable-next-line sonarjs/prefer-immediate-return
     const mailResponse = await this.callService(data);
 
     return {

@@ -1,9 +1,12 @@
 import {
   AdvancedSQLModel,
+  ComputingTransactionQueryFilter,
   Context,
+  getQueryParams,
   PopulateFrom,
   presenceValidator,
   prop,
+  selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
@@ -14,18 +17,25 @@ import {
   DbTables,
   TransactionType,
 } from '../../../config/types';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class Transaction extends AdvancedSQLModel {
   public readonly tableName = DbTables.TRANSACTION;
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
       SerializeFor.WORKER,
     ],
     validators: [
@@ -156,7 +166,6 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
     validators: [],
@@ -198,7 +207,7 @@ export class Transaction extends AdvancedSQLModel {
       `
         SELECT t.*
         FROM \`${this.tableName}\` as t
-               JOIN contract as c ON (c.id = t.contract_id)
+               JOIN ${DbTables.CONTRACT} as c ON (c.id = t.contract_id)
         WHERE t.status <> ${SqlModelStatus.DELETED}
           AND (@transactionStatus IS NULL OR
                t.transactionStatus = @transactionStatus)
@@ -236,7 +245,7 @@ export class Transaction extends AdvancedSQLModel {
                c.contractAddress AS contractAddress,
                c.data            AS contractData
         FROM \`${this.tableName}\` as t
-               JOIN contract as c ON (c.id = t.contract_id)
+               JOIN ${DbTables.CONTRACT} as c ON (c.id = t.contract_id)
         WHERE t.status <> ${SqlModelStatus.DELETED}
           AND t.transactionStatus = @transactionStatus
           AND JSON_EXTRACT(c.data, "$.clusterId") = @clusterId
@@ -264,5 +273,62 @@ export class Transaction extends AdvancedSQLModel {
       contractAddress: string;
       contractData: { clusterId: string };
     }[];
+  }
+
+  public async getList(
+    context: ServiceContext,
+    filter: ComputingTransactionQueryFilter,
+    serializationStrategy: SerializeFor = SerializeFor.PROFILE,
+  ) {
+    // Map url query with sql fields.
+    const fieldMap = {
+      id: 't.id',
+    };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      't',
+      fieldMap,
+      filter.serialize(),
+    );
+
+    const selectFields = this.generateSelectFields(
+      't',
+      '',
+      serializationStrategy,
+    );
+    const sqlQuery = {
+      qSelect: `
+        SELECT ${selectFields}
+        `,
+      qFrom: `
+        FROM \`${this.tableName}\` t
+        JOIN ${DbTables.CONTRACT} AS c ON (c.id = t.contract_id)
+        WHERE t.status <> ${SqlModelStatus.DELETED}
+        AND (@contract_uuid IS null OR c.contract_uuid = @contract_uuid)
+        AND (@transactionStatus IS null OR t.transactionStatus = @transactionStatus)
+        AND (@transactionType IS null OR t.transactionType = @transactionType)
+        AND (@search IS null OR t.transactionHash LIKE CONCAT('%', @search, '%'))
+      `,
+      qFilter: `
+        ORDER BY ${filters.orderStr}
+        LIMIT ${filters.limit} OFFSET ${filters.offset};
+      `,
+    };
+
+    const transactionsResult = await selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      params,
+      't.id',
+    );
+
+    return {
+      ...transactionsResult,
+      items: transactionsResult.items.map((transaction) =>
+        new Transaction({}, context)
+          .populate(transaction, PopulateFrom.DB)
+          .serialize(serializationStrategy),
+      ),
+    };
   }
 }

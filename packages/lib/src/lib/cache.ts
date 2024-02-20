@@ -1,5 +1,6 @@
 import { env } from '../config/env';
 import * as redis from 'redis';
+import { CacheKeyPrefix } from '../config/types';
 
 function flatObject(obj: Record<any, any>, joinChar = '/') {
   if (!obj) {
@@ -38,7 +39,7 @@ export function generateCacheKey(
  * @param expire cache TTL
  */
 export async function runCachedFunction(
-  key: string,
+  key: CacheKeyPrefix | `${CacheKeyPrefix}:${string}`,
   action: () => any,
   expire = env.DEFAULT_CACHE_TTL,
 ) {

@@ -24,6 +24,8 @@ import {
   ReferralMicroservice,
   writeLog,
   BaseQueryFilter,
+  EmailDataDto,
+  EmailTemplate,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -311,15 +313,16 @@ export class ProjectService {
         await new Ams(context).assignUserRole(params);
 
         //send email
-        await new Mailing(context).sendMail({
-          emails: [data.email],
-          // subject: 'New project in Apillon.io',
-          template: 'user-added-to-project',
-          data: {
-            actionUrl: `${env.APP_URL}`,
-            projectName: project.name,
-          },
-        });
+        await new Mailing(context).sendMail(
+          new EmailDataDto({
+            mailAddresses: [data.email],
+            templateName: EmailTemplate.USER_ADDED_TO_PROJECT,
+            templateData: {
+              actionUrl: `${env.APP_URL}`,
+              projectName: project.name,
+            },
+          }),
+        );
 
         await context.mysql.commit(conn);
         return pu;
@@ -357,15 +360,16 @@ export class ProjectService {
         });
 
         //send email
-        await new Mailing(context).sendMail({
-          emails: [data.email],
-          // subject: 'You have been invited to project in Apillon.io',
-          template: 'new-user-added-to-project',
-          data: {
-            projectName: project.name,
-            actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
-          },
-        });
+        await new Mailing(context).sendMail(
+          new EmailDataDto({
+            mailAddresses: [data.email],
+            templateName: EmailTemplate.NEW_USER_ADDED_TO_PROJECT,
+            templateData: {
+              projectName: project.name,
+              actionUrl: `${env.APP_URL}/register/confirmed?token=${token}`,
+            },
+          }),
+        );
 
         await context.mysql.commit(conn);
       } catch (err) {

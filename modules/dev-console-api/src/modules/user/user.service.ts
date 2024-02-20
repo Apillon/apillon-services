@@ -18,6 +18,8 @@ import {
   CacheKeyPrefix,
   checkCaptcha,
   parseJwtToken,
+  EmailDataDto,
+  EmailTemplate,
 } from '@apillon/lib';
 import { getDiscordProfile } from '@apillon/modules-lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -38,9 +40,11 @@ import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { User } from './models/user.model';
 
 import { registerUser } from './utils/authentication-utils';
-import { getOauthSessionToken } from './utils/oauth-utils';
 import { UserConsentDto, UserConsentStatus } from './dtos/user-consent.dto';
 import { DiscordCodeDto } from './dtos/discord-code.dto';
+import { Identity } from '@apillon/sdk';
+import axios from 'axios';
+
 @Injectable()
 export class UserService {
   constructor(private readonly projectService: ProjectService) {}
@@ -64,6 +68,7 @@ export class UserService {
     user.userRoles = context.user.userRoles;
     user.userPermissions = context.user.userPermissions;
     user.wallet = context.user.authUser.wallet;
+    user.evmWallet = context.user.authUser.evmWallet;
 
     return user.serialize(SerializeFor.PROFILE);
   }
@@ -172,7 +177,7 @@ export class UserService {
       tokenType: JwtTokenType.OAUTH_TOKEN,
     };
 
-    return registerUser(params, context);
+    return registerUser(params as any, context);
   }
 
   /**
@@ -185,7 +190,7 @@ export class UserService {
     context: Context,
     emailVal: ValidateEmailDto,
   ): Promise<any> {
-    const { email, refCode, metadata } = emailVal;
+    const { email, refCode, metadata, walletAddress } = emailVal;
 
     const { data: emailResult } = await new Ams(context).emailExists(
       emailVal.email,
@@ -205,17 +210,22 @@ export class UserService {
         email,
         refCode,
         metadata,
+        walletAddress,
       },
       '1h',
     );
 
-    await new Mailing(context).sendMail({
-      emails: [email],
-      template: 'welcome',
-      data: {
-        actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
-      },
-    });
+    await new Mailing(context).sendMail(
+      new EmailDataDto({
+        mailAddresses: [email],
+        templateName: EmailTemplate.WELCOME,
+        templateData: {
+          actionUrl: `${env.APP_URL}/register/confirmed?token=${token}${
+            walletAddress ? `&walletLogin=true` : ''
+          }`,
+        },
+      }),
+    );
 
     return emailResult;
   }
@@ -235,7 +245,7 @@ export class UserService {
       projectService: this.projectService,
       tokenType: JwtTokenType.USER_CONFIRM_EMAIL,
     };
-    return registerUser(params, context);
+    return registerUser(params as any, context);
   }
 
   /**
@@ -256,7 +266,7 @@ export class UserService {
    * @param {Context} context - The API context with current user session.
    * @returns {Promise<any>} The serialized user profile data and token.
    */
-  async walletLogin(userAuth: UserWalletAuthDto, context: Context) {
+  async loginWithWallet(userAuth: UserWalletAuthDto, context: Context) {
     // 1 hour validity
     if (new Date().getTime() - userAuth.timestamp > 60 * 60 * 1000) {
       throw new CodeException({
@@ -269,10 +279,8 @@ export class UserService {
     }
 
     const { message } = this.getAuthMessage(userAuth.timestamp);
-    const resp = await new Ams(context).loginWithWallet(userAuth, message);
-    const user = await new User({}, context).populateByUUID(
-      resp.data.user_uuid,
-    );
+    const { data } = await new Ams(context).loginWithWallet(userAuth, message);
+    const user = await new User({}, context).populateByUUID(data.user_uuid);
 
     if (!user.exists()) {
       throw new CodeException({
@@ -282,13 +290,13 @@ export class UserService {
       });
     }
 
-    user.setUserRolesAndPermissionsFromAmsResponse(resp);
+    user.setUserRolesAndPermissionsFromAmsResponse(data);
 
-    user.wallet = resp.data.wallet;
+    user.wallet = data.wallet;
 
     return {
       ...user.serialize(SerializeFor.PROFILE),
-      token: resp.data.token,
+      token: data.token,
     };
   }
 
@@ -309,12 +317,16 @@ export class UserService {
       });
     }
 
-    const { message } = this.getAuthMessage(userAuth.timestamp);
-    const { isValid } = signatureVerify(
-      message,
-      userAuth.signature,
-      userAuth.wallet,
-    );
+    const { signature, wallet, timestamp, isEvmWallet } = userAuth;
+
+    const { message } = this.getAuthMessage(timestamp);
+    const { isValid } = isEvmWallet
+      ? new Identity(null).validateEvmWalletSignature({
+          message,
+          signature,
+          walletAddress: wallet,
+        })
+      : signatureVerify(message, signature, wallet);
 
     if (!isValid) {
       throw new CodeException({
@@ -327,7 +339,7 @@ export class UserService {
 
     const resp = await new Ams(context).updateAuthUser({
       user_uuid: context.user.user_uuid,
-      wallet: userAuth.wallet,
+      [isEvmWallet ? 'evmWallet' : 'wallet']: wallet,
     });
 
     context.user.populate(resp.data);
@@ -358,14 +370,15 @@ export class UserService {
       emailResult.authUser.password ? emailResult.authUser.password : undefined,
     );
 
-    await new Mailing(context).sendMail({
-      emails: [email],
-      // subject: 'Apillon password reset',
-      template: 'reset-password',
-      data: {
-        actionUrl: `${env.APP_URL}/register/reset-password/?token=${token}`,
-      },
-    });
+    await new Mailing(context).sendMail(
+      new EmailDataDto({
+        mailAddresses: [email],
+        templateName: EmailTemplate.RESET_PASSWORD,
+        templateData: {
+          actionUrl: `${env.APP_URL}/register/reset-password/?token=${token}`,
+        },
+      }),
+    );
 
     return true;
   }
@@ -542,12 +555,16 @@ export class UserService {
    * @returns Session info for the oauth module
    */
   async getOauthSession() {
-    return (
-      await getOauthSessionToken(
-        env.APILLON_API_INTEGRATION_API_KEY,
-        env.APILLON_API_INTEGRATION_API_SECRET,
-      )
-    ).data;
+    const response = await axios.get(
+      `${env.APILLON_API_URL}/auth/session-token`,
+      {
+        auth: {
+          username: env.APILLON_API_INTEGRATION_API_KEY,
+          password: env.APILLON_API_INTEGRATION_API_SECRET,
+        },
+      },
+    );
+    return response.data;
   }
 
   /**

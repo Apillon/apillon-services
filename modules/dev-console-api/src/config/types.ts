@@ -103,6 +103,14 @@ export enum BadRequestErrorCode {
 }
 
 /**
+ * Server error codes - 50004000.
+ */
+export enum ServerErrorCode {
+  ERROR_HANDLING_CRYPTO_WEBHOOK = 50004000,
+  ERROR_CREATING_CRYPTO_PAYMENT_SESSION = 50004001,
+}
+
+/**
  * Instruction Type Enum { Helper, Video, Q&A }
  */
 export enum InstructionType {

@@ -13,12 +13,13 @@ import {
   SpendCreditDto,
   ProductCode,
   spendCreditAction,
+  EmailDataDto,
+  EmailTemplate,
 } from '@apillon/lib';
 import { Identity } from './models/identity.model';
 import {
   IdentityState,
   AuthenticationErrorCode,
-  AuthApiEmailType,
   ApillonSupportedCTypes,
   HttpStatus,
   DidCreateOp,
@@ -99,7 +100,7 @@ export class IdentityService {
     );
 
     const verificationEmailType = event.body.type;
-    if (verificationEmailType == AuthApiEmailType.GENERATE_IDENTITY) {
+    if (verificationEmailType == EmailTemplate.GENERATE_IDENTITY) {
       // This is the start process of the identity generation, so we need
       // to do some extra stuff before we can start the process
       if (identity.exists()) {
@@ -151,8 +152,8 @@ export class IdentityService {
         throw err;
       }
     } else if (
-      verificationEmailType == AuthApiEmailType.RESTORE_CREDENTIAL ||
-      verificationEmailType == AuthApiEmailType.REVOKE_DID
+      verificationEmailType == EmailTemplate.RESTORE_CREDENTIAL ||
+      verificationEmailType == EmailTemplate.REVOKE_DID
     ) {
       if (!identity.exists() || identity.state != IdentityState.ATTESTED) {
         throw new AuthenticationCodeException({
@@ -163,13 +164,15 @@ export class IdentityService {
       auth_app_page = 'restore';
     }
 
-    await new Mailing(context).sendMail({
-      emails: [email],
-      template: verificationEmailType,
-      data: {
-        actionUrl: `${env.AUTH_APP_URL}/${auth_app_page}/?token=${token}&email=${email}&type=${verificationEmailType}`,
-      },
-    });
+    await new Mailing(context).sendMail(
+      new EmailDataDto({
+        mailAddresses: [email],
+        templateName: verificationEmailType,
+        templateData: {
+          actionUrl: `${env.AUTH_APP_URL}/${auth_app_page}/?token=${token}&email=${email}&type=${verificationEmailType}`,
+        },
+      }),
+    );
 
     return { success: true };
   }
