@@ -42,11 +42,12 @@ export class StorageService {
     ).data;
   }
 
-  async getLink(context: ApillonApiContext, cid: string) {
+  async getLink(context: ApillonApiContext, cid: string, type: string) {
     return (
       await new StorageMicroservice(context).getLink(
         context.apiKey.project_uuid,
         cid,
+        type,
       )
     ).data;
   }

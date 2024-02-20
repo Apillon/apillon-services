@@ -788,23 +788,20 @@ export class StorageService {
    * @returns link on ipfs gateway
    */
   static async getLink(
-    event: { cid: string; project_uuid: string },
+    event: { cid: string; project_uuid: string; type: string },
     context: ServiceContext,
   ) {
-    let isIpns = false;
-    try {
-      event.cid;
-    } catch (err) {
-      isIpns = true;
-    }
-
     const ipfsCluster = await new ProjectConfig(
       { project_uuid: event.project_uuid },
       context,
     ).getIpfsCluster();
 
     return {
-      link: ipfsCluster.generateLink(event.project_uuid, event.cid, isIpns),
+      link: ipfsCluster.generateLink(
+        event.project_uuid,
+        event.cid,
+        event.type == 'IPNS',
+      ),
     };
   }
 }

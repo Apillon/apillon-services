@@ -16,4 +16,11 @@ export class LinkOnIpfsQueryFilter extends BaseProjectQueryFilter {
     ],
   })
   public cid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    defaultValue: 'CID',
+  })
+  public type: string;
 }
