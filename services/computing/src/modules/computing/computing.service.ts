@@ -106,7 +106,7 @@ export class ComputingService {
     const contract = new Contract(params.body, context).populate({
       contract_uuid: uuidV4(),
       bucket_uuid,
-      status: SqlModelStatus.INCOMPLETE,
+      status: SqlModelStatus.ACTIVE,
       contractAbi_id: contractAbi.id,
       data: {
         nftContractAddress: params.body.nftContractAddress,
