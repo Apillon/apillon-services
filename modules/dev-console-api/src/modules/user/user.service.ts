@@ -20,10 +20,10 @@ import {
   parseJwtToken,
   EmailDataDto,
   EmailTemplate,
+  LogType,
 } from '@apillon/lib';
 import { getDiscordProfile } from '@apillon/modules-lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { signatureVerify } from '@polkadot/util-crypto';
 import { v4 as uuidV4 } from 'uuid';
 import {
   ResourceNotFoundErrorCode,
@@ -38,12 +38,12 @@ import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { User } from './models/user.model';
-
 import { registerUser } from './utils/authentication-utils';
 import { UserConsentDto, UserConsentStatus } from './dtos/user-consent.dto';
 import { DiscordCodeDto } from './dtos/discord-code.dto';
 import { Identity } from '@apillon/sdk';
 import axios from 'axios';
+import { ServiceContext } from '@apillon/service-lib';
 
 @Injectable()
 export class UserService {
@@ -190,7 +190,7 @@ export class UserService {
     context: Context,
     emailVal: ValidateEmailDto,
   ): Promise<any> {
-    const { email, refCode, metadata, walletAddress } = emailVal;
+    const { email, refCode, metadata } = emailVal;
 
     const { data: emailResult } = await new Ams(context).emailExists(
       emailVal.email,
@@ -204,14 +204,20 @@ export class UserService {
       });
     }
 
+    // If user has registered with wallet, validate the signature and use it in signup email jwt
+    let wallet = emailVal.wallet;
+    if (wallet) {
+      const { address } = await this.validateWalletSignature(
+        emailVal,
+        'UserService/walletConnect',
+        context,
+      );
+      wallet = address;
+    }
+
     const token = generateJwtToken(
       JwtTokenType.USER_CONFIRM_EMAIL,
-      {
-        email,
-        refCode,
-        metadata,
-        walletAddress,
-      },
+      { email, refCode, metadata, wallet },
       '1h',
     );
 
@@ -221,7 +227,7 @@ export class UserService {
         templateName: EmailTemplate.WELCOME,
         templateData: {
           actionUrl: `${env.APP_URL}/register/confirmed?token=${token}${
-            walletAddress ? `&walletLogin=true` : ''
+            wallet ? `&walletLogin=true` : ''
           }`,
         },
       }),
@@ -249,37 +255,19 @@ export class UserService {
   }
 
   /**
-   * Generates an auth message with a timestamp for wallet login.
-   * @param {number} [timestamp] - The timestamp for the message. Default is the current time.
-   * @returns {object} The auth message and timestamp.
-   */
-  public getAuthMessage(timestamp: number = new Date().getTime()) {
-    return {
-      message: `Please sign this message.\n${timestamp}`,
-      timestamp,
-    };
-  }
-
-  /**
    * Authenticates a user using wallet signature.
    * @param {UserWalletAuthDto} userAuth - The wallet authentication data.
    * @param {Context} context - The API context with current user session.
    * @returns {Promise<any>} The serialized user profile data and token.
    */
   async loginWithWallet(userAuth: UserWalletAuthDto, context: Context) {
-    // 1 hour validity
-    if (new Date().getTime() - userAuth.timestamp > 60 * 60 * 1000) {
-      throw new CodeException({
-        status: HttpStatus.UNAUTHORIZED,
-        code: UnauthorizedErrorCodes.INVALID_SIGNATURE,
-        sourceFunction: `${this.constructor.name}/walletLogin`,
-        errorCodes: UnauthorizedErrorCodes,
-        context,
-      });
-    }
+    await this.validateWalletSignature(
+      userAuth,
+      'UserService/loginWithWallet',
+      context,
+    );
 
-    const { message } = this.getAuthMessage(userAuth.timestamp);
-    const { data } = await new Ams(context).loginWithWallet(userAuth, message);
+    const { data } = await new Ams(context).loginWithWallet(userAuth);
     const user = await new User({}, context).populateByUUID(data.user_uuid);
 
     if (!user.exists()) {
@@ -307,35 +295,13 @@ export class UserService {
    * @returns {Promise<any>} The serialized user profile data.
    */
   async walletConnect(userAuth: UserWalletAuthDto, context: Context) {
-    // 1 hour validity
-    if (new Date().getTime() - userAuth.timestamp > 60 * 60 * 1000) {
-      throw new CodeException({
-        status: HttpStatus.UNAUTHORIZED,
-        code: UnauthorizedErrorCodes.INVALID_SIGNATURE,
-        sourceFunction: `${this.constructor.name}/walletConnect`,
-        context,
-      });
-    }
+    const { wallet, isEvmWallet } = userAuth;
 
-    const { signature, wallet, timestamp, isEvmWallet } = userAuth;
-
-    const { message } = this.getAuthMessage(timestamp);
-    const { isValid } = isEvmWallet
-      ? new Identity(null).validateEvmWalletSignature({
-          message,
-          signature,
-          walletAddress: wallet,
-        })
-      : signatureVerify(message, signature, wallet);
-
-    if (!isValid) {
-      throw new CodeException({
-        status: HttpStatus.UNAUTHORIZED,
-        code: UnauthorizedErrorCodes.INVALID_SIGNATURE,
-        sourceFunction: `${this.constructor.name}/walletConnect`,
-        context,
-      });
-    }
+    await this.validateWalletSignature(
+      userAuth,
+      'UserService/walletConnect',
+      context,
+    );
 
     const resp = await new Ams(context).updateAuthUser({
       user_uuid: context.user.user_uuid,
@@ -588,5 +554,72 @@ export class UserService {
       );
     }
     return captchaJwt;
+  }
+
+  /**
+   * Validate a wallet signature for a given address and timestamp
+   * @param {UserWalletAuthDto} walletAuthDto
+   * @param {string} sourceFunction - Used for logging in case of an error
+   * @param {ServiceContext} context
+   */
+  async validateWalletSignature(
+    walletAuthDto: UserWalletAuthDto,
+    sourceFunction: string,
+    context: ServiceContext,
+  ) {
+    const { isEvmWallet, wallet, signature, timestamp } = walletAuthDto;
+    const { message } = this.getAuthMessage(timestamp);
+    const signatureValidityMinutes = 60;
+
+    try {
+      const signatureData = isEvmWallet
+        ? new Identity(null).validateEvmWalletSignature({
+            message,
+            signature,
+            walletAddress: wallet,
+            timestamp,
+            signatureValidityMinutes,
+          })
+        : new Identity(null).validatePolkadotWalletSignature({
+            message,
+            signature,
+            walletAddress: wallet,
+            timestamp,
+            signatureValidityMinutes,
+          });
+      if (!signatureData.isValid) {
+        throw new Error('Signature is invalid.');
+      }
+      return signatureData;
+    } catch (err) {
+      throw await new CodeException({
+        status: HttpStatus.UNAUTHORIZED,
+        code: UnauthorizedErrorCodes.INVALID_SIGNATURE,
+        sourceFunction,
+        errorCodes: UnauthorizedErrorCodes,
+        context,
+        errorMessage: err.message,
+      }).writeToMonitor({
+        logType: LogType.WARN,
+        context,
+        user_uuid: context?.user?.user_uuid,
+        data: {
+          walletAuthDto: walletAuthDto.serialize(),
+          err,
+        },
+      });
+    }
+  }
+
+  /**
+   * Generates an auth message with a timestamp for wallet login.
+   * @param {number} [timestamp] - The timestamp for the message. Default is the current time.
+   * @returns {object} The auth message and timestamp.
+   */
+  getAuthMessage(timestamp: number = new Date().getTime()) {
+    return {
+      message: `Please sign this message.\n${timestamp}`,
+      timestamp,
+    };
   }
 }
