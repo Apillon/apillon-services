@@ -24,7 +24,7 @@ export class SubscriptionPackage extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
     ],
-    fakeValue: getFaker().word.noun(),
+    fakeValue: () => getFaker().word.noun(),
   })
   public name: string;
 
@@ -38,7 +38,7 @@ export class SubscriptionPackage extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
     ],
-    fakeValue: getFaker().lorem.sentence(),
+    fakeValue: () => getFaker().lorem.sentence(),
   })
   public description: string;
 

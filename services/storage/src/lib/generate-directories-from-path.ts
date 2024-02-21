@@ -1,5 +1,4 @@
 import { PoolConnection, SerializeFor } from '@apillon/lib';
-import { CID } from 'ipfs-http-client';
 import { ServiceContext } from '@apillon/service-lib';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { Directory } from '../modules/directory/models/directory.model';
@@ -19,7 +18,7 @@ export async function generateDirectoriesForFUR(
   directories: Directory[],
   fur: FileUploadRequest,
   bucket: Bucket,
-  ipfsDirectories?: { path: string; cid: CID }[],
+  ipfsDirectories?: { path: string; cid: string }[],
   conn?: PoolConnection,
 ): Promise<Directory> {
   if (fur.directory_uuid) {
@@ -54,7 +53,7 @@ export async function generateDirectoriesForFURs(
   directories: Directory[],
   furs: FileUploadRequest[],
   bucket: Bucket,
-  ipfsDirectories?: { path: string; cid: CID }[],
+  ipfsDirectories?: { path: string; cid: string }[],
   conn?: PoolConnection,
 ) {
   const paths = [...new Set(furs.map((item) => item.path))];
@@ -77,7 +76,7 @@ export async function generateDirectoriesFromPath(
   directories: Directory[],
   path: string,
   bucket: Bucket,
-  ipfsDirectories?: { path: string; cid: CID }[],
+  ipfsDirectories?: { path: string; cid: string }[],
   conn?: PoolConnection,
 ): Promise<Directory> {
   if (path) {
@@ -110,8 +109,8 @@ export async function generateDirectoriesFromPath(
           (x) => x.path == splittedPath.slice(0, i + 1).join('/'),
         );
         if (ipfsDirectory) {
-          newDirectory.CID = ipfsDirectory.cid.toV0().toString();
-          newDirectory.CIDv1 = ipfsDirectory.cid.toV1().toString();
+          newDirectory.CID = ipfsDirectory.cid;
+          newDirectory.CIDv1 = ipfsDirectory.cid;
         }
 
         try {

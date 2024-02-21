@@ -182,7 +182,7 @@ export class Task extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: getFaker().date.future(1),
+    fakeValue: () => getFaker().date.future(1),
     validators: [],
   })
   public activeTo: Date;

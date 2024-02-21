@@ -830,7 +830,7 @@ describe('Storage tests', () => {
       test('User should be able to get link on ipfs for IPNS', async () => {
         const response = await request(stage.http)
           .get(
-            `/storage/link-on-ipfs?project_uuid=${testProject.project_uuid}&cid=k2k4r8lqt07ls9uyz141ofqcl99k4b8e63ns1fh52ib1bwh09z0k6vjk`,
+            `/storage/link-on-ipfs?project_uuid=${testProject.project_uuid}&cid=k2k4r8lqt07ls9uyz141ofqcl99k4b8e63ns1fh52ib1bwh09z0k6vjk&type=IPNS`,
           )
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);

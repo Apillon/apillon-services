@@ -53,7 +53,6 @@ import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
 import { IpfsBandwidth } from '../ipfs/models/ipfs-bandwidth';
 import { generateJwtSecret } from '../../lib/ipfs-utils';
-import { CID } from 'ipfs-http-client';
 import { Directory } from '../directory/models/directory.model';
 
 export class StorageService {
@@ -795,23 +794,20 @@ export class StorageService {
    * @returns link on ipfs gateway
    */
   static async getLink(
-    event: { cid: string; project_uuid: string },
+    event: { cid: string; project_uuid: string; type: string },
     context: ServiceContext,
   ) {
-    let isIpns = false;
-    try {
-      CID.parse(event.cid);
-    } catch (err) {
-      isIpns = true;
-    }
-
     const ipfsCluster = await new ProjectConfig(
       { project_uuid: event.project_uuid },
       context,
     ).getIpfsCluster();
 
     return {
-      link: ipfsCluster.generateLink(event.project_uuid, event.cid, isIpns),
+      link: ipfsCluster.generateLink(
+        event.project_uuid,
+        event.cid,
+        event.type == 'ipns',
+      ),
     };
   }
 }
