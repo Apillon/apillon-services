@@ -944,7 +944,7 @@ async function initSocialTestMigrations() {
   };
 
   if (!/(test|testing)/i.test(poolSocial.database)) {
-    throw new Error(`Blockchain: NO TEST DATABASE!`);
+    throw new Error(`Social: NO TEST DATABASE!`);
   }
 
   const pool = createPool(poolSocial);

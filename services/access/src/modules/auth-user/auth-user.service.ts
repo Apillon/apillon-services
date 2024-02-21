@@ -22,12 +22,9 @@ import {
 } from '../../lib/exceptions';
 import { AuthToken } from '../auth-token/auth-token.model';
 import { AuthUser } from './auth-user.model';
-
-import { signatureVerify } from '@polkadot/util-crypto';
 import { TokenExpiresInStr } from '../../config/types';
 import { CryptoHash } from '../../lib/hash-with-crypto';
 import { ApiKeyService } from '../api-key/api-key.service';
-import { Identity } from '@apillon/sdk';
 
 /**
  * AuthUserService class handles user authentication and related operations, such as registration, login, password reset, and email verification.
@@ -499,7 +496,10 @@ export class AuthUserService {
    * @param context The ServiceContext instance for the current request.
    * @returns The authenticated user's data.
    */
-  static async loginWithWalletAddress(event, context: ServiceContext) {
+  static async loginWithWalletAddress(
+    event: { authData: UserWalletAuthDto },
+    context: ServiceContext,
+  ) {
     const authData = new UserWalletAuthDto(event.authData);
 
     try {
@@ -508,29 +508,7 @@ export class AuthUserService {
       throw new AmsValidationException(authData);
     }
 
-    if (!event?.message) {
-      throw await new AmsBadRequestException(context, event).writeToMonitor();
-    }
-    const { signature, wallet, timestamp, isEvmWallet } = authData;
-    const { isValid } = isEvmWallet
-      ? new Identity(null).validateEvmWalletSignature({
-          message: event.message,
-          signature,
-          walletAddress: wallet,
-        })
-      : signatureVerify(event.message, signature, wallet);
-
-    if (!isValid) {
-      throw await new AmsCodeException({
-        status: 401,
-        code: AmsErrorCode.INVALID_WALLET_SIGNATURE,
-      }).writeToMonitor({
-        logType: LogType.WARN,
-        context,
-        user_uuid: event?.user_uuid,
-        data: event,
-      });
-    }
+    const { wallet, timestamp } = authData;
 
     const authUser = await new AuthUser({}, context).populateByWalletAddress(
       wallet,
@@ -543,12 +521,12 @@ export class AuthUserService {
       }).writeToMonitor({
         logType: LogType.WARN,
         context,
-        user_uuid: event?.user_uuid,
+        user_uuid: context?.user?.user_uuid,
         data: event,
       });
     }
 
-    //If login token with greater timestamp exists, throw error - signature was already used for login
+    // If login token with greater timestamp exists, throw error - signature was already used for login
     const authToken = await new AuthToken({}, context).populateByUserAndType(
       authUser.user_uuid,
       JwtTokenType.USER_AUTHENTICATION,
@@ -560,7 +538,7 @@ export class AuthUserService {
         code: AmsErrorCode.WALLET_SIGNATURE_ALREADY_USED,
       }).writeToMonitor({
         context,
-        user_uuid: event?.user_uuid,
+        user_uuid: context?.user?.user_uuid,
         data: event,
       });
     }

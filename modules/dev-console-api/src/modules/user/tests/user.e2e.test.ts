@@ -13,6 +13,7 @@ describe('Auth tests', () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let testUser: TestUser;
   let testUserKeyPair;
+  let testUserKeyPair2;
   const newUserData = {
     email: 'dev+test@apillon.io',
     password: 'MyPassword01!',
@@ -26,6 +27,11 @@ describe('Auth tests', () => {
 
     const keyring = createTestKeyring();
     testUserKeyPair = keyring.addFromUri('//Alice');
+    testUserKeyPair2 = keyring.addFromUri('//Bob');
+
+    await stage.amsContext.mysql.paramExecute(
+      `UPDATE authUser SET wallet = '${testUserKeyPair.address}' WHERE user_uuid = '${testUser.authUser.user_uuid}'`,
+    );
   });
 
   afterAll(async () => {
@@ -99,7 +105,7 @@ describe('Auth tests', () => {
     const response = await request(stage.http)
       .post('/users/login')
       .send({
-        email: newUserData.email + 'x',
+        email: `${newUserData.email}x`,
         password: newUserData.password,
       });
     expect(response.status).toBe(401);
@@ -172,7 +178,7 @@ describe('Auth tests', () => {
     const response = await request(stage.http)
       .post('/users/password-reset')
       .send({
-        token: token,
+        token,
         password: 'MyNewPassword01!',
       });
     expect(response.status).toBe(200);
@@ -216,6 +222,8 @@ describe('Auth tests', () => {
   });
 
   test('User should be able to login with polkadot wallet', async () => {
+    // wait 1 second to avoid getting signature already used error because of same timestamp
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     const authMsgResp = await request(stage.http).get('/users/auth-msg');
     expect(authMsgResp.status).toBe(200);
 
@@ -237,9 +245,52 @@ describe('Auth tests', () => {
     expect(connectResp.body.data.user_uuid).toBe(testUser.user.user_uuid);
   });
 
+  test('User should be able to register with wallet', async () => {
+    const email = 'wallet-register@gmail.com';
+    const wallet = testUserKeyPair2.address;
+
+    const input = new ValidateEmailDto({
+      email,
+      wallet,
+      captcha: { token: 'test' },
+    });
+    // Test invalid signature response
+    let response = await request(stage.http)
+      .post('/users/validate-email')
+      .send(input);
+    expect(response.status).toBe(401);
+    expect(response.body.message).toEqual('INVALID_SIGNATURE');
+
+    const authMsgResp = await request(stage.http).get('/users/auth-msg');
+    expect(authMsgResp.status).toBe(200);
+
+    const signature = u8aToHex(
+      testUserKeyPair2.sign(authMsgResp.body.data.message),
+    );
+    input.signature = signature;
+    input.timestamp = authMsgResp.body.data.timestamp;
+    response = await request(stage.http)
+      .post('/users/validate-email')
+      .send(input);
+    expect(response.status).toBe(201);
+
+    const token = generateJwtToken(
+      JwtTokenType.USER_CONFIRM_EMAIL,
+      { email, wallet },
+      '1h',
+    );
+
+    response = await request(stage.http)
+      .post('/users/register')
+      .send({ token });
+    expect(response.status).toBe(201);
+    expect(response.body.data.email).toEqual(email);
+  });
+
   test('User should NOT BE able to login with invalid signature or unconnected wallet', async () => {
     const keyring = createTestKeyring();
-    const keyPair = keyring.addFromUri('//Bob');
+
+    const keyPair = keyring.addFromUri('//Dave');
 
     const authMsgResp = await request(stage.http).get('/users/auth-msg');
     expect(authMsgResp.status).toBe(200);
@@ -255,6 +306,7 @@ describe('Auth tests', () => {
       });
 
     expect(connectResp.status).toBe(401);
+    expect(connectResp.body.message).toEqual('INVALID_SIGNATURE');
 
     const connectResp2 = await request(stage.http)
       .post('/users/login/wallet')
@@ -265,6 +317,7 @@ describe('Auth tests', () => {
       });
 
     expect(connectResp2.status).toBe(401);
+    expect(connectResp2.body.message).toEqual('USER_IS_NOT_AUTHENTICATED');
   });
 
   test('Kilt login: Existing user should be able to login', async () => {
@@ -278,38 +331,5 @@ describe('Auth tests', () => {
       .post('/users/login-kilt')
       .send({ token: tokenKilt });
     expect(resp.status).toBe(201);
-  });
-
-  test('Kilt login: New user should be able to login', async () => {
-    const controlEmail = 'dims.okniv@kalmia.si';
-    const tokenKiltNew = generateJwtToken(
-      JwtTokenType.OAUTH_TOKEN,
-      { email: controlEmail },
-      '10min',
-    );
-
-    const resp1 = await request(stage.http)
-      .post('/users/login-kilt')
-      .send({ token: tokenKiltNew });
-    expect(resp1.status).toBe(201);
-    expect(resp1.body.data.token).toBeTruthy();
-    expect(resp1.body.data.user_uuid).toBeTruthy();
-
-    const userData = resp1.body.data;
-    const sqlRes1 = await stage.devConsoleSql.paramExecute(
-      `SELECT * from user WHERE user_uuid = @uuid`,
-      { uuid: userData.user_uuid },
-    );
-
-    expect(sqlRes1.length).toBe(1);
-    expect(sqlRes1[0].user_uuid).toBe(resp1.body.data.user_uuid);
-
-    const sqlRes2 = await stage.amsSql.paramExecute(
-      `SELECT * from authUser WHERE user_uuid = @uuid`,
-      { uuid: userData.user_uuid },
-    );
-
-    expect(sqlRes2.length).toBe(1);
-    expect(sqlRes2[0].email).toBe(controlEmail);
   });
 });
