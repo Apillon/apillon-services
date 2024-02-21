@@ -181,6 +181,7 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 401,
         code: AmsErrorCode.USER_AUTH_TOKEN_IS_INVALID,
+        errorMessage: error.message,
       }).writeToMonitor({
         context,
         user_uuid: event?.user_uuid,

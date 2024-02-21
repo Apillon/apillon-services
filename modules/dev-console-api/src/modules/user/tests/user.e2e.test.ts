@@ -1,4 +1,4 @@
-import { generateJwtToken, JwtTokenType } from '@apillon/lib';
+import { generateJwtToken, JwtTokenType, parseJwtToken } from '@apillon/lib';
 import * as request from 'supertest';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { createTestUser, TestUser } from '@apillon/tests-lib';
@@ -331,5 +331,53 @@ describe('Auth tests', () => {
       .post('/users/login-kilt')
       .send({ token: tokenKilt });
     expect(resp.status).toBe(201);
+  });
+
+  // NOTE: Requires env variables APILLON_API_INTEGRATION_API_KEY and env.APILLON_API_INTEGRATION_API_SECRET
+  test('Kilt login: New user should be able to login', async () => {
+    const controlEmail = 'dims.okniv@kalmia.si';
+    const tokenKiltNew = generateJwtToken(
+      JwtTokenType.OAUTH_TOKEN,
+      { email: controlEmail },
+      '10min',
+    );
+
+    const resp1 = await request(stage.http)
+      .post('/users/login-kilt')
+      .send({ token: tokenKiltNew });
+    expect(resp1.status).toBe(201);
+    expect(resp1.body.data.token).toBeTruthy();
+    expect(resp1.body.data.user_uuid).toBeTruthy();
+
+    const userData = resp1.body.data;
+    const sqlRes1 = await stage.devConsoleSql.paramExecute(
+      `SELECT * from user WHERE user_uuid = @uuid`,
+      { uuid: userData.user_uuid },
+    );
+
+    expect(sqlRes1.length).toBe(1);
+    expect(sqlRes1[0].user_uuid).toBe(resp1.body.data.user_uuid);
+
+    const sqlRes2 = await stage.amsSql.paramExecute(
+      `SELECT * from authUser WHERE user_uuid = @uuid`,
+      { uuid: userData.user_uuid },
+    );
+
+    expect(sqlRes2.length).toBe(1);
+    expect(sqlRes2[0].email).toBe(controlEmail);
+  });
+
+  // NOTE: Requires env variables APILLON_API_INTEGRATION_API_KEY and env.APILLON_API_INTEGRATION_API_SECRET
+  test('Should be able to get OAuth session', async () => {
+    const resp = await request(stage.http).get('/users/oauth-session');
+    expect(resp.status).toBe(200);
+    expect(resp.body.data.sessionToken).toBeTruthy();
+    expect(typeof resp.body.data.sessionToken).toBe('string');
+
+    const tokenData = parseJwtToken(
+      JwtTokenType.AUTH_SESSION,
+      resp.body.data.sessionToken,
+    );
+    expect(tokenData.project_uuid).toBeTruthy();
   });
 });

@@ -521,7 +521,7 @@ export class UserService {
    * @returns Session info for the oauth module
    */
   async getOauthSession() {
-    const response = await axios.get(
+    const { data } = await axios.get(
       `${env.APILLON_API_URL}/auth/session-token`,
       {
         auth: {
@@ -530,7 +530,7 @@ export class UserService {
         },
       },
     );
-    return response.data;
+    return data.data;
   }
 
   /**
