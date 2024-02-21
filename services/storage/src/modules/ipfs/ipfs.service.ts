@@ -92,6 +92,15 @@ export class IPFSService {
     }
 
     console.info('Getting file from S3', event.fileUploadRequest.s3FileKey);
+
+    const tmpFile = await s3Client.get(
+      env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+      event.fileUploadRequest.s3FileKey,
+    );
+
+    console.info(tmpFile);
+    console.info('Body.toString()', await this.streamToString(tmpFile.Body));
+
     const file = await s3Client.get(
       env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
       event.fileUploadRequest.s3FileKey,
@@ -131,6 +140,15 @@ export class IPFSService {
       cidV1: filesOnIPFS.Hash,
       size: filesOnIPFS.Size,
     };
+  }
+
+  async streamToString(stream) {
+    const chunks = [];
+    return new Promise((resolve, reject) => {
+      stream.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+      stream.on('error', (err) => reject(err));
+      stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    });
   }
 
   /**
