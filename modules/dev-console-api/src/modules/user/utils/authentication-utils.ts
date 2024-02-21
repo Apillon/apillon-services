@@ -30,9 +30,9 @@ export async function registerUser(
   const tokenData = parseJwtToken(params.tokenType, params.token);
 
   const user = await createUser(tokenData, context);
-  const { email, walletAddress, refCode } = tokenData;
+  const { email, wallet, refCode } = tokenData;
 
-  if (walletAddress) {
+  if (wallet) {
     // If user has registered with wallet, generate a random password
     params.password = generateRandomCode(
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%',
@@ -60,7 +60,7 @@ export async function registerUser(
       user_uuid: user.user_uuid,
       email,
       password: params.password,
-      [isEVMWallet(walletAddress) ? 'evmWallet' : 'wallet']: walletAddress,
+      [isEVMWallet(wallet) ? 'evmWallet' : 'wallet']: wallet,
     });
 
     user.setUserRolesAndPermissionsFromAmsResponse(amsResponse);
