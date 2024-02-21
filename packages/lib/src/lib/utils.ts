@@ -138,7 +138,8 @@ export function dateToSqlString(date: Date): string {
   return date.toISOString().replace(/T/, ' ').replace(/Z/, '');
 }
 
-export function getFaker(): typeof import('@faker-js/faker').faker {
+// DO NOT SET RETURN TYPE AS IT WILL MESS WITH CI/CD BUILD!
+export function getFaker() {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   return require('@faker-js/faker').faker;
 }
