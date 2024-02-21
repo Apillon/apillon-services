@@ -101,6 +101,12 @@ export class IPFSService {
     console.info(tmpFile);
     console.info('Body.toString()', await this.streamToString(tmpFile.Body));
 
+    const tmpFilesOnIPFS = await this.kuboRpcApiClient.add({
+      content: 'A takle pa dela? Sranje eno!',
+    });
+
+    console.info('tmpFilesOnIPFS', tmpFilesOnIPFS);
+
     const file = await s3Client.get(
       env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
       event.fileUploadRequest.s3FileKey,
