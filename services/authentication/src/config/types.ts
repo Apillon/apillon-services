@@ -1,5 +1,5 @@
 import { VerificationKeyRelationship, DidUri } from '@kiltprotocol/types';
-import { IPublicKeyRecord, Proof } from '@kiltprotocol/vc-export';
+// import { IPublicKeyRecord } from '@kiltprotocol/vc-export';
 
 export enum DbTables {
   IDENTITY = 'identity',
@@ -153,10 +153,19 @@ export interface DidCreateOp {
 }
 
 // SECTION
+
+interface Proof {
+  type: string;
+  created?: string;
+  proofPurpose?: string;
+  [key: string]: any;
+}
+
 export interface ApillonSelfSignedProof extends Proof {
   type: typeof APILLON_SELF_SIGNED_PROOF_TYPE;
   proofPurpose: 'assertionMethod';
-  verificationMethod: IPublicKeyRecord['id'] | IPublicKeyRecord;
+  // verificationMethod: IPublicKeyRecord['id'] | IPublicKeyRecord;
+  verificationMethod: any;
   signature: string;
   challenge?: string;
 }

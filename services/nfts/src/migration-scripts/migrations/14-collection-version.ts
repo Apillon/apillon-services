@@ -22,6 +22,6 @@ export async function downgrade(
     ALTER TABLE \`${DbTables.COLLECTION}\`
     DROP COLUMN \`isAutoIncrement\`,
     DROP FOREIGN KEY \`fk_collection_contract_version\`,
-    DROP COLUMN \`contractVersion\`;
+    DROP COLUMN \`contractVersion_id\`;
   `);
 }

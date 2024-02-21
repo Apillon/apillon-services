@@ -112,7 +112,7 @@ describe('Authentication tests', () => {
       .send({ token });
 
     expect(response.status).toBe(201);
-    expect(response.body.data).toEqual(email);
+    expect(response.body.data.email).toEqual(email);
   });
 
   test('Expired token should not be verified', async () => {

@@ -10,7 +10,6 @@ import {
   ServiceName,
   writeLog,
 } from '@apillon/lib';
-import { CID } from 'ipfs-http-client';
 import {
   DbTables,
   FileStatus,
@@ -110,8 +109,8 @@ export async function storageBucketSyncFilesToIPFS(
         ipfsRes.ipfsDirectories,
       );
 
-      wrappingDirectory.CID = ipfsRes.parentDirCID.toV0().toString();
-      wrappingDirectory.CIDv1 = ipfsRes.parentDirCID.toV1().toString();
+      wrappingDirectory.CID = ipfsRes.parentDirCID;
+      wrappingDirectory.CIDv1 = ipfsRes.parentDirCID;
       await wrappingDirectory.update();
 
       for (const fur of files) {
@@ -132,8 +131,8 @@ export async function storageBucketSyncFilesToIPFS(
         bucket,
       );
       if (dir.exists()) {
-        dir.CID = ipfsDir.cid.toV0().toString();
-        dir.CIDv1 = ipfsDir.cid.toV1().toString();
+        dir.CID = ipfsDir.cid;
+        dir.CIDv1 = ipfsDir.cid;
         await dir.update();
       }
     }
@@ -159,8 +158,8 @@ export async function storageBucketSyncFilesToIPFS(
           if (existingFile.exists()) {
             //Update existing file
             existingFile.populate({
-              CID: file.CID.toV0().toString(),
-              CIDv1: file.CID.toV1().toString(),
+              CID: file.CID,
+              CIDv1: file.CID,
               s3FileKey: file.s3FileKey,
               name: file.fileName,
               contentType: file.contentType,
@@ -183,8 +182,8 @@ export async function storageBucketSyncFilesToIPFS(
             const tmpF = await new File({}, context)
               .populate({
                 file_uuid: file.file_uuid,
-                CID: file.CID.toV0().toString(),
-                CIDv1: file.CID.toV1().toString(),
+                CID: file.CID,
+                CIDv1: file.CID,
                 s3FileKey: file.s3FileKey,
                 name: file.fileName,
                 contentType: file.contentType,
@@ -255,7 +254,7 @@ export async function storageBucketSyncFilesToIPFS(
       wrappingDirectory.directory_uuid,
       DbTables.DIRECTORY,
     );
-    wrappedDirCid = ipfsRes.parentDirCID.toV0().toString();
+    wrappedDirCid = ipfsRes.parentDirCID;
   } else {
     //Generate directories
     await generateDirectoriesForFURs(context, directories, files, bucket);
@@ -426,7 +425,7 @@ export async function storageBucketSyncFilesToIPFS(
         await pinFileToCRUST(
           context,
           bucket.bucket_uuid,
-          CID.parse(transferedFile.CID),
+          transferedFile.CID,
           transferedFile.size,
           false,
           transferedFile.file_uuid,

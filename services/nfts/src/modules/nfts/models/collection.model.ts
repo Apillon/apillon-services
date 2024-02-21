@@ -379,6 +379,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.SELECT_DB,
     ],
     defaultValue: true,
+    fakeValue: true,
   })
   public isAutoIncrement: boolean;
 
