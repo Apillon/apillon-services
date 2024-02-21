@@ -40,7 +40,7 @@
     "@polkadot/keyring": "^10.1.9",
     "@polkadot/util": "^10.1.10",
     "@types/uuid": "^8.3.4",
-    "axios": "^1.2.0"
+    "axios": "^1.6.7"
   },
   "devDependencies": {
     "@apillon/tests-lib": "*",
