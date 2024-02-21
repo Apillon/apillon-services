@@ -245,8 +245,8 @@ export class AuthUser extends AdvancedSQLModel {
     const res = await this.db().paramExecute(
       `
       SELECT * FROM authUser
-      WHERE wallet = @wallet
-      OR evmWallet = @wallet
+      WHERE UPPER(wallet) = UPPER(@wallet)
+      OR UPPER(evmWallet) = UPPER(@wallet)
     `,
       { wallet },
       conn,
