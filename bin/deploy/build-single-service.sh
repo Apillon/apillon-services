@@ -72,6 +72,9 @@ fi
 echo "Instaling build dependencies"
 npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
 
+echo "Instalation of dependancies complete"
+npm ls
+
 if [ "$DB_MIGRATIONS" == "true" ]
 then
   # requires VPC access to DB and configuration from secret manager
