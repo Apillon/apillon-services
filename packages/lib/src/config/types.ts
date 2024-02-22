@@ -773,6 +773,8 @@ export enum CacheKeyPrefix {
   CONTRACT_VERSION = 'contract-version',
   CONTRACT_ABI = 'contract-abi',
   BLOCKCHAIN_ENDPOINT = 'blockchain-endpoint',
+
+  AIRDROP_TASKS = 'airdrop-tasks'
 }
 
 export enum CacheKeyTTL {

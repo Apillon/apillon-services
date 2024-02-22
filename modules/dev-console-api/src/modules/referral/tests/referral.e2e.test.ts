@@ -202,4 +202,15 @@ describe('Referral tests', () => {
       expect(response2.status).toBe(400);
     });
   });
+  
+  describe('Airdrop', () => {
+    test('User should be able to get his stats regarding airdrop rewards', async () => {
+      const response = await request(stage.http)
+        .get(`/referral/airdrop-tasks`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      console.log(response.body.data)
+    });
+  
+  });
 });

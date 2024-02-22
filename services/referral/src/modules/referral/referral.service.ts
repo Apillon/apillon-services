@@ -325,8 +325,9 @@ export class ReferralService {
     event: { user_uuid: string },
     context: ServiceContext,
   ) {
-    return await new UserAirdropTask({}, context).populateByUserUuid(
+    const stats =  await new UserAirdropTask({}, context).getNewStats(
       event.user_uuid,
     );
+    return stats.serialize(SerializeFor.SERVICE);
   }
 }
