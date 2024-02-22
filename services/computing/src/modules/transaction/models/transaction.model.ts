@@ -154,6 +154,13 @@ export class Transaction extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.INSERT_DB],
+  })
+  public transaction_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,
@@ -236,6 +243,7 @@ export class Transaction extends AdvancedSQLModel {
     return (await this.getContext().mysql.paramExecute(
       `
         SELECT t.id              AS transaction_id,
+               t.transaction_uuid AS transaction_uuid,
                t.transactionType AS transactionType,
                t.transactionHash AS transactionHash,
                t.nonce           AS transactionNonce,
@@ -265,6 +273,7 @@ export class Transaction extends AdvancedSQLModel {
     )) as {
       project_uuid: string;
       transaction_id: number;
+      transaction_uuid: string;
       transactionType: TransactionType;
       transactionHash: string;
       transactionNonce: string;

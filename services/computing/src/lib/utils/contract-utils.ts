@@ -20,6 +20,7 @@ import { ContractAbi } from '../../modules/computing/models/contractAbi.model';
 
 export async function deployPhalaContract(
   context: ServiceContext,
+  transaction_uuid: string,
   contract: Contract,
   contractAbi: ContractAbi,
   conn: PoolConnection,
@@ -47,6 +48,7 @@ export async function deployPhalaContract(
 
   const dbTxRecord = new Transaction({}, context);
   dbTxRecord.populate({
+    transaction_uuid,
     walletAddress: response.data.address,
     transactionType: TransactionType.DEPLOY_CONTRACT,
     contract_id: contract.id,
@@ -97,6 +99,7 @@ export async function depositToPhalaCluster(
 
 export async function transferContractOwnership(
   context: ServiceContext,
+  transaction_uuid: string,
   projectUuid: string,
   contract_id: number,
   contractAbi: { [key: string]: any },
@@ -127,6 +130,7 @@ export async function transferContractOwnership(
   ).createSubstrateTransaction(blockchainServiceRequest);
   const dbTxRecord = new Transaction(
     {
+      transaction_uuid,
       walletAddress: response.data.address,
       transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       contract_id: contract_id,
@@ -154,6 +158,7 @@ export async function encryptContent(
 
 export async function assignCidToNft(
   context: ServiceContext,
+  transaction_uuid: string,
   projectUuid: string,
   contract_id: number,
   contractAbi: { [key: string]: any },
@@ -186,6 +191,7 @@ export async function assignCidToNft(
   ).createSubstrateTransaction(blockchainServiceRequest);
   const dbTxRecord = new Transaction(
     {
+      transaction_uuid,
       walletAddress: response.data.address,
       transactionType: TransactionType.ASSIGN_CID_TO_NFT,
       contract_id: contract_id,
