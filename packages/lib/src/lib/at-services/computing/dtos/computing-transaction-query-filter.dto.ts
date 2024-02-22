@@ -10,4 +10,18 @@ export class ComputingTransactionQueryFilter extends BaseProjectQueryFilter {
     validators: [],
   })
   public contract_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public transactionType: number;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public transactionStatus: number;
 }

@@ -99,7 +99,12 @@ export class CreateContractDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
   })
   public nftChainRpcUrl: string;
 
@@ -107,12 +112,7 @@ export class CreateContractDto extends ModelBase {
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.COMPUTING_RESTRICT_TO_OWNER_NOT_PRESENT,
-      },
-    ],
+    defaultValue: true,
   })
   public restrictToOwner: boolean;
 }

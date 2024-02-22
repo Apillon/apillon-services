@@ -41,6 +41,12 @@ import { ContractAbi } from './models/contractAbi.model';
 import { ClusterWallet } from './models/cluster-wallet.model';
 
 export class ComputingService {
+  /**
+   * Creates a new computing contract with the given data
+   * @param {{ body: CreateContractDto }} params - Contract creation params
+   * @param {ServiceContext} context
+   * @returns {Contract}
+   */
   static async createContract(
     params: { body: CreateContractDto },
     context: ServiceContext,
@@ -56,7 +62,7 @@ export class ComputingService {
           throw await new ComputingCodeException({
             status: 404,
             code: ComputingErrorCode.BUCKET_NOT_FOUND,
-            context: context,
+            context,
             sourceFunction: 'createContract()',
             errorMessage: `Bucket with UUID ${bucket_uuid} not found.`,
           }).writeToMonitor({});
@@ -97,7 +103,7 @@ export class ComputingService {
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.DEPLOY_CONTRACT_ERROR,
-        context: context,
+        context,
         sourceFunction: 'createContract()',
         errorMessage: `Contract ABI not found for contract type ${contractType}.`,
       }).writeToMonitor({});
@@ -166,6 +172,12 @@ export class ComputingService {
     return contract.serialize(getSerializationStrategy(context));
   }
 
+  /**
+   * Returns a list of all contracts for a project
+   * @param {{ query: ContractQueryFilter }} event
+   * @param {ServiceContext} context
+   * @returns {Contract[]}
+   */
   static async listContracts(
     event: { query: ContractQueryFilter },
     context: ServiceContext,
@@ -176,8 +188,14 @@ export class ComputingService {
     ).getList(context, new ContractQueryFilter(event.query));
   }
 
+  /**
+   * Gets a contract by UUID
+   * @param {{ uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Contract}
+   */
   static async getContractByUuid(
-    event: { uuid: any },
+    event: { uuid: string },
     context: ServiceContext,
   ) {
     const contract = await new Contract({}, context).populateByUUID(event.uuid);
@@ -194,6 +212,12 @@ export class ComputingService {
     return contract.serialize(getSerializationStrategy(context));
   }
 
+  /**
+   * Gets list of the contract's transaction based on the query filter
+   * @param {{ query: ComputingTransactionQueryFilter }} event
+   * @param {ServiceContext} context
+   * @returns {Transaction[]}
+   */
   static async listTransactions(
     event: { query: ComputingTransactionQueryFilter },
     context: ServiceContext,
@@ -204,6 +228,11 @@ export class ComputingService {
     ).getList(context, new ComputingTransactionQueryFilter(event.query));
   }
 
+  /**
+   * Deposits funds from wallet to Phala cluster
+   * @param {{ body: DepositToClusterDto }} params - Contains cluster data
+   * @param {ServiceContext} context
+   */
   static async depositToPhalaCluster(
     params: { body: DepositToClusterDto },
     context: ServiceContext,
@@ -220,7 +249,7 @@ export class ComputingService {
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.DEPOSIT_TO_PHALA_CLUSTER_ERROR,
-        context: context,
+        context,
         sourceFunction,
         errorMessage: 'Error depositing to Phala cluster',
         details: e,
@@ -243,6 +272,12 @@ export class ComputingService {
     return { success: true };
   }
 
+  /**
+   * Transfers ownership of the computing contract to another address
+   * @param {{ body: TransferOwnershipDto }} param0 - Contains new owner address
+   * @param {ServiceContext} context
+   * @returns {{success: boolean}}
+   */
   static async transferContractOwnership(
     { body }: { body: TransferOwnershipDto },
     context: ServiceContext,
@@ -252,13 +287,13 @@ export class ComputingService {
     const contract = await new Contract({}, context).populateByUUID(
       body.contract_uuid,
     );
-    const sourceFunction = 'transferContractOwnership()';
+    const sourceFunction = 'ComputingService/transferContractOwnership()';
     contract.verifyStatusAndAccess(sourceFunction, context);
     await ComputingService.checkTransferConditions(
       context,
-      sourceFunction,
       contract,
       newOwnerAddress,
+      sourceFunction,
     );
 
     await contract.populateAbi();
@@ -275,7 +310,7 @@ export class ComputingService {
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.TRANSFER_CONTRACT_ERROR,
-        context: context,
+        context,
         sourceFunction,
         errorMessage: 'Error transferring contract ownership',
         details: e,
@@ -300,11 +335,17 @@ export class ComputingService {
     return { success: true };
   }
 
+  /**
+   * Check conditions if contract can be transferred
+   * @param {ServiceContext} context
+   * @param {Contract} contract
+   * @param {string} newOwnerAddress
+   */
   private static async checkTransferConditions(
     context: ServiceContext,
-    sourceFunction: string,
     contract: Contract,
     newOwnerAddress: string,
+    sourceFunction = 'ComputingService/transferContractOwnership',
   ) {
     if (
       [ContractStatus.TRANSFERRING, ContractStatus.TRANSFERRED].includes(
@@ -352,6 +393,12 @@ export class ComputingService {
     }
   }
 
+  /**
+   * Sends an encrypt request to the contract
+   * for a given content in the form of a string
+   * @param {{ body: EncryptContentDto }} param
+   * @param {ServiceContext} context
+   */
   static async encryptContent(
     { body }: { body: EncryptContentDto },
     context: ServiceContext,
@@ -375,7 +422,7 @@ export class ComputingService {
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.FAILED_TO_ENCRYPT_CONTENT,
-        context: context,
+        context,
         sourceFunction,
         errorMessage: 'Error encrypting content',
         details: e,
@@ -397,6 +444,11 @@ export class ComputingService {
     return { encryptedContent };
   }
 
+  /**
+   * Creates a mapping on the contract for which NFT token ID decrypts a file with a given CID
+   * @param {{ body: AssignCidToNft }} param
+   * @param {ServiceContext} context
+   */
   static async assignCidToNft(
     { body }: { body: AssignCidToNft },
     context: ServiceContext,
@@ -421,7 +473,7 @@ export class ComputingService {
       throw await new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.FAILED_TO_ASSIGN_CID_TO_NFT,
-        context: context,
+        context,
         sourceFunction,
         errorMessage: 'Error assigning CID to NFT',
         details: e,
@@ -447,6 +499,12 @@ export class ComputingService {
     return { success: true };
   }
 
+  /**
+   * List all cluster wallets for a given wallet
+   * @param {{ query: ClusterWalletQueryFilter }} event
+   * @param {ServiceContext} context
+   * @returns {ClusterWallet[]}
+   */
   static async listClusterWallets(
     event: { query: ClusterWalletQueryFilter },
     context: ServiceContext,

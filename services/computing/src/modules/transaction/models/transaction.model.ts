@@ -191,11 +191,9 @@ export class Transaction extends AdvancedSQLModel {
       { transactionHash },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async getContractTransactions(
