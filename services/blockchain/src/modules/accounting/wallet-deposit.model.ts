@@ -1,7 +1,6 @@
 import {
   AdvancedSQLModel,
   getQueryParams,
-  getTokenPriceUsd,
   PoolConnection,
   PopulateFrom,
   presenceValidator,
@@ -141,7 +140,6 @@ export class WalletDeposit extends AdvancedSQLModel {
     conn?: PoolConnection,
     validationErrorCallback?: (walletDeposit: WalletDeposit) => void,
   ) {
-    pricePerToken ||= await getTokenPriceUsd(wallet.token);
     const walletDeposit = new WalletDeposit(
       {
         wallet_id: wallet.id,

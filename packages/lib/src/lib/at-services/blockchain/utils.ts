@@ -43,7 +43,7 @@ function getTokenDecimalsFromChain(chainType: ChainType, chain: Chain) {
   return options[chainType]?.[chain] || null;
 }
 
-export async function getTokenPriceUsd(token: string) {
+export async function getTokenPriceUsd(token: string): Promise<number> {
   const networkTokenMap = {
     CRU: 'crust-network',
     ASTR: 'astar',
