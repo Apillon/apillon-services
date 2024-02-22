@@ -91,6 +91,10 @@ export class CreateContractDto extends ModelBase {
         resolver: ethAddressValidator(),
         code: ValidatorErrorCode.COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID,
       },
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
     ],
   })
   public nftContractAddress: string;
