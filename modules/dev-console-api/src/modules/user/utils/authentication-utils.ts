@@ -34,10 +34,7 @@ export async function registerUser(
 
   if (wallet) {
     // If user has registered with wallet, generate a random password
-    params.password = generateRandomCode(
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%',
-      15,
-    );
+    params.password = generateRandomCode(15);
   } else if (!params.password) {
     throw new CodeException({
       status: HttpStatus.UNPROCESSABLE_ENTITY,

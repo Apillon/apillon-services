@@ -133,16 +133,6 @@ export function decodeJwtToken(token: string) {
   return decode(token) as any;
 }
 
-export function generatePassword(length: number) {
-  const charset =
-    '@#$&*0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$&*0123456789abcdefghijklmnopqrstuvwxyz';
-  let password = '';
-  for (let i = 0, n = charset.length; i < length; ++i) {
-    password += charset.charAt(Math.floor(Math.random() * n));
-  }
-  return password;
-}
-
 export function dateToSqlString(date: Date): string {
   return date.toISOString().replace(/T/, ' ').replace(/Z/, '');
 }
@@ -196,7 +186,10 @@ export function isEVMWallet(walletAddress: string): boolean {
   return evmAddressRegex.test(walletAddress);
 }
 
-export function generateRandomCode(characters: string, length: number): string {
+export function generateRandomCode(
+  length: number,
+  characters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%',
+): string {
   let code = '';
   for (let i = 0; i < length; i++) {
     code += characters.charAt(Math.floor(Math.random() * characters.length));

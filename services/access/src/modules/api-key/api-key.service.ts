@@ -2,7 +2,6 @@ import {
   ApiKeyQueryFilterDto,
   CacheKeyPrefix,
   CreateApiKeyDto,
-  generatePassword,
   invalidateCacheKey,
   Lmas,
   LogType,
@@ -10,6 +9,7 @@ import {
   Scs,
   SerializeFor,
   ServiceName,
+  generateRandomCode,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { ApiKey } from './models/api-key.model';
@@ -110,7 +110,7 @@ export class ApiKeyService {
       context,
     );
 
-    const apiKeySecret = generatePassword(12);
+    const apiKeySecret = generateRandomCode(12);
     key.apiKeySecret = bcrypt.hashSync(apiKeySecret);
 
     try {
