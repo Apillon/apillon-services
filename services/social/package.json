@@ -43,6 +43,9 @@
     "tsconfig": "*",
     "@apillon/tests-lib": "*"
   },
+  "overrides": {
+    "ipfs-utils": "9.0.6"
+  },
   "jest": {
     "testTimeout": 1800000,
     "moduleFileExtensions": [
