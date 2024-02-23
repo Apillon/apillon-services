@@ -151,11 +151,21 @@ describe('Computing API tests', () => {
     });
 
     test('API should be able to list transactions for a specific computing contract', async () => {
-      const response = await request(stage.http)
+      let response = await request(stage.http)
         .get(`/computing/contracts/${contractUuid}/transactions`)
         .set('Authorization', authorization);
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBeGreaterThanOrEqual(1);
+
+      // List transactions only of a certain type
+      response = await request(stage.http)
+        .get(
+          `/computing/contracts/${contractUuid}/transactions?transactionType=1`,
+        )
+        .set('Authorization', authorization);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toEqual(1);
+      expect(response.body.data.items[0].transactionType).toEqual(1);
     });
 
     test('API should be able to encrypt content via a computing contract', async () => {
