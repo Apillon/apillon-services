@@ -305,7 +305,7 @@ export class Contract extends UuidSqlModel {
   public data: {
     nftContractAddress: string;
     nftChainRpcUrl: string;
-    restrictToOwner: string;
+    restrictToOwner: boolean;
     ipfsGatewayUrl: string;
     clusterId: string;
   };

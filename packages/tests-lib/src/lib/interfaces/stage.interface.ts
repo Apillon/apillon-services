@@ -25,4 +25,6 @@ export interface Stage {
   blockchainSql: MySql;
   socialContext: TestContext;
   socialSql: MySql;
+  computingContext: TestContext;
+  computingSql: MySql;
 }

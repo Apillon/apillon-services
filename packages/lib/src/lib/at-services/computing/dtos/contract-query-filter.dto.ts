@@ -19,13 +19,6 @@ export class ContractQueryFilter extends BaseQueryFilter {
   public project_uuid: string;
 
   @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
-  })
-  public contract_uuid: string;
-
-  @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],

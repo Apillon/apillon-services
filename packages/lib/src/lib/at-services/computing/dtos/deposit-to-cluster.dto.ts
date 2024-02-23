@@ -7,7 +7,7 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { numberSizeValidator } from '../../../validators';
-import { substrateAddressValidator } from '../validators/substrate-address-validator';
+import { substrateAddressValidator } from '../validators/computing-contract-validators';
 import { ChainPrefix } from '../../substrate/constants/chain-prefix';
 
 export class DepositToClusterDto extends ModelBase {

@@ -3,7 +3,7 @@ import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
-import { substrateAddressValidator } from '../validators/substrate-address-validator';
+import { substrateAddressValidator } from '../validators/computing-contract-validators';
 import { ChainPrefix } from '../../substrate/constants/chain-prefix';
 
 export class TransferOwnershipDto extends ModelBase {
