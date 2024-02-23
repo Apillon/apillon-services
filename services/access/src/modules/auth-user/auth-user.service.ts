@@ -12,6 +12,8 @@ import {
   UserWalletAuthDto,
   SqlModelStatus,
   env,
+  invalidateCacheKey,
+  CacheKeyPrefix,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AmsErrorCode } from '../../config/types';
@@ -377,14 +379,20 @@ export class AuthUserService {
       });
     }
 
-    // send log to monitoring service
-    await new Lmas().writeLog({
-      context,
-      logType: LogType.INFO,
-      message: 'AuthUser updated!',
-      location: 'AMS/UserService/updateAuthUser',
-      service: ServiceName.AMS,
-    });
+    await Promise.all([
+      // send log to monitoring service
+      new Lmas().writeLog({
+        context,
+        logType: LogType.INFO,
+        message: 'AuthUser updated!',
+        location: 'AMS/UserService/updateAuthUser',
+        service: ServiceName.AMS,
+      }),
+      // Invalidate auth user data cache
+      await invalidateCacheKey(
+        `${CacheKeyPrefix.AUTH_USER_DATA}:${authUser.user_uuid}`,
+      ),
+    ]);
 
     return authUser.serialize(SerializeFor.SERVICE);
   }
