@@ -61,12 +61,13 @@ describe('Referral tests', () => {
     test('User should be able to refer others', async () => {
       const token = generateJwtToken(JwtTokenType.USER_CONFIRM_EMAIL, {
         email: newUserData.email,
+        refCode,
       });
       const password = newUserData.password;
 
       const response = await request(stage.http)
         .post('/users/register')
-        .send({ token, password, refCode });
+        .send({ token, password });
       expect(response.status).toBe(201);
       expect(response.body.data.token).toBeTruthy();
       expect(response.body.data.user_uuid).toBeTruthy();
@@ -204,15 +205,14 @@ describe('Referral tests', () => {
       expect(response2.status).toBe(400);
     });
   });
-  
+
   describe('Airdrop', () => {
     test('User should be able to get his stats regarding airdrop rewards', async () => {
       const response = await request(stage.http)
         .get(`/referral/airdrop-tasks`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      console.log(response.body.data)
+      console.log(response.body.data);
     });
-  
   });
 });
