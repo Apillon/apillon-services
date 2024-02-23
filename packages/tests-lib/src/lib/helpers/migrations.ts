@@ -300,12 +300,15 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbStorageMigration.reset(),
       dbConfigMigration.reset(),
       dbAuthApiMigration.reset(),
-      dbReferralMigration.reset(),
       dbNftsMigration.reset(),
       dbComputingMigration.reset(),
       dbBcsMigration.reset(),
       dbSocialMigration.reset(),
     ]);
+    
+    // referral depends on other db!
+    await dbReferralMigration.reset();
+
     for (const res of migrationResults) {
       if (res.status === 'rejected') {
         throw new Error(`Migration reset rejected with: ${res.reason}`);
@@ -944,7 +947,7 @@ async function initSocialTestMigrations() {
   };
 
   if (!/(test|testing)/i.test(poolSocial.database)) {
-    throw new Error(`Blockchain: NO TEST DATABASE!`);
+    throw new Error(`Social: NO TEST DATABASE!`);
   }
 
   const pool = createPool(poolSocial);

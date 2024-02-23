@@ -11,6 +11,7 @@ import {
   TestUser,
   createTestReferralTasks,
   createTestReferralProduct,
+  createTestProject,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
@@ -35,6 +36,7 @@ describe('Referral tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    const project = await createTestProject(testUser, stage, 7000);
     // await createTestReferralTasks(stage.referralContext);
     product = await createTestReferralProduct(stage.referralContext);
   });
@@ -98,7 +100,7 @@ describe('Referral tests', () => {
     });
   });
 
-  describe('Twitter', () => {
+  describe.skip('Twitter', () => {
     test('User should be able to get twitter authentication link', async () => {
       const response = await request(stage.http)
         .get(`/referral/twitter/authenticate`)

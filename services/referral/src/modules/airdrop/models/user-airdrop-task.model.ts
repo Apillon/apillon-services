@@ -1,4 +1,5 @@
 import {
+  AppEnvironment,
   BaseSQLModel,
   Mongo,
   MongoCollections,
@@ -414,7 +415,10 @@ export class UserAirdropTask extends BaseSQLModel {
 
     await this.assignUserAirdropTasks(userStats);
 
-    const referrals = userStats.referrals.join(',').split(',');
+    const referrals =
+      userStats.referral_count > 0
+        ? userStats.referrals.join(',').split(',')
+        : [];
 
     if (referrals?.length && !isRecursive) {
       await Promise.all(
@@ -487,8 +491,12 @@ export class UserAirdropTask extends BaseSQLModel {
   // Assign tasks which are checked on mongoDB (API calls)
   private async assignApiTasks(apiKeys: any[]) {
     const mongo = new Mongo(
-      env.MONITORING_MONGO_SRV,
-      env.MONITORING_MONGO_DATABASE,
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.MONITORING_MONGO_SRV_TEST
+        : env.MONITORING_MONGO_SRV,
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.MONITORING_MONGO_DATABASE_TEST
+        : env.MONITORING_MONGO_DATABASE,
       4,
     );
     await mongo.connect();
