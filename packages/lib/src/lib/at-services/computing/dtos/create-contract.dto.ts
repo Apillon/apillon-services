@@ -8,7 +8,8 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { enumInclusionValidator } from '../../../validators';
-import { computingContractDataValidator } from '../validators/substrate-address-validator';
+import { computingContractDataValidator } from '../validators/computing-contract-validators';
+import { SchrodingerContractDataDto } from './schrodinger-contract-data-dto';
 
 export class CreateContractDto extends ModelBase {
   @prop({
@@ -97,11 +98,5 @@ export class CreateContractDto extends ModelBase {
       },
     ],
   })
-  contractData: SchrodingerContractData;
+  contractData: SchrodingerContractDataDto;
 }
-
-export type SchrodingerContractData = {
-  nftContractAddress: string;
-  nftChainRpcUrl: string;
-  restrictToOwner: boolean;
-};

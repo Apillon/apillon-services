@@ -1,8 +1,7 @@
 import { ChainPrefix } from '../../substrate/constants/chain-prefix';
 import { checkAddress } from '@polkadot/util-crypto';
-import { SchrodingerContractData } from '../dtos/create-contract.dto';
 import { ComputingContractType } from '../../../../config/types';
-import { isEVMWallet } from '../../../utils';
+import { SchrodingerContractDataDto } from '../dtos/schrodinger-contract-data-dto';
 
 export function substrateAddressValidator(chainPrefix: ChainPrefix) {
   return function (this: any, address: string): boolean {
@@ -17,14 +16,15 @@ export function substrateAddressValidator(chainPrefix: ChainPrefix) {
 }
 
 export function computingContractDataValidator() {
-  return function (this: any, data: SchrodingerContractData): boolean {
+  return async function (
+    this: any,
+    data: SchrodingerContractDataDto,
+  ): Promise<boolean> {
     switch (this.contractType) {
       case ComputingContractType.SCHRODINGER:
-        return (
-          !!data.nftChainRpcUrl &&
-          !!data.nftContractAddress &&
-          isEVMWallet(data.nftContractAddress)
-        );
+        const dto = new SchrodingerContractDataDto(data);
+        await dto.validate({ quiet: true });
+        return dto.isValid();
       default:
         return true;
     }
