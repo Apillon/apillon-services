@@ -1,10 +1,6 @@
 import { ModelBase, prop } from '../../../base-models/base';
-import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
-import {
-  ethAddressValidator,
-  presenceValidator,
-  stringLengthValidator,
-} from '@rawmodel/validators';
+import { integerParser, stringParser } from '@rawmodel/parsers';
+import { presenceValidator, stringLengthValidator } from '@rawmodel/validators';
 import {
   ComputingContractType,
   PopulateFrom,
@@ -82,41 +78,17 @@ export class CreateContractDto extends ModelBase {
   })
   public description: string;
 
+  /**
+   * Contract-specific data, may vary based on contract type
+   * Validated on contract creation based on type
+   */
   @prop({
-    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: ethAddressValidator(),
-        code: ValidatorErrorCode.COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID,
-      },
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
   })
-  public nftContractAddress: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-  })
-  public nftChainRpcUrl: string;
-
-  @prop({
-    parser: { resolver: booleanParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    defaultValue: true,
-  })
-  public restrictToOwner: boolean;
+  contractData: {
+    nftContractAddress: string;
+    nftChainRpcUrl: string;
+    restrictToOwner: boolean;
+  };
 }

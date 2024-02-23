@@ -8,6 +8,7 @@ import {
   CreateContractDto,
   DepositToClusterDto,
   EncryptContentDto,
+  isEVMWallet,
   Lmas,
   LogType,
   ProductCode,
@@ -56,6 +57,8 @@ export class ComputingService {
     context: ServiceContext,
   ) {
     console.log(`Creating computing contract: ${JSON.stringify(params.body)}`);
+
+    ComputingService.validateContractDataFields(params.body, context);
 
     let bucket_uuid = params.body.bucket_uuid;
     if (bucket_uuid) {
@@ -119,9 +122,9 @@ export class ComputingService {
       status: SqlModelStatus.ACTIVE,
       contractAbi_id: contractAbi.id,
       data: {
-        nftContractAddress: params.body.nftContractAddress,
-        nftChainRpcUrl: params.body.nftChainRpcUrl,
-        restrictToOwner: params.body.restrictToOwner,
+        nftContractAddress: params.body.contractData.nftContractAddress,
+        nftChainRpcUrl: params.body.contractData.nftChainRpcUrl,
+        restrictToOwner: params.body.contractData.restrictToOwner,
         ipfsGatewayUrl,
       },
     });
@@ -386,64 +389,6 @@ export class ComputingService {
   }
 
   /**
-   * Check conditions if contract can be transferred
-   * @param {ServiceContext} context
-   * @param {Contract} contract
-   * @param {string} newOwnerAddress
-   */
-  private static async checkTransferConditions(
-    context: ServiceContext,
-    contract: Contract,
-    newOwnerAddress: string,
-    sourceFunction = 'ComputingService/transferContractOwnership',
-  ) {
-    if (
-      [ContractStatus.TRANSFERRING, ContractStatus.TRANSFERRED].includes(
-        contract.contractStatus,
-      )
-    ) {
-      throw new ComputingCodeException({
-        status: 500,
-        code: ComputingErrorCode.CONTRACT_TRANSFERING_OR_ALREADY_TRANSFERED,
-        context,
-        sourceFunction,
-      });
-    }
-    if (contract.deployerAddress == newOwnerAddress) {
-      throw new ComputingCodeException({
-        status: 400,
-        code: ComputingErrorCode.INVALID_ADDRESS_FOR_TRANSFER_TO,
-        context,
-        sourceFunction,
-      });
-    }
-
-    const transactions = await new Transaction(
-      {},
-      context,
-    ).getContractTransactions(
-      contract.contract_uuid,
-      null,
-      TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-    );
-    if (
-      transactions.find(
-        (x) =>
-          x.transactionStatus == ComputingTransactionStatus.PENDING ||
-          x.transactionStatus == ComputingTransactionStatus.CONFIRMED ||
-          x.transactionStatus == ComputingTransactionStatus.WORKER_SUCCESS,
-      )
-    ) {
-      throw new ComputingCodeException({
-        status: 400,
-        code: ComputingErrorCode.TRANSACTION_FOR_TRANSFER_ALREADY_EXISTS,
-        context,
-        sourceFunction,
-      });
-    }
-  }
-
-  /**
    * Sends an encrypt request to the contract
    * for a given content in the form of a string
    * @param {{ body: EncryptContentDto }} param
@@ -584,5 +529,96 @@ export class ComputingService {
       context,
       new ClusterWalletQueryFilter(event.query),
     );
+  }
+
+  /**
+   * Check conditions if contract can be transferred
+   * @param {ServiceContext} context
+   * @param {Contract} contract
+   * @param {string} newOwnerAddress
+   */
+  private static async checkTransferConditions(
+    context: ServiceContext,
+    contract: Contract,
+    newOwnerAddress: string,
+    sourceFunction = 'ComputingService/transferContractOwnership',
+  ) {
+    if (
+      [ContractStatus.TRANSFERRING, ContractStatus.TRANSFERRED].includes(
+        contract.contractStatus,
+      )
+    ) {
+      throw new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.CONTRACT_TRANSFERING_OR_ALREADY_TRANSFERED,
+        context,
+        sourceFunction,
+      });
+    }
+    if (contract.deployerAddress == newOwnerAddress) {
+      throw new ComputingCodeException({
+        status: 400,
+        code: ComputingErrorCode.INVALID_ADDRESS_FOR_TRANSFER_TO,
+        context,
+        sourceFunction,
+      });
+    }
+
+    const transactions = await new Transaction(
+      {},
+      context,
+    ).getContractTransactions(
+      contract.contract_uuid,
+      null,
+      TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+    );
+    if (
+      transactions.find(
+        (x) =>
+          x.transactionStatus == ComputingTransactionStatus.PENDING ||
+          x.transactionStatus == ComputingTransactionStatus.CONFIRMED ||
+          x.transactionStatus == ComputingTransactionStatus.WORKER_SUCCESS,
+      )
+    ) {
+      throw new ComputingCodeException({
+        status: 400,
+        code: ComputingErrorCode.TRANSACTION_FOR_TRANSFER_ALREADY_EXISTS,
+        context,
+        sourceFunction,
+      });
+    }
+  }
+
+  private static async validateContractDataFields(
+    createContractDto: CreateContractDto,
+    context: ServiceContext,
+  ) {
+    switch (createContractDto.contractType) {
+      case ComputingContractType.SCHRODINGER: {
+        const nftContractAddress =
+          createContractDto.contractData?.nftContractAddress;
+        if (!nftContractAddress || !isEVMWallet(nftContractAddress)) {
+          throw new ComputingCodeException({
+            status: 422,
+            code: ComputingErrorCode.NFT_CONTRACT_ADDRESS_NOT_VALID,
+            context,
+            sourceFunction: 'createContract()',
+            errorMessage: `Invalid NFT contract address`,
+          });
+        } else if (!createContractDto.contractData?.nftChainRpcUrl) {
+          throw new ComputingCodeException({
+            status: 422,
+            code: ComputingErrorCode.NFT_RPC_URL_NOT_PRESENT,
+            context,
+            sourceFunction: 'createContract()',
+            errorMessage: `NFT contract RPC URL not valid.`,
+          });
+        }
+        // Default for this field is true
+        createContractDto.contractData.restrictToOwner ||= true;
+      }
+
+      // Add other cases here when new contract types are created
+    }
   }
 }
