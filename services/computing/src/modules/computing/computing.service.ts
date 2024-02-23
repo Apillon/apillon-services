@@ -10,8 +10,11 @@ import {
   EncryptContentDto,
   Lmas,
   LogType,
+  ProductCode,
   SerializeFor,
   ServiceName,
+  spendCreditAction,
+  SpendCreditDto,
   SqlModelStatus,
   StorageMicroservice,
   TransferOwnershipDto,
@@ -22,6 +25,7 @@ import {
   ComputingErrorCode,
   ComputingTransactionStatus,
   ContractStatus,
+  DbTables,
   TransactionType,
 } from '../../config/types';
 import {
@@ -125,30 +129,55 @@ export class ComputingService {
       }
     }
 
-    const conn = await context.mysql.start();
-    try {
-      await contract.insert(SerializeFor.INSERT_DB, conn);
-      await deployPhalaContract(context, contract, contractAbi, conn);
-      await context.mysql.commit(conn);
-    } catch (err) {
-      await context.mysql.rollback(conn);
-
-      throw await new ComputingCodeException({
-        status: 500,
-        code: ComputingErrorCode.DEPLOY_CONTRACT_ERROR,
-        context,
-        sourceFunction: 'createContract()',
-        errorMessage: `Error creating contract: ${err}`,
-        details: err,
-      }).writeToMonitor({
-        logType: LogType.ERROR,
+    const spendCredit = new SpendCreditDto(
+      {
+        project_uuid: contract.project_uuid,
+        product_id: ProductCode.COMPUTING_SCHRODINGER_CREATE,
+        referenceTable: DbTables.TRANSACTION,
+        referenceId: uuidV4(),
+        location: 'ComputingService.createContract',
         service: ServiceName.COMPUTING,
-        data: {
-          dto: params.body,
-          err,
-        },
-      });
-    }
+      },
+      context,
+    );
+    await spendCreditAction(
+      context,
+      spendCredit,
+      () =>
+        new Promise(async (resolve, _reject) => {
+          const conn = await context.mysql.start();
+          try {
+            await contract.insert(SerializeFor.INSERT_DB, conn);
+            await deployPhalaContract(
+              context,
+              spendCredit.referenceId,
+              contract,
+              contractAbi,
+              conn,
+            );
+            await context.mysql.commit(conn);
+            resolve(true);
+          } catch (err) {
+            await context.mysql.rollback(conn);
+
+            throw await new ComputingCodeException({
+              status: 500,
+              code: ComputingErrorCode.DEPLOY_CONTRACT_ERROR,
+              context,
+              sourceFunction: 'createContract()',
+              errorMessage: `Error creating contract: ${err}`,
+              details: err,
+            }).writeToMonitor({
+              logType: LogType.ERROR,
+              service: ServiceName.COMPUTING,
+              data: {
+                dto: params.body,
+                err,
+              },
+            });
+          }
+        }),
+    );
 
     await new Lmas().writeLog({
       context,
@@ -262,25 +291,46 @@ export class ComputingService {
     );
 
     await contract.populateAbi();
-    try {
-      await transferContractOwnership(
-        context,
-        contract.project_uuid,
-        contract.id,
-        contract.contractAbi.abi,
-        contract.contractAddress,
-        newOwnerAddress,
-      );
-    } catch (e: any) {
-      throw await new ComputingCodeException({
-        status: 500,
-        code: ComputingErrorCode.TRANSFER_CONTRACT_ERROR,
-        context: context,
-        sourceFunction,
-        errorMessage: 'Error transferring contract ownership',
-        details: e,
-      }).writeToMonitor({});
-    }
+
+    const spendCredit = new SpendCreditDto(
+      {
+        project_uuid: contract.project_uuid,
+        product_id: ProductCode.COMPUTING_SCHRODINGER_TRANSFER_OWNERSHIP,
+        referenceTable: DbTables.TRANSACTION,
+        referenceId: uuidV4(),
+        location: 'ComputingService.transferContractOwnership',
+        service: ServiceName.COMPUTING,
+      },
+      context,
+    );
+    await spendCreditAction(
+      context,
+      spendCredit,
+      () =>
+        new Promise(async (resolve, _reject) => {
+          try {
+            await transferContractOwnership(
+              context,
+              spendCredit.referenceId,
+              contract.project_uuid,
+              contract.id,
+              contract.contractAbi.abi,
+              contract.contractAddress,
+              newOwnerAddress,
+            );
+            resolve(true);
+          } catch (e: any) {
+            throw await new ComputingCodeException({
+              status: 500,
+              code: ComputingErrorCode.TRANSFER_CONTRACT_ERROR,
+              context: context,
+              sourceFunction,
+              errorMessage: 'Error transferring contract ownership',
+              details: e,
+            }).writeToMonitor({});
+          }
+        }),
+    );
 
     await new Lmas().writeLog({
       context,
@@ -407,26 +457,47 @@ export class ComputingService {
     );
     contract.verifyStatusAndAccess(sourceFunction, context);
     await contract.populateAbi();
-    try {
-      await assignCidToNft(
-        context,
-        contract.project_uuid,
-        contract.id,
-        contract.contractAbi.abi,
-        contract.contractAddress,
-        body.cid,
-        body.nftId,
-      );
-    } catch (e: any) {
-      throw await new ComputingCodeException({
-        status: 500,
-        code: ComputingErrorCode.FAILED_TO_ASSIGN_CID_TO_NFT,
-        context: context,
-        sourceFunction,
-        errorMessage: 'Error assigning CID to NFT',
-        details: e,
-      }).writeToMonitor({});
-    }
+
+    const spendCredit = new SpendCreditDto(
+      {
+        project_uuid: contract.project_uuid,
+        product_id: ProductCode.COMPUTING_SCHRODINGER_ASSIGN_CID_TO_NFT,
+        referenceTable: DbTables.TRANSACTION,
+        referenceId: uuidV4(),
+        location: 'ComputingService.transferContractOwnership',
+        service: ServiceName.COMPUTING,
+      },
+      context,
+    );
+    await spendCreditAction(
+      context,
+      spendCredit,
+      () =>
+        new Promise(async (resolve, _reject) => {
+          try {
+            await assignCidToNft(
+              context,
+              spendCredit.referenceId,
+              contract.project_uuid,
+              contract.id,
+              contract.contractAbi.abi,
+              contract.contractAddress,
+              body.cid,
+              body.nftId,
+            );
+            resolve(true);
+          } catch (e: any) {
+            throw await new ComputingCodeException({
+              status: 500,
+              code: ComputingErrorCode.FAILED_TO_ASSIGN_CID_TO_NFT,
+              context: context,
+              sourceFunction,
+              errorMessage: 'Error assigning CID to NFT',
+              details: e,
+            }).writeToMonitor({});
+          }
+        }),
+    );
 
     await new Lmas().writeLog({
       context,

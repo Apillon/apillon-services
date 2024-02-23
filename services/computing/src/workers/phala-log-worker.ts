@@ -9,6 +9,7 @@ import {
   LogType,
   PhalaClusterWalletDto,
   PhalaLogFilterDto,
+  refundCredit,
   ServiceName,
   SubstrateChain,
 } from '@apillon/lib';
@@ -105,6 +106,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
             transaction.contractAddress,
             transaction.contractData.clusterId,
             transaction.transaction_id,
+            transaction.transaction_uuid,
             transaction.transactionHash,
           );
         } else if (
@@ -119,6 +121,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
             transaction.contract_id,
             clusterWallet.walletAddress,
             transaction.transaction_id,
+            transaction.transaction_uuid,
             transaction.transactionType,
             transaction.transactionHash,
             transaction.transactionNonce,
@@ -161,6 +164,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
     contractAddress: string,
     clusterId: string,
     transaction_id: number,
+    transaction_uuid: string,
     transactionHash: string,
   ) {
     // TODO: since we cant filter logs by account cluster we are processing deploy transaction multiple times
@@ -226,6 +230,15 @@ export class PhalaLogWorker extends BaseQueueWorker {
       },
       this.context,
     ).insert();
+    if (!isInstantiated) {
+      await refundCredit(
+        this.context,
+        DbTables.TRANSACTION,
+        transaction_uuid,
+        'PhalaLogWorker.runExecutor.processContractTransaction',
+        ServiceName.COMPUTING,
+      );
+    }
   }
 
   protected async processContractTransaction(
@@ -233,6 +246,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
     contract_id: number,
     walletAddress: string,
     transaction_id: number,
+    transaction_uuid: string,
     transactionType: TransactionType,
     transactionHash: string,
     transactionNonce: string,
@@ -335,6 +349,15 @@ export class PhalaLogWorker extends BaseQueueWorker {
       },
       this.context,
     ).insert();
+    if (!workerSuccess) {
+      await refundCredit(
+        this.context,
+        DbTables.TRANSACTION,
+        transaction_uuid,
+        'PhalaLogWorker.runExecutor.processContractTransaction',
+        ServiceName.COMPUTING,
+      );
+    }
   }
 
   protected async getRecordFromLogs(
