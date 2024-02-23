@@ -29,9 +29,13 @@ import {
   TxDirection,
 } from '../config/types';
 import { SerMessage, SerMessageLog, SerMessageMessageOutput } from '@phala/sdk';
-import { ClusterTransactionLog } from '../modules/accounting/cluster-transaction-log.model';
+import {
+  ClusterTransactionLog
+} from '../modules/accounting/cluster-transaction-log.model';
 import { Keyring } from '@polkadot/api';
-import { ClusterWallet } from '../modules/computing/models/cluster-wallet.model';
+import {
+  ClusterWallet
+} from '../modules/computing/models/cluster-wallet.model';
 import { Contract } from '../modules/computing/models/contract.model';
 
 /**
@@ -502,7 +506,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
         ChainType.SUBSTRATE,
         SubstrateChain.PHALA,
       );
-      const message = `LOW WALLET BALANCE! ${formattedWalletAddress} ==> balance: ${balanceDecimal} / ${minBalanceDecimal}`;
+      const message = `LOW CLUSTER WALLET BALANCE! ${formattedWalletAddress} (${clusterId}) ==> balance: ${balanceDecimal} / ${minBalanceDecimal}`;
       await this.writeEventLog(
         {
           logType: LogType.WARN,
