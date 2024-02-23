@@ -81,8 +81,10 @@ describe('Computing API tests', () => {
         .send({
           name: 'My Computing Contract',
           contractType: 1,
-          nftContractAddress: '0xB601A99a1D1804c13780F9e53d661d8bEe6D3bF1',
-          nftChainRpcUrl: 'https://rpc.api.moonbeam.network/',
+          contractData: {
+            nftContractAddress: '0xB601A99a1D1804c13780F9e53d661d8bEe6D3bF1',
+            nftChainRpcUrl: 'https://rpc.api.moonbeam.network/',
+          },
         })
         .set('Authorization', authorization);
       expect(response.status).toBe(201);
@@ -101,8 +103,10 @@ describe('Computing API tests', () => {
           name: 'My Computing Contract 2',
           bucket_uuid,
           contractType: 1,
-          nftContractAddress: '0xB601A99a1D1804c13780F9e53d661d8bEe6D3bF1',
-          nftChainRpcUrl: 'https://rpc.api.moonbeam.network/',
+          contractData: {
+            nftContractAddress: '0xB601A99a1D1804c13780F9e53d661d8bEe6D3bF1',
+            nftChainRpcUrl: 'https://rpc.api.moonbeam.network/',
+          },
         })
         .set('Authorization', authorization);
       expect(response.status).toBe(201);
@@ -115,7 +119,6 @@ describe('Computing API tests', () => {
         .post(`/computing/contracts`)
         .send({
           contractType: 1,
-          nftChainRpcUrl: 'https://rpc.api.moonbeam.network/',
         })
         .set('Authorization', authorization);
 

@@ -8,7 +8,6 @@ import {
   CreateContractDto,
   DepositToClusterDto,
   EncryptContentDto,
-  isEVMWallet,
   Lmas,
   LogType,
   ProductCode,
@@ -57,10 +56,9 @@ export class ComputingService {
     context: ServiceContext,
   ) {
     console.log(`Creating computing contract: ${JSON.stringify(params.body)}`);
+    const createContractDto = new CreateContractDto(params.body);
 
-    ComputingService.validateContractDataFields(params.body, context);
-
-    let bucket_uuid = params.body.bucket_uuid;
+    let bucket_uuid = createContractDto.bucket_uuid;
     if (bucket_uuid) {
       try {
         await new StorageMicroservice(context).getBucket(bucket_uuid);
@@ -79,14 +77,14 @@ export class ComputingService {
       }
     } else {
       console.log(
-        `Creating bucket for computing contract with name ${params.body.name}.`,
+        `Creating bucket for computing contract with name ${createContractDto.name}.`,
       );
       const bucket = (
         await new StorageMicroservice(context).createBucket(
           new CreateBucketDto().populate({
-            project_uuid: params.body.project_uuid,
+            project_uuid: createContractDto.project_uuid,
             bucketType: 1,
-            name: `${params.body.name} bucket`,
+            name: `${createContractDto.name} bucket`,
           }),
         )
       ).data;
@@ -95,7 +93,7 @@ export class ComputingService {
 
     const ipfsCluster = (
       await new StorageMicroservice(context).getProjectIpfsCluster(
-        params.body.project_uuid,
+        createContractDto.project_uuid,
       )
     ).data;
     const ipfsGatewayUrl = ipfsCluster.ipfsGateway.endsWith('/')
@@ -116,18 +114,22 @@ export class ComputingService {
       }).writeToMonitor({});
     }
 
-    const contract = new Contract(params.body, context).populate({
+    const contract = new Contract(createContractDto, context).populate({
       contract_uuid: uuidV4(),
       bucket_uuid,
       status: SqlModelStatus.ACTIVE,
       contractAbi_id: contractAbi.id,
       data: {
-        nftContractAddress: params.body.contractData.nftContractAddress,
-        nftChainRpcUrl: params.body.contractData.nftChainRpcUrl,
-        restrictToOwner: params.body.contractData.restrictToOwner,
+        nftContractAddress: createContractDto.contractData.nftContractAddress,
+        nftChainRpcUrl: createContractDto.contractData.nftChainRpcUrl,
+        restrictToOwner: createContractDto.contractData.restrictToOwner,
         ipfsGatewayUrl,
       },
     });
+    // Set to true by default if not set
+    if (contract.data.restrictToOwner === null) {
+      contract.data.restrictToOwner = true;
+    }
 
     try {
       await contract.validate();
@@ -179,10 +181,7 @@ export class ComputingService {
             }).writeToMonitor({
               logType: LogType.ERROR,
               service: ServiceName.COMPUTING,
-              data: {
-                dto: params.body,
-                err,
-              },
+              data: { dto: createContractDto.serialize(), err },
             });
           }
         }),
@@ -361,7 +360,7 @@ export class ComputingService {
             throw await new ComputingCodeException({
               status: 500,
               code: ComputingErrorCode.TRANSFER_CONTRACT_ERROR,
-              context: context,
+              context,
               sourceFunction,
               errorMessage: 'Error transferring contract ownership',
               details: e,
@@ -487,7 +486,7 @@ export class ComputingService {
             throw await new ComputingCodeException({
               status: 500,
               code: ComputingErrorCode.FAILED_TO_ASSIGN_CID_TO_NFT,
-              context: context,
+              context,
               sourceFunction,
               errorMessage: 'Error assigning CID to NFT',
               details: e,
@@ -586,39 +585,6 @@ export class ComputingService {
         context,
         sourceFunction,
       });
-    }
-  }
-
-  private static async validateContractDataFields(
-    createContractDto: CreateContractDto,
-    context: ServiceContext,
-  ) {
-    switch (createContractDto.contractType) {
-      case ComputingContractType.SCHRODINGER: {
-        const nftContractAddress =
-          createContractDto.contractData?.nftContractAddress;
-        if (!nftContractAddress || !isEVMWallet(nftContractAddress)) {
-          throw new ComputingCodeException({
-            status: 422,
-            code: ComputingErrorCode.NFT_CONTRACT_ADDRESS_NOT_VALID,
-            context,
-            sourceFunction: 'createContract()',
-            errorMessage: `Invalid NFT contract address`,
-          });
-        } else if (!createContractDto.contractData?.nftChainRpcUrl) {
-          throw new ComputingCodeException({
-            status: 422,
-            code: ComputingErrorCode.NFT_RPC_URL_NOT_PRESENT,
-            context,
-            sourceFunction: 'createContract()',
-            errorMessage: `NFT contract RPC URL not valid.`,
-          });
-        }
-        // Default for this field is true
-        createContractDto.contractData.restrictToOwner ||= true;
-      }
-
-      // Add other cases here when new contract types are created
     }
   }
 }

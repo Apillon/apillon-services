@@ -8,6 +8,7 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { enumInclusionValidator } from '../../../validators';
+import { computingContractDataValidator } from '../validators/substrate-address-validator';
 
 export class CreateContractDto extends ModelBase {
   @prop({
@@ -85,10 +86,22 @@ export class CreateContractDto extends ModelBase {
   @prop({
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.COMPUTING_FIELD_NOT_PRESENT,
+      },
+      {
+        resolver: computingContractDataValidator(),
+        code: ValidatorErrorCode.COMPUTING_CONTRACT_DATA_NOT_VALID,
+      },
+    ],
   })
-  contractData: {
-    nftContractAddress: string;
-    nftChainRpcUrl: string;
-    restrictToOwner: boolean;
-  };
+  contractData: SchrodingerContractData;
 }
+
+export type SchrodingerContractData = {
+  nftContractAddress: string;
+  nftChainRpcUrl: string;
+  restrictToOwner: boolean;
+};
