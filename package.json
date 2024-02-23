@@ -40,6 +40,9 @@
     "ts-node": "^10.9.1",
     "turbo": "^1.7.4"
   },
+  "overrides": {
+    "ipfs-utils": "9.0.6"
+  },
   "engines": {
     "npm": ">=7.0.0",
     "node": ">=20.0.0"

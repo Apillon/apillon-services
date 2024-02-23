@@ -28,7 +28,7 @@ import {
   TransactionStatus,
   TransferCollectionDTO,
 } from '@apillon/lib';
-import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
+import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
   ServiceDefinition,
@@ -376,7 +376,7 @@ export class NftsService {
       {
         project_uuid: collection.project_uuid,
         product_id,
-        referenceTable: DbTables.COLLECTION,
+        referenceTable: DbTables.TRANSACTION,
         referenceId: uuidV4(),
         location: 'NftsService.transferCollectionOwnership',
         service: ServiceName.NFTS,

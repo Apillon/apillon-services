@@ -486,8 +486,8 @@ export class Player extends AdvancedSQLModel {
     while (!result.length) {
       // generate 5 length code
       result = generateRandomCode(
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
         5,
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
       );
       const player = await new Player({}, this.getContext()).populateByRefCode(
         result,

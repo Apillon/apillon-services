@@ -5,6 +5,7 @@ import {
   env,
   getTokenPriceUsd,
   LogType,
+  refundCredit,
   runWithWorkers,
   ServiceName,
   TransactionStatus,
@@ -19,6 +20,7 @@ import {
 import {
   ComputingTransactionStatus,
   ContractStatus,
+  DbTables,
   TransactionType,
   TxAction,
   TxDirection,
@@ -93,10 +95,20 @@ export class TransactionStatusWorker extends BaseQueueWorker {
         await transaction.update();
 
         // update contract if transaction was made on contract
-        if (
-          transaction.contract_id &&
-          transaction.transactionStatus === ComputingTransactionStatus.CONFIRMED
-        ) {
+        if (transaction.contract_id) {
+          if (
+            transaction.transactionStatus !==
+            ComputingTransactionStatus.CONFIRMED
+          ) {
+            await refundCredit(
+              this.context,
+              DbTables.TRANSACTION,
+              transaction.transaction_uuid,
+              'TransactionStatusWorker.runExecutor',
+              ServiceName.COMPUTING,
+            );
+            return;
+          }
           const contract = await new Contract({}, this.context).populateById(
             transaction.contract_id,
           );
