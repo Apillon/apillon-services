@@ -504,7 +504,11 @@ export class UserAirdropTask extends BaseSQLModel {
 
     const checkApiCalled = ($regex: RegExp) =>
       collection
-        .count({ apiKey: { $in: apiKeys }, url: { $regex, $options: 'i' } })
+        .count({
+          apiKey: { $in: apiKeys },
+          status: { $in: [200, 201] },
+          url: { $regex, $options: 'i' },
+        })
         .then((c) => c > 0);
 
     return {

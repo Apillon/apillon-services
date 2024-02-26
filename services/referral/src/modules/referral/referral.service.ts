@@ -154,13 +154,13 @@ export class ReferralService {
       });
     }
 
-    // Missing accepted terms
-    if (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) {
-      throw new ReferralCodeException({
-        code: ReferralErrorCode.MISSING_TERMS_ACCEPTANCE,
-        status: 400,
-      });
-    }
+    // Missing accepted terms - ignored since airdrop
+    // if (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) {
+    //   throw new ReferralCodeException({
+    //     code: ReferralErrorCode.MISSING_TERMS_ACCEPTANCE,
+    //     status: 400,
+    //   });
+    // }
 
     await player.populateSubmodels();
 

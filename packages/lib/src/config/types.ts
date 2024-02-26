@@ -775,6 +775,11 @@ export enum CacheKeyPrefix {
   BLOCKCHAIN_ENDPOINT = 'blockchain-endpoint',
 
   AIRDROP_TASKS = 'airdrop-tasks',
+
+  PAYMENTS_SUBSCRIPTION_PACKAGES = 'payments-subscription-packages',
+  PAYMENTS_CREDIT_PACKAGES = 'payments-credit-packages',
+  PRODUCT_PRICE_LIST = 'product-price-list',
+  PRODUCT_PRICE = 'product-price-list',
 }
 
 export enum CacheKeyTTL {
