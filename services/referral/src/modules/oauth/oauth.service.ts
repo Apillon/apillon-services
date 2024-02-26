@@ -9,7 +9,7 @@ import {
   ServiceName,
   TwitterOauthDto,
 } from '@apillon/lib';
-import { Injectable, HttpStatus } from '@nestjs/common';
+
 import axios from 'axios';
 import { ReferralErrorCode } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -22,7 +22,6 @@ import { Player } from '../referral/models/player.model';
 import { Task, TaskType } from '../referral/models/task.model';
 import { OauthTokenPair } from './models/oauth-token-pairs';
 
-@Injectable()
 export class OauthService {
   static async unlinkTwitter(_event: any, context: ServiceContext) {
     const player = await new Player({}, context).populateByUserUuid(
@@ -93,7 +92,7 @@ export class OauthService {
     if (!player.exists()) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
       });
     }
     const pair = await new OauthTokenPair({}, context).populateByToken(
@@ -108,7 +107,7 @@ export class OauthService {
     if (!loggedTokens) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.OAUTH_PROFILE_CREDENTIALS_INVALID,
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
         context,
         sourceFunction: `${this.constructor.name}/oauth`,
       });
@@ -122,7 +121,7 @@ export class OauthService {
     if (existingOauth.exists()) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.OAUTH_USER_ID_ALREADY_PRESENT,
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
         context,
         sourceFunction: `${this.constructor.name}/oauth`,
       });
@@ -166,7 +165,7 @@ export class OauthService {
     } catch (error) {
       await context.mysql.rollback(conn);
       throw new ReferralCodeException({
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
         code: ReferralErrorCode.ERROR_LINKING_TWITTER,
       });
     }
@@ -187,7 +186,7 @@ export class OauthService {
     if (!player.exists()) {
       throw new ReferralCodeException({
         code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
       });
     }
 
@@ -217,7 +216,7 @@ export class OauthService {
 
       if (!gitUser?.data?.id) {
         throw new ReferralCodeException({
-          status: HttpStatus.BAD_REQUEST,
+          status: 400,
           code: ReferralErrorCode.OAUTH_APP_DENIED_OR_SESSION_EXPIRED, // getting github user
         });
       }
@@ -229,7 +228,7 @@ export class OauthService {
       if (existingOauth.exists()) {
         throw new ReferralCodeException({
           code: ReferralErrorCode.OAUTH_USER_ID_ALREADY_PRESENT,
-          status: HttpStatus.BAD_REQUEST,
+          status: 400,
           context,
           sourceFunction: `${this.constructor.name}/oauth`,
         });
@@ -279,13 +278,13 @@ export class OauthService {
       } catch (error) {
         await context.mysql.rollback(conn);
         throw new ReferralCodeException({
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          status: 500,
           code: ReferralErrorCode.ERROR_LINKING_GITHUB,
         });
       }
     } else {
       throw new ReferralCodeException({
-        status: HttpStatus.BAD_REQUEST,
+        status: 400,
         code: ReferralErrorCode.OAUTH_APP_DENIED_OR_SESSION_EXPIRED, // getting access token
       });
     }
