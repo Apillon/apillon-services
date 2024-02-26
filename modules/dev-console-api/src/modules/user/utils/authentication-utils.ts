@@ -21,7 +21,27 @@ export async function registerUser(params: any, context: DevConsoleApiContext) {
   const tokenData = parseJwtToken(params.tokenType, params.token);
 
   const user = await createUser(tokenData, context);
-  const email = tokenData.email;
+  const { email, wallet, refCode } = tokenData;
+
+  if (wallet) {
+    // If user has registered with wallet, generate a random password
+    params.password = generateRandomCode(
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%',
+      15,
+    );
+  } else if (!params.password) {
+    throw new CodeException({
+      status: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: ValidatorErrorCode.USER_PASSWORD_NOT_PRESENT,
+      errorCodes: ValidatorErrorCode,
+    });
+  } else if (params.password.length < 12) {
+    throw new CodeException({
+      status: HttpStatus.UNPROCESSABLE_ENTITY,
+      code: ValidatorErrorCode.USER_PASSWORD_TOO_SHORT,
+      errorCodes: ValidatorErrorCode,
+    });
+  }
 
   const conn = await context.mysql.start();
   let amsResponse;
@@ -31,6 +51,7 @@ export async function registerUser(params: any, context: DevConsoleApiContext) {
       user_uuid: user.user_uuid,
       email,
       password: params.password,
+      [isEVMWallet(wallet) ? 'evmWallet' : 'wallet']: wallet,
     });
 
     user.setUserRolesAndPermissionsFromAmsResponse(amsResponse);
