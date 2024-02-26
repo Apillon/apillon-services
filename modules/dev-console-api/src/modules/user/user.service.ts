@@ -297,11 +297,14 @@ export class UserService {
   async walletConnect(userAuth: UserWalletAuthDto, context: Context) {
     const { wallet, isEvmWallet } = userAuth;
 
-    await this.validateWalletSignature(
-      userAuth,
-      'UserService/walletConnect',
-      context,
-    );
+    // Wallet is null if user has disconnected wallet, do not check signature
+    if (wallet !== null) {
+      await this.validateWalletSignature(
+        userAuth,
+        'UserService/walletConnect',
+        context,
+      );
+    }
 
     const resp = await new Ams(context).updateAuthUser({
       user_uuid: context.user.user_uuid,
@@ -571,22 +574,17 @@ export class UserService {
     const { message } = this.getAuthMessage(timestamp);
     const signatureValidityMinutes = 60;
 
+    const getSignatureData = isEvmWallet
+      ? new Identity(null).validateEvmWalletSignature
+      : new Identity(null).validatePolkadotWalletSignature;
     try {
-      const signatureData = isEvmWallet
-        ? new Identity(null).validateEvmWalletSignature({
-            message,
-            signature,
-            walletAddress: wallet,
-            timestamp,
-            signatureValidityMinutes,
-          })
-        : new Identity(null).validatePolkadotWalletSignature({
-            message,
-            signature,
-            walletAddress: wallet,
-            timestamp,
-            signatureValidityMinutes,
-          });
+      const signatureData = getSignatureData({
+        message,
+        signature,
+        walletAddress: wallet,
+        timestamp,
+        signatureValidityMinutes,
+      });
       if (!signatureData.isValid) {
         throw new Error('Signature is invalid.');
       }
