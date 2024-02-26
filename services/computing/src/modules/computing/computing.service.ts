@@ -30,6 +30,7 @@ import {
 } from '../../config/types';
 import {
   ComputingCodeException,
+  ComputingNotFoundException,
   ComputingValidationException,
 } from '../../lib/exceptions';
 import {
@@ -232,11 +233,7 @@ export class ComputingService {
     const contract = await new Contract({}, context).populateByUUID(event.uuid);
 
     if (!contract.exists()) {
-      throw new ComputingCodeException({
-        status: 500,
-        code: ComputingErrorCode.CONTRACT_DOES_NOT_EXIST,
-        context,
-      });
+      throw new ComputingNotFoundException();
     }
     contract.canAccess(context);
 
@@ -253,8 +250,17 @@ export class ComputingService {
     event: { query: ComputingTransactionQueryFilter },
     context: ServiceContext,
   ) {
+    const contract = await new Contract({}, context).populateByUUID(
+      event.query.contract_uuid,
+    );
+
+    if (!contract.exists()) {
+      throw new ComputingNotFoundException();
+    }
+    contract.canAccess(context);
+
     return await new Transaction(
-      { project_uuid: event.query.project_uuid },
+      { project_uuid: contract.project_uuid },
       context,
     ).getList(context, new ComputingTransactionQueryFilter(event.query));
   }
@@ -318,7 +324,13 @@ export class ComputingService {
     const contract = await new Contract({}, context).populateByUUID(
       body.contract_uuid,
     );
-    const sourceFunction = 'ComputingService/transferContractOwnership()';
+
+    if (!contract.exists()) {
+      throw new ComputingNotFoundException();
+    }
+    contract.canModify(context);
+
+    const sourceFunction = 'transferContractOwnership()';
     contract.verifyStatusAndAccess(sourceFunction, context);
     await ComputingService.checkTransferConditions(
       context,
@@ -401,6 +413,12 @@ export class ComputingService {
     const contract = await new Contract({}, context).populateByUUID(
       body.contract_uuid,
     );
+
+    if (!contract.exists()) {
+      throw new ComputingNotFoundException();
+    }
+    contract.canAccess(context);
+
     contract.verifyStatusAndAccess(sourceFunction, context);
 
     await contract.populateAbi();
@@ -451,6 +469,12 @@ export class ComputingService {
     const contract = await new Contract({}, context).populateByUUID(
       body.contract_uuid,
     );
+
+    if (!contract.exists()) {
+      throw new ComputingNotFoundException();
+    }
+    contract.canAccess(context);
+
     contract.verifyStatusAndAccess(sourceFunction, context);
     await contract.populateAbi();
 

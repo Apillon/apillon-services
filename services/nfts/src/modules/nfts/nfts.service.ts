@@ -46,6 +46,7 @@ import {
 import {
   NftsCodeException,
   NftsContractException,
+  NftsNotFoundException,
   NftsValidationException,
 } from '../../lib/exceptions';
 import { DeployCollectionWorker } from '../../workers/deploy-collection-worker';
@@ -305,11 +306,7 @@ export class NftsService {
     ).populateById(event.id);
 
     if (!collection.exists()) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.NFT_COLLECTION_DOES_NOT_EXIST,
-        context,
-      });
+      throw new NftsNotFoundException();
     }
     collection.canAccess(context);
 
@@ -326,11 +323,7 @@ export class NftsService {
     ).populateByUUID(event.uuid);
 
     if (!collection.exists()) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.NFT_COLLECTION_DOES_NOT_EXIST,
-        context,
-      });
+      throw new NftsNotFoundException();
     }
     collection.canAccess(context);
 

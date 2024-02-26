@@ -344,6 +344,7 @@ export class Contract extends UuidSqlModel {
 
   public async getList(context: ServiceContext, filter: ContractQueryFilter) {
     this.canAccess(context);
+
     const fieldMap = {
       id: 'c.id',
     };

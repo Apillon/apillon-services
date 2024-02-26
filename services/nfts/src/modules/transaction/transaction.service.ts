@@ -12,6 +12,7 @@ import { DbTables, NftsErrorCode } from '../../config/types';
 import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
 import {
   NftsCodeException,
+  NftsNotFoundException,
   NftsValidationException,
 } from '../../lib/exceptions';
 import { executeTransactionStatusWorker } from '../../scripts/serverless-workers/execute-transaction-status-worker';
@@ -65,11 +66,7 @@ export class TransactionService {
       context,
     ).populateByUUID(event.collection_uuid);
     if (!collection.exists()) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
-        context: context,
-      });
+      throw new NftsNotFoundException();
     }
     collection.canAccess(context);
 
