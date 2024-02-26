@@ -55,7 +55,10 @@ export class PhalaLogWorker extends BaseQueueWorker {
       {},
       this.context,
     ).getClusterWalletIds();
-
+    console.log(
+      `Creating run plan for ${clusterWalletIds.length} cluster wallets:`,
+      clusterWalletIds,
+    );
     return clusterWalletIds.map((w: { id: string }) => ({
       clusterWalletId: w.id,
     }));
