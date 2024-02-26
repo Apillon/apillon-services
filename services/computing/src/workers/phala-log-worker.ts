@@ -29,13 +29,9 @@ import {
   TxDirection,
 } from '../config/types';
 import { SerMessage, SerMessageLog, SerMessageMessageOutput } from '@phala/sdk';
-import {
-  ClusterTransactionLog
-} from '../modules/accounting/cluster-transaction-log.model';
+import { ClusterTransactionLog } from '../modules/accounting/cluster-transaction-log.model';
 import { Keyring } from '@polkadot/api';
-import {
-  ClusterWallet
-} from '../modules/computing/models/cluster-wallet.model';
+import { ClusterWallet } from '../modules/computing/models/cluster-wallet.model';
 import { Contract } from '../modules/computing/models/contract.model';
 
 /**
@@ -278,12 +274,19 @@ export class PhalaLogWorker extends BaseQueueWorker {
       transactionHash,
       data.records,
     )) as SerMessageMessageOutput;
+    console.log(
+      `Found 1 record for transaction with hash ${transactionHash}`,
+      record,
+    );
     if (!record) {
       return;
     }
     const recordWalletAddress = this.keyring.encodeAddress(record.origin, 30);
     // only process transactions for wallet in question
     if (recordWalletAddress !== walletAddress) {
+      console.log(
+        `Record wallet ${recordWalletAddress} does not match processed wallet ${walletAddress}.`,
+      );
       return;
     }
 
