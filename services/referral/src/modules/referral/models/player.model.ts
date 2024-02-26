@@ -10,6 +10,7 @@ import {
   SerializeFor,
   SqlModelStatus,
   getFaker,
+  generateRandomCode,
 } from '@apillon/lib';
 import { DbTables, ReferralErrorCode } from '../../../config/types';
 import { Task, TaskType } from './task.model';
@@ -481,23 +482,18 @@ export class Player extends AdvancedSQLModel {
   }
 
   public async generateCode() {
-    const characters =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
     let result = '';
     while (!result.length) {
-      const charactersLength = characters.length;
       // generate 5 length code
-      for (let i = 0; i < 5; i++) {
-        result += characters.charAt(
-          Math.floor(Math.random() * charactersLength),
-        );
-      }
-      const r = await new Player({}, this.getContext()).populateByRefCode(
+      result = generateRandomCode(
+        5,
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+      );
+      const player = await new Player({}, this.getContext()).populateByRefCode(
         result,
         true,
       );
-      if (r.exists()) {
+      if (player.exists()) {
         result = '';
       }
     }

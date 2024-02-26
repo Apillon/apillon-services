@@ -28,6 +28,15 @@ export async function streamToString(
   });
 }
 
+export async function streamToBuffer(stream: any) {
+  const chunks = [];
+  return new Promise((resolve, reject) => {
+    stream.on('data', (chunk: any) => chunks.push(Buffer.from(chunk)));
+    stream.on('error', (err: any) => reject(err));
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
+  });
+}
+
 /**
  * Runs tasks in parallel with workers
  *
@@ -124,21 +133,12 @@ export function decodeJwtToken(token: string) {
   return decode(token) as any;
 }
 
-export function generatePassword(length: number) {
-  const charset =
-    '@#$&*0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$&*0123456789abcdefghijklmnopqrstuvwxyz';
-  let password = '';
-  for (let i = 0, n = charset.length; i < length; ++i) {
-    password += charset.charAt(Math.floor(Math.random() * n));
-  }
-  return password;
-}
-
 export function dateToSqlString(date: Date): string {
   return date.toISOString().replace(/T/, ' ').replace(/Z/, '');
 }
 
-export function getFaker(): typeof import('@faker-js/faker').faker {
+// DO NOT SET RETURN TYPE AS IT WILL MESS WITH CI/CD BUILD!
+export function getFaker() {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   return require('@faker-js/faker').faker;
 }
@@ -179,4 +179,20 @@ export function sortObject(obj) {
           : obj[key];
       return result;
     }, {});
+}
+
+export function isEVMWallet(walletAddress: string): boolean {
+  const evmAddressRegex = /^(0x)?[0-9a-fA-F]{40}$/; // Regular expression for EVM addresses
+  return evmAddressRegex.test(walletAddress);
+}
+
+export function generateRandomCode(
+  length: number,
+  characters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%',
+): string {
+  let code = '';
+  for (let i = 0; i < length; i++) {
+    code += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return code;
 }
