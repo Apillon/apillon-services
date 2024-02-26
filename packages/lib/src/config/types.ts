@@ -841,6 +841,8 @@ export enum ProductService {
   HOSTING = 'HOSTING',
   NFT = 'NFT',
   IDENTITY = 'IDENTITY',
+  SOCIAL = 'SOCIAL',
+  COMPUTING = 'COMPUTING',
 }
 
 export enum ProductCategory {
@@ -849,6 +851,8 @@ export enum ProductCategory {
   MOONBEAM_NFT = 'MOONBEAM_NFT',
   ASTAR_NFT = 'ASTAR_NFT',
   KILT_IDENTITY = 'KILT_IDENTITY',
+  GRILLCHAT = 'GRILLCHAT',
+  SCHRODINGER = 'SCHRODINGER',
 }
 
 export enum EmailTemplate {
