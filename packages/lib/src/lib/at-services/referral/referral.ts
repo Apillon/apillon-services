@@ -122,4 +122,11 @@ export class ReferralMicroservice extends BaseService {
       email,
     });
   }
+
+  public async getAirdropTasks(user_uuid: string) {
+    return await this.callService({
+      eventName: ReferralEventType.GET_AIRDROP_TASKS,
+      user_uuid,
+    });
+  }
 }

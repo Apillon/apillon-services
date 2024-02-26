@@ -24,6 +24,7 @@ import { Twitter } from '../../lib/twitter';
 import { Product } from './models/product.model';
 import { PromoCodeUser } from '../promo-code/models/promo-code-user.model';
 import { PromoCode } from '../promo-code/models/promo-code.model';
+import { UserAirdropTask } from '../airdrop/models/user-airdrop-task.model';
 
 export class ReferralService {
   static async createPlayer(
@@ -312,5 +313,21 @@ export class ReferralService {
 
     await player.populateSubmodels();
     return { player: player.serialize(SerializeFor.PROFILE), retweeted };
+  }
+
+  /**
+   * Get completed airdrop tasks and total points for a user
+   *
+   * @param {user_uuid} - UUID of the user requesting the airdrop tasks
+   * @returns {UserAirdropTask} - UserAirdropTask model from Referral MS
+   */
+  static async getAirdropTasks(
+    event: { user_uuid: string },
+    context: ServiceContext,
+  ) {
+    const stats =  await new UserAirdropTask({}, context).getNewStats(
+      event.user_uuid,
+    );
+    return stats.serialize(SerializeFor.SERVICE);
   }
 }

@@ -52,6 +52,9 @@
     },
     "db-upgrade:ci": {
       "cache": false
+    },
+    "db-rebuild-test": {
+      "cache": false
     }
   }
 }
