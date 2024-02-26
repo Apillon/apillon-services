@@ -274,13 +274,10 @@ export class PhalaLogWorker extends BaseQueueWorker {
       transactionHash,
       data.records,
     )) as SerMessageMessageOutput;
-    console.log(
-      `Found 1 record for transaction with hash ${transactionHash}`,
-      record,
-    );
     if (!record) {
       return;
     }
+    console.log(`Record for transaction with hash ${transactionHash}:`, record);
     const recordWalletAddress = this.keyring.encodeAddress(record.origin, 30);
     // only process transactions for wallet in question
     if (recordWalletAddress !== walletAddress) {
