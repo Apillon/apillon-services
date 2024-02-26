@@ -3,6 +3,7 @@ import {
   BaseProjectQueryFilter,
   Context,
   ErrorCode,
+  LogType,
   Lmas,
   PopulateFrom,
   SerializeFor,
@@ -212,10 +213,10 @@ export class Space extends UuidSqlModel {
     );
     const sqlQuery = {
       qSelect: `
-        SELECT ${selectFields}, 
+        SELECT ${selectFields},
         (
-          SELECT COUNT(*) 
-          FROM \`${DbTables.POST}\` p 
+          SELECT COUNT(*)
+          FROM \`${DbTables.POST}\` p
           WHERE p.space_id = s.id
         ) as numOfPosts
         `,
@@ -266,7 +267,7 @@ export class Space extends UuidSqlModel {
         location: 'Space.createSpace',
         message: 'New social space(hub) created',
         service: ServiceName.SOCIAL,
-        data: this.serialize()
+        data: this.serialize(),
       });
     } catch (err) {
       await context.mysql.rollback(conn);
@@ -280,7 +281,7 @@ export class Space extends UuidSqlModel {
           err,
           space: this.serialize(),
         },
-      }).writeToMonitor({ sendAdminAlert: true });
+      }).writeToMonitor({ logType: LogType.ERROR, sendAdminAlert: true });
     }
   }
 }

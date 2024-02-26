@@ -251,6 +251,8 @@ export enum ReferralEventType {
   CONFIRM_RETWEET = 'confirm-retweet',
 
   ADD_PROMO_CODE_CREDITS = 'add-promo-code-credits',
+
+  GET_AIRDROP_TASKS = 'get-airdrop-tasks',
 }
 
 export enum SocialEventType {
@@ -771,6 +773,8 @@ export enum CacheKeyPrefix {
   CONTRACT_VERSION = 'contract-version',
   CONTRACT_ABI = 'contract-abi',
   BLOCKCHAIN_ENDPOINT = 'blockchain-endpoint',
+
+  AIRDROP_TASKS = 'airdrop-tasks'
 }
 
 export enum CacheKeyTTL {

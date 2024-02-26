@@ -29,6 +29,7 @@ export async function processEvent(
     [ReferralEventType.CONFIRM_RETWEET]: ReferralService.confirmRetweet,
     [ReferralEventType.ADD_PROMO_CODE_CREDITS]:
       PromoCodeService.addPromoCodeCredits,
+    [ReferralEventType.GET_AIRDROP_TASKS]: ReferralService.getAirdropTasks,
   };
 
   return await processors[event.eventName](event, context);

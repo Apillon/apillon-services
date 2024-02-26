@@ -13,6 +13,7 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    DROP INDEX \`idx_search_by_file_key\` ON \`${DbTables.FILE_UPLOAD_REQUEST}\`;
+    ALTER TABLE \`${DbTables.FILE_UPLOAD_REQUEST}\`
+    DROP INDEX \`idx_search_by_file_key\`;
   `);
 }

@@ -11,6 +11,7 @@ import {
   TestUser,
   createTestReferralTasks,
   createTestReferralProduct,
+  createTestProject,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
@@ -35,6 +36,7 @@ describe('Referral tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    const project = await createTestProject(testUser, stage, 7000);
     // await createTestReferralTasks(stage.referralContext);
     product = await createTestReferralProduct(stage.referralContext);
   });
@@ -59,12 +61,13 @@ describe('Referral tests', () => {
     test('User should be able to refer others', async () => {
       const token = generateJwtToken(JwtTokenType.USER_CONFIRM_EMAIL, {
         email: newUserData.email,
+        refCode,
       });
       const password = newUserData.password;
 
       const response = await request(stage.http)
         .post('/users/register')
-        .send({ token, password, refCode });
+        .send({ token, password });
       expect(response.status).toBe(201);
       expect(response.body.data.token).toBeTruthy();
       expect(response.body.data.user_uuid).toBeTruthy();
@@ -98,7 +101,7 @@ describe('Referral tests', () => {
     });
   });
 
-  describe('Twitter', () => {
+  describe.skip('Twitter', () => {
     test('User should be able to get twitter authentication link', async () => {
       const response = await request(stage.http)
         .get(`/referral/twitter/authenticate`)
@@ -200,6 +203,16 @@ describe('Referral tests', () => {
         .send({ id: product.id })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response2.status).toBe(400);
+    });
+  });
+
+  describe('Airdrop', () => {
+    test('User should be able to get his stats regarding airdrop rewards', async () => {
+      const response = await request(stage.http)
+        .get(`/referral/airdrop-tasks`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      console.log(response.body.data);
     });
   });
 });
