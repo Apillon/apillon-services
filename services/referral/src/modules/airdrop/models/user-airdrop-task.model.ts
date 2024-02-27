@@ -547,7 +547,7 @@ export class UserAirdropTask extends BaseSQLModel {
         WHERE user_uuid IN ( @referrals )
         AND totalPoints >= 15
       `,
-      referrals,
+      { referrals },
     );
 
     this.usersReferred = res[0]?.cnt || 0;
