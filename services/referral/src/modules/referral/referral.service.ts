@@ -30,7 +30,7 @@ export class ReferralService {
   static async createPlayer(
     event: { body: CreateReferralDto },
     context: ServiceContext,
-    serializedReturn = true
+    serializedReturn = true,
   ): Promise<any> {
     const user_uuid = context?.user?.user_uuid;
     const userEmail = context?.user?.email;
@@ -84,11 +84,7 @@ export class ReferralService {
       await ReferralService.createPromoCodeUser(refCode, userEmail, context);
     }
 
-    if (serializedReturn) {
-      return player.serialize(SerializeFor.PROFILE);;
-    } else {
-      return player;
-    }
+    return serializedReturn ? player.serialize(SerializeFor.PROFILE) : player;
   }
 
   static async createPromoCodeUser(
@@ -157,7 +153,11 @@ export class ReferralService {
       //   code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
       //   status: 400,
       // });
-      player = await ReferralService.createPlayer({body: null}, context, false);
+      player = await ReferralService.createPlayer(
+        { body: null },
+        context,
+        false,
+      );
     }
 
     // Missing accepted terms - ignored since airdrop
@@ -331,7 +331,7 @@ export class ReferralService {
     event: { user_uuid: string },
     context: ServiceContext,
   ) {
-    const stats =  await new UserAirdropTask({}, context).getNewStats(
+    const stats = await new UserAirdropTask({}, context).getNewStats(
       event.user_uuid,
     );
     return stats.serialize(SerializeFor.SERVICE);
