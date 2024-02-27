@@ -415,10 +415,22 @@ export class UserAirdropTask extends BaseSQLModel {
 
     await this.assignUserAirdropTasks(userStats);
 
+    console.log(
+      `REF LOG: userStats.refferal_count = ${userStats.referral_count}`,
+    );
+    console.log(`REF LOG:userStats.referrals = ${userStats.referrals}`);
+    console.log(
+      `REF LOG:userStats.referrals.join(',').split(',') = ${userStats.referrals
+        .join(',')
+        .split(',')}`,
+    );
+
     const referrals =
       userStats.referral_count > 0
         ? userStats.referrals.join(',').split(',')
         : [];
+
+    console.log(`REF LOG: referrals = ${referrals}`);
 
     if (referrals?.length && !isRecursive) {
       await Promise.all(
@@ -524,7 +536,7 @@ export class UserAirdropTask extends BaseSQLModel {
     if (!referrals?.length) {
       return;
     }
-
+    console.log(`REF LOG: referrals = ${referrals}`);
     const res = await this.db().paramExecute(
       `
         SELECT count(*) as cnt 
