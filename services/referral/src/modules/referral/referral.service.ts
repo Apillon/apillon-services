@@ -44,7 +44,7 @@ export class ReferralService {
         user_uuid,
         userEmail,
         refCode: await player.generateCode(),
-        status: SqlModelStatus.INCOMPLETE,
+        status: SqlModelStatus.ACTIVE,
       });
     }
     const referrer: Player = refCode
@@ -53,13 +53,13 @@ export class ReferralService {
 
     player.referrer_id = referrer?.id;
 
-    if (
-      (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) &&
-      event?.body?.termsAccepted
-    ) {
-      player.termsAccepted ||= new Date();
-      player.status = SqlModelStatus.ACTIVE;
-    }
+    // if (
+    //   (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) &&
+    //   event?.body?.termsAccepted
+    // ) {
+    //   player.termsAccepted ||= new Date();
+    //   player.status = SqlModelStatus.ACTIVE;
+    // }
 
     try {
       await player.validate();

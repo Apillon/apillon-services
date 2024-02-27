@@ -458,10 +458,12 @@ export class Player extends AdvancedSQLModel {
           '@',
           SUBSTRING_INDEX(ref.userEmail,'@',-1)
         ) AS name,
-      IF(ref.github_id,1,0) has_github,
-      ref.createTime AS joined,
-      user_uuid
-      FROM \`${DbTables.PLAYER}\` ref
+        IF(ref.github_id, 1, 0) AS has_github,
+        ref.createTime AS joined,
+        ref.user_uuid,
+        IF(uat.totalPoints >= 15, 1, 0) AS active
+      FROM ${DbTables.PLAYER} ref
+      LEFT JOIN ${DbTables.USER_AIRDROP_TASK} uat ON ref.user_uuid = uat.user_uuid
       WHERE ref.referrer_id = @player_id
       GROUP BY ref.id;
       `,
