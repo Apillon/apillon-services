@@ -44,17 +44,17 @@ export async function upgrade(
   };
 
   await queryFn(`
-  
+
     CREATE OR REPLACE VIEW \`v_userStats\` AS
-      SELECT 
+      SELECT
         email, user_uuid, COUNT(project_uuid) as project_count, JSON_ARRAYAGG(project_uuid) as project_uuids,
         IFNULL(SUM(sub_count), 0) as subscriptions , IFNULL(SUM(buy_count), 0) as buy_count, IFNULL(SUM(buy_amount), 0) as buy_amount, IFNULL(SUM(spend_count), 0) as spend_count, IFNULL(SUM(spend_amount), 0) as spend_amount,
         IFNULL(SUM(bucket_count), 0) as bucket_count, IFNULL(SUM(file_count), 0) as file_count, IFNULL(SUM(ipns_count), 0) as ipns_count, IFNULL(SUM(www_count), 0) as www_count, IFNULL(SUM(www_domain_count), 0) as www_domain_count,
-        IFNULL(SUM(nft_count), 0) as nft_count, IFNULL(SUM(social_count), 0) as social_count, IFNULL(SUM(comp_count), 0) as comp_count, IFNULL(SUM(id_count), 0) as id_count, 
+        IFNULL(SUM(nft_count), 0) as nft_count, IFNULL(SUM(social_count), 0) as social_count, IFNULL(SUM(comp_count), 0) as comp_count, IFNULL(SUM(id_count), 0) as id_count,
         IFNULL(SUM(key_count), 0) as key_count, JSON_ARRAYAGG(apiKeys) as apiKeys, IFNULL(SUM(coworker_count), 0) as coworker_count,
         IFNULL(SUM(referral_count), 0) as referral_count, JSON_ARRAYAGG(referrals) as referrals
       FROM (
-        SELECT DISTINCT 
+        SELECT DISTINCT
           u.email, u.user_uuid, p.project_uuid,
           sub_count , buy_count, buy_amount, spend_count, spend_amount,
           bucket_count, file_count, ipns_count, www_count, www_domain_count,
@@ -67,49 +67,49 @@ export async function upgrade(
         LEFT JOIN ${databases.consoleApiDb}.project p
           ON p.id = pu.project_id
         LEFT JOIN (
-          SELECT COUNT(*) as bucket_count, project_uuid 
-          FROM ${databases.storageDb}.bucket 
-          WHERE bucketType = 1 
-          AND status = 5 
+          SELECT COUNT(*) as bucket_count, project_uuid
+          FROM ${databases.storageDb}.bucket
+          WHERE bucketType = 1
+          AND status = 5
           GROUP BY project_uuid
         ) as b
         ON b.project_uuid = p.project_uuid
         LEFT JOIN (
           SELECT COUNT(*) as file_count, f.project_uuid
           FROM ${databases.storageDb}.file f
-          JOIN ${databases.storageDb}.bucket b 
+          JOIN ${databases.storageDb}.bucket b
           ON b.id = f.bucket_id
           WHERE b.bucketType = 1
-          AND f.status = 5 
+          AND f.status = 5
           GROUP BY f.project_uuid
         ) as f
         ON f.project_uuid = p.project_uuid
         LEFT JOIN (
-          SELECT COUNT(*) as ipns_count, project_uuid 
-          FROM ${databases.storageDb}.ipns 
-          WHERE status = 5 
+          SELECT COUNT(*) as ipns_count, project_uuid
+          FROM ${databases.storageDb}.ipns
+          WHERE status = 5
           GROUP BY project_uuid
         ) as ipns
         ON ipns.project_uuid = p.project_uuid
         LEFT JOIN (
-          SELECT COUNT(*) as www_count, SUM(IF(IFNULL(domain, '') <> '', 1, 0)) as www_domain_count, project_uuid 
-          FROM ${databases.storageDb}.website 
-          WHERE status = 5 
+          SELECT COUNT(*) as www_count, SUM(IF(IFNULL(domain, '') <> '', 1, 0)) as www_domain_count, project_uuid
+          FROM ${databases.storageDb}.website
+          WHERE status = 5
           GROUP BY project_uuid
         ) as www
         ON www.project_uuid = p.project_uuid
         LEFT JOIN (
-          SELECT COUNT(*) as nft_count, project_uuid 
-          FROM ${databases.nftsDb}.collection 
-          WHERE status = 5 
+          SELECT COUNT(*) as nft_count, project_uuid
+          FROM ${databases.nftsDb}.collection
+          WHERE status = 5
           AND collectionStatus = 3
           GROUP BY project_uuid
         ) as nft
         ON nft.project_uuid = p.project_uuid
         LEFT JOIN (
-          SELECT COUNT(*) as sub_count, project_uuid 
-          FROM ${databases.configDb}.subscription 
-          WHERE status = 5 
+          SELECT COUNT(*) as sub_count, project_uuid
+          FROM ${databases.configDb}.subscription
+          WHERE status = 5
           AND expiresOn > NOW()
           GROUP BY project_uuid
         ) as subs
@@ -119,45 +119,45 @@ export async function upgrade(
             SUM(IF(direction = 1 AND product_id IS null, 1, 0)) as buy_count,
             SUM(IF(direction = 1 AND product_id IS null, amount, 0)) as buy_amount,
             SUM(IF(direction = 2, 1, 0)) as spend_count,
-            SUM(IF(direction = 2, amount, 0)) as spend_amount, project_uuid 
-          FROM ${databases.configDb}.creditTransaction   
-          where referenceTable NOT IN ('project', 'promo_code', 'manually_added')   
+            SUM(IF(direction = 2, amount, 0)) as spend_amount, project_uuid
+          FROM ${databases.configDb}.creditTransaction
+          where referenceTable NOT IN ('project', 'promo_code', 'manually_added')
           GROUP BY project_uuid
         ) as trans
         ON trans.project_uuid = p.project_uuid
         LEFT JOIN (
-          SELECT COUNT(*) as social_count, project_uuid 
-          FROM ${databases.socialDb}.space 
+          SELECT COUNT(*) as social_count, project_uuid
+          FROM ${databases.socialDb}.space
           WHERE status = 5
           GROUP BY project_uuid
         ) as social
         ON social.project_uuid = p.project_uuid
         LEFT JOIN (
-          SELECT COUNT(*) as comp_count, project_uuid 
-          FROM ${databases.computeDb}.contract 
+          SELECT COUNT(*) as comp_count, project_uuid
+          FROM ${databases.computeDb}.contract
           WHERE contractStatus = 3
           GROUP BY project_uuid
         ) as comp
         ON comp.project_uuid = p.project_uuid
         LEFT JOIN (
-          SELECT COUNT(*) as id_count, project_uuid 
+          SELECT COUNT(*) as id_count, email
           FROM ${databases.authDb}.identity
           WHERE state = 'attested'
-          GROUP BY project_uuid
+          GROUP BY email
         ) as id
-        ON id.project_uuid = p.project_uuid
+        ON id.email = u.email
         LEFT JOIN (
-          SELECT COUNT(*) as key_count, JSON_ARRAYAGG(apiKey) as apiKeys, project_uuid 
+          SELECT COUNT(*) as key_count, JSON_ARRAYAGG(apiKey) as apiKeys, project_uuid
           FROM ${databases.accessDb}.apiKey
           WHERE status = 5
           GROUP BY project_uuid
         ) as apikey
         ON apikey.project_uuid = p.project_uuid
         LEFT JOIN (
-          SELECT COUNT(*) as coworker_count, project_id 
-          FROM ${databases.consoleApiDb}.project_user 
+          SELECT COUNT(*) as coworker_count, project_id
+          FROM ${databases.consoleApiDb}.project_user
           WHERE role_id <> 10
-          AND status = 5 
+          AND status = 5
           GROUP BY project_id
         ) as coworker
         ON coworker.project_id = p.id
