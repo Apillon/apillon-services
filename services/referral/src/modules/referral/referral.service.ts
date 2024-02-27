@@ -157,7 +157,7 @@ export class ReferralService {
       //   code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
       //   status: 400,
       // });
-      player = await this.createPlayer({body: null}, context, false);
+      player = await ReferralService.createPlayer({body: null}, context, false);
     }
 
     // Missing accepted terms - ignored since airdrop

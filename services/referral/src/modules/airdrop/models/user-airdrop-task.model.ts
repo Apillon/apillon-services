@@ -425,10 +425,13 @@ export class UserAirdropTask extends BaseSQLModel {
         .split(',')}`,
     );
 
-    const referrals =
-      userStats.referral_count > 0
-        ? userStats.referrals.join(',').split(',')
-        : [];
+    const referrals = [
+      ...new Set(
+        userStats.referral_count > 0
+          ? userStats.referrals.join(',').split(',')
+          : [],
+      ),
+    ];
 
     console.log(`REF LOG: referrals = ${referrals}`);
 
@@ -541,7 +544,7 @@ export class UserAirdropTask extends BaseSQLModel {
       `
         SELECT count(*) as cnt 
         FROM ${DbTables.USER_AIRDROP_TASK}
-        WHERE user_uuid IN (@referrals)
+        WHERE user_uuid IN ( @referrals )
         AND totalPoints >= 15
       `,
       referrals,
