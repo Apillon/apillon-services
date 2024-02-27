@@ -12,6 +12,7 @@ import {
 import { booleanParser, stringParser, integerParser } from '@rawmodel/parsers';
 import { DbTables, ReferralErrorCode } from '../../../config/types';
 import { UserStats, taskPoints } from './user-stats';
+import dns from 'node:dns';
 
 export class UserAirdropTask extends BaseSQLModel {
   public readonly tableName = DbTables.USER_AIRDROP_TASK;
@@ -396,6 +397,15 @@ export class UserAirdropTask extends BaseSQLModel {
       await this.assignReferredUsers(referrals);
     }
 
+    const domains = [
+      ...new Set(
+        userStats.www_domain_count > 0
+          ? userStats.domains.join(',').split(',')
+          : [],
+      ),
+    ];
+    await this.checkLinkedDomains(domains);
+
     this.recalculateTotalPoints();
     await this.insertOrUpdate();
     console.info('Finished assigning airdrop tasks');
@@ -440,7 +450,7 @@ export class UserAirdropTask extends BaseSQLModel {
       fileUploaded: stat.file_count > 0,
       ipnsCreated: stat.ipns_count > 0,
       websiteCreated: stat.www_count > 0,
-      domainLinked: stat.www_domain_count > 0,
+      domainLinked: false, // Checked later with DNS resolve
       nftCollectionCreated: stat.nft_count > 0,
       onSubscriptionPlan: stat.subscriptions > 0,
       grillChatCreated: stat.social_count > 0,
@@ -449,7 +459,7 @@ export class UserAirdropTask extends BaseSQLModel {
       collaboratorAdded: stat.coworker_count > 0,
       creditsPurchased: stat.buy_count > 0,
       creditsSpent: stat.spend_amount,
-      userReferred: 0,
+      userReferred: 0, // Populated later
       ...(await this.assignApiTasks(stat.apiKeys.join(',').split(','))),
     });
   }
@@ -502,5 +512,29 @@ export class UserAirdropTask extends BaseSQLModel {
     );
 
     this.usersReferred = res[0]?.cnt || 0;
+  }
+
+  // Verify that user has linked webiste DNS record to Apillon hosting
+  async checkLinkedDomains(domains: string[]) {
+    if (!domains?.length) {
+      return;
+    }
+
+    const validIps = ['52.19.92.40', '63.35.144.25', '35.244.158.129'];
+
+    // Replace prefixes for DNS lookup
+    domains = domains.map((domain) =>
+      domain.replace('www.', '').replace('http://', '').replace('https://', ''),
+    );
+
+    for (const domain of domains) {
+      dns.lookup(domain, {}, (err, address) => {
+        if (err) {
+          console.error(`Error resolving DNS domain: ${err}`);
+        } else if (validIps.includes(address)) {
+          return (this.domainLinked = true);
+        }
+      });
+    }
   }
 }
