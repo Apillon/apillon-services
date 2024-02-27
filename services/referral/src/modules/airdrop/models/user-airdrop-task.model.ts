@@ -11,32 +11,8 @@ import {
 } from '@apillon/lib';
 import { booleanParser, stringParser, integerParser } from '@rawmodel/parsers';
 import { DbTables, ReferralErrorCode } from '../../../config/types';
+import { UserStats, taskPoints } from './user-stats';
 
-interface UserStats {
-  email: string;
-  user_uuid: string;
-  project_count: number;
-  project_uuids: string[];
-  subscriptions: number;
-  buy_count: number;
-  buy_amount: number;
-  spend_count: number;
-  spend_amount: number;
-  bucket_count: number;
-  file_count: number;
-  ipns_count: number;
-  www_count: number;
-  www_domain_count: number;
-  nft_count: number;
-  social_count: number;
-  comp_count: number;
-  id_count: number;
-  key_count: number;
-  apiKeys: string[][];
-  coworker_count: number;
-  referral_count: number;
-  referrals: string[][];
-}
 export class UserAirdropTask extends BaseSQLModel {
   public readonly tableName = DbTables.USER_AIRDROP_TASK;
 
@@ -339,29 +315,6 @@ export class UserAirdropTask extends BaseSQLModel {
   })
   public totalPoints: number;
 
-  // Define a mapping for tasks to points
-  taskPoints = {
-    register: 10,
-    projectCreated: 1,
-    bucketCreated: 1,
-    fileUploaded: 1,
-    ipnsCreated: 1,
-    websiteCreated: 1,
-    domainLinked: 10,
-    nftCollectionCreated: 10,
-    onSubscriptionPlan: 20,
-    creditsPurchased: 5,
-    grillChatCreated: 1,
-    computingContractCreated: 0,
-    kiltIdentityCreated: 10,
-    collaboratorAdded: 1,
-    usersReferred: 2,
-    websiteUploadedViaApi: 5,
-    identitySdkUsed: 2,
-    fileUploadedViaApi: 5,
-    nftMintedApi: 5,
-  };
-
   exists(): boolean {
     return !!this.user_uuid;
   }
@@ -406,9 +359,7 @@ export class UserAirdropTask extends BaseSQLModel {
       SELECT * FROM v_userStats
       WHERE user_uuid = @user_uuid
     `,
-      {
-        user_uuid,
-      },
+      { user_uuid },
     );
 
     const userStats = res[0] as UserStats;
@@ -437,9 +388,9 @@ export class UserAirdropTask extends BaseSQLModel {
 
     if (referrals?.length && !isRecursive) {
       await Promise.all(
-        referrals.map((x) => {
-          new UserAirdropTask({}, this.getContext()).getNewStats(x, true);
-        }),
+        referrals.map((x) =>
+          new UserAirdropTask({}, this.getContext()).getNewStats(x, true),
+        ),
       );
 
       await this.assignReferredUsers(referrals);
@@ -463,9 +414,9 @@ export class UserAirdropTask extends BaseSQLModel {
       if (task === 'creditsSpent') {
         taskPoint = Math.floor(this.creditsSpent / 3000);
       } else if (task === 'usersReferred') {
-        taskPoint = this.usersReferred * this.taskPoints[task];
+        taskPoint = this.usersReferred * taskPoints[task];
       } else if (isCompleted) {
-        taskPoint = this.taskPoints[task] || 0;
+        taskPoint = taskPoints[task] || 0;
       }
       console.log(`${taskPoint} awarded to user ${this.user_uuid} for ${task}`);
       points += taskPoint;
@@ -476,7 +427,7 @@ export class UserAirdropTask extends BaseSQLModel {
     return points;
   }
 
-  private async assignUserAirdropTasks(stat: UserStats): Promise<void> {
+  async assignUserAirdropTasks(stat: UserStats): Promise<void> {
     if (!stat.project_count) {
       return;
     }
@@ -535,14 +486,14 @@ export class UserAirdropTask extends BaseSQLModel {
   }
 
   // Add total points based on users they have referred which meet totalPoints criteria
-  private async assignReferredUsers(referrals: string[]) {
+  async assignReferredUsers(referrals: string[]) {
     if (!referrals?.length) {
       return;
     }
     console.log(`REF LOG: referrals = ${referrals}`);
     const res = await this.db().paramExecute(
       `
-        SELECT count(*) as cnt 
+        SELECT count(*) as cnt
         FROM ${DbTables.USER_AIRDROP_TASK}
         WHERE user_uuid IN ( @referrals )
         AND totalPoints >= 15

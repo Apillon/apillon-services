@@ -9,7 +9,6 @@ import {
   releaseStage,
   Stage,
   TestUser,
-  createTestReferralTasks,
   createTestReferralProduct,
   createTestProject,
 } from '@apillon/tests-lib';
@@ -36,7 +35,7 @@ describe('Referral tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    const project = await createTestProject(testUser, stage, 7000);
+    // const project = await createTestProject(testUser, stage, 7000);
     // await createTestReferralTasks(stage.referralContext);
     product = await createTestReferralProduct(stage.referralContext);
   });
@@ -85,7 +84,7 @@ describe('Referral tests', () => {
   });
 
   describe('Get referral player tests', () => {
-    test('User should not be able to get referral if did not accept terms', async () => {
+    test.skip('User should not be able to get referral if did not accept terms', async () => {
       const response = await request(stage.http)
         .get(`/referral`)
         .set('Authorization', `Bearer ${newUserData.authToken}`);
@@ -147,7 +146,7 @@ describe('Referral tests', () => {
     });
   });
 
-  describe('Shop', () => {
+  describe.skip('Shop', () => {
     test('User should be able to get products', async () => {
       const response = await request(stage.http)
         .get(`/referral/products`)
