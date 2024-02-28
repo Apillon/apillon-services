@@ -59,7 +59,7 @@ export function startDevServer(
     });
   });
 
-  server.listen(port, () => {
+  server.listen(port, '127.0.0.1', () => {
     console.log(
       `${serviceName}: Socket server listening for connection requests on socket localhost:${port}`,
     );

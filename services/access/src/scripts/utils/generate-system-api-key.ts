@@ -4,7 +4,7 @@ import {
   CreateApiKeyDto,
   DefaultApiKeyRole,
   env,
-  generatePassword,
+  generateRandomCode,
   MySql,
   SerializeFor,
 } from '@apillon/lib';
@@ -75,7 +75,7 @@ export async function run() {
 
   const key: ApiKey = new ApiKey({ ...payload, apiKey: uuidV4() }, context);
 
-  const apiKeySecret = generatePassword(12);
+  const apiKeySecret = generateRandomCode(12);
   key.apiKeySecret = bcrypt.hashSync(apiKeySecret);
 
   try {

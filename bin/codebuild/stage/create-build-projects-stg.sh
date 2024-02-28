@@ -37,6 +37,9 @@ aws codebuild create-webhook --cli-input-json file://auth-webhook-stg.json --pro
 aws codebuild create-project --cli-input-json file://computing-config-stg.json --profile apillon
 aws codebuild create-webhook --cli-input-json file://computing-webhook-stg.json --profile apillon
 
+aws codebuild create-project --cli-input-json file://social-config-stg.json --profile apillon
+aws codebuild create-webhook --cli-input-json file://social-webhook-stg.json --profile apillon
+
 # FRONTEND:
 aws codebuild create-project --cli-input-json file://apillon-app-config-stg.json --profile apillon
 aws codebuild create-webhook --cli-input-json file://apillon-app-webhook-stg.json --profile apillon

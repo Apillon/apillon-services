@@ -3,8 +3,8 @@ import {
   AttachedServiceType,
   CreateApiKeyDto,
   DefaultApiKeyRole,
-  generatePassword,
   SerializeFor,
+  generateRandomCode,
 } from '@apillon/lib';
 import { TestContext } from './context';
 import { v4 as uuidV4 } from 'uuid';
@@ -51,7 +51,7 @@ export async function generateSystemApiKey(
 
   const key: ApiKey = new ApiKey({ ...payload, apiKey: uuidV4() }, context);
 
-  const apiKeySecret = generatePassword(12);
+  const apiKeySecret = generateRandomCode(12);
   key.apiKeySecret = bcrypt.hashSync(apiKeySecret);
 
   try {

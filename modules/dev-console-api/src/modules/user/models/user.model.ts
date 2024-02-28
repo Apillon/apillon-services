@@ -278,6 +278,13 @@ export class User extends AdvancedSQLModel {
     return this;
   }
 
+  public setWalletsFromAmsResponse(amsResponse: any) {
+    const data = amsResponse?.data || amsResponse;
+
+    this.wallet = data.wallet;
+    this.evmWallet = data.evmWallet;
+  }
+
   public async listProjects(user_uuid: string, filter: BaseQueryFilter) {
     const fieldMap = { id: 'u.id' };
     const { params, filters } = getQueryParams(

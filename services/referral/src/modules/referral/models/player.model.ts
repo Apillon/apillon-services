@@ -10,6 +10,7 @@ import {
   SerializeFor,
   SqlModelStatus,
   getFaker,
+  generateRandomCode,
 } from '@apillon/lib';
 import { DbTables, ReferralErrorCode } from '../../../config/types';
 import { Task, TaskType } from './task.model';
@@ -263,7 +264,9 @@ export class Player extends AdvancedSQLModel {
     serializable: [SerializeFor.ADMIN, SerializeFor.PROFILE],
     validators: [],
   })
-  public referrals: any;
+  // Offers autocomplete for existing fields of Player model,
+  // with ability to pass in other arbitrary fields because of custom SQL query fields
+  public referrals: (this & { [x: string]: any })[];
 
   /**
    * Populates model fields by loading the document with the provided user id from the database.
@@ -289,12 +292,9 @@ export class Player extends AdvancedSQLModel {
       conn,
     );
 
-    if (data && data.length) {
-      this.populate(data[0], PopulateFrom.DB);
-      return this;
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async populateSubmodels() {
@@ -458,9 +458,12 @@ export class Player extends AdvancedSQLModel {
           '@',
           SUBSTRING_INDEX(ref.userEmail,'@',-1)
         ) AS name,
-        IF(ref.github_id,1,0) has_github,
-        ref.createTime AS joined
-      FROM \`${DbTables.PLAYER}\` ref
+        IF(ref.github_id, 1, 0) AS has_github,
+        ref.createTime AS joined,
+        ref.user_uuid,
+        IF(uat.totalPoints >= 15, 1, 0) AS active
+      FROM ${DbTables.PLAYER} ref
+      LEFT JOIN ${DbTables.USER_AIRDROP_TASK} uat ON ref.user_uuid = uat.user_uuid
       WHERE ref.referrer_id = @player_id
       GROUP BY ref.id;
       `,
@@ -481,23 +484,18 @@ export class Player extends AdvancedSQLModel {
   }
 
   public async generateCode() {
-    const characters =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
     let result = '';
     while (!result.length) {
-      const charactersLength = characters.length;
       // generate 5 length code
-      for (let i = 0; i < 5; i++) {
-        result += characters.charAt(
-          Math.floor(Math.random() * charactersLength),
-        );
-      }
-      const r = await new Player({}, this.getContext()).populateByRefCode(
+      result = generateRandomCode(
+        5,
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+      );
+      const player = await new Player({}, this.getContext()).populateByRefCode(
         result,
         true,
       );
-      if (r.exists()) {
+      if (player.exists()) {
         result = '';
       }
     }

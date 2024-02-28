@@ -10,6 +10,16 @@ import { setupTest } from '../../../../test/helpers/setup';
 import * as request from 'supertest';
 import { ProductCategory, ProductService, SqlModelStatus } from '@apillon/lib';
 
+/*
+ * NOTE: These tests require the following env variables to be filled:
+ * STRIPE_WEBHOOK_SECRET
+ * STRIPE_SECRET_TEST
+ * MAILERLITE_API_KEY
+ * POLKADOT_RPC_URL
+ * NOWPAYMENTS_API_KEY
+ * IPN_SECRET_KEY
+ * IPN_CALLBACK_URL
+ */
 describe('Payments controller e2e tests', () => {
   let stage: Stage;
 
@@ -36,6 +46,19 @@ describe('Payments controller e2e tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(typeof response.body.data).toBe('string'); // session URL response
+    });
+
+    test('Create crypto credit session url success', async () => {
+      const response = await request(stage.http)
+        .post('/payments/crypto/payment')
+        .set('Authorization', `Bearer ${testUser.token}`)
+        .send({
+          project_uuid: testProject.project_uuid,
+          package_id: 1,
+          returnUrl: 'https://apillon.io',
+        });
+      expect(response.status).toBe(201);
+      expect(typeof response.body.data.invoice_url).toBe('string'); // session URL response
     });
 
     test('Create credit session url failure', async () => {
@@ -141,7 +164,7 @@ describe('Payments controller e2e tests', () => {
   describe('Product pricelist tests', () => {
     test('Get all product prices', async () => {
       const response = await request(stage.http)
-        .get('/payments/product')
+        .get('/payments/products/price-list')
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       const products = response.body.data.items;
@@ -157,7 +180,7 @@ describe('Payments controller e2e tests', () => {
 
     test('Get filtered product pricelist', async () => {
       let response = await request(stage.http)
-        .get(`/payments/product?service=${ProductService.NFT}`)
+        .get(`/payments/products/price-list?service=${ProductService.NFT}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       let products = response.body.data.items;
@@ -168,7 +191,9 @@ describe('Payments controller e2e tests', () => {
       });
 
       response = await request(stage.http)
-        .get(`/payments/product?category=${ProductCategory.WEBSITE}`)
+        .get(
+          `/payments/products/price-list?category=${ProductCategory.WEBSITE}`,
+        )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       products = response.body.data.items;
@@ -181,7 +206,7 @@ describe('Payments controller e2e tests', () => {
 
     test('Get a single product', async () => {
       const response = await request(stage.http)
-        .get(`/payments/product/1`)
+        .get(`/payments/products/1/price`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
 

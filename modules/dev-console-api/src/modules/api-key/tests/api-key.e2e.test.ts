@@ -52,6 +52,7 @@ describe('API key tests', () => {
     expect(response.body.data.id).toBeTruthy();
     expect(response.body.data.apiKey).toBeTruthy();
     expect(response.body.data.apiKeySecret).toBeTruthy();
+    expect(response.body.data.apiKeySecret).toHaveLength(12);
 
     const ap: ApiKey = await new ApiKey({}, stage.amsContext).populateById(
       response.body.data.id,

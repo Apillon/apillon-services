@@ -161,11 +161,10 @@ export class Ams extends BaseService {
     };
   }
 
-  public async loginWithWallet(authData: UserWalletAuthDto, message: string) {
+  public async loginWithWallet(authData: UserWalletAuthDto) {
     const data = {
       eventName: AmsEventType.USER_WALLET_LOGIN,
       authData,
-      message,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
