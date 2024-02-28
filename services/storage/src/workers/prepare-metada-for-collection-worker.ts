@@ -164,7 +164,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             metadataFUR.s3FileKey,
           ))
         ) {
-          //NOTE: Define flow, what happen in this case. My gues - we should probably throw error
+          //NOTE: Define flow, what happen in this case. My guess - we should probably throw error
           return;
         }
         const file = await s3Client.get(

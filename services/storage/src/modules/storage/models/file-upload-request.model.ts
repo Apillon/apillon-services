@@ -246,6 +246,17 @@ export class FileUploadRequest extends AdvancedSQLModel {
   })
   public size: number;
 
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    validators: [],
+  })
+  public url: string;
+
   /**
    * ASYNC canAccess function
    * @param context
