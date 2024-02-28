@@ -404,7 +404,10 @@ export class UserAirdropTask extends BaseSQLModel {
           : [],
       ),
     ];
-    await this.checkLinkedDomains(domains);
+
+    if (domains?.length && !isRecursive) {
+      await this.checkLinkedDomains(domains);
+    }
 
     this.recalculateTotalPoints();
     await this.insertOrUpdate();
