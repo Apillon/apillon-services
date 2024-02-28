@@ -22,6 +22,7 @@ export interface UserStats {
   coworker_count: number;
   referral_count: number;
   referrals: string[][];
+  domains: string[][];
 }
 
 // Define a mapping for tasks to points

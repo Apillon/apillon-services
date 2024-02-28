@@ -38,9 +38,10 @@ async function main() {
 
   await Promise.all(
     userStats.map((stat: UserStats) =>
-      assignReferredUsers(
+      checkReferralsAndDomains(
         stat.user_uuid,
         stat.referrals.join(',').split(','),
+        stat.domains.join(',').split(','),
         context,
       ),
     ),
@@ -63,27 +64,25 @@ async function assignUserAirdropTasks(stat: UserStats): Promise<void> {
   // Populate tasks for user based on their data in the database
   // from each of their projects
   await airdropTasks.assignUserAirdropTasks(stat);
-
   airdropTasks.recalculateTotalPoints();
   await airdropTasks.insertOrUpdate();
 }
 
 // Add total points based on users they have referred which meet totalPoints criteria
-async function assignReferredUsers(
+async function checkReferralsAndDomains(
   user_uuid: string,
   referrals: string[],
+  domains: string[],
   context: ServiceContext,
 ) {
-  if (!referrals?.length) {
-    return;
-  }
-
   const airdropTasks = await new UserAirdropTask(
     {},
     context,
   ).populateByUserUuid(user_uuid);
 
   await airdropTasks.assignReferredUsers(referrals);
+  await airdropTasks.checkLinkedDomains(domains);
+
   airdropTasks.recalculateTotalPoints();
   await airdropTasks.insertOrUpdate();
 }

@@ -1,5 +1,4 @@
 import { AppEnvironment, env } from '@apillon/lib';
-import { DbTables } from '../../config/types';
 
 export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
@@ -52,14 +51,14 @@ export async function upgrade(
         IFNULL(SUM(bucket_count), 0) as bucket_count, IFNULL(SUM(file_count), 0) as file_count, IFNULL(SUM(ipns_count), 0) as ipns_count, IFNULL(SUM(www_count), 0) as www_count, IFNULL(SUM(www_domain_count), 0) as www_domain_count,
         IFNULL(SUM(nft_count), 0) as nft_count, IFNULL(SUM(social_count), 0) as social_count, IFNULL(SUM(comp_count), 0) as comp_count, IFNULL(SUM(id_count), 0) as id_count,
         IFNULL(SUM(key_count), 0) as key_count, JSON_ARRAYAGG(apiKeys) as apiKeys, IFNULL(SUM(coworker_count), 0) as coworker_count,
-        IFNULL(SUM(referral_count), 0) as referral_count, JSON_ARRAYAGG(referrals) as referrals
+        IFNULL(SUM(referral_count), 0) as referral_count, JSON_ARRAYAGG(referrals) as referrals, JSON_ARRAYAGG(domains) as domains
       FROM (
         SELECT DISTINCT
           u.email, u.user_uuid, p.project_uuid,
           sub_count , buy_count, buy_amount, spend_count, spend_amount,
           bucket_count, file_count, ipns_count, www_count, www_domain_count,
           nft_count, social_count, comp_count, id_count,
-          key_count, apiKeys, coworker_count, referral_count, referrals
+          key_count, apiKeys, coworker_count, referral_count, referrals, domains
         FROM ${databases.consoleApiDb}.user u
         LEFT JOIN ${databases.consoleApiDb}.project_user pu
           ON pu.user_id = u.id
@@ -92,8 +91,9 @@ export async function upgrade(
         ) as ipns
         ON ipns.project_uuid = p.project_uuid
         LEFT JOIN (
-          SELECT COUNT(*) as www_count, SUM(IF(IFNULL(domain, '') <> '', 1, 0)) as www_domain_count, project_uuid
-          FROM ${databases.storageDb}.website
+          SELECT COUNT(*) as www_count, SUM(IF(IFNULL(domain, '') <> '', 1, 0)) as www_domain_count,
+          JSON_ARRAYAGG(w.domain) as domains, project_uuid
+          FROM ${databases.storageDb}.website w
           WHERE status = 5
           GROUP BY project_uuid
         ) as www
@@ -116,8 +116,8 @@ export async function upgrade(
         ON subs.project_uuid = p.project_uuid
         LEFT JOIN (
           SELECT
-            SUM(IF(direction = 1 AND product_id IS null, 1, 0)) as buy_count,
-            SUM(IF(direction = 1 AND product_id IS null, amount, 0)) as buy_amount,
+            SUM(IF(direction = 1 AND product_id IS null AND referenceTable = 'invoice', 1, 0)) as buy_count,
+            SUM(IF(direction = 1 AND product_id IS null AND referenceTable = 'invoice', amount, 0)) as buy_amount,
             SUM(IF(direction = 2, 1, 0)) as spend_count,
             SUM(IF(direction = 2, amount, 0)) as spend_amount, project_uuid
           FROM ${databases.configDb}.creditTransaction
