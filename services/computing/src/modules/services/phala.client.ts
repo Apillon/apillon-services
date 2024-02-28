@@ -8,6 +8,7 @@ import { Contract } from '../computing/models/contract.model';
 import { SubstrateRpcApi } from '@apillon/blockchain/src/modules/substrate/rpc-api';
 import {
   OnChainRegistry,
+  periodicityChecker,
   PinkBlueprintPromise,
   PinkContractPromise,
   signCertificate,
@@ -46,7 +47,9 @@ export class PhalaClient {
       ).data.url;
       console.log('rpcEndpoint', rpcEndpoint);
       this.api = await new SubstrateRpcApi(rpcEndpoint, types).getApi();
-      this.registry = await OnChainRegistry.create(this.api);
+      this.registry = await OnChainRegistry.create(this.api, {
+        strategy: periodicityChecker(),
+      });
       console.log(`RPC initialization ${rpcEndpoint}`);
     }
   }
@@ -101,6 +104,11 @@ export class PhalaClient {
   async getClusterId() {
     await this.initializeProvider();
     return this.registry.clusterId;
+  }
+
+  async getPruntimeUrl() {
+    await this.initializeProvider();
+    return this.registry.pruntimeURL;
   }
 
   async createDeployTransaction(
@@ -173,9 +181,8 @@ export class PhalaClient {
       [p: string]: any;
     },
   ) {
-    const contractKey = await this.registry.getContractKeyOrFail(
-      contractAddress,
-    );
+    const contractKey =
+      await this.registry.getContractKeyOrFail(contractAddress);
     return new PinkContractPromise(
       this.api,
       this.registry,
