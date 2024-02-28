@@ -367,16 +367,6 @@ export class UserAirdropTask extends BaseSQLModel {
 
     await this.assignUserAirdropTasks(userStats);
 
-    console.log(
-      `REF LOG: userStats.refferal_count = ${userStats.referral_count}`,
-    );
-    console.log(`REF LOG:userStats.referrals = ${userStats.referrals}`);
-    console.log(
-      `REF LOG:userStats.referrals.join(',').split(',') = ${userStats.referrals
-        .join(',')
-        .split(',')}`,
-    );
-
     const referrals = [
       ...new Set(
         userStats.referral_count > 0
@@ -384,8 +374,6 @@ export class UserAirdropTask extends BaseSQLModel {
           : [],
       ),
     ];
-
-    console.log(`REF LOG: referrals = ${referrals}`);
 
     if (referrals?.length && !isRecursive) {
       await Promise.all(
@@ -417,7 +405,6 @@ export class UserAirdropTask extends BaseSQLModel {
 
   public recalculateTotalPoints() {
     let points = 10; // 10 points for registering
-    console.log(`${points} awarded to user ${this.user_uuid} for registration`);
 
     // Calculate total points based on the completed tasks
     for (const [task, isCompleted] of Object.entries(
@@ -431,12 +418,12 @@ export class UserAirdropTask extends BaseSQLModel {
       } else if (isCompleted) {
         taskPoint = taskPoints[task] || 0;
       }
-      console.log(`${taskPoint} awarded to user ${this.user_uuid} for ${task}`);
+      // console.log(`${taskPoint} awarded to user ${this.user_uuid} for ${task}`);
       points += taskPoint;
     }
 
     this.totalPoints = points;
-    console.log(`Total points awarded to user ${this.user_uuid} --> ${points}`);
+    // console.log(`Total points awarded to user ${this.user_uuid} --> ${points}`);
     return points;
   }
 
@@ -503,7 +490,6 @@ export class UserAirdropTask extends BaseSQLModel {
     if (!referrals?.length) {
       return;
     }
-    console.log(`REF LOG: referrals = ${referrals}`);
     const res = await this.db().paramExecute(
       `
         SELECT count(*) as cnt
@@ -531,14 +517,14 @@ export class UserAirdropTask extends BaseSQLModel {
     );
 
     for (const domain of domains) {
-      dns.lookup(domain, {}, (err, address) => {
-        if (err) {
-          console.error(`Error resolving DNS domain: ${err}`);
-        } else if (validIps.includes(address)) {
-          this.domainLinked = true;
-          return;
-        }
+      const { address } = await dns.promises.lookup(domain).catch((err) => {
+        console.error(`Error resolving DNS domain: ${err}`);
+        return { address: null };
       });
+      if (validIps.includes(address)) {
+        this.domainLinked = true;
+        return;
+      }
     }
   }
 }

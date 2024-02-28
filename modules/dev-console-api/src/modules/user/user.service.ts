@@ -103,9 +103,8 @@ export class UserService {
         });
       }
 
-      user.wallet = authUser.wallet;
-
       user.setUserRolesAndPermissionsFromAmsResponse(authUser);
+      user.setWalletsFromAmsResponse(authUser);
 
       return {
         ...user.serialize(SerializeFor.PROFILE),
@@ -150,8 +149,8 @@ export class UserService {
         });
       }
 
-      user.wallet = resp.data.wallet;
       user.setUserRolesAndPermissionsFromAmsResponse(resp);
+      user.setWalletsFromAmsResponse(resp);
 
       return {
         ...user.serialize(SerializeFor.PROFILE),
@@ -279,8 +278,7 @@ export class UserService {
     }
 
     user.setUserRolesAndPermissionsFromAmsResponse(data);
-
-    user.wallet = data.wallet;
+    user.setWalletsFromAmsResponse(data);
 
     return {
       ...user.serialize(SerializeFor.PROFILE),
