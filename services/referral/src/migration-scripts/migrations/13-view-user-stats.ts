@@ -117,7 +117,7 @@ export async function upgrade(
         LEFT JOIN (
           SELECT
             SUM(IF(direction = 1 AND product_id IS null AND referenceTable = 'invoice', 1, 0)) as buy_count,
-            SUM(IF(direction = 1 AND product_id IS null, amount, 0)) as buy_amount,
+            SUM(IF(direction = 1 AND product_id IS null AND referenceTable = 'invoice', amount, 0)) as buy_amount,
             SUM(IF(direction = 2, 1, 0)) as spend_count,
             SUM(IF(direction = 2, amount, 0)) as spend_amount, project_uuid
           FROM ${databases.configDb}.creditTransaction

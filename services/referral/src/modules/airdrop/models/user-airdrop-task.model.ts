@@ -525,9 +525,9 @@ export class UserAirdropTask extends BaseSQLModel {
 
     const validIps = ['52.19.92.40', '63.35.144.25', '35.244.158.129'];
 
-    // Replace prefixes for DNS lookup
+    // Replace prefixes for DNS lookup (failsafe for http prefixes)
     domains = domains.map((domain) =>
-      domain.replace('www.', '').replace('http://', '').replace('https://', ''),
+      domain.replace('http://', '').replace('https://', ''),
     );
 
     for (const domain of domains) {
@@ -535,7 +535,8 @@ export class UserAirdropTask extends BaseSQLModel {
         if (err) {
           console.error(`Error resolving DNS domain: ${err}`);
         } else if (validIps.includes(address)) {
-          return (this.domainLinked = true);
+          this.domainLinked = true;
+          return;
         }
       });
     }
