@@ -172,12 +172,31 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
     validators: [],
   })
   public nonce: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+    ],
+    validators: [],
+    defaultValue: {},
+  })
+  public metadata: {
+    pruntimeUrl: string;
+  };
 
   public constructor(data: any, context: Context) {
     super(data, context);
@@ -249,7 +268,8 @@ export class Transaction extends AdvancedSQLModel {
                c.id              AS contract_id,
                c.project_uuid    AS project_uuid,
                c.contractAddress AS contractAddress,
-               c.data            AS contractData
+               c.data     AS contractData,
+               t.metadata AS metadata
         FROM \`${this.tableName}\` as t
                JOIN ${DbTables.CONTRACT} as c ON (c.id = t.contract_id)
         WHERE t.status <> ${SqlModelStatus.DELETED}
@@ -279,6 +299,7 @@ export class Transaction extends AdvancedSQLModel {
       contract_id: number;
       contractAddress: string;
       contractData: { clusterId: string };
+      metadata: { pruntimeUrl: string };
     }[];
   }
 

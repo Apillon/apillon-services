@@ -30,7 +30,7 @@
         "@apillon/service-lib": "*",
         "@apillon/workers-lib": "*",
         "@middy/core": "^2.5.7",
-        "@phala/sdk": "^0.5.8",
+      "@phala/sdk": "^0.5.9",
         "@polkadot/api": "10.11.2",
         "node-fetch": "2.6.7"
     },
