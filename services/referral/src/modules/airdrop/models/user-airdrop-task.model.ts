@@ -531,14 +531,14 @@ export class UserAirdropTask extends BaseSQLModel {
     );
 
     for (const domain of domains) {
-      dns.lookup(domain, {}, (err, address) => {
-        if (err) {
-          console.error(`Error resolving DNS domain: ${err}`);
-        } else if (validIps.includes(address)) {
-          this.domainLinked = true;
-          return;
-        }
+      const { address } = await dns.promises.lookup(domain).catch((err) => {
+        console.error(`Error resolving DNS domain: ${err}`);
+        return { address: null };
       });
+      if (validIps.includes(address)) {
+        this.domainLinked = true;
+        return;
+      }
     }
   }
 }
