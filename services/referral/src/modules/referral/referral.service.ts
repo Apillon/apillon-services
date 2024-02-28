@@ -30,20 +30,21 @@ export class ReferralService {
   static async createPlayer(
     event: { body: CreateReferralDto },
     context: ServiceContext,
+    serializedReturn = true,
   ): Promise<any> {
     const user_uuid = context?.user?.user_uuid;
     const userEmail = context?.user?.email;
     const player: Player = await new Player({}, context).populateByUserUuid(
       user_uuid,
     );
-    const refCode = event.body.refCode;
+    const refCode = event?.body?.refCode;
 
     if (!player.exists()) {
       player.populate({
         user_uuid,
         userEmail,
         refCode: await player.generateCode(),
-        status: SqlModelStatus.INCOMPLETE,
+        status: SqlModelStatus.ACTIVE,
       });
     }
     const referrer: Player = refCode
@@ -52,13 +53,13 @@ export class ReferralService {
 
     player.referrer_id = referrer?.id;
 
-    if (
-      (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) &&
-      event.body.termsAccepted
-    ) {
-      player.termsAccepted ||= new Date();
-      player.status = SqlModelStatus.ACTIVE;
-    }
+    // if (
+    //   (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) &&
+    //   event?.body?.termsAccepted
+    // ) {
+    //   player.termsAccepted ||= new Date();
+    //   player.status = SqlModelStatus.ACTIVE;
+    // }
 
     try {
       await player.validate();
@@ -83,7 +84,7 @@ export class ReferralService {
       await ReferralService.createPromoCodeUser(refCode, userEmail, context);
     }
 
-    return player.serialize(SerializeFor.PROFILE);
+    return serializedReturn ? player.serialize(SerializeFor.PROFILE) : player;
   }
 
   static async createPromoCodeUser(
@@ -142,25 +143,30 @@ export class ReferralService {
   }
 
   static async getPlayer(_event: any, context: ServiceContext): Promise<any> {
-    const player: Player = await new Player({}, context).populateByUserUuid(
+    let player: Player = await new Player({}, context).populateByUserUuid(
       context?.user?.user_uuid,
     );
 
     // Player does not exist
     if (!player.exists()) {
-      throw new ReferralCodeException({
-        code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
-        status: 400,
-      });
+      // throw new ReferralCodeException({
+      //   code: ReferralErrorCode.PLAYER_DOES_NOT_EXISTS,
+      //   status: 400,
+      // });
+      player = await ReferralService.createPlayer(
+        { body: null },
+        context,
+        false,
+      );
     }
 
-    // Missing accepted terms
-    if (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) {
-      throw new ReferralCodeException({
-        code: ReferralErrorCode.MISSING_TERMS_ACCEPTANCE,
-        status: 400,
-      });
-    }
+    // Missing accepted terms - ignored since airdrop
+    // if (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) {
+    //   throw new ReferralCodeException({
+    //     code: ReferralErrorCode.MISSING_TERMS_ACCEPTANCE,
+    //     status: 400,
+    //   });
+    // }
 
     await player.populateSubmodels();
 
@@ -325,7 +331,7 @@ export class ReferralService {
     event: { user_uuid: string },
     context: ServiceContext,
   ) {
-    const stats =  await new UserAirdropTask({}, context).getNewStats(
+    const stats = await new UserAirdropTask({}, context).getNewStats(
       event.user_uuid,
     );
     return stats.serialize(SerializeFor.SERVICE);

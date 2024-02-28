@@ -11,32 +11,9 @@ import {
 } from '@apillon/lib';
 import { booleanParser, stringParser, integerParser } from '@rawmodel/parsers';
 import { DbTables, ReferralErrorCode } from '../../../config/types';
+import { UserStats, taskPoints } from './user-stats';
+import dns from 'node:dns';
 
-interface UserStats {
-  email: string;
-  user_uuid: string;
-  project_count: number;
-  project_uuids: string[];
-  subscriptions: number;
-  buy_count: number;
-  buy_amount: number;
-  spend_count: number;
-  spend_amount: number;
-  bucket_count: number;
-  file_count: number;
-  ipns_count: number;
-  www_count: number;
-  www_domain_count: number;
-  nft_count: number;
-  social_count: number;
-  comp_count: number;
-  id_count: number;
-  key_count: number;
-  apiKeys: string[][];
-  coworker_count: number;
-  referral_count: number;
-  referrals: string[][];
-}
 export class UserAirdropTask extends BaseSQLModel {
   public readonly tableName = DbTables.USER_AIRDROP_TASK;
 
@@ -339,29 +316,6 @@ export class UserAirdropTask extends BaseSQLModel {
   })
   public totalPoints: number;
 
-  // Define a mapping for tasks to points
-  taskPoints = {
-    register: 10,
-    projectCreated: 1,
-    bucketCreated: 1,
-    fileUploaded: 1,
-    ipnsCreated: 1,
-    websiteCreated: 1,
-    domainLinked: 10,
-    nftCollectionCreated: 10,
-    onSubscriptionPlan: 20,
-    creditsPurchased: 5,
-    grillChatCreated: 1,
-    computingContractCreated: 0,
-    kiltIdentityCreated: 10,
-    collaboratorAdded: 1,
-    usersReferred: 2,
-    websiteUploadedViaApi: 5,
-    identitySdkUsed: 2,
-    fileUploadedViaApi: 5,
-    nftMintedApi: 5,
-  };
-
   exists(): boolean {
     return !!this.user_uuid;
   }
@@ -406,28 +360,53 @@ export class UserAirdropTask extends BaseSQLModel {
       SELECT * FROM v_userStats
       WHERE user_uuid = @user_uuid
     `,
-      {
-        user_uuid,
-      },
+      { user_uuid },
     );
 
     const userStats = res[0] as UserStats;
 
     await this.assignUserAirdropTasks(userStats);
 
-    const referrals =
-      userStats.referral_count > 0
-        ? userStats.referrals.join(',').split(',')
-        : [];
+    console.log(
+      `REF LOG: userStats.refferal_count = ${userStats.referral_count}`,
+    );
+    console.log(`REF LOG:userStats.referrals = ${userStats.referrals}`);
+    console.log(
+      `REF LOG:userStats.referrals.join(',').split(',') = ${userStats.referrals
+        .join(',')
+        .split(',')}`,
+    );
+
+    const referrals = [
+      ...new Set(
+        userStats.referral_count > 0
+          ? userStats.referrals.join(',').split(',')
+          : [],
+      ),
+    ];
+
+    console.log(`REF LOG: referrals = ${referrals}`);
 
     if (referrals?.length && !isRecursive) {
       await Promise.all(
-        referrals.map((x) => {
-          new UserAirdropTask({}, this.getContext()).getNewStats(x, true);
-        }),
+        referrals.map((x) =>
+          new UserAirdropTask({}, this.getContext()).getNewStats(x, true),
+        ),
       );
 
       await this.assignReferredUsers(referrals);
+    }
+
+    const domains = [
+      ...new Set(
+        userStats.www_domain_count > 0
+          ? userStats.domains.join(',').split(',')
+          : [],
+      ),
+    ];
+
+    if (domains?.length && !isRecursive) {
+      await this.checkLinkedDomains(domains);
     }
 
     this.recalculateTotalPoints();
@@ -448,9 +427,9 @@ export class UserAirdropTask extends BaseSQLModel {
       if (task === 'creditsSpent') {
         taskPoint = Math.floor(this.creditsSpent / 3000);
       } else if (task === 'usersReferred') {
-        taskPoint = this.usersReferred * this.taskPoints[task];
+        taskPoint = this.usersReferred * taskPoints[task];
       } else if (isCompleted) {
-        taskPoint = this.taskPoints[task] || 0;
+        taskPoint = taskPoints[task] || 0;
       }
       console.log(`${taskPoint} awarded to user ${this.user_uuid} for ${task}`);
       points += taskPoint;
@@ -461,7 +440,7 @@ export class UserAirdropTask extends BaseSQLModel {
     return points;
   }
 
-  private async assignUserAirdropTasks(stat: UserStats): Promise<void> {
+  async assignUserAirdropTasks(stat: UserStats): Promise<void> {
     if (!stat.project_count) {
       return;
     }
@@ -474,7 +453,7 @@ export class UserAirdropTask extends BaseSQLModel {
       fileUploaded: stat.file_count > 0,
       ipnsCreated: stat.ipns_count > 0,
       websiteCreated: stat.www_count > 0,
-      domainLinked: stat.www_domain_count > 0,
+      domainLinked: false, // Checked later with DNS resolve
       nftCollectionCreated: stat.nft_count > 0,
       onSubscriptionPlan: stat.subscriptions > 0,
       grillChatCreated: stat.social_count > 0,
@@ -483,7 +462,7 @@ export class UserAirdropTask extends BaseSQLModel {
       collaboratorAdded: stat.coworker_count > 0,
       creditsPurchased: stat.buy_count > 0,
       creditsSpent: stat.spend_amount,
-      userReferred: 0,
+      userReferred: 0, // Populated later
       ...(await this.assignApiTasks(stat.apiKeys.join(',').split(','))),
     });
   }
@@ -504,7 +483,11 @@ export class UserAirdropTask extends BaseSQLModel {
 
     const checkApiCalled = ($regex: RegExp) =>
       collection
-        .count({ apiKey: { $in: apiKeys }, url: { $regex, $options: 'i' } })
+        .count({
+          apiKey: { $in: apiKeys },
+          status: { $in: [200, 201] },
+          url: { $regex, $options: 'i' },
+        })
         .then((c) => c > 0);
 
     return {
@@ -516,21 +499,46 @@ export class UserAirdropTask extends BaseSQLModel {
   }
 
   // Add total points based on users they have referred which meet totalPoints criteria
-  private async assignReferredUsers(referrals: string[]) {
+  async assignReferredUsers(referrals: string[]) {
     if (!referrals?.length) {
       return;
     }
-
+    console.log(`REF LOG: referrals = ${referrals}`);
     const res = await this.db().paramExecute(
       `
-        SELECT count(*) as cnt 
+        SELECT count(*) as cnt
         FROM ${DbTables.USER_AIRDROP_TASK}
-        WHERE user_uuid IN (@referrals)
+        WHERE user_uuid IN ( @referrals )
         AND totalPoints >= 15
       `,
-      referrals,
+      { referrals },
     );
 
     this.usersReferred = res[0]?.cnt || 0;
+  }
+
+  // Verify that user has linked webiste DNS record to Apillon hosting
+  async checkLinkedDomains(domains: string[]) {
+    if (!domains?.length) {
+      return;
+    }
+
+    const validIps = ['52.19.92.40', '63.35.144.25', '35.244.158.129'];
+
+    // Replace prefixes for DNS lookup (failsafe for http prefixes)
+    domains = domains.map((domain) =>
+      domain.replace('http://', '').replace('https://', ''),
+    );
+
+    for (const domain of domains) {
+      dns.lookup(domain, {}, (err, address) => {
+        if (err) {
+          console.error(`Error resolving DNS domain: ${err}`);
+        } else if (validIps.includes(address)) {
+          this.domainLinked = true;
+          return;
+        }
+      });
+    }
   }
 }
