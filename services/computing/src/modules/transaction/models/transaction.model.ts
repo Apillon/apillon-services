@@ -172,8 +172,6 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
     validators: [],
   })
@@ -192,8 +190,6 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
     validators: [],
     defaultValue: {},
@@ -272,8 +268,8 @@ export class Transaction extends AdvancedSQLModel {
                c.id              AS contract_id,
                c.project_uuid    AS project_uuid,
                c.contractAddress AS contractAddress,
-               c.data            AS contractData
-          t.metadata        AS metadata
+               c.data     AS contractData,
+               t.metadata AS metadata
         FROM \`${this.tableName}\` as t
                JOIN ${DbTables.CONTRACT} as c ON (c.id = t.contract_id)
         WHERE t.status <> ${SqlModelStatus.DELETED}
