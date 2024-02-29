@@ -47,7 +47,7 @@ export class PhalaClient {
       console.log('rpcEndpoint', rpcEndpoint);
       this.api = await ApiPromise.create({
         provider: new WsProvider(rpcEndpoint),
-        typesBundle: types as any,
+        types: types as any,
         throwOnConnect: true,
       });
 
