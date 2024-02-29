@@ -25,6 +25,13 @@ export class Credit extends ProjectAccessModel {
   public updateTime?: Date;
 
   @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.PROFILE, SerializeFor.SELECT_DB],
+    populatable: [PopulateFrom.DB],
+  })
+  public createTime?: Date;
+
+  @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
@@ -59,6 +66,7 @@ export class Credit extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.LOGGER,
+      SerializeFor.APILLON_API,
     ],
   })
   public balance: number;
