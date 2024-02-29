@@ -77,6 +77,7 @@ export * from './lib/at-services/nfts/dtos/transfer-collection.dto';
 export * from './lib/at-services/nfts/dtos/create-collection.dto';
 export * from './lib/at-services/nfts/dtos/burn-nft.dto';
 export * from './lib/at-services/nfts/dtos/collections-quota-reached-query-filter.dto';
+export * from './lib/at-services/nfts/dtos/add-nfts-metadata.dto';
 
 //#REGION COMPUTING
 export * from './lib/at-services/computing/computing';

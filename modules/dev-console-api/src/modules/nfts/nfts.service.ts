@@ -1,4 +1,5 @@
 import {
+  AddNftsMetadataDto,
   AttachedServiceType,
   BurnNftDto,
   CodeException,
@@ -163,5 +164,14 @@ export class NftsService {
     return (
       await new NftsMicroservice(context).maxCollectionsQuotaReached(query)
     ).data.maxCollectionsQuotaReached;
+  }
+
+  async addNftsMetadata(
+    context: DevConsoleApiContext,
+    collection_uuid: string,
+    body: AddNftsMetadataDto,
+  ) {
+    body.collection_uuid = collection_uuid;
+    return (await new NftsMicroservice(context).addNftsMetadata(body)).data;
   }
 }

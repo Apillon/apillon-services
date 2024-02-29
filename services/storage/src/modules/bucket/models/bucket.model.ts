@@ -19,6 +19,7 @@ import { v4 as uuidV4 } from 'uuid';
 import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { StorageCodeException } from '../../../lib/exceptions';
 import { StorageService } from '../../storage/storage.service';
+import { Ipns } from '../../ipns/models/ipns.model';
 
 export class Bucket extends UuidSqlModel {
   public readonly tableName = DbTables.BUCKET;
@@ -370,6 +371,28 @@ export class Bucket extends UuidSqlModel {
     );
 
     return data.length > 0;
+  }
+
+  public async getBucketIpnsRecords(): Promise<Ipns[]> {
+    if (!this.id) {
+      throw new Error('bucket_id should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${DbTables.IPNS}\`
+      WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { bucket_id: this.id },
+    );
+    const res = [];
+    if (data && data.length) {
+      for (const d of data) {
+        res.push(new Ipns({}, this.getContext()).populate(d, PopulateFrom.DB));
+      }
+    }
+    return res;
   }
 
   /**

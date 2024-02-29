@@ -109,20 +109,15 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             undefined,
           )
         : { files: [], wrappedDirCid: undefined };
-    if (
-      imageFURs.filter(
-        (x) => x.fileStatus == FileUploadRequestFileStatus.UPLOAD_COMPLETED,
-      ).length > 0
-    ) {
-      //get uploaded files and add them to imageFiles object
-      for (const f of imageFURs.filter(
-        (x) => x.fileStatus == FileUploadRequestFileStatus.UPLOAD_COMPLETED,
-      )) {
-        const tmpFile: File = await new File({}, this.context).populateByUUID(
-          f.file_uuid,
-        );
-        imageFiles.files.push(tmpFile);
-      }
+
+    //get uploaded files and add them to imageFiles object
+    for (const f of imageFURs.filter(
+      (x) => x.fileStatus == FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+    )) {
+      const tmpFile: File = await new File({}, this.context).populateByUUID(
+        f.file_uuid,
+      );
+      imageFiles.files.push(tmpFile);
     }
 
     //#endregion
@@ -225,6 +220,11 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     );
 
     if (data.useApillonIpfsGateway) {
+      //If ipnsId is not specified in data, get first ipns record in bucket
+      if (!data.ipnsId) {
+        const ipnses = await bucket.getBucketIpnsRecords();
+        data.ipnsId = ipnses[0].id;
+      }
       //Pin to IPNS
       const ipnsDbRecord: Ipns = await new Ipns({}, this.context).populateById(
         data.ipnsId,

@@ -29,31 +29,6 @@ describe('PrepareMetadataForCollectionWorker integration test', () => {
   let collectionBucket: Bucket;
   let collectionIpns: Ipns;
 
-  const nftImagesPayload = {
-    bucket_uuid: undefined,
-    session_uuid: uuidV4(),
-    files: [
-      {
-        fileName: '1.png',
-      },
-      {
-        fileName: '2.png',
-      },
-    ],
-  };
-  const nftMetadataPayload = {
-    bucket_uuid: undefined,
-    session_uuid: uuidV4(),
-    files: [
-      {
-        fileName: '1.json',
-      },
-      {
-        fileName: '2.json',
-      },
-    ],
-  };
-
   let imageSession: FileUploadSession;
   let metadataSession: FileUploadSession;
 
@@ -113,9 +88,6 @@ describe('PrepareMetadataForCollectionWorker integration test', () => {
     collectionIpns.ipnsValue = publishRes.value;
 
     await collectionIpns.insert();
-
-    nftImagesPayload.bucket_uuid = collectionBucket.bucket_uuid;
-    nftMetadataPayload.bucket_uuid = collectionBucket.bucket_uuid;
   });
 
   afterAll(async () => {
@@ -265,6 +237,117 @@ describe('PrepareMetadataForCollectionWorker integration test', () => {
     expect(tmpImageFile.CIDv1).toBeTruthy();
 
     const tmpMetadataFile = filesInBucket.find((x) => x.name == '1.json');
+    expect(tmpMetadataFile).toBeTruthy();
+    expect(tmpMetadataFile.CID).toBeTruthy();
+    expect(tmpMetadataFile.CIDv1).toBeTruthy();
+    expect(tmpMetadataFile.path).toMatch('Metadata');
+
+    //get metadata directory
+    const directories = await new Directory(
+      {},
+      stage.context,
+    ).populateDirectoriesInBucket(collectionBucket.id, stage.context);
+
+    expect(directories.length).toBe(1);
+
+    //check ipns
+    const tmpIpns = await new Ipns({}, stage.context).populateById(
+      collectionIpns.id,
+    );
+    expect(tmpIpns.ipnsName).toBe(collectionIpns.ipnsName);
+    expect(tmpIpns.ipnsValue).toMatch(directories[0].CIDv1);
+  });
+
+  test('Test add new nft metadata', async () => {
+    //#region Prepare new image and metadata session
+
+    //Create session
+    imageSession = await new FileUploadSession(
+      { session_uuid: uuidV4, bucket_id: collectionBucket.id },
+      stage.context,
+    ).insert();
+    const image3Fur = new FileUploadRequest(
+      {
+        session_id: imageSession.id,
+        bucket_id: collectionBucket.id,
+        fileName: '3.png',
+        contentType: 'image/png',
+      },
+      stage.context,
+    );
+    await createFURAndS3Url(
+      stage.context,
+      `NFT_METADATA_sessions/${collectionBucket.id}/${imageSession.session_uuid}/3.png`,
+      image3Fur,
+      imageSession,
+      collectionBucket,
+      s3Client,
+    );
+
+    //Upload images to s3
+    let uploadRes = await request(image3Fur.url)
+      .put('')
+      .send(await fs.readFileSync('test/test-files/3.png'));
+
+    expect(uploadRes.status).toBe(200);
+
+    //Create session
+    metadataSession = await new FileUploadSession(
+      { session_uuid: uuidV4, bucket_id: collectionBucket.id },
+      stage.context,
+    ).insert();
+    const metadata3Fur = new FileUploadRequest(
+      {
+        session_id: metadataSession.id,
+        bucket_id: collectionBucket.id,
+        fileName: '3.json',
+        contentType: 'application/json',
+      },
+      stage.context,
+    );
+    await createFURAndS3Url(
+      stage.context,
+      `NFT_METADATA_sessions/${collectionBucket.id}/${metadataSession.session_uuid}/3.json`,
+      metadata3Fur,
+      metadataSession,
+      collectionBucket,
+      s3Client,
+    );
+
+    //Upload json to s3
+    uploadRes = await request(metadata3Fur.url).put('').send({
+      name: 'Nft 3',
+      description: 'Nft 3 description',
+      image: '3.png',
+    });
+
+    expect(uploadRes.status).toBe(200);
+
+    //#endregion
+
+    await worker.run({
+      executeArg: JSON.stringify({
+        collection_uuid: uuidV4(),
+        imagesSession: imageSession.session_uuid,
+        metadataSession: metadataSession.session_uuid,
+        useApillonIpfsGateway: true,
+      }),
+    });
+
+    //check files in bucket
+    const filesInBucket = await new File(
+      {},
+      stage.context,
+    ).populateFilesInBucket(collectionBucket.id, stage.context);
+
+    expect(filesInBucket.length).toBe(6);
+
+    const tmpImageFile = filesInBucket.find((x) => x.name == '3.png');
+    expect(tmpImageFile).toBeTruthy();
+    expect(tmpImageFile.CID).toBeTruthy();
+    expect(tmpImageFile.CIDv1).toBeTruthy();
+
+    const tmpMetadataFile = filesInBucket.find((x) => x.name == '3.json');
     expect(tmpMetadataFile).toBeTruthy();
     expect(tmpMetadataFile.CID).toBeTruthy();
     expect(tmpMetadataFile.CIDv1).toBeTruthy();
