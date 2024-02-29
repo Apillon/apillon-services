@@ -170,7 +170,11 @@ export class CryptoPaymentsService {
               email,
               name,
               description,
-              date: new Date().toLocaleDateString(),
+              date: new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              }),
               price: payment.pay_amount,
               currency: payment.pay_currency?.toLocaleUpperCase(),
               invoiceNumber: invoice.invoice_uuid,
