@@ -5,7 +5,6 @@ import {
   SubstrateChain,
 } from '@apillon/lib';
 import { Contract } from '../computing/models/contract.model';
-import { SubstrateRpcApi } from '@apillon/blockchain/src/modules/substrate/rpc-api';
 import {
   OnChainRegistry,
   periodicityChecker,
@@ -16,7 +15,7 @@ import {
 } from '@phala/sdk';
 import { ContractAbi } from '../computing/models/contractAbi.model';
 import { SubmittableExtrinsic } from '@polkadot/api-base/types';
-import { ApiPromise, Keyring } from '@polkadot/api';
+import { ApiPromise, Keyring, WsProvider } from '@polkadot/api';
 import randomBytes from 'randombytes';
 import { hexAddPrefix } from '@polkadot/util';
 
@@ -46,7 +45,12 @@ export class PhalaClient {
         )
       ).data.url;
       console.log('rpcEndpoint', rpcEndpoint);
-      this.api = await new SubstrateRpcApi(rpcEndpoint, types).getApi();
+      this.api = await ApiPromise.create({
+        provider: new WsProvider(rpcEndpoint),
+        typesBundle: types as any,
+        throwOnConnect: true,
+      });
+
       this.registry = await OnChainRegistry.create(this.api, {
         strategy: periodicityChecker(),
       });

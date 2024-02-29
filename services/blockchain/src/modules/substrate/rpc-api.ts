@@ -4,6 +4,7 @@ import { isTransactionIndexed } from '../blockchain-indexers/substrate/helpers';
 import '@polkadot/api-augment';
 import '@polkadot/rpc-augment';
 import '@polkadot/types-augment';
+import { SubmittableExtrinsic } from '@polkadot/api/types';
 
 export class SubstrateRpcApi {
   protected endpointUrl: string = null;
@@ -27,12 +28,14 @@ export class SubstrateRpcApi {
     console.log('Timing after destroy', this.getTiming(), 's');
   }
 
-  async getUnsignedTransaction(transaction: string) {
+  async getUnsignedTransaction(
+    transaction: string,
+  ): Promise<SubmittableExtrinsic<'promise', any>> {
     console.log('Timing before unsigned transaction', this.getTiming(), 's');
     return (await this.getApi()).tx(transaction);
   }
 
-  async send(rawTransaction: string) {
+  async send(rawTransaction: string): Promise<any> {
     console.log('Timing before send', this.getTiming(), 's');
     return (await this.getApi()).tx(rawTransaction).send();
   }
