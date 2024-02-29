@@ -31,7 +31,7 @@
         "@apillon/workers-lib": "*",
         "@middy/core": "^2.5.7",
       "@phala/sdk": "^0.5.9",
-        "@polkadot/api": "10.11.2",
+      "@polkadot/api": "10.9.1",
         "node-fetch": "2.6.7"
     },
     "devDependencies": {
@@ -44,7 +44,7 @@
         "tsconfig": "*"
     },
     "overrides": {
-        "@polkadot/api": "10.11.2"
+      "@polkadot/api": "10.9.1"
     },
     "jest": {
         "testTimeout": 1800000,
