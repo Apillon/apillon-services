@@ -223,6 +223,7 @@ export enum NftsEventType {
   MAX_COLLECTIONS_QUOTA_REACHED = 'max-collections-quota-reached',
   EXECUTE_DEPLOY_COLLECTION_WORKER = 'execute-deploy-collection-worker',
   PROJECT_COLLECTION_DETAILS = 'project-collections-details',
+  ADD_NFTS_METADATA = 'add-nfts-metadata',
 }
 
 export enum ComputingEventType {
@@ -595,6 +596,7 @@ export enum ValidatorErrorCode {
   INVALID_FILES_LENGTH = 42200150,
   CID_NOT_PRESENT = 42200160,
   REQUIRED_DATA_NOT_PRESENT = 42200161,
+  ADD_NFT_REQUIRED_DATA_NOT_PRESENT = 42200162,
 
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
