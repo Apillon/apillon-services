@@ -17,8 +17,22 @@ export class CaptchaGuard implements CanActivate {
       execCtx.getClass(),
     ]) as any as IValidationOptions;
     const request = execCtx.switchToHttp().getRequest<IRequest>();
+
+    let gatewayEvent = null;
+    try {
+      gatewayEvent = JSON.parse(
+        decodeURI(request.headers['x-apigateway-event'] as string),
+      );
+    } catch (err) {}
+
+    const remoteIp =
+      request.ip ||
+      gatewayEvent?.requestContext?.identity?.sourceIp ||
+      (request.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+      null;
+
     const { captcha } = request[options.validateFor] || {};
 
-    return await checkCaptcha(captcha?.token);
+    return await checkCaptcha(captcha?.token, remoteIp);
   }
 }
