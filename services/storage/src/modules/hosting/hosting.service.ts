@@ -291,9 +291,23 @@ export class HostingService {
         ? website.bucket_id
         : website.stagingBucket_id,
     );
-    if (!(await sourceBucket.containsFiles())) {
+
+    const filesInBucket = await new File({}, context).populateFilesInBucket(
+      sourceBucket.id,
+      context,
+    );
+
+    if (filesInBucket.length == 0) {
       throw new StorageCodeException({
         code: StorageErrorCode.NO_FILES_TO_DEPLOY,
+        status: 400,
+      });
+    } else if (
+      !filesInBucket.find((x) => x.name.toLowerCase() == 'index.html')
+    ) {
+      //Check if index.html is present
+      throw new StorageCodeException({
+        code: StorageErrorCode.INDEX_HTML_FILE_NOT_PRESENT,
         status: 400,
       });
     }
