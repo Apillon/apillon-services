@@ -354,6 +354,7 @@ export class UserAirdropTask extends BaseSQLModel {
   }
 
   public async getNewStats(user_uuid: string, isRecursive = false) {
+    this.reset();
     this.user_uuid = user_uuid;
     const res = await this.db().paramExecute(
       `
@@ -362,6 +363,10 @@ export class UserAirdropTask extends BaseSQLModel {
     `,
       { user_uuid },
     );
+
+    if (!res.length) {
+      return this;
+    }
 
     const userStats = res[0] as UserStats;
 
@@ -465,24 +470,48 @@ export class UserAirdropTask extends BaseSQLModel {
         : env.MONITORING_MONGO_DATABASE,
       4,
     );
-    await mongo.connect();
-    const collection = mongo.db.collection(MongoCollections.API_REQUEST_LOGS);
 
-    const checkApiCalled = ($regex: RegExp) =>
-      collection
-        .count({
-          apiKey: { $in: apiKeys },
-          status: { $in: [200, 201] },
-          url: { $regex, $options: 'i' },
-        })
-        .then((c) => c > 0);
-
-    return {
-      websiteUploadedViaApi: await checkApiCalled(/^\/hosting.*upload/),
-      identitySdkUsed: await checkApiCalled(/^\/wallet-identity.*$/),
-      fileUploadedViaApi: await checkApiCalled(/^\/storage\/buckets.*upload/),
-      nftMintedApi: await checkApiCalled(/^\/nfts\/collections.*mint/),
+    const activity = {
+      websiteUploadedViaApi: false,
+      identitySdkUsed: false,
+      fileUploadedViaApi: false,
+      nftMintedApi: false,
     };
+
+    try {
+      await mongo.connect();
+      const collection = mongo.db.collection(MongoCollections.API_REQUEST_LOGS);
+
+      const checkApiCalled = ($regex: RegExp) =>
+        collection
+          .count({
+            apiKey: { $in: apiKeys },
+            status: { $in: [200, 201] },
+            url: { $regex, $options: 'i' },
+          })
+          .then((c) => c > 0);
+
+      activity.websiteUploadedViaApi = await checkApiCalled(
+        /^\/hosting.*upload/,
+      );
+      activity.identitySdkUsed = await checkApiCalled(/^\/wallet-identity.*$/);
+      activity.fileUploadedViaApi = await checkApiCalled(
+        /^\/storage\/buckets.*upload/,
+      );
+      activity.nftMintedApi = await checkApiCalled(
+        /^\/nfts\/collections.*mint/,
+      );
+
+      await mongo.close();
+    } catch (err) {
+      console.log(err);
+      try {
+        await mongo.close();
+      } catch (e) {}
+      throw err;
+    }
+
+    return activity;
   }
 
   // Add total points based on users they have referred which meet totalPoints criteria
