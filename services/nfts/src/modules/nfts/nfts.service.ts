@@ -6,6 +6,7 @@ import {
   CreateCollectionDTO,
   CreateEvmTransactionDto,
   DeployCollectionDTO,
+  env,
   EvmChain,
   Lmas,
   LogType,
@@ -31,6 +32,7 @@ import {
 import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
+  sendToWorkerQueue,
   ServiceDefinition,
   ServiceDefinitionType,
   WorkerDefinition,
@@ -56,6 +58,7 @@ import { TransactionService } from '../transaction/transaction.service';
 import { WalletService } from '../wallet/wallet.service';
 import { Collection } from './models/collection.model';
 import { deployNFTCollectionContract } from '../../lib/utils/collection-utils';
+import { AddNftsMetadataDto } from '@apillon/lib';
 
 export class NftsService {
   //#region collection functions
@@ -483,6 +486,35 @@ export class NftsService {
   //#endregion
 
   //#region NFT functions
+
+  static async addNftsMetadata(
+    { body }: { body: AddNftsMetadataDto },
+    context: ServiceContext,
+  ) {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(body.collection_uuid);
+    await NftsService.checkCollection(collection, 'addNfts()', context);
+
+    //send message to storage sqs workers
+    await sendToWorkerQueue(
+      env.STORAGE_AWS_WORKER_SQS_URL,
+      'PrepareMetadataForCollectionWorker',
+      [
+        {
+          collection_uuid: body.collection_uuid,
+          imagesSession: body.imagesSession,
+          metadataSession: body.metadataSession,
+          useApillonIpfsGateway: !collection.baseUri.startsWith('ipfs://'),
+        },
+      ],
+      null,
+      null,
+    );
+
+    return true;
+  }
 
   static async mintNftTo(
     { body }: { body: MintNftDTO },

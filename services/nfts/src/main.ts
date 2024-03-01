@@ -31,6 +31,7 @@ export async function processEvent(event, context: Context): Promise<any> {
       NftsService.executeDeployCollectionWorker,
     [NftsEventType.PROJECT_COLLECTION_DETAILS]:
       NftsService.getProjectCollectionDetails,
+    [NftsEventType.ADD_NFTS_METADATA]: NftsService.addNftsMetadata,
   };
 
   return await processors[event.eventName](event, context);
