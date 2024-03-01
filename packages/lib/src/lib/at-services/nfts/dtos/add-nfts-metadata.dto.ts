@@ -21,6 +21,9 @@ export class AddNftsMetadataDto extends ModelBase {
   })
   public collection_uuid: string;
 
+  /**
+   * File upload session from storage MS used to upload images to S3
+   */
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -34,6 +37,9 @@ export class AddNftsMetadataDto extends ModelBase {
   })
   public imagesSession: string;
 
+  /**
+   * File upload session from storage MS used to upload nft metadata (json) to S3
+   */
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],

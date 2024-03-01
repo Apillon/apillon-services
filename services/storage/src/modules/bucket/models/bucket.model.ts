@@ -386,13 +386,9 @@ export class Bucket extends UuidSqlModel {
       `,
       { bucket_id: this.id },
     );
-    const res = [];
-    if (data && data.length) {
-      for (const d of data) {
-        res.push(new Ipns({}, this.getContext()).populate(d, PopulateFrom.DB));
-      }
-    }
-    return res;
+    return data.map((d) =>
+      new Ipns({}, this.getContext()).populate(d, PopulateFrom.DB),
+    );
   }
 
   /**
