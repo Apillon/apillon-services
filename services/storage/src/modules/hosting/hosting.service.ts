@@ -297,6 +297,7 @@ export class HostingService {
       context,
     );
 
+    //Source bucket must contain files. One of them should be index.html
     if (filesInBucket.length == 0) {
       throw new StorageCodeException({
         code: StorageErrorCode.NO_FILES_TO_DEPLOY,
@@ -305,7 +306,6 @@ export class HostingService {
     } else if (
       !filesInBucket.find((x) => x.name.toLowerCase() == 'index.html')
     ) {
-      //Check if index.html is present
       throw new StorageCodeException({
         code: StorageErrorCode.INDEX_HTML_FILE_NOT_PRESENT,
         status: 400,
