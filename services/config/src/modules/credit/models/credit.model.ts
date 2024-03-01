@@ -7,7 +7,12 @@ import {
   presenceValidator,
   prop,
 } from '@apillon/lib';
-import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
+import {
+  booleanParser,
+  dateParser,
+  integerParser,
+  stringParser,
+} from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
 
@@ -70,6 +75,57 @@ export class Credit extends ProjectAccessModel {
     ],
   })
   public balance: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.LOGGER,
+    ],
+  })
+  public threshold: number;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.LOGGER,
+    ],
+  })
+  public alertIfBelowThreshold: boolean;
+
+  @prop({
+    parser: { resolver: dateParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.LOGGER,
+    ],
+  })
+  public lastAlertTime: Date;
 
   /**
    * Populate model. Use this for simple reads.

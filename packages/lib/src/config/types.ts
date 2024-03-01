@@ -187,6 +187,7 @@ export enum ScsEventType {
   CREATE_OVERRIDE = 'create-override',
   DELETE_OVERRIDE = 'delete-override',
   ADD_CREDIT = 'add-credit',
+  CONFIGURE_CREDIT = 'configure-credit',
   SPEND_CREDIT = 'spend-credit',
   REFUND_CREDIT = 'refund-credit',
   GET_PROJECT_CREDIT = 'get-project-credit',
@@ -660,6 +661,7 @@ export enum ValidatorErrorCode {
   SPEND_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001002,
   PRODUCT_SERVICE_NOT_VALID = 422001003,
   PRODUCT_CATEGORY_NOT_VALID = 422001004,
+  CONFIGURE_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001005,
   //#endregion
 }
 
@@ -883,4 +885,6 @@ export enum EmailTemplate {
   DOWNLOAD_IDENTITY = 'download-identity',
 
   CRYPTO_PAYMENT_SUCCESSFUL = 'crypto-payment-successful',
+
+  CREDIT_BALANCE_BELOW_THRESHOLD = 'credit-balance-below-threshold',
 }

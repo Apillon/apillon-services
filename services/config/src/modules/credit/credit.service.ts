@@ -2,9 +2,14 @@ import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
 import { Credit } from './models/credit.model';
 import {
   AddCreditDto,
+  Ams,
+  ConfigureCreditDto,
   CreditTransactionQueryFilter,
+  EmailDataDto,
+  EmailTemplate,
   Lmas,
   LogType,
+  Mailing,
   PoolConnection,
   SerializeFor,
   ServiceName,
@@ -91,6 +96,7 @@ export class CreditService {
         await credit.insert(SerializeFor.INSERT_DB, conn);
       } else {
         credit.balance += addCreditDto.amount;
+        credit.lastAlertTime = null;
         await credit.update(SerializeFor.UPDATE_DB, conn);
       }
 
@@ -157,6 +163,23 @@ export class CreditService {
         SerializeFor.SERVICE,
       ) as CreditTransaction,
     };
+  }
+
+  static async configureCredit(
+    event: { body: ConfigureCreditDto },
+    context: ServiceContext,
+  ): Promise<any> {
+    const credit = await new Credit({}, context).populateByProjectUUIDForUpdate(
+      event.body.project_uuid,
+      undefined,
+    );
+
+    if (credit.exists()) {
+      credit.populate(event.body);
+      await credit.update();
+    }
+
+    return credit.serialize(getSerializationStrategy(context));
   }
 
   /**
@@ -229,6 +252,42 @@ export class CreditService {
       }
 
       credit.balance -= product.currentPrice;
+
+      if (credit.balance < credit.threshold && !credit.lastAlertTime) {
+        //Send email and set lastAlertTime property
+        try {
+          //Get project owner
+          const projectOwner = (
+            await new Ams(context).getProjectOwner(credit.project_uuid)
+          ).data;
+
+          if (projectOwner?.email) {
+            //send email
+            await new Mailing(context).sendMail(
+              new EmailDataDto({
+                mailAddresses: [projectOwner.email],
+                templateName: EmailTemplate.CREDIT_BALANCE_BELOW_THRESHOLD,
+              }),
+            );
+          }
+          credit.lastAlertTime = new Date();
+        } catch (err) {
+          //Admin alert
+          await new Lmas().writeLog({
+            context,
+            project_uuid: credit.project_uuid,
+            logType: LogType.ERROR,
+            message: 'Error notifying user that credit is below threshold',
+            location: `CreditService.spendCredit()`,
+            service: ServiceName.CONFIG,
+            data: {
+              credit: credit.serialize(SerializeFor.LOGGER),
+            },
+            sendAdminAlert: true,
+          });
+        }
+      }
+
       await credit.update(SerializeFor.UPDATE_DB, conn);
 
       const creditTransaction: CreditTransaction = new CreditTransaction(

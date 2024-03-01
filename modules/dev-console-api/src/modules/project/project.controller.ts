@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import {
   BaseQueryFilter,
+  ConfigureCreditDto,
   CreditTransactionQueryFilter,
   DefaultUserRole,
   RoleGroup,
@@ -194,6 +195,22 @@ export class ProjectController {
     @Param('uuid') uuid: string,
   ) {
     return await this.projectService.getProjectCredit(context, uuid);
+  }
+
+  @Patch(':uuid/credit-settings')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @Validation({ dto: ConfigureCreditDto })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async configureCreditSettings(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+    @Body() body: ConfigureCreditDto,
+  ) {
+    body.project_uuid = uuid;
+    return await this.projectService.configureCreditSettings(context, body);
   }
 
   @Get(':uuid/credit/transactions')
