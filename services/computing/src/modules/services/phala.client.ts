@@ -5,9 +5,9 @@ import {
   SubstrateChain,
 } from '@apillon/lib';
 import { Contract } from '../computing/models/contract.model';
-import { SubstrateRpcApi } from '@apillon/blockchain/src/modules/substrate/rpc-api';
 import {
   OnChainRegistry,
+  periodicityChecker,
   PinkBlueprintPromise,
   PinkContractPromise,
   signCertificate,
@@ -15,7 +15,7 @@ import {
 } from '@phala/sdk';
 import { ContractAbi } from '../computing/models/contractAbi.model';
 import { SubmittableExtrinsic } from '@polkadot/api-base/types';
-import { ApiPromise, Keyring } from '@polkadot/api';
+import { ApiPromise, Keyring, WsProvider } from '@polkadot/api';
 import randomBytes from 'randombytes';
 import { hexAddPrefix } from '@polkadot/util';
 
@@ -45,8 +45,15 @@ export class PhalaClient {
         )
       ).data.url;
       console.log('rpcEndpoint', rpcEndpoint);
-      this.api = await new SubstrateRpcApi(rpcEndpoint, types).getApi();
-      this.registry = await OnChainRegistry.create(this.api);
+      this.api = await ApiPromise.create({
+        provider: new WsProvider(rpcEndpoint),
+        types: types as any,
+        throwOnConnect: true,
+      });
+
+      this.registry = await OnChainRegistry.create(this.api, {
+        strategy: periodicityChecker(),
+      });
       console.log(`RPC initialization ${rpcEndpoint}`);
     }
   }
@@ -101,6 +108,11 @@ export class PhalaClient {
   async getClusterId() {
     await this.initializeProvider();
     return this.registry.clusterId;
+  }
+
+  async getPruntimeUrl() {
+    await this.initializeProvider();
+    return this.registry.pruntimeURL;
   }
 
   async createDeployTransaction(
@@ -173,9 +185,8 @@ export class PhalaClient {
       [p: string]: any;
     },
   ) {
-    const contractKey = await this.registry.getContractKeyOrFail(
-      contractAddress,
-    );
+    const contractKey =
+      await this.registry.getContractKeyOrFail(contractAddress);
     return new PinkContractPromise(
       this.api,
       this.registry,

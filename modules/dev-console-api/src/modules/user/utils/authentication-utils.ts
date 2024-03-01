@@ -57,7 +57,7 @@ export async function registerUser(
       user_uuid: user.user_uuid,
       email,
       password: params.password,
-      [isEVMWallet(wallet) ? 'evmWallet' : 'wallet']: wallet,
+      [isEVMWallet(wallet) ? 'evmWallet' : 'wallet']: wallet || null, // null by default, otherwise unique index fails
     });
 
     user.setUserRolesAndPermissionsFromAmsResponse(amsResponse);

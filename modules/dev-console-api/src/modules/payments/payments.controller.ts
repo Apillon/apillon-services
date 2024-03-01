@@ -1,5 +1,5 @@
 import { CryptoPaymentsService } from './crypto-payments.service';
-import { Ctx, Validation } from '@apillon/modules-lib';
+import { CacheInterceptor, Ctx, Validation, Cache } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -11,18 +11,20 @@ import {
   RawBodyRequest,
   Req,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '../../guards/auth.guard';
 import { PaymentsService } from './payments.service';
 import { Headers } from '@nestjs/common';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { PaymentSessionDto } from './dto/payment-session.dto';
-import { PricelistQueryFilter, ValidateFor } from '@apillon/lib';
+import { CacheKeyPrefix, CacheKeyTTL, PricelistQueryFilter, ValidateFor } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { StripeService } from './stripe.service';
 import { CryptoPayment } from './dto/crypto-payment';
 
 @Controller('payments')
+@UseInterceptors(CacheInterceptor)
 export class PaymentsController {
   constructor(
     private paymentsService: PaymentsService,
@@ -83,18 +85,21 @@ export class PaymentsController {
   }
 
   @Get('subscription/packages')
-  @UseGuards(AuthGuard)
+  @Cache({ keyPrefix: CacheKeyPrefix.PAYMENTS_SUBSCRIPTION_PACKAGES, ttl: CacheKeyTTL.EXTRA_LONG })
+  @UseGuards(AuthGuard)  
   async getSubscriptionPackages(@Ctx() context: DevConsoleApiContext) {
     return this.paymentsService.getSubscriptionPackages(context);
   }
 
   @Get('credit/packages')
+  @Cache({ keyPrefix: CacheKeyPrefix.PAYMENTS_CREDIT_PACKAGES, ttl: CacheKeyTTL.EXTRA_LONG })
   @UseGuards(AuthGuard)
   async getCreditPackages(@Ctx() context: DevConsoleApiContext) {
     return this.paymentsService.getCreditPackages(context);
   }
 
   @Get('products/price-list')
+  @Cache({ keyPrefix: CacheKeyPrefix.PRODUCT_PRICE_LIST, ttl: CacheKeyTTL.EXTRA_LONG })
   @Validation({ dto: PricelistQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
   async getProductPricelist(
@@ -105,6 +110,7 @@ export class PaymentsController {
   }
 
   @Get('products/:id/price')
+  @Cache({ keyPrefix: CacheKeyPrefix.PRODUCT_PRICE, ttl: CacheKeyTTL.EXTRA_LONG })
   @UseGuards(AuthGuard)
   async getProductPrice(
     @Ctx() context: DevConsoleApiContext,

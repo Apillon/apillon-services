@@ -264,6 +264,7 @@ export class SubstrateService {
     try {
       const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
         clusterId: phalaLogFilter.clusterId,
+        pruntimeURL: phalaLogFilter.pruntimeUrl,
       });
       const gasPrice = phatRegistry.gasPrice.toNumber();
       console.log(`Retrieved gas price=${gasPrice}.`);

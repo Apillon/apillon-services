@@ -108,14 +108,12 @@ export class PhalaLogWorker extends BaseQueueWorker {
             transaction.contract_id,
             transaction.contractAddress,
             transaction.contractData.clusterId,
+            transaction.metadata.pruntimeUrl,
             transaction.transaction_id,
             transaction.transaction_uuid,
             transaction.transactionHash,
           );
-        } else if (
-          transaction.transactionNonce &&
-          transaction.contractData.clusterId
-        ) {
+        } else if (transaction.transactionNonce) {
           if (tokenPrice === null) {
             tokenPrice = await getTokenPriceUsd(clusterWallet.token);
           }
@@ -129,6 +127,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
             transaction.transactionHash,
             transaction.transactionNonce,
             transaction.contractData.clusterId,
+            transaction.metadata.pruntimeUrl,
             tokenPrice,
           );
         } else {
@@ -166,6 +165,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
     contract_id: number,
     contractAddress: string,
     clusterId: string,
+    pruntimeUrl: string,
     transaction_id: number,
     transaction_uuid: string,
     transactionHash: string,
@@ -175,7 +175,8 @@ export class PhalaLogWorker extends BaseQueueWorker {
       {
         type: 'Log',
         contract: contractAddress,
-        clusterId: clusterId,
+        clusterId,
+        pruntimeUrl,
       },
       this.context,
     );
@@ -254,12 +255,14 @@ export class PhalaLogWorker extends BaseQueueWorker {
     transactionHash: string,
     transactionNonce: string,
     clusterId: string,
+    pruntimeUrl: string,
     tokenPrice: number,
   ) {
     const blockchainServiceRequest = new PhalaLogFilterDto({
-      clusterId: clusterId,
       type: 'MessageOutput',
       nonce: transactionNonce,
+      clusterId,
+      pruntimeUrl,
     });
     const { data } = (await new BlockchainMicroservice(
       this.context,
