@@ -312,6 +312,16 @@ export class PhalaLogWorker extends BaseQueueWorker {
       message = workerSuccess ? null : flags.join(',');
     } else {
       message = 'unhandled error';
+      await this.writeEventLog({
+        logType: LogType.WARN,
+        message: `Unhandled error for Phala transaction with id ${transaction_id}.`,
+        service: ServiceName.COMPUTING,
+        data: {
+          transaction_id,
+          contract_id,
+          walletAddress,
+        },
+      });
     }
     const transactionStatus = workerSuccess
       ? ComputingTransactionStatus.WORKER_SUCCESS
