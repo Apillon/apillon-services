@@ -300,16 +300,18 @@ export class PhalaLogWorker extends BaseQueueWorker {
 
     // update transaction status in computing
     let workerSuccess = false;
-    let message = null;
+    let message: string;
     if ('err' in record.output.result) {
       const err = record.output.result.err;
       message = err
-        ? phalaTypes.createType('ContractError', err.module.error).toJSON()
+        ? phalaTypes.createType('ContractError', err.module.error).toString()
         : 'unknown error';
     } else if ('ok' in record.output.result) {
       const flags = record.output.result.ok.flags;
       workerSuccess = record.output.result.ok.flags.length === 0;
       message = workerSuccess ? null : flags.join(',');
+    } else {
+      message = 'unhandled error';
     }
     const transactionStatus = workerSuccess
       ? ComputingTransactionStatus.WORKER_SUCCESS
