@@ -16,7 +16,8 @@ export class CaptchaGuard implements CanActivate {
       execCtx.getHandler(),
       execCtx.getClass(),
     ]) as any as IValidationOptions;
-    const request = execCtx.switchToHttp().getRequest<IRequest>();
+    // "as any" is added, otherwise type checking fails during build.
+    const request = execCtx.switchToHttp().getRequest<IRequest>() as any;
 
     let gatewayEvent = null;
     try {
