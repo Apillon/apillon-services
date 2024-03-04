@@ -523,10 +523,9 @@ export class UserAirdropTask extends BaseSQLModel {
       `
         SELECT count(*) as cnt
         FROM ${DbTables.USER_AIRDROP_TASK}
-        WHERE user_uuid IN ( @referrals )
+        WHERE user_uuid IN ('${referrals.join("','")}')
         AND totalPoints >= 15
       `,
-      { referrals },
     );
 
     this.usersReferred = res[0]?.cnt || 0;
