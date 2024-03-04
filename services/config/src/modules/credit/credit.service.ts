@@ -174,10 +174,20 @@ export class CreditService {
       undefined,
     );
 
-    if (credit.exists()) {
-      credit.populate(event.body);
-      await credit.update();
+    if (!credit.exists()) {
+      throw new ScsCodeException({
+        code: ConfigErrorCode.PROJECT_CREDIT_NOT_FOUND,
+        status: 404,
+        context,
+        sourceFunction: 'configureCredit()',
+        sourceModule: 'CreditService',
+      });
     }
+
+    credit.canModify(context);
+
+    credit.populate(event.body);
+    await credit.update();
 
     return credit.serialize(getSerializationStrategy(context));
   }
@@ -253,7 +263,11 @@ export class CreditService {
 
       credit.balance -= product.currentPrice;
 
-      if (credit.balance < credit.threshold && !credit.lastAlertTime) {
+      if (
+        credit.alertIfBelowThreshold &&
+        credit.balance < credit.threshold &&
+        !credit.lastAlertTime
+      ) {
         //Send email and set lastAlertTime property
         try {
           //Get project owner
@@ -269,8 +283,8 @@ export class CreditService {
                 templateName: EmailTemplate.CREDIT_BALANCE_BELOW_THRESHOLD,
               }),
             );
+            credit.lastAlertTime = new Date();
           }
-          credit.lastAlertTime = new Date();
         } catch (err) {
           //Admin alert
           await new Lmas().writeLog({

@@ -90,6 +90,8 @@ export class Credit extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.LOGGER,
     ],
+    defaultValue: 200,
+    fakeValue: 200,
   })
   public threshold: number;
 
@@ -107,6 +109,8 @@ export class Credit extends ProjectAccessModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.LOGGER,
     ],
+    defaultValue: true,
+    fakeValue: true,
   })
   public alertIfBelowThreshold: boolean;
 
@@ -152,7 +156,7 @@ export class Credit extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-          SELECT ${this.generateSelectFields()}
+          SELECT *
           FROM \`${DbTables.CREDIT}\`
           WHERE project_uuid = @project_uuid
           AND status <> ${SqlModelStatus.DELETED}
