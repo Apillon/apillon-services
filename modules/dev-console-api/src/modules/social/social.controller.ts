@@ -62,12 +62,11 @@ export class SocialController {
 
   @Post('spaces')
   @Validation({ dto: CreateSpaceDto })
-  @UseGuards(ValidationGuard)
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @UseGuards(AuthGuard)
+  @UseGuards(ValidationGuard, AuthGuard)
   async createSpace(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateSpaceDto,
