@@ -288,7 +288,7 @@ export class ComputingService {
         code: ComputingErrorCode.DEPOSIT_TO_PHALA_CLUSTER_ERROR,
         context,
         sourceFunction,
-        errorMessage: 'Error depositing to Phala cluster',
+        errorMessage: `Error depositing to Phala cluster: ${e.message}`,
         details: e,
       }).writeToMonitor({});
     }
@@ -374,7 +374,7 @@ export class ComputingService {
               code: ComputingErrorCode.TRANSFER_CONTRACT_ERROR,
               context,
               sourceFunction,
-              errorMessage: 'Error transferring contract ownership',
+              errorMessage: `Error transferring contract ownership: ${e.message}`,
               details: e,
             }).writeToMonitor({});
           }
@@ -436,7 +436,7 @@ export class ComputingService {
         code: ComputingErrorCode.FAILED_TO_ENCRYPT_CONTENT,
         context,
         sourceFunction,
-        errorMessage: 'Error encrypting content',
+        errorMessage: `Error encrypting content: ${e.message}`,
         details: e,
       }).writeToMonitor({});
     }
@@ -512,7 +512,7 @@ export class ComputingService {
               code: ComputingErrorCode.FAILED_TO_ASSIGN_CID_TO_NFT,
               context,
               sourceFunction,
-              errorMessage: 'Error assigning CID to NFT',
+              errorMessage: `Error assigning CID to NFT: ${e.message}`,
               details: e,
             }).writeToMonitor({});
           }
@@ -559,6 +559,7 @@ export class ComputingService {
    * @param {ServiceContext} context
    * @param {Contract} contract
    * @param {string} newOwnerAddress
+   * @param sourceFunction
    */
   private static async checkTransferConditions(
     context: ServiceContext,
