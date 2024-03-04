@@ -19,7 +19,7 @@ cat ./bin/deploy/env/env.yml
 echo "Building libraries..."
 cd packages/lib/
 echo "Building @apillon/lib"
-npm install --omit=dev
+npm ci --omit=dev
 npm run build
 npm link
 cd ../../
@@ -28,14 +28,14 @@ if [ "$MODULES_LIB" == "true" ]
 then
   echo "Building @apillon/modules-lib"
   cd packages/modules-lib/
-  npm install --omit=dev
+  npm ci --omit=dev
   npm run build
   npm link
   cd ../../
 else
   echo "Building @apillon/service-lib"
   cd packages/service-lib/
-  npm install --omit=dev
+  npm ci --omit=dev
   npm run build
   npm link
   cd ../../
@@ -45,7 +45,7 @@ if [ "$WORKERS_LIB" == "true" ]
 then
   echo "Building @apillon/workers-lib"
   cd packages/workers-lib/
-  npm install --omit=dev
+  npm ci --omit=dev
   npm run build
   npm link
   cd ../../
@@ -59,7 +59,7 @@ if [ "$MODULES_LIB" == "true" ]
 then
   echo "Linking modules-lib"
   npm link @apillon/modules-lib --omit=dev
-else 
+else
   echo "Linking service-lib"
   npm link @apillon/service-lib --omit=dev
 fi
