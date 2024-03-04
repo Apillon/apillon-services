@@ -37,7 +37,27 @@ export class SubstrateRpcApi {
 
   async send(rawTransaction: string): Promise<any> {
     console.log('Timing before send', this.getTiming(), 's');
-    return (await this.getApi()).tx(rawTransaction).send();
+    // return (await this.getApi()).tx(rawTransaction).send();
+    return await new Promise(async (resolve, reject) => {
+      const api = await this.getApi();
+      await api.tx(rawTransaction).send((result) => {
+        console.log('Got transaction send result:', result);
+        if (result.status.isInBlock) {
+          for (const e of result.events) {
+            const {
+              event: { method, section },
+            } = e;
+            if (section === 'system' && method === 'ExtrinsicFailed') {
+              return reject(result);
+            }
+          }
+          return resolve(result);
+        }
+        if (result.isError) {
+          return reject(result);
+        }
+      });
+    });
   }
 
   /**
@@ -54,7 +74,7 @@ export class SubstrateRpcApi {
       return;
     }
     const lastProcessedNonce = nextOnChainNonce - 1;
-    if (wallet.lastProcessedNonce > lastProcessedNonce) {
+    if (wallet.lastProcessedNonce >= lastProcessedNonce) {
       return;
     }
 
