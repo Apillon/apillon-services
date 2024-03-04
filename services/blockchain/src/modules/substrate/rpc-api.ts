@@ -78,7 +78,7 @@ export class SubstrateRpcApi {
       return;
     }
     const lastProcessedNonce = nextOnChainNonce - 1;
-    if (wallet.lastProcessedNonce >= lastProcessedNonce) {
+    if (wallet.lastProcessedNonce > lastProcessedNonce) {
       return;
     }
 
