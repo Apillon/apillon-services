@@ -36,16 +36,16 @@ export class Mongo {
   public async connect(): Promise<Mongo> {
     try {
       if (!this.client) {
-        console.log('Connecting client...');
+        // console.log('Connecting client...');
         this.client = await MongoClient.connect(this.mongoUrl, {
           minPoolSize: 1,
           maxPoolSize: this.mongoPool,
         });
 
         this.db = this.client.db(this.mongoDb);
-        console.log('Testing connection...');
+        // console.log('Testing connection...');
         const res = await this.db.command({ ping: 1 });
-        console.log(res);
+        // console.log(res);
         writeLog(
           LogType.INFO,
           `Connected to DB: ${this.mongoUrl} | ${this.mongoDb}`,
