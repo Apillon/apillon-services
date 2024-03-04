@@ -153,9 +153,18 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           env.SEND_WEBSITES_TO_REVIEW &&
           !(await checkProjectSubscription(this.context, website.project_uuid))
         ) {
-          //if project is on freemium, website goes to review
-          await deployment.sendToReview(website, data.user_uuid);
-          return;
+          //Check if deployment with such CID(content) already exists. Skip review if true
+          const reviewedDeployment = await new Deployment(
+            {},
+            this.context,
+          ).populateDeploymentByCid(deployment.cid);
+
+          if(!reviewedDeployment.exists())
+          {
+            //if project is on freemium, website goes to review
+            await deployment.sendToReview(website, data.user_uuid);
+            return;
+          }
         }
 
         targetBucket.CID = ipfsRes.parentDirCID.toV0().toString();
@@ -222,10 +231,8 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
       const conn = await this.context.mysql.start();
 
       try {
-        await targetBucket.update(SerializeFor.UPDATE_DB, conn);
-
         //copy files to new bucket
-        await targetBucket.clearBucketContent(this.context, conn);
+        await targetBucket.clearBucketContent(this.context, conn, false);
 
         const directories: Directory[] = [];
         for (const srcFile of sourceFiles) {
@@ -296,6 +303,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         deployment.cid = targetBucket.CID;
         deployment.cidv1 = targetBucket.CIDv1;
         await deployment.update(SerializeFor.UPDATE_DB, conn);
+        await targetBucket.update(SerializeFor.UPDATE_DB, conn);
 
         await this.context.mysql.commit(conn);
         //Clear bucket for upload

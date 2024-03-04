@@ -290,7 +290,7 @@ export class Bucket extends UuidSqlModel {
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
   }
 
-  public async clearBucketContent(context: Context, conn: PoolConnection) {
+  public async clearBucketContent(context: Context, conn: PoolConnection, updateBucketSize = true) {
     await context.mysql.paramExecute(
       `
         UPDATE \`${DbTables.DIRECTORY}\`
@@ -313,8 +313,11 @@ export class Bucket extends UuidSqlModel {
       conn,
     );
 
-    this.size = 0;
-    await this.update(SerializeFor.UPDATE_DB, conn);
+    if(updateBucketSize)
+    {
+      this.size = 0;
+      await this.update(SerializeFor.UPDATE_DB, conn);
+    }
   }
 
   /**
