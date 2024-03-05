@@ -302,10 +302,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
     let workerSuccess = false;
     let message: string;
     if ('err' in record.output.result) {
-      const err = record.output.result.err;
-      message = err
-        ? phalaTypes.createType('ContractError', err.module.error).toString()
-        : 'unknown error';
+      message = record.output.result.err.module.error;
     } else if ('ok' in record.output.result) {
       const flags = record.output.result.ok.flags;
       workerSuccess = record.output.result.ok.flags.length === 0;
