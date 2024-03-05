@@ -32,7 +32,12 @@
     "@middy/core": "^2.5.7",
     "@phala/sdk": "^0.5.10",
     "@polkadot/api": "10.11.3",
+    "@polkadot/api-contract": "10.11.3",
+    "@polkadot/keyring": "12.3.2",
     "@polkadot/types": "10.11.3",
+    "@polkadot/types-augment": "10.11.3",
+    "@polkadot/util": "12.3.2",
+    "@polkadot/util-crypto": "12.3.2",
     "node-fetch": "2.6.7"
   },
   "devDependencies": {
