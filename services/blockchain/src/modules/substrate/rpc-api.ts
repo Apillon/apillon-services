@@ -37,31 +37,31 @@ export class SubstrateRpcApi {
 
   async send(rawTransaction: string): Promise<any> {
     console.log('Timing before send', this.getTiming(), 's');
-    // return (await this.getApi()).tx(rawTransaction).send();
-    return await new Promise(async (resolve, reject) => {
-      try {
-        const api = await this.getApi();
-        await api.tx(rawTransaction).send((result) => {
-          console.log('Got transaction send result:', result);
-          if (result.status.isInBlock) {
-            for (const e of result.events) {
-              const {
-                event: { method, section },
-              } = e;
-              if (section === 'system' && method === 'ExtrinsicFailed') {
-                return reject(result);
-              }
-            }
-            return resolve(result);
-          }
-          if (result.isError) {
-            return reject(result);
-          }
-        });
-      } catch (e: unknown) {
-        reject(e);
-      }
-    });
+    return (await this.getApi()).tx(rawTransaction).send();
+    // return await new Promise(async (resolve, reject) => {
+    //   try {
+    //     const api = await this.getApi();
+    //     await api.tx(rawTransaction).send((result) => {
+    //       console.log('Got transaction send result:', result);
+    //       if (result.status.isInBlock) {
+    //         for (const e of result.events) {
+    //           const {
+    //             event: { method, section },
+    //           } = e;
+    //           if (section === 'system' && method === 'ExtrinsicFailed') {
+    //             return reject(result);
+    //           }
+    //         }
+    //         return resolve(result);
+    //       }
+    //       if (result.isError) {
+    //         return reject(result);
+    //       }
+    //     });
+    //   } catch (e: unknown) {
+    //     reject(e);
+    //   }
+    // });
   }
 
   /**
