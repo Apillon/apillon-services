@@ -354,6 +354,7 @@ export class UserAirdropTask extends BaseSQLModel {
   }
 
   public async getNewStats(user_uuid: string, isRecursive = false) {
+    this.reset();
     this.user_uuid = user_uuid;
     const res = await this.db().paramExecute(
       `
@@ -362,6 +363,10 @@ export class UserAirdropTask extends BaseSQLModel {
     `,
       { user_uuid },
     );
+
+    if (!res.length) {
+      return this;
+    }
 
     const userStats = res[0] as UserStats;
 
@@ -376,11 +381,13 @@ export class UserAirdropTask extends BaseSQLModel {
     ];
 
     if (referrals?.length && !isRecursive) {
-      await Promise.all(
-        referrals.map((x) =>
-          new UserAirdropTask({}, this.getContext()).getNewStats(x, true),
-        ),
-      );
+      // disable recursion
+
+      // await Promise.all(
+      //   referrals.map((x) =>
+      //     new UserAirdropTask({}, this.getContext()).getNewStats(x, true),
+      //   ),
+      // );
 
       await this.assignReferredUsers(referrals);
     }
@@ -465,24 +472,51 @@ export class UserAirdropTask extends BaseSQLModel {
         : env.MONITORING_MONGO_DATABASE,
       4,
     );
-    await mongo.connect();
-    const collection = mongo.db.collection(MongoCollections.API_REQUEST_LOGS);
 
-    const checkApiCalled = ($regex: RegExp) =>
-      collection
-        .count({
-          apiKey: { $in: apiKeys },
-          status: { $in: [200, 201] },
-          url: { $regex, $options: 'i' },
-        })
-        .then((c) => c > 0);
-
-    return {
-      websiteUploadedViaApi: await checkApiCalled(/^\/hosting.*upload/),
-      identitySdkUsed: await checkApiCalled(/^\/wallet-identity.*$/),
-      fileUploadedViaApi: await checkApiCalled(/^\/storage\/buckets.*upload/),
-      nftMintedApi: await checkApiCalled(/^\/nfts\/collections.*mint/),
+    const activity = {
+      websiteUploadedViaApi: false,
+      identitySdkUsed: false,
+      fileUploadedViaApi: false,
+      nftMintedApi: false,
     };
+
+    try {
+      await mongo.connect();
+      const collection = mongo.db.collection(MongoCollections.API_REQUEST_LOGS);
+
+      const checkApiCalled = ($regex: RegExp) =>
+        collection
+          .count({
+            apiKey: { $in: apiKeys },
+            status: { $in: [200, 201] },
+            url: { $regex, $options: 'i' },
+          })
+          .then((c) => c > 0);
+
+      await Promise.all([
+        checkApiCalled(/^\/hosting.*upload/).then(
+          (v) => (activity.websiteUploadedViaApi = v),
+        ),
+        checkApiCalled(/^\/wallet-identity.*$/).then(
+          (v) => (activity.identitySdkUsed = v),
+        ),
+        checkApiCalled(/^\/storage\/buckets.*upload/).then(
+          (v) => (activity.fileUploadedViaApi = v),
+        ),
+        checkApiCalled(/^\/nfts\/collections.*mint/).then(
+          (v) => (activity.nftMintedApi = v),
+        ),
+      ]);
+
+      await mongo.close();
+    } catch (err) {
+      console.error(err);
+      try {
+        await mongo.close();
+      } catch (e) {}
+    }
+
+    return activity;
   }
 
   // Add total points based on users they have referred which meet totalPoints criteria
@@ -494,10 +528,9 @@ export class UserAirdropTask extends BaseSQLModel {
       `
         SELECT count(*) as cnt
         FROM ${DbTables.USER_AIRDROP_TASK}
-        WHERE user_uuid IN ( @referrals )
+        WHERE user_uuid IN ('${referrals.join("','")}')
         AND totalPoints >= 15
       `,
-      { referrals },
     );
 
     this.usersReferred = res[0]?.cnt || 0;

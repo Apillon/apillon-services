@@ -107,7 +107,7 @@ export class MySql {
       waitForConnections: true,
       decimalNumbers: true,
       connectionLimit: 10,
-      queueLimit: 100,
+      queueLimit: 1000,
       timezone: 'Z',
       // ssl: env.USE_DB_SSL ? {
       //   ca: fs.readFileSync(`${__dirname}/keys/ca-cert.pem`).toString(),

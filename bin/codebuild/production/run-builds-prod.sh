@@ -10,7 +10,8 @@ aws codebuild start-build --project-name apillon-nfts-production --profile apill
 aws codebuild start-build --project-name apillon-blockchain-production --profile apillon
 aws codebuild start-build --project-name apillon-auth-api-production --profile apillon
 aws codebuild start-build --project-name apillon-auth-production --profile apillon
-# aws codebuild start-build --project-name apillon-computing-production --profile apillon
+aws codebuild start-build --project-name apillon-computing-production --profile apillon
+aws codebuild start-build --project-name apillon-social-production --profile apillon
 
 aws codebuild start-build --project-name apillon-app-production --profile apillon
 aws codebuild start-build --project-name apillon-admin-production --profile apillon
