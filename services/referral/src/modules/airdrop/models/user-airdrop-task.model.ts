@@ -381,11 +381,13 @@ export class UserAirdropTask extends BaseSQLModel {
     ];
 
     if (referrals?.length && !isRecursive) {
-      await Promise.all(
-        referrals.map((x) =>
-          new UserAirdropTask({}, this.getContext()).getNewStats(x, true),
-        ),
-      );
+      // disable recursion
+
+      // await Promise.all(
+      //   referrals.map((x) =>
+      //     new UserAirdropTask({}, this.getContext()).getNewStats(x, true),
+      //   ),
+      // );
 
       await this.assignReferredUsers(referrals);
     }
@@ -491,24 +493,27 @@ export class UserAirdropTask extends BaseSQLModel {
           })
           .then((c) => c > 0);
 
-      activity.websiteUploadedViaApi = await checkApiCalled(
-        /^\/hosting.*upload/,
-      );
-      activity.identitySdkUsed = await checkApiCalled(/^\/wallet-identity.*$/);
-      activity.fileUploadedViaApi = await checkApiCalled(
-        /^\/storage\/buckets.*upload/,
-      );
-      activity.nftMintedApi = await checkApiCalled(
-        /^\/nfts\/collections.*mint/,
-      );
+      await Promise.all([
+        checkApiCalled(/^\/hosting.*upload/).then(
+          (v) => (activity.websiteUploadedViaApi = v),
+        ),
+        checkApiCalled(/^\/wallet-identity.*$/).then(
+          (v) => (activity.identitySdkUsed = v),
+        ),
+        checkApiCalled(/^\/storage\/buckets.*upload/).then(
+          (v) => (activity.fileUploadedViaApi = v),
+        ),
+        checkApiCalled(/^\/nfts\/collections.*mint/).then(
+          (v) => (activity.nftMintedApi = v),
+        ),
+      ]);
 
       await mongo.close();
     } catch (err) {
-      console.log(err);
+      console.error(err);
       try {
         await mongo.close();
       } catch (e) {}
-      throw err;
     }
 
     return activity;
