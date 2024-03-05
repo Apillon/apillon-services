@@ -156,4 +156,16 @@ export class WalletService {
       new WalletDepositsQueryFilter(event),
     );
   }
+
+  /**
+   * Get total transaction count (sum of lastProcessedNonce) for all wallets
+   * @param {null} _event
+   * @param {ServiceContext} context
+   */
+  static async getTotalWalletTransactions(
+    _event: null,
+    context: ServiceContext,
+  ): Promise<number> {
+    return new Wallet({}, context).getTotalWalletTransactions();
+  }
 }

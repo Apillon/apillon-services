@@ -690,6 +690,18 @@ export class Wallet extends AdvancedSQLModel {
     );
   }
 
+  public async getTotalWalletTransactions(): Promise<number> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT SUM(lastProcessedNonce) as total
+        FROM \`${DbTables.WALLET}\`
+        WHERE status = ${SqlModelStatus.ACTIVE};
+        `,
+    );
+
+    return data?.length ? data[0].total : 0;
+  }
+
   public get isBelowThreshold(): boolean {
     return (
       !!this.minBalance &&

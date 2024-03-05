@@ -43,6 +43,8 @@ export async function processEvent(
       WalletService.listWalletDeposits,
     [BlockchainEventType.GET_WALLET_IDENTITY]:
       WalletIdentityService.getWalletIdentityData,
+    [BlockchainEventType.GET_TOTAL_WALLET_TRANSACTIONS]:
+      WalletService.getTotalWalletTransactions,
   };
 
   return await processors[event.eventName](event, context);

@@ -18,7 +18,12 @@ import { PaymentsService } from './payments.service';
 import { Headers } from '@nestjs/common';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { PaymentSessionDto } from './dto/payment-session.dto';
-import { CacheKeyPrefix, CacheKeyTTL, PricelistQueryFilter, ValidateFor } from '@apillon/lib';
+import {
+  CacheKeyPrefix,
+  CacheKeyTTL,
+  PricelistQueryFilter,
+  ValidateFor,
+} from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { StripeService } from './stripe.service';
 import { CryptoPayment } from './dto/crypto-payment';
@@ -85,21 +90,30 @@ export class PaymentsController {
   }
 
   @Get('subscription/packages')
-  @Cache({ keyPrefix: CacheKeyPrefix.PAYMENTS_SUBSCRIPTION_PACKAGES, ttl: CacheKeyTTL.EXTRA_LONG })
-  @UseGuards(AuthGuard)  
+  @Cache({
+    keyPrefix: CacheKeyPrefix.PAYMENTS_SUBSCRIPTION_PACKAGES,
+    ttl: CacheKeyTTL.EXTRA_LONG,
+  })
+  @UseGuards(AuthGuard)
   async getSubscriptionPackages(@Ctx() context: DevConsoleApiContext) {
     return this.paymentsService.getSubscriptionPackages(context);
   }
 
   @Get('credit/packages')
-  @Cache({ keyPrefix: CacheKeyPrefix.PAYMENTS_CREDIT_PACKAGES, ttl: CacheKeyTTL.EXTRA_LONG })
+  @Cache({
+    keyPrefix: CacheKeyPrefix.PAYMENTS_CREDIT_PACKAGES,
+    ttl: CacheKeyTTL.EXTRA_LONG,
+  })
   @UseGuards(AuthGuard)
   async getCreditPackages(@Ctx() context: DevConsoleApiContext) {
     return this.paymentsService.getCreditPackages(context);
   }
 
   @Get('products/price-list')
-  @Cache({ keyPrefix: CacheKeyPrefix.PRODUCT_PRICE_LIST, ttl: CacheKeyTTL.EXTRA_LONG })
+  @Cache({
+    keyPrefix: CacheKeyPrefix.PRODUCT_PRICE_LIST,
+    ttl: CacheKeyTTL.EXTRA_LONG,
+  })
   @Validation({ dto: PricelistQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
   async getProductPricelist(
@@ -110,7 +124,10 @@ export class PaymentsController {
   }
 
   @Get('products/:id/price')
-  @Cache({ keyPrefix: CacheKeyPrefix.PRODUCT_PRICE, ttl: CacheKeyTTL.EXTRA_LONG })
+  @Cache({
+    keyPrefix: CacheKeyPrefix.PRODUCT_PRICE,
+    ttl: CacheKeyTTL.EXTRA_LONG,
+  })
   @UseGuards(AuthGuard)
   async getProductPrice(
     @Ctx() context: DevConsoleApiContext,
