@@ -122,6 +122,13 @@ export class SubstrateService {
         );
       }
 
+      if (!wallet.exists()) {
+        throw new BlockchainCodeException({
+          code: BlockchainErrorCode.WALLET_DOES_NOT_EXISTS,
+          status: 500,
+        });
+      }
+
       console.log('Wallet', wallet.serialize());
       console.info('Getting wallet seed, ...');
       const seed = await getWalletSeed(wallet.seed);

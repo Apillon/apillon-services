@@ -41,8 +41,6 @@ export class Space extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -172,11 +170,33 @@ export class Space extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
   })
   public spaceId: string;
+
+  /**
+   * Renamed properties for apillon api ----------------------------------------
+   */
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.APILLON_API],
+    getter() {
+      return this.space_uuid;
+    },
+  })
+  public hub_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.APILLON_API],
+    getter() {
+      return this.spaceId;
+    },
+  })
+  public hubId: string;
 
   public async populateByUuidAndCheckAccess(uuid: string): Promise<this> {
     const space: Space = await this.populateByUUID(uuid, 'space_uuid');
@@ -213,7 +233,10 @@ export class Space extends UuidSqlModel {
     );
     const sqlQuery = {
       qSelect: `
-        SELECT ${selectFields},
+        SELECT 
+        space_uuid as ${this.getContext().apiName == ApiName.APILLON_API ? 'hub_uuid' : 'space_uuid'},
+        spaceId as ${this.getContext().apiName == ApiName.APILLON_API ? 'hubId' : 'spaceId'},
+        ${selectFields},
         (
           SELECT COUNT(*)
           FROM \`${DbTables.POST}\` p

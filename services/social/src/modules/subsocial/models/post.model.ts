@@ -41,8 +41,6 @@ export class Post extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -104,8 +102,6 @@ export class Post extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -218,11 +214,33 @@ export class Post extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
   })
   public postId: string;
+
+  /**
+   * Renamed properties for apillon api ----------------------------------------
+   */
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.APILLON_API],
+    getter() {
+      return this.post_uuid;
+    },
+  })
+  public channel_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.APILLON_API],
+    getter() {
+      return this.postId;
+    },
+  })
+  public channelId: string;
 
   public async populateByUuidAndCheckAccess(uuid: string): Promise<this> {
     const post: Post = await this.populateByUUID(uuid, 'post_uuid');
@@ -261,7 +279,10 @@ export class Post extends UuidSqlModel {
     );
     const sqlQuery = {
       qSelect: `
-        SELECT ${selectFields}
+        SELECT 
+        post_uuid as ${this.getContext().apiName == ApiName.APILLON_API ? 'channel_uuid' : 'post_uuid'},
+        postId as ${this.getContext().apiName == ApiName.APILLON_API ? 'channelId' : 'postId'},
+        ${selectFields}
         `,
       qFrom: `
         FROM \`${DbTables.POST}\` p
@@ -311,7 +332,7 @@ export class Post extends UuidSqlModel {
         location: 'Post.createPost',
         message: 'New social post(channel) created',
         service: ServiceName.SOCIAL,
-        data: this.serialize()
+        data: this.serialize(),
       });
     } catch (err) {
       await context.mysql.rollback(conn);
