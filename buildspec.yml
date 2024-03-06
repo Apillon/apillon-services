@@ -26,5 +26,5 @@ phases:
       # - npm install
       - pwd
       - ls -al
-      - npm ci --omit=dev
+      - npm ci --production
       - ./bin/deploy/build-single-service.sh
