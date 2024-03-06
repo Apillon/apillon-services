@@ -12,7 +12,6 @@ custom:
       forceExclude:
         - aws-sdk
     packagerOptions:
-      noInstall: true
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
 
