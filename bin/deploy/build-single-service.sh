@@ -17,7 +17,6 @@ cat ./bin/deploy/env/env.yml
 
 # prepare the environemnt
 echo "Building libraries..."
-npm ci --omit=dev
 cd packages/lib/
 echo "Building @apillon/lib"
 npm run build

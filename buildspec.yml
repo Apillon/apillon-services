@@ -24,4 +24,7 @@ phases:
     commands:
       # - npm cache verify
       # - npm install
+      - pwd
+      - ls -al
+      - npm ci --omit=dev
       - ./bin/deploy/build-single-service.sh
