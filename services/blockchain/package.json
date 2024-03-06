@@ -64,6 +64,7 @@
     "webpack-node-externals": "^3.0.0"
   },
   "overrides": {
+    "@pokladot/types": "10.11.3",
     "ipfs-utils": "9.0.6"
   },
   "jest": {
