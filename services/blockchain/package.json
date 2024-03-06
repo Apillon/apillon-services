@@ -64,7 +64,18 @@
     "webpack-node-externals": "^3.0.0"
   },
   "overrides": {
-    "@pokladot/types": "10.11.3",
+    "@polkadot/api": "10.11.3",
+    "@polkadot/api-augment": "10.11.3",
+    "@polkadot/api-base": "10.11.3",
+    "@polkadot/api-derive": "10.11.3",
+    "@polkadot/rpc-augment": "10.11.3",
+    "@polkadot/rpc-core": "10.11.3",
+    "@polkadot/rpc-provider": "10.11.3",
+    "@polkadot/types": "10.11.3",
+    "@polkadot/types-augment": "10.11.3",
+    "@polkadot/types-codec": "10.11.3",
+    "@polkadot/types-create": "10.11.3",
+    "@polkadot/types-support": "10.11.3",
     "ipfs-utils": "9.0.6"
   },
   "jest": {
