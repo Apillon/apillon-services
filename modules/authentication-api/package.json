@@ -34,7 +34,7 @@
     "@nestjs/common": "^9.0.11",
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
-    "@polkadot/util-crypto": "^10.1.9",
+    "@polkadot/util-crypto": "10.1.9",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
