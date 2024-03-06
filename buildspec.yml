@@ -26,5 +26,6 @@ phases:
       # - npm install
       - pwd
       - ls -al
+      - cat package-lock.json
       - npm ci --production
       - ./bin/deploy/build-single-service.sh
