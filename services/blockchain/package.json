@@ -76,6 +76,7 @@
     "@polkadot/types-codec": "10.11.3",
     "@polkadot/types-create": "10.11.3",
     "@polkadot/types-support": "10.11.3",
+    "@polkadot/types-known": "10.11.3",
     "ipfs-utils": "9.0.6"
   },
   "jest": {
