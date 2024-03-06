@@ -24,6 +24,7 @@ import {
   releaseStage,
 } from '@apillon/tests-lib';
 import { setupTest } from '../../../../test/helpers/setup';
+import * as request from 'supertest';
 
 describe('Apillon API social tests', () => {
   let stage: Stage;
@@ -60,7 +61,7 @@ describe('Apillon API social tests', () => {
         role_id: DefaultApiKeyRole.KEY_EXECUTE,
         project_uuid: testProject.project_uuid,
         service_uuid: testService.service_uuid,
-        serviceType_id: AttachedServiceType.HOSTING,
+        serviceType_id: AttachedServiceType.SOCIAL,
       }),
     );
     await apiKey.assignRole(
@@ -68,7 +69,7 @@ describe('Apillon API social tests', () => {
         role_id: DefaultApiKeyRole.KEY_READ,
         project_uuid: testProject.project_uuid,
         service_uuid: testService.service_uuid,
-        serviceType_id: AttachedServiceType.HOSTING,
+        serviceType_id: AttachedServiceType.SOCIAL,
       }),
     );
     await apiKey.assignRole(
@@ -76,7 +77,7 @@ describe('Apillon API social tests', () => {
         role_id: DefaultApiKeyRole.KEY_WRITE,
         project_uuid: testProject.project_uuid,
         service_uuid: testService.service_uuid,
-        serviceType_id: AttachedServiceType.HOSTING,
+        serviceType_id: AttachedServiceType.SOCIAL,
       }),
     );
 
@@ -84,9 +85,10 @@ describe('Apillon API social tests', () => {
     testSpace = await new Space({}, stage.socialContext)
       .fake()
       .populate({
-        status: SqlModelStatus.DRAFT,
+        status: SqlModelStatus.ACTIVE,
         project_uuid: testProject.project_uuid,
         about: 'Test space',
+        spaceId: 111,
       })
       .insert();
 
@@ -95,8 +97,9 @@ describe('Apillon API social tests', () => {
       .fake()
       .populate({
         space_id: testSpace.id,
-        status: SqlModelStatus.DRAFT,
+        status: SqlModelStatus.ACTIVE,
         project_uuid: testProject.project_uuid,
+        postId: 222,
       })
       .insert();
 
@@ -131,7 +134,7 @@ describe('Apillon API social tests', () => {
         role_id: DefaultApiKeyRole.KEY_EXECUTE,
         project_uuid: testProject2.project_uuid,
         service_uuid: testService2.service_uuid,
-        serviceType_id: AttachedServiceType.HOSTING,
+        serviceType_id: AttachedServiceType.SOCIAL,
       }),
     );
     await apiKey2.assignRole(
@@ -139,7 +142,7 @@ describe('Apillon API social tests', () => {
         role_id: DefaultApiKeyRole.KEY_READ,
         project_uuid: testProject2.project_uuid,
         service_uuid: testService2.service_uuid,
-        serviceType_id: AttachedServiceType.HOSTING,
+        serviceType_id: AttachedServiceType.SOCIAL,
       }),
     );
     await apiKey2.assignRole(
@@ -147,7 +150,7 @@ describe('Apillon API social tests', () => {
         role_id: DefaultApiKeyRole.KEY_WRITE,
         project_uuid: testProject2.project_uuid,
         service_uuid: testService2.service_uuid,
-        serviceType_id: AttachedServiceType.HOSTING,
+        serviceType_id: AttachedServiceType.SOCIAL,
       }),
     );
   });
@@ -157,15 +160,112 @@ describe('Apillon API social tests', () => {
   });
 
   describe('Apillon API social Space tests', () => {
-    test('Application (through Apillon API) should be able to should be able to list spaces(hubs)', async () => {
+    test('Application (through Apillon API) should be able to list spaces(hubs)', async () => {
       const response = await getRequest(`/social/hubs`);
 
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBe(1);
-      expect(response.body.data.items[0]?.space_uuid).toBeTruthy();
-      expect(response.body.data.items[0]?.status).toBeTruthy();
-      expect(response.body.data.items[0]?.name).toBeTruthy();
-      expect(response.body.data.items[0]?.about).toBeTruthy();
+      const listedSpace = response.body.data.items[0];
+      expect(listedSpace.hubUuid).toBe(testSpace.space_uuid);
+      expect(listedSpace.status).toBe(5);
+      expect(listedSpace.name).toBe(testSpace.name);
+      expect(listedSpace.about).toBe(testSpace.about);
+      expect(listedSpace.hubId).toBe(testSpace.spaceId);
+    });
+
+    test('Application (through Apillon API) should be able to get space(hub)', async () => {
+      const response = await getRequest(`/social/hubs/${testSpace.space_uuid}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.hubUuid).toBe(testSpace.space_uuid);
+      expect(response.body.data.status).toBe(5);
+      expect(response.body.data.name).toBe(testSpace.name);
+      expect(response.body.data.about).toBe(testSpace.about);
+      expect(response.body.data.hubId).toBe(testSpace.spaceId);
+    });
+
+    test('Application (through Apillon API) should NOT be able to get space(hub) of another project', async () => {
+      const response = await request(stage.http)
+        .get(`/social/hubs/${testSpace.space_uuid}`)
+        .set(
+          'Authorization',
+          `Basic ${Buffer.from(
+            apiKey2.apiKey + ':' + apiKey2.apiKeySecret,
+          ).toString('base64')}`,
+        );
+
+      expect(response.status).toBe(403);
+    });
+
+    test('Application (through Apillon API) should be able to create new space(hub)', async () => {
+      const response = await postRequest(`/social/hubs`, {
+        name: 'My test space',
+        about: 'My test space description',
+      });
+      expect(response.status).toBe(201);
+      expect(response.body.data.hubUuid).toBeTruthy();
+      expect(response.body.data.status).toBe(1);
+      expect(response.body.data.name).toBeTruthy();
+      expect(response.body.data.about).toBeTruthy();
+    });
+  });
+
+  describe('Apillon API social Post(channel) tests', () => {
+    test('Application (through Apillon API) should be able to list channels in hub', async () => {
+      const response = await getRequest(
+        `/social/hubs/${testSpace.space_uuid}/channels`,
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBeGreaterThan(0);
+      const listedPost = response.body.data.items[0];
+      expect(listedPost.channelUuid).toBe(testPost.post_uuid);
+      expect(listedPost.status).toBe(5);
+      expect(listedPost.title).toBe(testPost.title);
+      expect(listedPost.body).toBe(testPost.body);
+      expect(listedPost.channelId).toBe(testPost.postId);
+    });
+
+    test('Application (through Apillon API) should be able to get channel(post)', async () => {
+      const response = await getRequest(
+        `/social/hubs/${testSpace.space_uuid}/channels/${testPost.post_uuid}`,
+      );
+
+      expect(response.body.data.channelUuid).toBe(testPost.post_uuid);
+      expect(response.body.data.status).toBe(5);
+      expect(response.body.data.title).toBe(testPost.title);
+      expect(response.body.data.body).toBe(testPost.body);
+      expect(response.body.data.channelId).toBe(testPost.postId);
+    });
+
+    test('Application (through Apillon API) should NOT be able to get channel(post) of another project', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/social/hubs/${testSpace.space_uuid}/channels/${testPost.post_uuid}`,
+        )
+        .set(
+          'Authorization',
+          `Basic ${Buffer.from(
+            apiKey2.apiKey + ':' + apiKey2.apiKeySecret,
+          ).toString('base64')}`,
+        );
+
+      expect(response.status).toBe(403);
+    });
+
+    test('Application (through Apillon API) should be able to create new post(channel)', async () => {
+      const response = await postRequest(
+        `/social/hubs/${testSpace.space_uuid}/channels`,
+        {
+          title: 'My test channel',
+          body: 'This is channel description',
+        },
+      );
+      expect(response.status).toBe(201);
+      expect(response.body.data.channelUuid).toBeTruthy();
+      expect(response.body.data.status).toBe(1);
+      expect(response.body.data.title).toBeTruthy();
+      expect(response.body.data.body).toBeTruthy();
     });
   });
 });
