@@ -67,6 +67,7 @@
     "@polkadot/api": "10.11.3",
     "@polkadot/api-augment": "10.11.3",
     "@polkadot/api-base": "10.11.3",
+    "@polkadot/api-contract": "10.11.3",
     "@polkadot/api-derive": "10.11.3",
     "@polkadot/rpc-augment": "10.11.3",
     "@polkadot/rpc-core": "10.11.3",
