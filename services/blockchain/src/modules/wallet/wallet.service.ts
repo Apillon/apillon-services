@@ -166,6 +166,6 @@ export class WalletService {
     _event: null,
     context: ServiceContext,
   ): Promise<number> {
-    return new Wallet({}, context).getTotalWalletTransactions();
+    return new Wallet({}, context).getTotalTransactions();
   }
 }

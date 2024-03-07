@@ -28,22 +28,22 @@ export class PublicService {
     const results = await Promise.all([
       new User({}, context).getTotalUsers(),
       new Project({}, context).getTotalProjects(),
-      new Lmas().getTotalRequests(),
+      // new Lmas().getTotalRequests(),
       new BlockchainMicroservice(context).getTotalWalletTransactions(),
     ]);
 
     const [
       totalUsers,
       totalProjects,
-      { totalApiRequests, totalDevConsoleRequests },
+      // { totalApiRequests, totalDevConsoleRequests },
       totalWalletTransactions,
     ] = results.map((d) => d?.data || d);
 
     return {
       totalUsers,
       totalProjects,
-      totalApiRequests,
-      totalDevConsoleRequests,
+      // totalApiRequests,
+      // totalDevConsoleRequests,
       totalWalletTransactions,
     };
   }

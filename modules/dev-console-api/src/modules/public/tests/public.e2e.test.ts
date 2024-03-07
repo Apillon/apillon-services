@@ -9,7 +9,7 @@ import {
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 
-describe('Social tests', () => {
+describe('Public controller tests', () => {
   let stage: Stage;
 
   beforeAll(async () => {
