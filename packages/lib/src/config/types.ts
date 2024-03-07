@@ -76,10 +76,13 @@ export enum LmasEventType {
   SEND_ALERT = 'send-alert',
   SEND_ADMIN_ALERT = 'send-admin-alert',
   NOTIFY = 'notify',
+
   LIST_LOGS = 'list-logs',
   LIST_REQUEST_LOGS = 'list-request-logs',
   GET_API_KEYS_USAGE_COUNT = 'get-api-keys-usage-count',
   GET_IPFS_TRAFFIC = 'get-ipfs-traffic',
+  GET_TOTAL_REQUESTS = 'get-total-requests',
+
   SEND_MESSAGE_TO_SLACK = 'send-message-to-slack',
 }
 
@@ -99,6 +102,7 @@ export enum BlockchainEventType {
   UPDATE_TRANSACTION = 'update-transaction',
   LIST_WALLET_DEPOSITS = 'list-wallet-deposits',
   GET_WALLET_IDENTITY = 'get-wallet-identity',
+  GET_TOTAL_WALLET_TRANSACTIONS = 'get-total-wallet-transactions',
 }
 
 export enum StorageEventType {
@@ -780,6 +784,8 @@ export enum CacheKeyPrefix {
   PAYMENTS_CREDIT_PACKAGES = 'payments-credit-packages',
   PRODUCT_PRICE_LIST = 'product-price-list',
   PRODUCT_PRICE = 'product-price-list',
+
+  PLATFORM_STATISTICS = 'platform-statistics',
 }
 
 export enum CacheKeyTTL {

@@ -189,5 +189,11 @@ export class BlockchainMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async getTotalWalletTransactions() {
+    return await this.callService({
+      eventName: BlockchainEventType.GET_TOTAL_WALLET_TRANSACTIONS,
+    });
+  }
   //#endregion
 }

@@ -318,4 +318,15 @@ export class User extends AdvancedSQLModel {
       'u.id',
     );
   }
+
+  public async getTotalUsers(): Promise<number> {
+    const data = await this.db().paramExecute(
+      `
+        SELECT COUNT(*) as total
+        FROM \`${DbTables.USER}\`
+        WHERE status = ${SqlModelStatus.ACTIVE}
+      `,
+    );
+    return data?.length ? data[0].total : 0;
+  }
 }
