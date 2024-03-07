@@ -24,10 +24,10 @@ export async function processEvent(
       SubstrateService.createTransaction,
     [BlockchainEventType.SUBSTRATE_GET_TRANSACTION]:
       SubstrateService.getTransactionById,
-    [BlockchainEventType.GET_PHALA_LOG_RECORDS_AND_GAS_PRICE]:
+    /*[BlockchainEventType.GET_PHALA_LOG_RECORDS_AND_GAS_PRICE]:
       SubstrateService.getPhalaLogRecordsAndGasPrice,
     [BlockchainEventType.GET_PHALA_CLUSTER_WALLET_BALANCE]:
-      SubstrateService.getPhalaClusterWalletBalance,
+      SubstrateService.getPhalaClusterWalletBalance,*/
     [BlockchainEventType.GET_PHALA_CLUSTER_DEPOSIT_TRANSACTION]:
       SubstrateService.getPhalaClusterDepositTransaction,
     [BlockchainEventType.EVM_SIGN_TRANSACTION]: EvmService.createTransaction,

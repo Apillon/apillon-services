@@ -25,7 +25,7 @@ import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { getWalletSeed } from '../../lib/seed';
 import { SubstrateRpcApi } from './rpc-api';
-import { OnChainRegistry, types as PhalaTypesBundle } from '@phala/sdk';
+//import { OnChainRegistry, types as PhalaTypesBundle } from '@phala/sdk';
 import { substrateChainToWorkerName } from '../../lib/helpers';
 import { typesBundle as SubsocialTypesBundle } from '@subsocial/types';
 import { PhalaBlockchainIndexer } from '../blockchain-indexers/substrate/phala/indexer.service';
@@ -78,11 +78,11 @@ export class SubstrateService {
         typesBundle = CrustTypesBundle;
         break;
       }
-      case SubstrateChain.PHALA: {
+      /*case SubstrateChain.PHALA: {
         keyring = new Keyring({ type: 'sr25519' });
         typesBundle = PhalaTypesBundle;
         break;
-      }
+      }*/
       case SubstrateChain.XSOCIAL:
       case SubstrateChain.SUBSOCIAL: {
         keyring = new Keyring({ type: 'sr25519' });
@@ -251,7 +251,8 @@ export class SubstrateService {
     },
     context: ServiceContext,
   ) {
-    const phalaLogFilter = event.phalaLogFilter;
+    return undefined;
+    /*const phalaLogFilter = event.phalaLogFilter;
     const endpoint = await new Endpoint({}, context).populateByChain(
       SubstrateChain.PHALA,
       ChainType.SUBSTRATE,
@@ -290,7 +291,7 @@ export class SubstrateService {
       throw e;
     } finally {
       await api.destroy();
-    }
+    }*/
   }
 
   static async getPhalaClusterWalletBalance(
@@ -299,7 +300,8 @@ export class SubstrateService {
     },
     context: ServiceContext,
   ) {
-    const endpoint = await new Endpoint({}, context).populateByChain(
+    return undefined;
+    /*const endpoint = await new Endpoint({}, context).populateByChain(
       SubstrateChain.PHALA,
       ChainType.SUBSTRATE,
     );
@@ -334,7 +336,7 @@ export class SubstrateService {
       throw e;
     } finally {
       await api.destroy();
-    }
+    }*/
   }
 
   static async getPhalaClusterDepositTransaction(
@@ -385,10 +387,10 @@ export class SubstrateService {
         typesBundle = CrustTypesBundle;
         break;
       }
-      case SubstrateChain.PHALA: {
+      /*case SubstrateChain.PHALA: {
         typesBundle = PhalaTypesBundle;
         break;
-      }
+      }*/
       case SubstrateChain.XSOCIAL:
       case SubstrateChain.SUBSOCIAL: {
         typesBundle = SubsocialTypesBundle;
