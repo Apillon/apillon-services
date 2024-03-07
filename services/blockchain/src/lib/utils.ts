@@ -13,6 +13,7 @@ export function getTokenFromChain(chainType: ChainType, chain: Chain) {
       [SubstrateChain.CRUST]: TxToken.CRUST_TOKEN,
       [SubstrateChain.KILT]: TxToken.KILT_TOKEN,
       [SubstrateChain.PHALA]: TxToken.PHALA_TOKEN,
+      [SubstrateChain.SUBSOCIAL]: TxToken.SUBSOCIAL_TOKEN,
     },
   };
   return options[chainType]?.[chain] || null;
