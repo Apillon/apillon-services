@@ -263,11 +263,7 @@ export class CreditService {
 
       credit.balance -= product.currentPrice;
 
-      if (
-        credit.alertIfBelowThreshold &&
-        credit.balance < credit.threshold &&
-        !credit.lastAlertTime
-      ) {
+      if (credit.balance < credit.threshold && !credit.lastAlertTime) {
         //Send email and set lastAlertTime property
         try {
           //Get project owner

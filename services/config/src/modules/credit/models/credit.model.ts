@@ -96,25 +96,6 @@ export class Credit extends ProjectAccessModel {
   public threshold: number;
 
   @prop({
-    parser: { resolver: booleanParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.ADMIN, //
-    ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.LOGGER,
-    ],
-    defaultValue: true,
-    fakeValue: true,
-  })
-  public alertIfBelowThreshold: boolean;
-
-  @prop({
     parser: { resolver: dateParser() },
     populatable: [
       PopulateFrom.DB,

@@ -2,7 +2,7 @@
 import { prop } from '@rawmodel/core';
 import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 
-import { presenceValidator } from '@rawmodel/validators';
+import { numberSizeValidator, presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
 
@@ -21,19 +21,13 @@ export class ConfigureCreditDto extends ModelBase {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.CONFIGURE_CREDIT_REQUIRED_DATA_NOT_PRESENT,
       },
-    ],
-  })
-  public threshold: number;
-
-  @prop({
-    parser: { resolver: booleanParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
       {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.CONFIGURE_CREDIT_REQUIRED_DATA_NOT_PRESENT,
+        resolver: numberSizeValidator({
+          minOrEqual: 0,
+        }),
+        code: ValidatorErrorCode.CONFIGURE_CREDIT_REQUIRED_DATA_NOT_VALID,
       },
     ],
   })
-  public alertIfBelowThreshold: string;
+  public threshold: number;
 }

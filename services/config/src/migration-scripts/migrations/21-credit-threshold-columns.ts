@@ -6,7 +6,6 @@ export async function upgrade(
   await queryFn(`
     ALTER TABLE \`${DbTables.CREDIT}\`
     ADD COLUMN \`threshold\` INT NOT NULL DEFAULT 200,
-    ADD COLUMN \`alertIfBelowThreshold\` BOOLEAN NOT NULL DEFAULT 1,
     ADD COLUMN \`lastAlertTime\` DATETIME NULL 
     ;
     `);
@@ -18,7 +17,6 @@ export async function downgrade(
   await queryFn(`
         ALTER TABLE \`${DbTables.CREDIT}\` 
         DROP COLUMN \`threshold\`, 
-        DROP COLUMN \`alertIfBelowThreshold\`,
         DROP COLUMN \`lastAlertTime\`;
     `);
 }

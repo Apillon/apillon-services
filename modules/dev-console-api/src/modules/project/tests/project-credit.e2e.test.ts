@@ -134,7 +134,6 @@ describe('Project credit e2e tests', () => {
         .patch(`/projects/${testProject.project_uuid}/credit-settings`)
         .send({
           threshold: 500,
-          alertIfBelowThreshold: false,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
@@ -144,7 +143,22 @@ describe('Project credit e2e tests', () => {
         stage.configContext,
       ).populateByProjectUUIDForUpdate(testProject.project_uuid, undefined);
       expect(tmpProjectCredit.threshold).toBe(500);
-      expect(tmpProjectCredit.alertIfBelowThreshold).toBe(false);
+    });
+
+    test('User should be able to change(disable - threshold = 0) config for credit alerting', async () => {
+      const response = await request(stage.http)
+        .patch(`/projects/${testProject.project_uuid}/credit-settings`)
+        .send({
+          threshold: 0,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+
+      const tmpProjectCredit = await new Credit(
+        {},
+        stage.configContext,
+      ).populateByProjectUUIDForUpdate(testProject.project_uuid, undefined);
+      expect(tmpProjectCredit.threshold).toBe(0);
     });
 
     test('User should NOT be able to change config for another user project', async () => {
@@ -152,20 +166,19 @@ describe('Project credit e2e tests', () => {
         .patch(`/projects/${testProject.project_uuid}/credit-settings`)
         .send({
           threshold: 500,
-          alertIfBelowThreshold: false,
         })
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
     });
 
-    test('User should not be notified if alertIfBelowThreshold is false and balance is below threshold', async () => {
+    test('User should not be notified if threshold is not set', async () => {
       const projectCredit = await new Credit(
         {},
         stage.configContext,
       ).populateByProjectUUIDForUpdate(testProject.project_uuid, undefined);
       projectCredit.balance = 150;
       projectCredit.lastAlertTime = null;
-      projectCredit.alertIfBelowThreshold = false;
+      projectCredit.threshold = 0;
       await projectCredit.update();
 
       const response = await request(stage.http)
