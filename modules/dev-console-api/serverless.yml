@@ -8,7 +8,7 @@ custom:
   webpack:
     webpackConfig: ./webpack.config.js
     includeModules:
-      nodeModulesRelativeDir: '../../'
+      #      nodeModulesRelativeDir: '../../'
       forceExclude:
         - aws-sdk
       forceInclude:
