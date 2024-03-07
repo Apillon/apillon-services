@@ -85,8 +85,6 @@ export class Space extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -241,7 +239,7 @@ export class Space extends UuidSqlModel {
           SELECT COUNT(*)
           FROM \`${DbTables.POST}\` p
           WHERE p.space_id = s.id
-        ) as numOfPosts
+        ) as ${this.getContext().apiName == ApiName.APILLON_API ? 'numOfChannels' : 'numOfPosts'}
         `,
       qFrom: `
         FROM \`${DbTables.SPACE}\` s
