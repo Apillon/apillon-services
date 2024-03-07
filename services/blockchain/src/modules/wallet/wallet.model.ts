@@ -697,6 +697,7 @@ export class Wallet extends AdvancedSQLModel {
    * @returns {Promise<number>}
    */
   public async getTotalTransactions(address?: string): Promise<number> {
+    console.log(address);
     const data = await this.getContext().mysql.paramExecute(
       `
         SELECT SUM(lastProcessedNonce) as total
