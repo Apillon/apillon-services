@@ -8,8 +8,6 @@ import {
   IsolationLevel,
   Lmas,
   LogType,
-  PhalaClusterWalletDto,
-  PhalaLogFilterDto,
   SerializeFor,
   ServiceName,
   SubstrateChain,
@@ -25,14 +23,10 @@ import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { getWalletSeed } from '../../lib/seed';
 import { SubstrateRpcApi } from './rpc-api';
-import { OnChainRegistry, types as PhalaTypesBundle } from '@phala/sdk';
+import { types as PhalaTypesBundle } from '@phala/sdk';
 import { substrateChainToWorkerName } from '../../lib/helpers';
 import { typesBundle as SubsocialTypesBundle } from '@subsocial/types';
 import { PhalaBlockchainIndexer } from '../blockchain-indexers/substrate/phala/indexer.service';
-
-function removeObjectKeysWithNullValue(obj: any) {
-  return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null));
-}
 
 export class SubstrateService {
   static async createTransaction(
@@ -243,99 +237,6 @@ export class SubstrateService {
       });
     }
     return transaction.serialize(SerializeFor.PROFILE);
-  }
-
-  static async getPhalaLogRecordsAndGasPrice(
-    event: {
-      phalaLogFilter: PhalaLogFilterDto;
-    },
-    context: ServiceContext,
-  ) {
-    const phalaLogFilter = event.phalaLogFilter;
-    const endpoint = await new Endpoint({}, context).populateByChain(
-      SubstrateChain.PHALA,
-      ChainType.SUBSTRATE,
-    );
-    console.log('Fetching gas price and logs with filter: ', {
-      ...phalaLogFilter,
-      endpoint: endpoint.url,
-    });
-    const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
-    try {
-      const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
-        clusterId: phalaLogFilter.clusterId,
-        pruntimeURL: phalaLogFilter.pruntimeUrl,
-      });
-      const gasPrice = phatRegistry.gasPrice.toNumber();
-      console.log(`Retrieved gas price=${gasPrice}.`);
-      const { records } = await phatRegistry.loggerContract.tail(
-        100,
-        removeObjectKeysWithNullValue(phalaLogFilter),
-      );
-      console.log(`Retrieved ${records.length} log records.`);
-      return { records, gasPrice };
-    } catch (e: unknown) {
-      await new Lmas().writeLog({
-        logType: LogType.ERROR,
-        message: `Error fetching phala logs or gas price.`,
-        location: 'SubstrateService.getPhalaClusterWalletBalance',
-        service: ServiceName.BLOCKCHAIN,
-        data: {
-          error: e,
-          clusterId: phalaLogFilter.clusterId,
-          contract: phalaLogFilter.contract,
-          nonce: phalaLogFilter.nonce,
-          type: phalaLogFilter.type,
-        },
-      });
-      throw e;
-    } finally {
-      await api.destroy();
-    }
-  }
-
-  static async getPhalaClusterWalletBalance(
-    event: {
-      phalaClusterWallet: PhalaClusterWalletDto;
-    },
-    context: ServiceContext,
-  ) {
-    const endpoint = await new Endpoint({}, context).populateByChain(
-      SubstrateChain.PHALA,
-      ChainType.SUBSTRATE,
-    );
-    const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
-    try {
-      const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
-        clusterId: event.phalaClusterWallet.clusterId,
-      });
-      const balance = await phatRegistry.getClusterBalance(
-        event.phalaClusterWallet.walletAddress,
-      );
-
-      console.log(
-        `Retrieved balance total ${balance.total} and free ${balance.free}`,
-      );
-      return {
-        total: balance.total.toNumber(),
-        free: balance.free.toNumber(),
-      };
-    } catch (e: unknown) {
-      await new Lmas().writeLog({
-        logType: LogType.ERROR,
-        message: `Error fetching cluster ${event.phalaClusterWallet.walletAddress} balance.`,
-        location: 'SubstrateService.getPhalaClusterWalletBalance',
-        service: ServiceName.BLOCKCHAIN,
-        data: {
-          error: e,
-          clusterId: event.phalaClusterWallet.clusterId,
-          walletAddress: event.phalaClusterWallet.walletAddress,
-        },
-      });
-      throw e;
-    } finally {
-      await api.destroy();
-    }
   }
 
   static async getPhalaClusterDepositTransaction(
