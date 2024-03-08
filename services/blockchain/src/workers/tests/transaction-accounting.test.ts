@@ -110,13 +110,24 @@ describe('Transaction Accounting unit tests', () => {
         },
         stage.context,
       ),
+      // 20 Kilt
+      new TransactionLog(
+        {
+          action: TxAction.DEPOSIT,
+          direction: TxDirection.INCOME,
+          wallet: kiltAddress,
+          hash: '4',
+          amount: 20_000_000_000_000_000,
+        },
+        stage.context,
+      ),
       new TransactionLog(
         {
           action: TxAction.TRANSACTION,
           direction: TxDirection.COST,
           wallet: kiltAddress,
-          hash: '4',
-          amount: 5_000_000_000_000_000,
+          hash: '5',
+          amount: 20_000_000_000_000_000,
         },
         stage.context,
       ),
@@ -126,7 +137,7 @@ describe('Transaction Accounting unit tests', () => {
           direction: TxDirection.COST,
           wallet: kiltAddress,
           hash: '6',
-          amount: 15_000_000_000_000_000,
+          amount: 20_000_000_000_000_000,
         },
         stage.context,
       ),
@@ -160,7 +171,7 @@ describe('Transaction Accounting unit tests', () => {
         },
         stage.context,
       ),
-    ].map(t => t.calculateTotalPrice());
+    ].map((t) => t.calculateTotalPrice());
 
     await worker.processWalletDepositAmounts(crustWallet, transactions);
     await worker.processWalletDepositAmounts(kiltWallet, transactions);
@@ -168,16 +179,20 @@ describe('Transaction Accounting unit tests', () => {
       `SELECT * FROM ${DbTables.WALLET_DEPOSIT}`,
     );
 
-    expect(walletDeposits).toHaveLength(3);
-    expect(walletDeposits[0].depositAmount).toEqual(100_000_000_000_000);
-    expect(walletDeposits[1].depositAmount).toEqual(200_000_000_000_000);
-    expect(walletDeposits[2].depositAmount).toEqual(30_000_000_000_000_000);
-    // expect(walletDeposits.every(w => !!w.pricePerToken)).toBeTruthy();
+    expect(walletDeposits).toHaveLength(4);
+    expect(walletDeposits.every((w) => !!w.pricePerToken)).toBeTruthy();
 
-    const crustDeposits = walletDeposits.filter(d => d.wallet_id === 1);
+    const crustDeposits = walletDeposits.filter((d) => d.wallet_id === 1);
     expect(crustDeposits).toHaveLength(2);
-    expect(crustDeposits.every(x => x.currentAmount === 0)); // Whole deposit balance spent
+    expect(crustDeposits[0].depositAmount).toEqual(100_000_000_000_000);
+    expect(crustDeposits[1].depositAmount).toEqual(200_000_000_000_000);
+    expect(crustDeposits.every((x) => x.currentAmount === 0)); // Whole deposit balance spent
 
-    expect(walletDeposits[2].currentAmount).toEqual(10_000_000_000_000_000);
+    const kiltDeposits = walletDeposits.filter((d) => d.wallet_id === 2);
+    expect(kiltDeposits[0].depositAmount).toEqual(30_000_000_000_000_000);
+    expect(kiltDeposits[0].currentAmount).toEqual(0);
+
+    expect(kiltDeposits[1].depositAmount).toEqual(20_000_000_000_000_000);
+    expect(kiltDeposits[1].currentAmount).toEqual(10_000_000_000_000_000);
   });
 });
