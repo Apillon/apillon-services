@@ -63,6 +63,7 @@ export class SubsocialProvider {
         referenceTable: DbTables.SPACE,
         referenceId: space.space_uuid,
         project_uuid: space.project_uuid,
+        fromAddress: space.walletAddress,
       },
       this.context,
     );
@@ -113,6 +114,7 @@ export class SubsocialProvider {
         referenceTable: DbTables.POST,
         referenceId: post.post_uuid,
         project_uuid: post.project_uuid,
+        fromAddress: space.walletAddress,
       },
       this.context,
     );

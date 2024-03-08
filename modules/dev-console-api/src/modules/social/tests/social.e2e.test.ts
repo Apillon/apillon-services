@@ -40,6 +40,7 @@ describe('Social tests', () => {
         status: SqlModelStatus.DRAFT,
         project_uuid: testProject.project_uuid,
         about: 'Test space',
+        walletAddress: '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6'
       })
       .insert();
 

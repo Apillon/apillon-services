@@ -10,6 +10,7 @@ import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import {
+  Chain,
   ClusterDepositTransaction,
   CreateEvmTransactionDto,
   CreateSubstrateTransactionDto,
@@ -100,6 +101,13 @@ export class BlockchainMicroservice extends BaseService {
     return await this.callService({
       eventName: BlockchainEventType.LIST_WALLETS,
       ...filter,
+    });
+  }
+
+  public async getWallets(chain: Chain) {
+    return await this.callService({
+      eventName: BlockchainEventType.GET_WALLETS,
+      chain,
     });
   }
 
