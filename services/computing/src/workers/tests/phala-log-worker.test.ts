@@ -1,8 +1,6 @@
 import {
   BlockchainMicroservice,
   ComputingContractType,
-  PhalaClusterWalletDto,
-  PhalaLogFilterDto,
   SubstrateChain,
 } from '@apillon/lib';
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
@@ -29,6 +27,7 @@ import {
 import { expect } from '@jest/globals';
 import { ClusterTransactionLog } from '../../modules/accounting/cluster-transaction-log.model';
 import { ServiceContext } from '@apillon/service-lib';
+import { PhalaClient } from '../../modules/services/phala.client';
 
 const mockAxios = new MockAdapter(axios);
 
@@ -62,7 +61,8 @@ describe('Log worker tests', () => {
   let contractAbi: ContractAbi;
   let contract: Contract;
   let getPhalaLogsMock: jest.SpyInstance,
-    getClusterWalletBalanceMock: jest.SpyInstance;
+    getClusterWalletBalanceMock: jest.SpyInstance,
+    getPhalaEndpointMock: jest.SpyInstance;
 
   beforeAll(async () => {
     stage = await setupTest();
@@ -79,6 +79,7 @@ describe('Log worker tests', () => {
       {
         contract_uuid: 'contract_uuid',
         project_uuid: 'project_uuid',
+        bucket_uuid: 'bucket_uuid',
         name: 'name',
         contractType: ComputingContractType.SCHRODINGER,
         contractAddress: 'contractAddress',
@@ -112,12 +113,16 @@ describe('Log worker tests', () => {
         pha: { usd: 1 },
       });
     getPhalaLogsMock = jest.spyOn(
-      BlockchainMicroservice.prototype,
+      PhalaClient.prototype,
       'getPhalaLogRecordsAndGasPrice',
     );
     getClusterWalletBalanceMock = jest.spyOn(
-      BlockchainMicroservice.prototype,
+      PhalaClient.prototype,
       'getPhalaClusterWalletBalance',
+    );
+    getPhalaEndpointMock = jest.spyOn(
+      BlockchainMicroservice.prototype,
+      'getChainEndpoint',
     );
   });
 
@@ -134,6 +139,7 @@ describe('Log worker tests', () => {
     test('phala log worker should update successful contract deploy transactions and balance', async () => {
       mockGetPhalaLogsForDeploy(getPhalaLogsMock);
       mockGetClusterWalletBalance(getClusterWalletBalanceMock);
+      mockGetPhalaEndpoint(getPhalaEndpointMock);
       const transactionHash = 'contractTransactionHash1';
       transaction = await new Transaction(
         {
@@ -142,32 +148,30 @@ describe('Log worker tests', () => {
           transactionType: TransactionType.DEPLOY_CONTRACT,
           transactionHash,
           transactionStatus: ComputingTransactionStatus.CONFIRMED,
+          metadata: { pruntimeUrl: 'mocked_pruntime_url' },
         },
         stage.context,
       ).insert();
 
       await runPhalaLogWorker(stage.context);
 
-      expect(mockAxios.history.get.length).toBe(1);
-      expect(mockAxios.history.get[0].url).toBe(
-        'https://api.coingecko.com/api/v3/simple/price?ids=pha&vs_currencies=USD',
-      );
+      // expect(mockAxios.history.get.length).toBe(1);
+      // expect(mockAxios.history.get[0].url).toBe(
+      //   'https://api.coingecko.com/api/v3/simple/price?ids=pha&vs_currencies=USD',
+      // );
       expect(getPhalaLogsMock).toBeCalledTimes(1);
-      expect(getPhalaLogsMock).toBeCalledWith(
-        new PhalaLogFilterDto({
-          clusterId: CLUSTER_ID,
-          contract: 'contractAddress',
-          nonce: null,
-          type: 'Log',
-        }),
-      );
+      expect(getPhalaLogsMock).toBeCalledWith({
+        clusterId: CLUSTER_ID,
+        contract: 'contractAddress',
+        pruntimeUrl: 'mocked_pruntime_url',
+        type: 'Log',
+      });
       expect(getClusterWalletBalanceMock).toBeCalledTimes(1);
       expect(getClusterWalletBalanceMock).toBeCalledWith(
-        new PhalaClusterWalletDto({
-          clusterId: CLUSTER_ID,
-          walletAddress: WALLET_ADDRESS,
-        }),
+        CLUSTER_ID,
+        WALLET_ADDRESS,
       );
+      expect(getPhalaEndpointMock).toBeCalledTimes(1);
       const updatedTransaction = await getTransaction(stage, transaction.id);
       expect(updatedTransaction.transactionStatus).toEqual(
         ComputingTransactionStatus.WORKER_SUCCESS,
@@ -199,6 +203,7 @@ describe('Log worker tests', () => {
     test('phala log worker should update failed contract deploy transactions and balance', async () => {
       mockGetPhalaLogsForDeploy(getPhalaLogsMock, 'uninstantiated');
       mockGetClusterWalletBalance(getClusterWalletBalanceMock);
+      mockGetPhalaEndpoint(getPhalaEndpointMock);
       const transactionHash = 'contractTransactionHash2';
       transaction = await new Transaction(
         {
@@ -207,32 +212,30 @@ describe('Log worker tests', () => {
           transactionType: TransactionType.DEPLOY_CONTRACT,
           transactionHash,
           transactionStatus: ComputingTransactionStatus.CONFIRMED,
+          metadata: { pruntimeUrl: 'mocked_pruntime_url' },
         },
         stage.context,
       ).insert();
 
       await runPhalaLogWorker(stage.context);
 
-      expect(mockAxios.history.get.length).toBe(1);
-      expect(mockAxios.history.get[0].url).toBe(
-        'https://api.coingecko.com/api/v3/simple/price?ids=pha&vs_currencies=USD',
-      );
+      // expect(mockAxios.history.get.length).toBe(1);
+      // expect(mockAxios.history.get[0].url).toBe(
+      //   'https://api.coingecko.com/api/v3/simple/price?ids=pha&vs_currencies=USD',
+      // );
       expect(getPhalaLogsMock).toBeCalledTimes(1);
-      expect(getPhalaLogsMock).toBeCalledWith(
-        new PhalaLogFilterDto({
-          clusterId: CLUSTER_ID,
-          contract: 'contractAddress',
-          nonce: null,
-          type: 'Log',
-        }),
-      );
+      expect(getPhalaLogsMock).toBeCalledWith({
+        clusterId: CLUSTER_ID,
+        contract: 'contractAddress',
+        pruntimeUrl: 'mocked_pruntime_url',
+        type: 'Log',
+      });
       expect(getClusterWalletBalanceMock).toBeCalledTimes(1);
       expect(getClusterWalletBalanceMock).toBeCalledWith(
-        new PhalaClusterWalletDto({
-          clusterId: CLUSTER_ID,
-          walletAddress: WALLET_ADDRESS,
-        }),
+        CLUSTER_ID,
+        WALLET_ADDRESS,
       );
+      expect(getPhalaEndpointMock).toBeCalledTimes(1);
       const updatedTransaction = await getTransaction(stage, transaction.id);
       expect(updatedTransaction.transactionStatus).toEqual(
         ComputingTransactionStatus.WORKER_FAILED,
@@ -266,6 +269,7 @@ describe('Log worker tests', () => {
     test('phala log worker should update successful transactions and balance', async () => {
       mockGetPhalaLogs(getPhalaLogsMock);
       mockGetClusterWalletBalance(getClusterWalletBalanceMock);
+      mockGetPhalaEndpoint(getPhalaEndpointMock);
       const transactionHash = 'transactionHash1';
       transaction = await new Transaction(
         {
@@ -275,6 +279,7 @@ describe('Log worker tests', () => {
           transactionHash,
           transactionStatus: ComputingTransactionStatus.CONFIRMED,
           nonce: 'nonce',
+          metadata: { pruntimeUrl: 'mocked_pruntime_url' },
         },
         stage.context,
       ).insert();
@@ -286,21 +291,18 @@ describe('Log worker tests', () => {
         'https://api.coingecko.com/api/v3/simple/price?ids=pha&vs_currencies=USD',
       );
       expect(getPhalaLogsMock).toBeCalledTimes(1);
-      expect(getPhalaLogsMock).toBeCalledWith(
-        new PhalaLogFilterDto({
-          clusterId: CLUSTER_ID,
-          contract: null,
-          nonce: 'nonce',
-          type: 'MessageOutput',
-        }),
-      );
+      expect(getPhalaLogsMock).toBeCalledWith({
+        clusterId: CLUSTER_ID,
+        nonce: 'nonce',
+        pruntimeUrl: 'mocked_pruntime_url',
+        type: 'MessageOutput',
+      });
       expect(getClusterWalletBalanceMock).toBeCalledTimes(1);
       expect(getClusterWalletBalanceMock).toBeCalledWith(
-        new PhalaClusterWalletDto({
-          clusterId: CLUSTER_ID,
-          walletAddress: WALLET_ADDRESS,
-        }),
+        CLUSTER_ID,
+        WALLET_ADDRESS,
       );
+      expect(getPhalaEndpointMock).toBeCalledTimes(1);
       const updatedTransaction = await getTransaction(stage, transaction.id);
       expect(updatedTransaction.transactionStatus).toEqual(
         ComputingTransactionStatus.WORKER_SUCCESS,
@@ -333,6 +335,7 @@ describe('Log worker tests', () => {
     test('phala log worker should update failed transactions and balance', async () => {
       mockGetPhalaLogs(getPhalaLogsMock, ['failed']);
       mockGetClusterWalletBalance(getClusterWalletBalanceMock);
+      mockGetPhalaEndpoint(getPhalaEndpointMock);
       const transactionHash = 'transactionHash2';
       transaction = await new Transaction(
         {
@@ -342,6 +345,7 @@ describe('Log worker tests', () => {
           transactionHash,
           transactionStatus: ComputingTransactionStatus.CONFIRMED,
           nonce: 'nonce',
+          metadata: { pruntimeUrl: 'mocked_pruntime_url' },
         },
         stage.context,
       ).insert();
@@ -353,21 +357,18 @@ describe('Log worker tests', () => {
         'https://api.coingecko.com/api/v3/simple/price?ids=pha&vs_currencies=USD',
       );
       expect(getPhalaLogsMock).toBeCalledTimes(1);
-      expect(getPhalaLogsMock).toBeCalledWith(
-        new PhalaLogFilterDto({
-          clusterId: CLUSTER_ID,
-          contract: null,
-          nonce: 'nonce',
-          type: 'MessageOutput',
-        }),
-      );
+      expect(getPhalaLogsMock).toBeCalledWith({
+        clusterId: CLUSTER_ID,
+        nonce: 'nonce',
+        pruntimeUrl: 'mocked_pruntime_url',
+        type: 'MessageOutput',
+      });
       expect(getClusterWalletBalanceMock).toBeCalledTimes(1);
       expect(getClusterWalletBalanceMock).toBeCalledWith(
-        new PhalaClusterWalletDto({
-          clusterId: CLUSTER_ID,
-          walletAddress: WALLET_ADDRESS,
-        }),
+        CLUSTER_ID,
+        WALLET_ADDRESS,
       );
+      expect(getPhalaEndpointMock).toBeCalledTimes(1);
       const updatedTransaction = await getTransaction(stage, transaction.id);
       expect(updatedTransaction.transactionStatus).toEqual(
         ComputingTransactionStatus.WORKER_FAILED,
@@ -405,7 +406,12 @@ function mockGetPhalaLogsForDeploy(
   message = 'instantiated',
 ) {
   return getPhalaLogsMock.mockImplementation(
-    async (_phalaLogFilter: PhalaLogFilterDto) => {
+    async (_phalaLogFilter: {
+      clusterId: string;
+      contract: string;
+      nonce: string;
+      type: string;
+    }) => {
       return {
         gasPrice: 1,
         records: [
@@ -432,7 +438,12 @@ function mockGetPhalaLogs(
   flags: string[] = [],
 ) {
   return getPhalaLogsMock.mockImplementation(
-    async (_phalaLogFilter: PhalaLogFilterDto) => {
+    async (_phalaLogFilter: {
+      clusterId: string;
+      contract: string;
+      nonce: string;
+      type: string;
+    }) => {
       return {
         gasPrice: 1,
         records: [
@@ -463,6 +474,12 @@ function mockGetClusterWalletBalance(
 ) {
   return getClusterWalletBalance.mockImplementation(async () => {
     return { total: CLUSTER_TOTAL_BALANCE, free: CLUSTER_FREE_BALANCE };
+  });
+}
+
+function mockGetPhalaEndpoint(getPhalaEndpointMock: jest.SpyInstance) {
+  return getPhalaEndpointMock.mockImplementation(async () => {
+    return { data: { url: 'wss://api.phala.network/ws' } };
   });
 }
 

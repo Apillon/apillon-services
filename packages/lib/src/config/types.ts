@@ -89,8 +89,6 @@ export enum LmasEventType {
 export enum BlockchainEventType {
   SUBSTRATE_SIGN_TRANSACTION = 'substrate-sign-transaction',
   SUBSTRATE_GET_TRANSACTION = 'substrate-get-transaction',
-  GET_PHALA_LOG_RECORDS_AND_GAS_PRICE = 'get-phala-log-records-and-gas-price',
-  GET_PHALA_CLUSTER_WALLET_BALANCE = 'get-phala-cluster-wallet-balance',
   GET_PHALA_CLUSTER_DEPOSIT_TRANSACTION = 'get-phala-cluster-deposit-transaction',
   EVM_SIGN_TRANSACTION = 'evm-sign-transaction',
   EVM_GET_TRANSACTION = 'evm-get-transaction',

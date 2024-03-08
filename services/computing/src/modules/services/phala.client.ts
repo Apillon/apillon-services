@@ -1,9 +1,4 @@
-import {
-  BlockchainMicroservice,
-  ChainType,
-  Context,
-  SubstrateChain,
-} from '@apillon/lib';
+import { Lmas, LogType, ServiceName } from '@apillon/lib';
 import { Contract } from '../computing/models/contract.model';
 import {
   OnChainRegistry,
@@ -20,16 +15,24 @@ import randomBytes from 'randombytes';
 import { hexAddPrefix } from '@polkadot/util';
 
 export class PhalaClient {
-  private context: Context;
   private api: ApiPromise;
   private registry: OnChainRegistry;
+  private readonly rpcEndpoint: string;
 
-  constructor(context: Context) {
-    this.context = context;
+  constructor(rpcEndpoint: string) {
+    this.rpcEndpoint = rpcEndpoint;
   }
 
   static getRandomNonce() {
     return hexAddPrefix(randomBytes(32).toString('hex'));
+  }
+
+  async destroy() {
+    if (this.registry) {
+      await this.api.disconnect();
+      this.api = null;
+      this.registry = null;
+    }
   }
 
   /**
@@ -38,15 +41,8 @@ export class PhalaClient {
    */
   async initializeProvider() {
     if (!this.api) {
-      const rpcEndpoint = (
-        await new BlockchainMicroservice(this.context).getChainEndpoint(
-          SubstrateChain.PHALA,
-          ChainType.SUBSTRATE,
-        )
-      ).data.url;
-      console.log('rpcEndpoint', rpcEndpoint);
       this.api = await ApiPromise.create({
-        provider: new WsProvider(rpcEndpoint),
+        provider: new WsProvider(this.rpcEndpoint),
         types: types as any,
         throwOnConnect: true,
       });
@@ -54,7 +50,7 @@ export class PhalaClient {
       this.registry = await OnChainRegistry.create(this.api, {
         strategy: periodicityChecker(),
       });
-      console.log(`RPC initialization ${rpcEndpoint}`);
+      console.log(`Phala client initialization ${this.rpcEndpoint}`);
     }
   }
 
@@ -209,5 +205,82 @@ export class PhalaClient {
     const certificate = await signCertificate({ api: this.api, pair: account });
 
     return { account, certificate };
+  }
+
+  async getPhalaLogRecordsAndGasPrice(phalaLogFilter: {
+    type: 'Log' | 'Event' | 'MessageOutput' | 'QueryIn' | 'TooLarge';
+    clusterId: string;
+    pruntimeUrl: string;
+    contract?: string;
+    nonce?: string;
+  }) {
+    await this.initializeProvider();
+    console.log('Fetching gas price and logs with filter: ', phalaLogFilter);
+    try {
+      const phatRegistry = await OnChainRegistry.create(this.api, {
+        clusterId: phalaLogFilter.clusterId,
+        pruntimeURL: phalaLogFilter.pruntimeUrl,
+      });
+      const gasPrice = phatRegistry.gasPrice.toNumber();
+      console.log(`Retrieved gas price=${gasPrice}.`);
+      const { records } = await phatRegistry.loggerContract.tail(
+        100,
+        this.removeObjectKeysWithNullValue(phalaLogFilter),
+      );
+      console.log(`Retrieved ${records.length} log records.`);
+      return { records, gasPrice };
+    } catch (e: unknown) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        message: `Error fetching phala logs or gas price.`,
+        location: 'SubstrateService.getPhalaClusterWalletBalance',
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          error: e,
+          clusterId: phalaLogFilter.clusterId,
+          contract: phalaLogFilter.contract,
+          nonce: phalaLogFilter.nonce,
+          type: phalaLogFilter.type,
+        },
+      });
+      throw e;
+    }
+  }
+
+  async getPhalaClusterWalletBalance(clusterId: string, walletAddress: string) {
+    await this.initializeProvider();
+    try {
+      const phatRegistry = await OnChainRegistry.create(this.api, {
+        clusterId,
+      });
+      const balance = await phatRegistry.getClusterBalance(walletAddress);
+
+      console.log(
+        `Retrieved balance total ${balance.total} and free ${balance.free}`,
+      );
+      return {
+        total: balance.total.toNumber(),
+        free: balance.free.toNumber(),
+      };
+    } catch (e: unknown) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        message: `Error fetching cluster ${walletAddress} balance.`,
+        location: 'SubstrateService.getPhalaClusterWalletBalance',
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          error: e,
+          clusterId,
+          walletAddress,
+        },
+      });
+      throw e;
+    }
+  }
+
+  protected removeObjectKeysWithNullValue(obj: any) {
+    return Object.fromEntries(
+      Object.entries(obj).filter(([_, v]) => v != null),
+    );
   }
 }
