@@ -701,8 +701,7 @@ export class Wallet extends AdvancedSQLModel {
       `
         SELECT SUM(lastProcessedNonce) as total
         FROM \`${DbTables.WALLET}\`
-        WHERE status = ${SqlModelStatus.ACTIVE}
-        ${address ? `AND address = '${address}'` : ''}
+        ${address ? `WHERE address = '${address}'` : ''}
         `,
     );
 
