@@ -23,7 +23,7 @@ import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { getWalletSeed } from '../../lib/seed';
 import { SubstrateRpcApi } from './rpc-api';
-import { types as PhalaTypesBundle } from '@phala/sdk';
+import { types as PhalaTypesBundle } from './phala-types';
 import { substrateChainToWorkerName } from '../../lib/helpers';
 import { typesBundle as SubsocialTypesBundle } from '@subsocial/types';
 import { PhalaBlockchainIndexer } from '../blockchain-indexers/substrate/phala/indexer.service';
