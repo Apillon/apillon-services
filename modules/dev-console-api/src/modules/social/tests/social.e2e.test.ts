@@ -40,7 +40,7 @@ describe('Social tests', () => {
         status: SqlModelStatus.DRAFT,
         project_uuid: testProject.project_uuid,
         about: 'Test space',
-        walletAddress: '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6'
+        walletAddress: '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
       })
       .insert();
 
@@ -56,7 +56,7 @@ describe('Social tests', () => {
 
     await new Wallet(
       {
-        chain: SubstrateChain.XSOCIAL,
+        chain: SubstrateChain.SUBSOCIAL,
         chainType: ChainType.SUBSTRATE,
         seed: 'disorder reveal crumble deer axis slush unique answer catalog junk hazard damp',
         address: '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
