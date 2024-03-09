@@ -315,9 +315,7 @@ export class Space extends UuidSqlModel {
       await this.insert(SerializeFor.INSERT_DB, conn);
       const provider = new SubsocialProvider(context, SubstrateChain.SUBSOCIAL);
       await provider.initializeApi();
-      const tx = await provider.createSpace(this);
-
-      this.walletAddress = tx.data.address;
+      await provider.createSpace(this);
 
       await context.mysql.commit(conn);
 
