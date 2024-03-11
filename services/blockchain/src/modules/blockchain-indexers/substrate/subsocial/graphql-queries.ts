@@ -96,14 +96,23 @@ export class SubsocialGQLQueries extends BaseGQLQueries {
       $address: String!
       $extrinsicHash: String!
     ) {
-      storageOrders(
+      spaces(
         where: {
           extrinsicHash_eq: $extrinsicHash
-          account_eq: $address
+          account_eq: $account
         }
       ) {
-        account
         extrinsicHash
+        account
+      }
+      posts(
+        where: {
+          extrinsicHash_eq: $extrinsicHash
+          account_eq: $account
+        }
+      ) {
+        extrinsicHash
+        account
       }
       transfers(
         where: { extrinsicHash_eq: $extrinsicHash, from_eq: $address }
@@ -138,20 +147,6 @@ export class SubsocialGQLQueries extends BaseGQLQueries {
       to
       amount
       fee
-    }
-    storageOrders(
-      where: {
-        AND: {
-          extrinsicHash_in: $hashes,
-          account_eq: $account
-        }
-      }
-    )
-    {
-      ${this.BASE_SUBSTRATE_FIELDS}
-      fee
-      fileCid
-      account
     }
   }`;
 }
