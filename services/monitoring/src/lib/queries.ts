@@ -1,6 +1,14 @@
 import { LogsQueryFilter, RequestLogsQueryFilter } from '@apillon/lib';
 import { Filter } from 'mongodb';
 
+export const systemRoutes = [
+  '/hosting/domains',
+  '/discord-bot/user-list',
+  '/storage/blacklist',
+  '/system',
+  '/auth/session-token',
+];
+
 export async function generateMongoLogsQuery(
   query: LogsQueryFilter | RequestLogsQueryFilter,
 ): Promise<Filter<any>> {
@@ -37,13 +45,6 @@ export async function generateMongoLogsQuery(
 
   if (query instanceof RequestLogsQueryFilter) {
     if (!query.showSystemRequests) {
-      const systemRoutes = [
-        '/hosting/domains',
-        '/discord-bot/user-list',
-        '/storage/blacklist',
-        '/system',
-        '/auth/session-token',
-      ];
       // System routes, conditionally hide from results if showSystemRequests is false
       mongoQuery[property] = {
         ...(mongoQuery[property] || {}),

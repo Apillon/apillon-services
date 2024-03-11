@@ -690,6 +690,25 @@ export class Wallet extends AdvancedSQLModel {
     );
   }
 
+  /**
+   * Get total transactions (sum of lastProcessedNonce)
+   * for all wallets or for a single wallet by address
+   * @param {?string} [address]
+   * @returns {Promise<number>}
+   */
+  public async getTotalTransactions(address?: string): Promise<number> {
+    console.log(address);
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT SUM(lastProcessedNonce) as total
+        FROM \`${DbTables.WALLET}\`
+        ${address ? `WHERE address = '${address}'` : ''}
+        `,
+    );
+
+    return data?.length ? data[0].total : 0;
+  }
+
   public get isBelowThreshold(): boolean {
     return (
       !!this.minBalance &&

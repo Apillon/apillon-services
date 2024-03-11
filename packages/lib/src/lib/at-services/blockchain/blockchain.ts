@@ -10,6 +10,7 @@ import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import {
+  Chain,
   ClusterDepositTransaction,
   CreateEvmTransactionDto,
   CreateSubstrateTransactionDto,
@@ -103,6 +104,13 @@ export class BlockchainMicroservice extends BaseService {
     });
   }
 
+  public async getWallets(chain: Chain) {
+    return await this.callService({
+      eventName: BlockchainEventType.GET_WALLETS,
+      chain,
+    });
+  }
+
   public async getWallet(walletId: number) {
     return await this.callService({
       eventName: BlockchainEventType.GET_WALLET,
@@ -188,6 +196,12 @@ export class BlockchainMicroservice extends BaseService {
       clusterDepositTransaction,
     };
     return await this.callService(data);
+  }
+
+  public async getTotalWalletTransactions() {
+    return await this.callService({
+      eventName: BlockchainEventType.GET_TOTAL_WALLET_TRANSACTIONS,
+    });
   }
   //#endregion
 }

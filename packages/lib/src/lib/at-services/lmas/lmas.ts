@@ -190,4 +190,12 @@ export class Lmas extends BaseService {
       { isAsync: false },
     );
   }
+
+  public async getTotalRequests() {
+    this.defaultQueueUrl = null;
+    this.isDefaultAsync = false;
+    return await this.callService({
+      eventName: LmasEventType.GET_TOTAL_REQUESTS,
+    });
+  }
 }

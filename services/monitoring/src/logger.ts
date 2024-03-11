@@ -8,7 +8,7 @@ import {
 } from '@apillon/lib';
 import { Collection } from 'mongodb';
 import { ServiceContext } from './context';
-import { generateMongoLogsQuery } from './lib/queries';
+import { generateMongoLogsQuery, systemRoutes } from './lib/queries';
 /**
  * Logger class for logging events intodatabase.
  */
@@ -207,5 +207,29 @@ export class Logger {
     ]);
 
     return [...traffic[0], ...traffic[1]];
+  }
+
+  /**
+   * Get total number of API and Dev Console requests
+   * @param {null} _event
+   * @param {ServiceContext} context
+   * @returns {Promise<{ totalApiRequests: number; totalDevConsoleRequests: number }>}
+   */
+  static async getTotalRequestsCount(
+    _event: null,
+    context: ServiceContext,
+  ): Promise<{ totalApiRequests: number; totalDevConsoleRequests: number }> {
+    // Total API requests excluding system requests
+    const totalApiRequests = await context.mongo.db
+      .collection(MongoCollections.API_REQUEST_LOGS)
+      .countDocuments({
+        url: { $not: { $regex: systemRoutes.join('|') } },
+      });
+
+    const totalDevConsoleRequests = await context.mongo.db
+      .collection(MongoCollections.REQUEST_LOGS)
+      .countDocuments();
+
+    return { totalApiRequests, totalDevConsoleRequests };
   }
 }

@@ -6,6 +6,7 @@ import {
   WalletTransactionsQueryFilter,
   SqlModelStatus,
   WalletDepositsQueryFilter,
+  Chain,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
@@ -24,6 +25,13 @@ export class WalletService {
     context: ServiceContext,
   ): Promise<{ items: any[]; total: number }> {
     return await new Wallet({}, context).listWallets(filter);
+  }
+
+  static async getWallets(
+    { chain }: { chain: Chain },
+    context: ServiceContext,
+  ): Promise<{ items: any[]; total: number }> {
+    return await new Wallet({}, context).getWallets(chain);
   }
 
   static async getWallet(
@@ -155,5 +163,17 @@ export class WalletService {
     return await new WalletDeposit({}, context).listDeposits(
       new WalletDepositsQueryFilter(event),
     );
+  }
+
+  /**
+   * Get total transaction count (sum of lastProcessedNonce) for all wallets
+   * @param {null} _event
+   * @param {ServiceContext} context
+   */
+  static async getTotalWalletTransactions(
+    _event: null,
+    context: ServiceContext,
+  ): Promise<number> {
+    return new Wallet({}, context).getTotalTransactions();
   }
 }
