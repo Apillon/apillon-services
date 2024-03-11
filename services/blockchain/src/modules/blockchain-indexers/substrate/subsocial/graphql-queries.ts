@@ -99,7 +99,7 @@ export class SubsocialGQLQueries extends BaseGQLQueries {
       spaces(
         where: {
           extrinsicHash_eq: $extrinsicHash
-          account_eq: $account
+          account_eq: $address
         }
       ) {
         extrinsicHash
@@ -108,7 +108,7 @@ export class SubsocialGQLQueries extends BaseGQLQueries {
       posts(
         where: {
           extrinsicHash_eq: $extrinsicHash
-          account_eq: $account
+          account_eq: $address
         }
       ) {
         extrinsicHash
