@@ -222,20 +222,40 @@ export class SubstrateTransactionWorker extends BaseSingleThreadWorker {
         (t: any) => t.status == TransactionIndexerStatus.SUCCESS && !t.error,
       )
       .map((t: any): string => t.extrinsicHash);
-    await this.updateTransactions(
-      successTransactions,
-      TransactionStatus.CONFIRMED,
-      conn,
-    );
+    if (successTransactions.length) {
+      await this.updateTransactions(
+        successTransactions,
+        TransactionStatus.CONFIRMED,
+        conn,
+      );
+    }
 
     // Update FAILED transactions
     const failedTransactions: string[] = transactions
       .filter((t: any) => t.status == TransactionIndexerStatus.FAIL || t.error)
       .map((t: any): string => t.extrinsicHash);
-    await this.updateTransactions(
-      failedTransactions,
-      TransactionStatus.FAILED,
-      conn,
-    );
+
+    if (failedTransactions.length) {
+      await this.updateTransactions(
+        failedTransactions,
+        TransactionStatus.FAILED,
+        conn,
+      );
+
+      //Send admin alert for failed transaction
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          message: `${failedTransactions.length} transaction(s) have failed on chain for wallet ${_walletAddress}`,
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            transactions: failedTransactions,
+            chain: this.chainId,
+            walletAddress: _walletAddress,
+          },
+        },
+        LogOutput.NOTIFY_MSG,
+      );
+    }
   }
 }
