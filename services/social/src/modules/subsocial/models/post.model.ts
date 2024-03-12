@@ -311,7 +311,7 @@ export class Post extends UuidSqlModel {
         location: 'Post.createPost',
         message: 'New social post(channel) created',
         service: ServiceName.SOCIAL,
-        data: this.serialize()
+        data: this.serialize(),
       });
     } catch (err) {
       await context.mysql.rollback(conn);

@@ -15,6 +15,7 @@ import {
   presenceValidator,
   prop,
   selectAndCountQuery,
+  BlockchainMicroservice,
 } from '@apillon/lib';
 import { DbTables, SocialErrorCode } from '../../../config/types';
 
@@ -178,6 +179,18 @@ export class Space extends UuidSqlModel {
   })
   public spaceId: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public walletAddress: string;
+
   public async populateByUuidAndCheckAccess(uuid: string): Promise<this> {
     const space: Space = await this.populateByUUID(uuid, 'space_uuid');
 
@@ -251,10 +264,55 @@ export class Space extends UuidSqlModel {
       }
     }
 
+    //Get subsocial wallets, and pick least used
+    const wallets = await new BlockchainMicroservice(context).getWallets(
+      SubstrateChain.SUBSOCIAL,
+    );
+
+    console.info('Retrieving wallet address used to create space');
+
+    const queries = [];
+    for (const wallet of wallets.data.map((x) => x.address)) {
+      queries.push(`
+        select "${wallet}" as walletAddress, 
+        (
+          SELECT count(*) from \`${DbTables.SPACE}\` 
+          where walletAddress = "${wallet}"
+        ) as numOfSpaces
+      `);
+    }
+    const numOfSpacesByWallet = await context.mysql.paramExecute(
+      `
+      SELECT t.* 
+      FROM (${queries.join(' UNION ')})t 
+      order by t.numOfSpaces
+      limit 1
+      `,
+      {},
+    );
+
+    this.walletAddress = numOfSpacesByWallet[0].walletAddress;
+
+    console.info(
+      'Wallet retrieved! Creating space... ',
+      numOfSpacesByWallet[0],
+    );
+
+    if (numOfSpacesByWallet[0].numOfSpaces > 4000) {
+      throw await new SocialCodeException({
+        code: SocialErrorCode.WALLETS_HAVE_REACHED_MAX_SPACES,
+        status: 500,
+        sourceFunction: 'createSpace',
+        context,
+        details: {
+          leastUsedWallet: numOfSpacesByWallet[0],
+        },
+      }).writeToMonitor({ logType: LogType.ERROR, sendAdminAlert: true });
+    }
+
     const conn = await context.mysql.start();
     try {
       await this.insert(SerializeFor.INSERT_DB, conn);
-
       const provider = new SubsocialProvider(context, SubstrateChain.SUBSOCIAL);
       await provider.initializeApi();
       await provider.createSpace(this);

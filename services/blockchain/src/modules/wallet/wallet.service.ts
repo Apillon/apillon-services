@@ -6,6 +6,7 @@ import {
   WalletTransactionsQueryFilter,
   SqlModelStatus,
   WalletDepositsQueryFilter,
+  Chain,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
@@ -24,6 +25,13 @@ export class WalletService {
     context: ServiceContext,
   ): Promise<{ items: any[]; total: number }> {
     return await new Wallet({}, context).listWallets(filter);
+  }
+
+  static async getWallets(
+    { chain }: { chain: Chain },
+    context: ServiceContext,
+  ): Promise<{ items: any[]; total: number }> {
+    return await new Wallet({}, context).getWallets(chain);
   }
 
   static async getWallet(
