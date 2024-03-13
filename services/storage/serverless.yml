@@ -11,6 +11,12 @@ custom:
       #      nodeModulesRelativeDir: '../../'
       forceExclude:
         - aws-sdk
+        - "@aws-sdk/client-lambda"
+        - "@aws-sdk/client-s3"
+        - "@aws-sdk/client-secrets-manager"
+        - "@aws-sdk/client-sqs"
+        - "@aws-sdk/s3-request-presigner"
+        - "@aws-sdk/client-cloudfront"
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
