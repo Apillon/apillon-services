@@ -17,7 +17,6 @@ import {
   TransactionDto,
   UpdateTransactionDto,
   WalletDepositsQueryFilter,
-  WalletIdentityDto,
   WalletTransactionsQueryFilter,
 } from '../../..';
 
@@ -152,15 +151,6 @@ export class BlockchainMicroservice extends BaseService {
     return await this.callService({
       eventName: BlockchainEventType.LIST_WALLET_DEPOSITS,
       ...query,
-    });
-  }
-  //#endregion
-
-  //#region wallet-identity
-  public async getWalletIdentity(query: WalletIdentityDto) {
-    return await this.callService({
-      eventName: BlockchainEventType.GET_WALLET_IDENTITY,
-      query,
     });
   }
   //#endregion

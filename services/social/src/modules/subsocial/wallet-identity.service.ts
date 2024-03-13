@@ -1,4 +1,5 @@
 import {
+  BlockchainMicroservice,
   ChainType,
   Lmas,
   LogType,
@@ -9,7 +10,6 @@ import {
 import { ServiceContext } from '@apillon/service-lib';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { SubsocialApi } from '@subsocial/api';
-import { Endpoint } from '../../common/models/endpoint';
 
 export class WalletIdentityService {
   /**
@@ -50,10 +50,13 @@ export class WalletIdentityService {
     context: ServiceContext,
   ) {
     try {
-      const subsocialEndpoint = await new Endpoint({}, context).populateByChain(
-        SubstrateChain.SUBSOCIAL,
-        ChainType.SUBSTRATE,
-      );
+      const subsocialEndpoint = (
+        await new BlockchainMicroservice(context).getChainEndpoint(
+          SubstrateChain.SUBSOCIAL,
+          ChainType.SUBSTRATE,
+        )
+      ).data;
+
       const api = await SubsocialApi.create({
         substrateNodeUrl: subsocialEndpoint.url,
         ipfsNodeUrl: 'https://ipfs.subsocial.network',
@@ -84,10 +87,13 @@ export class WalletIdentityService {
     context: ServiceContext,
   ) {
     try {
-      const polkadotEndpoint = await new Endpoint({}, context).populateByChain(
-        SubstrateChain.POLKADOT,
-        ChainType.SUBSTRATE,
-      );
+      const polkadotEndpoint = (
+        await new BlockchainMicroservice(context).getChainEndpoint(
+          SubstrateChain.POLKADOT,
+          ChainType.SUBSTRATE,
+        )
+      ).data;
+
       const provider = new WsProvider(polkadotEndpoint.url);
       const api = await ApiPromise.create({ provider });
       const identity = (
