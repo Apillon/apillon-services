@@ -100,7 +100,6 @@ export enum BlockchainEventType {
   GET_WALLET_TRANSACTIONS = 'get-wallet-transactions',
   UPDATE_TRANSACTION = 'update-transaction',
   LIST_WALLET_DEPOSITS = 'list-wallet-deposits',
-  GET_WALLET_IDENTITY = 'get-wallet-identity',
   GET_TOTAL_WALLET_TRANSACTIONS = 'get-total-wallet-transactions',
 }
 
@@ -266,6 +265,7 @@ export enum SocialEventType {
   CREATE_POST = 'create-post',
   LIST_POSTS = 'list-posts',
   GET_POST = 'get-post',
+  GET_WALLET_IDENTITY = 'get-wallet-identity',
 }
 
 export enum ServiceName {
