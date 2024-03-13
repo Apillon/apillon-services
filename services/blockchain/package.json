@@ -34,7 +34,7 @@
     "@golevelup/nestjs-graphql-request": "^0.1.14",
     "@kiltprotocol/type-definitions": "^0.34.0",
     "@middy/core": "^3.3.1",
-    "@polkadot/api": "10.11.3",
+    "@polkadot/api": "10.12.2",
     "@polkadot/keyring": "^12.3.2",
     "@polkadot/util": "^12.3.2",
     "@polkadot/util-crypto": "^12.3.2",
@@ -61,20 +61,6 @@
     "webpack-node-externals": "^3.0.0"
   },
   "overrides": {
-    "@polkadot/api": "10.11.3",
-    "@polkadot/api-augment": "10.11.3",
-    "@polkadot/api-base": "10.11.3",
-    "@polkadot/api-contract": "10.11.3",
-    "@polkadot/api-derive": "10.11.3",
-    "@polkadot/rpc-augment": "10.11.3",
-    "@polkadot/rpc-core": "10.11.3",
-    "@polkadot/rpc-provider": "10.11.3",
-    "@polkadot/types": "10.11.3",
-    "@polkadot/types-augment": "10.11.3",
-    "@polkadot/types-codec": "10.11.3",
-    "@polkadot/types-create": "10.11.3",
-    "@polkadot/types-support": "10.11.3",
-    "@polkadot/types-known": "10.11.3",
     "ipfs-utils": "9.0.6"
   },
   "jest": {
