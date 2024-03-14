@@ -697,10 +697,15 @@ export class TransactionLogWorker extends BaseQueueWorker {
     amount: string,
     conn: PoolConnection,
   ): Promise<number> {
+    console.log('deductFromAvailableDeposit amount', amount);
     const availableDeposit = await new WalletDeposit(
       {},
       this.context,
     ).getOldestWithBalance(wallet.id, conn);
+    console.log(
+      'deductFromAvailableDeposit availableDeposit',
+      availableDeposit,
+    );
     if (!availableDeposit.exists()) {
       await this.sendErrorAlert(
         `NO AVAILABLE DEPOSIT! ${formatWalletAddress(
@@ -712,21 +717,27 @@ export class TransactionLogWorker extends BaseQueueWorker {
       );
       return 0;
     }
-    if (
-      this.subtractAmount(availableDeposit.currentAmount, amount).startsWith(
-        '-',
-      )
-    ) {
-      // if amount is negative, set currentAmount to 0 and recursively deduct the remainder
-      amount = this.subtractAmount(amount, availableDeposit.currentAmount);
-      availableDeposit.currentAmount = ethers.BigNumber.from(0).toString();
-      await availableDeposit.update(SerializeFor.UPDATE_DB, conn);
-      return this.deductFromAvailableDeposit(wallet, amount, conn);
-    }
-    availableDeposit.currentAmount = this.subtractAmount(
+    console.log(
+      'deductFromAvailableDeposit availableDeposit.currentAmount',
+      availableDeposit.currentAmount,
+    );
+    const newAmount = this.subtractAmount(
       availableDeposit.currentAmount,
       amount,
     );
+    console.log('deductFromAvailableDeposit newAmount', newAmount.toString());
+    if (newAmount.startsWith('-')) {
+      // if amount is negative, set currentAmount to 0 and recursively deduct the remainder
+      const remainder = this.subtractAmount(
+        amount,
+        availableDeposit.currentAmount,
+      );
+      console.log('deductFromAvailableDeposit remainder', remainder.toString());
+      availableDeposit.currentAmount = ethers.BigNumber.from(0).toString();
+      await availableDeposit.update(SerializeFor.UPDATE_DB, conn);
+      return this.deductFromAvailableDeposit(wallet, remainder, conn);
+    }
+    availableDeposit.currentAmount = newAmount;
     await availableDeposit.update(SerializeFor.UPDATE_DB, conn);
     return availableDeposit.pricePerToken;
   }
