@@ -174,7 +174,7 @@ describe('Transaction Accounting unit tests', () => {
     expect(walletDeposits[2].currentAmount).toEqual(150000000);
   });
 
-  test('Test wallet spends where we drain one deposit row to 0', async () => {
+  test('Test wallet spends roll over to currentAmount of second deposit', async () => {
     const transactions = [
       new TransactionLog(
         {
