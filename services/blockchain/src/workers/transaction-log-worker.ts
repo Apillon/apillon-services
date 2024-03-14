@@ -701,10 +701,6 @@ export class TransactionLogWorker extends BaseQueueWorker {
       {},
       this.context,
     ).getOldestWithBalance(wallet.id, conn);
-    console.log(
-      'deductFromAvailableDeposit availableDeposit',
-      availableDeposit,
-    );
     if (!availableDeposit.exists()) {
       await this.sendErrorAlert(
         `NO AVAILABLE DEPOSIT! ${formatWalletAddress(
@@ -716,29 +712,15 @@ export class TransactionLogWorker extends BaseQueueWorker {
       );
       return 0;
     }
-    console.log('deductFromAvailableDeposit amount', amount);
     const newAmount = this.subtractAmount(
       availableDeposit.currentAmount,
       amount,
-    );
-    console.log('deductFromAvailableDeposit newAmount', newAmount);
-    console.log(
-      'deductFromAvailableDeposit newAmount string',
-      newAmount.toString(),
     );
     if (newAmount.startsWith('-')) {
       // if amount is negative, set currentAmount to 0 and recursively deduct the remainder
       availableDeposit.currentAmount = ethers.BigNumber.from(0).toString();
       await availableDeposit.update(SerializeFor.UPDATE_DB, conn);
-      const remainder = this.subtractAmount(
-        amount,
-        availableDeposit.currentAmount,
-      );
-      console.log('deductFromAvailableDeposit remainder', remainder);
-      console.log(
-        'deductFromAvailableDeposit remainder string',
-        remainder.toString(),
-      );
+      const remainder = newAmount.replace('-', '');
       return this.deductFromAvailableDeposit(wallet, remainder, conn);
     }
     availableDeposit.currentAmount = newAmount;

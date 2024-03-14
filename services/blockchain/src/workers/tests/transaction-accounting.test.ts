@@ -163,4 +163,30 @@ describe('Transaction Accounting unit tests', () => {
     expect(walletDeposits[1].currentAmount).toEqual(200000000);
     expect(walletDeposits[2].currentAmount).toEqual(150000000);
   });
+
+  test('Test wallet spends where we drain one deposit row to 0', async () => {
+    const transactions = [
+      new TransactionLog(
+        {
+          action: TxAction.TRANSACTION,
+          direction: TxDirection.COST,
+          wallet: '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
+          hash: '1',
+          amount: 200_000_001,
+        },
+        stage.context,
+      ).calculateTotalPrice(),
+    ];
+
+    await worker.processWalletDepositAmounts(kiltWallet, transactions);
+    const walletDeposits = await stage.context.mysql.paramExecute(
+      `SELECT *
+       FROM ${DbTables.WALLET_DEPOSIT}
+       WHERE wallet_id = 2`,
+    );
+
+    expect(walletDeposits).toHaveLength(2);
+    expect(walletDeposits[0].currentAmount).toEqual(0);
+    expect(walletDeposits[1].currentAmount).toEqual(149999999);
+  });
 });
