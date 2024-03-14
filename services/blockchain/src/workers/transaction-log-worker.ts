@@ -701,6 +701,10 @@ export class TransactionLogWorker extends BaseQueueWorker {
       {},
       this.context,
     ).getOldestWithBalance(wallet.id, conn);
+    console.log(
+      'deductFromAvailableDeposit availableDeposit',
+      availableDeposit,
+    );
     if (!availableDeposit.exists()) {
       await this.sendErrorAlert(
         `NO AVAILABLE DEPOSIT! ${formatWalletAddress(
@@ -712,21 +716,31 @@ export class TransactionLogWorker extends BaseQueueWorker {
       );
       return 0;
     }
-    if (
-      this.subtractAmount(availableDeposit.currentAmount, amount).startsWith(
-        '-',
-      )
-    ) {
-      // if amount is negative, set currentAmount to 0 and recursively deduct the remainder
-      amount = this.subtractAmount(amount, availableDeposit.currentAmount);
-      availableDeposit.currentAmount = ethers.BigNumber.from(0).toString();
-      await availableDeposit.update(SerializeFor.UPDATE_DB, conn);
-      return this.deductFromAvailableDeposit(wallet, amount, conn);
-    }
-    availableDeposit.currentAmount = this.subtractAmount(
+    const newAmount = this.subtractAmount(
       availableDeposit.currentAmount,
       amount,
     );
+    console.log('deductFromAvailableDeposit newAmount', newAmount);
+    console.log(
+      'deductFromAvailableDeposit newAmount string',
+      newAmount.toString(),
+    );
+    if (newAmount.startsWith('-')) {
+      // if amount is negative, set currentAmount to 0 and recursively deduct the remainder
+      availableDeposit.currentAmount = ethers.BigNumber.from(0).toString();
+      await availableDeposit.update(SerializeFor.UPDATE_DB, conn);
+      const remainder = this.subtractAmount(
+        amount,
+        availableDeposit.currentAmount,
+      );
+      console.log('deductFromAvailableDeposit remainder', remainder);
+      console.log(
+        'deductFromAvailableDeposit remainder string',
+        remainder.toString(),
+      );
+      return this.deductFromAvailableDeposit(wallet, remainder, conn);
+    }
+    availableDeposit.currentAmount = newAmount;
     await availableDeposit.update(SerializeFor.UPDATE_DB, conn);
     return availableDeposit.pricePerToken;
   }
