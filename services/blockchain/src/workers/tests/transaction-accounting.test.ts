@@ -8,8 +8,11 @@ import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { Wallet } from '../../modules/wallet/wallet.model';
 import { DbTables, TxAction, TxDirection } from '../../config/types';
 import { TransactionLogWorker } from '../transaction-log-worker';
-
 import { TransactionLog } from '../../modules/accounting/transaction-log.model';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
+
+const mockAxios = new MockAdapter(axios);
 
 describe('Transaction Accounting unit tests', () => {
   let stage: Stage;
@@ -21,6 +24,13 @@ describe('Transaction Accounting unit tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
+
+    mockAxios
+      .onGet(/https:\/\/api.coingecko.com\/api\/v3\/simple\/price.*/)
+      .reply(200, {
+        'crust-network': { usd: 1 },
+        'kilt-protocol': { usd: 1 },
+      });
 
     crustWallet = new Wallet(
       {
