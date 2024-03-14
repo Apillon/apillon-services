@@ -116,6 +116,30 @@ export class SubstrateService {
         );
       }
 
+      // If wallet balance is below minimum balance for sending a tx, throw an error
+      const balanceData = await wallet.checkAndUpdateBalance(conn);
+      if (balanceData.isBelowTransactionThreshold) {
+        throw await new BlockchainCodeException({
+          code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
+          errorMessage: `Transaction can not be sent - balance below transaction minimum for wallet ${wallet.address} and chain ${SubstrateChain[wallet.chain]}`,
+          sourceFunction: 'SubstrateService.createTransaction',
+          status: 500,
+        }).writeToMonitor({
+          logType: LogType.ERROR,
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            ...balanceData,
+            transaction: params.transaction,
+            chain: params.chain,
+            chainType: ChainType.SUBSTRATE,
+            address: params.fromAddress,
+            referenceTable: params.referenceTable,
+            referenceId: params.referenceId,
+          },
+          sendAdminAlert: true,
+        });
+      }
+
       console.log('Wallet', wallet.serialize());
       console.info('Getting wallet seed, ...');
       const seed = await getWalletSeed(wallet.seed);
@@ -183,23 +207,27 @@ export class SubstrateService {
       } catch (e) {
         await new Lmas().writeLog({
           logType: LogType.ERROR,
-          message:
-            'Error triggering TRANSMIT_SUBSTRATE_TRANSACTION worker queue',
+          message: `Error triggering TRANSMIT_SUBSTRATE_TRANSACTION worker queue: ${e}`,
           location: 'SubstrateService.createTransaction',
           service: ServiceName.BLOCKCHAIN,
-          data: {
-            error: e,
-          },
+          data: { error: e },
+          sendAdminAlert: true,
         });
       }
       return transaction.serialize(SerializeFor.PROFILE);
     } catch (e) {
-      //Write log to LMAS
       console.log(e);
-      await new Lmas().writeLog({
+      await conn.rollback();
+      if (e instanceof BlockchainCodeException) {
+        throw e;
+      }
+      throw await new BlockchainCodeException({
+        code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
+        errorMessage: `Error creating substrate transaction: ${e}`,
+        sourceFunction: 'SubstrateService.createTransaction',
+        status: 500,
+      }).writeToMonitor({
         logType: LogType.ERROR,
-        message: 'Error creating transaction',
-        location: 'SubstrateService.createTransaction',
         service: ServiceName.BLOCKCHAIN,
         data: {
           error: e,
@@ -210,11 +238,7 @@ export class SubstrateService {
           referenceTable: params.referenceTable,
           referenceId: params.referenceId,
         },
-      });
-      await conn.rollback();
-      throw new BlockchainCodeException({
-        code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
-        status: 500,
+        sendAdminAlert: true,
       });
     } finally {
       await api.destroy();

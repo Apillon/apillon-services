@@ -1,4 +1,4 @@
-import { ChainType, SubstrateChain } from '@apillon/lib';
+import { ChainType, SqlModelStatus, SubstrateChain } from '@apillon/lib';
 import Keyring from '@polkadot/keyring';
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { Endpoint } from '../../common/models/endpoint';
@@ -9,6 +9,8 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { SubsocialApi } from '@subsocial/api';
 import { IpfsContent } from '@subsocial/types/substrate/classes';
 import { Transaction } from '../../common/models/transaction';
+import { DbTables } from '../../config/types';
+import { BlockchainCodeException } from '../../lib/exceptions';
 
 describe('Substrate service unit test', () => {
   let stage: Stage;
@@ -22,7 +24,7 @@ describe('Substrate service unit test', () => {
     await releaseStage(stage);
   });
 
-  test('Test service', async () => {
+  test('Test substrate service', async () => {
     const keyring = new Keyring({ ss58Format: 38, type: 'sr25519' });
     const keypair = keyring.createFromUri(
       'fine circle fiction good shop hand canal approve over canal border mixed',
@@ -77,6 +79,7 @@ describe('Substrate service unit test', () => {
         chainType: ChainType.SUBSTRATE,
         seed: 'fine circle fiction good shop hand canal approve over canal border mixed',
         address: '4q4EMLcCRKF1VgXgJgtcVu4CeVvwa6tsmBDQUKgNH9YUZRKq',
+        minTxBalance: '2000000000000000',
       },
       stage.context,
     ).insert();
@@ -112,6 +115,34 @@ describe('Substrate service unit test', () => {
     //   stage.context,
     // );
     // console.log('res2: ', res2);
+  });
+
+  test('Should fail sending a tx if balance below minTxBalance threshold', async () => {
+    const { 0: kiltWallet } = await stage.context.mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${DbTables.WALLET}\`
+      WHERE chain = ${SubstrateChain.KILT}
+      AND minTxBalance IS NOT NULL
+      AND status = ${SqlModelStatus.ACTIVE}
+      LIMIT 1
+      `,
+    );
+    // At least 2 KILT is required for creating a DID
+    expect(kiltWallet.minTxBalance?.toString()).toBe('2000000000000000');
+
+    // Mock creating a transaction which should fail
+    await expect(async () => {
+      await SubstrateService.createTransaction(
+        {
+          params: {
+            transaction: '0x',
+            chain: SubstrateChain.KILT,
+          },
+        },
+        stage.context,
+      );
+    }).rejects.toThrow(BlockchainCodeException);
   });
 
   /*describe('Test create and transmit subsocial(xsocial) transactions (space)', () => {
@@ -302,7 +333,7 @@ describe('Substrate service unit test', () => {
     });
   });*/
 
-  describe.only('Test create and transmit subsocial transactions', () => {
+  describe('Test create and transmit subsocial transactions', () => {
     let nonce, transaction, wallet, api: SubsocialApi;
 
     beforeAll(async () => {
