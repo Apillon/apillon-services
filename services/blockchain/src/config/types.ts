@@ -153,6 +153,7 @@ export enum TxToken {
   ETHEREUM = 'ETH',
   USDC = 'USDC',
   USDT = 'USDT',
+  SUBSOCIAL_TOKEN = 'SUB'
 }
 
 export enum TxAction {
