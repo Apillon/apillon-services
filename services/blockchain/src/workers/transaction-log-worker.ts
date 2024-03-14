@@ -716,6 +716,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
       );
       return 0;
     }
+    console.log('deductFromAvailableDeposit amount', amount);
     const newAmount = this.subtractAmount(
       availableDeposit.currentAmount,
       amount,
