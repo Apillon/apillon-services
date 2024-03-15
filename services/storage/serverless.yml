@@ -8,9 +8,15 @@ custom:
   webpack:
     webpackConfig: ./webpack.config.js
     includeModules:
-      modeModulesRelativeDir: '../../'
+      #      nodeModulesRelativeDir: '../../'
       forceExclude:
         - aws-sdk
+        - "@aws-sdk/client-lambda"
+        - "@aws-sdk/client-s3"
+        - "@aws-sdk/client-secrets-manager"
+        - "@aws-sdk/client-sqs"
+        - "@aws-sdk/s3-request-presigner"
+        - "@aws-sdk/client-cloudfront"
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
@@ -64,7 +70,7 @@ functions:
     events:
       - schedule: cron(${env:CRON_SCHEDULE, '0/1 * * * ? *'})
       - sqs:
-          arn: ${env:WORKER_SQS_ARN} #arn:aws:sqs:eu-west-1:018021943180:apillon-storage-queue-dev 
+          arn: ${env:WORKER_SQS_ARN} #arn:aws:sqs:eu-west-1:018021943180:apillon-storage-queue-dev
           batchSize: 4
           maximumBatchingWindow: 5
           functionResponseType: ReportBatchItemFailures

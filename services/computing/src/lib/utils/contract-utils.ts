@@ -1,5 +1,7 @@
 import {
   BlockchainMicroservice,
+  ChainType,
+  Context,
   CreateSubstrateTransactionDto,
   PoolConnection,
   SerializeFor,
@@ -18,6 +20,17 @@ import { TransactionService } from '../../modules/transaction/transaction.servic
 import { PhalaClient } from '../../modules/services/phala.client';
 import { ContractAbi } from '../../modules/computing/models/contractAbi.model';
 
+export async function getPhalaEndpoint(context: Context) {
+  const rpcEndpoint = (
+    await new BlockchainMicroservice(context).getChainEndpoint(
+      SubstrateChain.PHALA,
+      ChainType.SUBSTRATE,
+    )
+  ).data.url;
+  console.log('rpcEndpoint', rpcEndpoint);
+  return rpcEndpoint;
+}
+
 export async function deployPhalaContract(
   context: ServiceContext,
   transaction_uuid: string,
@@ -25,7 +38,8 @@ export async function deployPhalaContract(
   contractAbi: ContractAbi,
   conn: PoolConnection,
 ) {
-  const phalaClient = new PhalaClient(context);
+  const rpcUrl = await getPhalaEndpoint(context);
+  const phalaClient = new PhalaClient(rpcUrl);
   const transaction = await phalaClient.createDeployTransaction(
     contract,
     contractAbi,
@@ -73,7 +87,8 @@ export async function depositToPhalaCluster(
   accountAddress: string,
   amount: number,
 ) {
-  const phalaClient = new PhalaClient(context);
+  const rpcUrl = await getPhalaEndpoint(context);
+  const phalaClient = new PhalaClient(rpcUrl);
   const transaction = await phalaClient.createDepositToClusterTransaction(
     clusterId,
     accountAddress,
@@ -111,7 +126,8 @@ export async function transferContractOwnership(
   newOwnerAddress: string,
 ) {
   const nonce = PhalaClient.getRandomNonce();
-  const phalaClient = new PhalaClient(context);
+  const rpcUrl = await getPhalaEndpoint(context);
+  const phalaClient = new PhalaClient(rpcUrl);
   const transaction = await phalaClient.createTransferOwnershipTransaction(
     contractAbi,
     contractAddress,
@@ -154,7 +170,8 @@ export async function encryptContent(
   contractAddress: string,
   content: string,
 ) {
-  return await new PhalaClient(context).encryptContent(
+  const rpcUrl = await getPhalaEndpoint(context);
+  return await new PhalaClient(rpcUrl).encryptContent(
     contractAbi,
     contractAddress,
     content,
@@ -172,7 +189,8 @@ export async function assignCidToNft(
   nftId: number,
 ) {
   const nonce = PhalaClient.getRandomNonce();
-  const phalaClient = new PhalaClient(context);
+  const rpcUrl = await getPhalaEndpoint(context);
+  const phalaClient = new PhalaClient(rpcUrl);
   const transaction = await phalaClient.createAssignCidToNftTransaction(
     contractAbi,
     contractAddress,

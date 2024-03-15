@@ -1,6 +1,7 @@
 import {
   BaseProjectQueryFilter,
   BaseQueryFilter,
+  BlockchainMicroservice,
   CreatePostDto,
   CreateSpaceDto,
   ProductCode,
@@ -58,7 +59,6 @@ export class SubsocialService {
       },
       context,
     );
-
     await spendCreditAction(context, spendCredit, () => space.createSpace());
 
     return space.serialize(getSerializationStrategy(context));

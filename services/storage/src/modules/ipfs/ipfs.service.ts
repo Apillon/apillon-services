@@ -9,7 +9,6 @@ import {
   runWithWorkers,
   SerializeFor,
   ServiceName,
-  streamToBuffer,
   writeLog,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
@@ -101,7 +100,7 @@ export class IPFSService {
 
     console.info('Add file to IPFS, ...');
     const filesOnIPFS = await this.kuboRpcApiClient.add({
-      content: await streamToBuffer(file.Body as ReadableStream),
+      content: file.Body as ReadableStream,
     });
 
     await this.pinCidToCluster(filesOnIPFS.Hash);
@@ -185,7 +184,7 @@ export class IPFSService {
           );
 
           await this.kuboRpcApiClient.files.write({
-            content: await streamToBuffer(file.Body as ReadableStream),
+            content: file.Body as ReadableStream,
             path:
               mfsDirectoryPath +
               '/' +

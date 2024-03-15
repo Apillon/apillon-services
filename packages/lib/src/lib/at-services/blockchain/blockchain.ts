@@ -10,17 +10,15 @@ import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import {
+  Chain,
   ClusterDepositTransaction,
   CreateEvmTransactionDto,
   CreateSubstrateTransactionDto,
-  PhalaClusterWalletDto,
   TransactionDto,
   UpdateTransactionDto,
   WalletDepositsQueryFilter,
-  WalletIdentityDto,
   WalletTransactionsQueryFilter,
 } from '../../..';
-import { PhalaLogFilterDto } from '../computing/dtos/phala-log-filter.dto';
 
 export class BlockchainMicroservice extends BaseService {
   lambdaFunctionName =
@@ -103,6 +101,13 @@ export class BlockchainMicroservice extends BaseService {
     });
   }
 
+  public async getWallets(chain: Chain) {
+    return await this.callService({
+      eventName: BlockchainEventType.GET_WALLETS,
+      chain,
+    });
+  }
+
   public async getWallet(walletId: number) {
     return await this.callService({
       eventName: BlockchainEventType.GET_WALLET,
@@ -150,35 +155,7 @@ export class BlockchainMicroservice extends BaseService {
   }
   //#endregion
 
-  //#region wallet-identity
-  public async getWalletIdentity(query: WalletIdentityDto) {
-    return await this.callService({
-      eventName: BlockchainEventType.GET_WALLET_IDENTITY,
-      query,
-    });
-  }
-  //#endregion
-
   //#region computing on phala
-  public async getPhalaLogRecordsAndGasPrice(
-    phalaLogFilter: PhalaLogFilterDto,
-  ) {
-    const data = {
-      eventName: BlockchainEventType.GET_PHALA_LOG_RECORDS_AND_GAS_PRICE,
-      phalaLogFilter,
-    };
-    return await this.callService(data);
-  }
-
-  public async getPhalaClusterWalletBalance(
-    phalaClusterWallet: PhalaClusterWalletDto,
-  ) {
-    const data = {
-      eventName: BlockchainEventType.GET_PHALA_CLUSTER_WALLET_BALANCE,
-      phalaClusterWallet,
-    };
-    return await this.callService(data);
-  }
 
   public async getPhalaClusterDepositTransaction(
     clusterDepositTransaction: ClusterDepositTransaction,
@@ -188,6 +165,12 @@ export class BlockchainMicroservice extends BaseService {
       clusterDepositTransaction,
     };
     return await this.callService(data);
+  }
+
+  public async getTotalWalletTransactions() {
+    return await this.callService({
+      eventName: BlockchainEventType.GET_TOTAL_WALLET_TRANSACTIONS,
+    });
   }
   //#endregion
 }

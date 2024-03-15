@@ -76,29 +76,31 @@ export enum LmasEventType {
   SEND_ALERT = 'send-alert',
   SEND_ADMIN_ALERT = 'send-admin-alert',
   NOTIFY = 'notify',
+
   LIST_LOGS = 'list-logs',
   LIST_REQUEST_LOGS = 'list-request-logs',
   GET_API_KEYS_USAGE_COUNT = 'get-api-keys-usage-count',
   GET_IPFS_TRAFFIC = 'get-ipfs-traffic',
+  GET_TOTAL_REQUESTS = 'get-total-requests',
+
   SEND_MESSAGE_TO_SLACK = 'send-message-to-slack',
 }
 
 export enum BlockchainEventType {
   SUBSTRATE_SIGN_TRANSACTION = 'substrate-sign-transaction',
   SUBSTRATE_GET_TRANSACTION = 'substrate-get-transaction',
-  GET_PHALA_LOG_RECORDS_AND_GAS_PRICE = 'get-phala-log-records-and-gas-price',
-  GET_PHALA_CLUSTER_WALLET_BALANCE = 'get-phala-cluster-wallet-balance',
   GET_PHALA_CLUSTER_DEPOSIT_TRANSACTION = 'get-phala-cluster-deposit-transaction',
   EVM_SIGN_TRANSACTION = 'evm-sign-transaction',
   EVM_GET_TRANSACTION = 'evm-get-transaction',
   GET_CHAIN_ENDPOINT = 'get-chain-endpoint',
   LIST_WALLETS = 'list-wallets',
+  GET_WALLETS = 'get-wallets',
   GET_WALLET = 'get-wallet',
   UPDATE_WALLET = 'update-wallet',
   GET_WALLET_TRANSACTIONS = 'get-wallet-transactions',
   UPDATE_TRANSACTION = 'update-transaction',
   LIST_WALLET_DEPOSITS = 'list-wallet-deposits',
-  GET_WALLET_IDENTITY = 'get-wallet-identity',
+  GET_TOTAL_WALLET_TRANSACTIONS = 'get-total-wallet-transactions',
 }
 
 export enum StorageEventType {
@@ -263,6 +265,7 @@ export enum SocialEventType {
   CREATE_POST = 'create-post',
   LIST_POSTS = 'list-posts',
   GET_POST = 'get-post',
+  GET_WALLET_IDENTITY = 'get-wallet-identity',
 }
 
 export enum ServiceName {
@@ -782,6 +785,8 @@ export enum CacheKeyPrefix {
   PAYMENTS_CREDIT_PACKAGES = 'payments-credit-packages',
   PRODUCT_PRICE_LIST = 'product-price-list',
   PRODUCT_PRICE = 'product-price-list',
+
+  PLATFORM_STATISTICS = 'platform-statistics',
 }
 
 export enum CacheKeyTTL {

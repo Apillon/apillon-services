@@ -377,6 +377,7 @@ export class Deployment extends AdvancedSQLModel {
       FROM \`${this.tableName}\`
       WHERE cid = @cid
       AND status <> ${SqlModelStatus.DELETED}
+      AND deploymentStatus = ${DeploymentStatus.SUCCESSFUL}
       ORDER BY createTime DESC
       LIMIT 1;
       `,
@@ -408,6 +409,7 @@ export class Deployment extends AdvancedSQLModel {
       WHERE website_id = @website_id
       AND ${environmentCondition}
       AND status <> ${SqlModelStatus.DELETED}
+      AND deploymentStatus = ${DeploymentStatus.SUCCESSFUL}
       ORDER BY number DESC
       LIMIT 1;
       `,

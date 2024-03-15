@@ -335,8 +335,7 @@ export class Project extends ProjectAccessModel {
   }
 
   public async getNumOfUsersOnProjects() {
-    const context = await this.getContext();
-    const data = await context.mysql.paramExecute(
+    const data = await this.getContext().mysql.paramExecute(
       `
       select sum(project_users.numOfUsers) as numOfUsersOnProject
       from (
@@ -362,5 +361,17 @@ export class Project extends ProjectAccessModel {
       (x) => x.project_uuid == this.project_uuid,
     );
     this.myRole_id_onProject = roleOnProject?.role.id;
+  }
+
+  public async getTotalProjects(): Promise<number> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as total
+      FROM \`${DbTables.PROJECT}\`
+      WHERE status = ${SqlModelStatus.ACTIVE};
+      `,
+    );
+
+    return data?.length ? data[0].total : 0;
   }
 }

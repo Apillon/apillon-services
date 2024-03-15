@@ -68,6 +68,7 @@ export class AppModule {
         { path: 'payments/stripe/webhook', method: RequestMethod.POST },
         { path: 'payments/crypto/webhook', method: RequestMethod.POST },
         { path: 'public/contact-us', method: RequestMethod.POST },
+        { path: 'public/statistics', method: RequestMethod.GET },
         {
           path: 'websites/:website_uuid/deployments/:deployment_uuid/approve',
           method: RequestMethod.GET,
