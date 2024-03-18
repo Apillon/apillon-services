@@ -16,6 +16,7 @@ import {
   prop,
   selectAndCountQuery,
   BlockchainMicroservice,
+  env,
 } from '@apillon/lib';
 import { DbTables, SocialErrorCode } from '../../../config/types';
 
@@ -218,7 +219,11 @@ export class Space extends UuidSqlModel {
         status: 404,
       });
     }
-    space.canAccess(this.getContext());
+
+    //Anyone can create post in default space
+    if (space.space_uuid != env.SOCIAL_DEFAULT_SPACE) {
+      space.canAccess(this.getContext());
+    }
 
     return this;
   }

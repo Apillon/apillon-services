@@ -12,6 +12,19 @@ export class CreatePostDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public project_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
   public space_uuid: string;
 
@@ -62,4 +75,13 @@ export class CreatePostDto extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
   public image: string;*/
+}
+
+export class ApillonApiCreatePostDto extends CreatePostDto {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public hubUuid: string;
 }

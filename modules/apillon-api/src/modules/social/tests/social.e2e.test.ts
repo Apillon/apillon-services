@@ -43,6 +43,7 @@ describe('Apillon API social tests', () => {
 
   let testSpace: Space;
   let testPost: Post;
+  let defaultSpace: Space;
 
   beforeAll(async () => {
     stage = await setupTest();
@@ -89,6 +90,19 @@ describe('Apillon API social tests', () => {
         project_uuid: testProject.project_uuid,
         about: 'Test space',
         spaceId: 111,
+      })
+      .insert();
+
+    //insert default (apillon) space
+    defaultSpace = await new Space({}, stage.socialContext)
+      .fake()
+      .populate({
+        space_uuid: '109ec07b-cfd5-486f-ac9e-831ef0d6ec6f',
+        status: SqlModelStatus.ACTIVE,
+        project_uuid: 'Integration project uuid',
+        about: 'Default space',
+        spaceId: 123,
+        walletAddress: '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
       })
       .insert();
 
@@ -211,10 +225,8 @@ describe('Apillon API social tests', () => {
   });
 
   describe('Apillon API social Post(channel) tests', () => {
-    test('Application (through Apillon API) should be able to list channels in hub', async () => {
-      const response = await getRequest(
-        `/social/hubs/${testSpace.space_uuid}/channels`,
-      );
+    test('Application (through Apillon API) should be able to list channels', async () => {
+      const response = await getRequest(`/social/channels`);
 
       expect(response.status).toBe(200);
       expect(response.body.data.items.length).toBeGreaterThan(0);
@@ -228,7 +240,7 @@ describe('Apillon API social tests', () => {
 
     test('Application (through Apillon API) should be able to get channel(post)', async () => {
       const response = await getRequest(
-        `/social/hubs/${testSpace.space_uuid}/channels/${testPost.post_uuid}`,
+        `/social/channels/${testPost.post_uuid}`,
       );
 
       expect(response.body.data.channelUuid).toBe(testPost.post_uuid);
@@ -240,9 +252,7 @@ describe('Apillon API social tests', () => {
 
     test('Application (through Apillon API) should NOT be able to get channel(post) of another project', async () => {
       const response = await request(stage.http)
-        .get(
-          `/social/hubs/${testSpace.space_uuid}/channels/${testPost.post_uuid}`,
-        )
+        .get(`/social/channels/${testPost.post_uuid}`)
         .set(
           'Authorization',
           `Basic ${Buffer.from(
@@ -254,18 +264,44 @@ describe('Apillon API social tests', () => {
     });
 
     test('Application (through Apillon API) should be able to create new post(channel)', async () => {
-      const response = await postRequest(
-        `/social/hubs/${testSpace.space_uuid}/channels`,
-        {
-          title: 'My test channel',
-          body: 'This is channel description',
-        },
-      );
+      const response = await postRequest(`/social/channels`, {
+        projectUuid: testProject.project_uuid,
+        hubUuid: testSpace.space_uuid,
+        title: 'My test channel',
+        body: 'This is channel description',
+      });
       expect(response.status).toBe(201);
       expect(response.body.data.channelUuid).toBeTruthy();
       expect(response.body.data.status).toBe(1);
       expect(response.body.data.title).toBeTruthy();
       expect(response.body.data.body).toBeTruthy();
+
+      const tmpChannel = await new Post({}, stage.socialContext).populateByUUID(
+        response.body.data.channelUuid,
+        'post_uuid',
+      );
+      expect(tmpChannel.exists).toBeTruthy();
+      expect(tmpChannel.space_id).toBe(testSpace.id);
+    });
+
+    test('Application (through Apillon API) should be able to create new post(channel) in DEFAULT hub', async () => {
+      const response = await postRequest(`/social/channels`, {
+        projectUuid: testProject.project_uuid,
+        title: 'My test channel',
+        body: 'This is channel description',
+      });
+      expect(response.status).toBe(201);
+      expect(response.body.data.channelUuid).toBeTruthy();
+      expect(response.body.data.status).toBe(1);
+      expect(response.body.data.title).toBeTruthy();
+      expect(response.body.data.body).toBeTruthy();
+
+      const tmpChannel = await new Post({}, stage.socialContext).populateByUUID(
+        response.body.data.channelUuid,
+        'post_uuid',
+      );
+      expect(tmpChannel.exists).toBeTruthy();
+      expect(tmpChannel.space_id).toBe(defaultSpace.id);
     });
   });
 });

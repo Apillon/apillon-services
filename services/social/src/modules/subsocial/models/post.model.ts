@@ -1,6 +1,6 @@
 import {
   ApiName,
-  BaseQueryFilter,
+  BaseProjectQueryFilter,
   Context,
   ErrorCode,
   Lmas,
@@ -17,14 +17,13 @@ import {
 } from '@apillon/lib';
 import { DbTables, PostType, SocialErrorCode } from '../../../config/types';
 
-import { stringParser, integerParser } from '@rawmodel/parsers';
-import { Space } from './space.model';
+import { integerParser, stringParser } from '@rawmodel/parsers';
+import { v4 as uuidV4 } from 'uuid';
 import {
   SocialCodeException,
   SocialValidationException,
 } from '../../../lib/exceptions';
 import { SubsocialProvider } from '../subsocial.provider';
-import { v4 as uuidV4 } from 'uuid';
 
 export class Post extends UuidSqlModel {
   public readonly tableName = DbTables.POST;
@@ -256,10 +255,8 @@ export class Post extends UuidSqlModel {
     return this;
   }
 
-  public async getList(space_uuid: string, filter: BaseQueryFilter) {
-    await new Space({}, this.getContext()).populateByUuidAndCheckAccess(
-      space_uuid,
-    );
+  public async getList(space_uuid: string, filter: BaseProjectQueryFilter) {
+    this.canAccess(this.getContext());
 
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
@@ -282,12 +279,14 @@ export class Post extends UuidSqlModel {
         SELECT 
         post_uuid as ${this.getContext().apiName == ApiName.APILLON_API ? 'channel_uuid' : 'post_uuid'},
         postId as ${this.getContext().apiName == ApiName.APILLON_API ? 'channelId' : 'postId'},
-        ${selectFields}
+        ${selectFields},
+        s.name as hubName
         `,
       qFrom: `
         FROM \`${DbTables.POST}\` p
         JOIN \`${DbTables.SPACE}\` s ON s.id = p.space_id
-        WHERE s.space_uuid = @space_uuid
+        WHERE p.project_uuid = @project_uuid
+        ${space_uuid ? ' AND s.space_uuid = @space_uuid' : ''}
         AND (@search IS null OR p.title LIKE CONCAT('%', @search, '%') OR p.post_uuid = @search)
         AND ((@status IS null AND s.status <> ${SqlModelStatus.DELETED}) OR @status = p.status)
       `,

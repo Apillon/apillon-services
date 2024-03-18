@@ -1,10 +1,10 @@
 import {
+  ApillonApiCreatePostDto,
   AttachedServiceType,
   BaseProjectQueryFilter,
-  BaseQueryFilter,
-  CreatePostDto,
   CreateSpaceDto,
   DefaultApiKeyRole,
+  SocialPostQueryFilter,
   ValidateFor,
 } from '@apillon/lib';
 import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
@@ -74,8 +74,8 @@ export class SocialController {
     return await this.socialService.createSpace(context, body);
   }
 
-  @Get('hubs/:hub_uuid/channels')
-  @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
+  @Get('channels')
+  @Validation({ dto: SocialPostQueryFilter, validateFor: ValidateFor.QUERY })
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.SOCIAL,
@@ -83,13 +83,12 @@ export class SocialController {
   @UseGuards(ValidationGuard, AuthGuard)
   async listChannels(
     @Ctx() context: ApillonApiContext,
-    @Param('hub_uuid') space_uuid: string,
-    @Query() query: BaseQueryFilter,
+    @Query() query: SocialPostQueryFilter,
   ) {
-    return await this.socialService.listPosts(context, space_uuid, query);
+    return await this.socialService.listPosts(context, query.hubUuid, query);
   }
 
-  @Get('hubs/:hub_uuid/channels/:channel_uuid')
+  @Get('channels/:channel_uuid')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.SOCIAL,
@@ -102,8 +101,8 @@ export class SocialController {
     return await this.socialService.getPost(context, post_uuid);
   }
 
-  @Post('hubs/:hub_uuid/channels')
-  @Validation({ dto: CreatePostDto })
+  @Post('channels')
+  @Validation({ dto: ApillonApiCreatePostDto })
   @UseGuards(ValidationGuard)
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_WRITE,
@@ -112,10 +111,9 @@ export class SocialController {
   @UseGuards(AuthGuard)
   async createPost(
     @Ctx() context: ApillonApiContext,
-    @Param('hub_uuid') space_uuid: string,
-    @Body() body: CreatePostDto,
+    @Body() body: ApillonApiCreatePostDto,
   ) {
-    body.space_uuid = space_uuid;
+    body.space_uuid = body.hubUuid;
     return await this.socialService.createPost(context, body);
   }
 }
