@@ -151,7 +151,12 @@ export class BucketService {
       });
     }
 
-    await b.markDeleted();
+    await Promise.all([
+      b.markDeleted(),
+      invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
+        project_uuid: b.project_uuid,
+      }),
+    ]);
 
     return true;
   }

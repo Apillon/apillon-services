@@ -88,8 +88,6 @@ export * from './lib/at-services/computing/dtos/deposit-to-cluster.dto';
 export * from './lib/at-services/computing/dtos/transfer-ownership.dto';
 export * from './lib/at-services/computing/dtos/encrypt-content.dto';
 export * from './lib/at-services/computing/dtos/assign-cid-to-nft.dto';
-export * from './lib/at-services/computing/dtos/phala-log-filter.dto';
-export * from './lib/at-services/computing/dtos/phala-cluster-wallet.dto';
 export * from './lib/at-services/computing/dtos/phala-cluster-deposit-transaction.dto';
 export * from './lib/at-services/computing/dtos/cluster-wallet-query-filter.dto';
 export * from './lib/at-services/computing/dtos/computing-transaction-query-filter.dto';

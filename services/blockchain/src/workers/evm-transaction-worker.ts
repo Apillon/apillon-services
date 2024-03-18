@@ -193,6 +193,23 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
       conn,
     );
 
+    if (failedTxs.length) {
+      //Send admin alert for failed transaction
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          message: `${failedTxs.length} transaction(s) have failed on chain for wallet ${wallet.address}`,
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            transactions: failedTxs,
+            chain: wallet.chain,
+            walletAddress: wallet.address,
+          },
+        },
+        LogOutput.NOTIFY_MSG,
+      );
+    }
+
     const updatedDbTxs: string[] = confirmedTxs.concat(failedTxs);
 
     await this.writeEventLog(

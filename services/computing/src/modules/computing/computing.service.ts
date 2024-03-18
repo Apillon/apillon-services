@@ -38,6 +38,7 @@ import {
   deployPhalaContract,
   depositToPhalaCluster,
   encryptContent,
+  getPhalaEndpoint,
   transferContractOwnership,
 } from '../../lib/utils/contract-utils';
 import { Contract } from './models/contract.model';
