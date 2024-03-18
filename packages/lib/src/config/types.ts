@@ -774,6 +774,7 @@ export enum CacheKeyPrefix {
 
   SOCIAL_SPACE_LIST = 'social-space-list',
   SOCIAL_POST_LIST = 'social-post-list',
+  SOCIAL_SPACE_POST_LIST = 'social-space-post-list',
 
   CONTRACT_VERSION = 'contract-version',
   CONTRACT_ABI = 'contract-abi',

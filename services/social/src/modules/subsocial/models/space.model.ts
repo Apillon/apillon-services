@@ -16,6 +16,7 @@ import {
   prop,
   selectAndCountQuery,
   BlockchainMicroservice,
+  env,
 } from '@apillon/lib';
 import { DbTables, SocialErrorCode } from '../../../config/types';
 
@@ -42,8 +43,6 @@ export class Space extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -88,8 +87,6 @@ export class Space extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -173,8 +170,6 @@ export class Space extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
   })
   public spaceId: string;
@@ -191,6 +186,30 @@ export class Space extends UuidSqlModel {
   })
   public walletAddress: string;
 
+  /**
+   * Renamed properties for apillon api ----------------------------------------
+   */
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.APILLON_API],
+    getter() {
+      return this.space_uuid;
+    },
+  })
+  public hub_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.APILLON_API],
+    getter() {
+      return this.spaceId;
+    },
+  })
+  public hubId: string;
+
   public async populateByUuidAndCheckAccess(uuid: string): Promise<this> {
     const space: Space = await this.populateByUUID(uuid, 'space_uuid');
 
@@ -200,7 +219,11 @@ export class Space extends UuidSqlModel {
         status: 404,
       });
     }
-    space.canAccess(this.getContext());
+
+    //Anyone can create post in default space
+    if (space.space_uuid != env.SOCIAL_DEFAULT_SPACE) {
+      space.canAccess(this.getContext());
+    }
 
     return this;
   }
@@ -226,12 +249,15 @@ export class Space extends UuidSqlModel {
     );
     const sqlQuery = {
       qSelect: `
-        SELECT ${selectFields},
+        SELECT 
+        space_uuid as ${this.getContext().apiName == ApiName.APILLON_API ? 'hub_uuid' : 'space_uuid'},
+        spaceId as ${this.getContext().apiName == ApiName.APILLON_API ? 'hubId' : 'spaceId'},
+        ${selectFields},
         (
           SELECT COUNT(*)
           FROM \`${DbTables.POST}\` p
           WHERE p.space_id = s.id
-        ) as numOfPosts
+        ) as ${this.getContext().apiName == ApiName.APILLON_API ? 'numOfChannels' : 'numOfPosts'}
         `,
       qFrom: `
         FROM \`${DbTables.SPACE}\` s

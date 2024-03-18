@@ -116,6 +116,13 @@ export class SubstrateService {
         );
       }
 
+      if (!wallet.exists()) {
+        throw new BlockchainCodeException({
+          code: BlockchainErrorCode.WALLET_DOES_NOT_EXISTS,
+          status: 500,
+        });
+      }
+
       // If wallet balance is below minimum balance for sending a tx, throw an error
       const balanceData = await wallet.checkAndUpdateBalance(conn);
       if (balanceData.isBelowTransactionThreshold) {

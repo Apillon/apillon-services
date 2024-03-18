@@ -536,6 +536,8 @@ export interface IEnv {
    */
   SOCIAL_AWS_WORKER_SQS_URL: string;
   SOCIAL_AWS_WORKER_LAMBDA_NAME: string;
+
+  SOCIAL_DEFAULT_SPACE: string;
   /**
    * NOWPAYMENTS
    */
@@ -952,6 +954,8 @@ export let env: IEnv = {
 
   SOCIAL_AWS_WORKER_SQS_URL: process.env['SOCIAL_AWS_WORKER_SQS_URL'],
   SOCIAL_AWS_WORKER_LAMBDA_NAME: process.env['SOCIAL_AWS_WORKER_LAMBDA_NAME'],
+
+  SOCIAL_DEFAULT_SPACE: process.env['SOCIAL_DEFAULT_SPACE'],
 
   /** DISCORD */
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
