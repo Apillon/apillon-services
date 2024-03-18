@@ -26,6 +26,7 @@ import {
   BaseQueryFilter,
   EmailDataDto,
   EmailTemplate,
+  ConfigureCreditDto,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -614,6 +615,13 @@ export class ProjectService {
 
   async getProjectCredit(context: DevConsoleApiContext, project_uuid: string) {
     return (await new Scs(context).getProjectCredit(project_uuid)).data;
+  }
+
+  async configureCreditSettings(
+    context: DevConsoleApiContext,
+    body: ConfigureCreditDto,
+  ) {
+    return (await new Scs(context).configureCredit(body)).data;
   }
 
   async getCreditTransactions(
