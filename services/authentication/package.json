@@ -32,7 +32,7 @@
     "@apillon/workers-lib": "*",
     "@kiltprotocol/sdk-js": "^0.31.1",
     "@middy/core": "^2.5.7",
-    "@polkadot/api": "^9.5.1",
+    "@polkadot/api": "10.12.2",
     "@polkadot/keyring": "^10.1.9",
     "@polkadot/util": "^10.1.10",
     "@types/uuid": "^8.3.4",
