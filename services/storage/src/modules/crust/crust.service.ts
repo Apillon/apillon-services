@@ -1,5 +1,6 @@
 import {
   BlockchainMicroservice,
+  ChainType,
   Context,
   CreateSubstrateTransactionDto,
   SubstrateChain,
@@ -28,9 +29,17 @@ export class CrustService {
     const tips = 0;
     const memo = params.isDirectory ? 'folder' : '';
 
+    //Get endpoint from BCS
+    const rpcEndpoint = (
+      await new BlockchainMicroservice(context).getChainEndpoint(
+        SubstrateChain.CRUST,
+        ChainType.SUBSTRATE,
+      )
+    ).data.url;
+
     // Pin dist directory on Crust
     const api = await ApiPromise.create({
-      provider: new WsProvider('wss://rpc.crust.network'),
+      provider: new WsProvider(rpcEndpoint),
       typesBundle: typesBundleForPolkadot,
       throwOnConnect: true,
     });
