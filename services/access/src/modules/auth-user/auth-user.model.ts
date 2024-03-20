@@ -321,7 +321,7 @@ export class AuthUser extends AdvancedSQLModel {
   }
 
   public setPassword(password: string) {
-    this.password = bcrypt.hashSync(password, 10);
+    this.password = bcrypt.hashSync(password);
   }
 
   public async setDefaultRole(conn: PoolConnection) {

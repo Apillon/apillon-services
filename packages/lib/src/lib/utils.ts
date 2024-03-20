@@ -3,7 +3,6 @@ import { sign, verify, decode } from 'jsonwebtoken';
 import { env } from '../config/env';
 
 export function isPlainObject(testVar: any): boolean {
-  // eslint-disable-next-line sonarjs/prefer-single-boolean-return
   if (
     testVar === null ||
     testVar === undefined ||
@@ -75,7 +74,7 @@ export async function runWithWorkers(
 }
 
 export function objectIdFromDate(date: Date) {
-  return Math.floor(date.getTime() / 1000).toString(16) + '0000000000000000';
+  return `${Math.floor(date.getTime() / 1000).toString(16)}0000000000000000`;
 }
 
 export function dateFromObjectId(objectId: string) {
@@ -84,18 +83,16 @@ export function dateFromObjectId(objectId: string) {
 
 export function safeJsonParse(inputString: string, defaultResult = null) {
   try {
-    defaultResult = JSON.parse(inputString);
+    return JSON.parse(inputString);
   } catch (err) {
     // console.warn('JSON parse failed and was handled by default value.');
   }
   return defaultResult;
 }
 
-export function checkEmail(email: string) {
-  const regex =
-    // eslint-disable-next-line security/detect-unsafe-regex
-    /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g;
-  return regex.test(email);
+export function isValidEmail(email: string) {
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
 }
 
 /**
@@ -112,6 +109,10 @@ export function generateJwtToken(
   expiresIn = '1d',
   secret?: string,
 ) {
+  if (!secret && !env.APP_SECRET) {
+    throw new Error('APP_SECRET is not provided!');
+  }
+
   if (!subject && !expiresIn) {
     return sign({ ...data }, secret ? secret : env.APP_SECRET);
   } else if (expiresIn == 'never') {
@@ -126,6 +127,10 @@ export function generateJwtToken(
 }
 
 export function parseJwtToken(subject: string, token: string, secret?: string) {
+  if (!secret && !env.APP_SECRET) {
+    throw new Error('APP_SECRET is not provided!');
+  }
+
   return verify(token, secret ? secret : env.APP_SECRET, { subject }) as any;
 }
 
