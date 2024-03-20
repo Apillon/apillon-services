@@ -280,7 +280,8 @@ export class Post extends UuidSqlModel {
         post_uuid as ${this.getContext().apiName == ApiName.APILLON_API ? 'channel_uuid' : 'post_uuid'},
         postId as ${this.getContext().apiName == ApiName.APILLON_API ? 'channelId' : 'postId'},
         ${selectFields},
-        s.name as hubName
+        s.name as hubName, 
+        s.spaceId as hubId
         `,
       qFrom: `
         FROM \`${DbTables.POST}\` p
