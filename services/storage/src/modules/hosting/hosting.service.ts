@@ -64,6 +64,10 @@ export class HostingService {
     return await new Website({}, context).listDomains(event.query);
   }
 
+  static async getDomains(event: {}, context: ServiceContext) {
+    return await new Website({}, context).getDomains();
+  }
+
   static async getWebsite(event: { id: any }, context: ServiceContext) {
     const website: Website = await new Website({}, context).populateById(
       event.id,

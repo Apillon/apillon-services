@@ -681,4 +681,21 @@ export class Website extends UuidSqlModel {
       { ipfsClusterDomain: query.ipfsClusterDomain },
     );
   }
+
+  public async getDomains(): Promise<
+    { domains: string; project_uuid: string }[]
+  > {
+    return await this.getContext().mysql.paramExecute(
+      `
+      SELECT w.domain, w.project_uuid
+      FROM \`${DbTables.WEBSITE}\` w
+      JOIN \`${DbTables.BUCKET}\` b ON b.id = w.productionBucket_id
+      WHERE w.domain IS NOT NULL
+      AND w.domain <> ''
+      AND b.CID IS NOT NULL
+      AND w.status <> ${SqlModelStatus.DELETED}
+      `,
+      {},
+    );
+  }
 }
