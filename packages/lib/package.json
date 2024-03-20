@@ -44,6 +44,7 @@
     "mongodb": "4.17.0",
     "mysql2": "^2.3.3",
     "redis": "^4.6.7",
+    "saslprep": "^1.0.3",
     "sqlstring": "^2.3.3",
     "ts-mysql-migrate": "^1.0.2",
     "uuid": "^9.0.0"

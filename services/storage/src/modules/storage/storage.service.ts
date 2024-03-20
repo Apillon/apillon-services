@@ -165,8 +165,11 @@ export class StorageService {
       bucket.bucketType != BucketType.HOSTING &&
       !(await checkProjectSubscription(context, bucket.project_uuid))
     ) {
-      console.info('Project WO subscription. Checking fileNames for upload');
-      if (event.body.files.find((x) => x.fileName.includes('.html'))) {
+      console.info(
+        `Project W/O subscription (${bucket.project_uuid}). Checking fileNames for upload`,
+      );
+      // Content type can also be checked, but it may not always be provided
+      if (event.body.files.find((x) => x.fileName.includes('.htm'))) {
         throw new StorageCodeException({
           code: StorageErrorCode.HTML_FILES_NOT_ALLOWED,
           status: 400,

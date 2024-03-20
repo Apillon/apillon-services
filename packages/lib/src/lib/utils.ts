@@ -1,6 +1,8 @@
 import * as _ from 'lodash';
-import { sign, verify, decode } from 'jsonwebtoken';
+import { sign, verify, decode, Jwt } from 'jsonwebtoken';
 import { env } from '../config/env';
+import * as crypto from 'crypto';
+import { JwtExpireTime } from '../config/types';
 
 export function isPlainObject(testVar: any): boolean {
   if (
@@ -106,7 +108,7 @@ export function isValidEmail(email: string) {
 export function generateJwtToken(
   subject: string,
   data: object,
-  expiresIn = '1d',
+  expiresIn = JwtExpireTime.ONE_DAY,
   secret?: string,
 ) {
   if (!secret && !env.APP_SECRET) {
@@ -114,13 +116,13 @@ export function generateJwtToken(
   }
 
   if (!subject && !expiresIn) {
-    return sign({ ...data }, secret ? secret : env.APP_SECRET);
-  } else if (expiresIn == 'never') {
-    return sign({ ...data }, secret ? secret : env.APP_SECRET, {
+    return sign({ ...data }, secret || env.APP_SECRET);
+  } else if (expiresIn == JwtExpireTime.NEVER) {
+    return sign({ ...data }, secret || env.APP_SECRET, {
       subject,
     });
   }
-  return sign({ ...data }, secret ? secret : env.APP_SECRET, {
+  return sign({ ...data }, secret || env.APP_SECRET, {
     subject,
     expiresIn,
   });
@@ -197,7 +199,7 @@ export function generateRandomCode(
 ): string {
   let code = '';
   for (let i = 0; i < length; i++) {
-    code += characters.charAt(Math.floor(Math.random() * characters.length));
+    code += characters.charAt(crypto.randomInt(0, characters.length));
   }
   return code;
 }

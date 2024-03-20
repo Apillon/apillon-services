@@ -5,6 +5,7 @@ import {
   Context,
   DefaultUserRole,
   JSONParser,
+  JwtExpireTime,
   JwtTokenType,
   PoolConnection,
   PopulateFrom,
@@ -20,7 +21,7 @@ import {
 import { stringParser } from '@rawmodel/parsers';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import * as bcrypt from 'bcryptjs';
-import { AmsErrorCode, DbTables, TokenExpiresInStr } from '../../config/types';
+import { AmsErrorCode, DbTables } from '../../config/types';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { CryptoHash } from '../../lib/hash-with-crypto';
 import { AuthToken } from '../auth-token/auth-token.model';
@@ -276,7 +277,7 @@ export class AuthUser extends AdvancedSQLModel {
       tokenHash: await CryptoHash.hash(this.token),
       user_uuid: this.user_uuid,
       tokenType: JwtTokenType.USER_AUTHENTICATION,
-      expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
+      expiresIn: JwtExpireTime.ONE_DAY,
     };
 
     authToken.populate(tokenData, PopulateFrom.SERVICE);

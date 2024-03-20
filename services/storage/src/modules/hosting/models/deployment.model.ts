@@ -7,6 +7,7 @@ import {
   DeploymentQueryFilter,
   ErrorCode,
   ForbiddenErrorCodes,
+  JwtExpireTime,
   JwtTokenType,
   Lmas,
   LogType,
@@ -508,7 +509,7 @@ export class Deployment extends AdvancedSQLModel {
       const parameters = {
         deployment_uuid: this.deployment_uuid,
         clearBucketForUpload: this.clearBucketForUpload,
-        user_uuid: this.getContext().user?.user_uuid
+        user_uuid: this.getContext().user?.user_uuid,
       };
       const wd = new WorkerDefinition(
         serviceDef,
@@ -526,7 +527,7 @@ export class Deployment extends AdvancedSQLModel {
       await worker.runExecutor({
         deployment_uuid: this.deployment_uuid,
         clearBucketForUpload: this.clearBucketForUpload,
-        user_uuid: this.getContext().user?.user_uuid
+        user_uuid: this.getContext().user?.user_uuid,
       });
     } else {
       //send message to SQS
@@ -537,7 +538,7 @@ export class Deployment extends AdvancedSQLModel {
           {
             deployment_uuid: this.deployment_uuid,
             clearBucketForUpload: this.clearBucketForUpload,
-            user_uuid: this.getContext().user?.user_uuid
+            user_uuid: this.getContext().user?.user_uuid,
           },
         ],
         null,
@@ -549,7 +550,7 @@ export class Deployment extends AdvancedSQLModel {
   /**
    * Update deployment status, get deployment(hosted on IPFS) screenshot and send message to slack (screenshot + url + approve/reject button)
    * @param website
-   * @param user_uuid In workers, context.user is not initialized. So user need to be passed separately. 
+   * @param user_uuid In workers, context.user is not initialized. So user need to be passed separately.
    */
   public async sendToReview(website: Website, user_uuid: string) {
     //Send website to review
@@ -577,10 +578,8 @@ export class Deployment extends AdvancedSQLModel {
     //Send message to slack
     const jwt = generateJwtToken(
       JwtTokenType.WEBSITE_REVIEW_TOKEN,
-      {
-        deployment_uuid: this.deployment_uuid,
-      },
-      'never',
+      { deployment_uuid: this.deployment_uuid },
+      JwtExpireTime.NEVER,
     );
     const blocks = [];
     if (linkToScreenshot) {
@@ -606,16 +605,14 @@ export class Deployment extends AdvancedSQLModel {
         {
           type: 'button',
           text: { text: 'Open dashboard', type: 'plain_text' },
-          url: `${env.ADMIN_APP_URL}/dashboard/users/${
-            user_uuid
-          }`,
+          url: `${env.ADMIN_APP_URL}/dashboard/users/${user_uuid}`,
         },
       ],
     });
 
     const msgParams = {
       message: `
-      New website deployment for review.\n   
+      New website deployment for review.\n
       URL: ${ipfsCluster.generateLink(website.project_uuid, this.cid)} \n
       Project: ${website.project_uuid} \n
       User: ${user_uuid}

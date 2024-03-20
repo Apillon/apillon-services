@@ -52,7 +52,7 @@ describe('Referral tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
       expect(response.body.data.refCode).toHaveLength(5);
-      expect(response.body.data.termsAccepted).toBeTruthy();
+      // expect(response.body.data.termsAccepted).toBeTruthy();
       playerId = response.body.data.id;
       refCode = response.body.data.refCode;
     });

@@ -21,6 +21,7 @@ import {
   EmailDataDto,
   EmailTemplate,
   LogType,
+  JwtExpireTime,
 } from '@apillon/lib';
 import { getDiscordProfile } from '@apillon/modules-lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -217,7 +218,7 @@ export class UserService {
     const token = generateJwtToken(
       JwtTokenType.USER_CONFIRM_EMAIL,
       { email, refCode, metadata, wallet },
-      '1h',
+      JwtExpireTime.ONE_HOUR,
     );
 
     await new Mailing(context).sendMail(
@@ -330,10 +331,8 @@ export class UserService {
 
     const token = generateJwtToken(
       JwtTokenType.USER_RESET_PASSWORD,
-      {
-        email,
-      },
-      '1h',
+      { email },
+      JwtExpireTime.ONE_HOUR,
       emailResult.authUser.password ? emailResult.authUser.password : undefined,
     );
 
@@ -551,7 +550,7 @@ export class UserService {
       return generateJwtToken(
         JwtTokenType.USER_LOGIN_CAPTCHA,
         { email: loginInfo.email },
-        `${env.CAPTCHA_REMEMBER_DAYS}d`,
+        `${env.CAPTCHA_REMEMBER_DAYS}d` as JwtExpireTime,
       );
     }
     return captchaJwt;

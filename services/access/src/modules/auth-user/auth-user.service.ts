@@ -24,9 +24,9 @@ import {
 } from '../../lib/exceptions';
 import { AuthToken } from '../auth-token/auth-token.model';
 import { AuthUser } from './auth-user.model';
-import { TokenExpiresInStr } from '../../config/types';
 import { CryptoHash } from '../../lib/hash-with-crypto';
 import { ApiKeyService } from '../api-key/api-key.service';
+import { JwtExpireTime } from '@apillon/lib/src/config/types';
 
 /**
  * AuthUserService class handles user authentication and related operations, such as registration, login, password reset, and email verification.
@@ -85,7 +85,7 @@ export class AuthUserService {
         tokenHash: await CryptoHash.hash(authUser.token),
         user_uuid: authUser.user_uuid,
         tokenType: JwtTokenType.USER_AUTHENTICATION,
-        expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
+        expiresIn: JwtExpireTime.ONE_DAY,
       };
 
       authToken.populate({ ...tokenData }, PopulateFrom.SERVICE);
@@ -424,7 +424,7 @@ export class AuthUserService {
     if (!authUser.exists()) {
       throw await new AmsCodeException({
         status: 400,
-        code: AmsErrorCode.USER_DOES_NOT_EXISTS,
+        code: AmsErrorCode.INVALID_TOKEN,
       }).writeToMonitor({
         logType: LogType.WARN,
         context,

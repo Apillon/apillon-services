@@ -303,9 +303,8 @@ export class HostingService {
         code: StorageErrorCode.NO_FILES_TO_DEPLOY,
         status: 400,
       });
-    } else if (
-      !filesInBucket.find((x) => x.name.toLowerCase() == 'index.html')
-    ) {
+      // Content type can also be checked, but it may not always be provided
+    } else if (!filesInBucket.find((x) => x.name === 'index.html')) {
       throw new StorageCodeException({
         code: StorageErrorCode.INDEX_HTML_FILE_NOT_PRESENT,
         status: 400,

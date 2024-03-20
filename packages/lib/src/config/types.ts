@@ -895,3 +895,10 @@ export enum EmailTemplate {
 
   CREDIT_BALANCE_BELOW_THRESHOLD = 'credit-balance-below-threshold',
 }
+
+export enum JwtExpireTime {
+  ONE_DAY = '1d',
+  ONE_HOUR = '1h',
+  TWENTY_MINUTES = '20m',
+  NEVER = 'never',
+}
