@@ -43,7 +43,6 @@ export async function upgrade(
   };
 
   await queryFn(`
-
     CREATE OR REPLACE VIEW \`v_userStats\` AS
       SELECT
         email, user_uuid, COUNT(project_uuid) as project_count, JSON_ARRAYAGG(project_uuid) as project_uuids,
