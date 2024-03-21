@@ -64,7 +64,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
       data.wallet.id,
     );
 
-    const lastBlock = await this.getLastLoggedBlockNumber(wallet);
+    const lastBlock = wallet.lastLoggedBlock;
     const transactions = await this.getTransactionsForWallet(
       wallet,
       lastBlock || 1,
@@ -98,25 +98,6 @@ export class TransactionLogWorker extends BaseQueueWorker {
         LogOutput.EVENT_INFO,
       );
     }
-  }
-
-  private async getLastLoggedBlockNumber(wallet: Wallet) {
-    const res = await this.context.mysql.paramExecute(
-      `
-        SELECT lastLoggedBlock
-        FROM \`${DbTables.WALLET}\`
-        WHERE chain = @chain
-          AND chainType = @chainType
-          AND address = @address
-      `,
-      {
-        address: wallet.address,
-        chain: wallet.chain,
-        chainType: wallet.chainType,
-      },
-    );
-
-    return res.length ? res[0].lastLoggedBlock : 0;
   }
 
   private async getTransactionsForWallet(
