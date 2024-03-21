@@ -1,4 +1,9 @@
-import { generateJwtToken, JwtTokenType, parseJwtToken } from '@apillon/lib';
+import {
+  generateJwtToken,
+  getFaker,
+  JwtTokenType,
+  parseJwtToken,
+} from '@apillon/lib';
 import * as request from 'supertest';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { createTestUser, TestUser } from '@apillon/tests-lib';
@@ -6,6 +11,7 @@ import { ValidateEmailDto } from '../dtos/validate-email.dto';
 import { setupTest } from '../../../../test/helpers/setup';
 import { createTestKeyring } from '@polkadot/keyring';
 import { u8aToHex } from '@polkadot/util';
+import { JwtExpireTime } from '@apillon/lib';
 
 describe('Auth tests', () => {
   let stage: Stage;
@@ -15,7 +21,7 @@ describe('Auth tests', () => {
   let testUserKeyPair;
   let testUserKeyPair2;
   const newUserData = {
-    email: 'dev+test@apillon.io',
+    email: getFaker().internet.email(),
     password: 'MyPassword01!',
     authToken: null,
     user_uuid: null,
@@ -168,10 +174,8 @@ describe('Auth tests', () => {
   test('User should be able to reset password & login with new password', async () => {
     const token = generateJwtToken(
       JwtTokenType.USER_RESET_PASSWORD,
-      {
-        email: testUser.authUser.email,
-      },
-      '1h',
+      { email: testUser.authUser.email },
+      JwtExpireTime.ONE_HOUR,
       testUser.authUser.password,
     );
 
@@ -277,7 +281,7 @@ describe('Auth tests', () => {
     const token = generateJwtToken(
       JwtTokenType.USER_CONFIRM_EMAIL,
       { email, wallet },
-      '1h',
+      JwtExpireTime.ONE_HOUR,
     );
 
     response = await request(stage.http)
@@ -324,7 +328,7 @@ describe('Auth tests', () => {
     const tokenKilt = generateJwtToken(
       JwtTokenType.OAUTH_TOKEN,
       { email: newUserData.email },
-      '10min',
+      JwtExpireTime.TWENTY_MINUTES,
     );
 
     const resp = await request(stage.http)
@@ -339,7 +343,7 @@ describe('Auth tests', () => {
     const tokenKiltNew = generateJwtToken(
       JwtTokenType.OAUTH_TOKEN,
       { email: controlEmail },
-      '10min',
+      JwtExpireTime.TWENTY_MINUTES,
     );
 
     const resp1 = await request(stage.http)

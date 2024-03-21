@@ -197,11 +197,8 @@ export class UserService {
     );
 
     if (emailResult.result === true) {
-      throw new CodeException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        code: ValidatorErrorCode.USER_EMAIL_ALREADY_TAKEN,
-        errorCodes: ValidatorErrorCode,
-      });
+      // for security reason do not return error to FE
+      return true;
     }
 
     // If user has registered with wallet, validate the signature and use it in signup email jwt
@@ -233,7 +230,7 @@ export class UserService {
       }),
     );
 
-    return emailResult;
+    return true;
   }
 
   /**
