@@ -391,6 +391,7 @@ export class EvmService {
           latestSuccess = transaction.nonce;
           transmitted++;
         } catch (err) {
+          console.log('ERRRROR: ', err);
           if (
             err?.reason === 'nonce has already been used' ||
             err?.error?.message === 'already known'
@@ -461,11 +462,10 @@ export class EvmService {
         }
       }
 
-      if (latestSuccess) {
+      if (latestSuccess !== null) {
         const dbWallet = new Wallet(wallet, context);
         await dbWallet.updateLastProcessedNonce(latestSuccess);
       }
-
       await eventLogger(
         {
           logType: LogType.COST,

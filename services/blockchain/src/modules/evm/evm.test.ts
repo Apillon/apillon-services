@@ -1,8 +1,11 @@
-import { EvmChain } from '@apillon/lib';
+import { EvmChain, TransactionStatus } from '@apillon/lib';
 import { UnsignedTransaction, ethers } from 'ethers';
 import { Stage, releaseStage, setupTest } from '../../../test/setup';
 import { EvmService } from './evm.service';
 import { TestBlockchain } from '@apillon/tests-lib';
+import { Wallet } from '../wallet/wallet.model';
+import { ChainType } from '@apillon/lib';
+import { Transaction } from '../../common/models/transaction';
 
 describe('Evm service unit test', () => {
   let stage: Stage;
@@ -26,6 +29,7 @@ describe('Evm service unit test', () => {
 
     const serialized = ethers.utils.serializeTransaction(transaction);
 
+    // this already triggers transmiting transaction
     const res = await EvmService.createTransaction(
       {
         params: {
@@ -36,14 +40,19 @@ describe('Evm service unit test', () => {
       },
       stage.context,
     );
-    console.log('res: ', res);
-    const res2 = await EvmService.transmitTransactions(
-      { chain: EvmChain.MOONBASE },
-      stage.context,
-      async () => {
-        return;
-      },
+
+    const wallet = await new Wallet({}, stage.context).populateByAddress(
+      EvmChain.MOONBASE,
+      ChainType.EVM,
+      blockchain.getWalletAddress(0),
     );
-    console.log('res2: ', res2);
+
+    const tx = await new Transaction(
+      {},
+      stage.context,
+    ).getTransactionByChainAndHash(EvmChain.MOONBASE, res.transactionHash);
+
+    expect(tx.transactionStatus).toEqual(TransactionStatus.CONFIRMED);
+    expect(wallet.lastProcessedNonce).toEqual(tx.nonce);
   });
 });
