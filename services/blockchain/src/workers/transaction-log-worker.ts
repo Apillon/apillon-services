@@ -103,20 +103,20 @@ export class TransactionLogWorker extends BaseQueueWorker {
   private async getLastLoggedBlockNumber(wallet: Wallet) {
     const res = await this.context.mysql.paramExecute(
       `
-        SELECT MAX(blockId) as maxBlockId
-        FROM \`${DbTables.TRANSACTION_LOG}\`
+        SELECT lastLoggedBlock
+        FROM \`${DbTables.WALLET}\`
         WHERE chain = @chain
           AND chainType = @chainType
-          AND wallet = @wallet
+          AND address = @address
       `,
       {
-        wallet: wallet.address,
+        address: wallet.address,
         chain: wallet.chain,
         chainType: wallet.chainType,
       },
     );
 
-    return res.length ? res[0].maxBlockId : 0;
+    return res.length ? res[0].lastLoggedBlock : 0;
   }
 
   private async getTransactionsForWallet(
