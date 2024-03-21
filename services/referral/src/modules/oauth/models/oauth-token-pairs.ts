@@ -94,10 +94,8 @@ export class OauthTokenPair extends AdvancedSQLModel {
       { token },
     );
 
-    if (data && data.length) {
-      this.populate(data[0], PopulateFrom.DB);
-      return this;
-    }
-    return this.reset();
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 }

@@ -248,15 +248,13 @@ export class ApiKey extends ProjectAccessModel {
       { id: this.id },
     );
 
-    if (data && data.length) {
+    if (data?.length) {
       this.apiKeyRoles = [];
       for (const apiKeyRole of data) {
         this.apiKeyRoles.push(new ApiKeyRole(apiKeyRole, this.getContext()));
       }
-      return this;
-    } else {
-      return this;
     }
+    return this;
   }
 
   public async getList(context: ServiceContext, filter: ApiKeyQueryFilterDto) {

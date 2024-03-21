@@ -103,16 +103,10 @@ export class ProjectUserPendingInvitation extends AdvancedSQLModel {
       { email },
     );
 
-    if (data && data.length) {
-      const invitations = [];
-      for (const i of data) {
-        invitations.push(
-          new ProjectUserPendingInvitation(i, this.getContext()),
-        );
-      }
-      return invitations;
-    } else {
-      return [];
-    }
+    return (
+      data?.map(
+        (d) => new ProjectUserPendingInvitation({}, this.getContext()),
+      ) || []
+    );
   }
 }

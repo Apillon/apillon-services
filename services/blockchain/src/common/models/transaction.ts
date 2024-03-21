@@ -263,7 +263,7 @@ export class Transaction extends AdvancedSQLModel {
     );
 
     const res: Transaction[] = [];
-    if (data && data.length) {
+    if (data?.length) {
       for (const t of data) {
         res.push(new Transaction({}, this.getContext()).populate(t));
       }
@@ -316,10 +316,6 @@ export class Transaction extends AdvancedSQLModel {
       conn,
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return null;
-    }
+    return data?.length ? this.populate(data[0], PopulateFrom.DB) : null;
   }
 }

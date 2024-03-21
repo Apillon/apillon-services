@@ -96,7 +96,7 @@ export class AuthToken extends AdvancedSQLModel {
       `
         SELECT *
         FROM \`${DbTables.AUTH_TOKEN}\` at
-        WHERE at.user_uuid = @user_uuid 
+        WHERE at.user_uuid = @user_uuid
           AND at.tokenType = @tokenType
           AND at.status = ${SqlModelStatus.ACTIVE}
         LIMIT 1
@@ -106,7 +106,7 @@ export class AuthToken extends AdvancedSQLModel {
       conn,
     );
 
-    if (data && data.length) {
+    if (data?.length) {
       return this.populate(data[0], PopulateFrom.DB);
     }
     return this.reset();
