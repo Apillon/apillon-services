@@ -133,14 +133,7 @@ export class ComputingService {
       contract.data.restrictToOwner = true;
     }
 
-    try {
-      await contract.validate();
-    } catch (err) {
-      await contract.handle(err);
-      if (!contract.isValid()) {
-        throw new ComputingValidationException(contract);
-      }
-    }
+    await contract.validateOrThrow(ComputingValidationException);
 
     const spendCredit = new SpendCreditDto(
       {

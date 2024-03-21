@@ -66,7 +66,7 @@ export class DirectoryService {
       );
     }
 
-    const d: Directory = new Directory(
+    const directory: Directory = new Directory(
       {
         ...event.body,
         directory_uuid: uuidV4(),
@@ -77,18 +77,11 @@ export class DirectoryService {
       context,
     );
 
-    try {
-      await d.validate();
-    } catch (err) {
-      await d.handle(err);
-      if (!d.isValid()) {
-        throw new StorageValidationException(d);
-      }
-    }
+    await directory.validateOrThrow(StorageValidationException);
 
-    await d.insert();
+    await directory.insert();
     return {
-      ...d.serialize(SerializeFor.PROFILE),
+      ...directory.serialize(SerializeFor.PROFILE),
       parentDirectory_uuid: parentDirectory?.directory_uuid,
     };
   }
@@ -97,31 +90,25 @@ export class DirectoryService {
     event: { directory_uuid: string; data: any },
     context: ServiceContext,
   ): Promise<any> {
-    const d: Directory = await new Directory({}, context).populateByUUID(
-      event.directory_uuid,
-    );
+    const directory: Directory = await new Directory(
+      {},
+      context,
+    ).populateByUUID(event.directory_uuid);
 
-    if (!d.exists()) {
+    if (!directory.exists()) {
       throw new StorageCodeException({
         code: StorageErrorCode.DIRECTORY_NOT_FOUND,
         status: 404,
       });
     }
 
-    d.canModify(context);
-    d.populate(event.data, PopulateFrom.PROFILE);
+    directory.canModify(context);
+    directory.populate(event.data, PopulateFrom.PROFILE);
 
-    try {
-      await d.validate();
-    } catch (err) {
-      await d.handle(err);
-      if (!d.isValid()) {
-        throw new StorageValidationException(d);
-      }
-    }
+    await directory.validateOrThrow(StorageValidationException);
 
-    await d.update();
-    return d.serialize(SerializeFor.PROFILE);
+    await directory.update();
+    return directory.serialize(SerializeFor.PROFILE);
   }
 
   /**

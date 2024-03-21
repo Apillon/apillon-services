@@ -210,14 +210,7 @@ export class ProjectService {
 
     project.populate(data, PopulateFrom.PROFILE);
 
-    try {
-      await project.validate();
-    } catch (err) {
-      await project.handle(err);
-      if (!project.isValid()) {
-        throw new ValidationException(project, ValidatorErrorCode);
-      }
-    }
+    await project.validateOrThrow(ValidationException, ValidatorErrorCode);
 
     await project.update();
     await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);

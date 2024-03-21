@@ -351,8 +351,8 @@ export class Website extends UuidSqlModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT w.*, 
-      lastDeployment.deployment_uuid as lastDeployment_uuid, 
+      SELECT w.*,
+      lastDeployment.deployment_uuid as lastDeployment_uuid,
       lastDeployment.deploymentStatus as lastDeploymentStatus
       FROM \`${DbTables.WEBSITE}\` w
       LEFT JOIN (
@@ -394,7 +394,7 @@ export class Website extends UuidSqlModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT w.* 
+      SELECT w.*
       FROM \`${DbTables.WEBSITE}\` w
       WHERE w.domain LIKE @domain
       AND w.status <> ${SqlModelStatus.DELETED}
@@ -428,48 +428,29 @@ export class Website extends UuidSqlModel {
       },
       context,
     );
-    try {
-      await bucket.validate();
-    } catch (err) {
-      await bucket.handle(err);
-      if (!bucket.isValid()) {
-        throw new StorageValidationException(bucket);
-      }
-    }
+    await bucket.validateOrThrow(StorageValidationException);
+
     const stagingBucket: Bucket = new Bucket(
       {
         bucket_uuid: uuidV4(),
         project_uuid: this.project_uuid,
         bucketType: BucketType.HOSTING,
-        name: this.name + '_staging',
+        name: `${this.name}_staging`,
       },
       context,
     );
-    try {
-      await stagingBucket.validate();
-    } catch (err) {
-      await stagingBucket.handle(err);
-      if (!stagingBucket.isValid()) {
-        throw new StorageValidationException(stagingBucket);
-      }
-    }
+    await stagingBucket.validateOrThrow(StorageValidationException);
+
     const productionBucket: Bucket = new Bucket(
       {
         bucket_uuid: uuidV4(),
         project_uuid: this.project_uuid,
         bucketType: BucketType.HOSTING,
-        name: this.name + '_production',
+        name: `${this.name}_production`,
       },
       context,
     );
-    try {
-      await productionBucket.validate();
-    } catch (err) {
-      await productionBucket.handle(err);
-      if (!productionBucket.isValid()) {
-        throw new StorageValidationException(productionBucket);
-      }
-    }
+    await productionBucket.validateOrThrow(StorageValidationException);
 
     const conn = await context.mysql.start();
 
@@ -482,14 +463,14 @@ export class Website extends UuidSqlModel {
       ]);
       //Populate website
       this.populate({
-        website_uuid: website_uuid,
+        website_uuid,
         bucket_uuid: bucket.bucket_uuid,
         bucket_id: bucket.id,
         stagingBucket_id: stagingBucket.id,
         productionBucket_id: productionBucket.id,
-        bucket: bucket,
-        stagingBucket: stagingBucket,
-        productionBucket: productionBucket,
+        bucket,
+        stagingBucket,
+        productionBucket,
         domainChangeDate: this.domain ? new Date() : undefined,
         createTime: new Date(),
         updateTime: new Date(),
@@ -558,7 +539,7 @@ export class Website extends UuidSqlModel {
           context.apiName == ApiName.ADMIN_CONSOLE_API
             ? SerializeFor.ADMIN_SELECT_DB
             : SerializeFor.SELECT_DB,
-        )}, 
+        )},
         uploadBucket.bucket_uuid, stgBucket.ipns as ipnsStaging, prodBucket.ipns as ipnsProduction
         `,
       qFrom: `
@@ -648,10 +629,10 @@ export class Website extends UuidSqlModel {
     return await this.getContext().mysql.paramExecute(
       `
       SELECT domain, lastDeploymentDate FROM (
-        SELECT w.domain, 
+        SELECT w.domain,
         (
-          SELECT d.updateTime 
-          FROM \`${DbTables.DEPLOYMENT}\` d 
+          SELECT d.updateTime
+          FROM \`${DbTables.DEPLOYMENT}\` d
           WHERE d.website_id = w.id
           AND d.environment IN (${DeploymentEnvironment.PRODUCTION}, ${DeploymentEnvironment.DIRECT_TO_PRODUCTION})
           AND d.deploymentStatus = 10
@@ -661,7 +642,7 @@ export class Website extends UuidSqlModel {
         (
           SELECT c.domain
           FROM \`${DbTables.IPFS_CLUSTER}\` c
-          LEFT JOIN \`${DbTables.PROJECT_CONFIG}\` pc 
+          LEFT JOIN \`${DbTables.PROJECT_CONFIG}\` pc
             ON pc.ipfsCluster_id = c.id
             AND pc.project_uuid = w.project_uuid
           WHERE (pc.project_uuid = w.project_uuid OR c.isDefault = 1)

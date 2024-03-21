@@ -7,14 +7,7 @@ export class TransactionService {
     transaction: Transaction,
     conn?: PoolConnection,
   ) {
-    try {
-      await transaction.validate();
-    } catch (err) {
-      await transaction.handle(err);
-      if (!transaction.isValid()) {
-        throw new ComputingValidationException(transaction);
-      }
-    }
+    await transaction.validateOrThrow(ComputingValidationException);
     await transaction.insert(SerializeFor.INSERT_DB, conn);
 
     return transaction;

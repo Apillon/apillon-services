@@ -161,7 +161,7 @@ export class ApiKey extends ProjectAccessModel {
     );
 
     try {
-      await keyRole.validate();
+      await keyRole.validateOrThrow(AmsValidationException);
     } catch (err) {
       await keyRole.handle(err);
       if (!keyRole.isValid()) {

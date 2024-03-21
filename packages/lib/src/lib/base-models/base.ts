@@ -1,5 +1,7 @@
 import { Model, prop } from '@rawmodel/core';
 import { Context } from '../context';
+import { ValidationException } from '../exceptions/exceptions';
+import { ValidatorErrorCode } from '../../config/types';
 
 /**
  * Common model related objects.
@@ -19,9 +21,9 @@ export abstract class ModelBase extends Model<any> {
     super(data, { context });
   }
 
-  public async handle(
+  public override async handle(
     error: any,
-    { quiet }: { quiet: boolean } = { quiet: false },
+    { quiet } = { quiet: false },
   ): Promise<this> {
     try {
       await super.handle(error, { quiet });
@@ -32,6 +34,23 @@ export abstract class ModelBase extends Model<any> {
     } catch (e) {
     } finally {
       return this;
+    }
+  }
+
+  public async validateOrThrow(
+    validationException: new (
+      model: Model,
+      errorCodes?: any,
+    ) => ValidationException,
+    errorCodes?: object,
+  ): Promise<this> {
+    try {
+      return await this.validate();
+    } catch (err) {
+      await this.handle(err);
+      if (!this.isValid()) {
+        throw new validationException(this, errorCodes);
+      }
     }
   }
 

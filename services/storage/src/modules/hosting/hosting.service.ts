@@ -187,14 +187,7 @@ export class HostingService {
 
     website.populate(event.data, PopulateFrom.PROFILE);
 
-    try {
-      await website.validate();
-    } catch (err) {
-      await website.handle(err);
-      if (!website.isValid()) {
-        throw new StorageValidationException(website);
-      }
-    }
+    await website.validateOrThrow(StorageValidationException);
 
     await website.update();
     return website.serialize(SerializeFor.PROFILE);
@@ -371,14 +364,7 @@ export class HostingService {
       updateTime: new Date(),
     });
 
-    try {
-      await deployment.validate();
-    } catch (err) {
-      await deployment.handle(err);
-      if (!deployment.isValid()) {
-        throw new StorageValidationException(deployment);
-      }
-    }
+    await deployment.validateOrThrow(StorageValidationException);
 
     await deployment.insert();
 

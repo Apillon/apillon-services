@@ -133,14 +133,7 @@ export class NftsService {
               }
             }
 
-            try {
-              await collection.validate();
-            } catch (err) {
-              await collection.handle(err);
-              if (!collection.isValid()) {
-                throw new NftsValidationException(collection);
-              }
-            }
+            await collection.validateOrThrow(NftsValidationException);
 
             const conn = await context.mysql.start();
 

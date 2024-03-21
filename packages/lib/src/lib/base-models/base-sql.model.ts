@@ -53,42 +53,6 @@ export abstract class BaseSQLModel extends BaseDBModel {
     return this;
   }
 
-  // public async replace(conn?: PoolConnection): Promise<this> {
-  //   const serializedModel = this.serialize(SerializeFor.INSERT_DB);
-
-  //   let isSingleTrans = false;
-  //   if (!conn) {
-  //     isSingleTrans = true;
-  //     conn = await this.getContext().mysql.start();
-  //   }
-
-  //   try {
-  //     const query = `
-  //     REPLACE INTO \`${this.tableName}\`
-  //     ( ${Object.keys(serializedModel)
-  //         .map((x) => `\`${x}\``)
-  //         .join(', ')} )
-  //     VALUES (
-  //       ${Object.keys(serializedModel)
-  //         .map((key) => `@${key}`)
-  //         .join(', ')}
-  //     )`;
-
-  //     await this.db().paramExecute(query, this.serialize(SerializeFor.INSERT_DB), conn);
-
-  //     if (isSingleTrans) {
-  //       await this.getContext().mysql.commit(conn);
-  //     }
-  //   } catch (err) {
-  //     if (isSingleTrans) {
-  //       await this.getContext().mysql.rollback(conn);
-  //     }
-  //     throw new Error(err);
-  //   }
-
-  //   return this;
-  // }
-
   /**
    * Creates or updates model data in the database. Upsert can only be used if ID is present, otherwise INSERT will be called.
    * @param forceUpsert Force duplicate check even if no ID on the model.
@@ -231,7 +195,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
     strategy?: PopulateFrom,
   ) {
     const filteredData = {};
-    prefix = prefix + '__';
+    prefix = `${prefix}__`;
     for (const key of Object.keys(data)) {
       if (data.hasOwnProperty(key) && key.startsWith(prefix)) {
         filteredData[key.replace(prefix, '')] = data[key];
@@ -282,7 +246,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
         .map(
           (x) =>
             `${prefix ? `\`${prefix}\`.` : ''}\`${x}\` as '${
-              asPrefix ? asPrefix + '__' : ''
+              asPrefix ? `${asPrefix}__` : ''
             }${x}'`,
         )
         .join(',\n') || `${prefix ? `\`${prefix}\`.` : ''}*`
@@ -306,7 +270,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
       Object.keys(serialized)
         .map(
           (x) =>
-            `'${asPrefix ? asPrefix + '__' : ''}${x}', ${
+            `'${asPrefix ? `${asPrefix}__` : ''}${x}', ${
               prefix ? `${prefix}.` : ''
             }${x}`,
         )

@@ -281,11 +281,7 @@ export class AuthUser extends AdvancedSQLModel {
 
     authToken.populate(tokenData, PopulateFrom.SERVICE);
 
-    try {
-      await authToken.validate();
-    } catch (err) {
-      throw new AmsValidationException(authToken);
-    }
+    await authToken.validateOrThrow(AmsValidationException);
 
     try {
       await this.invalidateOldToken();

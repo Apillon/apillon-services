@@ -33,14 +33,8 @@ export class TransactionService {
     transaction: Transaction,
     conn: PoolConnection,
   ) {
-    try {
-      await transaction.validate();
-    } catch (err) {
-      await transaction.handle(err);
-      if (!transaction.isValid()) {
-        throw new NftsValidationException(transaction);
-      }
-    }
+    await transaction.validateOrThrow(NftsValidationException);
+
     await transaction.insert(SerializeFor.INSERT_DB, conn);
 
     return transaction;

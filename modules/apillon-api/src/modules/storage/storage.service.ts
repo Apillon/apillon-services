@@ -134,19 +134,12 @@ export class StorageService {
     bucket_uuid: string,
     query: ApillonApiDirectoryContentQueryFilter,
   ) {
-    try {
-      await query.validate();
-    } catch (err) {
-      await query.handle(err);
-      if (!query.isValid()) {
-        throw new ValidationException(query);
-      }
-    }
+    await query.validateOrThrow(ValidationException);
     return (
       await new StorageMicroservice(context).listDirectoryContent(
         new DirectoryContentQueryFilter().populate({
           ...query.serialize(),
-          bucket_uuid: bucket_uuid,
+          bucket_uuid,
           directory_uuid: query.directoryUuid,
         }),
       )
@@ -225,14 +218,7 @@ export class StorageService {
     body: PublishIpnsDto,
   ) {
     body.populate({ ipns_uuid });
-    try {
-      await body.validate();
-    } catch (err) {
-      await body.handle(err);
-      if (!body.isValid()) {
-        throw new ValidationException(body, ValidatorErrorCode);
-      }
-    }
+    await body.validateOrThrow(ValidationException, ValidatorErrorCode);
 
     return (await new StorageMicroservice(context).publishIpns(body)).data;
   }

@@ -249,7 +249,7 @@ export class Space extends UuidSqlModel {
     );
     const sqlQuery = {
       qSelect: `
-        SELECT 
+        SELECT
         space_uuid as ${this.getContext().apiName == ApiName.APILLON_API ? 'hub_uuid' : 'space_uuid'},
         spaceId as ${this.getContext().apiName == ApiName.APILLON_API ? 'hubId' : 'spaceId'},
         ${selectFields},
@@ -281,14 +281,7 @@ export class Space extends UuidSqlModel {
 
   public async createSpace() {
     const context = this.getContext();
-    try {
-      await this.validate();
-    } catch (err) {
-      await this.handle(err);
-      if (!this.isValid()) {
-        throw new SocialValidationException(this);
-      }
-    }
+    await this.validateOrThrow(SocialValidationException);
 
     //Get subsocial wallets, and pick least used
     const wallets = await new BlockchainMicroservice(context).getWallets(
@@ -300,17 +293,17 @@ export class Space extends UuidSqlModel {
     const queries = [];
     for (const wallet of wallets.data.map((x) => x.address)) {
       queries.push(`
-        select "${wallet}" as walletAddress, 
+        select "${wallet}" as walletAddress,
         (
-          SELECT count(*) from \`${DbTables.SPACE}\` 
+          SELECT count(*) from \`${DbTables.SPACE}\`
           where walletAddress = "${wallet}"
         ) as numOfSpaces
       `);
     }
     const numOfSpacesByWallet = await context.mysql.paramExecute(
       `
-      SELECT t.* 
-      FROM (${queries.join(' UNION ')})t 
+      SELECT t.*
+      FROM (${queries.join(' UNION ')})t
       order by t.numOfSpaces
       limit 1
       `,

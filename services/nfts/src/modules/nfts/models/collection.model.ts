@@ -83,7 +83,7 @@ export class Collection extends ProjectAccessModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: NftsErrorCode.COLLECTION_COLLECTION_UUID_NOT_PRESENT,
+        code: NftsErrorCode.COLLECTION_UUID_NOT_PRESENT,
       },
     ],
   })

@@ -208,14 +208,7 @@ export class IpnsService {
 
     ipns.populate(event.data, PopulateFrom.PROFILE);
 
-    try {
-      await ipns.validate();
-    } catch (err) {
-      await ipns.handle(err);
-      if (!ipns.isValid()) {
-        throw new StorageValidationException(ipns);
-      }
-    }
+    await ipns.validateOrThrow(StorageValidationException);
 
     await ipns.update();
     await ipns.populateLink();

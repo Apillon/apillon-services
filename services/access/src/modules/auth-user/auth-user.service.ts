@@ -61,11 +61,7 @@ export class AuthUserService {
     authUser.setPassword(event.password);
     const conn = await context.mysql.start();
 
-    try {
-      await authUser.validate();
-    } catch (err) {
-      throw new AmsValidationException(authUser);
-    }
+    await authUser.validateOrThrow(AmsValidationException);
 
     try {
       await authUser.insert(SerializeFor.INSERT_DB, conn);
@@ -90,12 +86,7 @@ export class AuthUserService {
 
       authToken.populate({ ...tokenData }, PopulateFrom.SERVICE);
 
-      try {
-        await authToken.validate();
-      } catch (err) {
-        console.log('Exception occurred when validating auth token - ', err);
-        throw new AmsValidationException(authToken);
-      }
+      await authToken.validateOrThrow(AmsValidationException);
 
       await authToken.insert(SerializeFor.INSERT_DB, conn);
       await context.mysql.commit(conn);
@@ -361,11 +352,8 @@ export class AuthUserService {
     }
 
     authUser.populate(event, PopulateFrom.SERVICE);
-    try {
-      await authUser.validate();
-    } catch (err) {
-      throw new AmsValidationException(authUser);
-    }
+    await authUser.validateOrThrow(AmsValidationException);
+
     try {
       await authUser.update();
     } catch (err) {
@@ -448,11 +436,7 @@ export class AuthUserService {
     }
 
     authUser.setPassword(event.password);
-    try {
-      await authUser.validate();
-    } catch (err) {
-      throw new AmsValidationException(authUser);
-    }
+    await authUser.validateOrThrow(AmsValidationException);
 
     try {
       await authUser.update();
@@ -511,11 +495,7 @@ export class AuthUserService {
   ) {
     const authData = new UserWalletAuthDto(event.authData);
 
-    try {
-      await authData.validate();
-    } catch (err) {
-      throw new AmsValidationException(authData);
-    }
+    await authData.validateOrThrow(AmsValidationException);
 
     const { wallet, timestamp } = authData;
 
@@ -632,11 +612,8 @@ export class AuthUserService {
     }
 
     authUser.status = event.status;
-    try {
-      await authUser.validate();
-    } catch (err) {
-      throw new AmsValidationException(authUser);
-    }
+    await authUser.validateOrThrow(AmsValidationException);
+
     try {
       await authUser.update();
     } catch (err) {
