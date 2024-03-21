@@ -9,6 +9,9 @@ import { HttpServer, INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { AdminAppModule } from '../../src/admin-app.module';
+import { Transaction as NftCollectionTx } from '@apillon/nfts/src/modules/transaction/models/transaction.model';
+import { Transaction as BlockchainTx } from '@apillon/blockchain/src/common/models/transaction';
+import { TransactionType } from '@apillon/nfts/src/config/types';
 
 /**
  * Setup test environment. Rebuild BD, run test app and create test stage object
@@ -66,4 +69,24 @@ export async function setupTest(
     console.error(e);
     throw new Error('Unable to set up env');
   }
+}
+
+export async function getNftTransactionStatus(
+  stage: Stage,
+  collectionUuid: string,
+  transactionType: TransactionType,
+) {
+  const collectionTxs = await new NftCollectionTx(
+    {},
+    stage.nftsContext,
+  ).getCollectionTransactions(collectionUuid);
+  const collectionTx = collectionTxs.find(
+    (x) => x.transactionType == transactionType,
+  );
+  const blockchainTx = await new BlockchainTx(
+    {},
+    stage.blockchainContext,
+  ).getTransactionByChainAndHash(this.chainId, collectionTx.transactionHash);
+
+  return blockchainTx.transactionStatus;
 }

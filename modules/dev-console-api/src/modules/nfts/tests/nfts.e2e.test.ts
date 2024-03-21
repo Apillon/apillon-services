@@ -21,7 +21,10 @@ import {
   TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
-import { setupTest } from '../../../../test/helpers/setup';
+import {
+  getNftTransactionStatus,
+  setupTest,
+} from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
@@ -44,7 +47,11 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
   beforeAll(async () => {
     stage = await setupTest();
 
-    blockchain = new TestBlockchain(stage, CHAIN_ID);
+    const blockchainStage = {
+      db: stage.blockchainSql,
+      context: stage.blockchainContext,
+    };
+    blockchain = new TestBlockchain(blockchainStage, CHAIN_ID);
     await blockchain.start();
     deployerAddress = blockchain.getWalletAddress(0);
 
@@ -180,7 +187,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
 
       newCollection.collectionStatus = CollectionStatus.DEPLOYED;
       await newCollection.update();
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         newCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
@@ -205,7 +213,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         newCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
@@ -232,7 +241,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         newCollection.collection_uuid,
         TransactionType.BURN_NFT,
       );
@@ -454,7 +464,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(
         collectionMetadataFiles.find((x) => x.name == '1.json').directory_id,
       ).toBe(metadataDir.id);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         newCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
@@ -533,7 +544,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
         stage.nftsContext,
       ).populateById(response.body.data.id);
       expect(nestableCollection.exists()).toBeTruthy();
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         nestableCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
@@ -563,7 +575,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
         })
         .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(response.status).toBe(201);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         nestableCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
@@ -638,7 +651,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
         .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         childCollection.collection_uuid,
         TransactionType.NEST_MINT_NFT,
       );
@@ -653,7 +667,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         nestableCollection.collection_uuid,
         TransactionType.BURN_NFT,
       );
@@ -670,7 +685,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
         })
         .set('Authorization', `Bearer ${nestableUser.token}`);
       expect(response.status).toBe(201);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         nestableCollection.collection_uuid,
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );
