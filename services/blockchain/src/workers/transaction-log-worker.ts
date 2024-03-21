@@ -64,7 +64,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
       data.wallet.id,
     );
 
-    const lastBlock = await this.getLastLoggedBlockNumber(wallet);
+    const lastBlock = wallet.lastLoggedBlock;
     const transactions = await this.getTransactionsForWallet(
       wallet,
       lastBlock || 1,
@@ -98,25 +98,6 @@ export class TransactionLogWorker extends BaseQueueWorker {
         LogOutput.EVENT_INFO,
       );
     }
-  }
-
-  private async getLastLoggedBlockNumber(wallet: Wallet) {
-    const res = await this.context.mysql.paramExecute(
-      `
-        SELECT MAX(blockId) as maxBlockId
-        FROM \`${DbTables.TRANSACTION_LOG}\`
-        WHERE chain = @chain
-          AND chainType = @chainType
-          AND wallet = @wallet
-      `,
-      {
-        wallet: wallet.address,
-        chain: wallet.chain,
-        chainType: wallet.chainType,
-      },
-    );
-
-    return res.length ? res[0].maxBlockId : 0;
   }
 
   private async getTransactionsForWallet(
@@ -697,15 +678,10 @@ export class TransactionLogWorker extends BaseQueueWorker {
     amount: string,
     conn: PoolConnection,
   ): Promise<number> {
-    console.log('deductFromAvailableDeposit amount', amount);
     const availableDeposit = await new WalletDeposit(
       {},
       this.context,
     ).getOldestWithBalance(wallet.id, conn);
-    console.log(
-      'deductFromAvailableDeposit availableDeposit',
-      availableDeposit,
-    );
     if (!availableDeposit.exists()) {
       await this.sendErrorAlert(
         `NO AVAILABLE DEPOSIT! ${formatWalletAddress(
@@ -717,22 +693,16 @@ export class TransactionLogWorker extends BaseQueueWorker {
       );
       return 0;
     }
-    console.log(
-      'deductFromAvailableDeposit availableDeposit.currentAmount',
-      availableDeposit.currentAmount,
-    );
     const newAmount = this.subtractAmount(
       availableDeposit.currentAmount,
       amount,
     );
-    console.log('deductFromAvailableDeposit newAmount', newAmount.toString());
     if (newAmount.startsWith('-')) {
       // if amount is negative, set currentAmount to 0 and recursively deduct the remainder
       const remainder = this.subtractAmount(
         amount,
         availableDeposit.currentAmount,
       );
-      console.log('deductFromAvailableDeposit remainder', remainder.toString());
       availableDeposit.currentAmount = ethers.BigNumber.from(0).toString();
       await availableDeposit.update(SerializeFor.UPDATE_DB, conn);
       return this.deductFromAvailableDeposit(wallet, remainder, conn);
