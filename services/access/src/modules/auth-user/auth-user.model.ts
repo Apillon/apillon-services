@@ -293,7 +293,10 @@ export class AuthUser extends AdvancedSQLModel {
       throw await new AmsCodeException({
         status: 500,
         code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({ user_uuid: this.user_uuid });
+      }).writeToMonitor({
+        user_uuid: this.user_uuid,
+        data: { err, authToken: authToken.serialize() },
+      });
     }
   }
 
@@ -304,7 +307,7 @@ export class AuthUser extends AdvancedSQLModel {
       throw await new AmsCodeException({
         status: 500,
         code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({ user_uuid: this.user_uuid });
+      }).writeToMonitor({ user_uuid: this.user_uuid, data: { err } });
     }
   }
 

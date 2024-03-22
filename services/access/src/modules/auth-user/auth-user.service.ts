@@ -95,7 +95,11 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 500,
         code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+      }).writeToMonitor({
+        context,
+        user_uuid: event?.user_uuid,
+        data: { event, authUser: authUser.serialize(), err },
+      });
     }
 
     await new Lmas().writeLog({
@@ -363,7 +367,7 @@ export class AuthUserService {
       }).writeToMonitor({
         context,
         user_uuid: event?.user_uuid,
-        data: event,
+        data: { event, err, authUser: authUser.serialize() },
       });
     }
 
@@ -444,7 +448,11 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 500,
         code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+      }).writeToMonitor({
+        context,
+        user_uuid: event?.user_uuid,
+        data: { event, err, authUser: authUser.serialize() },
+      });
     }
 
     return true;
@@ -605,7 +613,7 @@ export class AuthUserService {
     );
 
     if (!authUser.exists()) {
-      throw await new AmsCodeException({
+      throw new AmsCodeException({
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
       });
@@ -623,7 +631,7 @@ export class AuthUserService {
       }).writeToMonitor({
         context,
         user_uuid: event?.user_uuid,
-        data: event,
+        data: { event, authUser: authUser.serialize(), err },
       });
     }
 
