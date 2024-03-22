@@ -63,11 +63,9 @@ export class TransactionLogWorker extends BaseQueueWorker {
     const wallet = await new Wallet({}, this.context).populateById(
       data.wallet.id,
     );
-
-    const lastBlock = wallet.lastLoggedBlock;
     const transactions = await this.getTransactionsForWallet(
       wallet,
-      lastBlock || 1,
+      wallet.lastLoggedBlock || 1,
     );
 
     await this.logTransactions(transactions);
@@ -504,7 +502,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
         await deposit.updateValueByHash(value, conn);
 
         console.log(
-          `Update transaction log for tx  ${deposit.id}|${deposit.hash}||${wallet.seed}|${wallet.address} ==> ${value}`,
+          `Update transaction log for deposit tx  ${deposit.id}|${deposit.hash}||${wallet.seed}|${wallet.address} ==> ${value}`,
         );
 
         await this.context.mysql.commit(conn);
@@ -554,7 +552,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
         await spend.updateValueByHash(value, conn);
 
         console.log(
-          `Update transaction log for tx  ${spend.id}|${spend.hash}||${wallet.seed}|${wallet.address} ==> ${value}`,
+          `Update transaction log for spend tx  ${spend.id}|${spend.hash}||${wallet.seed}|${wallet.address} ==> ${value}`,
         );
 
         await this.context.mysql.commit(conn);
