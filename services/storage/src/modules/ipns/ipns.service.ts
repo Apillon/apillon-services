@@ -9,7 +9,7 @@ import {
   ServiceName,
   SqlModelStatus,
 } from '@apillon/lib';
-import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { StorageErrorCode } from '../../config/types';
 import {
   StorageCodeException,
@@ -44,7 +44,7 @@ export class IpnsService {
     ipns.canAccess(context);
     await ipns.populateLink();
 
-    return ipns.serialize(getSerializationStrategy(context));
+    return ipns.serializeByContext();
   }
 
   static async createIpns(
@@ -110,7 +110,7 @@ export class IpnsService {
     });
 
     await ipns.populateLink();
-    return ipns.serialize(getSerializationStrategy(context));
+    return ipns.serializeByContext();
   }
 
   /**
@@ -187,7 +187,7 @@ export class IpnsService {
     });
 
     await ipns.populateLink();
-    return ipns.serialize(getSerializationStrategy(context));
+    return ipns.serializeByContext();
   }
 
   static async updateIpns(
@@ -212,7 +212,7 @@ export class IpnsService {
 
     await ipns.update();
     await ipns.populateLink();
-    return ipns.serialize(getSerializationStrategy(context));
+    return ipns.serializeByContext();
   }
 
   static async deleteIpns(
@@ -232,6 +232,6 @@ export class IpnsService {
     ipns.canModify(context);
 
     await ipns.delete();
-    return ipns.serialize(getSerializationStrategy(context));
+    return ipns.serializeByContext();
   }
 }

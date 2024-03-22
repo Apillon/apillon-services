@@ -29,7 +29,7 @@ import {
   TransactionStatus,
   TransferCollectionDTO,
 } from '@apillon/lib';
-import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
   sendToWorkerQueue,
@@ -191,7 +191,7 @@ export class NftsService {
     collection.updateTime = new Date();
     collection.createTime = new Date();
 
-    return collection.serialize(getSerializationStrategy(context));
+    return collection.serializeByContext();
   }
 
   static async deployCollection(
@@ -240,7 +240,7 @@ export class NftsService {
       useApillonIpfsGateway: body.useApillonIpfsGateway,
     });
 
-    return collection.serialize(getSerializationStrategy(context));
+    return collection.serializeByContext();
   }
 
   /**
@@ -291,7 +291,7 @@ export class NftsService {
     ).getList(
       context,
       new NFTCollectionQueryFilter(event.query),
-      getSerializationStrategy(context),
+      context.getSerializationStrategy(),
     );
   }
 
@@ -306,7 +306,7 @@ export class NftsService {
     }
     collection.canAccess(context);
 
-    return collection.serialize(getSerializationStrategy(context));
+    return collection.serializeByContext();
   }
 
   static async getCollectionByUuid(
@@ -323,7 +323,7 @@ export class NftsService {
     }
     collection.canAccess(context);
 
-    return collection.serialize(getSerializationStrategy(context));
+    return collection.serializeByContext();
   }
 
   static async transferCollectionOwnership(
@@ -394,7 +394,7 @@ export class NftsService {
       data: { collection_uuid: collection.collection_uuid },
     });
 
-    return collection.serialize(getSerializationStrategy(context));
+    return collection.serializeByContext();
   }
 
   static async setNftCollectionBaseUri(

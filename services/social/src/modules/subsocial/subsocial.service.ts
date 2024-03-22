@@ -9,7 +9,7 @@ import {
   env,
   spendCreditAction,
 } from '@apillon/lib';
-import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import { DbTables, PostType, SocialErrorCode } from '../../config/types';
 import { SocialCodeException } from '../../lib/exceptions';
@@ -35,7 +35,7 @@ export class SubsocialService {
       event.space_uuid,
     );
 
-    return space.serialize(getSerializationStrategy(context));
+    return space.serializeByContext();
   }
 
   static async createSpace(
@@ -60,7 +60,7 @@ export class SubsocialService {
     );
     await spendCreditAction(context, spendCredit, () => space.createSpace());
 
-    return space.serialize(getSerializationStrategy(context));
+    return space.serializeByContext();
   }
 
   static async listPosts(
@@ -78,7 +78,7 @@ export class SubsocialService {
       event.post_uuid,
     );
 
-    return post.serialize(getSerializationStrategy(context));
+    return post.serializeByContext();
   }
 
   static async createPost(
@@ -123,6 +123,6 @@ export class SubsocialService {
 
     await spendCreditAction(context, spendCredit, () => post.createPost());
 
-    return post.serialize(getSerializationStrategy(context));
+    return post.serializeByContext();
   }
 }

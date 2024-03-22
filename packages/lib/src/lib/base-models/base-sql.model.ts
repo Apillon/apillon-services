@@ -1,5 +1,5 @@
 import { prop } from '@rawmodel/core';
-import { PopulateFrom, SerializeFor } from '../../config/types';
+import { SerializeFor } from '../../config/types';
 import { PoolConnection } from 'mysql2/promise';
 // import 'reflect-metadata';
 import { BaseDBModel } from './base-db.model';
@@ -187,36 +187,6 @@ export abstract class BaseSQLModel extends BaseDBModel {
     }
 
     return this;
-  }
-
-  public populateWithPrefix(
-    data: any,
-    prefix: string,
-    strategy?: PopulateFrom,
-  ) {
-    const filteredData = {};
-    prefix = `${prefix}__`;
-    for (const key of Object.keys(data)) {
-      if (data.hasOwnProperty(key) && key.startsWith(prefix)) {
-        filteredData[key.replace(prefix, '')] = data[key];
-      }
-    }
-    return this.populate(filteredData, strategy);
-  }
-
-  public populate(data: any, strategy?: PopulateFrom): this {
-    const mappedObj = {};
-    if (!data) {
-      return super.populate(mappedObj, strategy);
-    }
-    for (const key of Object.keys(this.__props)) {
-      if (data.hasOwnProperty(key)) {
-        mappedObj[key] = data[key];
-        // } else if (data.hasOwnProperty(getFieldName(this, key))) {
-        //   mappedObj[key] = data[getFieldName(this, key)];
-      }
-    }
-    return super.populate(mappedObj, strategy);
   }
 
   protected db(): MySql {

@@ -1,4 +1,4 @@
-import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { Credit } from './models/credit.model';
 import {
   AddCreditDto,
@@ -42,7 +42,7 @@ export class CreditService {
 
     credit.canAccess(context, event.project_uuid);
 
-    return credit.serialize(getSerializationStrategy(context));
+    return credit.serializeByContext();
   }
 
   /**
@@ -182,7 +182,7 @@ export class CreditService {
     credit.populate(event.body);
     await credit.update();
 
-    return credit.serialize(getSerializationStrategy(context));
+    return credit.serializeByContext();
   }
 
   /**

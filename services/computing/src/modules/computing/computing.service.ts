@@ -19,7 +19,7 @@ import {
   StorageMicroservice,
   TransferOwnershipDto,
 } from '@apillon/lib';
-import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import {
   ComputingErrorCode,
@@ -195,7 +195,7 @@ export class ComputingService {
     contract.updateTime = new Date();
     contract.createTime = new Date();
 
-    return contract.serialize(getSerializationStrategy(context));
+    return contract.serializeByContext();
   }
 
   /**
@@ -231,7 +231,7 @@ export class ComputingService {
     }
     contract.canAccess(context);
 
-    return contract.serialize(getSerializationStrategy(context));
+    return contract.serializeByContext();
   }
 
   /**

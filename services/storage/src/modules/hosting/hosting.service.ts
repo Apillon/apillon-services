@@ -25,7 +25,7 @@ import {
   WebsitesQuotaReachedQueryFilter,
   writeLog,
 } from '@apillon/lib';
-import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import {
   DbTables,
@@ -84,7 +84,7 @@ export class HostingService {
     //Get buckets
     await website.populateBucketsAndLink();
 
-    return website.serialize(getSerializationStrategy(context));
+    return website.serializeByContext();
   }
 
   static async createWebsite(
@@ -137,7 +137,7 @@ export class HostingService {
       new Mailing(context).setMailerliteField('has_website', true),
     ]);
 
-    return website.serialize(getSerializationStrategy(context));
+    return website.serializeByContext();
   }
 
   static async updateWebsite(
@@ -393,7 +393,7 @@ export class HostingService {
 
     await deployment.deploy();
 
-    return deployment.serialize(getSerializationStrategy(context));
+    return deployment.serializeByContext();
   }
 
   //#endregion
@@ -428,7 +428,7 @@ export class HostingService {
       deployment.size = undefined;
     }
 
-    return deployment.serialize(getSerializationStrategy(context));
+    return deployment.serializeByContext();
   }
 
   static async listDeployments(

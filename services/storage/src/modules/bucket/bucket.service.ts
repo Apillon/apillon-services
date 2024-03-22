@@ -17,7 +17,7 @@ import {
 } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import { BucketType, StorageErrorCode } from '../../config/types';
-import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   StorageCodeException,
   StorageNotFoundException,
@@ -47,7 +47,7 @@ export class BucketService {
       context,
     ).populateByUuidAndCheckAccess(event.bucket_uuid);
 
-    return b.serialize(getSerializationStrategy(context));
+    return b.serializeByContext();
   }
 
   static async createBucket(
@@ -86,7 +86,7 @@ export class BucketService {
       new Mailing(context).setMailerliteField('has_bucket', true),
     ]);
 
-    return bucket.serialize(getSerializationStrategy(context));
+    return bucket.serializeByContext();
   }
 
   static async updateBucket(
