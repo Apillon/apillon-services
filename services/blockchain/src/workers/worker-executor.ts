@@ -24,6 +24,7 @@ import { EvmTransactionWorker } from './evm-transaction-worker';
 import { SubstrateTransactionWorker } from './substrate-transaction-worker';
 import { PhalaTransactionWorker } from './phala-transaction-worker';
 import { SubsocialTransactionWorker } from './subsocial-transaction-worker';
+import { CheckPendingTransactionsWorker } from './check-pending-transactions-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -48,6 +49,7 @@ export enum WorkerName {
   VERIFY_ASTAR_TRANSACTIONS = 'VerifyAstarTransactions',
   TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
   TRANSACTION_LOG = 'TransactionLog',
+  CHECK_PENDING_TRANSACTIONS = 'CheckPendingTransactions',
 }
 
 export async function handler(event: any) {
@@ -192,6 +194,14 @@ export async function handleLambdaEvent(
         QueueWorkerType.PLANNER,
       ).run();
       break;
+    case WorkerName.CHECK_PENDING_TRANSACTIONS: {
+      const checkPendingTransactionsWorker = new CheckPendingTransactionsWorker(
+        workerDefinition,
+        context,
+      );
+      await checkPendingTransactionsWorker.run();
+      break;
+    }
     default:
       console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
