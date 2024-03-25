@@ -50,8 +50,8 @@ describe('Apillon Console NFTs tests for Astar', () => {
     );
   });
 
-  describe.only('Astar NFT Collection tests', () => {
-    test.only('User should be able to create new Astar collection with existing baseURI', async () => {
+  describe('Astar NFT Collection tests', () => {
+    test('User should be able to create new Astar collection with existing baseURI', async () => {
       const response = await request(stage.http)
         .post(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
         .send({
@@ -74,7 +74,6 @@ describe('Apillon Console NFTs tests for Astar', () => {
           royaltiesFees: 0,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
-      console.log(response.body);
       expect(response.status).toBe(201);
       expect(response.body.data.contractAddress).toBeTruthy();
 
