@@ -186,7 +186,12 @@ export class CreditService {
 
     credit.canModify(context);
 
-    credit.populate(event.body);
+    if (credit.threshold == event.body.threshold) {
+      return credit.serialize(getSerializationStrategy(context));
+    }
+
+    //Last alert time is set to null if threshold was modified, so that owner is renotified when projects falls below new threshold.
+    credit.populate({ ...event.body, lastAlertTime: null });
     await credit.update();
 
     return credit.serialize(getSerializationStrategy(context));
