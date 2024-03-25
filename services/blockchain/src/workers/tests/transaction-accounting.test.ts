@@ -8,8 +8,11 @@ import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { Wallet } from '../../modules/wallet/wallet.model';
 import { DbTables, TxAction, TxDirection } from '../../config/types';
 import { TransactionLogWorker } from '../transaction-log-worker';
-
 import { TransactionLog } from '../../modules/accounting/transaction-log.model';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
+
+const mockAxios = new MockAdapter(axios);
 
 describe('Transaction Accounting unit tests', () => {
   let stage: Stage;
@@ -21,6 +24,13 @@ describe('Transaction Accounting unit tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
+
+    mockAxios
+      .onGet(/https:\/\/api.coingecko.com\/api\/v3\/simple\/price.*/)
+      .reply(200, {
+        'crust-network': { usd: 1 },
+        'kilt-protocol': { usd: 1 },
+      });
 
     crustWallet = new Wallet(
       {
@@ -162,5 +172,31 @@ describe('Transaction Accounting unit tests', () => {
     expect(walletDeposits[0].currentAmount).toEqual(70000000);
     expect(walletDeposits[1].currentAmount).toEqual(200000000);
     expect(walletDeposits[2].currentAmount).toEqual(150000000);
+  });
+
+  test('Test wallet spends roll over to currentAmount of second deposit', async () => {
+    const transactions = [
+      new TransactionLog(
+        {
+          action: TxAction.TRANSACTION,
+          direction: TxDirection.COST,
+          wallet: '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
+          hash: '1',
+          amount: 200_000_001,
+        },
+        stage.context,
+      ).calculateTotalPrice(),
+    ];
+
+    await worker.processWalletDepositAmounts(kiltWallet, transactions);
+    const walletDeposits = await stage.context.mysql.paramExecute(
+      `SELECT *
+       FROM ${DbTables.WALLET_DEPOSIT}
+       WHERE wallet_id = 2`,
+    );
+
+    expect(walletDeposits).toHaveLength(2);
+    expect(walletDeposits[0].currentAmount).toEqual(0);
+    expect(walletDeposits[1].currentAmount).toEqual(149999999);
   });
 });
