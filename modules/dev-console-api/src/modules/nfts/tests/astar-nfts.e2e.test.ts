@@ -30,7 +30,6 @@ describe('Apillon Console NFTs tests for Astar', () => {
   let newCollection: Collection;
 
   beforeAll(async () => {
-    console.log('hrer1');
     stage = await setupTest();
 
     const blockchainStage = {
@@ -39,12 +38,10 @@ describe('Apillon Console NFTs tests for Astar', () => {
     };
     blockchain = new TestBlockchain(blockchainStage, CHAIN_ID);
     await blockchain.start();
-    console.log('hrer2');
 
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testProject = await createTestProject(testUser, stage);
 
-    console.log('hrer3');
     await overrideDefaultQuota(
       stage,
       testProject.project_uuid,
@@ -55,7 +52,6 @@ describe('Apillon Console NFTs tests for Astar', () => {
 
   describe.only('Astar NFT Collection tests', () => {
     test.only('User should be able to create new Astar collection with existing baseURI', async () => {
-      console.log('hrer4');
       const response = await request(stage.http)
         .post(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
         .send({
@@ -78,7 +74,6 @@ describe('Apillon Console NFTs tests for Astar', () => {
           royaltiesFees: 0,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
-      console.log('hrer5');
       console.log(response.body);
       expect(response.status).toBe(201);
       expect(response.body.data.contractAddress).toBeTruthy();
@@ -93,7 +88,6 @@ describe('Apillon Console NFTs tests for Astar', () => {
         newCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
-      console.log('hrer6');
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
 
       newCollection.collectionStatus = CollectionStatus.DEPLOYED;
