@@ -105,7 +105,7 @@ export class ProjectUserPendingInvitation extends AdvancedSQLModel {
 
     return (
       data?.map(
-        (d) => new ProjectUserPendingInvitation({}, this.getContext()),
+        (d) => new ProjectUserPendingInvitation(d, this.getContext()),
       ) || []
     );
   }

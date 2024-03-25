@@ -160,14 +160,7 @@ export class ApiKey extends ProjectAccessModel {
       this.getContext(),
     );
 
-    try {
-      await keyRole.validateOrThrow(AmsValidationException);
-    } catch (err) {
-      await keyRole.handle(err);
-      if (!keyRole.isValid()) {
-        throw new AmsValidationException(keyRole);
-      }
-    }
+    await keyRole.validateOrThrow(AmsValidationException);
 
     //Check if role already assigned
     if (!(await keyRole.hasRole(keyRole.role_id))) {

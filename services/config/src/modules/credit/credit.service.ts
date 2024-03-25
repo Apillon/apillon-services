@@ -180,7 +180,7 @@ export class CreditService {
     credit.canModify(context);
 
     if (credit.threshold == event.body.threshold) {
-      return credit.serialize(getSerializationStrategy(context));
+      return credit.serializeByContext();
     }
 
     //Last alert time is set to null if threshold was modified, so that owner is renotified when projects falls below new threshold.
@@ -199,6 +199,7 @@ export class CreditService {
     event: { body: SpendCreditDto },
     context: ServiceContext,
   ): Promise<any> {
+    event.body = new SpendCreditDto(event.body, context);
     await event.body.validateOrThrow(ScsValidationException);
 
     //Check product and populate it's price
