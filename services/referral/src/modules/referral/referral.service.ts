@@ -61,14 +61,7 @@ export class ReferralService {
     //   player.status = SqlModelStatus.ACTIVE;
     // }
 
-    try {
-      await player.validate();
-    } catch (err) {
-      await player.handle(err);
-      if (!player.isValid()) {
-        throw new ReferralValidationException(player);
-      }
-    }
+    await player.validateOrThrow(ReferralValidationException);
 
     if (player.exists()) {
       await player.update();
@@ -118,14 +111,7 @@ export class ReferralService {
         context,
       );
 
-      try {
-        await promoCodeUser.validate();
-      } catch (err) {
-        await promoCodeUser.handle(err);
-        if (!promoCodeUser.isValid()) {
-          throw new ReferralValidationException(promoCodeUser);
-        }
-      }
+      await promoCodeUser.validateOrThrow(ReferralValidationException);
 
       await promoCodeUser.insert();
     } catch (err) {
@@ -216,21 +202,8 @@ export class ReferralService {
 
     if (order.info) {
       player.shippingInfo = order.info;
-      try {
-        await player.validate();
-        await player.update();
-      } catch (err) {
-        await player.handle(err);
-        if (!player.isValid()) {
-          writeLog(
-            LogType.ERROR,
-            `Error updating player shipping info`,
-            'referral.service.ts',
-            'orderProduct',
-            err,
-          );
-        }
-      }
+      await player.validateOrThrow(ReferralValidationException);
+      await player.update();
     }
 
     await player.populateSubmodels();

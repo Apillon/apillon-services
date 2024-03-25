@@ -19,7 +19,7 @@ import {
   StorageMicroservice,
   TransferOwnershipDto,
 } from '@apillon/lib';
-import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import {
   ComputingErrorCode,
@@ -133,14 +133,7 @@ export class ComputingService {
       contract.data.restrictToOwner = true;
     }
 
-    try {
-      await contract.validate();
-    } catch (err) {
-      await contract.handle(err);
-      if (!contract.isValid()) {
-        throw new ComputingValidationException(contract);
-      }
-    }
+    await contract.validateOrThrow(ComputingValidationException);
 
     const spendCredit = new SpendCreditDto(
       {
@@ -202,7 +195,7 @@ export class ComputingService {
     contract.updateTime = new Date();
     contract.createTime = new Date();
 
-    return contract.serialize(getSerializationStrategy(context));
+    return contract.serializeByContext();
   }
 
   /**
@@ -238,7 +231,7 @@ export class ComputingService {
     }
     contract.canAccess(context);
 
-    return contract.serialize(getSerializationStrategy(context));
+    return contract.serializeByContext();
   }
 
   /**

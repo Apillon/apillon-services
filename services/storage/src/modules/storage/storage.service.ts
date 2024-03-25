@@ -20,7 +20,7 @@ import {
   ServiceName,
   SqlModelStatus,
 } from '@apillon/lib';
-import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
   sendToWorkerQueue,
@@ -549,7 +549,7 @@ export class StorageService {
 
     await file.populateLink();
 
-    return file.serialize(getSerializationStrategy(context));
+    return file.serializeByContext();
   }
 
   static async deleteFile(
@@ -662,7 +662,7 @@ export class StorageService {
       project_uuid: f.project_uuid,
     });
 
-    return f.serialize(getSerializationStrategy(context));
+    return f.serializeByContext();
   }
 
   /**

@@ -517,13 +517,10 @@ export class File extends UuidSqlModel {
       `,
       { bucket_id },
     );
-    const res = [];
-    if (data && data.length) {
-      for (const d of data) {
-        res.push(new File({}, context).populate(d, PopulateFrom.DB));
-      }
-    }
-    return res;
+
+    return (
+      data?.map((d) => new File({}, context).populate(d, PopulateFrom.DB)) || []
+    );
   }
 
   /**
@@ -540,18 +537,17 @@ export class File extends UuidSqlModel {
       `
       SELECT *
       FROM \`${DbTables.FILE}\`
-      WHERE project_uuid = @project_uuid 
+      WHERE project_uuid = @project_uuid
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { project_uuid },
     );
-    const res = [];
-    if (data && data.length) {
-      for (const d of data) {
-        res.push(new File({}, this.getContext()).populate(d, PopulateFrom.DB));
-      }
-    }
-    return res;
+
+    return (
+      data?.map((d) =>
+        new File({}, this.getContext()).populate(d, PopulateFrom.DB),
+      ) || []
+    );
   }
 
   /**
@@ -569,7 +565,7 @@ export class File extends UuidSqlModel {
     INSERT INTO \`${DbTables.BLACKLIST}\` (cid)
     SELECT f.CID
     FROM \`${DbTables.FILE}\` f
-    WHERE f.project_uuid = @project_uuid 
+    WHERE f.project_uuid = @project_uuid
     AND f.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.BLOCKED})
     `,
       { project_uuid },
@@ -579,7 +575,7 @@ export class File extends UuidSqlModel {
       `
     UPDATE \`${DbTables.FILE}\`
     SET status = ${SqlModelStatus.BLOCKED}
-    WHERE project_uuid = @project_uuid 
+    WHERE project_uuid = @project_uuid
     AND status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.BLOCKED})
     `,
       { project_uuid },

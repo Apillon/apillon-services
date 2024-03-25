@@ -157,14 +157,8 @@ export class ProjectService {
   async addCreditsToProject(context: DevConsoleApiContext, data: AddCreditDto) {
     data.referenceTable = 'manually_added';
     data.referenceId = uuidV4();
-    try {
-      await data.validate();
-    } catch (err) {
-      await data.handle(err);
-      if (!data.isValid()) {
-        throw new ValidationException(data, ValidatorErrorCode);
-      }
-    }
+    await data.validateOrThrow(ValidationException, ValidatorErrorCode);
+
     return (await new Scs(context).addCredit(data)).data;
   }
 }

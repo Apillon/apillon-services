@@ -9,7 +9,7 @@ import {
   TransactionWebhookDataDto,
 } from '@apillon/lib';
 import { DbTables, NftsErrorCode } from '../../config/types';
-import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   NftsCodeException,
   NftsNotFoundException,
@@ -33,14 +33,8 @@ export class TransactionService {
     transaction: Transaction,
     conn: PoolConnection,
   ) {
-    try {
-      await transaction.validate();
-    } catch (err) {
-      await transaction.handle(err);
-      if (!transaction.isValid()) {
-        throw new NftsValidationException(transaction);
-      }
-    }
+    await transaction.validateOrThrow(NftsValidationException);
+
     await transaction.insert(SerializeFor.INSERT_DB, conn);
 
     return transaction;
@@ -79,7 +73,7 @@ export class TransactionService {
     return await new Transaction({}, context).getList(
       context,
       query,
-      getSerializationStrategy(context),
+      context.getSerializationStrategy(),
     );
   }
 

@@ -1,5 +1,7 @@
 import { Model, prop } from '@rawmodel/core';
 import { Context } from '../context';
+import { ValidationException } from '../exceptions/exceptions';
+import { PopulateFrom, SerializeFor } from '../../config/types';
 
 /**
  * Common model related objects.
@@ -19,9 +21,86 @@ export abstract class ModelBase extends Model<any> {
     super(data, { context });
   }
 
-  public async handle(
+  /**
+   * Populate the model with the given data and strategy
+   * @param {(Partial<this> | Record<string, any>)} data - Object used to fill model with props
+   * @param {?PopulateFrom} [strategy] - Population strategy
+   * @returns {this}
+   */
+  public override populate(
+    // This type works the same as `any`, but provides autocomplete for the model's props
+    data: Partial<this> | Record<string, any>,
+    strategy?: PopulateFrom,
+  ): this {
+    const mappedObj = {};
+    if (!data) {
+      return super.populate(mappedObj, strategy);
+    }
+    for (const key of Object.keys(this.__props)) {
+      if (data.hasOwnProperty(key)) {
+        mappedObj[key] = data[key];
+        // } else if (data.hasOwnProperty(getFieldName(this, key))) {
+        //   mappedObj[key] = data[getFieldName(this, key)];
+      }
+    }
+    return super.populate(mappedObj, strategy);
+  }
+
+  /**
+   * Populate a model based on an object with prefixed fileds
+   * @param {(Partial<this> | Record<string, any>)} data - Object used to fill model with props
+   * @param {string} prefix
+   * @param {?PopulateFrom} [strategy]
+   * @returns {this}
+   */
+  public populateWithPrefix(
+    data: Partial<this> | Record<string, any>,
+    prefix: string,
+    strategy?: PopulateFrom,
+  ) {
+    const filteredData = {};
+    prefix = `${prefix}__`;
+    for (const key of Object.keys(data)) {
+      if (data.hasOwnProperty(key) && key.startsWith(prefix)) {
+        filteredData[key.replace(prefix, '')] = data[key];
+      }
+    }
+    return this.populate(filteredData, strategy);
+  }
+
+  /**
+   * Serialize the model according to the current context
+   * @param context Context
+   */
+  public serializeByContext(context: Context = this.getContext()): {
+    [key: string]: any;
+  } {
+    return this.serialize(context.getSerializationStrategy());
+  }
+
+  /**
+   * Populate a model based on multiple strategies
+   * @param {(Partial<this> | Record<string, any>)} data - Object used to fill model with props
+   * @param {PopulateFrom[]} strategies
+   */
+  public populateByStrategies(
+    data: Partial<this> | Record<string, any>,
+    strategies: PopulateFrom[],
+  ) {
+    for (const strategy of strategies) {
+      this.populate(data, strategy);
+    }
+  }
+
+  /**
+   * Handle validation errors for a model
+   * @param {*} error
+   * @param {{ quiet: boolean; }} [param0={ quiet: false }]
+   * @returns {Promise<this>}
+   */
+  public override async handle(
     error: any,
-    { quiet }: { quiet: boolean } = { quiet: false },
+    { quiet } = { quiet: false },
   ): Promise<this> {
     try {
       await super.handle(error, { quiet });
@@ -35,9 +114,29 @@ export abstract class ModelBase extends Model<any> {
     }
   }
 
-  public populateByStrategies(data, strategies: string[]) {
-    for (const strategy of strategies) {
-      this.populate(data, strategy);
+  /**
+   * Validate a model and throw an error if it is invalid
+   * @param {new (
+   *       model: Model,
+   *       errorCodes?: any,
+   *     ) => ValidationException} validationException
+   * @param {?object} [errorCodes]
+   * @returns {Promise<this>}
+   */
+  public async validateOrThrow(
+    validationException: new (
+      model: Model,
+      errorCodes?: any,
+    ) => ValidationException,
+    errorCodes?: object,
+  ): Promise<this> {
+    try {
+      return await this.validate();
+    } catch (err) {
+      await this.handle(err);
+      if (!this.isValid()) {
+        throw new validationException(this, errorCodes);
+      }
     }
   }
 }

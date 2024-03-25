@@ -75,14 +75,7 @@ export class WalletService {
       WalletService.checkExists(wallet);
 
       wallet.populate(data, PopulateFrom.ADMIN);
-      try {
-        await wallet.validate();
-      } catch (err) {
-        await wallet.handle(err);
-        if (!wallet.isValid()) {
-          throw new BlockchainValidationException(wallet);
-        }
-      }
+      await wallet.validateOrThrow(BlockchainValidationException);
       await wallet.update(SerializeFor.UPDATE_DB, conn);
       await context.mysql.commit(conn);
       return wallet.serialize(SerializeFor.ADMIN);
@@ -130,14 +123,7 @@ export class WalletService {
 
     transaction.populate(data, PopulateFrom.ADMIN);
 
-    try {
-      await transaction.validate();
-    } catch (err) {
-      await transaction.handle(err);
-      if (!transaction.isValid()) {
-        throw new BlockchainValidationException(transaction);
-      }
-    }
+    await transaction.validateOrThrow(BlockchainValidationException);
     await transaction.update();
     return transaction.serialize(SerializeFor.ADMIN) as TransactionLog;
   }

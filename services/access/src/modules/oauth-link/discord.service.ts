@@ -83,12 +83,8 @@ export class OauthLinkService {
       oauthLink.externalUserId = event.externalUserId;
       oauthLink.externalUsername = event.externalUsername;
       oauthLink.type = OauthLinkType.DISCORD;
-      try {
-        await oauthLink.validate();
-      } catch (err) {
-        await oauthLink.handle(err);
-        throw new AmsValidationException(oauthLink);
-      }
+
+      await oauthLink.validateOrThrow(AmsValidationException);
       await oauthLink.insert();
     }
 
@@ -116,12 +112,8 @@ export class OauthLinkService {
     ).populateByUserUuidAndType(context.user.user_uuid, OauthLinkType.DISCORD);
     oauthLink.status = SqlModelStatus.DELETED;
 
-    try {
-      await oauthLink.validate();
-    } catch (err) {
-      await oauthLink.handle(err);
-      throw new AmsValidationException(oauthLink);
-    }
+    await oauthLink.validateOrThrow(AmsValidationException);
+
     await oauthLink.update();
     return { success: true };
   }

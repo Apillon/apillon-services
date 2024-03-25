@@ -43,7 +43,7 @@ export enum ConfigErrorCode {
 
   // 400 - Bad request
   BAD_REQUEST = 40010001,
-  ACTIVE_SUBSCRIPTION_EXISTS = 4001002,
+  ACTIVE_SUBSCRIPTION_EXISTS = 40010002,
 
   // 401 - Unauthorized (Not authenticated)
   USER_IS_NOT_AUTHENTICATED = 40110100,

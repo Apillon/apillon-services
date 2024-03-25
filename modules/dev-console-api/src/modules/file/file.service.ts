@@ -72,14 +72,7 @@ export class FileService {
     file: File,
   ): Promise<File> {
     //Method can be called from app, so extra validation is required
-    try {
-      await file.validate();
-    } catch (error) {
-      await file.handle(error);
-    }
-    if (!file.isValid()) {
-      throw new ValidationException(file);
-    }
+    await file.validateOrThrow(ValidationException);
 
     const s3Client: AWS_S3 = new AWS_S3();
 
