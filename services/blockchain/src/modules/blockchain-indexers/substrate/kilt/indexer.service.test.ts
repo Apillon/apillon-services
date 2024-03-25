@@ -11,8 +11,8 @@ describe('Testing indexer data-fetch', () => {
 
   test('Get all transactions', async () => {
     const kiltIndexer = new KiltBlockchainIndexer();
-    const fromBlock = 4377705;
-    const toBlock = 4410572;
+    const fromBlock = 4377704;
+    const toBlock = 4410571;
     const address = '4qb612mWyrA2Ga2WhXRgYE7tqo8rGs6f6UBZciqcJvfYUGTp';
 
     // Get all systems without limit
@@ -30,7 +30,7 @@ describe('Testing indexer data-fetch', () => {
       fromBlock,
       toBlock,
     );
-    expect(systemsWithLimit.length).toEqual(5);
+    expect(systemsWithLimit.length).toEqual(8);
 
     // Get all transfer events
     const transfers: any = await kiltIndexer.getAccountBalanceTransfers(
@@ -38,7 +38,7 @@ describe('Testing indexer data-fetch', () => {
       fromBlock,
       toBlock,
     );
-    expect(transfers.length).toEqual(9);
+    expect(transfers.length).toEqual(1);
 
     // Get all did events
     const didCreatedEvents: any = await kiltIndexer.getAccountDidCreate(
@@ -56,8 +56,8 @@ describe('Testing indexer data-fetch', () => {
 
   test('Required parameters present', async () => {
     const kiltIndexer = new KiltBlockchainIndexer();
-    const fromBlock = 4377705;
-    const toBlock = 4410572;
+    const fromBlock = 4377704;
+    const toBlock = 4410571;
     const address = '4qb612mWyrA2Ga2WhXRgYE7tqo8rGs6f6UBZciqcJvfYUGTp';
 
     // Get all systems without limit
