@@ -86,7 +86,7 @@ export async function upgrade(
           SELECT COUNT(*) as ipns_count, project_uuid
           FROM ${databases.storageDb}.ipns
           WHERE status = 5
-          AND ipnsValue <> NULL
+          AND ipnsValue IS NOT NULL
           GROUP BY project_uuid
         ) as ipns
         ON ipns.project_uuid = p.project_uuid
