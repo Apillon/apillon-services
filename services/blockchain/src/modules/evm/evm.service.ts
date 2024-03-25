@@ -391,7 +391,6 @@ export class EvmService {
           latestSuccess = transaction.nonce;
           transmitted++;
         } catch (err) {
-          console.log('ERRRROR: ', err);
           if (
             err?.reason === 'nonce has already been used' ||
             err?.error?.message === 'already known'
