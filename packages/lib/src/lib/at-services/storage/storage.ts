@@ -427,6 +427,13 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async getDomains() {
+    const data = {
+      eventName: StorageEventType.WEBSITE_GET_ALL_DOMAINS,
+    };
+    return await this.callService(data);
+  }
+
   public async listDeployments(params: DeploymentQueryFilter) {
     const data = {
       eventName: StorageEventType.DEPLOYMENT_LIST,

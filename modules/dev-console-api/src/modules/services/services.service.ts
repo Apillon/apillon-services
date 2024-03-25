@@ -155,14 +155,7 @@ export class ServicesService {
 
     service.populate(data);
 
-    try {
-      await service.validate();
-    } catch (err) {
-      await service.handle(err);
-      if (!service.isValid()) {
-        throw new ValidationException(service, ValidatorErrorCode);
-      }
-    }
+    await service.validateOrThrow(ValidationException, ValidatorErrorCode);
 
     await service.update();
     return service;

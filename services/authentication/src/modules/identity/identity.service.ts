@@ -275,14 +275,7 @@ export class IdentityService {
     // Don't update here, but in the request below
     await identity.setState(IdentityState.SUBMITTED_DID_CREATE_REQ, false);
 
-    try {
-      await identity.validate();
-    } catch (err) {
-      await identity.handle(err);
-      if (!identity.isValid()) {
-        throw new AuthenticationValidationException(identity);
-      }
-    }
+    await identity.validateOrThrow(AuthenticationValidationException);
     await identity.update();
 
     writeLog(LogType.INFO, 'Sending blockchain request..');
@@ -379,14 +372,7 @@ export class IdentityService {
     // Set state but don't update
     await identity.setState(IdentityState.SUBMITTED_ATTESATION_REQ, false);
 
-    try {
-      await identity.validate();
-    } catch (err) {
-      await identity.handle(err);
-      if (!identity.isValid()) {
-        throw new AuthenticationValidationException(identity);
-      }
-    }
+    await identity.validateOrThrow(AuthenticationValidationException);
     await identity.update();
 
     const conn = await context.mysql.start();

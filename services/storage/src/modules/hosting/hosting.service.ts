@@ -25,7 +25,7 @@ import {
   WebsitesQuotaReachedQueryFilter,
   writeLog,
 } from '@apillon/lib';
-import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import {
   DbTables,
@@ -64,6 +64,10 @@ export class HostingService {
     return await new Website({}, context).listDomains(event.query);
   }
 
+  static async getDomains(event: {}, context: ServiceContext) {
+    return await new Website({}, context).getDomains();
+  }
+
   static async getWebsite(event: { id: any }, context: ServiceContext) {
     const website: Website = await new Website({}, context).populateById(
       event.id,
@@ -80,7 +84,7 @@ export class HostingService {
     //Get buckets
     await website.populateBucketsAndLink();
 
-    return website.serialize(getSerializationStrategy(context));
+    return website.serializeByContext();
   }
 
   static async createWebsite(
@@ -133,7 +137,7 @@ export class HostingService {
       new Mailing(context).setMailerliteField('has_website', true),
     ]);
 
-    return website.serialize(getSerializationStrategy(context));
+    return website.serializeByContext();
   }
 
   static async updateWebsite(
@@ -183,14 +187,7 @@ export class HostingService {
 
     website.populate(event.data, PopulateFrom.PROFILE);
 
-    try {
-      await website.validate();
-    } catch (err) {
-      await website.handle(err);
-      if (!website.isValid()) {
-        throw new StorageValidationException(website);
-      }
-    }
+    await website.validateOrThrow(StorageValidationException);
 
     await website.update();
     return website.serialize(SerializeFor.PROFILE);
@@ -366,14 +363,7 @@ export class HostingService {
       updateTime: new Date(),
     });
 
-    try {
-      await deployment.validate();
-    } catch (err) {
-      await deployment.handle(err);
-      if (!deployment.isValid()) {
-        throw new StorageValidationException(deployment);
-      }
-    }
+    await deployment.validateOrThrow(StorageValidationException);
 
     await deployment.insert();
 
@@ -402,7 +392,7 @@ export class HostingService {
 
     await deployment.deploy();
 
-    return deployment.serialize(getSerializationStrategy(context));
+    return deployment.serializeByContext();
   }
 
   //#endregion
@@ -437,7 +427,7 @@ export class HostingService {
       deployment.size = undefined;
     }
 
-    return deployment.serialize(getSerializationStrategy(context));
+    return deployment.serializeByContext();
   }
 
   static async listDeployments(

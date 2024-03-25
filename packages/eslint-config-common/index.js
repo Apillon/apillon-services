@@ -30,6 +30,7 @@ module.exports = {
     semi: [2, 'always'],
     quotes: [1, 'single', { allowTemplateLiterals: true }],
     curly: [2, 'all'],
+    "spaced-comment": ["error", "always", { "exceptions": ["-", "+"] }],
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',

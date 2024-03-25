@@ -13,6 +13,7 @@ import { ApiKey } from '../../modules/api-key/models/api-key.model';
 import { v4 as uuidV4 } from 'uuid';
 import * as bcrypt from 'bcryptjs';
 import { ApiKeyRole } from '../../modules/role/models/api-key-role.model';
+import { AmsValidationException } from '../../lib/exceptions';
 
 const project_uuid = 'SYSTEM_GENERAL';
 const service_uuid = 'SYSTEM_GENERAL_SERVICE';
@@ -78,14 +79,7 @@ export async function run() {
   const apiKeySecret = generateRandomCode(12);
   key.apiKeySecret = bcrypt.hashSync(apiKeySecret);
 
-  try {
-    await key.validate();
-  } catch (err) {
-    await key.handle(err);
-    if (!key.isValid()) {
-      throw new Error('validation failed');
-    }
-  }
+  await key.validateOrThrow(AmsValidationException);
 
   //Create new api key
   const conn = await context.mysql.start();
@@ -99,16 +93,8 @@ export async function run() {
         const akr: ApiKeyRole = new ApiKeyRole(kr, context).populate({
           apiKey_id: key.id,
         });
-        try {
-          await akr.validate();
-        } catch (err) {
-          await akr.handle(err);
 
-          if (!akr.isValid()) {
-            throw new Error('validation failed');
-          }
-        }
-
+        await akr.validateOrThrow(AmsValidationException);
         await akr.insert(SerializeFor.INSERT_DB, conn);
       }
     }

@@ -379,14 +379,7 @@ export class UserService {
     }
 
     user.populate(body);
-    try {
-      await user.validate();
-    } catch (err) {
-      await user.handle(err);
-      if (!user.isValid()) {
-        throw new ValidationException(user, ValidatorErrorCode);
-      }
-    }
+    await user.validateOrThrow(ValidationException, ValidatorErrorCode);
 
     const conn = await context.mysql.start();
 
@@ -478,14 +471,8 @@ export class UserService {
 
       consent.dateOfAgreement =
         consent.status === UserConsentStatus.ACCEPTED ? new Date() : null;
-      try {
-        await consent.validate();
-      } catch (err) {
-        await consent.handle(err);
-        if (!consent.isValid()) {
-          throw new ValidationException(consent, ValidatorErrorCode);
-        }
-      }
+      await consent.validateOrThrow(ValidationException, ValidatorErrorCode);
+
       const term = activeTerms.find(
         (x) => x.id == consent.id && x.type == consent.type,
       );

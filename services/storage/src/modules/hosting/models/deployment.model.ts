@@ -22,7 +22,7 @@ import {
   prop,
   selectAndCountQuery,
 } from '@apillon/lib';
-import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   dateParser,
   integerParser,
@@ -439,7 +439,7 @@ export class Deployment extends AdvancedSQLModel {
         SELECT ${this.generateSelectFields(
           'd',
           '',
-          getSerializationStrategy(context),
+          context.getSerializationStrategy(),
         )}, wp.website_uuid
         `,
       qFrom: `

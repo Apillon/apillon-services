@@ -27,7 +27,7 @@ import {
   Ctx,
   Permissions,
   Validation,
-  Cache,
+  CacheByUser,
 } from '@apillon/modules-lib';
 import { AuthGuard } from '../../guards/auth.guard';
 
@@ -149,10 +149,9 @@ export class ReferralController {
   @Get('airdrop-tasks')
   @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
-  @Cache({
+  @CacheByUser({
     keyPrefix: CacheKeyPrefix.AIRDROP_TASKS,
     ttl: CacheKeyTTL.DEFAULT,
-    byUser: true,
   })
   async getAirdropTasks(@Ctx() context: DevConsoleApiContext) {
     return await this.referralService.getAirdropTasks(context);
