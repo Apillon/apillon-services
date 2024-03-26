@@ -1,6 +1,7 @@
 # Apillon Mailing Service - MAIL
 
-Mailing service is simple service that provides endpoint and templates for sending emails to users. It (currently) doesn't have any database and does not store any data. For sending emails it uses AWS Simple Email Service (AWS SES).
+Mailing service is simple service that provides endpoint and templates for sending emails to users. It (currently) doesn't have any database and does not store any data. For sending emails it uses AWS Simple Email Service (AWS SES). Some mails are pre-written with customizable properties (e.g. templates located in `template-data.ts`) while some emails can contain custom data for the subject, content etc.
+There is also a deployed lambda for converting an HTML file to a PDF attachment (e.g. for payment invoices) which is utilized through the `GeneratePdfMicroservice` class.
 
 ## Table of Contents
 
@@ -15,7 +16,7 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 
 ## Configuration
 
-Environment variables that has to be set:
+Environment variables that have to be set:
 
 ```ts
   /************************************************************

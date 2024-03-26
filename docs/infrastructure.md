@@ -70,7 +70,7 @@ Email sending service for transactional and marketing emails.
 
 Managed NoSQL database service for MongoDB.
 
-### Bitbucket
+### Github
 
 Git-based version control system for hosting source code repositories.
 
@@ -91,3 +91,7 @@ A privacy-preserving data computation platform based on Substrate.
 ### Moonbeam
 
 An Ethereum-compatible smart contract platform on the Polkadot network for building cross-chain applications.
+
+### Subsocial
+
+A decentralized network which has built Grill.chat, a decentralized chat protocol

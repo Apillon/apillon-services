@@ -1,6 +1,6 @@
 # Apillon System Configuration Service - SCS
 
-SCS is providing various system wide configuration parameters. One of the key features is that service holds user subscriptions and user quotas for limiting use of different Apillon services.
+SCS is providing various system wide configuration parameters. One of the key features is that service holds user subscriptions and user quotas for limiting use of different Apillon services, as well as credit amounts for all projects.
 
 ## Table of Contents
 
@@ -71,7 +71,7 @@ All current existing actions for spending credits are defined in the 'product' t
 
 ## Configuration
 
-Environment variables that has to be set:
+Environment variables that have to be set:
 
 ```ts
   /*************************************************************

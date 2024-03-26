@@ -1,6 +1,6 @@
 # Apillon public API
 
-This public API is intended for Apillon users to consume it with use of their API Key. API can be called with Apillon SDK, CLI or with direct HTTP calls. API
+This public API is intended for Apillon users to consume it with use of their API Keys. The API can be called using Apillon SDK, CLI or with direct HTTP calls.
 
 ## Table of Contents
 
@@ -19,7 +19,7 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 
 ## Documentation
 
-Public documentation of endpoints is available at [https://wiki.apillon.io/build/3-apillon-api.html](https://wiki.apillon.io/build/3-apillon-api.html).
+Public documentation of endpoints and all available API modules is available at https://wiki.apillon.io/build/1-apillon-api.html
 
 ## Configuration
 
@@ -31,8 +31,6 @@ List of URLs the API is available at:
 
 | Environment | URL                               |
 | ----------- | --------------------------------- |
-| Development | <https://api-dev.apillon.io/>     |
-| Staging     | <https://api-staging.apillon.io/> |
 | Production  | <https://api.apillon.io/>         |
 
 ## Requests
@@ -49,18 +47,18 @@ Requests must include a basic auth HTTP header field in the form of
 Authorization: Basic <credentials>
 ```
 
-Credentials represent the Base64 encoding of API key and API key secret joined by a single colon :.
+Credentials represent the Base64 encoding of API key and API key secret joined by a single colon (`:`).
 
 API keys could be generated on the developer dashboard under `Project settings`.
 
 Authorization is checked at the endpoint level in controller. Required permissions are defined with `@ApiKeyPermissions` decorator. Example:
 
 ```ts
- @ApiKeyPermissions({
-    role: DefaultApiKeyRole.KEY_EXECUTE,
-    serviceType: AttachedServiceType.STORAGE,
-  })
-  @UseGuards(AuthGuard)
+@ApiKeyPermissions({
+  role: DefaultApiKeyRole.KEY_EXECUTE,
+  serviceType: AttachedServiceType.STORAGE,
+})
+@UseGuards(AuthGuard)
 ```
 
 ## Deployment

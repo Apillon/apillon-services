@@ -18,7 +18,7 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 
 ## Configuration
 
-Environment variables that has to be set:
+Environment variables that have to be set:
 
 ```ts
   /************************************************************
@@ -57,8 +57,6 @@ Environment variables that has to be set:
 
 | Environment | API URL                                   | Frontend URL                              |
 | ----------- | ---------------------------------------   | ---------------------------------------   |
-| Development | <https://console-api-dev.apillon.io/>     | <https://app-dev.apillon.io/>             |
-| Staging     | <https://console-api-staging.apillon.io/> | <https://app-staging.apillon.io/>         |
 | Production  | <https://console-api.apillon.io/>         | <https://app.apillon.io/>                 |
 
 ## Requests
@@ -75,12 +73,12 @@ Requests must include a [bearer token](https://swagger.io/docs/specification/aut
 Authorization is checked at the endpoint level in controller. Required permissions are defined with `@Permissions` decorator. Example:
 
 ```ts
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
-  @UseGuards(AuthGuard)
+@Permissions(
+  { role: DefaultUserRole.PROJECT_OWNER },
+  { role: DefaultUserRole.PROJECT_ADMIN },
+  { role: DefaultUserRole.PROJECT_USER },
+)
+@UseGuards(AuthGuard)
 ```
 
 ## Deployment

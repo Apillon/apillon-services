@@ -1,6 +1,6 @@
-# Apillon Blockchain Integration Service - BIS
+# Apillon Blockchain Integration Service - BCS
 
-BIS is handling communication between Apillon system services and APIs with different blockchain networks. It's job is to send and store transaction and monitor status of transactions on blockchain.
+BCS is handling communication between Apillon system services and APIs with different blockchain networks. Its job is to send and store transaction and monitor status of transactions on blockchain.
 
 ## Table of Contents
 
@@ -15,11 +15,11 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 
 ## Configuration
 
-Environment variables that has to be set:
+Environment variables that have to be set:
 
 ```ts
   /************************************************************
-   * BIS - Apillon Blockchain Integration Service
+   * BCS - Apillon Blockchain Integration Service
    ************************************************************/
   BLOCKCHAIN_FUNCTION_NAME: string;
   BLOCKCHAIN_FUNCTION_NAME_TEST: string;
@@ -52,12 +52,12 @@ Please read [Deployment](../../docs/deployment.md) documentation.
 ## Structure
 ### Modules
 * **Accounting**
-* **Blockchain-indexers** -> Updates transactions 
+* **Blockchain-indexers** -> Updates transactions
 * **Evm**
 * **Substrate**
 * **Wallet**
 
-#### **Substrate** 
+#### **Substrate**
 Contains the substrate service, which is responsible for creating and storing transactions into the database, based on the rawTransaction provided by the caller. It also takes care for transmitting transactions to the blockchain, depending on the chainId provided (Currently supported: Crust, Kilt, Phala)
 
 #### **EVM**
@@ -96,7 +96,7 @@ export class KiltGQLQueries extends BaseGQLQueries {
 }
 ```
 
-* **base-transaction-model.ts** - Contains the BaseTransaction model, which must be extended in each respective model, such as 
+* **base-transaction-model.ts** - Contains the BaseTransaction model, which must be extended in each respective model, such as
 
 ```
 export interface DidTransaction extends BaseTransaction {
@@ -110,7 +110,7 @@ Example provided from Kilt.
 
 **evm** TODO
 
-#### 
+####
 
 ### Workers
 * **substrate-transaction-worker** - The transmit substrate and evm transaction workers are single threded workers, that are executed either via an sqs message or run at an interval (check serverless.yml). They run the transmit transaction function inside evm / substrate.service and transmit all pending transaction in the database.

@@ -1,6 +1,6 @@
 # Apillon Authentication API
 
-This API is consumed by the Apillon OAUTH application. It serves as backend to the Apillon OAUTH service that can be implemented on third party websites. API is a bridge between oAuth App and Apillon authentication service.
+This API is consumed by the Apillon OAuth application. It serves as backend to the Apillon OAuth service that can be implemented on third party websites. Auth API is a bridge between oAuth App and Apillon authentication service.
 
 ## Table of Contents
 
@@ -24,8 +24,6 @@ List of URLs the API is available at:
 
 | Environment | URL                                     |
 | ----------- | --------------------------------------- |
-| Development | <https://oauth-api-dev.apillon.io/>     |
-| Staging     | <https://oauth-api-staging.apillon.io/> |
 | Production  | <https://oauth-api.apillon.io/>         |
 
 ## Deployment
