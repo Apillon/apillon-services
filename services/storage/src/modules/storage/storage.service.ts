@@ -169,7 +169,12 @@ export class StorageService {
         `Project W/O subscription (${bucket.project_uuid}). Checking fileNames for upload`,
       );
       // Content type can also be checked, but it may not always be provided
-      if (event.body.files.find((x) => x.fileName.includes('.htm'))) {
+      // Disallow files with htm or html extension
+      if (
+        ['htm', 'html'].some((ext) =>
+          event.body.files.find((f) => f.fileName.endsWith(ext)),
+        )
+      ) {
         throw new StorageCodeException({
           code: StorageErrorCode.HTML_FILES_NOT_ALLOWED,
           status: 400,
