@@ -260,9 +260,9 @@ describe('Phala transaction Log Worker unit test', () => {
 
     await new Endpoint(
       {
-        url: 'wss://poc6.phala.network/ws',
-        chain: CHAIN,
-        chainType: CHAIN_TYPE,
+        ...config.phala.endpoint,
+        chain: config.phala.chain,
+        chainType: config.phala.chainType,
       },
       stage.context,
     ).insert();
