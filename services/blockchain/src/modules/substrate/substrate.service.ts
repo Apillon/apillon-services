@@ -1,6 +1,7 @@
 import { Keyring } from '@polkadot/keyring';
 import { Wallet } from '../wallet/wallet.model';
 import {
+  AppEnvironment,
   ChainType,
   ClusterDepositTransaction,
   env,
@@ -68,7 +69,7 @@ export class SubstrateService {
         break;
       }
       case SubstrateChain.CRUST: {
-        keyring = new Keyring({ type: 'sr25519' });
+        keyring = new Keyring({ ss58Format: 66, type: 'sr25519' });
         typesBundle = CrustTypesBundle;
         break;
       }
@@ -199,27 +200,32 @@ export class SubstrateService {
         },
       });
 
-      try {
-        await sendToWorkerQueue(
-          env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-          substrateChainToWorkerName(params.chain),
-          [
-            {
-              chain: params.chain,
-            },
-          ],
-          null,
-          null,
-        );
-      } catch (e) {
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message: `Error triggering TRANSMIT_SUBSTRATE_TRANSACTION worker queue: ${e}`,
-          location: 'SubstrateService.createTransaction',
-          service: ServiceName.BLOCKCHAIN,
-          data: { error: e },
-          sendAdminAlert: true,
-        });
+      if (
+        env.APP_ENV != AppEnvironment.TEST &&
+        env.APP_ENV != AppEnvironment.LOCAL_DEV
+      ) {
+        try {
+          await sendToWorkerQueue(
+            env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+            substrateChainToWorkerName(params.chain),
+            [
+              {
+                chain: params.chain,
+              },
+            ],
+            null,
+            null,
+          );
+        } catch (e) {
+          await new Lmas().writeLog({
+            logType: LogType.ERROR,
+            message: `Error triggering TRANSMIT_SUBSTRATE_TRANSACTION worker queue: ${e}`,
+            location: 'SubstrateService.createTransaction',
+            service: ServiceName.BLOCKCHAIN,
+            data: { error: e },
+            sendAdminAlert: true,
+          });
+        }
       }
       return transaction.serialize(SerializeFor.PROFILE);
     } catch (e) {
