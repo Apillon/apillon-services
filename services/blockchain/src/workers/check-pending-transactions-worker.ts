@@ -40,17 +40,17 @@ export class CheckPendingTransactionsWorker extends BaseWorker {
       { transactionStatus: TransactionStatus.PENDING },
     );
 
-    if (res && res.length) {
-      let message;
-      for (let i = 0; i < res.length; i++) {
-        message =
-          message +
-          `
-          Wallet ${res[i].address} (chain ${res[i].chaintype == ChainType.EVM ? EvmChain[res[i].chain] : SubstrateChain[res[i].chain]})
-          has pending transactions not resolved since ${res[i].minTime}, nonce: ${res[i].minNonce} \n
+    let message = '';
+    for (const data of res) {
+      message =
+        message +
+        `
+          Wallet ${data.address} (chain ${data.chaintype == ChainType.EVM ? EvmChain[data.chain] : SubstrateChain[data.chain]})
+          has pending transactions not resolved since ${data.minTime}, nonce: ${data.minNonce} \n
         `;
-      }
+    }
 
+    if (message != '') {
       await this.writeEventLog(
         {
           logType: LogType.ERROR,
