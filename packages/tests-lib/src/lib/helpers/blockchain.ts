@@ -1,10 +1,7 @@
 import ganache, { Server } from 'ganache';
-import { Stage } from '../interfaces/stage.interface';
+import { ServiceStage } from '../interfaces/stage.interface';
 import { Wallet } from '@apillon/blockchain/src/modules/wallet/wallet.model';
 import { ChainType, EvmChain } from '@apillon/lib';
-import { Transaction as NftCollectionTx } from '@apillon/nfts/src/modules/transaction/models/transaction.model';
-import { Transaction as BlockchainTx } from '@apillon/blockchain/src/common/models/transaction';
-import { TransactionType } from '@apillon/nfts/src/config/types';
 import { ethers } from 'ethers';
 
 const KEYS = {
@@ -34,14 +31,14 @@ const KEYS = {
  * Helper class for emulating blockchain and getting blockchain related data.
  */
 export class TestBlockchain {
-  private readonly stage: Stage;
+  private readonly stage: ServiceStage;
   private readonly chainId: EvmChain;
   private readonly port: number;
   private readonly server: Server;
   private readonly accounts: string[] = [];
   private readonly keys = KEYS;
 
-  constructor(stage: Stage, chainId: EvmChain, port = 8545) {
+  constructor(stage: ServiceStage, chainId: EvmChain, port = 8545) {
     this.stage = stage;
     this.chainId = chainId;
     this.port = port;
@@ -153,12 +150,12 @@ export class TestBlockchain {
   }
 
   private async storeEndpoint(ganacheEndpoint: string) {
-    await this.stage.blockchainSql.paramExecute(
+    await this.stage.db.paramExecute(
       `DELETE
        FROM endpoint`,
       {},
     );
-    await this.stage.blockchainSql.paramExecute(
+    await this.stage.db.paramExecute(
       `
         INSERT INTO endpoint (status, url, chain, chainType)
         VALUES (5, 'http://${ganacheEndpoint}', ${this.chainId},
@@ -170,10 +167,7 @@ export class TestBlockchain {
 
   private async storeWallet(address: string, privateKey: string) {
     //Configure wallets
-    const wallet: Wallet = new Wallet(
-      {},
-      this.stage.blockchainContext,
-    ).populate({
+    const wallet: Wallet = new Wallet({}, this.stage.context).populate({
       address: address,
       chain: this.chainId,
       chainType: ChainType.EVM,
@@ -181,24 +175,5 @@ export class TestBlockchain {
       type: 1,
     });
     await wallet.insert();
-  }
-
-  async getNftTransactionStatus(
-    collectionUuid: string,
-    transactionType: TransactionType,
-  ) {
-    const collectionTxs = await new NftCollectionTx(
-      {},
-      this.stage.nftsContext,
-    ).getCollectionTransactions(collectionUuid);
-    const collectionTx = collectionTxs.find(
-      (x) => x.transactionType == transactionType,
-    );
-    const blockchainTx = await new BlockchainTx(
-      {},
-      this.stage.blockchainContext,
-    ).getTransactionByChainAndHash(this.chainId, collectionTx.transactionHash);
-
-    return blockchainTx.transactionStatus;
   }
 }

@@ -50,3 +50,4 @@ env.*yml
 *.orig
 
 tmp/
+test-config.js

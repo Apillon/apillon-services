@@ -461,11 +461,10 @@ export class EvmService {
         }
       }
 
-      if (latestSuccess) {
+      if (latestSuccess !== null) {
         const dbWallet = new Wallet(wallet, context);
         await dbWallet.updateLastProcessedNonce(latestSuccess);
       }
-
       await eventLogger(
         {
           logType: LogType.COST,
