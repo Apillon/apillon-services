@@ -1,14 +1,17 @@
 import { env } from '@apillon/lib';
 import { CrustBlockchainIndexer } from './indexer.service';
+import { getConfig } from '@apillon/tests-lib';
 
 // TODO: Move to indexer, test with real wallet
 // TODO2: Add more test cases
 // TODO3: Once new indexer deployed to crust, modify this test.
 describe('Test all transactions', () => {
   const address = 'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU';
+  let config: any;
 
   beforeAll(async () => {
-    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://3.251.2.33:8081/graphql';
+    config = await getConfig();
+    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = config.crust.indexerUrl;
   });
 
   test('Get all transactions', async () => {

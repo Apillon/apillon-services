@@ -58,11 +58,7 @@ describe('Apillon API NFTs tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
 
-    const blockchainStage = {
-      db: stage.blockchainSql,
-      context: stage.blockchainContext,
-    };
-    blockchain = new TestBlockchain(blockchainStage, CHAIN_ID);
+    blockchain = TestBlockchain.fromStage(stage, CHAIN_ID);
     await blockchain.start();
 
     //User 1 project & other data
@@ -198,7 +194,7 @@ describe('Apillon API NFTs tests', () => {
         stage.nftsContext,
       ).populateByUUID(response.body.data.collectionUuid);
       expect(genericCollection.exists()).toBeTruthy();
-      const transactionStatus = await getNftTransactionStatus(ž
+      const transactionStatus = await getNftTransactionStatus(
         stage,
         genericCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,

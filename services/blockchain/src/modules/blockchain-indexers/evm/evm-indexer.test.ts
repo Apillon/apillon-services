@@ -11,8 +11,8 @@ import { Wallet } from '../../wallet/wallet.model';
 import { WorkerType, evmChainToWorkerName } from '../../../lib/helpers';
 import { getConfig } from '@apillon/tests-lib';
 
+const address = '0xba01526c6d80378a9a95f1687e9960857593983b';
 describe('MOONBASE', () => {
-  const address = '0xba01526c6d80378a9a95f1687e9960857593983b';
   let stage: Stage;
   const chain = 1287;
   const chainType = ChainType.EVM;
@@ -28,7 +28,7 @@ describe('MOONBASE', () => {
       {
         chain,
         chainType,
-        address: '0xba01526c6d80378a9a95f1687e9960857593983b',
+        address,
         // This is actually not correct - the seed should match the address
         seed: 'Yadayaya',
         lastParsedBlock: 4845276,
@@ -50,13 +50,12 @@ describe('MOONBASE', () => {
       '0x84ad9150974e47f4746b53c7169317ab3ec10a8d96c2a55624f75966d7431465';
     const controlHashFail =
       '0xa530750e55fbfd3b67d0422d78a9195659fa7c76c8cb0a117346d7be62a55239';
-    const address = '0xba01526c6d80378a9a95f1687e9960857593983b';
 
     await new Transaction(
       {
-        chain: chain,
-        chainType: chainType,
-        address: address,
+        chain,
+        chainType,
+        address,
         to: null,
         nonce: 602,
         referenceTable: 'test',
@@ -71,9 +70,9 @@ describe('MOONBASE', () => {
 
     await new Transaction(
       {
-        chain: chain,
-        chainType: chainType,
-        address: address,
+        chain,
+        chainType,
+        address,
         to: null,
         nonce: 538,
         referenceTable: 'test',

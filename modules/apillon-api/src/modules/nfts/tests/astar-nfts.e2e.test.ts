@@ -51,11 +51,7 @@ describe('Apillon API NFTs tests on Astar', () => {
   beforeAll(async () => {
     stage = await setupTest();
 
-    const blockchainStage = {
-      db: stage.blockchainSql,
-      context: stage.blockchainContext,
-    };
-    blockchain = new TestBlockchain(blockchainStage, CHAIN_ID);
+    blockchain = TestBlockchain.fromStage(stage, CHAIN_ID);
     await blockchain.start();
 
     //User 1 project & other data

@@ -12,7 +12,6 @@ import {
   TestBlockchain,
   TestUser,
 } from '@apillon/tests-lib';
-import { ethers } from 'ethers';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { setupTest } from '../../../../../test/helpers/setup';
 import { TransactionLog } from '@apillon/blockchain/src/modules/accounting/transaction-log.model';
@@ -27,17 +26,16 @@ describe('Blockchain endpoint tests', () => {
   let adminTestUser: TestUser;
   let testWallet: Wallet;
   let testTransaction: TransactionLog;
+
   beforeAll(async () => {
     stage = await setupTest(
       env.ADMIN_CONSOLE_API_PORT_TEST,
       env.ADMIN_CONSOLE_API_HOST_TEST,
     );
-    const blockchainStage = {
-      db: stage.blockchainSql,
-      context: stage.blockchainContext,
-    };
-    blockchain = new TestBlockchain(blockchainStage, EvmChain.MOONBEAM);
+
+    blockchain = TestBlockchain.fromStage(stage, EvmChain.MOONBEAM);
     await blockchain.start();
+
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     adminTestUser = await createTestUser(
       stage.devConsoleContext,

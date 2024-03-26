@@ -48,7 +48,7 @@ export class TestBlockchain {
 
     this.accounts = Object.keys(this.keys);
     this.server = ganache.server({
-      chain: { chainId: chainId },
+      chain: { chainId },
       wallet: {
         accounts: this.accounts.map((account) => ({
           secretKey: this.keys[account],
@@ -56,6 +56,17 @@ export class TestBlockchain {
         })),
       },
     });
+  }
+
+  static fromStage(stage: Stage, chainId: EvmChain, port = 8545) {
+    return new TestBlockchain(
+      {
+        db: stage.blockchainSql,
+        context: stage.blockchainContext,
+      },
+      chainId,
+      port,
+    );
   }
 
   async start() {
