@@ -7,6 +7,7 @@ import {
   DeploymentQueryFilter,
   ErrorCode,
   ForbiddenErrorCodes,
+  JwtExpireTime,
   JwtTokenType,
   Lmas,
   LogType,
@@ -577,10 +578,8 @@ export class Deployment extends AdvancedSQLModel {
     //Send message to slack
     const jwt = generateJwtToken(
       JwtTokenType.WEBSITE_REVIEW_TOKEN,
-      {
-        deployment_uuid: this.deployment_uuid,
-      },
-      'never',
+      { deployment_uuid: this.deployment_uuid },
+      JwtExpireTime.NEVER,
     );
     const blocks = [];
     if (linkToScreenshot) {

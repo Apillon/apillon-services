@@ -1,4 +1,4 @@
-import { JwtTokenType, generateJwtToken } from '@apillon/lib';
+import { JwtExpireTime, JwtTokenType, generateJwtToken } from '@apillon/lib';
 import * as crypto from 'crypto';
 import { IpfsCluster } from '../modules/ipfs/models/ipfs-cluster.model';
 
@@ -21,11 +21,8 @@ export function addJwtToIPFSUrl(
 
   const jwt = generateJwtToken(
     JwtTokenType.IPFS_TOKEN,
-    {
-      cid,
-      project_uuid,
-    },
-    'never',
+    { cid, project_uuid },
+    JwtExpireTime.NEVER,
     generateJwtSecret(project_uuid, ipfsCluster.secret),
   );
 

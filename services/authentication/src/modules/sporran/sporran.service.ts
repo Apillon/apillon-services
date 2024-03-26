@@ -2,6 +2,7 @@ import {
   CodeException,
   env,
   generateJwtToken,
+  JwtExpireTime,
   JwtTokenType,
   Lmas,
   LogType,
@@ -441,7 +442,7 @@ export class SporranService {
     const token = generateJwtToken(
       JwtTokenType.OAUTH_TOKEN,
       { email, project_uuid },
-      '10min',
+      JwtExpireTime.TWENTY_MINUTES,
     );
 
     return { verified: true, token };

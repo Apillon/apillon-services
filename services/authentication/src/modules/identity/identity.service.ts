@@ -15,6 +15,7 @@ import {
   spendCreditAction,
   EmailDataDto,
   EmailTemplate,
+  JwtExpireTime,
 } from '@apillon/lib';
 import { Identity } from './models/identity.model';
 import {
@@ -85,11 +86,8 @@ export class IdentityService {
 
     const token = generateJwtToken(
       JwtTokenType.IDENTITY_VERIFICATION,
-      {
-        email,
-        project_uuid,
-      },
-      '10min',
+      { email, project_uuid },
+      JwtExpireTime.TWENTY_MINUTES,
     );
     let auth_app_page = 'registration';
     const inProgressStates = IdentityState.getProcessInProgressStates();

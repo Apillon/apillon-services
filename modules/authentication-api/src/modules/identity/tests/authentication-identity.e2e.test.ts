@@ -1,7 +1,12 @@
 import * as request from 'supertest';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { setupTest } from '../../../../test/helpers/setup';
-import { generateJwtToken, JwtTokenType, SerializeFor } from '@apillon/lib';
+import {
+  generateJwtToken,
+  JwtExpireTime,
+  JwtTokenType,
+  SerializeFor,
+} from '@apillon/lib';
 import * as mock from './mock-data';
 import { u8aToHex } from '@polkadot/util';
 import {
@@ -257,10 +262,8 @@ describe('Identity', () => {
       // EXPIRED TOKEN
       controlRequestBody.token = generateJwtToken(
         JwtTokenType.IDENTITY_VERIFICATION,
-        {
-          email: identityMock.email,
-        },
-        '0', // valid 0 miliseconds
+        { email: identityMock.email },
+        '0' as JwtExpireTime, // Valid for 0 milliseconds, for test
       );
       const resp3 = await request(stage.http)
         .post('/identity/generate')
@@ -286,7 +289,7 @@ describe('Identity', () => {
           ...controlRequestBody,
         });
       expect(resp4.status).toBe(400);
-      expect(resp4.body.message).toEqual('IDENTITY_INVALID_REQUEST');
+      expect(resp4.body.message).toEqual('IDENTITY_INVALID_STATE');
     });
 
     test('Combinatorics - didUri', async () => {
@@ -378,7 +381,7 @@ describe('Identity', () => {
           ...controlRequestBody,
         });
       expect(resp3.status).toBe(400);
-      expect(resp3.body.message).toEqual('IDENTITY_INVALID_REQUEST');
+      expect(resp3.body.message).toEqual('IDENTITY_INVALID_STATE');
       // VALID EMAIL
       // const resp4 = await request(stage.http)
       //   .post('/identity/generate')

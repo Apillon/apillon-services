@@ -11,7 +11,6 @@ export class Slack {
   }
 
   async findChannel(chanelName) {
-    let conversationId;
     try {
       // Call the conversations.list method using the built-in WebClient
       const result = await this.client.conversations.list({
@@ -20,17 +19,11 @@ export class Slack {
 
       for (const channel of result.channels) {
         if (channel.name === chanelName) {
-          conversationId = channel.id;
-
-          // Print result
-          // console.log('Found conversation ID: ' + conversationId);
-          return conversationId;
+          return channel.id;
         }
       }
     } catch (error) {
-      console.error('FIND CHANNEL:', error);
-      console.log('token:', env.SLACK_TOKEN);
-      console.log('channel:', env.SLACK_CHANNEL);
+      console.error('Find slack channel error:', error);
       throw error;
     }
   }
@@ -49,16 +42,14 @@ export class Slack {
         token: env.SLACK_TOKEN,
         channel: channelId,
         blocks,
-        text: text,
+        text,
         // You could also use a blocks[] array to send richer content
       });
 
       // Print result, which includes information about the message (like TS)
       // console.log(result);
     } catch (error) {
-      console.error('PUBLISH MESSAGE:', error);
-      console.log('token:', env.SLACK_TOKEN);
-      console.log('channel:', env.SLACK_CHANNEL);
+      console.error('Publish slack message error:', error);
       throw error;
     }
   }

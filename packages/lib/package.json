@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
-    "@types/jsonwebtoken": "^8.5.9",
+    "@types/jsonwebtoken": "^9.0.6",
     "eslint-config-common": "*",
     "tsconfig": "*"
   },
@@ -38,12 +38,13 @@
     "dotenv": "^16.0.2",
     "ethers": "^5.7.2",
     "hcaptcha": "^0.1.1",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
     "mongodb": "4.17.0",
     "mysql2": "^2.3.3",
     "redis": "^4.6.7",
+    "saslprep": "^1.0.3",
     "sqlstring": "^2.3.3",
     "ts-mysql-migrate": "^1.0.2",
     "uuid": "^9.0.0"
