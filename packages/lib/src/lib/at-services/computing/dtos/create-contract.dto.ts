@@ -1,10 +1,6 @@
 import { ModelBase, prop } from '../../../base-models/base';
-import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
-import {
-  ethAddressValidator,
-  presenceValidator,
-  stringLengthValidator,
-} from '@rawmodel/validators';
+import { integerParser, stringParser } from '@rawmodel/parsers';
+import { presenceValidator, stringLengthValidator } from '@rawmodel/validators';
 import {
   ComputingContractType,
   PopulateFrom,
@@ -12,6 +8,8 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { enumInclusionValidator } from '../../../validators';
+import { computingContractDataValidator } from '../validators/computing-contract-validators';
+import { SchrodingerContractDataDto } from './schrodinger-contract-data-dto';
 
 export class CreateContractDto extends ModelBase {
   @prop({
@@ -82,37 +80,23 @@ export class CreateContractDto extends ModelBase {
   })
   public description: string;
 
+  /**
+   * Contract-specific data, may vary based on contract type
+   * Validated on contract creation based on type
+   */
   @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: ethAddressValidator(),
-        code: ValidatorErrorCode.COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID,
-      },
-    ],
-  })
-  public nftContractAddress: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
-  })
-  public nftChainRpcUrl: string;
-
-  @prop({
-    parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.COMPUTING_RESTRICT_TO_OWNER_NOT_PRESENT,
+        code: ValidatorErrorCode.COMPUTING_FIELD_NOT_PRESENT,
+      },
+      {
+        resolver: computingContractDataValidator(),
+        code: ValidatorErrorCode.COMPUTING_CONTRACT_DATA_NOT_VALID,
       },
     ],
   })
-  public restrictToOwner: boolean;
+  contractData: SchrodingerContractDataDto;
 }

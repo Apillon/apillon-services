@@ -273,7 +273,8 @@ export class Wallet extends AdvancedSQLModel {
   public type: number;
 
   /**
-   * minBalance - string representation of BigNumber
+   * minBalance - string representation of BigNumber.
+   * A monitoring alert will be sent if wallet balance is below this value
    */
   @prop({
     parser: { resolver: stringParser() },
@@ -292,6 +293,28 @@ export class Wallet extends AdvancedSQLModel {
     ],
   })
   public minBalance: string;
+
+  /**
+   * minTxBalance - string representation of BigNumber.
+   * Transactions will not be sent and an error will be thrown if wallet balance is below this value
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      //
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+    ],
+  })
+  public minTxBalance: string;
 
   /**
    * virtual - min balance in base token
@@ -610,7 +633,7 @@ export class Wallet extends AdvancedSQLModel {
     );
   }
 
-  public async checkAndUpdateBalance() {
+  public async checkAndUpdateBalance(conn?: PoolConnection) {
     let balance = null;
     const endpoint = await new Endpoint({}, this.getContext()).populateByChain(
       this.chain,
@@ -618,7 +641,7 @@ export class Wallet extends AdvancedSQLModel {
     );
 
     if (!endpoint.exists()) {
-      throw new Error('Endpoint does not exits');
+      throw new Error('Endpoint does not exist');
     }
     if (this.chainType === ChainType.EVM) {
       const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
@@ -640,12 +663,13 @@ export class Wallet extends AdvancedSQLModel {
     }
 
     this.currentBalance = balance;
-    await this.update();
+    await this.update(SerializeFor.UPDATE_DB, conn);
 
     return {
       balance,
       minBalance: this.minBalance,
       isBelowThreshold: this.isBelowThreshold,
+      isBelowTransactionThreshold: this.isBelowTransactionThreshold,
     };
   }
 
@@ -713,6 +737,15 @@ export class Wallet extends AdvancedSQLModel {
     return (
       !!this.minBalance &&
       ethers.BigNumber.from(this.minBalance).gte(
+        ethers.BigNumber.from(this.currentBalance),
+      )
+    );
+  }
+
+  public get isBelowTransactionThreshold(): boolean {
+    return (
+      !!this.minTxBalance &&
+      ethers.BigNumber.from(this.minTxBalance).gte(
         ethers.BigNumber.from(this.currentBalance),
       )
     );

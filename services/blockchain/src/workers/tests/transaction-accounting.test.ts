@@ -16,11 +16,12 @@ const mockAxios = new MockAdapter(axios);
 
 describe('Transaction Accounting unit tests', () => {
   let stage: Stage;
-  let crustWallet: Wallet;
-
-  let kiltWallet: Wallet;
-
   let worker: TransactionLogWorker;
+
+  let crustWallet: Wallet;
+  let kiltWallet: Wallet;
+  const crustAddress = 'cTJp5A3DSBq5FQm55gxsXbuYutnghHkLPWYNowLG2E1wudbuj';
+  const kiltAddress = '4opuc6SYnkBoeT5R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn';
 
   beforeAll(async () => {
     stage = await setupTest();
@@ -35,7 +36,7 @@ describe('Transaction Accounting unit tests', () => {
     crustWallet = new Wallet(
       {
         status: 5,
-        address: '0x25Cd0fE6953F5799AEbDa9ee445287CFb101972E',
+        address: crustAddress,
         chain: SubstrateChain.CRUST,
         chainType: ChainType.SUBSTRATE,
         seed: '1',
@@ -51,7 +52,7 @@ describe('Transaction Accounting unit tests', () => {
     kiltWallet = new Wallet(
       {
         status: 5,
-        address: '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
+        address: kiltAddress,
         chain: SubstrateChain.KILT,
         chainType: ChainType.SUBSTRATE,
         seed: '4',
@@ -86,77 +87,101 @@ describe('Transaction Accounting unit tests', () => {
 
   test('Test wallet deposits', async () => {
     const transactions = [
+      // 100 Crust
       new TransactionLog(
         {
           action: TxAction.DEPOSIT,
           direction: TxDirection.INCOME,
-          wallet: '0x25Cd0fE6953F5799AEbDa9ee445287CFb101972E',
+          wallet: crustAddress,
           hash: '1',
-          amount: 100_000_000,
+          amount: 100_000_000_000_000,
         },
         stage.context,
-      ).calculateTotalPrice(),
+      ),
+      // 200 Crust
       new TransactionLog(
         {
           action: TxAction.DEPOSIT,
           direction: TxDirection.INCOME,
-          wallet: '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
+          wallet: crustAddress,
           hash: '2',
-          amount: 200_000_000,
+          amount: 200_000_000_000_000,
         },
         stage.context,
-      ).calculateTotalPrice(),
-      new TransactionLog(
-        {
-          action: TxAction.TRANSACTION,
-          direction: TxDirection.COST,
-          wallet: '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
-          hash: '3',
-          amount: 30_000_000,
-        },
-        stage.context,
-      ).calculateTotalPrice(),
-      new TransactionLog(
-        {
-          action: TxAction.TRANSACTION,
-          direction: TxDirection.COST,
-          wallet: '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
-          hash: '4',
-          amount: 30_000_000,
-        },
-        stage.context,
-      ).calculateTotalPrice(),
+      ),
+      // 30 Kilt
       new TransactionLog(
         {
           action: TxAction.DEPOSIT,
           direction: TxDirection.INCOME,
-          wallet: '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
+          wallet: kiltAddress,
+          hash: '3',
+          amount: 30_000_000_000_000_000,
+        },
+        stage.context,
+      ),
+      // 20 Kilt
+      new TransactionLog(
+        {
+          action: TxAction.DEPOSIT,
+          direction: TxDirection.INCOME,
+          wallet: kiltAddress,
+          hash: '4',
+          amount: 20_000_000_000_000_000,
+        },
+        stage.context,
+      ),
+      new TransactionLog(
+        {
+          action: TxAction.TRANSACTION,
+          direction: TxDirection.COST,
+          wallet: kiltAddress,
           hash: '5',
-          amount: 150_000_000,
+          amount: 20_000_000_000_000_000,
         },
         stage.context,
-      ).calculateTotalPrice(),
+      ),
       new TransactionLog(
         {
           action: TxAction.TRANSACTION,
           direction: TxDirection.COST,
-          wallet: '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
+          wallet: kiltAddress,
           hash: '6',
-          amount: 20_000_000,
+          amount: 20_000_000_000_000_000,
         },
         stage.context,
-      ).calculateTotalPrice(),
+      ),
       new TransactionLog(
         {
           action: TxAction.TRANSACTION,
           direction: TxDirection.COST,
-          wallet: '0x25Cd0fE6953F5799AEbDa9ee445287CFb101972E',
+          wallet: crustAddress,
           hash: '7',
-          amount: 30_000_000,
+          amount: 30_000_000_000_000,
         },
         stage.context,
-      ).calculateTotalPrice(),
-    ];
+      ),
+      new TransactionLog(
+        {
+          action: TxAction.TRANSACTION,
+          direction: TxDirection.COST,
+          wallet: crustAddress,
+          hash: '8',
+          amount: 70_000_000_000_000,
+        },
+        stage.context,
+      ),
+      new TransactionLog(
+        {
+          action: TxAction.TRANSACTION,
+          direction: TxDirection.COST,
+          wallet: crustAddress,
+          hash: '9',
+          amount: 130_000_000_000_000,
+        },
+        stage.context,
+      ),
+    ].map((t) => t.calculateTotalPrice());
 
     await worker.processWalletDepositAmounts(crustWallet, transactions);
     await worker.processWalletDepositAmounts(kiltWallet, transactions);
@@ -164,14 +189,21 @@ describe('Transaction Accounting unit tests', () => {
       `SELECT * FROM ${DbTables.WALLET_DEPOSIT}`,
     );
 
-    expect(walletDeposits).toHaveLength(3);
-    expect(walletDeposits[0].pricePerToken).toBeTruthy();
-    expect(walletDeposits[0].depositAmount).toBeTruthy();
-    expect(walletDeposits[0].wallet_id).toEqual(crustWallet.id);
+    expect(walletDeposits).toHaveLength(4);
+    expect(walletDeposits.every((w) => !!w.pricePerToken)).toBeTruthy();
 
-    expect(walletDeposits[0].currentAmount).toEqual(70000000);
-    expect(walletDeposits[1].currentAmount).toEqual(200000000);
-    expect(walletDeposits[2].currentAmount).toEqual(150000000);
+    const crustDeposits = walletDeposits.filter((d) => d.wallet_id === 1);
+    expect(crustDeposits).toHaveLength(2);
+    expect(crustDeposits[0].depositAmount).toEqual(100_000_000_000_000);
+    expect(crustDeposits[1].depositAmount).toEqual(200_000_000_000_000);
+    expect(crustDeposits.every((x) => x.currentAmount === 0)); // Whole deposit balance spent
+
+    const kiltDeposits = walletDeposits.filter((d) => d.wallet_id === 2);
+    expect(kiltDeposits[0].depositAmount).toEqual(30_000_000_000_000_000);
+    expect(kiltDeposits[0].currentAmount).toEqual(0);
+
+    expect(kiltDeposits[1].depositAmount).toEqual(20_000_000_000_000_000);
+    expect(kiltDeposits[1].currentAmount).toEqual(10_000_000_000_000_000);
   });
 
   test('Test wallet spends roll over to currentAmount of second deposit', async () => {

@@ -37,13 +37,13 @@ function getTokenDecimalsFromChain(chainType: ChainType, chain: Chain) {
     [ChainType.SUBSTRATE]: {
       [SubstrateChain.CRUST]: 12,
       [SubstrateChain.KILT]: 15,
-      [SubstrateChain.PHALA]: 18,
+      [SubstrateChain.PHALA]: 12,
     },
   };
   return options[chainType]?.[chain] || null;
 }
 
-export async function getTokenPriceUsd(token: string) {
+export async function getTokenPriceUsd(token: string): Promise<number> {
   const networkTokenMap = {
     CRU: 'crust-network',
     ASTR: 'astar',

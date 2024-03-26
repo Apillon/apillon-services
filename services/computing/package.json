@@ -1,71 +1,72 @@
 {
-    "name": "@apillon/computing",
-    "version": "0.7.4",
-    "author": "Kalmia d.o.o.",
-    "license": "UNLICENSED",
-    "description": "",
-    "main": "index.js",
-    "private": true,
-    "scripts": {
-        "prebuild": "rimraf dist",
-        "test-service": "jest --passWithNoTests",
-        "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60014",
-        "build": "tsc",
-        "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60014",
-        "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-        "deploy:prod": "serverless deploy --stage production",
-        "deploy:staging": "serverless deploy --stage staging",
-        "deploy:dev": "serverless deploy --stage dev",
-        "deploy:test": "serverless deploy --stage test",
-        "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
-        "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
-        "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
-        "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
-        "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
-        "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
-        "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
+  "name": "@apillon/computing",
+  "version": "0.7.4",
+  "author": "Kalmia d.o.o.",
+  "license": "UNLICENSED",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "test-service": "jest --passWithNoTests",
+    "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60014",
+    "build": "tsc",
+    "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60014",
+    "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "deploy:prod": "serverless deploy --stage production",
+    "deploy:staging": "serverless deploy --stage staging",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:test": "serverless deploy --stage test",
+    "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
+    "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
+    "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
+    "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
+    "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
+    "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
+    "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
+  },
+  "dependencies": {
+    "@apillon/lib": "*",
+    "@apillon/service-lib": "*",
+    "@apillon/workers-lib": "*",
+    "@middy/core": "^2.5.7",
+    "@phala/sdk": "^0.5.10",
+    "@polkadot/api": "10.11.3",
+    "@polkadot/types": "10.11.3",
+    "node-fetch": "2.6.7"
+  },
+  "devDependencies": {
+    "@types/uuid": "^8.3.4",
+    "@types/jest": "^29.5.1",
+    "eslint-config-common": "*",
+    "jest": "29.5.0",
+    "ts-jest": "29.1.0",
+    "ts-loader": "^9.2.3",
+    "tsconfig": "*"
+  },
+  "jest": {
+    "testTimeout": 1800000,
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "rootDir": "src",
+    "testPathIgnorePatterns": [
+      "dist/*"
+    ],
+    "testRegex": ".*\\.test\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
     },
-    "dependencies": {
-        "@apillon/lib": "*",
-        "@apillon/service-lib": "*",
-        "@apillon/workers-lib": "*",
-        "@middy/core": "^2.5.7",
-      "@phala/sdk": "^0.5.8",
-        "@polkadot/api": "^10.9.1",
-        "node-fetch": "2.6.7"
-    },
-    "devDependencies": {
-        "@types/uuid": "^8.3.4",
-        "@types/jest": "^29.5.1",
-        "eslint-config-common": "*",
-        "jest": "29.5.0",
-        "ts-jest": "29.1.0",
-        "ts-loader": "^9.2.3",
-        "tsconfig": "*"
-    },
-    "jest": {
-        "testTimeout": 1800000,
-        "moduleFileExtensions": [
-            "ts",
-            "tsx",
-            "js",
-            "json"
-        ],
-        "rootDir": "src",
-        "testPathIgnorePatterns": [
-            "dist/*"
-        ],
-        "testRegex": ".*\\.test\\.ts$",
-        "transform": {
-            "^.+\\.(t|j)s$": "ts-jest"
-        },
-        "collectCoverage": false,
-        "collectCoverageFrom": [
-            "**/*.(t|j)s"
-        ],
-        "coverageDirectory": "../coverage",
-        "testEnvironment": "node",
-        "preset": "ts-jest",
-        "verbose": true
-    }
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "preset": "ts-jest",
+    "verbose": true
+  }
 }

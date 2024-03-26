@@ -17,7 +17,7 @@ import {
 } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import { BucketType, StorageErrorCode } from '../../config/types';
-import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   StorageCodeException,
   StorageNotFoundException,
@@ -47,14 +47,14 @@ export class BucketService {
       context,
     ).populateByUuidAndCheckAccess(event.bucket_uuid);
 
-    return b.serialize(getSerializationStrategy(context));
+    return b.serializeByContext();
   }
 
   static async createBucket(
     event: { body: CreateBucketDto },
     context: ServiceContext,
   ): Promise<any> {
-    const b: Bucket = new Bucket(
+    const bucket: Bucket = new Bucket(
       {
         ...event.body,
         bucket_uuid: uuidV4(),
@@ -64,17 +64,10 @@ export class BucketService {
       context,
     );
 
-    try {
-      await b.validate();
-    } catch (err) {
-      await b.handle(err);
-      if (!b.isValid()) {
-        throw new StorageValidationException(b);
-      }
-    }
+    await bucket.validateOrThrow(StorageValidationException);
 
     //Insert
-    await b.insert();
+    await bucket.insert();
 
     await Promise.all([
       new Lmas().writeLog({
@@ -84,47 +77,40 @@ export class BucketService {
         message: 'New bucket created',
         location: 'BucketService/createBucket',
         service: ServiceName.STORAGE,
-        data: b.serialize(),
+        data: bucket.serialize(),
       }),
       invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
-        project_uuid: b.project_uuid,
+        project_uuid: bucket.project_uuid,
       }),
       // Set mailerlite field indicating the user created a bucket
       new Mailing(context).setMailerliteField('has_bucket', true),
     ]);
 
-    return b.serialize(getSerializationStrategy(context));
+    return bucket.serializeByContext();
   }
 
   static async updateBucket(
     event: { bucket_uuid: string; data: any },
     context: ServiceContext,
   ): Promise<any> {
-    const b: Bucket = await new Bucket({}, context).populateByUUID(
+    const bucket: Bucket = await new Bucket({}, context).populateByUUID(
       event.bucket_uuid,
     );
 
-    if (!b.exists()) {
+    if (!bucket.exists()) {
       throw new StorageNotFoundException();
     }
-    b.canModify(context);
+    bucket.canModify(context);
 
-    b.populate(event.data, PopulateFrom.PROFILE);
+    bucket.populate(event.data, PopulateFrom.PROFILE);
 
-    try {
-      await b.validate();
-    } catch (err) {
-      await b.handle(err);
-      if (!b.isValid()) {
-        throw new StorageValidationException(b);
-      }
-    }
+    await bucket.validateOrThrow(StorageValidationException);
 
-    await b.update();
+    await bucket.update();
     await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
-      project_uuid: b.project_uuid,
+      project_uuid: bucket.project_uuid,
     });
-    return b.serialize(SerializeFor.PROFILE);
+    return bucket.serialize(SerializeFor.PROFILE);
   }
 
   static async deleteBucket(
@@ -151,7 +137,12 @@ export class BucketService {
       });
     }
 
-    await b.markDeleted();
+    await Promise.all([
+      b.markDeleted(),
+      invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
+        project_uuid: b.project_uuid,
+      }),
+    ]);
 
     return true;
   }
@@ -183,16 +174,9 @@ export class BucketService {
     event: { query: BucketQuotaReachedQueryFilter },
     context: ServiceContext,
   ): Promise<any> {
+    // Validation - call can be from other services or from this service - so validate that required fields are present
     event.query = new BucketQuotaReachedQueryFilter(event.query, context);
-    //Validation - call can be from other services or from this service - so validate that required fields are present
-    try {
-      await event.query.validate();
-    } catch (err) {
-      await event.query.handle(err);
-      if (!event.query.isValid()) {
-        throw new StorageValidationException(event.query);
-      }
-    }
+    await event.query.validateOrThrow(StorageValidationException);
 
     const numOfBuckets = await new Bucket(
       event.query,
@@ -250,14 +234,7 @@ export class BucketService {
       { ...event.body, bucket_id: b.id },
       context,
     );
-    try {
-      await webhook.validate();
-    } catch (err) {
-      await webhook.handle(err);
-      if (!webhook.isValid()) {
-        throw new StorageValidationException(webhook);
-      }
-    }
+    await webhook.validateOrThrow(StorageValidationException);
 
     //Check if webhook for this bucket already exists
     if (
@@ -305,14 +282,7 @@ export class BucketService {
     await webhook.canModify(context);
 
     webhook.populate(event.data);
-    try {
-      await webhook.validate();
-    } catch (err) {
-      await webhook.handle(err);
-      if (!webhook.isValid()) {
-        throw new StorageValidationException(webhook);
-      }
-    }
+    await webhook.validateOrThrow(StorageValidationException);
 
     await webhook.update();
     return webhook.serialize(SerializeFor.PROFILE);

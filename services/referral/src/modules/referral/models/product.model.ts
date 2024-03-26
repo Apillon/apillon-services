@@ -237,22 +237,12 @@ export class Product extends AdvancedSQLModel {
         });
       }
 
-      try {
-        await order.validate();
-      } catch (err) {
-        await order.handle(err);
-        throw new ReferralValidationException(order);
-      }
+      await order.validateOrThrow(ReferralValidationException);
       await order.insert(SerializeFor.INSERT_DB, conn);
 
       this.stock -= 1;
 
-      try {
-        await this.validate();
-      } catch (err) {
-        await this.handle(err);
-        throw new ReferralValidationException(this);
-      }
+      await this.validateOrThrow(ReferralValidationException);
       await this.update(SerializeFor.UPDATE_DB, conn);
 
       await this.getContext().mysql.commit(conn);

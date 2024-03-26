@@ -1,6 +1,6 @@
 import {
   ApiName,
-  BaseQueryFilter,
+  BaseProjectQueryFilter,
   Context,
   ErrorCode,
   Lmas,
@@ -17,14 +17,13 @@ import {
 } from '@apillon/lib';
 import { DbTables, PostType, SocialErrorCode } from '../../../config/types';
 
-import { stringParser, integerParser } from '@rawmodel/parsers';
-import { Space } from './space.model';
+import { integerParser, stringParser } from '@rawmodel/parsers';
+import { v4 as uuidV4 } from 'uuid';
 import {
   SocialCodeException,
   SocialValidationException,
 } from '../../../lib/exceptions';
 import { SubsocialProvider } from '../subsocial.provider';
-import { v4 as uuidV4 } from 'uuid';
 
 export class Post extends UuidSqlModel {
   public readonly tableName = DbTables.POST;
@@ -41,8 +40,6 @@ export class Post extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -104,8 +101,6 @@ export class Post extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -218,11 +213,33 @@ export class Post extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.PROFILE,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
   })
   public postId: string;
+
+  /**
+   * Renamed properties for apillon api ----------------------------------------
+   */
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.APILLON_API],
+    getter() {
+      return this.post_uuid;
+    },
+  })
+  public channel_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.APILLON_API],
+    getter() {
+      return this.postId;
+    },
+  })
+  public channelId: string;
 
   public async populateByUuidAndCheckAccess(uuid: string): Promise<this> {
     const post: Post = await this.populateByUUID(uuid, 'post_uuid');
@@ -238,10 +255,8 @@ export class Post extends UuidSqlModel {
     return this;
   }
 
-  public async getList(space_uuid: string, filter: BaseQueryFilter) {
-    await new Space({}, this.getContext()).populateByUuidAndCheckAccess(
-      space_uuid,
-    );
+  public async getList(space_uuid: string, filter: BaseProjectQueryFilter) {
+    this.canAccess(this.getContext());
 
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
@@ -261,12 +276,18 @@ export class Post extends UuidSqlModel {
     );
     const sqlQuery = {
       qSelect: `
-        SELECT ${selectFields}
+        SELECT
+        post_uuid as ${this.getContext().apiName == ApiName.APILLON_API ? 'channel_uuid' : 'post_uuid'},
+        postId as ${this.getContext().apiName == ApiName.APILLON_API ? 'channelId' : 'postId'},
+        ${selectFields},
+        s.name as hubName,
+        s.spaceId as hubId
         `,
       qFrom: `
         FROM \`${DbTables.POST}\` p
         JOIN \`${DbTables.SPACE}\` s ON s.id = p.space_id
-        WHERE s.space_uuid = @space_uuid
+        WHERE p.project_uuid = @project_uuid
+        ${space_uuid ? ' AND s.space_uuid = @space_uuid' : ''}
         AND (@search IS null OR p.title LIKE CONCAT('%', @search, '%') OR p.post_uuid = @search)
         AND ((@status IS null AND s.status <> ${SqlModelStatus.DELETED}) OR @status = p.status)
       `,
@@ -286,14 +307,7 @@ export class Post extends UuidSqlModel {
 
   public async createPost() {
     const context = this.getContext();
-    try {
-      await this.validate();
-    } catch (err) {
-      await this.handle(err);
-      if (!this.isValid()) {
-        throw new SocialValidationException(this);
-      }
-    }
+    await this.validateOrThrow(SocialValidationException);
 
     const conn = await context.mysql.start();
     try {

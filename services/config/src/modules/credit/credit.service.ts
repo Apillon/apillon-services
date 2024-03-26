@@ -2,9 +2,14 @@ import { ServiceContext } from '@apillon/service-lib';
 import { Credit } from './models/credit.model';
 import {
   AddCreditDto,
+  Ams,
+  ConfigureCreditDto,
   CreditTransactionQueryFilter,
+  EmailDataDto,
+  EmailTemplate,
   Lmas,
   LogType,
+  Mailing,
   PoolConnection,
   SerializeFor,
   ServiceName,
@@ -37,7 +42,7 @@ export class CreditService {
 
     credit.canAccess(context, event.project_uuid);
 
-    return credit.serialize(SerializeFor.PROFILE);
+    return credit.serializeByContext();
   }
 
   /**
@@ -91,6 +96,7 @@ export class CreditService {
         await credit.insert(SerializeFor.INSERT_DB, conn);
       } else {
         credit.balance += addCreditDto.amount;
+        credit.lastAlertTime = null;
         await credit.update(SerializeFor.UPDATE_DB, conn);
       }
 
@@ -103,14 +109,7 @@ export class CreditService {
         referenceId: addCreditDto.referenceId,
       });
 
-      try {
-        await creditTransaction.validate();
-      } catch (err) {
-        await creditTransaction.handle(err);
-        if (!creditTransaction.isValid()) {
-          throw new ScsValidationException(creditTransaction);
-        }
-      }
+      await creditTransaction.validateOrThrow(ScsValidationException);
       await creditTransaction.insert(SerializeFor.INSERT_DB, conn);
 
       await new Lmas().writeLog({
@@ -159,6 +158,38 @@ export class CreditService {
     };
   }
 
+  static async configureCredit(
+    event: { body: ConfigureCreditDto },
+    context: ServiceContext,
+  ): Promise<any> {
+    const credit = await new Credit({}, context).populateByProjectUUIDForUpdate(
+      event.body.project_uuid,
+      undefined,
+    );
+
+    if (!credit.exists()) {
+      throw new ScsCodeException({
+        code: ConfigErrorCode.PROJECT_CREDIT_NOT_FOUND,
+        status: 404,
+        context,
+        sourceFunction: 'configureCredit()',
+        sourceModule: 'CreditService',
+      });
+    }
+
+    credit.canModify(context);
+
+    if (credit.threshold == event.body.threshold) {
+      return credit.serializeByContext();
+    }
+
+    //Last alert time is set to null if threshold was modified, so that owner is renotified when projects falls below new threshold.
+    credit.populate({ ...event.body, lastAlertTime: null });
+    await credit.update();
+
+    return credit.serializeByContext();
+  }
+
   /**
    * Pay for product with credit.
    * @param event
@@ -168,15 +199,8 @@ export class CreditService {
     event: { body: SpendCreditDto },
     context: ServiceContext,
   ): Promise<any> {
-    try {
-      event.body = new SpendCreditDto(event.body, context);
-      await event.body.validate();
-    } catch (err) {
-      await event.body.handle(err);
-      if (!event.body.isValid()) {
-        throw new ScsValidationException(event.body);
-      }
-    }
+    event.body = new SpendCreditDto(event.body, context);
+    await event.body.validateOrThrow(ScsValidationException);
 
     //Check product and populate it's price
     const product: Product = await new Product({}, context).populateById(
@@ -229,6 +253,42 @@ export class CreditService {
       }
 
       credit.balance -= product.currentPrice;
+
+      if (credit.balance < credit.threshold && !credit.lastAlertTime) {
+        //Send email and set lastAlertTime property
+        try {
+          //Get project owner
+          const projectOwner = (
+            await new Ams(context).getProjectOwner(credit.project_uuid)
+          ).data;
+
+          if (projectOwner?.email) {
+            //send email
+            await new Mailing(context).sendMail(
+              new EmailDataDto({
+                mailAddresses: [projectOwner.email],
+                templateName: EmailTemplate.CREDIT_BALANCE_BELOW_THRESHOLD,
+              }),
+            );
+            credit.lastAlertTime = new Date();
+          }
+        } catch (err) {
+          //Admin alert
+          await new Lmas().writeLog({
+            context,
+            project_uuid: credit.project_uuid,
+            logType: LogType.ERROR,
+            message: 'Error notifying user that credit is below threshold',
+            location: `CreditService.spendCredit()`,
+            service: ServiceName.CONFIG,
+            data: {
+              credit: credit.serialize(SerializeFor.LOGGER),
+            },
+            sendAdminAlert: true,
+          });
+        }
+      }
+
       await credit.update(SerializeFor.UPDATE_DB, conn);
 
       const creditTransaction: CreditTransaction = new CreditTransaction(
@@ -244,14 +304,7 @@ export class CreditService {
         referenceId: event.body.referenceId,
       });
 
-      try {
-        await creditTransaction.validate();
-      } catch (err) {
-        await creditTransaction.handle(err);
-        if (!creditTransaction.isValid()) {
-          throw new ScsValidationException(creditTransaction);
-        }
-      }
+      await creditTransaction.validateOrThrow(ScsValidationException);
       await creditTransaction.insert(SerializeFor.INSERT_DB, conn);
 
       await context.mysql.commit(conn);
@@ -350,14 +403,7 @@ export class CreditService {
         referenceId: creditTransaction.referenceId,
       });
 
-      try {
-        await refundCreditTransaction.validate();
-      } catch (err) {
-        await refundCreditTransaction.handle(err);
-        if (!refundCreditTransaction.isValid()) {
-          throw new ScsValidationException(refundCreditTransaction);
-        }
-      }
+      await refundCreditTransaction.validateOrThrow(ScsValidationException);
       await refundCreditTransaction.insert(SerializeFor.INSERT_DB, conn);
 
       await context.mysql.commit(conn);

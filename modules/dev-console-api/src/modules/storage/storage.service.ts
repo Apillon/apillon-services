@@ -38,6 +38,7 @@ export class StorageService {
       await new StorageMicroservice(context).getLink(
         query.project_uuid,
         query.cid,
+        query.type,
       )
     ).data;
   }

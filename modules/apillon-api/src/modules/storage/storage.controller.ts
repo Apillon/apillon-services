@@ -72,8 +72,13 @@ export class StorageController {
   async getLinkOnIpfs(
     @Ctx() context: ApillonApiContext,
     @Param('cid') cid: string,
+    @Query('type') type: string,
   ) {
-    return await this.storageService.getLink(context, cid);
+    return await this.storageService.getLink(
+      context,
+      cid,
+      type ? type.toLowerCase() : 'cid',
+    );
   }
 
   @Get('buckets')

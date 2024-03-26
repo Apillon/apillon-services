@@ -20,7 +20,7 @@ import {
   ServiceName,
   SqlModelStatus,
 } from '@apillon/lib';
-import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
   sendToWorkerQueue,
@@ -53,7 +53,6 @@ import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
 import { IpfsBandwidth } from '../ipfs/models/ipfs-bandwidth';
 import { generateJwtSecret } from '../../lib/ipfs-utils';
-import { CID } from 'ipfs-http-client';
 import { Directory } from '../directory/models/directory.model';
 
 export class StorageService {
@@ -166,8 +165,16 @@ export class StorageService {
       bucket.bucketType != BucketType.HOSTING &&
       !(await checkProjectSubscription(context, bucket.project_uuid))
     ) {
-      console.info('Project WO subscription. Checking fileNames for upload');
-      if (event.body.files.find((x) => x.fileName.includes('.html'))) {
+      console.info(
+        `Project W/O subscription (${bucket.project_uuid}). Checking fileNames for upload`,
+      );
+      // Content type can also be checked, but it may not always be provided
+      // Disallow files with htm or html extension
+      if (
+        ['htm', 'html'].some((ext) =>
+          event.body.files.find((f) => f.fileName.endsWith(ext)),
+        )
+      ) {
         throw new StorageCodeException({
           code: StorageErrorCode.HTML_FILES_NOT_ALLOWED,
           status: 400,
@@ -550,7 +557,7 @@ export class StorageService {
 
     await file.populateLink();
 
-    return file.serialize(getSerializationStrategy(context));
+    return file.serializeByContext();
   }
 
   static async deleteFile(
@@ -663,7 +670,7 @@ export class StorageService {
       project_uuid: f.project_uuid,
     });
 
-    return f.serialize(getSerializationStrategy(context));
+    return f.serializeByContext();
   }
 
   /**
@@ -795,23 +802,20 @@ export class StorageService {
    * @returns link on ipfs gateway
    */
   static async getLink(
-    event: { cid: string; project_uuid: string },
+    event: { cid: string; project_uuid: string; type: string },
     context: ServiceContext,
   ) {
-    let isIpns = false;
-    try {
-      CID.parse(event.cid);
-    } catch (err) {
-      isIpns = true;
-    }
-
     const ipfsCluster = await new ProjectConfig(
       { project_uuid: event.project_uuid },
       context,
     ).getIpfsCluster();
 
     return {
-      link: ipfsCluster.generateLink(event.project_uuid, event.cid, isIpns),
+      link: ipfsCluster.generateLink(
+        event.project_uuid,
+        event.cid,
+        event.type.toLowerCase() == 'ipns',
+      ),
     };
   }
 }

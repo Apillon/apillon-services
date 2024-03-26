@@ -21,6 +21,7 @@ import { SubscriptionsQueryFilter } from './dtos/subscriptions-query-filter.dto'
 import { InvoicesQueryFilter } from './dtos/invoices-query-filter.dto';
 import { UpdateSubscriptionDto } from './dtos/update-subscription.dto';
 import { PricelistQueryFilter } from './dtos/pricelist-query-filter.dto';
+import { ConfigureCreditDto } from './dtos/configure-credit.dto';
 
 /**
  * System config Service client
@@ -121,6 +122,15 @@ export class Scs extends BaseService {
     const data = {
       eventName: ScsEventType.ADD_CREDIT,
       body: addCreditDto.serialize(),
+    };
+
+    return await this.callService(data);
+  }
+
+  public async configureCredit(body: ConfigureCreditDto): Promise<any> {
+    const data = {
+      eventName: ScsEventType.CONFIGURE_CREDIT,
+      body: body.serialize(),
     };
 
     return await this.callService(data);

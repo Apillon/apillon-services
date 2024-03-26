@@ -575,6 +575,14 @@
                                     {{ date }}
                                   </td>
                                 </tr>
+                                <tr class="ff3">
+                                  <td class="al-p5b" align="left">
+                                    </strong>Date due:</strong>
+                                  </td>
+                                  <td class="al-p5b" align="left">
+                                    {{ date }}
+                                  </td>
+                                </tr>
                               </tbody>
                             </table>
                           </td>
@@ -621,7 +629,25 @@
                                   <td class="al-p5b" align="left">
                                     support@apillon.io
                                   </td>
+                                </tr>
+                                <tr>
                                   <td class="al-p5b" align="left">
+                                    &nbsp;
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td class="al-p5b" align="left">
+                                    &nbsp;
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td class="al-p5b" align="left">
+                                    <h2> US ${{ usdAmount }} due {{ date }}</h2>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td class="al-p5b" align="left">
+                                    Paid online
                                   </td>
                                 </tr>
                               </tbody>
@@ -650,7 +676,7 @@
                               <tbody>
                                 <tr>
                                   <td width="45%" class="al-p10t al-p20b al-p5r" align="left">
-                                    {{ description }}
+                                    {{ description }} on Apillon platform
                                   </td>
                                   <td class="al-p10t al-p20b al-p5r" align="left">
                                     1
@@ -659,7 +685,7 @@
                                     {{ price }} {{ currency }}
                                   </td>
                                   <td class="al-p10t al-p20b al-p5r" align="left">
-                                    ${{ usdAmount }}
+                                    ${{ usdAmount }}.00
                                   </td>
                                 </tr>
                               </tbody>
@@ -683,7 +709,15 @@
                                             Subtotal
                                           </td>
                                           <td class="al-p10t al-p10b" align="right">
-                                            {{ price }} {{ currency }}
+                                            ${{ usdAmount }}.00
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <td class="al-p10t al-p10b al-p5r" align="left">
+                                            VAT - Malta (0%)
+                                          </td>
+                                          <td class="al-p10t al-p10b" align="right">
+                                            $0.00
                                           </td>
                                         </tr>
                                         <tr>
@@ -691,7 +725,7 @@
                                             Total
                                           </td>
                                           <td class="al-p10t al-p10b" align="right">
-                                            {{ price }} {{ currency }}
+                                            ${{ usdAmount }}.00
                                           </td>
                                         </tr>
                                         <tr class="ff2">
@@ -699,7 +733,7 @@
                                             Amount due
                                           </td>
                                           <td class="al-p10t al-p10b" align="right">
-                                            {{ price }} {{currency}}
+                                            ${{ usdAmount }}.00
                                           </td>
                                         </tr>
                                       </tbody>

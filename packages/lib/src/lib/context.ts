@@ -1,4 +1,4 @@
-import { ApiName } from '../config/types';
+import { ApiName, SerializeFor } from '../config/types';
 import { MySql } from './database/mysql';
 import { v4 as uuid } from 'uuid';
 
@@ -119,5 +119,13 @@ export class Context {
       );
     }
     return false;
+  }
+
+  /**
+   * Get serialization strategy based on service context
+   * @param context ServiceContext
+   */
+  public getSerializationStrategy(): SerializeFor {
+    return this.apiKey ? SerializeFor.APILLON_API : SerializeFor.PROFILE;
   }
 }

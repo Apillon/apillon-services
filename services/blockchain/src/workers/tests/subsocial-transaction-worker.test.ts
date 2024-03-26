@@ -17,16 +17,16 @@ import { WorkerName } from '../worker-executor';
 import { SubsocialTransactionWorker } from '../subsocial-transaction-worker';
 
 const CHAIN_TYPE = ChainType.SUBSTRATE;
-const CHAIN = SubstrateChain.XSOCIAL;
+const CHAIN = SubstrateChain.SUBSOCIAL;
 const TEST_ADDRESS = '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6';
 
-describe('subsocial (xSocial) transaction worker tests', () => {
+describe('subsocial transaction worker tests', () => {
   let stage: Stage;
   let wallet: Wallet;
-  const startBlock = 12635344;
+  const startBlock = 4755750;
   beforeAll(async () => {
     stage = await setupTest();
-    env.BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER = 'http://localhost:4350/graphql';
+    env.BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER = 'http://3.251.2.33:8087/graphql';
 
     wallet = await new Wallet(
       {
@@ -47,7 +47,7 @@ describe('subsocial (xSocial) transaction worker tests', () => {
 
   test('Single wallet transactions', async () => {
     const successCreateSpaceTxHash =
-      '0x79ba572aed0fc265a506a0a1764bf76c4c7e4615841c5632e9c30060df3ea4bc';
+      '0x97ed404dd962939e8bcaf509fb0955dd6cf3c873cd4f1de0cb200836f50022c8';
     for (const transactionHash of [successCreateSpaceTxHash]) {
       await new Transaction(
         {

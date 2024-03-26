@@ -8,17 +8,17 @@ custom:
   webpack:
     webpackConfig: ./webpack.config.js
     includeModules:
-      modeModulesRelativeDir: '../../'
+      #      nodeModulesRelativeDir: '../../'
       forceExclude:
         - aws-sdk
-      forceInclude: 
+      forceInclude:
         - follow-redirects
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|**/test/**/|**/*\.spec\.ts|**/*\.spec\.js'
   # serverlessPluginTypescript:
   #   tsConfigFileLocation: './tsconfig.build.json'
- 
+
 
 plugins:
   - serverless-webpack
@@ -26,7 +26,7 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs16.x
+  runtime: nodejs20.x
   region: eu-west-1
   stage: ${opt:stage, 'dev'}
   iam:

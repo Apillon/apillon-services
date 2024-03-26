@@ -1,11 +1,11 @@
 import {
   AttachedServiceType,
   BaseProjectQueryFilter,
-  BaseQueryFilter,
   CodeException,
   CreatePostDto,
   CreateSpaceDto,
   SocialMicroservice,
+  SocialPostQueryFilter,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
@@ -73,13 +73,13 @@ export class SocialService {
     return (await new SocialMicroservice(context).createSpace(body)).data;
   }
 
-  async listPosts(
-    context: DevConsoleApiContext,
-    space_uuid: string,
-    query: BaseQueryFilter,
-  ) {
-    return (await new SocialMicroservice(context).listPosts(space_uuid, query))
-      .data;
+  async listPosts(context: DevConsoleApiContext, query: SocialPostQueryFilter) {
+    return (
+      await new SocialMicroservice(context).listPosts(
+        query.space_uuid || query.hubUuid,
+        query,
+      )
+    ).data;
   }
 
   async getPost(context: DevConsoleApiContext, post_uuid: string) {

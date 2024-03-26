@@ -25,6 +25,14 @@ export class NftsValidationException extends ValidationException {
   }
 }
 
+export class NftsNotFoundException extends NftsCodeException {
+  constructor(
+    code: NftsErrorCode = NftsErrorCode.NFT_COLLECTION_DOES_NOT_EXIST,
+  ) {
+    super({ code, status: 404 });
+  }
+}
+
 export class NftsContractException extends NftsCodeException {
   constructor(code: NftsErrorCode, context: ServiceContext, details: Error) {
     const codeToErrorMap: Record<

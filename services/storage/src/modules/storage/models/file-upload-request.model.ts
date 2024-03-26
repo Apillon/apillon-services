@@ -14,7 +14,6 @@ import {
   AdvancedSQLModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { CID } from 'ipfs-http-client';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { StorageCodeException } from '../../../lib/exceptions';
@@ -233,7 +232,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
     serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
     validators: [],
   })
-  public CID: CID;
+  public CID: string;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -246,6 +245,17 @@ export class FileUploadRequest extends AdvancedSQLModel {
     validators: [],
   })
   public size: number;
+
+  @prop({
+    populatable: [
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    validators: [],
+  })
+  public url: string;
 
   /**
    * ASYNC canAccess function
@@ -323,16 +333,12 @@ export class FileUploadRequest extends AdvancedSQLModel {
       `,
       { session_id },
     );
-    const res = [];
-    if (data && data.length) {
-      for (const d of data) {
-        res.push(
-          new FileUploadRequest({}, context).populate(d, PopulateFrom.DB),
-        );
-      }
-    }
 
-    return res;
+    return (
+      data?.map((d) =>
+        new FileUploadRequest({}, context).populate(d, PopulateFrom.DB),
+      ) || []
+    );
   }
 
   public async populateByS3FileKey(s3FileKey: string): Promise<this> {

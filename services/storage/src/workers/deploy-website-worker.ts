@@ -13,7 +13,6 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { CID } from 'ipfs-http-client';
 import { v4 as uuidV4 } from 'uuid';
 import {
   DbTables,
@@ -143,8 +142,8 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         );
 
         //Set ipfsRes data to deployment
-        deployment.cid = ipfsRes.parentDirCID.toV0().toString();
-        deployment.cidv1 = ipfsRes.parentDirCID.toV1().toString();
+        deployment.cid = ipfsRes.parentDirCID;
+        deployment.cidv1 = ipfsRes.parentDirCID;
         deployment.size = ipfsRes.size;
 
         //If deployment was not already reviewed, and env variable for sending websites to review is set to 1
@@ -167,8 +166,8 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           }
         }
 
-        targetBucket.CID = ipfsRes.parentDirCID.toV0().toString();
-        targetBucket.CIDv1 = ipfsRes.parentDirCID.toV1().toString();
+        targetBucket.CID = ipfsRes.parentDirCID;
+        targetBucket.CIDv1 = ipfsRes.parentDirCID;
 
         //Update bucket CID & Size
         targetBucket.size = ipfsRes.size;
@@ -287,7 +286,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           await pinFileToCRUST(
             this.context,
             targetBucket.bucket_uuid,
-            CID.parse(targetBucket.CID),
+            targetBucket.CID,
             cidSize,
             true,
             targetBucket.bucket_uuid,

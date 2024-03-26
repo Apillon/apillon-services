@@ -26,6 +26,7 @@ import {
   BaseQueryFilter,
   EmailDataDto,
   EmailTemplate,
+  ConfigureCreditDto,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -209,14 +210,7 @@ export class ProjectService {
 
     project.populate(data, PopulateFrom.PROFILE);
 
-    try {
-      await project.validate();
-    } catch (err) {
-      await project.handle(err);
-      if (!project.isValid()) {
-        throw new ValidationException(project, ValidatorErrorCode);
-      }
-    }
+    await project.validateOrThrow(ValidationException, ValidatorErrorCode);
 
     await project.update();
     await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);
@@ -366,7 +360,7 @@ export class ProjectService {
             templateName: EmailTemplate.NEW_USER_ADDED_TO_PROJECT,
             templateData: {
               projectName: project.name,
-              actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
+              actionUrl: `${env.APP_URL}/register/confirmed?token=${token}`,
             },
           }),
         );
@@ -614,6 +608,13 @@ export class ProjectService {
 
   async getProjectCredit(context: DevConsoleApiContext, project_uuid: string) {
     return (await new Scs(context).getProjectCredit(project_uuid)).data;
+  }
+
+  async configureCreditSettings(
+    context: DevConsoleApiContext,
+    body: ConfigureCreditDto,
+  ) {
+    return (await new Scs(context).configureCredit(body)).data;
   }
 
   async getCreditTransactions(

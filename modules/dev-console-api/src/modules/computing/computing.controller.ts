@@ -67,7 +67,10 @@ export class ComputingController {
 
   @Get('contracts/:uuid/transactions')
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @Validation({ dto: ContractQueryFilter, validateFor: ValidateFor.QUERY })
+  @Validation({
+    dto: ComputingTransactionQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
   @UseGuards(AuthGuard, ValidationGuard)
   async listContractTransactions(
     @Ctx() context: DevConsoleApiContext,

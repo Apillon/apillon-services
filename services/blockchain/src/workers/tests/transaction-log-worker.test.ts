@@ -230,7 +230,7 @@ describe('Transaction Log Worker unit test', () => {
       { address: crustWallet.address },
     );
 
-    expect(logs[0].cnt).toBe(465);
+    expect(logs[0].cnt).toBe(670);
     console.log(logs[0].cnt);
   });
 

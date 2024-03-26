@@ -62,6 +62,7 @@ export enum AmsErrorCode {
   OAUTH_SERVICE_CONNECTION_FAILED = 40002502,
   INVALID_TOKEN = 40002600,
   WALLET_SIGNATURE_ALREADY_USED = 40002700,
+  INVALID_WALLET_SIGNATURE = 40002701,
 
   // 401 - Unauthorized (Not authenticated)
   USER_IS_NOT_AUTHENTICATED = 401021000,
@@ -145,7 +146,3 @@ export type TokenData =
   | ResetUserEmailTokenData
   | MFAAuthenticationTokenData
   | RequestUserRegisterTokenData;
-
-export enum TokenExpiresInStr {
-  EXPIRES_IN_1_DAY = '1d', // Set to one day - for internal usage mostly
-}

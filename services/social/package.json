@@ -32,7 +32,7 @@
     "@middy/core": "^2.5.7",
     "@subsocial/api": "^0.8.14",
     "@subsocial/types": "^0.6.8",
-    "@polkadot/api": "^10.9.1",
+    "@polkadot/api": "10.12.2",
     "@polkadot/keyring": "^12.3.2",
     "@polkadot/util": "^12.3.2",
     "@types/uuid": "^8.3.4",
@@ -42,6 +42,9 @@
     "eslint-config-common": "*",
     "tsconfig": "*",
     "@apillon/tests-lib": "*"
+  },
+  "overrides": {
+    "ipfs-utils": "9.0.6"
   },
   "jest": {
     "testTimeout": 1800000,

@@ -160,14 +160,7 @@ export class ApiKey extends ProjectAccessModel {
       this.getContext(),
     );
 
-    try {
-      await keyRole.validate();
-    } catch (err) {
-      await keyRole.handle(err);
-      if (!keyRole.isValid()) {
-        throw new AmsValidationException(keyRole);
-      }
-    }
+    await keyRole.validateOrThrow(AmsValidationException);
 
     //Check if role already assigned
     if (!(await keyRole.hasRole(keyRole.role_id))) {
@@ -248,15 +241,13 @@ export class ApiKey extends ProjectAccessModel {
       { id: this.id },
     );
 
-    if (data && data.length) {
+    if (data?.length) {
       this.apiKeyRoles = [];
       for (const apiKeyRole of data) {
         this.apiKeyRoles.push(new ApiKeyRole(apiKeyRole, this.getContext()));
       }
-      return this;
-    } else {
-      return this;
     }
+    return this;
   }
 
   public async getList(context: ServiceContext, filter: ApiKeyQueryFilterDto) {

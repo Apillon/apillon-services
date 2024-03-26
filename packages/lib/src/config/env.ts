@@ -433,14 +433,6 @@ export interface IEnv {
   NFTS_MYSQL_DATABASE_TEST: string;
 
   /**
-   * NFT Moonbeam config
-   */
-  NFTS_MOONBEAM_TESTNET_RPC: string;
-  NFTS_MOONBEAM_MAINNET_RPC: string;
-  NFTS_ASTAR_TESTNET_RPC: string;
-  NFTS_ASTAR_MAINNET_RPC: string;
-
-  /**
    * NFT workers config
    */
   NFTS_AWS_WORKER_SQS_URL: string;
@@ -544,6 +536,8 @@ export interface IEnv {
    */
   SOCIAL_AWS_WORKER_SQS_URL: string;
   SOCIAL_AWS_WORKER_LAMBDA_NAME: string;
+
+  SOCIAL_DEFAULT_SPACE: string;
   /**
    * NOWPAYMENTS
    */
@@ -567,7 +561,7 @@ export let env: IEnv = {
   AWS_SECRET: process.env['AWS_SECRET'],
   AWS_BUCKET: process.env['AWS_BUCKET'],
   AWS_ENDPOINT: process.env['AWS_ENDPOINT'],
-  APP_SECRET: process.env['APP_SECRET'] || 'Du7Rvyqt7u38naZ2',
+  APP_SECRET: process.env['APP_SECRET'],
   CONSOLE_API_URL: process.env['CONSOLE_API_URL'],
   ADMIN_APP_URL: process.env['ADMIN_APP_URL'],
 
@@ -908,10 +902,6 @@ export let env: IEnv = {
   NFTS_MYSQL_USER_TEST: process.env['NFTS_MYSQL_USER_TEST'],
   NFTS_MYSQL_PASSWORD_TEST: process.env['NFTS_MYSQL_PASSWORD_TEST'],
 
-  NFTS_MOONBEAM_TESTNET_RPC: process.env['NFTS_MOONBEAM_TESTNET_RPC'],
-  NFTS_MOONBEAM_MAINNET_RPC: process.env['NFTS_MOONBEAM_MAINNET_RPC'],
-  NFTS_ASTAR_TESTNET_RPC: process.env['NFTS_ASTAR_TESTNET_RPC'],
-  NFTS_ASTAR_MAINNET_RPC: process.env['NFTS_ASTAR_MAINNET_RPC'],
   NFTS_AWS_WORKER_SQS_URL: process.env['NFTS_AWS_WORKER_SQS_URL'],
   NFTS_AWS_WORKER_LAMBDA_NAME: process.env['NFTS_AWS_WORKER_LAMBDA_NAME'],
 
@@ -964,6 +954,8 @@ export let env: IEnv = {
 
   SOCIAL_AWS_WORKER_SQS_URL: process.env['SOCIAL_AWS_WORKER_SQS_URL'],
   SOCIAL_AWS_WORKER_LAMBDA_NAME: process.env['SOCIAL_AWS_WORKER_LAMBDA_NAME'],
+
+  SOCIAL_DEFAULT_SPACE: process.env['SOCIAL_DEFAULT_SPACE'],
 
   /** DISCORD */
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',

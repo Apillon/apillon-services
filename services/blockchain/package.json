@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "prebuild": "rimraf dist",
-    "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit --verbose",
+    "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit --verbose --silent",
     "test:logging": "cross-env APP_ENV=test LOG_TARGET=console jest --detectOpenHandles --runInBand --forceExit",
     "test-service": "jest --passWithNoTests",
     "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60009",
@@ -32,16 +32,15 @@
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
     "@golevelup/nestjs-graphql-request": "^0.1.14",
+    "@kiltprotocol/type-definitions": "^0.34.0",
     "@middy/core": "^3.3.1",
-    "@polkadot/api": "^10.9.1",
+    "@polkadot/api": "10.12.2",
     "@polkadot/keyring": "^12.3.2",
     "@polkadot/util": "^12.3.2",
     "@polkadot/util-crypto": "^12.3.2",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
-    "@subsocial/api": "^0.8.14",
-    "@subsocial/types": "^0.6.8",
     "@types/uuid": "^8.3.4",
     "bcryptjs": "^2.4.3",
     "ethers": "^5.7.2",
@@ -58,8 +57,11 @@
     "ts-jest": "29.1.0",
     "ts-loader": "^9.2.3",
     "tsconfig": "*",
-    "webpack": "^5.41.1",
+    "webpack": "^5.90.3",
     "webpack-node-externals": "^3.0.0"
+  },
+  "overrides": {
+    "ipfs-utils": "9.0.6"
   },
   "jest": {
     "testTimeout": 1800000,

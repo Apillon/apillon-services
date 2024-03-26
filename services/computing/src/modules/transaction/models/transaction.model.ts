@@ -154,6 +154,13 @@ export class Transaction extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.INSERT_DB],
+  })
+  public transaction_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,
@@ -165,12 +172,31 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
     validators: [],
   })
   public nonce: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+    ],
+    validators: [],
+    defaultValue: {},
+  })
+  public metadata: {
+    pruntimeUrl: string;
+  };
 
   public constructor(data: any, context: Context) {
     super(data, context);
@@ -191,11 +217,9 @@ export class Transaction extends AdvancedSQLModel {
       { transactionHash },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async getContractTransactions(
@@ -217,14 +241,9 @@ export class Transaction extends AdvancedSQLModel {
       { transactionStatus, transactionType, contract_uuid },
     );
 
-    const res: Transaction[] = [];
-    if (data && data.length) {
-      for (const t of data) {
-        res.push(new Transaction({}, this.getContext()).populate(t));
-      }
-    }
-
-    return res;
+    return (
+      data?.map((d) => new Transaction({}, this.getContext()).populate(d)) || []
+    );
   }
 
   /**
@@ -236,6 +255,7 @@ export class Transaction extends AdvancedSQLModel {
     return (await this.getContext().mysql.paramExecute(
       `
         SELECT t.id              AS transaction_id,
+               t.transaction_uuid AS transaction_uuid,
                t.transactionType AS transactionType,
                t.transactionHash AS transactionHash,
                t.nonce           AS transactionNonce,
@@ -243,7 +263,8 @@ export class Transaction extends AdvancedSQLModel {
                c.id              AS contract_id,
                c.project_uuid    AS project_uuid,
                c.contractAddress AS contractAddress,
-               c.data            AS contractData
+               c.data     AS contractData,
+               t.metadata AS metadata
         FROM \`${this.tableName}\` as t
                JOIN ${DbTables.CONTRACT} as c ON (c.id = t.contract_id)
         WHERE t.status <> ${SqlModelStatus.DELETED}
@@ -265,6 +286,7 @@ export class Transaction extends AdvancedSQLModel {
     )) as {
       project_uuid: string;
       transaction_id: number;
+      transaction_uuid: string;
       transactionType: TransactionType;
       transactionHash: string;
       transactionNonce: string;
@@ -272,6 +294,7 @@ export class Transaction extends AdvancedSQLModel {
       contract_id: number;
       contractAddress: string;
       contractData: { clusterId: string };
+      metadata: { pruntimeUrl: string };
     }[];
   }
 

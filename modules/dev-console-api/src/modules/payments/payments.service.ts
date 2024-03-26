@@ -120,7 +120,7 @@ export class PaymentsService {
         break;
       }
       case 'customer.subscription.updated': {
-        if (event.data?.previous_attributes?.['status'] === 'incomplete') {
+        if (event.data?.previous_attributes?.status === 'incomplete') {
           return; // If update is only for a new subscription
         }
         // In case subscription is renewed or canceled
@@ -130,7 +130,11 @@ export class PaymentsService {
             cancelDate: payment.canceled_at
               ? new Date(payment.canceled_at * 1000)
               : null,
-            expiresOn: new Date(payment.current_period_end * 1000),
+            // If status is no longer active, set subscription as expired
+            expiresOn:
+              event.data?.previous_attributes?.status === 'active'
+                ? new Date()
+                : new Date(payment.current_period_end * 1000),
             cancellationReason: payment.cancellation_details?.feedback,
             cancellationComment: payment.cancellation_details?.comment,
             stripePackageId: payment.plan.id,

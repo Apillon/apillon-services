@@ -147,11 +147,12 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getLink(project_uuid: string, cid: string) {
+  public async getLink(project_uuid: string, cid: string, type: string) {
     const data = {
       eventName: StorageEventType.GET_LINK,
       project_uuid,
       cid,
+      type,
     };
     return await this.callService(data);
   }
@@ -422,6 +423,13 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.WEBSITE_LIST_DOMAINS,
       query: query.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getDomains() {
+    const data = {
+      eventName: StorageEventType.WEBSITE_GET_ALL_DOMAINS,
     };
     return await this.callService(data);
   }

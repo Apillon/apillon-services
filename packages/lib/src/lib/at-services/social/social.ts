@@ -1,3 +1,4 @@
+import { WalletIdentityDto } from '../../..';
 import { env } from '../../../config/env';
 import { AppEnvironment, SocialEventType } from '../../../config/types';
 import { BaseProjectQueryFilter } from '../../base-models/base-project-query-filter.model';
@@ -71,4 +72,13 @@ export class SocialMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  //#region wallet-identity
+  public async getWalletIdentity(query: WalletIdentityDto) {
+    return await this.callService({
+      eventName: SocialEventType.GET_WALLET_IDENTITY,
+      query,
+    });
+  }
+  //#endregion
 }

@@ -13,6 +13,7 @@ import {
   CollectionsQuotaReachedQueryFilter,
   DefaultPermission,
   RoleGroup,
+  AddNftsMetadataDto,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
@@ -207,6 +208,25 @@ export class NftsController {
     @Body() body: DeployCollectionDTO,
   ) {
     return await this.nftsService.deployCollection(
+      context,
+      collectionUuid,
+      body,
+    );
+  }
+
+  @Post('collections/:collectionUuid/nfts-metadata')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @Validation({ dto: AddNftsMetadataDto })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async addNftsMetadata(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collectionUuid') collectionUuid: string,
+    @Body() body: AddNftsMetadataDto,
+  ) {
+    return await this.nftsService.addNftsMetadata(
       context,
       collectionUuid,
       body,

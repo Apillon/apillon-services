@@ -6,6 +6,7 @@ import {
   CreateCollectionDTO,
   CreateEvmTransactionDto,
   DeployCollectionDTO,
+  env,
   EvmChain,
   Lmas,
   LogType,
@@ -28,9 +29,10 @@ import {
   TransactionStatus,
   TransferCollectionDTO,
 } from '@apillon/lib';
-import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
+  sendToWorkerQueue,
   ServiceDefinition,
   ServiceDefinitionType,
   WorkerDefinition,
@@ -46,6 +48,7 @@ import {
 import {
   NftsCodeException,
   NftsContractException,
+  NftsNotFoundException,
   NftsValidationException,
 } from '../../lib/exceptions';
 import { DeployCollectionWorker } from '../../workers/deploy-collection-worker';
@@ -55,6 +58,7 @@ import { TransactionService } from '../transaction/transaction.service';
 import { WalletService } from '../wallet/wallet.service';
 import { Collection } from './models/collection.model';
 import { deployNFTCollectionContract } from '../../lib/utils/collection-utils';
+import { AddNftsMetadataDto } from '@apillon/lib';
 
 export class NftsService {
   //#region collection functions
@@ -129,14 +133,7 @@ export class NftsService {
               }
             }
 
-            try {
-              await collection.validate();
-            } catch (err) {
-              await collection.handle(err);
-              if (!collection.isValid()) {
-                throw new NftsValidationException(collection);
-              }
-            }
+            await collection.validateOrThrow(NftsValidationException);
 
             const conn = await context.mysql.start();
 
@@ -194,7 +191,7 @@ export class NftsService {
     collection.updateTime = new Date();
     collection.createTime = new Date();
 
-    return collection.serialize(getSerializationStrategy(context));
+    return collection.serializeByContext();
   }
 
   static async deployCollection(
@@ -243,7 +240,7 @@ export class NftsService {
       useApillonIpfsGateway: body.useApillonIpfsGateway,
     });
 
-    return collection.serialize(getSerializationStrategy(context));
+    return collection.serializeByContext();
   }
 
   /**
@@ -294,7 +291,7 @@ export class NftsService {
     ).getList(
       context,
       new NFTCollectionQueryFilter(event.query),
-      getSerializationStrategy(context),
+      context.getSerializationStrategy(),
     );
   }
 
@@ -305,15 +302,11 @@ export class NftsService {
     ).populateById(event.id);
 
     if (!collection.exists()) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.NFT_COLLECTION_DOES_NOT_EXIST,
-        context,
-      });
+      throw new NftsNotFoundException();
     }
     collection.canAccess(context);
 
-    return collection.serialize(getSerializationStrategy(context));
+    return collection.serializeByContext();
   }
 
   static async getCollectionByUuid(
@@ -326,15 +319,11 @@ export class NftsService {
     ).populateByUUID(event.uuid);
 
     if (!collection.exists()) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.NFT_COLLECTION_DOES_NOT_EXIST,
-        context,
-      });
+      throw new NftsNotFoundException();
     }
     collection.canAccess(context);
 
-    return collection.serialize(getSerializationStrategy(context));
+    return collection.serializeByContext();
   }
 
   static async transferCollectionOwnership(
@@ -376,7 +365,7 @@ export class NftsService {
       {
         project_uuid: collection.project_uuid,
         product_id,
-        referenceTable: DbTables.COLLECTION,
+        referenceTable: DbTables.TRANSACTION,
         referenceId: uuidV4(),
         location: 'NftsService.transferCollectionOwnership',
         service: ServiceName.NFTS,
@@ -405,7 +394,7 @@ export class NftsService {
       data: { collection_uuid: collection.collection_uuid },
     });
 
-    return collection.serialize(getSerializationStrategy(context));
+    return collection.serializeByContext();
   }
 
   static async setNftCollectionBaseUri(
@@ -490,6 +479,35 @@ export class NftsService {
   //#endregion
 
   //#region NFT functions
+
+  static async addNftsMetadata(
+    { body }: { body: AddNftsMetadataDto },
+    context: ServiceContext,
+  ) {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(body.collection_uuid);
+    await NftsService.checkCollection(collection, 'addNfts()', context);
+
+    //send message to storage sqs workers
+    await sendToWorkerQueue(
+      env.STORAGE_AWS_WORKER_SQS_URL,
+      'PrepareMetadataForCollectionWorker',
+      [
+        {
+          collection_uuid: body.collection_uuid,
+          imagesSession: body.imagesSession,
+          metadataSession: body.metadataSession,
+          useApillonIpfsGateway: !collection.baseUri.startsWith('ipfs://'),
+        },
+      ],
+      null,
+      null,
+    );
+
+    return true;
+  }
 
   static async mintNftTo(
     { body }: { body: MintNftDTO },

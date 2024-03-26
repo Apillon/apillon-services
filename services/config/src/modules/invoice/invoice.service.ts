@@ -191,14 +191,8 @@ export class InvoiceService {
       },
       context,
     );
-    try {
-      await invoice.validate();
-    } catch (err) {
-      await invoice.handle(err);
-      if (!invoice.isValid()) {
-        throw new ScsValidationException(invoice);
-      }
-    }
+
+    await invoice.validateOrThrow(ScsValidationException);
     await invoice.insert(SerializeFor.INSERT_DB, conn);
     return invoice.serialize(SerializeFor.SERVICE) as Invoice;
   }

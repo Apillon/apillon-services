@@ -113,14 +113,7 @@ export class ApiKeyService {
     const apiKeySecret = generateRandomCode(12);
     key.apiKeySecret = bcrypt.hashSync(apiKeySecret);
 
-    try {
-      await key.validate();
-    } catch (err) {
-      await key.handle(err);
-      if (!key.isValid()) {
-        throw new AmsValidationException(key);
-      }
-    }
+    await key.validateOrThrow(AmsValidationException);
 
     //check max api keys quota
     const numOfApiKeys = await key.getNumOfApiKeysInProject();
@@ -147,16 +140,8 @@ export class ApiKeyService {
           const akr: ApiKeyRole = new ApiKeyRole(kr, context).populate({
             apiKey_id: key.id,
           });
-          try {
-            await akr.validate();
-          } catch (err) {
-            await akr.handle(err);
 
-            if (!akr.isValid()) {
-              throw new AmsValidationException(akr);
-            }
-          }
-
+          await akr.validateOrThrow(AmsValidationException);
           await akr.insert(SerializeFor.INSERT_DB, conn);
         }
       }

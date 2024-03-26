@@ -147,7 +147,7 @@ describe('Admin Project tests', () => {
 
       // Data inserted in beforeAll
       expect(responseProject.numOfBuckets).toEqual(1);
-      expect(responseProject.totalBucketSize).toEqual(2000);
+      expect(responseProject.usedStorage).toEqual(2000);
       expect(responseProject.numOfWebsites).toEqual(1);
       expect(responseProject.numOfCollections).toEqual(1);
     });

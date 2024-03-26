@@ -89,8 +89,6 @@ export enum LmasEventType {
 export enum BlockchainEventType {
   SUBSTRATE_SIGN_TRANSACTION = 'substrate-sign-transaction',
   SUBSTRATE_GET_TRANSACTION = 'substrate-get-transaction',
-  GET_PHALA_LOG_RECORDS_AND_GAS_PRICE = 'get-phala-log-records-and-gas-price',
-  GET_PHALA_CLUSTER_WALLET_BALANCE = 'get-phala-cluster-wallet-balance',
   GET_PHALA_CLUSTER_DEPOSIT_TRANSACTION = 'get-phala-cluster-deposit-transaction',
   EVM_SIGN_TRANSACTION = 'evm-sign-transaction',
   EVM_GET_TRANSACTION = 'evm-get-transaction',
@@ -102,7 +100,6 @@ export enum BlockchainEventType {
   GET_WALLET_TRANSACTIONS = 'get-wallet-transactions',
   UPDATE_TRANSACTION = 'update-transaction',
   LIST_WALLET_DEPOSITS = 'list-wallet-deposits',
-  GET_WALLET_IDENTITY = 'get-wallet-identity',
   GET_TOTAL_WALLET_TRANSACTIONS = 'get-total-wallet-transactions',
 }
 
@@ -145,6 +142,7 @@ export enum StorageEventType {
   WEBSITE_GET = 'get-website',
   WEBSITE_DEPLOY = 'deploy-website',
   WEBSITE_LIST_DOMAINS = 'list-website-domains',
+  WEBSITE_GET_ALL_DOMAINS = 'get-all-domains',
   WEBSITE_QUOTA_REACHED = 'websites-quota-reached',
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
@@ -192,6 +190,7 @@ export enum ScsEventType {
   CREATE_OVERRIDE = 'create-override',
   DELETE_OVERRIDE = 'delete-override',
   ADD_CREDIT = 'add-credit',
+  CONFIGURE_CREDIT = 'configure-credit',
   SPEND_CREDIT = 'spend-credit',
   REFUND_CREDIT = 'refund-credit',
   GET_PROJECT_CREDIT = 'get-project-credit',
@@ -228,6 +227,7 @@ export enum NftsEventType {
   MAX_COLLECTIONS_QUOTA_REACHED = 'max-collections-quota-reached',
   EXECUTE_DEPLOY_COLLECTION_WORKER = 'execute-deploy-collection-worker',
   PROJECT_COLLECTION_DETAILS = 'project-collections-details',
+  ADD_NFTS_METADATA = 'add-nfts-metadata',
 }
 
 export enum ComputingEventType {
@@ -267,6 +267,7 @@ export enum SocialEventType {
   CREATE_POST = 'create-post',
   LIST_POSTS = 'list-posts',
   GET_POST = 'get-post',
+  GET_WALLET_IDENTITY = 'get-wallet-identity',
 }
 
 export enum ServiceName {
@@ -600,6 +601,7 @@ export enum ValidatorErrorCode {
   INVALID_FILES_LENGTH = 42200150,
   CID_NOT_PRESENT = 42200160,
   REQUIRED_DATA_NOT_PRESENT = 42200161,
+  ADD_NFT_REQUIRED_DATA_NOT_PRESENT = 42200162,
 
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
@@ -608,10 +610,10 @@ export enum ValidatorErrorCode {
   COMPUTING_NAME_NOT_PRESENT = 42200204,
   COMPUTING_NAME_NOT_VALID = 42200205,
   COMPUTING_DESCRIPTION_NOT_VALID = 42200206,
-  COMPUTING_RESTRICT_TO_OWNER_NOT_PRESENT = 42200207,
-  COMPUTING_ACCOUNT_ADDRESS_NOT_PRESENT = 42200208,
-  COMPUTING_ACCOUNT_ADDRESS_NOT_VALID = 42200209,
-  COMPUTING_DEPOSIT_AMOUNT_NOT_VALID = 42200210,
+  COMPUTING_ACCOUNT_ADDRESS_NOT_PRESENT = 42200207,
+  COMPUTING_ACCOUNT_ADDRESS_NOT_VALID = 42200208,
+  COMPUTING_DEPOSIT_AMOUNT_NOT_VALID = 42200209,
+  COMPUTING_CONTRACT_DATA_NOT_VALID = 42200210,
   COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID = 42200211,
   COMPUTING_FIELD_NOT_PRESENT = 42200212,
 
@@ -663,6 +665,8 @@ export enum ValidatorErrorCode {
   SPEND_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001002,
   PRODUCT_SERVICE_NOT_VALID = 422001003,
   PRODUCT_CATEGORY_NOT_VALID = 422001004,
+  CONFIGURE_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001005,
+  CONFIGURE_CREDIT_REQUIRED_DATA_NOT_VALID = 422001006,
   //#endregion
 }
 
@@ -774,6 +778,7 @@ export enum CacheKeyPrefix {
 
   SOCIAL_SPACE_LIST = 'social-space-list',
   SOCIAL_POST_LIST = 'social-post-list',
+  SOCIAL_SPACE_POST_LIST = 'social-space-post-list',
 
   CONTRACT_VERSION = 'contract-version',
   CONTRACT_ABI = 'contract-abi',
@@ -847,12 +852,18 @@ export enum ProductCode {
 
   SOCIAL_SPACE = 21,
   SOCIAL_POST = 22,
+
+  COMPUTING_SCHRODINGER_CREATE = 23,
+  COMPUTING_SCHRODINGER_ASSIGN_CID_TO_NFT = 24,
+  COMPUTING_SCHRODINGER_TRANSFER_OWNERSHIP = 25,
 }
 
 export enum ProductService {
   HOSTING = 'HOSTING',
   NFT = 'NFT',
   IDENTITY = 'IDENTITY',
+  SOCIAL = 'SOCIAL',
+  COMPUTING = 'COMPUTING',
 }
 
 export enum ProductCategory {
@@ -861,6 +872,8 @@ export enum ProductCategory {
   MOONBEAM_NFT = 'MOONBEAM_NFT',
   ASTAR_NFT = 'ASTAR_NFT',
   KILT_IDENTITY = 'KILT_IDENTITY',
+  GRILLCHAT = 'GRILLCHAT',
+  SCHRODINGER = 'SCHRODINGER',
 }
 
 export enum EmailTemplate {
@@ -880,4 +893,13 @@ export enum EmailTemplate {
   DOWNLOAD_IDENTITY = 'download-identity',
 
   CRYPTO_PAYMENT_SUCCESSFUL = 'crypto-payment-successful',
+
+  CREDIT_BALANCE_BELOW_THRESHOLD = 'credit-balance-below-threshold',
+}
+
+export enum JwtExpireTime {
+  ONE_DAY = '1d',
+  ONE_HOUR = '1h',
+  TWENTY_MINUTES = '20m',
+  NEVER = 'never',
 }

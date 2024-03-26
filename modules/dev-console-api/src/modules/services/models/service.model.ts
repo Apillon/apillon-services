@@ -89,7 +89,7 @@ export class Service extends AdvancedSQLModel {
         code: ValidatorErrorCode.SERVICE_NAME_NOT_PRESENT,
       },
     ],
-    fakeValue: getFaker().word.verb(),
+    fakeValue: () => getFaker().word.verb(),
   })
   public name: string;
 

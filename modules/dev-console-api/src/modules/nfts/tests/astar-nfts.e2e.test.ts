@@ -14,7 +14,10 @@ import {
   TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
-import { setupTest } from '../../../../test/helpers/setup';
+import {
+  getNftTransactionStatus,
+  setupTest,
+} from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
 
 describe('Apillon Console NFTs tests for Astar', () => {
@@ -29,7 +32,11 @@ describe('Apillon Console NFTs tests for Astar', () => {
   beforeAll(async () => {
     stage = await setupTest();
 
-    blockchain = new TestBlockchain(stage, CHAIN_ID);
+    const blockchainStage = {
+      db: stage.blockchainSql,
+      context: stage.blockchainContext,
+    };
+    blockchain = new TestBlockchain(blockchainStage, CHAIN_ID);
     await blockchain.start();
 
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
@@ -75,7 +82,8 @@ describe('Apillon Console NFTs tests for Astar', () => {
         response.body.data.id,
       );
       expect(newCollection.exists()).toBeTruthy();
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         newCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
@@ -103,7 +111,8 @@ describe('Apillon Console NFTs tests for Astar', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         newCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
@@ -120,7 +129,8 @@ describe('Apillon Console NFTs tests for Astar', () => {
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         newCollection.collection_uuid,
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );

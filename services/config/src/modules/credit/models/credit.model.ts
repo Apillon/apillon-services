@@ -7,7 +7,12 @@ import {
   presenceValidator,
   prop,
 } from '@apillon/lib';
-import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
+import {
+  booleanParser,
+  dateParser,
+  integerParser,
+  stringParser,
+} from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
 
@@ -23,6 +28,13 @@ export class Credit extends ProjectAccessModel {
     populatable: [PopulateFrom.DB],
   })
   public updateTime?: Date;
+
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [SerializeFor.PROFILE, SerializeFor.SELECT_DB],
+    populatable: [PopulateFrom.DB],
+  })
+  public createTime?: Date;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -59,9 +71,46 @@ export class Credit extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.LOGGER,
+      SerializeFor.APILLON_API,
     ],
   })
   public balance: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.LOGGER,
+    ],
+    defaultValue: 200,
+    fakeValue: 200,
+  })
+  public threshold: number;
+
+  @prop({
+    parser: { resolver: dateParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.ADMIN, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.LOGGER,
+    ],
+  })
+  public lastAlertTime: Date;
 
   /**
    * Populate model. Use this for simple reads.
@@ -88,7 +137,7 @@ export class Credit extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-          SELECT ${this.generateSelectFields()}
+          SELECT *
           FROM \`${DbTables.CREDIT}\`
           WHERE project_uuid = @project_uuid
           AND status <> ${SqlModelStatus.DELETED}

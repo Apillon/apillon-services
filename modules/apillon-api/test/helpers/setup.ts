@@ -14,7 +14,10 @@ import { ApillonApiResponseInterceptor } from '../../src/interceptors/response.i
  * Setup test environment. Rebuild BD, run test app and create test stage object
  * @returns
  */
-export async function setupTest(): Promise<Stage> {
+export async function setupTest(
+  apiPort = env.APILLON_API_PORT_TEST,
+  apiHost = env.APILLON_API_HOST_TEST,
+): Promise<Stage> {
   let app: INestApplication = null;
   let http: HttpServer = null;
 
@@ -41,7 +44,7 @@ export async function setupTest(): Promise<Stage> {
 
     await app.init();
 
-    await app.listen(7002, '0.0.0.0');
+    await app.listen(apiPort, apiHost);
     http = app.getHttpServer();
 
     const stage: Stage = await setupTestContextAndSql();

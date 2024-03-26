@@ -1,21 +1,20 @@
 import {
   BaseProjectQueryFilter,
-  BaseQueryFilter,
-  BlockchainMicroservice,
   CreatePostDto,
   CreateSpaceDto,
   ProductCode,
   ServiceName,
   SpendCreditDto,
   SqlModelStatus,
+  env,
   spendCreditAction,
 } from '@apillon/lib';
-import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import { DbTables, PostType, SocialErrorCode } from '../../config/types';
+import { SocialCodeException } from '../../lib/exceptions';
 import { Post } from './models/post.model';
 import { Space } from './models/space.model';
-import { SocialCodeException } from '../../lib/exceptions';
 
 export class SubsocialService {
   static async listSpaces(
@@ -36,7 +35,7 @@ export class SubsocialService {
       event.space_uuid,
     );
 
-    return space.serialize(getSerializationStrategy(context));
+    return space.serializeByContext();
   }
 
   static async createSpace(
@@ -61,17 +60,17 @@ export class SubsocialService {
     );
     await spendCreditAction(context, spendCredit, () => space.createSpace());
 
-    return space.serialize(getSerializationStrategy(context));
+    return space.serializeByContext();
   }
 
   static async listPosts(
-    event: { space_uuid: string; query: BaseQueryFilter },
+    event: { space_uuid: string; query: BaseProjectQueryFilter },
     context: ServiceContext,
   ) {
-    return await new Post({}, context).getList(
-      event.space_uuid,
-      new BaseQueryFilter(event.query),
-    );
+    return await new Post(
+      { project_uuid: event.query.project_uuid },
+      context,
+    ).getList(event.space_uuid, new BaseProjectQueryFilter(event.query));
   }
 
   static async getPost(event: { post_uuid: string }, context: ServiceContext) {
@@ -79,13 +78,14 @@ export class SubsocialService {
       event.post_uuid,
     );
 
-    return post.serialize(getSerializationStrategy(context));
+    return post.serializeByContext();
   }
 
   static async createPost(
     params: { body: CreatePostDto },
     context: ServiceContext,
   ) {
+    params.body.space_uuid = params.body.space_uuid || env.SOCIAL_DEFAULT_SPACE;
     const space = await new Space({}, context).populateByUuidAndCheckAccess(
       params.body.space_uuid,
     );
@@ -103,7 +103,7 @@ export class SubsocialService {
         postType: PostType.REGULAR,
         post_uuid: uuidV4(),
         space_id: space.id,
-        project_uuid: space.project_uuid,
+        project_uuid: params.body.project_uuid,
         status: SqlModelStatus.DRAFT,
       },
       context,
@@ -111,7 +111,7 @@ export class SubsocialService {
 
     const spendCredit: SpendCreditDto = new SpendCreditDto(
       {
-        project_uuid: space.project_uuid,
+        project_uuid: params.body.project_uuid,
         product_id: ProductCode.SOCIAL_POST,
         referenceTable: DbTables.POST,
         referenceId: post.post_uuid,
@@ -123,6 +123,6 @@ export class SubsocialService {
 
     await spendCreditAction(context, spendCredit, () => post.createPost());
 
-    return post.serialize(getSerializationStrategy(context));
+    return post.serializeByContext();
   }
 }

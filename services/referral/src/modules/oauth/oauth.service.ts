@@ -30,12 +30,8 @@ export class OauthService {
 
     player.twitter_id = null;
     player.twitter_name = null;
-    try {
-      await player.validate();
-    } catch (err) {
-      await player.handle(err);
-      throw new ReferralValidationException(player);
-    }
+
+    await player.validateOrThrow(ReferralValidationException);
     await player.update();
     await new Lmas().writeLog({
       context,
@@ -54,12 +50,8 @@ export class OauthService {
 
     player.github_id = null;
     player.github_name = null;
-    try {
-      await player.validate();
-    } catch (err) {
-      await player.handle(err);
-      throw new ReferralValidationException(player);
-    }
+
+    await player.validateOrThrow(ReferralValidationException);
     await player.update();
     await new Lmas().writeLog({
       context,
@@ -131,12 +123,7 @@ export class OauthService {
     player.twitter_name = loggedTokens.screenName;
     // allTwitterData.userName
 
-    try {
-      await player.validate();
-    } catch (err) {
-      await player.handle(err);
-      throw new ReferralValidationException(player);
-    }
+    await player.validateOrThrow(ReferralValidationException);
 
     const conn = await context.mysql.start();
     try {
@@ -238,12 +225,7 @@ export class OauthService {
       player.github_name = gitUser?.data?.login;
       const conn = await context.mysql.start();
       try {
-        try {
-          await player.validate();
-        } catch (err) {
-          await player.handle(err);
-          throw new ReferralValidationException(player);
-        }
+        await player.validateOrThrow(ReferralValidationException);
         await player.update(SerializeFor.UPDATE_DB, conn);
         // Complete github task if present
         if (task.exists()) {

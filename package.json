@@ -13,6 +13,7 @@
     "build-no-cache": "npx turbo run build --no-cache",
     "dev": "npx turbo run dev --parallel",
     "dev-min": "npx turbo run dev --parallel --filter=!@apillon/authentication-api --filter=!@apillon/authentication --filter=!@apillon/api --filter=!@apillon/referral --filter=!@apillon/monitoring --filter=!@apillon/mailing --filter=!@apillon/workers-lib",
+    "dev-storage": "npx turbo run dev --parallel --filter=!@apillon/authentication-api --filter=!@apillon/authentication --filter=!@apillon/referral --filter=!@apillon/social  --filter=!@apillon/nfts  --filter=!@apillon/computing",
     "test:blockchain": "npx turbo run test --concurrency=1 --continue --filter=@apillon/blockchain",
     "test": "npx turbo run test --concurrency=1 --continue --filter=!@apillon/authentication-api --force",
     "test:logging": "npx turbo run test:logging --concurrency=1 --continue --filter=!@apillon/authentication-api --force",
@@ -46,7 +47,7 @@
   },
   "engines": {
     "npm": ">=7.0.0",
-    "node": ">=14.0.0"
+    "node": ">=20.0.0"
   },
   "packageManager": "npm@8.4.0"
 }
