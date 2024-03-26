@@ -387,7 +387,13 @@ export class EvmService {
           continue;
         }
         try {
-          await provider.sendTransaction(transaction.rawTransaction);
+          const result = await provider.sendTransaction(
+            transaction.rawTransaction,
+          );
+          console.log(
+            `successfully transmitted tx with id ${transaction.id}:`,
+            result,
+          );
           latestSuccess = transaction.nonce;
           transmitted++;
         } catch (err) {
