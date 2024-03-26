@@ -11,13 +11,11 @@ import {
   releaseStage,
   Stage,
   TestBlockchain,
+  getNftTransactionStatus,
   TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
-import {
-  getNftTransactionStatus,
-  setupTest,
-} from '../../../../test/helpers/setup';
+import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
 
 describe('Apillon Console NFTs tests for Astar', () => {

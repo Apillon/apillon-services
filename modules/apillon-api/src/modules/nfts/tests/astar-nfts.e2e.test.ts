@@ -10,6 +10,7 @@ import {
   Stage,
   TestBlockchain,
   TestUser,
+  getNftTransactionStatus,
 } from '@apillon/tests-lib';
 import {
   ApiKeyRoleBaseDto,
@@ -50,7 +51,11 @@ describe('Apillon API NFTs tests on Astar', () => {
   beforeAll(async () => {
     stage = await setupTest();
 
-    blockchain = new TestBlockchain(stage, CHAIN_ID);
+    const blockchainStage = {
+      db: stage.blockchainSql,
+      context: stage.blockchainContext,
+    };
+    blockchain = new TestBlockchain(blockchainStage, CHAIN_ID);
     await blockchain.start();
 
     //User 1 project & other data
@@ -132,7 +137,8 @@ describe('Apillon API NFTs tests on Astar', () => {
       expect(createdCollection.collectionStatus).toBe(
         CollectionStatus.DEPLOYING,
       );
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         createdCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
@@ -187,7 +193,8 @@ describe('Apillon API NFTs tests on Astar', () => {
       );
 
       expect(response.status).toBe(201);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         newCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
@@ -211,7 +218,8 @@ describe('Apillon API NFTs tests on Astar', () => {
       );
 
       expect(response.status).toBe(201);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         newCollection.collection_uuid,
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );
@@ -242,7 +250,7 @@ describe('Apillon API NFTs tests on Astar', () => {
   });
 
   afterAll(async () => {
-    await blockchain.stop();
+    await stop();
     await releaseStage(stage);
   });
 });

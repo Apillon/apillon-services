@@ -32,7 +32,11 @@ describe('Blockchain endpoint tests', () => {
       env.ADMIN_CONSOLE_API_PORT_TEST,
       env.ADMIN_CONSOLE_API_HOST_TEST,
     );
-    blockchain = new TestBlockchain(stage, EvmChain.MOONBEAM);
+    const blockchainStage = {
+      db: stage.blockchainSql,
+      context: stage.blockchainContext,
+    };
+    blockchain = new TestBlockchain(blockchainStage, EvmChain.MOONBEAM);
     await blockchain.start();
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     adminTestUser = await createTestUser(
@@ -40,12 +44,13 @@ describe('Blockchain endpoint tests', () => {
       stage.amsContext,
       DefaultUserRole.ADMIN,
     );
+
     testWallet = new Wallet(
       {
-        address: '0x25Cd0fE6953F5799AEbDa9ee445287CFb101972E',
+        address: blockchain.getWalletAddress(0),
         chainType: ChainType.EVM,
         chain: EvmChain.MOONBEAM,
-        seed: '2cf25b7536db83303e3fb5b8ca50a08758ffbfd1a4e1c7a8bc7a4d6e9f9e7519',
+        seed: blockchain.getWalletPrivateKey(0),
         nonce: 0,
         nextNonce: 1,
         status: SqlModelStatus.ACTIVE,

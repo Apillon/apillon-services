@@ -1,8 +1,11 @@
 import ganache, { Server } from 'ganache';
-import { ServiceStage } from '../interfaces/stage.interface';
+import { ServiceStage, Stage } from '../interfaces/stage.interface';
 import { Wallet } from '@apillon/blockchain/src/modules/wallet/wallet.model';
 import { ChainType, EvmChain } from '@apillon/lib';
 import { ethers } from 'ethers';
+import { TransactionType } from '@apillon/nfts/src/config/types';
+import { Transaction as NftCollectionTx } from '@apillon/nfts/src/modules/transaction/models/transaction.model';
+import { Transaction as BlockchainTx } from '@apillon/blockchain/src/common/models/transaction';
 
 const KEYS = {
   '0x7756251cff23061ec0856f8ec8d7384a2d260aa2':
@@ -87,6 +90,14 @@ export class TestBlockchain {
     return accountIndex < this.accounts.length
       ? this.accounts[accountIndex]
       : null;
+  }
+
+  getWalletPrivateKey(accountIndex: number) {
+    if (accountIndex < this.accounts.length) {
+      const address = this.accounts[accountIndex];
+      return KEYS[address];
+    }
+    return null;
   }
 
   async contractRead(to: string, data: string) {
@@ -176,4 +187,24 @@ export class TestBlockchain {
     });
     await wallet.insert();
   }
+}
+
+export async function getNftTransactionStatus(
+  stage: Stage,
+  collectionUuid: string,
+  transactionType: TransactionType,
+) {
+  const collectionTxs = await new NftCollectionTx(
+    {},
+    stage.nftsContext,
+  ).getCollectionTransactions(collectionUuid);
+  const collectionTx = collectionTxs.find(
+    (x) => x.transactionType == transactionType,
+  );
+  const blockchainTx = await new BlockchainTx(
+    {},
+    stage.blockchainContext,
+  ).getTransactionByChainAndHash(this.chainId, collectionTx.transactionHash);
+
+  return blockchainTx.transactionStatus;
 }

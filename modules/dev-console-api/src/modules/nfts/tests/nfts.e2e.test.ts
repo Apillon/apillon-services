@@ -19,12 +19,10 @@ import {
   Stage,
   TestBlockchain,
   TestUser,
+  getNftTransactionStatus,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
-import {
-  getNftTransactionStatus,
-  setupTest,
-} from '../../../../test/helpers/setup';
+import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';

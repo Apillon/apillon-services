@@ -10,6 +10,7 @@ import {
   Stage,
   TestBlockchain,
   TestUser,
+  getNftTransactionStatus,
 } from '@apillon/tests-lib';
 import {
   ApiKeyRoleBaseDto,
@@ -57,7 +58,11 @@ describe('Apillon API NFTs tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
 
-    blockchain = new TestBlockchain(stage, CHAIN_ID);
+    const blockchainStage = {
+      db: stage.blockchainSql,
+      context: stage.blockchainContext,
+    };
+    blockchain = new TestBlockchain(blockchainStage, CHAIN_ID);
     await blockchain.start();
 
     //User 1 project & other data
@@ -193,7 +198,8 @@ describe('Apillon API NFTs tests', () => {
         stage.nftsContext,
       ).populateByUUID(response.body.data.collectionUuid);
       expect(genericCollection.exists()).toBeTruthy();
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(ž
+        stage,
         genericCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
@@ -314,7 +320,8 @@ describe('Apillon API NFTs tests', () => {
       );
 
       expect(response.status).toBe(201);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         genericCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
@@ -329,7 +336,8 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         genericCollection.collection_uuid,
         TransactionType.BURN_NFT,
       );
@@ -345,7 +353,8 @@ describe('Apillon API NFTs tests', () => {
       );
 
       expect(response.status).toBe(201);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         transferredCollection.collection_uuid,
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );
@@ -456,7 +465,8 @@ describe('Apillon API NFTs tests', () => {
       expect(nestableCollection.collectionStatus).toBe(
         CollectionStatus.DEPLOYING,
       );
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         nestableCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
@@ -504,7 +514,8 @@ describe('Apillon API NFTs tests', () => {
       );
 
       expect(response.status).toBe(201);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         nestableCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
@@ -549,7 +560,8 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         childCollection.collectionUuid,
         TransactionType.NEST_MINT_NFT,
       );
@@ -574,7 +586,8 @@ describe('Apillon API NFTs tests', () => {
       );
 
       expect(response.status).toBe(201);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         newCollection.collection_uuid,
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );
@@ -613,7 +626,8 @@ describe('Apillon API NFTs tests', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.success).toBe(true);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
         nestableCollection.collection_uuid,
         TransactionType.BURN_NFT,
       );

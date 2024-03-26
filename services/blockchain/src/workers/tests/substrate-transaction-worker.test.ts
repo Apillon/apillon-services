@@ -22,6 +22,7 @@ import { Keyring } from '@polkadot/keyring';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 import HttpRequestMock from 'http-request-mock';
 import { KeyringPair } from '@polkadot/keyring/types';
+import { getConfig } from '@apillon/tests-lib';
 
 const CHAIN_TYPE = ChainType.SUBSTRATE;
 
@@ -236,23 +237,19 @@ describe('Substrate tests', () => {
       lastProcessedNonceOnChain: number,
       wallet: Wallet,
       pair: KeyringPair;
-    const CRUST_RPC_URL = 'wss://rpc.crust.network';
-    const CRUST_WALLET_ADDRESS =
-      'cTJUoNhua1ymvD87wCLjBrHb8yZTYXy5Ru2kBoxhia8kddYCq';
-    const CRUST_WALLET_SEED =
-      'fine circle fiction good shop hand canal approve over canal border mixed';
+    let config: any;
     const startBlock = 9607270;
     const chain = SubstrateChain.CRUST;
     const httpMocker = HttpRequestMock.setup();
 
     beforeAll(async () => {
       env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://localhost:4351/graphql';
-
+      config = await getConfig();
       const endpoint = await new Endpoint(
         {
-          url: CRUST_RPC_URL,
-          chain,
-          chainType: CHAIN_TYPE,
+          ...config.crust.endpoint,
+          chain: config.crust.chain,
+          chainType: config.crust.chainType,
         },
         stage.context,
       ).insert();
@@ -262,16 +259,17 @@ describe('Substrate tests', () => {
         typesBundle: typesBundleForPolkadot,
         throwOnConnect: true,
       });
+
       const lastNonceOnChain = (
-        await api.query.system.account(CRUST_WALLET_ADDRESS)
-      ).nonce.toNumber();
+        await api.rpc.system.accountNextIndex(config.crust.wallet.address)
+      ).toNumber();
       lastProcessedNonceOnChain = lastNonceOnChain - 1;
       wallet = await new Wallet(
         {
-          chain,
-          chainType: CHAIN_TYPE,
-          seed: CRUST_WALLET_SEED,
-          address: CRUST_WALLET_ADDRESS,
+          ...config.crust.wallet,
+          chain: config.crust.chain,
+          chainType: config.crust.chainType,
+
           nextNonce: lastProcessedNonceOnChain,
           lastProcessedNonce: lastProcessedNonceOnChain - 1,
           lastParsedBlock: startBlock,
@@ -449,7 +447,7 @@ describe('Substrate tests', () => {
 
       await new Transaction(
         {
-          address: CRUST_WALLET_ADDRESS,
+          address: config.crust.wallet.address,
           chain,
           chainType,
           transactionStatus: TransactionStatus.PENDING,
@@ -487,7 +485,7 @@ describe('Substrate tests', () => {
       const txs: Transaction[] = await new Transaction(
         {},
         stage.context,
-      ).getList(chain, chainType, CRUST_WALLET_ADDRESS, 0);
+      ).getList(chain, chainType, config.crust.wallet.address, 0);
 
       expect(txs.length).toBe(1);
 
