@@ -25,7 +25,7 @@ import {
   WebsitesQuotaReachedQueryFilter,
   writeLog,
 } from '@apillon/lib';
-import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import {
   DbTables,
@@ -84,7 +84,7 @@ export class HostingService {
     //Get buckets
     await website.populateBucketsAndLink();
 
-    return website.serialize(getSerializationStrategy(context));
+    return website.serializeByContext();
   }
 
   static async createWebsite(
@@ -137,7 +137,7 @@ export class HostingService {
       new Mailing(context).setMailerliteField('has_website', true),
     ]);
 
-    return website.serialize(getSerializationStrategy(context));
+    return website.serializeByContext();
   }
 
   static async updateWebsite(
@@ -187,14 +187,7 @@ export class HostingService {
 
     website.populate(event.data, PopulateFrom.PROFILE);
 
-    try {
-      await website.validate();
-    } catch (err) {
-      await website.handle(err);
-      if (!website.isValid()) {
-        throw new StorageValidationException(website);
-      }
-    }
+    await website.validateOrThrow(StorageValidationException);
 
     await website.update();
     return website.serialize(SerializeFor.PROFILE);
@@ -307,9 +300,8 @@ export class HostingService {
         code: StorageErrorCode.NO_FILES_TO_DEPLOY,
         status: 400,
       });
-    } else if (
-      !filesInBucket.find((x) => x.name.toLowerCase() == 'index.html')
-    ) {
+      // Content type can also be checked, but it may not always be provided
+    } else if (!filesInBucket.find((x) => x.name === 'index.html')) {
       throw new StorageCodeException({
         code: StorageErrorCode.INDEX_HTML_FILE_NOT_PRESENT,
         status: 400,
@@ -371,14 +363,7 @@ export class HostingService {
       updateTime: new Date(),
     });
 
-    try {
-      await deployment.validate();
-    } catch (err) {
-      await deployment.handle(err);
-      if (!deployment.isValid()) {
-        throw new StorageValidationException(deployment);
-      }
-    }
+    await deployment.validateOrThrow(StorageValidationException);
 
     await deployment.insert();
 
@@ -407,7 +392,7 @@ export class HostingService {
 
     await deployment.deploy();
 
-    return deployment.serialize(getSerializationStrategy(context));
+    return deployment.serializeByContext();
   }
 
   //#endregion
@@ -442,7 +427,7 @@ export class HostingService {
       deployment.size = undefined;
     }
 
-    return deployment.serialize(getSerializationStrategy(context));
+    return deployment.serializeByContext();
   }
 
   static async listDeployments(

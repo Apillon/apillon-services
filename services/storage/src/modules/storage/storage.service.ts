@@ -20,7 +20,7 @@ import {
   ServiceName,
   SqlModelStatus,
 } from '@apillon/lib';
-import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
   sendToWorkerQueue,
@@ -165,8 +165,16 @@ export class StorageService {
       bucket.bucketType != BucketType.HOSTING &&
       !(await checkProjectSubscription(context, bucket.project_uuid))
     ) {
-      console.info('Project WO subscription. Checking fileNames for upload');
-      if (event.body.files.find((x) => x.fileName.includes('.html'))) {
+      console.info(
+        `Project W/O subscription (${bucket.project_uuid}). Checking fileNames for upload`,
+      );
+      // Content type can also be checked, but it may not always be provided
+      // Disallow files with htm or html extension
+      if (
+        ['htm', 'html'].some((ext) =>
+          event.body.files.find((f) => f.fileName.endsWith(ext)),
+        )
+      ) {
         throw new StorageCodeException({
           code: StorageErrorCode.HTML_FILES_NOT_ALLOWED,
           status: 400,
@@ -549,7 +557,7 @@ export class StorageService {
 
     await file.populateLink();
 
-    return file.serialize(getSerializationStrategy(context));
+    return file.serializeByContext();
   }
 
   static async deleteFile(
@@ -662,7 +670,7 @@ export class StorageService {
       project_uuid: f.project_uuid,
     });
 
-    return f.serialize(getSerializationStrategy(context));
+    return f.serializeByContext();
   }
 
   /**

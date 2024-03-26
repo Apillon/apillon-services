@@ -1,4 +1,4 @@
-import { ServiceContext, getSerializationStrategy } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { Credit } from './models/credit.model';
 import {
   AddCreditDto,
@@ -42,7 +42,7 @@ export class CreditService {
 
     credit.canAccess(context, event.project_uuid);
 
-    return credit.serialize(getSerializationStrategy(context));
+    return credit.serializeByContext();
   }
 
   /**
@@ -109,14 +109,7 @@ export class CreditService {
         referenceId: addCreditDto.referenceId,
       });
 
-      try {
-        await creditTransaction.validate();
-      } catch (err) {
-        await creditTransaction.handle(err);
-        if (!creditTransaction.isValid()) {
-          throw new ScsValidationException(creditTransaction);
-        }
-      }
+      await creditTransaction.validateOrThrow(ScsValidationException);
       await creditTransaction.insert(SerializeFor.INSERT_DB, conn);
 
       await new Lmas().writeLog({
@@ -186,10 +179,15 @@ export class CreditService {
 
     credit.canModify(context);
 
-    credit.populate(event.body);
+    if (credit.threshold == event.body.threshold) {
+      return credit.serializeByContext();
+    }
+
+    //Last alert time is set to null if threshold was modified, so that owner is renotified when projects falls below new threshold.
+    credit.populate({ ...event.body, lastAlertTime: null });
     await credit.update();
 
-    return credit.serialize(getSerializationStrategy(context));
+    return credit.serializeByContext();
   }
 
   /**
@@ -201,15 +199,8 @@ export class CreditService {
     event: { body: SpendCreditDto },
     context: ServiceContext,
   ): Promise<any> {
-    try {
-      event.body = new SpendCreditDto(event.body, context);
-      await event.body.validate();
-    } catch (err) {
-      await event.body.handle(err);
-      if (!event.body.isValid()) {
-        throw new ScsValidationException(event.body);
-      }
-    }
+    event.body = new SpendCreditDto(event.body, context);
+    await event.body.validateOrThrow(ScsValidationException);
 
     //Check product and populate it's price
     const product: Product = await new Product({}, context).populateById(
@@ -313,14 +304,7 @@ export class CreditService {
         referenceId: event.body.referenceId,
       });
 
-      try {
-        await creditTransaction.validate();
-      } catch (err) {
-        await creditTransaction.handle(err);
-        if (!creditTransaction.isValid()) {
-          throw new ScsValidationException(creditTransaction);
-        }
-      }
+      await creditTransaction.validateOrThrow(ScsValidationException);
       await creditTransaction.insert(SerializeFor.INSERT_DB, conn);
 
       await context.mysql.commit(conn);
@@ -419,14 +403,7 @@ export class CreditService {
         referenceId: creditTransaction.referenceId,
       });
 
-      try {
-        await refundCreditTransaction.validate();
-      } catch (err) {
-        await refundCreditTransaction.handle(err);
-        if (!refundCreditTransaction.isValid()) {
-          throw new ScsValidationException(refundCreditTransaction);
-        }
-      }
+      await refundCreditTransaction.validateOrThrow(ScsValidationException);
       await refundCreditTransaction.insert(SerializeFor.INSERT_DB, conn);
 
       await context.mysql.commit(conn);

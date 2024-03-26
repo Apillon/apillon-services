@@ -201,7 +201,7 @@ export class Transaction extends AdvancedSQLModel {
     );
 
     const res: Transaction[] = [];
-    if (data && data.length) {
+    if (data?.length) {
       for (const t of data) {
         res.push(new Transaction({}, this.getContext()).populate(t));
       }
@@ -220,14 +220,9 @@ export class Transaction extends AdvancedSQLModel {
         WHERE transactionHash in ('${hashes.join("','")}')`,
     );
 
-    const res: Transaction[] = [];
-    if (data && data.length) {
-      for (const t of data) {
-        res.push(new Transaction({}, this.getContext()).populate(t));
-      }
-    }
-
-    return res;
+    return (
+      data?.map((d) => new Transaction({}, this.getContext()).populate(d)) || []
+    );
   }
 
   public async getList(

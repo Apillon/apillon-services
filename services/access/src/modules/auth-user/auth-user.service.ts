@@ -24,9 +24,9 @@ import {
 } from '../../lib/exceptions';
 import { AuthToken } from '../auth-token/auth-token.model';
 import { AuthUser } from './auth-user.model';
-import { TokenExpiresInStr } from '../../config/types';
 import { CryptoHash } from '../../lib/hash-with-crypto';
 import { ApiKeyService } from '../api-key/api-key.service';
+import { JwtExpireTime } from '@apillon/lib/src/config/types';
 
 /**
  * AuthUserService class handles user authentication and related operations, such as registration, login, password reset, and email verification.
@@ -61,11 +61,7 @@ export class AuthUserService {
     authUser.setPassword(event.password);
     const conn = await context.mysql.start();
 
-    try {
-      await authUser.validate();
-    } catch (err) {
-      throw new AmsValidationException(authUser);
-    }
+    await authUser.validateOrThrow(AmsValidationException);
 
     try {
       await authUser.insert(SerializeFor.INSERT_DB, conn);
@@ -85,17 +81,12 @@ export class AuthUserService {
         tokenHash: await CryptoHash.hash(authUser.token),
         user_uuid: authUser.user_uuid,
         tokenType: JwtTokenType.USER_AUTHENTICATION,
-        expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
+        expiresIn: JwtExpireTime.ONE_DAY,
       };
 
       authToken.populate({ ...tokenData }, PopulateFrom.SERVICE);
 
-      try {
-        await authToken.validate();
-      } catch (err) {
-        console.log('Exception occurred when validating auth token - ', err);
-        throw new AmsValidationException(authToken);
-      }
+      await authToken.validateOrThrow(AmsValidationException);
 
       await authToken.insert(SerializeFor.INSERT_DB, conn);
       await context.mysql.commit(conn);
@@ -104,7 +95,11 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 500,
         code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+      }).writeToMonitor({
+        context,
+        user_uuid: event?.user_uuid,
+        data: { event, authUser: authUser.serialize(), err },
+      });
     }
 
     await new Lmas().writeLog({
@@ -361,11 +356,8 @@ export class AuthUserService {
     }
 
     authUser.populate(event, PopulateFrom.SERVICE);
-    try {
-      await authUser.validate();
-    } catch (err) {
-      throw new AmsValidationException(authUser);
-    }
+    await authUser.validateOrThrow(AmsValidationException);
+
     try {
       await authUser.update();
     } catch (err) {
@@ -375,7 +367,7 @@ export class AuthUserService {
       }).writeToMonitor({
         context,
         user_uuid: event?.user_uuid,
-        data: event,
+        data: { event, err, authUser: authUser.serialize() },
       });
     }
 
@@ -424,7 +416,7 @@ export class AuthUserService {
     if (!authUser.exists()) {
       throw await new AmsCodeException({
         status: 400,
-        code: AmsErrorCode.USER_DOES_NOT_EXISTS,
+        code: AmsErrorCode.INVALID_TOKEN,
       }).writeToMonitor({
         logType: LogType.WARN,
         context,
@@ -448,11 +440,7 @@ export class AuthUserService {
     }
 
     authUser.setPassword(event.password);
-    try {
-      await authUser.validate();
-    } catch (err) {
-      throw new AmsValidationException(authUser);
-    }
+    await authUser.validateOrThrow(AmsValidationException);
 
     try {
       await authUser.update();
@@ -460,7 +448,11 @@ export class AuthUserService {
       throw await new AmsCodeException({
         status: 500,
         code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({ context, user_uuid: event?.user_uuid, data: event });
+      }).writeToMonitor({
+        context,
+        user_uuid: event?.user_uuid,
+        data: { event, err, authUser: authUser.serialize() },
+      });
     }
 
     return true;
@@ -511,11 +503,7 @@ export class AuthUserService {
   ) {
     const authData = new UserWalletAuthDto(event.authData);
 
-    try {
-      await authData.validate();
-    } catch (err) {
-      throw new AmsValidationException(authData);
-    }
+    await authData.validateOrThrow(AmsValidationException);
 
     const { wallet, timestamp } = authData;
 
@@ -625,18 +613,15 @@ export class AuthUserService {
     );
 
     if (!authUser.exists()) {
-      throw await new AmsCodeException({
+      throw new AmsCodeException({
         status: 400,
         code: AmsErrorCode.USER_DOES_NOT_EXISTS,
       });
     }
 
     authUser.status = event.status;
-    try {
-      await authUser.validate();
-    } catch (err) {
-      throw new AmsValidationException(authUser);
-    }
+    await authUser.validateOrThrow(AmsValidationException);
+
     try {
       await authUser.update();
     } catch (err) {
@@ -646,7 +631,7 @@ export class AuthUserService {
       }).writeToMonitor({
         context,
         user_uuid: event?.user_uuid,
-        data: event,
+        data: { event, authUser: authUser.serialize(), err },
       });
     }
 

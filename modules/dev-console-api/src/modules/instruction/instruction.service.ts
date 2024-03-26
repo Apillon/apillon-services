@@ -51,15 +51,7 @@ export class InstructionService {
 
     instruction.populate(data);
 
-    try {
-      await instruction.validate();
-    } catch (err) {
-      await instruction.handle(err);
-    }
-
-    if (!instruction.isValid()) {
-      throw new ValidationException(instruction, ValidatorErrorCode);
-    }
+    await instruction.validateOrThrow(ValidationException, ValidatorErrorCode);
 
     await instruction.update();
     return instruction.serialize(SerializeFor.PROFILE);

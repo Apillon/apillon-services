@@ -129,17 +129,6 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     return this.status !== SqlModelStatus.DELETED;
   }
 
-  // public async create(conn?: PoolConnection) {
-  //   try {
-  //     await this.validate();
-  //   } catch (err) {
-  //     await this.handle(err);
-  //     throw new ValidationException(this);
-  //   }
-
-  //   return await this.insert(SerializeFor.INSERT_DB, conn);
-  // }
-
   /**
    * Populates model fields by loading the document with the provided id from the database.
    * @param id Document's ID.
@@ -168,8 +157,8 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
       `
       SELECT *
       FROM \`${this.tableName}\`
-      WHERE id = @id 
-      ${allStatuses ? '' : ' AND status <> ' + SqlModelStatus.DELETED + ' '}
+      WHERE id = @id
+      ${allStatuses ? '' : ` AND status <> ${SqlModelStatus.DELETED} `}
       ${conn && forUpdate ? 'FOR UPDATE' : ''};
       `,
       { id },
@@ -292,46 +281,6 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
 
     return this;
   }
-
-  // public async replace(conn?: PoolConnection): Promise<this> {
-  //   const id = this.id;
-  //   this.updateUser = this.getContext()?.user?.id;
-
-  //   const serializedModel = this.serialize(SerializeFor.INSERT_DB);
-  //   serializedModel.id = id;
-
-  //   let isSingleTrans = false;
-  //   if (!conn) {
-  //     isSingleTrans = true;
-  //     conn = await this.getContext().mysql.start();
-  //   }
-
-  //   try {
-  //     const query = `
-  //     REPLACE INTO \`${this.tableName}\`
-  //     ( ${Object.keys(serializedModel)
-  //         .map((x) => `\`${x}\``)
-  //         .join(', ')} )
-  //     VALUES (
-  //       ${Object.keys(serializedModel)
-  //         .map((key) => `@${key}`)
-  //         .join(', ')}
-  //     )`;
-
-  //     await this.db().paramExecute(query, serializedModel, conn);
-
-  //     if (isSingleTrans) {
-  //       await this.getContext().mysql.commit(conn);
-  //     }
-  //   } catch (err) {
-  //     if (isSingleTrans) {
-  //       await this.getContext().mysql.rollback(conn);
-  //     }
-  //     throw new Error(err);
-  //   }
-
-  //   return this;
-  // }
 
   /**
    * Updates model data in the database.

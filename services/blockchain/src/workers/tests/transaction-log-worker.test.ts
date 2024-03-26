@@ -37,13 +37,14 @@ describe('Transaction Log Worker unit test', () => {
     crustWallet = new Wallet(
       {
         status: 5,
-        address: 'cTHA4D34PHTD5jkK68tbyLakwnC6mYWgUEq6pA1kSqAeUtpH1',
+        address: 'cTL1jk9CbHJAYz2hWDh3PprRCtrPAHUvSDw7gZbVWbUYt8SJU',
         chain: SubstrateChain.CRUST,
         chainType: ChainType.SUBSTRATE,
         seed: '1',
         minBalance: '5000000000000',
         decimals: 12,
         blockParseSize: 10_952_561,
+        lastLoggedBlock: 14042287,
       },
       stage.context,
     );
@@ -197,7 +198,18 @@ describe('Transaction Log Worker unit test', () => {
       `,
       { address: crustWallet.address },
     );
-    expect(logs[0].cnt).toBe(65);
+    expect(logs[0].cnt).toBe(238);
+
+    const totalPriceSum = await stage.db.paramExecute(
+      `
+        SELECT SUM(totalPrice) AS spends
+        FROM \`${DbTables.TRANSACTION_LOG}\`
+        WHERE wallet = @address
+        GROUP BY wallet
+      `,
+      { address: crustWallet.address },
+    );
+    expect(totalPriceSum[0].spends).toBe(279398536215);
   });
 
   test('Test Crust Wallet Logging 2nd run', async () => {

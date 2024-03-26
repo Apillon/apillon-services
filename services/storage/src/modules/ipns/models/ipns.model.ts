@@ -277,11 +277,9 @@ export class Ipns extends UuidSqlModel {
       { key },
     );
 
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    } else {
-      return this.reset();
-    }
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public override async insert(
@@ -290,14 +288,7 @@ export class Ipns extends UuidSqlModel {
     insertIgnore?: boolean,
   ): Promise<this> {
     this.ipns_uuid = this.ipns_uuid || uuidV4();
-    try {
-      await this.validate();
-    } catch (err) {
-      await this.handle(err);
-      if (!this.isValid()) {
-        throw new StorageValidationException(this);
-      }
-    }
+    await this.validateOrThrow(StorageValidationException);
 
     return super.insert(strategy, conn, insertIgnore);
   }

@@ -353,7 +353,7 @@ export class UserAirdropTask extends BaseSQLModel {
     await this.getContext().mysql.paramExecute(query, serializedData);
   }
 
-  public async getNewStats(user_uuid: string, isRecursive = false) {
+  public async getNewStats(user_uuid: string) {
     this.reset();
     this.user_uuid = user_uuid;
     const res = await this.db().paramExecute(
@@ -372,37 +372,23 @@ export class UserAirdropTask extends BaseSQLModel {
 
     await this.assignUserAirdropTasks(userStats);
 
-    const referrals = [
-      ...new Set(
-        userStats.referral_count > 0
-          ? userStats.referrals.join(',').split(',')
-          : [],
-      ),
-    ];
-
-    if (referrals?.length && !isRecursive) {
-      // disable recursion
-
-      // await Promise.all(
-      //   referrals.map((x) =>
-      //     new UserAirdropTask({}, this.getContext()).getNewStats(x, true),
-      //   ),
-      // );
-
-      await this.assignReferredUsers(referrals);
-    }
-
-    const domains = [
-      ...new Set(
-        userStats.www_domain_count > 0
-          ? userStats.domains.join(',').split(',')
-          : [],
-      ),
-    ];
-
-    if (domains?.length && !isRecursive) {
-      await this.checkLinkedDomains(domains);
-    }
+    // Assign points for referred users and linked domains
+    await Promise.allSettled([
+      await this.assignReferredUsers([
+        ...new Set(
+          userStats.referral_count > 0
+            ? userStats.referrals.join(',').split(',')
+            : [],
+        ),
+      ]),
+      await this.checkLinkedDomains([
+        ...new Set(
+          userStats.www_domain_count > 0
+            ? userStats.domains.join(',').split(',')
+            : [],
+        ),
+      ]),
+    ]);
 
     this.recalculateTotalPoints();
     await this.insertOrUpdate();
@@ -494,13 +480,13 @@ export class UserAirdropTask extends BaseSQLModel {
           .then((c) => c > 0);
 
       await Promise.all([
-        checkApiCalled(/^\/hosting.*upload/).then(
+        checkApiCalled(/^\/hosting.*end/).then(
           (v) => (activity.websiteUploadedViaApi = v),
         ),
         checkApiCalled(/^\/wallet-identity.*$/).then(
           (v) => (activity.identitySdkUsed = v),
         ),
-        checkApiCalled(/^\/storage\/buckets.*upload/).then(
+        checkApiCalled(/^\/storage\/buckets.*end/).then(
           (v) => (activity.fileUploadedViaApi = v),
         ),
         checkApiCalled(/^\/nfts\/collections.*mint/).then(
