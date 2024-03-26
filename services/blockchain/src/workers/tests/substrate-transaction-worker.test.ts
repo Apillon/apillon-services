@@ -28,7 +28,9 @@ const CHAIN_TYPE = ChainType.SUBSTRATE;
 
 describe('Substrate tests', () => {
   let stage: Stage;
+  let config: any;
   beforeAll(async () => {
+    config = await getConfig();
     stage = await setupTest();
   });
 
@@ -41,7 +43,7 @@ describe('Substrate tests', () => {
     const startBlock = 3982289;
 
     beforeAll(async () => {
-      env.BLOCKCHAIN_KILT_GRAPHQL_SERVER = 'http://3.251.2.33:8082/graphql';
+      env.BLOCKCHAIN_KILT_GRAPHQL_SERVER = config.kilt.indexerUrl;
       const chain = SubstrateChain.KILT;
 
       wallet = await new Wallet(

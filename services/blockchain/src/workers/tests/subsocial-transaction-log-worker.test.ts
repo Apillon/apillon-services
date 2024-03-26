@@ -100,7 +100,7 @@ describe('Subsocial transaction Log Worker unit test', () => {
   beforeAll(async () => {
     config = await getConfig();
     stage = await setupTest();
-    env.BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER = 'http://3.251.2.33:8087/graphql';
+    env.BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER = config.subsocial.indexerUrl;
 
     wallet = new Wallet(
       {

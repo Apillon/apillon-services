@@ -9,6 +9,7 @@ import {
 import { EvmTransactionWorker } from '../../../workers/evm-transaction-worker';
 import { Wallet } from '../../wallet/wallet.model';
 import { WorkerType, evmChainToWorkerName } from '../../../lib/helpers';
+import { getConfig } from '@apillon/tests-lib';
 
 describe('MOONBASE', () => {
   const address = '0xba01526c6d80378a9a95f1687e9960857593983b';
@@ -16,10 +17,12 @@ describe('MOONBASE', () => {
   const chain = 1287;
   const chainType = ChainType.EVM;
   let wallet: Wallet;
+  let config: any;
 
   beforeAll(async () => {
     stage = await setupTest();
-    env.BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER = 'http://3.251.2.33:8083/graphql';
+    config = await getConfig();
+    env.BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER = config.moonbase.indexerUrl;
 
     wallet = await new Wallet(
       {
