@@ -26,10 +26,11 @@ Add commands to package.json
 ```
 
 Implement actual migrations sql scripts (upgrade & downgrade functions) in directory: src/migration-scripts/migrations or in src/migration-scripts/seeds for seeds
+Note that migrations are ordered by a sequence number specified at the beginning of the file name of the migration, for example `1-users.ts`, `2-projects.ts` etc.
 
 ## Execute migrations
 
-Migrations are execute inside service directory, so .env with DB variables must be present in service root directory.
+Migrations are executed inside service directory, so .env with DB variables must be present in service root directory.
 
 Then run:
 

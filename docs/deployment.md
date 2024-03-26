@@ -2,19 +2,19 @@
 
 ## CI/CD
 
-  Apillon services are deployed and build with **AWS Codebuild** on eu-west-1 region.
-  Each service and API has its own CodeBuild project defined but all are build from the same git repository. For deploying to AWS Lambda we use [Serverless Framework](https://serverless.com) and webpack plugin for code packaging.
+Apillon services are deployed and build with **AWS Codebuild** on eu-west-1 region.
+Each service and API has its own CodeBuild project defined but all are build from the same git repository. For deploying to AWS Lambda we use [Serverless Framework](https://serverless.com) and webpack plugin for code packaging.
 
 ### Runtime environments
 
-  | Environment  | Git branch | Auto build on push |
-  | ------------ | ---------- | ------------------ |
-  | dev          | develop    | ✔                 |
-  | staging      | stage      | ✔                 |
-  | test         | test       | ✔                 |
-  | production   | master     | ✖                 |
+| Environment  | Git branch | Auto build on push |
+| ------------ | ---------- | ------------------ |
+| dev          | develop    | ✔                  |
+| staging      | stage      | ✔                  |
+| test         | test       | ✔                  |
+| production   | master     | ✖                  |
 
-  Currently build for production is started manually, other environments are deployed automatically on push to specific branch.
+Currently build for production is started manually, other environments are deployed automatically on push to specific branch.
 
 ### Environment variables
 
