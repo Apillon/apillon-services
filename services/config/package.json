@@ -1,7 +1,7 @@
 {
   "name": "@apillon/config",
-  "version": "1.1.0",
-  "author": "Kalmia d.o.o.",
+  "version": "1.2.0",
+  "author": "Apillon",
   "license": "UNLICENSED",
   "description": "System configuration service",
   "main": "index.js",
