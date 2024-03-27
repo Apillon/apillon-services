@@ -2,6 +2,10 @@
 
 The social microservice is utilizing the Subsocial parachain for access to decentralized social applications. The current implementation supports Grill.chat for creating spaces and posts within spaces on grill.chat, as well as provides premade code to integrate a chat widget anywhere.
 
+Subsocial is a set of Substrate pallets that allows anyone to launch their own decentralized social network or community, or add social features to an existing application. Subsocial is not a decentralized social network, like Twitter or Facebook, but rather Subsocial is a platform for building social networks.
+
+Grill.chat is a mobile-friendly, anonymous chat application powered by Subsocial, allowing anyone to communicate on-chain, without needing a wallet or tokens.
+
 ## Table of Contents
 
 1. [Getting Started](#getting-started)
