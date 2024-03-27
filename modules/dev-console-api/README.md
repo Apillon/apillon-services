@@ -53,6 +53,8 @@ Environment variables that have to be set:
   ADMIN_CONSOLE_API_HOST_TEST: string;
 ```
 
+For the test database, it is recommended to use a local database and instead of `localhost` use the string `127.0.0.1`
+
 ## Environments
 
 | Environment | API URL                                   | Frontend URL                              |
