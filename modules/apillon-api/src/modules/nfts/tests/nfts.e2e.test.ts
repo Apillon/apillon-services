@@ -5,17 +5,19 @@ import {
   createTestProject,
   createTestProjectService,
   createTestUser,
-  overrideDefaultQuota,
   releaseStage,
   Stage,
   TestBlockchain,
   TestUser,
   getNftTransactionStatus,
+  insertEvmNftContractVersion,
 } from '@apillon/tests-lib';
 import {
   ApiKeyRoleBaseDto,
   AttachedServiceType,
+  ChainType,
   DefaultApiKeyRole,
+  NFTCollectionType,
   QuotaCode,
   SqlModelStatus,
   TransactionStatus,
@@ -24,6 +26,7 @@ import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model
 import { Project } from '@apillon/dev-console-api/src/modules/project/models/project.model';
 import { Service } from '@apillon/dev-console-api/src/modules/services/models/service.model';
 import { Collection } from '@apillon/nfts/src/modules/nfts/models/collection.model';
+import { ContractVersion } from '@apillon/nfts/src/modules/nfts/models/contractVersion.model';
 import {
   CollectionStatus,
   TransactionType,
@@ -61,28 +64,34 @@ describe('Apillon API NFTs tests', () => {
     blockchain = TestBlockchain.fromStage(stage, CHAIN_ID);
     await blockchain.start();
 
+    await insertEvmNftContractVersion(stage.nftsContext);
+
     //User 1 project & other data
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
 
-    testProject = await createTestProject(testUser, stage);
-    await overrideDefaultQuota(
-      stage,
-      testProject.project_uuid,
-      QuotaCode.MAX_NFT_COLLECTIONS,
-      10,
-    );
+    testProject = await createTestProject(testUser, stage, 50000);
 
     testService = await createTestProjectService(
       stage.devConsoleContext,
       testProject,
     );
 
+    const { id } = await new ContractVersion(
+      {},
+      stage.nftsContext,
+    ).getContractVersion(NFTCollectionType.GENERIC);
+
     transferredCollection = await createTestNFTCollection(
       testUser,
       stage.nftsContext,
       testProject,
-      SqlModelStatus.DRAFT,
-      CollectionStatus.CREATED,
+      SqlModelStatus.ACTIVE,
+      CollectionStatus.DEPLOYED,
+      {
+        maxSupply: 0,
+        chain: CHAIN_ID,
+        contractVersion_id: id,
+      },
     );
 
     apiKey = await createTestApiKey(stage.amsContext, testProject.project_uuid);
@@ -120,12 +129,6 @@ describe('Apillon API NFTs tests', () => {
       stage.amsContext,
     );
     nestableProject = await createTestProject(nestableUser, stage);
-    await overrideDefaultQuota(
-      stage,
-      nestableProject.project_uuid,
-      QuotaCode.MAX_NFT_COLLECTIONS,
-      10,
-    );
     nestableApiKey = await createTestApiKey(
       stage.amsContext,
       nestableProject.project_uuid,
@@ -158,8 +161,8 @@ describe('Apillon API NFTs tests', () => {
     const data = await stage.nftsContext.mysql.paramExecute(`
       SELECT abi
       FROM \`contract_version\`
-      WHERE collectionType = 2
-      AND chainType = 1
+      WHERE collectionType = ${NFTCollectionType.NESTABLE}
+      AND chainType = ${ChainType.EVM}
       AND status = ${SqlModelStatus.ACTIVE}
       ORDER BY version DESC LIMIT 1
     `);
@@ -196,6 +199,7 @@ describe('Apillon API NFTs tests', () => {
       expect(genericCollection.exists()).toBeTruthy();
       const transactionStatus = await getNftTransactionStatus(
         stage,
+        CHAIN_ID,
         genericCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
@@ -318,6 +322,7 @@ describe('Apillon API NFTs tests', () => {
       expect(response.status).toBe(201);
       const transactionStatus = await getNftTransactionStatus(
         stage,
+        CHAIN_ID,
         genericCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
@@ -334,6 +339,7 @@ describe('Apillon API NFTs tests', () => {
       expect(response.body.data.success).toBe(true);
       const transactionStatus = await getNftTransactionStatus(
         stage,
+        CHAIN_ID,
         genericCollection.collection_uuid,
         TransactionType.BURN_NFT,
       );
@@ -351,6 +357,7 @@ describe('Apillon API NFTs tests', () => {
       expect(response.status).toBe(201);
       const transactionStatus = await getNftTransactionStatus(
         stage,
+        CHAIN_ID,
         transferredCollection.collection_uuid,
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );
@@ -424,6 +431,61 @@ describe('Apillon API NFTs tests', () => {
     });
   });
 
+  describe('NFT Collection versioning and ID mint tests', () => {
+    let collectionUuid;
+    test('Create collection with isAutoIncrement set to false', async () => {
+      const response = await postRequest('/nfts/collections', {
+        collectionType: 1,
+        symbol: 'TNFT',
+        name: 'Test NFT Collection',
+        maxSupply: 50,
+        project_uuid: testProject.project_uuid,
+        baseUri: TEST_COLLECTION_BASE_URI,
+        baseExtension: 'json',
+        drop: true,
+        dropStart: 123,
+        dropReserve: 5,
+        dropPrice: 0.00001,
+        chain: 1287,
+        isRevokable: true,
+        isSoulbound: false,
+        royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+        royaltiesFees: 0,
+        isAutoIncrement: false,
+      });
+
+      const collection = await new Collection(
+        {},
+        stage.nftsContext,
+      ).populateByUUID(response.body.data.collectionUuid);
+
+      expect(collection.isAutoIncrement).toBeFalsy();
+      expect(collection.contractVersion_id).toBeGreaterThanOrEqual(1); // Current default contract version from contract_version table
+
+      collectionUuid = collection.collection_uuid;
+    });
+
+    test('Mint an NFT with custom token IDs', async () => {
+      const response = await postRequest(
+        `/nfts/collections/${collectionUuid}/mint`,
+        {
+          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+          quantity: 2,
+          idsToMint: [5, 10],
+        },
+      );
+      expect(response.status).toBe(201);
+
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
+        CHAIN_ID,
+        collectionUuid,
+        TransactionType.MINT_NFT,
+      );
+      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
+    });
+  });
+
   describe('NFT Collection tests for nestable type', () => {
     test('User should be able to create nestable collection with existing baseURI', async () => {
       const testCollectionName = 'Nestable NFT Collection';
@@ -463,6 +525,7 @@ describe('Apillon API NFTs tests', () => {
       );
       const transactionStatus = await getNftTransactionStatus(
         stage,
+        CHAIN_ID,
         nestableCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
@@ -512,6 +575,7 @@ describe('Apillon API NFTs tests', () => {
       expect(response.status).toBe(201);
       const transactionStatus = await getNftTransactionStatus(
         stage,
+        CHAIN_ID,
         nestableCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
@@ -558,6 +622,7 @@ describe('Apillon API NFTs tests', () => {
       expect(response.body.data.success).toBe(true);
       const transactionStatus = await getNftTransactionStatus(
         stage,
+        CHAIN_ID,
         childCollection.collectionUuid,
         TransactionType.NEST_MINT_NFT,
       );
@@ -565,13 +630,18 @@ describe('Apillon API NFTs tests', () => {
     });
 
     test('User should be able to transfer nestable NFT collection', async () => {
+      const { id } = await new ContractVersion(
+        {},
+        stage.nftsContext,
+      ).getContractVersion(NFTCollectionType.NESTABLE);
+
       const newCollection = await createTestNFTCollection(
         testUser,
         stage.nftsContext,
         nestableProject,
         SqlModelStatus.DRAFT,
         CollectionStatus.CREATED,
-        { collectionType: 2 },
+        { collectionType: 2, contractVersion_id: id },
       );
       const response = await postRequest(
         `/nfts/collections/${newCollection.collection_uuid}/transfer`,
@@ -584,6 +654,7 @@ describe('Apillon API NFTs tests', () => {
       expect(response.status).toBe(201);
       const transactionStatus = await getNftTransactionStatus(
         stage,
+        CHAIN_ID,
         newCollection.collection_uuid,
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );
@@ -624,6 +695,7 @@ describe('Apillon API NFTs tests', () => {
       expect(response.body.data.success).toBe(true);
       const transactionStatus = await getNftTransactionStatus(
         stage,
+        CHAIN_ID,
         nestableCollection.collection_uuid,
         TransactionType.BURN_NFT,
       );
@@ -756,38 +828,10 @@ describe('Apillon API NFTs tests', () => {
     });
   });
 
-  describe('NFT Collection versioning and ID mint tests', () => {
-    let collectionUuid;
-    test('Create collection with isAutoIncrement set to false', async () => {
-      const collection = await createTestNFTCollection(
-        testUser,
-        stage.nftsContext,
-        nestableProject,
-        SqlModelStatus.ACTIVE,
-        CollectionStatus.CREATED,
-        { collectionType: 1 },
-      );
-      expect(collection.isAutoIncrement).toBeFalsy();
-      expect(collection.contractVersion_id).toBeGreaterThanOrEqual(1); // Current default contract version from contract_version table
-
-      collectionUuid = collection.collection_uuid;
-    });
-
-    test('Mint an NFT with custom token IDs', async () => {
-      const response = await postRequest(
-        `/nfts/collections/${collectionUuid}/mint`,
-        {
-          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
-          quantity: 2,
-          idsToMint: [5, 10],
-        },
-      );
-      expect(response.status).toBe(200);
-    });
-  });
-
   afterAll(async () => {
-    await blockchain.stop();
+    if (blockchain) {
+      await blockchain.stop();
+    }
     await releaseStage(stage);
   });
 });

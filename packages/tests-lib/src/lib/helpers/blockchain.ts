@@ -202,6 +202,7 @@ export class TestBlockchain {
 
 export async function getNftTransactionStatus(
   stage: Stage,
+  chainId: EvmChain,
   collectionUuid: string,
   transactionType: TransactionType,
 ) {
@@ -215,7 +216,7 @@ export async function getNftTransactionStatus(
   const blockchainTx = await new BlockchainTx(
     {},
     stage.blockchainContext,
-  ).getTransactionByChainAndHash(this.chainId, collectionTx.transactionHash);
+  ).getTransactionByChainAndHash(chainId, collectionTx.transactionHash);
 
   return blockchainTx.transactionStatus;
 }

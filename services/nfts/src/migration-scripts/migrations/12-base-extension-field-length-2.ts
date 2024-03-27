@@ -9,9 +9,4 @@ export async function upgrade(
 }
 export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
-): Promise<void> {
-  await queryFn(`
-    ALTER TABLE \`${DbTables.COLLECTION}\`
-    MODIFY COLUMN \`baseExtension\` VARCHAR(255) NOT NULL;
-    `);
-}
+): Promise<void> {}
