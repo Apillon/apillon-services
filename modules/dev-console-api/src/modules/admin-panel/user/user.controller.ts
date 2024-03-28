@@ -9,6 +9,7 @@ import {
   QuotaType,
   QuotaDto,
   GetQuotaDto,
+  SerializeFor,
 } from '@apillon/lib';
 import {
   Ctx,
@@ -60,7 +61,7 @@ export class UserController {
     @Ctx() context: DevConsoleApiContext,
     @Param('user_uuid', ParseUUIDPipe) user_uuid: UUID,
   ) {
-    return this.userService.getUser(context, user_uuid);
+    return (await this.userService.getUser(context, user_uuid)).serialize(SerializeFor.ADMIN);
   }
 
   @Get(':user_uuid/projects')
