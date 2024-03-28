@@ -48,6 +48,7 @@ import { Project } from './models/project.model';
 import { v4 as uuidV4 } from 'uuid';
 import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
 import { AuthenticationMicroservice } from '@apillon/lib';
+import { ComputingMicroservice } from '@apillon/lib/src';
 
 @Injectable()
 export class ProjectService {
@@ -425,6 +426,10 @@ export class ProjectService {
     const { data: totalDids } = await new AuthenticationMicroservice(
       context,
     ).getTotalDidsCreated(project_uuid);
+
+    const { data: computingDetails } = await new ComputingMicroservice(
+      context as any,
+    ).getProjectComputingDetails(project_uuid);
   }
 
   /**

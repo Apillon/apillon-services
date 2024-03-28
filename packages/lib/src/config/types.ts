@@ -241,6 +241,7 @@ export enum ComputingEventType {
   ENCRYPT_CONTENT = 'encrypt-content',
   ASSIGN_CID_TO_NFT = 'assign-cid-to-nft',
   LIST_CLUSTER_WALLETS = 'list-cluster-wallets',
+  PROJECT_COMPUTING_DETAILS = 'project-computing-details',
 }
 
 export enum ReferralEventType {
