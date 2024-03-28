@@ -382,7 +382,7 @@ export class Directory extends UuidSqlModel {
         qFilter: `ORDER BY ${filters.orderStr} LIMIT ${filters.limit} OFFSET ${filters.offset};`,
       },
       params,
-      'd.name',
+      'd.id',
     );
 
     //Populate link
