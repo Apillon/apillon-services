@@ -27,6 +27,7 @@ import {
   EmailDataDto,
   EmailTemplate,
   ConfigureCreditDto,
+  StorageMicroservice,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -400,6 +401,20 @@ export class ProjectService {
     }
 
     return true;
+  }
+
+  async getProjectOverview(
+    context: DevConsoleApiContext,
+    project_uuid: string,
+  ) {
+    const project: Project = await new Project(
+      {},
+      context,
+    ).populateByUUIDAndCheckAccess(project_uuid, context);
+
+    const { data } = await new StorageMicroservice(context).getStorageInfo(
+      project_uuid,
+    );
   }
 
   /**

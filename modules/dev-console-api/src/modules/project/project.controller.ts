@@ -185,6 +185,15 @@ export class ProjectController {
     ).serialize(SerializeFor.PROFILE);
   }
 
+  @Get(':uuid/overview')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async getProjectOverview(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+  ) {
+    return await this.projectService.getProjectOverview(context, uuid);
+  }
   //#region credits
 
   @Get(':uuid/credit')
