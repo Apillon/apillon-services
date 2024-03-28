@@ -270,6 +270,7 @@ export enum SocialEventType {
   LIST_POSTS = 'list-posts',
   GET_POST = 'get-post',
   GET_WALLET_IDENTITY = 'get-wallet-identity',
+  PROJECT_SOCIAL_DETAILS = 'project-social-details',
 }
 
 export enum ServiceName {

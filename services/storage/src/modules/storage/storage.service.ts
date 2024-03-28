@@ -72,9 +72,9 @@ export class StorageService {
     usedStorage: number;
     availableBandwidth: number;
     usedBandwidth: number;
-    totalBuckets: number;
-    totalWebsites: number;
-    totalFiles: number;
+    bucketCount: number;
+    websiteCount: number;
+    fileCount: number;
   }> {
     const project_uuid = event.project_uuid;
     //Storage space
@@ -101,16 +101,16 @@ export class StorageService {
     ).populateByProjectAndDate(project_uuid);
 
     // Total objects
-    const { total: totalBuckets } = await bucket.getList(
+    const { total: bucketCount } = await bucket.getList(
       context,
-      new BucketQueryFilter(project_uuid),
+      new BucketQueryFilter({ project_uuid }),
     );
-    const { total: totalWebsites } = await new Website(
+    const { total: websiteCount } = await new Website(
       { project_uuid },
       context,
     ).getList(context, new WebsiteQueryFilter({ project_uuid }));
 
-    const totalFiles = await new File(
+    const fileCount = await new File(
       { project_uuid },
       context,
     ).getFileCountOnProject(project_uuid);
@@ -120,9 +120,9 @@ export class StorageService {
       usedStorage,
       availableBandwidth,
       usedBandwidth: usedBandwidth.exists() ? usedBandwidth.bandwidth : 0,
-      totalBuckets,
-      totalWebsites,
-      totalFiles,
+      bucketCount,
+      websiteCount,
+      fileCount,
     };
   }
 

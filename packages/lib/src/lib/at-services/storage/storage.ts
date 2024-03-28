@@ -48,9 +48,9 @@ export class StorageMicroservice extends BaseService {
       usedStorage: number;
       availableBandwidth: number;
       usedBandwidth: number;
-      totalBuckets: number;
-      totalWebsites: number;
-      totalFiles: number;
+      bucketCount: number;
+      websiteCount: number;
+      fileCount: number;
     };
   }> {
     const data = {

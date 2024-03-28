@@ -125,4 +125,26 @@ export class SubsocialService {
 
     return post.serializeByContext();
   }
+
+  /**
+   * Get social details for a project.
+   * @param {{ project_uuid: string }} - uuid of the project
+   * @param {ServiceContext} context
+   */
+  static async getProjectSocialDetails(
+    { project_uuid }: { project_uuid: string },
+    context: ServiceContext,
+  ): Promise<{ spaceCount: number; postCount: number }> {
+    const { total: spaceCount } = await SubsocialService.listSpaces(
+      { query: new BaseProjectQueryFilter({ project_uuid }) },
+      context,
+    );
+
+    const postCount = await new Post(
+      { project_uuid },
+      context,
+    ).getPostCountOnProject(project_uuid);
+
+    return { spaceCount, postCount };
+  }
 }

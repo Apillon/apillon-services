@@ -29,6 +29,9 @@ import {
   ConfigureCreditDto,
   StorageMicroservice,
   NftsMicroservice,
+  SocialMicroservice,
+  ComputingMicroservice,
+  AuthenticationMicroservice,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -47,8 +50,6 @@ import { ProjectUser } from './models/project-user.model';
 import { Project } from './models/project.model';
 import { v4 as uuidV4 } from 'uuid';
 import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
-import { AuthenticationMicroservice } from '@apillon/lib';
-import { ComputingMicroservice } from '@apillon/lib/src';
 
 @Injectable()
 export class ProjectService {
@@ -410,10 +411,10 @@ export class ProjectService {
     context: DevConsoleApiContext,
     project_uuid: string,
   ) {
-    const project: Project = await new Project(
-      {},
+    await new Project({}, context).populateByUUIDAndCheckAccess(
+      project_uuid,
       context,
-    ).populateByUUIDAndCheckAccess(project_uuid, context);
+    );
 
     const { data: storageInfo } = await new StorageMicroservice(
       context,
@@ -423,13 +424,26 @@ export class ProjectService {
       context,
     ).getProjectCollectionDetails(project_uuid);
 
-    const { data: totalDids } = await new AuthenticationMicroservice(
+    const { data: didCount } = await new AuthenticationMicroservice(
       context,
     ).getTotalDidsCreated(project_uuid);
 
     const { data: computingDetails } = await new ComputingMicroservice(
       context as any,
     ).getProjectComputingDetails(project_uuid);
+
+    const { data: socialDetails } = await new SocialMicroservice(
+      context,
+    ).getProjectSocialDetails(project_uuid);
+
+    return {
+      ...storageInfo,
+      ...computingDetails,
+      ...socialDetails,
+      collectionCount: projectCollectionDetails.numOfCollections,
+      nftTransactionCount: projectCollectionDetails.nftTransactionCount,
+      didCount,
+    };
   }
 
   /**
