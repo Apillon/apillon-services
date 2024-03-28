@@ -407,41 +407,54 @@ export class ProjectService {
     return true;
   }
 
-  async getProjectOverview(
-    context: DevConsoleApiContext,
-    project_uuid: string,
-  ) {
+  async getProjectOverview(context, project_uuid) {
     await new Project({}, context).populateByUUIDAndCheckAccess(
       project_uuid,
       context,
     );
 
-    const { data: storageInfo } = await new StorageMicroservice(
-      context,
-    ).getStorageInfo(project_uuid);
+    const results = await Promise.allSettled([
+      new StorageMicroservice(context)
+        .getStorageInfo(project_uuid)
+        .then(({ data }) => ({ storageInfo: data }))
+        .catch(),
+      new NftsMicroservice(context)
+        .getProjectCollectionDetails(project_uuid)
+        .then(({ data }) => ({ projectCollectionDetails: data }))
+        .catch(),
+      new AuthenticationMicroservice(context)
+        .getTotalDidsCreated(project_uuid)
+        .then(({ data }) => ({ didCount: data }))
+        .catch(),
+      new ComputingMicroservice(context as any)
+        .getProjectComputingDetails(project_uuid)
+        .then(({ data }) => ({ computingDetails: data }))
+        .catch(),
+      new SocialMicroservice(context)
+        .getProjectSocialDetails(project_uuid)
+        .then(({ data }) => ({ socialDetails: data }))
+        .catch(),
+    ]);
 
-    const { data: projectCollectionDetails } = await new NftsMicroservice(
-      context,
-    ).getProjectCollectionDetails(project_uuid);
-
-    const { data: didCount } = await new AuthenticationMicroservice(
-      context,
-    ).getTotalDidsCreated(project_uuid);
-
-    const { data: computingDetails } = await new ComputingMicroservice(
-      context as any,
-    ).getProjectComputingDetails(project_uuid);
-
-    const { data: socialDetails } = await new SocialMicroservice(
-      context,
-    ).getProjectSocialDetails(project_uuid);
+    const {
+      storageInfo,
+      projectCollectionDetails,
+      didCount,
+      computingDetails,
+      socialDetails,
+    } = results.reduce((acc, result) => {
+      // Filter out unfulfilled promises
+      // and join results together in one object
+      return result.status === 'fulfilled'
+        ? { ...acc, ...(result.value || {}) }
+        : acc;
+    }, {}) as any;
 
     return {
       ...storageInfo,
       ...computingDetails,
       ...socialDetails,
-      collectionCount: projectCollectionDetails.numOfCollections,
-      nftTransactionCount: projectCollectionDetails.nftTransactionCount,
+      ...projectCollectionDetails,
       didCount,
     };
   }

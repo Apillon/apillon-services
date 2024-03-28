@@ -796,6 +796,7 @@ export enum CacheKeyPrefix {
   PRODUCT_PRICE = 'product-price-list',
 
   PLATFORM_STATISTICS = 'platform-statistics',
+  PROJECT_OVERVIEW = 'project-overview',
 }
 
 export enum CacheKeyTTL {
