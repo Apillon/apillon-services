@@ -591,4 +591,17 @@ export class IdentityService {
 
     return { success: true };
   }
+
+  /**
+   * Get count of created DIDs by project and user email
+   * @param {{ project_uuid: string }}
+   * @param {ServiceContext} context
+   * @returns count of identities
+   */
+  static async getTotalDidsCreated({ project_uuid }, context: ServiceContext) {
+    return new Identity({ project_uuid }, context).getIdentitiesCount(
+      project_uuid,
+      context.user.email,
+    );
+  }
 }

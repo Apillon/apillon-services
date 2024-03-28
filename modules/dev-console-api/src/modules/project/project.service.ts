@@ -28,6 +28,7 @@ import {
   EmailTemplate,
   ConfigureCreditDto,
   StorageMicroservice,
+  NftsMicroservice,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -46,6 +47,7 @@ import { ProjectUser } from './models/project-user.model';
 import { Project } from './models/project.model';
 import { v4 as uuidV4 } from 'uuid';
 import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
+import { AuthenticationMicroservice } from '@apillon/lib';
 
 @Injectable()
 export class ProjectService {
@@ -412,9 +414,17 @@ export class ProjectService {
       context,
     ).populateByUUIDAndCheckAccess(project_uuid, context);
 
-    const { data } = await new StorageMicroservice(context).getStorageInfo(
-      project_uuid,
-    );
+    const { data: storageInfo } = await new StorageMicroservice(
+      context,
+    ).getStorageInfo(project_uuid);
+
+    const { data: projectCollectionDetails } = await new NftsMicroservice(
+      context,
+    ).getProjectCollectionDetails(project_uuid);
+
+    const { data: totalDids } = await new AuthenticationMicroservice(
+      context,
+    ).getTotalDidsCreated(project_uuid);
   }
 
   /**

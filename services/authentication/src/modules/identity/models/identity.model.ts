@@ -1,4 +1,4 @@
-import { Context } from '@apillon/lib';
+import { Context, SqlModelStatus } from '@apillon/lib';
 import {
   AdvancedSQLModel,
   PopulateFrom,
@@ -178,5 +178,33 @@ export class Identity extends AdvancedSQLModel {
       params,
       'i.id',
     );
+  }
+
+  /**
+   * Get total identity count for project and email
+   * @param {string} project_uuid
+   * @param {string} email
+   * @returns count of identities
+   */
+  public async getIdentitiesCount(
+    project_uuid: string,
+    email: string,
+  ): Promise<number> {
+    if (!project_uuid || !email) {
+      throw new Error('project_uuid or email should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as identityCount
+      FROM \`${DbTables.IDENTITY}\`
+      WHERE project_uuid = @project_uuid
+      OR email = @email
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid, email },
+    );
+
+    return data?.length ? data[0].identityCount : 0;
   }
 }

@@ -175,6 +175,7 @@ export enum AuthenticationEventType {
   SPORRAN_SUBMIT_ATTESTATION = 'sporran-submit-attestation',
   SPORRAN_REQUEST_CREDENTIAL = 'sporran-request-credential',
   SPORRAN_VERIFY_CREDENTIAL = 'sporran-verify-credential',
+  GET_TOTAL_DIDS = 'get-total-dids',
 }
 
 export enum MailEventType {

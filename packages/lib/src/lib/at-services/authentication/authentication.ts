@@ -28,7 +28,7 @@ export class AuthenticationMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
-  //#REGION Verification
+  //#region Verification
   public async verifyIdentity(params: VerificationIdentityDto) {
     const data = {
       eventName: AuthenticationEventType.IDENTITY_VERIFICATION,
@@ -36,9 +36,9 @@ export class AuthenticationMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
-  //#END
+  //#endregion
 
-  //#REGION Identity Generation
+  //#region Identity Generation
   public async sendVerificationEmail(params: VerificationEmailDto) {
     const data = {
       eventName: AuthenticationEventType.SEND_VERIFICATION_EMAIL,
@@ -78,9 +78,9 @@ export class AuthenticationMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
-  //#END
+  //#endregion
 
-  //#REGION Sporran Wallet
+  //#region Sporran Wallet
   public async getSessionValues() {
     const data = {
       eventName: AuthenticationEventType.SPORRAN_GET_SESSION_VALUES,
@@ -127,5 +127,12 @@ export class AuthenticationMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
-  //#END
+  //#endregion
+
+  public async getTotalDidsCreated(project_uuid: string) {
+    return await this.callService({
+      eventName: AuthenticationEventType.GET_TOTAL_DIDS,
+      project_uuid,
+    });
+  }
 }
