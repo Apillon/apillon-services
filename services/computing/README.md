@@ -66,7 +66,7 @@ Environment variables that have to be set:
 
 ## Schrodinger's NFT service
 
-The schrodinger's NFT service/tool is currently powered by the computing microservice and Phala. You can view a demo of the service and learn how it works at https://phala-demo.apillon.io/
+The schrodinger's NFT service/tool is currently powered by the computing microservice and Phala. You can view a demo of the service and learn how it works at [https://phala-demo.apillon.io/](https://phala-demo.apillon.io/)
 
 ## Deployment
 

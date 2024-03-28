@@ -19,7 +19,7 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 
 ## Documentation
 
-Public documentation of endpoints and all available API modules is available at https://wiki.apillon.io/build/1-apillon-api.html
+Public documentation of endpoints and all available API modules is available at [https://wiki.apillon.io/build/1-apillon-api.html](https://wiki.apillon.io/build/1-apillon-api.html)
 
 ## Configuration
 

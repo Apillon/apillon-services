@@ -27,4 +27,4 @@ Request should use `PUT` method and `binary` body.
 
 Binary data should be sent in body as-is, but with the appropriate Content-Type header (e.g. text/plain)
 
-For detailed documentation about all current storage API routes and their respective URLs, parameters and response types, refer to https://wiki.apillon.io/build/2-storage-api.html
+For detailed documentation about all current storage API routes and their respective URLs, parameters and response types, refer to [https://wiki.apillon.io/build/2-storage-api.html](https://wiki.apillon.io/build/2-storage-api.html)
