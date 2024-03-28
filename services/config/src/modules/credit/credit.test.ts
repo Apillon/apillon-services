@@ -16,11 +16,6 @@ describe('Credits unit test', () => {
   let project1Balance = 0;
   let project2Credit: Credit;
 
-  /**
-   * TODO: Write tests
-   * - different types of value (1-max, 2-min, 3-boolean)
-   **/
-
   beforeAll(async () => {
     stage = await setupTest();
 

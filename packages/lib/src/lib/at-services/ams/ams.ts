@@ -106,11 +106,7 @@ export class Ams extends BaseService {
       ...params,
     };
 
-    // eslint-disable-next-line sonarjs/prefer-immediate-return
-    const amsResponse = await this.callService(data);
-    //TODO: do something with AMS response?
-
-    return amsResponse;
+    return await this.callService(data);
   }
 
   public async updateAuthUser(params: {
@@ -125,11 +121,7 @@ export class Ams extends BaseService {
       ...params,
     };
 
-    // eslint-disable-next-line sonarjs/prefer-immediate-return
-    const amsResponse = await this.callService(data);
-    //TODO: do something with AMS response?
-
-    return amsResponse;
+    return await this.callService(data);
   }
 
   public async emailExists(

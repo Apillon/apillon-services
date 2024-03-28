@@ -253,8 +253,6 @@ describe('Storage directory tests', () => {
         .set('Authorization', `Bearer ${adminTestUser.token}`);
       expect(response.status).toBe(403);
     });
-
-    //TODO ! can user with role "ProjectUser" create/update/delete directory
   });
 
   describe('Delete directory tests', () => {

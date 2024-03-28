@@ -53,14 +53,6 @@ export class AuthToken extends AdvancedSQLModel {
     parser: { resolver: stringParser() },
     serializable: [SerializeFor.INSERT_DB, SerializeFor.ADMIN],
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
-    // TODO: Check what happens if token == null OR token == undefined
-    // Uncomment block if needed
-    // validators: [
-    //   {
-    //     resolver: presenceValidator(),
-    //     code: AmsErrorCode.USER_AUTH_TOKEN_EXPIRES_IN_NOT_PRESENT,
-    //   },
-    // ],
   })
   public expiresIn: string;
 

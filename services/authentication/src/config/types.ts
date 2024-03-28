@@ -124,7 +124,6 @@ export interface SignRequestData {
   did: DidUri;
 }
 
-// TODO: Remove identity prefix
 export enum AuthAppErrors {
   IDENTITY_EMAIL_IS_ALREADY_ATTESTED = 'Email already attested',
 }
