@@ -89,23 +89,26 @@ export class Override extends AdvancedSQLModel {
   })
   public value: number;
 
-  public async findByProjectObjectUuid(dto: QuotaOverrideDto): Promise<this[]> {
+  public async findByQuotaAndUuid(dto: QuotaOverrideDto): Promise<this> {
     if (!dto.project_uuid && !dto.object_uuid) {
       throw new Error('project_uuid and object_uuid should not be null');
     }
 
     const data: any[] = await this.getContext().mysql.paramExecute(
       `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE (project_uuid IS NULL OR project_uuid = @project_uuid)
-      AND (object_uuid IS NULL OR object_uuid = @object_uuid)
+      SELECT ${this.generateSelectFields()}
+      FROM \`${DbTables.OVERRIDE}\`
+      WHERE quota_id = @quota_id
+      AND (@project_uuid IS NULL OR project_uuid = @project_uuid)
+      AND (@object_uuid IS NULL OR object_uuid = @object_uuid)
       AND status <> ${SqlModelStatus.DELETED};
       `,
       dto,
     );
 
-    return data?.map((override) => this.populate(override, PopulateFrom.DB));
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async findManyByObjectUuid(object_uuid: string): Promise<this[]> {
@@ -116,7 +119,7 @@ export class Override extends AdvancedSQLModel {
     const data: any[] = await this.getContext().mysql.paramExecute(
       `
       SELECT *
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.OVERRIDE}\`
       WHERE object_uuid = @object_uuid AND status <> ${SqlModelStatus.DELETED};
       `,
       { object_uuid },
