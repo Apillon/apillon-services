@@ -21,9 +21,11 @@ export function formatWalletAddress(
   chain: Chain,
   walletAddress: string,
 ) {
-  return `${
-    chainType === ChainType.EVM ? EvmChain[chain] : SubstrateChain[chain]
-  }: ${walletAddress}`;
+  return `${getChainName(chainType, chain)}: ${walletAddress}`;
+}
+
+export function getChainName(chainType: ChainType, chain: Chain) {
+  return chainType === ChainType.EVM ? EvmChain[chain] : SubstrateChain[chain];
 }
 
 function getTokenDecimalsFromChain(chainType: ChainType, chain: Chain) {

@@ -7,8 +7,8 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { numberSizeValidator } from '../../../validators';
-import { substrateAddressValidator } from '../validators/computing-contract-validators';
-import { ChainPrefix } from '../../substrate/constants/chain-prefix';
+import { SubstrateChainPrefix } from '../../substrate/constants/substrate-chain-prefix';
+import { substrateAddressValidator } from '../../substrate/validators/address-validator';
 
 export class DepositToClusterDto extends ModelBase {
   @prop({
@@ -33,7 +33,7 @@ export class DepositToClusterDto extends ModelBase {
         code: ValidatorErrorCode.COMPUTING_ACCOUNT_ADDRESS_NOT_PRESENT,
       },
       {
-        resolver: substrateAddressValidator(ChainPrefix.PHALA),
+        resolver: substrateAddressValidator(SubstrateChainPrefix.PHALA),
         code: ValidatorErrorCode.COMPUTING_ACCOUNT_ADDRESS_NOT_VALID,
       },
     ],

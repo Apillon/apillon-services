@@ -13,6 +13,8 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  ChainType,
+  SubstrateChain,
 } from '@apillon/lib';
 import {
   booleanParser,
@@ -602,9 +604,30 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+  })
+  public chainType: ChainType;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
     fakeValue: EvmChain.MOONBASE,
   })
-  public chain: EvmChain;
+  public chain: EvmChain | SubstrateChain;
 
   @prop({
     parser: { resolver: integerParser() },

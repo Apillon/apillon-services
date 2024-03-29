@@ -1,21 +1,24 @@
 import { ModelBase, prop } from '../../../base-models/base';
 import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
-  ethAddressValidator,
   numberSizeValidator,
   presenceValidator,
   stringLengthValidator,
 } from '@rawmodel/validators';
 import {
+  ChainType,
   EvmChain,
   NFTCollectionType,
   PopulateFrom,
   SerializeFor,
+  SubstrateChain,
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { enumInclusionValidator } from '../../../validators';
 import { dropReserveLowerOrEqualToMaxSupplyValidator } from '../validators/create-collection-drop-reserve-validator';
 import { validateDropPriceIfDrop } from '../validators/create-collection-drop-price-validator';
+import { SubstrateChainPrefix } from '../../substrate/constants/substrate-chain-prefix';
+import { evmOrSubstrateWalletValidator } from '../../blockchain/validators/address-validator';
 
 export class CreateCollectionDTOBase extends ModelBase {
   @prop({
@@ -192,15 +195,32 @@ export class CreateCollectionDTOBase extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(ChainType),
+        code: ValidatorErrorCode.DATA_NOT_VALID,
+      },
+    ],
+  })
+  public chainType: ChainType;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
         code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_PRESENT,
       },
       {
-        resolver: enumInclusionValidator(EvmChain),
+        resolver: enumInclusionValidator({ ...EvmChain, ...SubstrateChain }),
         code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_VALID,
       },
     ],
   })
-  public chain: EvmChain;
+  public chain: EvmChain | SubstrateChain;
 
   @prop({
     parser: { resolver: booleanParser() },
@@ -242,7 +262,7 @@ export class CreateCollectionDTOBase extends ModelBase {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
-        resolver: ethAddressValidator(),
+        resolver: evmOrSubstrateWalletValidator(SubstrateChainPrefix.ASTAR),
         code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_VALID,
       },
     ],

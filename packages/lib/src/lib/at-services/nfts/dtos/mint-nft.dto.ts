@@ -17,10 +17,6 @@ export class MintNftDTO extends ModelBase {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.NFT_MINT_ADDRESS_NOT_PRESENT,
       },
-      {
-        resolver: ethAddressValidator(),
-        code: ValidatorErrorCode.NFT_MINT_ADDRESS_NOT_VALID,
-      },
     ],
   })
   public receivingAddress: string;
