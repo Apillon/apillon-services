@@ -4,14 +4,17 @@ import { Wallet } from '../../modules/wallet/wallet.model';
 import { Transaction } from '../../common/models/transaction';
 import { ServiceDefinitionType, WorkerDefinition } from '@apillon/workers-lib';
 import { EvmTransactionWorker } from '../evm-transaction-worker';
+import { getConfig } from '@apillon/tests-lib';
 
 describe('Handle evm transactions', () => {
   let stage: Stage;
   let wallet: Wallet;
+  let config: any;
 
   beforeAll(async () => {
+    config = await getConfig();
     stage = await setupTest();
-    env.BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER = 'http://3.251.2.33:8083/graphql';
+    env.BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER = config.moonbase.indexerUrl;
     const chain = EvmChain.MOONBASE;
     const chainType = ChainType.EVM;
     wallet = await new Wallet(

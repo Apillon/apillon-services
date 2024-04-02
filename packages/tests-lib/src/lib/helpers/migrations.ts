@@ -305,7 +305,7 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbBcsMigration.reset(),
       dbSocialMigration.reset(),
     ]);
-    
+
     // referral depends on other db!
     await dbReferralMigration.reset();
 
