@@ -272,7 +272,7 @@ export function generateTemplateData(key: string, data: any) {
       actionUrl: data.actionUrl,
       actionText: 'Buy additional credits',
       text2: `
-      <p>The credit balance notification threshold can be configured in the <a href="https://app.apillon.io/dashboard/project-settings">project's settings</a> on the Apillon developer console.</p><br>
+      <p>The credit balance notification threshold can be configured in the <a href="https://app.apillon.io/dashboard/billing">credit settings</a> on the Apillon developer console.</p><br>
       <p>
         If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
         <br/><br/><br/>
