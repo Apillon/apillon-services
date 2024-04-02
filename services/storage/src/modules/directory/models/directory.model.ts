@@ -388,10 +388,7 @@ export class Directory extends UuidSqlModel {
     //Populate link
     for (const item of data.items) {
       if (item.CID) {
-        item.link = ipfsCluster.generateLink(
-          bucket.project_uuid,
-          item.item.CID,
-        );
+        item.link = ipfsCluster.generateLink(bucket.project_uuid, item.CID);
       }
     }
 
