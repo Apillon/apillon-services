@@ -207,13 +207,15 @@ export class Project extends ProjectAccessModel {
     };
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('p', '', SerializeFor.SELECT_DB)}
+        SELECT ${this.generateSelectFields('p')}
         `,
       qFrom: `
         FROM ${DbTables.PROJECT} p
-        INNER JOIN ${DbTables.PROJECT_USER} pu ON pu.project_id = p.id
-        WHERE pu.user_id = ${params.user_id}
-        AND (@role_id IS NULL OR pu.role_id = @role_id)
+        JOIN ${DbTables.PROJECT_USER} pu 
+          ON pu.project_id = p.id
+        WHERE 
+          pu.user_id = @user_id
+          AND (@role_id IS NULL OR pu.role_id = @role_id)
         `,
     };
 

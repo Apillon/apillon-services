@@ -43,6 +43,9 @@ export function substrateChainToWorkerName(chain: SubstrateChain): string {
     case SubstrateChain.PHALA: {
       return WorkerName.TRANSMIT_PHALA_TRANSACTIONS;
     }
+    case SubstrateChain.SUBSOCIAL: {
+      return WorkerName.TRANSMIT_SUBSOCIAL_TRANSACTION;
+    }
     default: {
       throw new Error('Unsupported');
     }

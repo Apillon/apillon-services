@@ -272,14 +272,7 @@ export class Task extends AdvancedSQLModel {
       player_id,
     });
 
-    try {
-      await realization.validate();
-    } catch (err) {
-      await realization.handle(err);
-      if (!realization.isValid()) {
-        throw new ReferralValidationException(realization);
-      }
-    }
+    await realization.validateOrThrow(ReferralValidationException);
 
     await realization.insert(SerializeFor.INSERT_DB, conn);
 

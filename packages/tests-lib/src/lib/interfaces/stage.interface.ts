@@ -1,5 +1,5 @@
 import { HttpServer, INestApplication } from '@nestjs/common';
-import { Mongo, MySql } from '@apillon/lib';
+import { Context, Mongo, MySql } from '@apillon/lib';
 import { TestContext } from '../helpers/context';
 
 export interface Stage {
@@ -27,4 +27,9 @@ export interface Stage {
   socialSql: MySql;
   computingContext: TestContext;
   computingSql: MySql;
+}
+
+export interface ServiceStage {
+  db: MySql;
+  context: Context;
 }

@@ -2,13 +2,13 @@ import { BaseGQLQueries } from '../base-queries';
 export class SubsocialGQLQueries extends BaseGQLQueries {
   static ACCOUNT_ALL_TRANSACTIONS_QUERY = `query getAccountTransactions(
       $account: String!
-      $fromBlock: Int!, 
+      $fromBlock: Int!,
       $toBlock: Int!
      ) {
       systems(
         where: {
           AND: {
-            blockNumber_gte: $fromBlock,
+            blockNumber_gt: $fromBlock,
             blockNumber_lte: $toBlock,
             account_eq: $account
           }
@@ -22,14 +22,14 @@ export class SubsocialGQLQueries extends BaseGQLQueries {
       transfers(
         where: {
           AND: {
-            blockNumber_gte: $fromBlock,
+            blockNumber_gt: $fromBlock,
             blockNumber_lte: $toBlock,
-            AND: { 
+            AND: {
               OR: [{from_eq: $account}, {to_eq: $account}]
             }
           }
         }
-      ) 
+      )
       {
         ${this.BASE_SUBSTRATE_FIELDS}
         from
@@ -39,7 +39,7 @@ export class SubsocialGQLQueries extends BaseGQLQueries {
       spaces(
         where: {
           AND: {
-            blockNumber_gte: $fromBlock,
+            blockNumber_gt: $fromBlock,
             blockNumber_lte: $toBlock,
             account_eq: $account
           }
@@ -53,7 +53,7 @@ export class SubsocialGQLQueries extends BaseGQLQueries {
       posts(
         where: {
           AND: {
-            blockNumber_gte: $fromBlock,
+            blockNumber_gt: $fromBlock,
             blockNumber_lte: $toBlock,
             account_eq: $account
           }
@@ -137,7 +137,7 @@ export class SubsocialGQLQueries extends BaseGQLQueries {
       where: {
         AND: {
           extrinsicHash_in: $hashes,
-          OR: [{from_eq: $account}, {to_eq: $account}]          
+          OR: [{from_eq: $account}, {to_eq: $account}]
         }
       }
     )

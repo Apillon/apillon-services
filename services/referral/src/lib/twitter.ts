@@ -74,21 +74,14 @@ export class Twitter {
     if (!pair.exists()) {
       pair.oauth_token = resp.oauth_token;
       pair.oauth_secret = resp.oauth_token_secret;
-      try {
-        await pair.validate();
-      } catch (err) {
-        await pair.handle(err);
-        throw new ReferralValidationException(pair);
-      }
+
+      await pair.validateOrThrow(ReferralValidationException);
+
       return pair.insert();
     }
     pair.oauth_secret = resp.oauth_token_secret;
-    try {
-      await pair.validate();
-    } catch (err) {
-      await pair.handle(err);
-      throw new ReferralValidationException(pair);
-    }
+
+    await pair.validateOrThrow(ReferralValidationException);
     return pair.update();
   }
 

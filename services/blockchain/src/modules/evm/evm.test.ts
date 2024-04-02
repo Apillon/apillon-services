@@ -1,56 +1,35 @@
-import { ChainType, EvmChain } from '@apillon/lib';
+import { EvmChain, TransactionStatus } from '@apillon/lib';
 import { UnsignedTransaction, ethers } from 'ethers';
 import { Stage, releaseStage, setupTest } from '../../../test/setup';
-import { Endpoint } from '../../common/models/endpoint';
-import { Wallet } from '../wallet/wallet.model';
 import { EvmService } from './evm.service';
+import { TestBlockchain } from '@apillon/tests-lib';
+import { Wallet } from '../wallet/wallet.model';
+import { ChainType } from '@apillon/lib';
+import { Transaction } from '../../common/models/transaction';
 
 describe('Evm service unit test', () => {
   let stage: Stage;
+  let blockchain: TestBlockchain;
 
   beforeAll(async () => {
     stage = await setupTest();
+    blockchain = new TestBlockchain(stage, EvmChain.MOONBASE);
+    await blockchain.start();
   });
-
   afterAll(async () => {
     await releaseStage(stage);
   });
 
   test('Test service', async () => {
-    const endpoint = await new Endpoint(
-      {
-        url: 'https://moonbeam-alpha.api.onfinality.io/rpc?apikey=15a3df59-0a99-4216-97b4-e2d242fe64e5',
-        chain: EvmChain.MOONBASE,
-        chainType: ChainType.EVM,
-        status: 5,
-      },
-      stage.context,
-    ).insert();
-
-    const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
-    const nonce = await provider.getTransactionCount(
-      '0xFBC42ccb9440FA54cBd175A626933cE6A0DA1354',
-    );
-
-    await new Wallet(
-      {
-        chain: EvmChain.MOONBASE,
-        chainType: ChainType.EVM,
-        seed: '0xca5aae58fe85a26a8df4ffb7e58da1b9074721f945243938d3bd8682bead1cd5',
-        address: '0xFBC42ccb9440FA54cBd175A626933cE6A0DA1354',
-        nextNonce: nonce,
-      },
-      stage.context,
-    ).insert();
-
     const transaction: UnsignedTransaction = {
-      to: '0xA257f4eF17c81Eb4d15A741A8D09e1EBb3953202',
+      to: blockchain.getWalletAddress(1),
       value: 1,
       chainId: EvmChain.MOONBASE,
     };
 
     const serialized = ethers.utils.serializeTransaction(transaction);
 
+    // this already triggers transmiting transaction
     const res = await EvmService.createTransaction(
       {
         params: {
@@ -61,11 +40,19 @@ describe('Evm service unit test', () => {
       },
       stage.context,
     );
-    console.log('res: ', res);
-    // const res2 = await EvmService.transmitTransactions(
-    //   { chain: EvmChain.MOONBASE },
-    //   stage.context,
-    // );
-    // console.log('res2: ', res2);
+
+    const wallet = await new Wallet({}, stage.context).populateByAddress(
+      EvmChain.MOONBASE,
+      ChainType.EVM,
+      blockchain.getWalletAddress(0),
+    );
+
+    const tx = await new Transaction(
+      {},
+      stage.context,
+    ).getTransactionByChainAndHash(EvmChain.MOONBASE, res.transactionHash);
+
+    expect(tx.transactionStatus).toEqual(TransactionStatus.CONFIRMED);
+    expect(wallet.lastProcessedNonce).toEqual(tx.nonce);
   });
 });

@@ -265,14 +265,14 @@ export function generateTemplateData(key: string, data: any) {
       text: `
       <p>Dear Apillonian,</p><br>
 
-      <p>credit balance in your project is below threshold. <p><br>
-      <p>Credit is used to carry out various non-recurring actions. Paid functionalities will no longer be possible if the credit balance is too low.</p><br>
+      <p>Your project's credit balance is below the configured threshold. <p><br>
+      <p>Credits are used to carry out various non-recurring actions on the Apillon platform. Paid functionalities will no longer be possible if the credit balance is too low.</p><br>
 
-      <p>You can buy credit in the developer console with a credit card or with a crypto payment.</p><br>`,
+      <p>You can buy additional credits in the <a href="https://app.apillon.io/dashboard/payments">Billing and Usage section</a> with a credit card or with a crypto payment.</p><br>`,
       actionUrl: data.actionUrl,
       actionText: 'Buy additional credits',
       text2: `
-      <p>The minimum number of credits can be set in the project settings. Notifications can also be turned off there.</p><br>
+      <p>The credit balance notification threshold can be configured in the <a href="https://app.apillon.io/dashboard/billing">credit settings</a> on the Apillon developer console.</p><br>
       <p>
         If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
         <br/><br/><br/>

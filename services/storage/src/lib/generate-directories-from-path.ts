@@ -113,14 +113,7 @@ export async function generateDirectoriesFromPath(
           newDirectory.CIDv1 = ipfsDirectory.cid;
         }
 
-        try {
-          await newDirectory.validate();
-        } catch (err) {
-          await newDirectory.handle(err);
-          if (!newDirectory.isValid()) {
-            throw new StorageValidationException(newDirectory);
-          }
-        }
+        await newDirectory.validateOrThrow(StorageValidationException);
 
         currDirectory = await newDirectory.insert(SerializeFor.INSERT_DB, conn);
 

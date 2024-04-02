@@ -115,14 +115,7 @@ async function createUser(
     email,
     metadata,
   });
-  try {
-    await user.validate();
-  } catch (err) {
-    await user.handle(err);
-    if (!user.isValid()) {
-      throw new ValidationException(user, ValidatorErrorCode);
-    }
-  }
+  await user.validateOrThrow(ValidationException, ValidatorErrorCode);
 
   return user;
 }

@@ -276,11 +276,12 @@ export class Post extends UuidSqlModel {
     );
     const sqlQuery = {
       qSelect: `
-        SELECT 
+        SELECT
         post_uuid as ${this.getContext().apiName == ApiName.APILLON_API ? 'channel_uuid' : 'post_uuid'},
         postId as ${this.getContext().apiName == ApiName.APILLON_API ? 'channelId' : 'postId'},
         ${selectFields},
-        s.name as hubName
+        s.name as hubName,
+        s.spaceId as hubId
         `,
       qFrom: `
         FROM \`${DbTables.POST}\` p
@@ -306,14 +307,7 @@ export class Post extends UuidSqlModel {
 
   public async createPost() {
     const context = this.getContext();
-    try {
-      await this.validate();
-    } catch (err) {
-      await this.handle(err);
-      if (!this.isValid()) {
-        throw new SocialValidationException(this);
-      }
-    }
+    await this.validateOrThrow(SocialValidationException);
 
     const conn = await context.mysql.start();
     try {

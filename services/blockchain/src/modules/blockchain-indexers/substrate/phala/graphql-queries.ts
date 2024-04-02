@@ -34,8 +34,8 @@ export class PhalaGqlQueries extends BaseGQLQueries {
     systems(
       where: {
         AND: {
-          blockNumber_gte: $fromBlock,
-          blockNumber_lt: $toBlock,
+          blockNumber_gt: $fromBlock,
+          blockNumber_lte: $toBlock,
           account_eq: $account
         }
       }
@@ -50,8 +50,8 @@ export class PhalaGqlQueries extends BaseGQLQueries {
     transfers(
       where: {
         AND: {
-          blockNumber_gte: $fromBlock,
-          blockNumber_lt: $toBlock,
+          blockNumber_gt: $fromBlock,
+          blockNumber_lte: $toBlock,
           AND: {
             OR: [{from_eq: $account}, {to_eq: $account}]
           }
@@ -68,8 +68,8 @@ export class PhalaGqlQueries extends BaseGQLQueries {
     phatContractsInstantiatings(
       where: {
         AND: {
-          blockNumber_gte: $fromBlock,
-          blockNumber_lt: $toBlock,
+          blockNumber_gt: $fromBlock,
+          blockNumber_lte: $toBlock,
           account_eq: $account
         }
       }

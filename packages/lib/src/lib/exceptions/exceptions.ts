@@ -94,15 +94,13 @@ export class ValidationException extends HttpException {
    * @param errorCodes Validator error codes from service, which initializes this class
    */
   public constructor(model: Model, errorCodes?: any) {
-    const validationErrors = model.collectErrors().map((x) => {
-      return {
-        code: x.code,
-        property: x.path[0],
-        message: errorCodes
-          ? { ...errorCodes, ...ValidatorErrorCode }[x.code]
-          : ValidatorErrorCode[x.code] || '',
-      };
-    });
+    const validationErrors = model.collectErrors().map((x) => ({
+      code: x.code,
+      property: x.path[0],
+      message: errorCodes
+        ? { ...errorCodes, ...ValidatorErrorCode }[x.code]
+        : ValidatorErrorCode[x.code] || '',
+    }));
 
     super(
       {

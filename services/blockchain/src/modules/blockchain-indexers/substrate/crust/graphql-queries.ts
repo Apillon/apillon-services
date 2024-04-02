@@ -138,7 +138,7 @@ export class CrustGQLQueries extends BaseGQLQueries {
     transfers(
       where: {
         AND: {
-          blockNumber_gte: $fromBlock,
+          blockNumber_gt: $fromBlock,
           blockNumber_lte: $toBlock,
           AND: {
             OR: [{from_eq: $account}, {to_eq: $account}]
@@ -156,7 +156,7 @@ export class CrustGQLQueries extends BaseGQLQueries {
     storageOrders(
       where: {
         AND: {
-          blockNumber_gte: $fromBlock,
+          blockNumber_gt: $fromBlock,
           blockNumber_lte: $toBlock,
           account_eq: $account
         }

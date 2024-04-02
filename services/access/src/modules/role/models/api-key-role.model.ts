@@ -150,13 +150,13 @@ export class ApiKeyRole extends ProjectAccessModel {
       `,
       {
         apiKey_id: this.apiKey_id,
-        role_id: role_id,
+        role_id,
         service_uuid: this.service_uuid,
         project_uuid: this.project_uuid,
       },
     );
 
-    return !!(data && data.length);
+    return !!data?.length;
   }
 
   public async getApiKeyRoles(apiKey_id: number) {
@@ -168,14 +168,10 @@ export class ApiKeyRole extends ProjectAccessModel {
       AND status <> ${SqlModelStatus.DELETED};
       `,
       {
-        apiKey_id: apiKey_id,
+        apiKey_id,
       },
     );
 
-    if (data && data.length) {
-      return data;
-    } else {
-      return [];
-    }
+    return data?.length ? data : [];
   }
 }

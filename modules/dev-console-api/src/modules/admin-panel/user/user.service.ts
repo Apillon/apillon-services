@@ -29,9 +29,9 @@ export class UserService {
    * @returns {Promise<User>} The serialized user data.
    */
   async getUser(context: DevConsoleApiContext, user_uuid: UUID): Promise<User> {
-    const user = await new User({}, context).getUserDetail(user_uuid);
+    const user = await new User({}, context).populateByUUID(user_uuid);
 
-    if (!user?.id) {
+    if (!user.exists()) {
       throw new CodeException({
         status: HttpStatus.NOT_FOUND,
         code: ResourceNotFoundErrorCode.USER_DOES_NOT_EXISTS,

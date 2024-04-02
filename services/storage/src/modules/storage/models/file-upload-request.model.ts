@@ -333,16 +333,12 @@ export class FileUploadRequest extends AdvancedSQLModel {
       `,
       { session_id },
     );
-    const res = [];
-    if (data && data.length) {
-      for (const d of data) {
-        res.push(
-          new FileUploadRequest({}, context).populate(d, PopulateFrom.DB),
-        );
-      }
-    }
 
-    return res;
+    return (
+      data?.map((d) =>
+        new FileUploadRequest({}, context).populate(d, PopulateFrom.DB),
+      ) || []
+    );
   }
 
   public async populateByS3FileKey(s3FileKey: string): Promise<this> {

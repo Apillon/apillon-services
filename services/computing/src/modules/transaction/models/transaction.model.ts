@@ -241,14 +241,9 @@ export class Transaction extends AdvancedSQLModel {
       { transactionStatus, transactionType, contract_uuid },
     );
 
-    const res: Transaction[] = [];
-    if (data && data.length) {
-      for (const t of data) {
-        res.push(new Transaction({}, this.getContext()).populate(t));
-      }
-    }
-
-    return res;
+    return (
+      data?.map((d) => new Transaction({}, this.getContext()).populate(d)) || []
+    );
   }
 
   /**

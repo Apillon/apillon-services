@@ -142,6 +142,7 @@ export enum StorageEventType {
   WEBSITE_GET = 'get-website',
   WEBSITE_DEPLOY = 'deploy-website',
   WEBSITE_LIST_DOMAINS = 'list-website-domains',
+  WEBSITE_GET_ALL_DOMAINS = 'get-all-domains',
   WEBSITE_QUOTA_REACHED = 'websites-quota-reached',
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
@@ -894,4 +895,11 @@ export enum EmailTemplate {
   CRYPTO_PAYMENT_SUCCESSFUL = 'crypto-payment-successful',
 
   CREDIT_BALANCE_BELOW_THRESHOLD = 'credit-balance-below-threshold',
+}
+
+export enum JwtExpireTime {
+  ONE_DAY = '1d',
+  ONE_HOUR = '1h',
+  TWENTY_MINUTES = '20m',
+  NEVER = 'never',
 }

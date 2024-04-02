@@ -151,11 +151,10 @@ export class Identity extends AdvancedSQLModel {
         `,
       { email },
     );
-    if (data && data.length) {
-      return this.populate(data[0], PopulateFrom.DB);
-    }
 
-    return this.reset();
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   /**

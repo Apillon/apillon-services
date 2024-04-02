@@ -1,4 +1,9 @@
-import { JwtTokenType, generateJwtToken, parseJwtToken } from '@apillon/lib';
+import {
+  JwtExpireTime,
+  JwtTokenType,
+  generateJwtToken,
+  parseJwtToken,
+} from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 import { ApiCodeException } from '../../lib/exceptions';
@@ -10,7 +15,7 @@ export class AuthService {
     const sessionToken = generateJwtToken(
       JwtTokenType.AUTH_SESSION,
       { project_uuid: context.apiKey.project_uuid },
-      '20min',
+      JwtExpireTime.TWENTY_MINUTES,
     );
 
     return { sessionToken };
