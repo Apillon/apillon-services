@@ -19,6 +19,7 @@ import {
   DefaultApiKeyRole,
   QuotaCode,
   SqlModelStatus,
+  SubstrateChain,
   TransactionStatus,
 } from '@apillon/lib';
 import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
@@ -230,6 +231,51 @@ describe('Apillon API NFTs tests on Astar', () => {
 
       expect(response.status).toBe(500);
       expect(response.body.code).toBe(50012002);
+    });
+  });
+
+  describe('Astar Substrate (WASM) NFT collection tests', () => {
+    test('User should be able to create new Astar Substrate', async () => {
+      const testCollectionName = 'Astar Created NFT Collection';
+      const response = await postRequest('/nfts/collections/substrate', {
+        collectionType: 1,
+        symbol: 'ANFT',
+        name: testCollectionName,
+        maxSupply: 50,
+        dropPrice: 0,
+        project_uuid: testProject.project_uuid,
+        baseUri: TEST_COLLECTION_BASE_URI,
+        baseExtension: 'json',
+        drop: false,
+        dropStart: 0,
+        dropReserve: 5,
+        chain: SubstrateChain.ASTAR,
+        royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+        royaltiesFees: 0,
+      });
+
+      expect(response.status).toBe(201);
+      expect(response.body.data.contractAddress).toBeTruthy();
+      newCollection = await new Collection(
+        {},
+        stage.nftsContext,
+      ).populateByUUID(response.body.data.collectionUuid);
+
+      expect(newCollection.exists()).toBeTruthy();
+      expect(newCollection.name).toBe(testCollectionName);
+      expect(newCollection.collectionStatus).toBe(CollectionStatus.DEPLOYING);
+      expect(newCollection.isRevokable).toBe(false);
+      expect(newCollection.isSoulbound).toBe(false);
+      expect(newCollection.isAutoIncrement).toBe(true);
+
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
+        SubstrateChain.ASTAR,
+        newCollection.collection_uuid,
+        TransactionType.DEPLOY_CONTRACT,
+      );
+
+      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
   });
 

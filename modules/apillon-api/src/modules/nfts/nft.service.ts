@@ -1,13 +1,13 @@
 import {
-  ApillonApiCreateCollectionDTO,
+  CreateCollectionDTO,
   ApillonApiNFTCollectionQueryFilter,
   BurnNftDto,
-  CreateCollectionDTO,
   MintNftDTO,
   NestMintNftDTO,
   NftsMicroservice,
   TransactionQueryFilter,
   TransferCollectionDTO,
+  CreateSubstrateCollectionDTO,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
@@ -16,7 +16,7 @@ import { ApillonApiContext } from '../../context';
 export class NftService {
   async createCollection(
     context: ApillonApiContext,
-    body: ApillonApiCreateCollectionDTO,
+    body: CreateCollectionDTO | CreateSubstrateCollectionDTO,
   ) {
     const dto = new CreateCollectionDTO().populate({
       ...body.serialize(),

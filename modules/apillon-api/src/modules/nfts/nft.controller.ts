@@ -1,5 +1,5 @@
 import {
-  ApillonApiCreateCollectionDTO,
+  CreateCollectionDTO,
   ApillonApiNFTCollectionQueryFilter,
   AttachedServiceType,
   BurnNftDto,
@@ -9,6 +9,7 @@ import {
   TransactionQueryFilter,
   TransferCollectionDTO,
   ValidateFor,
+  CreateSubstrateCollectionDTO,
 } from '@apillon/lib';
 import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
 import {
@@ -30,16 +31,31 @@ import { NftService } from './nft.service';
 export class NftController {
   constructor(private nftService: NftService) {}
 
-  @Post('collections')
+  // POST /collections is preserved for backwards compatibility
+  @Post(['collections', 'collections/evm'])
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_WRITE,
     serviceType: AttachedServiceType.NFT,
   })
-  @Validation({ dto: ApillonApiCreateCollectionDTO })
+  @Validation({ dto: CreateCollectionDTO })
   @UseGuards(AuthGuard, ValidationGuard)
   async createCollection(
     @Ctx() context: ApillonApiContext,
-    @Body() body: ApillonApiCreateCollectionDTO,
+    @Body() body: CreateCollectionDTO,
+  ) {
+    return await this.nftService.createCollection(context, body);
+  }
+
+  @Post('collections/substrate')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.NFT,
+  })
+  @Validation({ dto: CreateSubstrateCollectionDTO })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async createSubstrateCollection(
+    @Ctx() context: ApillonApiContext,
+    @Body() body: CreateSubstrateCollectionDTO,
   ) {
     return await this.nftService.createCollection(context, body);
   }

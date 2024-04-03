@@ -340,6 +340,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    defaultValue: false,
     fakeValue: false,
   })
   public isSoulbound: boolean;
@@ -360,7 +361,8 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: true,
+    defaultValue: false,
+    fakeValue: false,
   })
   public isRevokable: boolean;
 
