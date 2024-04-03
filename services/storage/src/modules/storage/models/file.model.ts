@@ -582,4 +582,27 @@ export class File extends UuidSqlModel {
     );
     return true;
   }
+
+  /**
+   * Get total file count for project
+   * @param project_uuid
+   * @returns count of files
+   */
+  public async getFileCountOnProject(project_uuid: string): Promise<number> {
+    if (!project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as fileCount
+      FROM \`${DbTables.FILE}\`
+      WHERE project_uuid = @project_uuid
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid },
+    );
+
+    return data?.length ? data[0].fileCount : 0;
+  }
 }

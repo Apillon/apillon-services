@@ -606,4 +606,26 @@ export class ComputingService {
       });
     }
   }
+
+  /**
+   * Get computing service details for a project.
+   * @param {{ project_uuid: string }} - uuid of the project
+   * @param {ServiceContext} context
+   */
+  static async getProjectComputingDetails(
+    { project_uuid }: { project_uuid: string },
+    context: ServiceContext,
+  ): Promise<{ contractCount: number; computingTransactionCount: number }> {
+    const { total: contractCount } = await new Contract(
+      { project_uuid },
+      context,
+    ).getList(context, new ContractQueryFilter({ project_uuid }));
+
+    const computingTransactionCount = await new Transaction(
+      { project_uuid },
+      context,
+    ).getTransactionCountOnProject(project_uuid);
+
+    return { contractCount, computingTransactionCount };
+  }
 }

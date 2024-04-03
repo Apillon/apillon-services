@@ -175,6 +175,7 @@ export enum AuthenticationEventType {
   SPORRAN_SUBMIT_ATTESTATION = 'sporran-submit-attestation',
   SPORRAN_REQUEST_CREDENTIAL = 'sporran-request-credential',
   SPORRAN_VERIFY_CREDENTIAL = 'sporran-verify-credential',
+  GET_TOTAL_DIDS = 'get-total-dids',
 }
 
 export enum MailEventType {
@@ -240,6 +241,7 @@ export enum ComputingEventType {
   ENCRYPT_CONTENT = 'encrypt-content',
   ASSIGN_CID_TO_NFT = 'assign-cid-to-nft',
   LIST_CLUSTER_WALLETS = 'list-cluster-wallets',
+  PROJECT_COMPUTING_DETAILS = 'project-computing-details',
 }
 
 export enum ReferralEventType {
@@ -268,6 +270,7 @@ export enum SocialEventType {
   LIST_POSTS = 'list-posts',
   GET_POST = 'get-post',
   GET_WALLET_IDENTITY = 'get-wallet-identity',
+  PROJECT_SOCIAL_DETAILS = 'project-social-details',
 }
 
 export enum ServiceName {
@@ -766,6 +769,7 @@ export enum OauthLinkType {
 
 export enum CacheKeyPrefix {
   BUCKET_LIST = 'bucket-list',
+  STORAGE_INFO = 'storage-info',
 
   AUTH_USER_DATA = 'auth-user-data',
 
@@ -792,6 +796,7 @@ export enum CacheKeyPrefix {
   PRODUCT_PRICE = 'product-price-list',
 
   PLATFORM_STATISTICS = 'platform-statistics',
+  PROJECT_OVERVIEW = 'project-overview',
 }
 
 export enum CacheKeyTTL {

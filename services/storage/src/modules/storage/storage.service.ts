@@ -2,6 +2,7 @@ import {
   ApiName,
   AppEnvironment,
   AWS_S3,
+  BucketQueryFilter,
   CacheKeyPrefix,
   checkProjectSubscription,
   CreateS3UrlsForUploadDto,
@@ -19,6 +20,7 @@ import {
   SerializeFor,
   ServiceName,
   SqlModelStatus,
+  WebsiteQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
@@ -70,35 +72,57 @@ export class StorageService {
     usedStorage: number;
     availableBandwidth: number;
     usedBandwidth: number;
+    bucketCount: number;
+    websiteCount: number;
+    fileCount: number;
   }> {
+    const project_uuid = event.project_uuid;
     //Storage space
     const maxStorageQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_STORAGE,
-      project_uuid: event.project_uuid,
+      project_uuid,
     });
-    const availableStorage = (maxStorageQuota?.value || 3) * 1073741824;
+    const availableStorage = (maxStorageQuota?.value || 3) * 1_073_741_824;
 
-    const bucket = new Bucket({ project_uuid: event.project_uuid }, context);
+    const bucket = new Bucket({ project_uuid }, context);
     const usedStorage = await bucket.getTotalSizeUsedByProject();
 
     //Bandwidth
     const bandwidthQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_BANDWIDTH,
-      project_uuid: event.project_uuid,
+      project_uuid,
     });
     const availableBandwidth =
-      (bandwidthQuota?.value || Defaults.DEFAULT_BANDWIDTH) * 1073741824;
+      (bandwidthQuota?.value || Defaults.DEFAULT_BANDWIDTH) * 1_073_741_824;
 
     const usedBandwidth = await new IpfsBandwidth(
       {},
       context,
-    ).populateByProjectAndDate(event.project_uuid);
+    ).populateByProjectAndDate(project_uuid);
+
+    // Total objects
+    const { total: bucketCount } = await bucket.getList(
+      context,
+      new BucketQueryFilter({ project_uuid }),
+    );
+    const { total: websiteCount } = await new Website(
+      { project_uuid },
+      context,
+    ).getList(context, new WebsiteQueryFilter({ project_uuid }));
+
+    const fileCount = await new File(
+      { project_uuid },
+      context,
+    ).getFileCountOnProject(project_uuid);
 
     return {
       availableStorage,
       usedStorage,
       availableBandwidth,
       usedBandwidth: usedBandwidth.exists() ? usedBandwidth.bandwidth : 0,
+      bucketCount,
+      websiteCount,
+      fileCount,
     };
   }
 

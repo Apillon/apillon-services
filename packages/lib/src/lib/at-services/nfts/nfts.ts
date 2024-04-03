@@ -148,7 +148,9 @@ export class NftsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getProjectCollectionDetails(project_uuid: string) {
+  public async getProjectCollectionDetails(project_uuid: string): Promise<{
+    data: { numOfCollections: number; nftTransactionCount: number };
+  }> {
     const data = {
       eventName: NftsEventType.PROJECT_COLLECTION_DETAILS,
       project_uuid,
