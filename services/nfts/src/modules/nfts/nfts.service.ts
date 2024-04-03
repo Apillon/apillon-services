@@ -558,6 +558,9 @@ export class NftsService {
       context,
     );
 
+    const minimumGas =
+      260000 *
+      (collection.isAutoIncrement ? body.quantity : body.idsToMint.length);
     const { data } = await spendCreditAction(context, spendCredit, () =>
       NftsService.sendEvmTransaction(
         context,
@@ -565,7 +568,7 @@ export class NftsService {
         TransactionType.MINT_NFT,
         tx,
         spendCredit.referenceId,
-        260000,
+        minimumGas,
       ),
     );
 
