@@ -84,6 +84,10 @@ export class SubstrateService {
         typesBundle = SubsocialTypesBundle;
         break;
       }
+      case SubstrateChain.ASTAR: {
+        keyring = new Keyring({type: 'sr25519'});
+        break;
+      }
       default: {
         throw new BlockchainCodeException({
           code: BlockchainErrorCode.INVALID_CHAIN,

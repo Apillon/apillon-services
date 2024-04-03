@@ -39,6 +39,7 @@ export enum WorkerName {
   TRANSMIT_XSOCIAL_TRANSACTION = 'TransmitXsocialTransactions',
   TRANSMIT_SUBSOCIAL_TRANSACTION = 'TransmitSubsocialTransactions',
   TRANSMIT_ASTAR_TRANSACTIONS = 'TransmitAstarTransactions',
+  TRANSMIT_ASTAR_SUBSTRATE_TRANSACTIONS = 'TransmitAstarSubstrateTransactions',
   VERIFY_CRUST_TRANSACTIONS = 'VerifyCrustTransactions',
   VERIFY_KILT_TRANSACTIONS = 'VerifyKiltTransactions',
   VERIFY_PHALA_TRANSACTIONS = 'VerifyPhalaTransactions',
@@ -151,6 +152,7 @@ export async function handleLambdaEvent(
     case WorkerName.TRANSMIT_PHALA_TRANSACTIONS:
     case WorkerName.TRANSMIT_SUBSOCIAL_TRANSACTION:
     case WorkerName.TRANSMIT_XSOCIAL_TRANSACTION:
+    case WorkerName.TRANSMIT_ASTAR_SUBSTRATE_TRANSACTIONS:
       await new TransmitSubstrateTransactionWorker(
         workerDefinition,
         context,
@@ -259,6 +261,7 @@ export async function handleSqsMessages(
         case WorkerName.TRANSMIT_CRUST_TRANSACTIONS:
         case WorkerName.TRANSMIT_KILT_TRANSACTIONS:
         case WorkerName.TRANSMIT_PHALA_TRANSACTIONS:
+        case WorkerName.TRANSMIT_ASTAR_SUBSTRATE_TRANSACTIONS:
           await new TransmitSubstrateTransactionWorker(
             workerDefinition,
             context,

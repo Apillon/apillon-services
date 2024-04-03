@@ -101,8 +101,8 @@ export class ContractVersion extends AdvancedSQLModel {
    */
   public async getContractVersion(
     collectionType: NFTCollectionType,
-    version_id: number = null,
     chainType: ChainType = ChainType.EVM,
+    version_id: number = null,
   ): Promise<ContractVersion> {
     try {
       const data = await runCachedFunction(

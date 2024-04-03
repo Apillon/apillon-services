@@ -19,8 +19,9 @@ export class NftTransaction {
    * @returns UnsignedTransaction
    */
   static async createDeployContractTransaction(
-    context: ServiceContext,
     params: Collection,
+    abi: string,
+    bytecode: string,
   ): Promise<UnsignedTransaction> {
     console.log(
       `[${
@@ -29,11 +30,6 @@ export class NftTransaction {
         params.deployerAddress
       }, parameters=${JSON.stringify(params)}`,
     );
-
-    const { abi, bytecode } = await new ContractVersion(
-      {},
-      context,
-    ).getContractVersion(params.collectionType);
 
     const nftContract = new ContractFactory(abi, bytecode);
 
@@ -102,23 +98,19 @@ export class NftTransaction {
    * @param chain EVM chain used
    * @param collection The NFT collection
    * @param newOwner new owner of contract
+   * @param abi contract ABI
    * @returns UnsignedTransaction
    */
   static async createTransferOwnershipTransaction(
-    context: ServiceContext,
     chain: EvmChain,
     collection: Collection,
     newOwner: string,
+    abi: string,
   ): Promise<UnsignedTransaction> {
     const { contractAddress, collectionType, contractVersion_id } = collection;
 
     console.log(
       `[${EvmChain[chain]}] Creating NFT transfer ownership (NFT contract address=${contractAddress}, collection type=${collectionType}) transaction to wallet address: ${newOwner}`,
-    );
-
-    const abi = await new ContractVersion({}, context).getContractAbi(
-      collectionType,
-      contractVersion_id,
     );
     const nftContract = new Contract(contractAddress, abi);
 
@@ -136,25 +128,20 @@ export class NftTransaction {
    * @param chain EVM chain used
    * @param collection The NFT collection
    * @param uri URI (ipfs base uri) to set
+   * @param abi contract ABI
    * @returns UnsignedTransaction
    */
   static async createSetNftBaseUriTransaction(
-    context: ServiceContext,
     chain: EvmChain,
     collection: Collection,
     uri: string,
+    abi: string,
   ): Promise<UnsignedTransaction> {
     const { contractAddress, collectionType, contractVersion_id } = collection;
 
     console.log(
       `[${EvmChain[chain]}] Creating NFT set base token URI transaction (contract=${contractAddress}, uri=${uri}, collection type=${collectionType}).`,
     );
-
-    const abi = await new ContractVersion({}, context).getContractAbi(
-      collectionType,
-      contractVersion_id,
-    );
-
     const nftContract: Contract = new Contract(contractAddress, abi);
 
     const txData: PopulatedTransaction =
@@ -171,23 +158,19 @@ export class NftTransaction {
    * @param chain EVM chain used
    * @param collection The NFT collection
    * @param params MintNftDTO parameters
+   * @param abi contract ABI
    * @returns UnsignedTransaction
    */
   static async createMintToTransaction(
-    context: ServiceContext,
     chain: EvmChain,
     collection: Collection,
     params: MintNftDTO,
+    abi: string,
   ): Promise<UnsignedTransaction> {
     const { contractAddress, collectionType, contractVersion_id } = collection;
 
     console.log(
       `[${EvmChain[chain]}] Creating NFT (NFT contract=${contractAddress}) mint transaction (toAddress=${params.receivingAddress}, collection type=${collectionType}).`,
-    );
-
-    const abi = await new ContractVersion({}, context).getContractAbi(
-      collectionType,
-      contractVersion_id,
     );
 
     const nftContract: Contract = new Contract(contractAddress, abi);
@@ -258,23 +241,19 @@ export class NftTransaction {
    * @param chain EVM chain used
    * @param collection - The NFT collection
    * @param tokenId tokenId to burn
+   * @param abi contract ABI
    * @returns UnsignedTransaction
    */
   static async createBurnNftTransaction(
-    context: ServiceContext,
     chain: EvmChain,
     collection: Collection,
     tokenId: number,
+    abi: string,
   ): Promise<UnsignedTransaction> {
     const { contractAddress, collectionType, contractVersion_id } = collection;
 
     console.log(
       `[${EvmChain[chain]}] Creating NFT (NFT contract=${contractAddress}) burn NFT transaction (tokenId=${tokenId}, collection type=${collectionType}).`,
-    );
-
-    const abi = await new ContractVersion({}, context).getContractAbi(
-      collectionType,
-      contractVersion_id,
     );
 
     const nftContract: Contract = new Contract(contractAddress, abi);
