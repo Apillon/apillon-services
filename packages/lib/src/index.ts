@@ -105,7 +105,7 @@ export * from './lib/at-services/blockchain/dtos/wallet-deposits-query-filter';
 export * from './lib/at-services/blockchain/validators/address-validator';
 
 //#REGION Substrate
-export * from './lib/at-services/substrate/constants/substrate-chain-prefix';
+export * from './lib/at-services/substrate/types';
 
 //#REGION Social
 export * from './lib/at-services/social/social';

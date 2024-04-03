@@ -1,4 +1,4 @@
-import { SubstrateChainPrefix } from '../../substrate/constants/substrate-chain-prefix';
+import { SubstrateChainPrefix } from '../../substrate/types';
 import { ChainType } from '../../../../config/types';
 import { substrateAddressValidator } from '../../substrate/validators/address-validator';
 import { ethAddressValidator } from '@rawmodel/validators';

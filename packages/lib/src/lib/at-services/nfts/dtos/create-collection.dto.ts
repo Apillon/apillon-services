@@ -17,7 +17,7 @@ import {
 import { enumInclusionValidator } from '../../../validators';
 import { dropReserveLowerOrEqualToMaxSupplyValidator } from '../validators/create-collection-drop-reserve-validator';
 import { validateDropPriceIfDrop } from '../validators/create-collection-drop-price-validator';
-import { SubstrateChainPrefix } from '../../substrate/constants/substrate-chain-prefix';
+import { SubstrateChainPrefix } from '../../substrate/types';
 import { evmOrSubstrateWalletValidator } from '../../blockchain/validators/address-validator';
 
 export class CreateCollectionDTOBase extends ModelBase {

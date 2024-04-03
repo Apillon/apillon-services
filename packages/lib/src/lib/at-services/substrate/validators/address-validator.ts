@@ -1,4 +1,4 @@
-import { SubstrateChainPrefix } from '../constants/substrate-chain-prefix';
+import { SubstrateChainPrefix } from '../types';
 import { checkAddress } from '@polkadot/util-crypto';
 
 export function substrateAddressValidator(chainPrefix: SubstrateChainPrefix) {
