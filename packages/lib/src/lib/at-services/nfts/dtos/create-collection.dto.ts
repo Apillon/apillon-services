@@ -202,23 +202,6 @@ class CreateCollectionDTOBase extends ModelBase {
   public description: string;
 
   @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_PRESENT,
-      },
-      {
-        resolver: enumInclusionValidator({ ...EvmChain, ...SubstrateChain }),
-        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_VALID,
-      },
-    ],
-  })
-  public chain: EvmChain | SubstrateChain;
-
-  @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
@@ -302,9 +285,43 @@ export class CreateCollectionDTO extends CreateCollectionDTOBase {
     defaultValue: true,
   })
   public isAutoIncrement: boolean;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(EvmChain),
+        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_VALID,
+      },
+    ],
+  })
+  public chain: EvmChain;
 }
 
 // Same as base DTO with baseUri required.
 // Substrate NFTs do not support properties such as isRevokable, isSoulboud, isAutoIncrement etc.
 // For now no additional properties, may be added in the future
-export class CreateSubstrateCollectionDTO extends CreateCollectionDTOBase {}
+export class CreateSubstrateCollectionDTO extends CreateCollectionDTOBase {
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(SubstrateChain),
+        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_VALID,
+      },
+    ],
+  })
+  public chain: SubstrateChain;
+}
