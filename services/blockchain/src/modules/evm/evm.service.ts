@@ -190,7 +190,11 @@ export class EvmService {
       // Override gas limit in transaction with minimum.
       // This is useful for transactions like minting before contract is deployed on chain where
       // estimate gas would return a much to low limit since it would assume normal transfer.
-      if (params.minimumGas && params.minimumGas > gasLimit) {
+      if (
+        params.minimumGas &&
+        params.minimumGas > gasLimit &&
+        gasLimit < 30000
+      ) {
         gasLimit = params.minimumGas;
       }
       unsignedTx.gasLimit = ethers.BigNumber.from(gasLimit);

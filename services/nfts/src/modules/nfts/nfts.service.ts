@@ -694,7 +694,8 @@ export class NftsService {
           collection.deployerAddress
         }, parameters=${JSON.stringify(collection)}`,
       );
-      let txHash: string;
+      let serializedTransaction: string;
+      let minimumGas = null;
       switch (collection.chainType) {
         case ChainType.EVM: {
           const walletService = new WalletService(
@@ -716,7 +717,12 @@ export class NftsService {
             body,
             abi,
           );
-          txHash = ethers.utils.serializeTransaction(tx);
+          serializedTransaction = ethers.utils.serializeTransaction(tx);
+          minimumGas =
+            260000 *
+            (collection.isAutoIncrement
+              ? body.quantity
+              : body.idsToMint.length);
           break;
         }
         case ChainType.SUBSTRATE: {
@@ -740,7 +746,7 @@ export class NftsService {
               [body.receivingAddress, body.quantity],
               collection.deployerAddress,
             );
-            txHash = tx.toHex();
+            serializedTransaction = tx.toHex();
           } finally {
             await substrateContractClient.destroy();
           }
@@ -756,9 +762,9 @@ export class NftsService {
         context,
         collection,
         TransactionType.MINT_NFT,
-        txHash,
+        serializedTransaction,
         spendCredit.referenceId,
-        260000,
+        minimumGas,
       );
     });
 
@@ -1282,9 +1288,9 @@ export class NftsService {
 const TYPE_ERROR_MAP: Record<TransactionType, NftsErrorCode> = {
   [TransactionType.DEPLOY_CONTRACT]: NftsErrorCode.DEPLOY_NFT_CONTRACT_ERROR,
   [TransactionType.TRANSFER_CONTRACT_OWNERSHIP]:
-  NftsErrorCode.TRANSFER_NFT_CONTRACT_ERROR,
+    NftsErrorCode.TRANSFER_NFT_CONTRACT_ERROR,
   [TransactionType.SET_COLLECTION_BASE_URI]:
-  NftsErrorCode.SET_NFT_BASE_URI_ERROR,
+    NftsErrorCode.SET_NFT_BASE_URI_ERROR,
   [TransactionType.MINT_NFT]: NftsErrorCode.MINT_NFT_ERROR,
   [TransactionType.NEST_MINT_NFT]: NftsErrorCode.NEST_MINT_NFT_ERROR,
   [TransactionType.BURN_NFT]: NftsErrorCode.BURN_NFT_ERROR,
