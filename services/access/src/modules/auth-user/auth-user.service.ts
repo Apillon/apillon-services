@@ -14,6 +14,7 @@ import {
   env,
   invalidateCacheKey,
   CacheKeyPrefix,
+  JwtExpireTime,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AmsErrorCode } from '../../config/types';
@@ -26,7 +27,6 @@ import { AuthToken } from '../auth-token/auth-token.model';
 import { AuthUser } from './auth-user.model';
 import { CryptoHash } from '../../lib/hash-with-crypto';
 import { ApiKeyService } from '../api-key/api-key.service';
-import { JwtExpireTime } from '@apillon/lib/src/config/types';
 
 /**
  * AuthUserService class handles user authentication and related operations, such as registration, login, password reset, and email verification.

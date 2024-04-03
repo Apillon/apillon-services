@@ -4,6 +4,7 @@ import { Wallet } from '../../wallet/wallet.model';
 import { setupTest, releaseStage, Stage } from '../../../../test/setup';
 import { KiltBlockchainIndexer } from '../substrate/kilt/indexer.service';
 import { kiltIndexerTransactions } from './test-data/indexer-transactions';
+import { getConfig } from '@apillon/tests-lib';
 
 describe('Indexer tests', () => {
   let stage: Stage;
@@ -11,10 +12,12 @@ describe('Indexer tests', () => {
   let address: string;
   let chain: number;
   let chainType: number;
+  let config: any;
 
   beforeAll(async () => {
     stage = await setupTest();
-    env.BLOCKCHAIN_KILT_GRAPHQL_SERVER = 'http://3.251.2.33:8082/graphql';
+    config = await getConfig();
+    env.BLOCKCHAIN_KILT_GRAPHQL_SERVER = config.kilt.indexerUrl;
     address = '4sAqndzGzNYtrdAWhSSnaGptrGY1TSJ99kf5ZRwAzcPUbaTN';
     chain = SubstrateChain.KILT;
     chainType = ChainType.SUBSTRATE;

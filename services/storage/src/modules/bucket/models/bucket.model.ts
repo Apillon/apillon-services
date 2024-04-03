@@ -291,7 +291,11 @@ export class Bucket extends UuidSqlModel {
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
   }
 
-  public async clearBucketContent(context: Context, conn: PoolConnection, updateBucketSize = true) {
+  public async clearBucketContent(
+    context: Context,
+    conn: PoolConnection,
+    updateBucketSize = true,
+  ) {
     await context.mysql.paramExecute(
       `
         UPDATE \`${DbTables.DIRECTORY}\`
@@ -314,8 +318,7 @@ export class Bucket extends UuidSqlModel {
       conn,
     );
 
-    if(updateBucketSize)
-    {
+    if (updateBucketSize) {
       this.size = 0;
       await this.update(SerializeFor.UPDATE_DB, conn);
     }
@@ -350,7 +353,7 @@ export class Bucket extends UuidSqlModel {
         SELECT SUM(size) as totalSize
         FROM \`${DbTables.BUCKET}\`
         WHERE project_uuid = @project_uuid
-          AND status <> ${SqlModelStatus.DELETED};
+        AND status <> ${SqlModelStatus.DELETED};
       `,
       { project_uuid: this.project_uuid },
     );
@@ -368,7 +371,7 @@ export class Bucket extends UuidSqlModel {
         SELECT f.id
         FROM \`${DbTables.FILE}\` f
         WHERE f.bucket_id = @bucket_id
-          AND status <> ${SqlModelStatus.DELETED} LIMIT 1;
+        AND status <> ${SqlModelStatus.DELETED} LIMIT 1;
       `,
       { bucket_id: this.id },
     );

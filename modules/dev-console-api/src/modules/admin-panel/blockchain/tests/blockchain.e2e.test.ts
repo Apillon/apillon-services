@@ -12,7 +12,6 @@ import {
   TestBlockchain,
   TestUser,
 } from '@apillon/tests-lib';
-import { ethers } from 'ethers';
 import { releaseStage, Stage } from '@apillon/tests-lib';
 import { setupTest } from '../../../../../test/helpers/setup';
 import { TransactionLog } from '@apillon/blockchain/src/modules/accounting/transaction-log.model';
@@ -27,25 +26,29 @@ describe('Blockchain endpoint tests', () => {
   let adminTestUser: TestUser;
   let testWallet: Wallet;
   let testTransaction: TransactionLog;
+
   beforeAll(async () => {
     stage = await setupTest(
       env.ADMIN_CONSOLE_API_PORT_TEST,
       env.ADMIN_CONSOLE_API_HOST_TEST,
     );
-    blockchain = new TestBlockchain(stage, EvmChain.MOONBEAM);
+
+    blockchain = TestBlockchain.fromStage(stage, EvmChain.MOONBEAM);
     await blockchain.start();
+
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     adminTestUser = await createTestUser(
       stage.devConsoleContext,
       stage.amsContext,
       DefaultUserRole.ADMIN,
     );
+
     testWallet = new Wallet(
       {
-        address: '0x25Cd0fE6953F5799AEbDa9ee445287CFb101972E',
+        address: blockchain.getWalletAddress(0),
         chainType: ChainType.EVM,
         chain: EvmChain.MOONBEAM,
-        seed: '2cf25b7536db83303e3fb5b8ca50a08758ffbfd1a4e1c7a8bc7a4d6e9f9e7519',
+        seed: blockchain.getWalletPrivateKey(0),
         nonce: 0,
         nextNonce: 1,
         status: SqlModelStatus.ACTIVE,

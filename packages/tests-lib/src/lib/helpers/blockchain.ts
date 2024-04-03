@@ -1,8 +1,11 @@
 import ganache, { Server } from 'ganache';
-import { ServiceStage } from '../interfaces/stage.interface';
+import { ServiceStage, Stage } from '../interfaces/stage.interface';
 import { Wallet } from '@apillon/blockchain/src/modules/wallet/wallet.model';
 import { ChainType, EvmChain } from '@apillon/lib';
 import { ethers } from 'ethers';
+import { TransactionType } from '@apillon/nfts/src/config/types';
+import { Transaction as NftCollectionTx } from '@apillon/nfts/src/modules/transaction/models/transaction.model';
+import { Transaction as BlockchainTx } from '@apillon/blockchain/src/common/models/transaction';
 
 const KEYS = {
   '0x7756251cff23061ec0856f8ec8d7384a2d260aa2':
@@ -45,7 +48,7 @@ export class TestBlockchain {
 
     this.accounts = Object.keys(this.keys);
     this.server = ganache.server({
-      chain: { chainId: chainId },
+      chain: { chainId },
       wallet: {
         accounts: this.accounts.map((account) => ({
           secretKey: this.keys[account],
@@ -53,6 +56,17 @@ export class TestBlockchain {
         })),
       },
     });
+  }
+
+  static fromStage(stage: Stage, chainId: EvmChain, port = 8545) {
+    return new TestBlockchain(
+      {
+        db: stage.blockchainSql,
+        context: stage.blockchainContext,
+      },
+      chainId,
+      port,
+    );
   }
 
   async start() {
@@ -87,6 +101,14 @@ export class TestBlockchain {
     return accountIndex < this.accounts.length
       ? this.accounts[accountIndex]
       : null;
+  }
+
+  getWalletPrivateKey(accountIndex: number) {
+    if (accountIndex < this.accounts.length) {
+      const address = this.accounts[accountIndex];
+      return KEYS[address];
+    }
+    return null;
   }
 
   async contractRead(to: string, data: string) {
@@ -176,4 +198,25 @@ export class TestBlockchain {
     });
     await wallet.insert();
   }
+}
+
+export async function getNftTransactionStatus(
+  stage: Stage,
+  chainId: EvmChain,
+  collectionUuid: string,
+  transactionType: TransactionType,
+) {
+  const collectionTxs = await new NftCollectionTx(
+    {},
+    stage.nftsContext,
+  ).getCollectionTransactions(collectionUuid);
+  const collectionTx = collectionTxs.find(
+    (x) => x.transactionType == transactionType,
+  );
+  const blockchainTx = await new BlockchainTx(
+    {},
+    stage.blockchainContext,
+  ).getTransactionByChainAndHash(chainId, collectionTx.transactionHash);
+
+  return blockchainTx.transactionStatus;
 }

@@ -10,6 +10,8 @@ import {
   Stage,
   TestBlockchain,
   TestUser,
+  getNftTransactionStatus,
+  insertEvmNftContractVersion,
 } from '@apillon/tests-lib';
 import {
   ApiKeyRoleBaseDto,
@@ -46,12 +48,15 @@ describe('Apillon API NFTs tests on Astar', () => {
   let testService: Service;
   let apiKey: ApiKey;
   let getRequest, postRequest;
+  let newCollection: Collection;
 
   beforeAll(async () => {
     stage = await setupTest();
 
-    blockchain = new TestBlockchain(stage, CHAIN_ID);
+    blockchain = TestBlockchain.fromStage(stage, CHAIN_ID);
     await blockchain.start();
+
+    await insertEvmNftContractVersion(stage.nftsContext);
 
     //User 1 project & other data
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
@@ -123,17 +128,17 @@ describe('Apillon API NFTs tests on Astar', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.contractAddress).toBeTruthy();
-      const createdCollection = await new Collection(
+      newCollection = await new Collection(
         {},
         stage.nftsContext,
       ).populateByUUID(response.body.data.collectionUuid);
-      expect(createdCollection.exists()).toBeTruthy();
-      expect(createdCollection.name).toBe(testCollectionName);
-      expect(createdCollection.collectionStatus).toBe(
-        CollectionStatus.DEPLOYING,
-      );
-      const transactionStatus = await blockchain.getNftTransactionStatus(
-        createdCollection.collection_uuid,
+      expect(newCollection.exists()).toBeTruthy();
+      expect(newCollection.name).toBe(testCollectionName);
+      expect(newCollection.collectionStatus).toBe(CollectionStatus.DEPLOYING);
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
+        CHAIN_ID,
+        newCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
@@ -169,15 +174,6 @@ describe('Apillon API NFTs tests on Astar', () => {
     });
 
     test('User should be able to mint NFT', async () => {
-      const newCollection = await createTestNFTCollection(
-        testUser,
-        stage.nftsContext,
-        testProject,
-        SqlModelStatus.DRAFT,
-        CollectionStatus.CREATED,
-        { collectionType: 1, chain: CHAIN_ID },
-      );
-
       const response = await postRequest(
         `/nfts/collections/${newCollection.collection_uuid}/mint`,
         {
@@ -187,7 +183,9 @@ describe('Apillon API NFTs tests on Astar', () => {
       );
 
       expect(response.status).toBe(201);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
+        CHAIN_ID,
         newCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
@@ -195,14 +193,6 @@ describe('Apillon API NFTs tests on Astar', () => {
     });
 
     test('User should be able to transfer NFT collection', async () => {
-      const newCollection = await createTestNFTCollection(
-        testUser,
-        stage.nftsContext,
-        testProject,
-        SqlModelStatus.DRAFT,
-        CollectionStatus.CREATED,
-        { collectionType: 1, chain: CHAIN_ID },
-      );
       const response = await postRequest(
         `/nfts/collections/${newCollection.collection_uuid}/transfer`,
         {
@@ -211,7 +201,9 @@ describe('Apillon API NFTs tests on Astar', () => {
       );
 
       expect(response.status).toBe(201);
-      const transactionStatus = await blockchain.getNftTransactionStatus(
+      const transactionStatus = await getNftTransactionStatus(
+        stage,
+        CHAIN_ID,
         newCollection.collection_uuid,
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );
@@ -242,7 +234,9 @@ describe('Apillon API NFTs tests on Astar', () => {
   });
 
   afterAll(async () => {
-    await blockchain.stop();
+    if (blockchain) {
+      await blockchain.stop();
+    }
     await releaseStage(stage);
   });
 });

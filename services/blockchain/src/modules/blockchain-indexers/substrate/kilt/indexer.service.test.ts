@@ -1,12 +1,15 @@
 import { env } from '@apillon/lib';
 import { KiltBlockchainIndexer } from './indexer.service';
+import { getConfig } from '@apillon/tests-lib';
 
 // TODO: Move to indexer, test with real wallet
 // TODO2: Add more test cases
 // TODO3: Once new indexer deployed to crust, modify this test.
 describe('Testing indexer data-fetch', () => {
+  let config: any;
   beforeAll(async () => {
-    env.BLOCKCHAIN_KILT_GRAPHQL_SERVER = 'http://3.251.2.33:8082/graphql';
+    config = await getConfig();
+    env.BLOCKCHAIN_KILT_GRAPHQL_SERVER = config.kilt.indexerUrl;
   });
 
   test('Get all transactions', async () => {

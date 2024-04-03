@@ -42,55 +42,57 @@ export class WalletService {
   }
 
   async createDeployTransaction(
-    context: ServiceContext,
     params: Collection,
+    abi: string,
+    bytecode: string,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createDeployContractTransaction(
-      context,
       params,
+      abi,
+      bytecode,
     );
   }
 
   async createTransferOwnershipTransaction(
-    context: ServiceContext,
     collection: Collection,
     newOwner: string,
+    abi: string,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createTransferOwnershipTransaction(
-      context,
       this.evmChain,
       collection,
       newOwner,
+      abi,
     );
   }
 
   async createSetNftBaseUriTransaction(
-    context: ServiceContext,
     collection: Collection,
     uri: string,
+    abi: string,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createSetNftBaseUriTransaction(
-      context,
       this.evmChain,
       collection,
       uri,
+      abi,
     );
   }
 
   async createMintToTransaction(
-    context: ServiceContext,
     collection: Collection,
     params: MintNftDTO,
+    abi: string,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createMintToTransaction(
-      context,
       this.evmChain,
       collection,
       params,
+      abi,
     );
   }
 
@@ -113,16 +115,16 @@ export class WalletService {
   }
 
   async createBurnNftTransaction(
-    context: ServiceContext,
     collection: Collection,
     tokenId: number,
+    abi: string,
   ): Promise<UnsignedTransaction> {
     await this.initializeProvider();
     return await NftTransaction.createBurnNftTransaction(
-      context,
       this.evmChain,
       collection,
       tokenId,
+      abi,
     );
   }
 

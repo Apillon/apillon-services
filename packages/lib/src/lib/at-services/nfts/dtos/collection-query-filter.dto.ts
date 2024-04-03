@@ -1,23 +1,9 @@
-// import { ApiProperty } from '@babel/core';
 import { prop } from '@rawmodel/core';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
-import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
-import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
+import { PopulateFrom } from '../../../../config/types';
+import { BaseProjectQueryFilter } from '../../../base-models/base-project-query-filter.model';
 
-export class NFTCollectionQueryFilter extends BaseQueryFilter {
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_PROJECT_UUID_QUERY_PARAM_NOT_PRESENT,
-      },
-    ],
-  })
-  public project_uuid: string;
-
+export class NFTCollectionQueryFilter extends BaseProjectQueryFilter {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -32,5 +18,5 @@ export class ApillonApiNFTCollectionQueryFilter extends NFTCollectionQueryFilter
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public project_uuid: string;
+  public override project_uuid: string;
 }

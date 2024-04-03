@@ -15,6 +15,7 @@ import { Transaction } from '../../common/models/transaction';
 import { Wallet } from '../../modules/wallet/wallet.model';
 import { WorkerName } from '../worker-executor';
 import { PhalaTransactionWorker } from '../phala-transaction-worker';
+import { getConfig } from '@apillon/tests-lib';
 
 const CHAIN_TYPE = ChainType.SUBSTRATE;
 const CHAIN = SubstrateChain.PHALA;
@@ -23,10 +24,12 @@ const TEST_ADDRESS = '4698EF9dVV5SaU9MuKpWqcdnxvvsito6Do3ARrinnuiZDdKk';
 describe('Phala tests', () => {
   let stage: Stage;
   let wallet: Wallet;
+  let config: any;
   const startBlock = 3513452;
   beforeAll(async () => {
     stage = await setupTest();
-    env.BLOCKCHAIN_PHALA_GRAPHQL_SERVER = 'http://3.251.2.33:8086/graphql';
+    config = await getConfig();
+    env.BLOCKCHAIN_PHALA_GRAPHQL_SERVER = config.phala.indexerUrl;
 
     wallet = await new Wallet(
       {

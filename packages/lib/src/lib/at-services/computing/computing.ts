@@ -98,4 +98,13 @@ export class ComputingMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async getProjectComputingDetails(
+    project_uuid: string,
+  ): Promise<{ data: { contractCount: number; transactionCount: number } }> {
+    return await this.callService({
+      eventName: ComputingEventType.PROJECT_COMPUTING_DETAILS,
+      project_uuid,
+    });
+  }
 }

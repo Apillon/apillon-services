@@ -6,6 +6,7 @@ import {
   refundCredit,
   SerializeFor,
   ServiceName,
+  checkProjectSubscription,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -32,7 +33,6 @@ import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { Ipns } from '../modules/ipns/models/ipns.model';
 import { File } from '../modules/storage/models/file.model';
-import { checkProjectSubscription } from '@apillon/lib/src';
 
 /**
  * Worker uploads files from source bucket to IPFS, acquired CID is published to website ipns record.
@@ -158,8 +158,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
             this.context,
           ).populateDeploymentByCid(deployment.cid);
 
-          if(!reviewedDeployment.exists())
-          {
+          if (!reviewedDeployment.exists()) {
             //if project is on freemium, website goes to review
             await deployment.sendToReview(website, data.user_uuid);
             return;

@@ -15,6 +15,7 @@ import { Transaction } from '../../common/models/transaction';
 import { Wallet } from '../../modules/wallet/wallet.model';
 import { WorkerName } from '../worker-executor';
 import { SubsocialTransactionWorker } from '../subsocial-transaction-worker';
+import { getConfig } from '@apillon/tests-lib';
 
 const CHAIN_TYPE = ChainType.SUBSTRATE;
 const CHAIN = SubstrateChain.SUBSOCIAL;
@@ -22,11 +23,13 @@ const TEST_ADDRESS = '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6';
 
 describe('subsocial transaction worker tests', () => {
   let stage: Stage;
+  let config: any;
   let wallet: Wallet;
   const startBlock = 4755750;
   beforeAll(async () => {
+    config = getConfig();
     stage = await setupTest();
-    env.BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER = 'http://3.251.2.33:8087/graphql';
+    env.BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER = config.subsocial.indexerUrl;
 
     wallet = await new Wallet(
       {

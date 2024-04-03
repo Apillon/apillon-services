@@ -281,4 +281,30 @@ export class Transaction extends AdvancedSQLModel {
       ),
     };
   }
+
+  /**
+   * Get total transaction count within a project
+   * @param project_uuid
+   * @returns count of transactions
+   */
+  public async getTransactionCountOnProject(
+    project_uuid: string,
+  ): Promise<number> {
+    if (!project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as txCount
+      FROM \`${DbTables.TRANSACTION}\` t
+      INNER JOIN \`${DbTables.COLLECTION}\` c ON t.refId = c.id
+      WHERE c.project_uuid = @project_uuid
+      AND t.status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid },
+    );
+
+    return data?.length ? data[0].txCount : 0;
+  }
 }

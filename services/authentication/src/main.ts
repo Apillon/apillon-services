@@ -1,6 +1,4 @@
-import type { Context } from 'aws-lambda/handler';
-import { AuthenticationEventType } from '@apillon/lib';
-
+import { AuthenticationEventType, Context } from '@apillon/lib';
 import { VerificationService } from './modules/verification/verification.service';
 import { IdentityService } from './modules/identity/identity.service';
 import { SporranService } from './modules/sporran/sporran.service';
@@ -38,6 +36,8 @@ export async function processEvent(event, context: Context): Promise<any> {
       SporranService.verifySession,
     [AuthenticationEventType.SPORRAN_VERIFY_CREDENTIAL]:
       SporranService.verifyCredential,
+    [AuthenticationEventType.GET_TOTAL_DIDS]:
+      IdentityService.getTotalDidsCreated,
   };
 
   return await processors[event.eventName](event, context);
