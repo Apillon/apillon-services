@@ -91,6 +91,9 @@ export class NftsService {
     ).populate({
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
+      chainType: Object.values(EvmChain).includes(params.body.chain as number)
+        ? ChainType.EVM
+        : ChainType.SUBSTRATE,
     });
 
     const product_id = {

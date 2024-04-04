@@ -1,7 +1,7 @@
 import ganache, { Server } from 'ganache';
 import { ServiceStage, Stage } from '../interfaces/stage.interface';
 import { Wallet } from '@apillon/blockchain/src/modules/wallet/wallet.model';
-import { ChainType, EvmChain } from '@apillon/lib';
+import { ChainType, EvmChain, SubstrateChain } from '@apillon/lib';
 import { ethers } from 'ethers';
 import { TransactionType } from '@apillon/nfts/src/config/types';
 import { Transaction as NftCollectionTx } from '@apillon/nfts/src/modules/transaction/models/transaction.model';
@@ -202,7 +202,7 @@ export class TestBlockchain {
 
 export async function getNftTransactionStatus(
   stage: Stage,
-  chainId: EvmChain,
+  chainId: EvmChain | SubstrateChain,
   collectionUuid: string,
   transactionType: TransactionType,
 ) {
