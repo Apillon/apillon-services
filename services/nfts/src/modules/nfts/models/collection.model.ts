@@ -678,6 +678,7 @@ export class Collection extends ProjectAccessModel {
         FROM \`${DbTables.COLLECTION}\` c
         WHERE c.project_uuid = IFNULL(@project_uuid, c.project_uuid)
         AND (@search IS null OR c.name LIKE CONCAT('%', @search, '%') OR c.collection_uuid = @search)
+        AND (@chainType IS null OR c.chainType = @chainType)
         AND (@collectionStatus IS null OR c.collectionStatus = @collectionStatus)
         AND
             (

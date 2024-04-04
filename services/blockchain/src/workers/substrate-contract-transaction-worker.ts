@@ -10,10 +10,8 @@ import { LogOutput } from '@apillon/workers-lib';
 import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/base-blockchain-indexer';
 
 /**
- * Phala has its own worker because beside normal transactions (transmitted by
- * our wallet) we also need to fetch "Instantiated" events to retrieve contract
- * address from TX that we didn't emit (these transactions are emitted by Phala
- * workers on successful instantiation)
+ * Worker which beside transfer transactions also fetches "Instantiating" events
+ * to retrieve contract address from TX.
  */
 export class SubstrateContractTransactionWorker extends SubstrateTransactionWorker {
   protected indexer: BaseBlockchainIndexer;

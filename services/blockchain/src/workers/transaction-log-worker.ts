@@ -416,7 +416,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
               toBlock,
             );
             console.log(`Got ${systems.length} Astar system events!`);
-            const {transfers} =
+            const { transfers } =
               await indexer.getAccountBalanceTransfersForTxs(
                 wallet.address,
                 lastBlock,
