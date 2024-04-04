@@ -53,7 +53,7 @@ export class AstarGqlQueries extends BaseGQLQueries {
     ) {
       ${this.BASE_SUBSTRATE_FIELDS}
       account
-      contractAddress
+      contract
       fee
     }
   }`;
@@ -71,7 +71,7 @@ export class AstarGqlQueries extends BaseGQLQueries {
     ) {
       ${this.BASE_SUBSTRATE_FIELDS}
       account
-      contractAddress
+      contract
       fee
     }
   }`;

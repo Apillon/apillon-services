@@ -35,7 +35,7 @@ export class SubstrateContractTransactionWorker extends SubstrateTransactionWork
     for (const contractTransaction of contractTransactions) {
       await this.updateContractTransaction(
         contractTransaction.extrinsicHash,
-        contractTransaction.contractAddress,
+        contractTransaction.contract,
         conn,
       );
       // remove transaction so we don't update it again bellow
