@@ -55,10 +55,45 @@ export class IPFSService {
       this.context,
     ).getIpfsCluster();
 
-    if (ipfsCluster.ipfsApi.endsWith('/')) {
-      ipfsCluster.ipfsApi = ipfsCluster.ipfsApi.slice(0, -1);
-    }
     this.kuboRpcApiClient = new IpfsKuboRpcHttpClient(ipfsCluster.ipfsApi);
+
+    //health check
+    try {
+      await this.kuboRpcApiClient.version(1000);
+    } catch (err) {
+      let canUseBackupNode = false;
+      if (ipfsCluster.backupIpfsApi) {
+        //Initialize client with backup api
+        this.kuboRpcApiClient = new IpfsKuboRpcHttpClient(
+          ipfsCluster.backupIpfsApi,
+        );
+        await this.kuboRpcApiClient
+          .version(1000)
+          .then(() => {
+            canUseBackupNode = true;
+          })
+          .catch((err) => {
+            //backup node is also not working
+            canUseBackupNode = false;
+            console.error(
+              'Error performing health check of backup ipfs api',
+              err,
+            );
+          });
+      }
+      //Send alert
+      await new Lmas().writeLog({
+        logType: LogType.ALERT,
+        message: `Error initializing IPFS Client. Failed to get ipfs version (ipfs api health check). ${canUseBackupNode ? 'Using backup node...' : ''}`,
+        location: 'IPFSService.initializeIPFSClient',
+        service: ServiceName.STORAGE,
+        data: {
+          canUseBackupNode,
+          error: err,
+        },
+        sendAdminAlert: !canUseBackupNode,
+      });
+    }
   }
 
   /**
