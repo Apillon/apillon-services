@@ -15,6 +15,7 @@ import { Transaction } from '../../common/models/transaction';
 import { Wallet } from '../../modules/wallet/wallet.model';
 import { WorkerName } from '../worker-executor';
 import { SubstrateContractTransactionWorker } from '../substrate-contract-transaction-worker';
+import { getConfig } from '@apillon/tests-lib';
 
 const CHAIN_TYPE = ChainType.SUBSTRATE;
 const CHAIN = SubstrateChain.ASTAR;
@@ -23,17 +24,19 @@ const TEST_ADDRESS = 'bTdmScYtDDGg12mG1pvQ5zAooMXMK45WHBt3meGDXrNBKua';
 describe('Astar Substrate tests', () => {
   let stage: Stage;
   let wallet: Wallet;
+  let config: any;
+
   beforeAll(async () => {
+    config = await getConfig();
     stage = await setupTest();
     env.BLOCKCHAIN_ASTAR_SUBSTRATE_GRAPHQL_SERVER =
-      'http://3.251.2.33:8088/graphql';
+      config.astar_substrate.indexerUrl;
 
     wallet = await new Wallet(
       {
         chain: CHAIN,
         chainType: CHAIN_TYPE,
         address: TEST_ADDRESS,
-        // This is actually not correct - the seed should match the address
         seed: mnemonicGenerate(),
         blockParseSize: 200,
         lastParsedBlock: 5964393,

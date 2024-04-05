@@ -36,7 +36,6 @@ describe('subsocial transaction worker tests', () => {
         chain: CHAIN,
         chainType: CHAIN_TYPE,
         address: TEST_ADDRESS,
-        // This is actually not correct - the seed should match the address
         seed: mnemonicGenerate(),
         lastParsedBlock: startBlock,
       },

@@ -17,6 +17,7 @@ import { Endpoint } from '../../common/models/endpoint';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import { Transaction } from '../../common/models/transaction';
+import { getConfig } from '@apillon/tests-lib';
 
 const CHAIN_TYPE = ChainType.SUBSTRATE;
 const CHAIN = SubstrateChain.ASTAR;
@@ -296,13 +297,14 @@ describe('Astar Substrate transaction Log Worker unit test', () => {
   let wallet: Wallet;
   let logCount: number;
   let writeEventLogMock: any;
-
   let worker: TransactionLogWorker;
+  let config: any;
 
   beforeAll(async () => {
+    config = await getConfig();
     stage = await setupTest();
     env.BLOCKCHAIN_ASTAR_SUBSTRATE_GRAPHQL_SERVER =
-      'http://3.251.2.33:8088/graphql';
+      config.astar_substrate.indexerUrl;
 
     wallet = new Wallet(
       {
@@ -342,7 +344,7 @@ describe('Astar Substrate transaction Log Worker unit test', () => {
 
     await new Endpoint(
       {
-        url: 'wss://rpc.shibuya.astar.network',
+        url: config.astar_substrate.endpoint.url,
         chain: CHAIN,
         chainType: CHAIN_TYPE,
       },
@@ -384,7 +386,7 @@ describe('Astar Substrate transaction Log Worker unit test', () => {
     mockAxios
       .onGet(/https:\/\/api.coingecko.com\/api\/v3\/simple\/price.*/)
       .reply(200, {
-        pha: { usd: 1 },
+        astar: { usd: 1 },
       });
 
     await worker.runExecutor(walletPlan);

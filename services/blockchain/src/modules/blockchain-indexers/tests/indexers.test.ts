@@ -27,7 +27,6 @@ describe('Indexer tests', () => {
         chain,
         chainType,
         address,
-        // This is actually not correct - the seed should match the address
         seed: mnemonicGenerate(),
         lastParsedBlock: 3982289,
       },

@@ -29,7 +29,6 @@ describe('MOONBASE', () => {
         chain,
         chainType,
         address,
-        // This is actually not correct - the seed should match the address
         seed: 'Yadayaya',
         lastParsedBlock: 4845276,
         blockParseSize: 1e6, // Set to something huge, since it's only test and we want to account all TX
