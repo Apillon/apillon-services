@@ -1,6 +1,7 @@
 import { ModelBase, prop } from '../../../base-models/base';
 import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
+  ethAddressValidator,
   numberSizeValidator,
   presenceValidator,
   stringLengthValidator,
@@ -17,7 +18,7 @@ import { enumInclusionValidator } from '../../../validators';
 import { dropReserveLowerOrEqualToMaxSupplyValidator } from '../validators/create-collection-drop-reserve-validator';
 import { validateDropPriceIfDrop } from '../validators/create-collection-drop-price-validator';
 import { SubstrateChainPrefix } from '../../substrate/types';
-import { evmOrSubstrateWalletValidator } from '../../blockchain/validators/address-validator';
+import { substrateAddressValidator } from '../../substrate/validators/address-validator';
 
 // Contains properties which are present for all collections
 class CreateCollectionDTOBase extends ModelBase {
@@ -242,7 +243,7 @@ export class CreateCollectionDTO extends CreateCollectionDTOBase {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
-        resolver: evmOrSubstrateWalletValidator(SubstrateChainPrefix.ASTAR),
+        resolver: ethAddressValidator(),
         code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_VALID,
       },
     ],
@@ -317,7 +318,7 @@ export class CreateSubstrateCollectionDTO extends CreateCollectionDTOBase {
         code: ValidatorErrorCode.DATA_NOT_PRESENT,
       },
       {
-        resolver: evmOrSubstrateWalletValidator(SubstrateChainPrefix.ASTAR),
+        resolver: substrateAddressValidator(SubstrateChainPrefix.ASTAR),
         code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_VALID,
       },
     ],
