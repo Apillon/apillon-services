@@ -1,5 +1,5 @@
 import { SubstrateChainPrefix } from '../../substrate/types';
-import { ChainType } from '../../../../config/types';
+import { ChainType, EvmChain } from '../../../../config/types';
 import { substrateAddressValidator } from '../../substrate/validators/address-validator';
 import { ethAddressValidator } from '@rawmodel/validators';
 
@@ -22,12 +22,14 @@ export function isEvmOrSubstrateWalletAddress(
 export function evmOrSubstrateWalletValidator(
   substrateChainPrefix: SubstrateChainPrefix,
   allowNull = false,
-  chainTypeKey = 'chainType',
 ) {
   return function (this: any, address: string): boolean {
+    const chainType = Object.values(EvmChain).includes(this.chain)
+      ? ChainType.EVM
+      : ChainType.SUBSTRATE;
     return isEvmOrSubstrateWalletAddress(
       address,
-      this[chainTypeKey],
+      chainType,
       substrateChainPrefix,
       allowNull,
     );
