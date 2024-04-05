@@ -1,4 +1,4 @@
-import { WalletIdentityDto } from '../../..';
+import { SocialPostQueryFilter, WalletIdentityDto } from '../../..';
 import { env } from '../../../config/env';
 import { AppEnvironment, SocialEventType } from '../../../config/types';
 import { BaseProjectQueryFilter } from '../../base-models/base-project-query-filter.model';
@@ -48,10 +48,9 @@ export class SocialMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async listPosts(space_uuid: string, params: BaseQueryFilter) {
+  public async listPosts(params: SocialPostQueryFilter) {
     const data = {
       eventName: SocialEventType.LIST_POSTS,
-      space_uuid,
       query: params.serialize(),
     };
     return await this.callService(data);

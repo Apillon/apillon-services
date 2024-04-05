@@ -74,12 +74,7 @@ export class SocialService {
   }
 
   async listPosts(context: DevConsoleApiContext, query: SocialPostQueryFilter) {
-    return (
-      await new SocialMicroservice(context).listPosts(
-        query.space_uuid || query.hubUuid,
-        query,
-      )
-    ).data;
+    return (await new SocialMicroservice(context).listPosts(query)).data;
   }
 
   async getPost(context: DevConsoleApiContext, post_uuid: string) {
