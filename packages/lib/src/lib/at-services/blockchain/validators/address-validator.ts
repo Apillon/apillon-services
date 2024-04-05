@@ -18,20 +18,3 @@ export function isEvmOrSubstrateWalletAddress(
     return ethAddressValidator()(address);
   }
 }
-
-export function evmOrSubstrateWalletValidator(
-  substrateChainPrefix: SubstrateChainPrefix,
-  allowNull = false,
-) {
-  return function (this: any, address: string): boolean {
-    const chainType = Object.values(EvmChain).includes(this.chain)
-      ? ChainType.EVM
-      : ChainType.SUBSTRATE;
-    return isEvmOrSubstrateWalletAddress(
-      address,
-      chainType,
-      substrateChainPrefix,
-      allowNull,
-    );
-  };
-}
