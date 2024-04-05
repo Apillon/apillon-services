@@ -1,4 +1,5 @@
 import {
+  ChainType,
   Context,
   env,
   LogType,
@@ -57,7 +58,7 @@ export class TransactionStatusWorker extends BaseQueueWorker {
               TransactionType.TRANSFER_CONTRACT_OWNERSHIP
           ) {
             //Update collection
-            await this.updateCollectionStatus(nftTransaction);
+            await this.updateCollectionStatus(nftTransaction, res.data);
           }
 
           //Refund credit if transaction failed
@@ -85,7 +86,7 @@ export class TransactionStatusWorker extends BaseQueueWorker {
     );
   }
 
-  private async updateCollectionStatus(tx: Transaction) {
+  private async updateCollectionStatus(tx: Transaction, data: string) {
     if (tx.transactionStatus === TransactionStatus.CONFIRMED) {
       const collection: Collection = await new Collection(
         {},
@@ -94,6 +95,9 @@ export class TransactionStatusWorker extends BaseQueueWorker {
 
       if (tx.transactionType === TransactionType.DEPLOY_CONTRACT) {
         collection.collectionStatus = CollectionStatus.DEPLOYED;
+        if (data && collection.chainType === ChainType.SUBSTRATE) {
+          collection.contractAddress = data;
+        }
       } else if (
         tx.transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP
       ) {
