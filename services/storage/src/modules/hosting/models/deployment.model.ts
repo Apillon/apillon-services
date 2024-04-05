@@ -246,6 +246,25 @@ export class Deployment extends AdvancedSQLModel {
   public deploymentStatus: number;
 
   @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+    ],
+    defaultValue: 0,
+    fakeValue: 0,
+  })
+  public retryCount: number;
+
+  @prop({
     parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.DB,

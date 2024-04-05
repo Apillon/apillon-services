@@ -1,5 +1,10 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 import {
+  IEntry,
+  INamePublishResult,
+  IpfsKuboRpcHttpClient,
+} from '@apillon/ipfs-kubo-rpc-http-client';
+import {
   AWS_S3,
   Context,
   env,
@@ -23,76 +28,89 @@ import { ProjectConfig } from '../config/models/project-config.model';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
 import { uploadItemsToIPFSRes } from './interfaces/upload-items-to-ipfs-res.interface';
-import { IpfsCluster } from './models/ipfs-cluster.model';
 import { IpfsBandwidth } from './models/ipfs-bandwidth';
-import {
-  IEntry,
-  INamePublishResult,
-  IpfsKuboRpcHttpClient,
-} from '@apillon/ipfs-kubo-rpc-http-client';
+import { IpfsCluster } from './models/ipfs-cluster.model';
 
 export class IPFSService {
   //private client: IPFSHTTPClient;
   private kuboRpcApiClient: IpfsKuboRpcHttpClient;
+  private ipfsCluster: IpfsCluster;
   private project_uuid: string;
   private context: ServiceContext;
+  public usingBackupNode = false;
 
   public constructor(context: ServiceContext, project_uuid: string) {
     this.project_uuid = project_uuid;
     this.context = context;
   }
 
-  public async initializeIPFSClient() {
-    if (this.kuboRpcApiClient) {
+  /**
+   * Get IpfsCluster for project. Initialize kuboRpcApi client and call endpoint to get kubo version (health check).
+   * If primary node is not responding, use backup api if present
+   */
+  public async initializeIPFSClient(force = false) {
+    if (this.kuboRpcApiClient && !force) {
       //IPFS Client is already initialized
       return;
     }
 
     //Get IPFS gateway
-
-    const ipfsCluster = await new ProjectConfig(
+    this.ipfsCluster = await new ProjectConfig(
       { project_uuid: this.project_uuid },
       this.context,
     ).getIpfsCluster();
 
-    this.kuboRpcApiClient = new IpfsKuboRpcHttpClient(ipfsCluster.ipfsApi);
+    this.kuboRpcApiClient = new IpfsKuboRpcHttpClient(this.ipfsCluster.ipfsApi);
 
     //health check
     try {
-      await this.kuboRpcApiClient.version(1000);
+      await this.kuboRpcApiClient.version(2000);
     } catch (err) {
-      let canUseBackupNode = false;
-      if (ipfsCluster.backupIpfsApi) {
+      if (this.ipfsCluster.backupIpfsApi) {
         //Initialize client with backup api
         this.kuboRpcApiClient = new IpfsKuboRpcHttpClient(
-          ipfsCluster.backupIpfsApi,
+          this.ipfsCluster.backupIpfsApi,
         );
         await this.kuboRpcApiClient
           .version(1000)
           .then(() => {
-            canUseBackupNode = true;
+            this.usingBackupNode = true;
+            //Override with backup node values
+            this.ipfsCluster.clusterServer =
+              this.ipfsCluster.backupClusterServer;
+            this.ipfsCluster.ipfsApi = this.ipfsCluster.backupIpfsApi;
           })
           .catch((err) => {
             //backup node is also not working
-            canUseBackupNode = false;
             console.error(
               'Error performing health check of backup ipfs api',
               err,
             );
           });
       }
-      //Send alert
+      //Send alert. Even if backup node works
       await new Lmas().writeLog({
         logType: LogType.ALERT,
-        message: `Error initializing IPFS Client. Failed to get ipfs version (ipfs api health check). ${canUseBackupNode ? 'Using backup node...' : ''}`,
+        message: `Error initializing IPFS Client. Failed to get ipfs version (ipfs api health check failed). Backup api status: ${this.usingBackupNode ? 'OK' : 'ERROR'}`,
         location: 'IPFSService.initializeIPFSClient',
         service: ServiceName.STORAGE,
         data: {
-          canUseBackupNode,
+          usingBackupNode: this.usingBackupNode,
           error: err,
         },
-        sendAdminAlert: !canUseBackupNode,
+        sendAdminAlert: true,
       });
+
+      //Ipfs api does not work - throw error
+      if (!this.usingBackupNode) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.STORAGE_IPFS_API_INITIALIZATION_ERROR,
+          status: 500,
+          context: this.context,
+          errorMessage: 'Error initializing IPFS Client',
+          details: err,
+        });
+      }
     }
   }
 
@@ -472,13 +490,15 @@ export class IPFSService {
    * @param cid cid to be pinned
    */
   public async pinCidToCluster(cid: string) {
-    const ipfsCluster = await new ProjectConfig(
-      { project_uuid: this.project_uuid },
-      this.context,
-    ).getIpfsCluster();
+    //Initialize IPFS client
+    await this.initializeIPFSClient();
 
     try {
-      await axios.post(ipfsCluster.clusterServer + `pins/ipfs/${cid}`, {}, {});
+      await axios.post(
+        this.ipfsCluster.clusterServer + `pins/ipfs/${cid}`,
+        {},
+        {},
+      );
     } catch (err) {
       writeLog(
         LogType.ERROR,
@@ -496,18 +516,18 @@ export class IPFSService {
    */
   public async unpinCidFromCluster(cid: string, ipfsCluster?: IpfsCluster) {
     if (!ipfsCluster) {
-      ipfsCluster = await new ProjectConfig(
-        { project_uuid: this.project_uuid },
-        this.context,
-      ).getIpfsCluster();
+      //Initialize IPFS client
+      await this.initializeIPFSClient();
+    } else {
+      this.ipfsCluster = ipfsCluster;
     }
 
     //If cluster server is not set, unpin directly from node
-    if (!ipfsCluster.clusterServer) {
+    if (!this.ipfsCluster.clusterServer) {
       await this.unpinFile(cid);
     } else {
       try {
-        await axios.delete(ipfsCluster.clusterServer + `pins/ipfs/${cid}`);
+        await axios.delete(this.ipfsCluster.clusterServer + `pins/ipfs/${cid}`);
       } catch (err) {
         writeLog(
           LogType.ERROR,
