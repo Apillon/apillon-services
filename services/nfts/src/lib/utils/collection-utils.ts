@@ -95,7 +95,6 @@ export async function deployNFTCollectionContract(
         }, parameters=${JSON.stringify(collection)}`,
       );
 
-      // const royaltiesFees = Math.round(params.royaltiesFees * 100);
       const maxSupply =
         collection.maxSupply === 0
           ? BN_MAX_INTEGER.toNumber()
@@ -116,9 +115,9 @@ export async function deployNFTCollectionContract(
         0, //presale_start_at
         collection.drop ? collection.dropStart : 0, //public_sale_start_at
         collection.drop ? BN_MAX_INTEGER.toNumber() : 0, //public_sale_end_at
-        collection.royaltiesFees, //launchpad_fee
+        0, //launchpad_fee
         collection.royaltiesAddress, //project_treasury
-        collection.royaltiesAddress, //launchpad_treasury
+        collection.deployerAddress, //launchpad_treasury
       ]);
       response = await new BlockchainMicroservice(
         context,

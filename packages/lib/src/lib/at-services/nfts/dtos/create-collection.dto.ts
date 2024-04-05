@@ -214,18 +214,6 @@ class CreateCollectionDTOBase extends ModelBase {
     ],
   })
   public baseUri: string;
-
-  @prop({
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: numberSizeValidator({ minOrEqual: 0, maxOrEqual: 100 }),
-        code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_FEES_NOT_VALID,
-      },
-    ],
-  })
-  public royaltiesFees: number;
 }
 
 // Contains properties from base DTO, with baseUri nullable and additional properties
@@ -249,6 +237,18 @@ export class CreateCollectionDTO extends CreateCollectionDTOBase {
     ],
   })
   public royaltiesAddress: string;
+
+  @prop({
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: numberSizeValidator({ minOrEqual: 0, maxOrEqual: 100 }),
+        code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_FEES_NOT_VALID,
+      },
+    ],
+  })
+  public royaltiesFees: number;
 
   @prop({
     parser: { resolver: booleanParser() },

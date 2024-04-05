@@ -446,6 +446,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.SELECT_DB,
     ],
     fakeValue: 0,
+    defaultValue: 0,
   })
   public royaltiesFees: number;
 
