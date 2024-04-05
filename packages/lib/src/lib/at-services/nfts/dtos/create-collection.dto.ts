@@ -1,6 +1,7 @@
 import { ModelBase, prop } from '../../../base-models/base';
 import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
+  ethAddressValidator,
   numberSizeValidator,
   presenceValidator,
   stringLengthValidator,
@@ -17,7 +18,7 @@ import { enumInclusionValidator } from '../../../validators';
 import { dropReserveLowerOrEqualToMaxSupplyValidator } from '../validators/create-collection-drop-reserve-validator';
 import { validateDropPriceIfDrop } from '../validators/create-collection-drop-price-validator';
 import { SubstrateChainPrefix } from '../../substrate/types';
-import { evmOrSubstrateWalletValidator } from '../../blockchain/validators/address-validator';
+import { substrateAddressValidator } from '../../substrate/validators/address-validator';
 
 // Contains properties which are present for all collections
 class CreateCollectionDTOBase extends ModelBase {
@@ -215,18 +216,6 @@ class CreateCollectionDTOBase extends ModelBase {
   public baseUri: string;
 
   @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: evmOrSubstrateWalletValidator(SubstrateChainPrefix.ASTAR),
-        code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_VALID,
-      },
-    ],
-  })
-  public royaltiesAddress: string;
-
-  @prop({
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
@@ -248,6 +237,18 @@ export class CreateCollectionDTO extends CreateCollectionDTOBase {
     validators: [],
   })
   public baseUri: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [
+      {
+        resolver: ethAddressValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_VALID,
+      },
+    ],
+  })
+  public royaltiesAddress: string;
 
   @prop({
     parser: { resolver: booleanParser() },
@@ -308,6 +309,22 @@ export class CreateCollectionDTO extends CreateCollectionDTOBase {
 // Substrate NFTs do not support properties such as isRevokable, isSoulboud, isAutoIncrement etc.
 // For now no additional properties, may be added in the future
 export class CreateSubstrateCollectionDTO extends CreateCollectionDTOBase {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.DATA_NOT_PRESENT,
+      },
+      {
+        resolver: substrateAddressValidator(SubstrateChainPrefix.ASTAR),
+        code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_VALID,
+      },
+    ],
+  })
+  public royaltiesAddress: string;
+
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
