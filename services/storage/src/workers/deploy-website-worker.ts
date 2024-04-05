@@ -20,6 +20,7 @@ import {
   DeploymentEnvironment,
   DeploymentStatus,
   FileStatus,
+  StorageErrorCode,
 } from '../config/types';
 import { createCloudfrontInvalidationCommand } from '../lib/aws-cloudfront';
 import { generateDirectoriesFromPath } from '../lib/generate-directories-from-path';
@@ -132,14 +133,40 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         deployment.environment == DeploymentEnvironment.STAGING ||
         deployment.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
       ) {
-        ipfsRes = await ipfsService.uploadFilesToIPFSFromS3(
-          {
-            files: sourceFiles,
-            wrapWithDirectory: true,
-            wrappingDirectoryPath: `Deployment_${deployment.id}`,
-          },
-          this.context,
-        );
+        try {
+          ipfsRes = await ipfsService.uploadFilesToIPFSFromS3(
+            {
+              files: sourceFiles,
+              wrapWithDirectory: true,
+              wrappingDirectoryPath: `Deployment_${deployment.id}`,
+            },
+            this.context,
+          );
+        } catch (uploadToIpfsErr) {
+          if (
+            uploadToIpfsErr?.options?.code !=
+              StorageErrorCode.STORAGE_IPFS_API_INITIALIZATION_ERROR &&
+            !ipfsService.usingBackupNode
+          ) {
+            //Force reinitialization of ipfs client and retry upload
+            await ipfsService.initializeIPFSClient(true);
+            ipfsRes = await ipfsService
+              .uploadFilesToIPFSFromS3(
+                {
+                  files: sourceFiles,
+                  wrapWithDirectory: true,
+                  wrappingDirectoryPath: `Deployment_${deployment.id}`,
+                },
+                this.context,
+              )
+              .catch((retryUploadToIpfsErr) => {
+                throw retryUploadToIpfsErr;
+              });
+          } else {
+            //ipfs service is already using backup node.
+            throw uploadToIpfsErr;
+          }
+        }
 
         //Set ipfsRes data to deployment
         deployment.cid = ipfsRes.parentDirCID;
@@ -336,6 +363,25 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
       });
     } catch (err) {
       console.error(err);
+      //To prevent failure of website deployment, try multiple times (possible problems with IPFS or some other service).
+      if (deployment.retryCount < 3) {
+        deployment.retryCount += 1;
+        await deployment.update().catch(async (upgError) => {
+          await this.writeEventLog(
+            {
+              logType: LogType.ERROR,
+              project_uuid: website.project_uuid,
+              message: 'Error updating deployment retryCount',
+              service: ServiceName.STORAGE,
+              err: upgError,
+            },
+            LogOutput.SYS_ERROR,
+          );
+        });
+        //Error is thrown from worker, so this sqs message will be processed again
+        throw err;
+      }
+
       await this.writeEventLog(
         {
           logType: LogType.ERROR,
