@@ -229,7 +229,8 @@ export class Space extends UuidSqlModel {
   }
 
   public async getList(filter: BaseProjectQueryFilter) {
-    this.canAccess(this.getContext());
+    const context = this.getContext();
+    this.canAccess(context);
 
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
@@ -243,21 +244,22 @@ export class Space extends UuidSqlModel {
     const selectFields = this.generateSelectFields(
       's',
       '',
-      this.getContext().apiName == ApiName.ADMIN_CONSOLE_API
+      context.apiName == ApiName.ADMIN_CONSOLE_API
         ? SerializeFor.ADMIN_SELECT_DB
         : SerializeFor.SELECT_DB,
     );
+    const isApi = context.apiName == ApiName.APILLON_API;
     const sqlQuery = {
       qSelect: `
         SELECT
-        space_uuid as ${this.getContext().apiName == ApiName.APILLON_API ? 'hub_uuid' : 'space_uuid'},
-        spaceId as ${this.getContext().apiName == ApiName.APILLON_API ? 'hubId' : 'spaceId'},
+        space_uuid as ${isApi ? 'hub_uuid' : 'space_uuid'},
+        spaceId as ${isApi ? 'hubId' : 'spaceId'},
         ${selectFields},
         (
           SELECT COUNT(*)
           FROM \`${DbTables.POST}\` p
           WHERE p.space_id = s.id
-        ) as ${this.getContext().apiName == ApiName.APILLON_API ? 'numOfChannels' : 'numOfPosts'}
+        ) as ${isApi ? 'numOfChannels' : 'numOfPosts'}
         `,
       qFrom: `
         FROM \`${DbTables.SPACE}\` s

@@ -4,6 +4,7 @@ import {
   CreateSpaceDto,
   ProductCode,
   ServiceName,
+  SocialPostQueryFilter,
   SpendCreditDto,
   SqlModelStatus,
   env,
@@ -64,13 +65,13 @@ export class SubsocialService {
   }
 
   static async listPosts(
-    event: { space_uuid: string; query: BaseProjectQueryFilter },
+    event: { query: SocialPostQueryFilter },
     context: ServiceContext,
   ) {
     return await new Post(
       { project_uuid: event.query.project_uuid },
       context,
-    ).getList(event.space_uuid, new BaseProjectQueryFilter(event.query));
+    ).getList(new SocialPostQueryFilter(event.query));
   }
 
   static async getPost(event: { post_uuid: string }, context: ServiceContext) {

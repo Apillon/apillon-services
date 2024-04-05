@@ -6,6 +6,7 @@ import {
   CreatePostDto,
   CreateSpaceDto,
   SocialMicroservice,
+  SocialPostQueryFilter,
 } from '@apillon/lib';
 
 @Injectable()
@@ -22,13 +23,8 @@ export class SocialService {
     return (await new SocialMicroservice(context).createSpace(body)).data;
   }
 
-  async listPosts(
-    context: ApillonApiContext,
-    space_uuid: string,
-    query: BaseQueryFilter,
-  ) {
-    return (await new SocialMicroservice(context).listPosts(space_uuid, query))
-      .data;
+  async listPosts(context: ApillonApiContext, query: SocialPostQueryFilter) {
+    return (await new SocialMicroservice(context).listPosts(query)).data;
   }
 
   async getPost(context: ApillonApiContext, post_uuid: string) {
