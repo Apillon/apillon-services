@@ -1,6 +1,6 @@
 # Apillon Referral Service - REF
 
-Referral Service provides functionality for user referral program, reward points and gift shop.
+Referral Service provides functionality for user referral program, reward points and gift shop. Users get rewarded for referring other users through their unique referral code and for completing tasks on the platform during different campaigns, for example airdrop campaign.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 
 ## Configuration
 
-Environment variables that has to be set:
+Environment variables that have to be set:
 
 ```ts
   /************************************************************
@@ -50,6 +50,11 @@ Environment variables that has to be set:
   REFERRAL_MYSQL_DATABASE_TEST: string;
 
 ```
+
+## Promo codes
+
+Referral promo codes are stored in the `promo_code` table. The way they work is that they represent a mapping between a referral code (e.g. `WEB3`) and how many credits a user gets for registering with that code.
+Promo codes are read from the `REF` query parameter upon user registration through the URL, for example `https://app.apillon.io/register?REF=WEB3`.
 
 ## Deployment
 

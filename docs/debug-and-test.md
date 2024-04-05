@@ -22,6 +22,12 @@ In root folder of the project, type
 npm run dev
 ```
 
+or for a more minimal subset of the services use which only includes the dev console API use
+
+```sh
+npm run dev-min
+```
+
 This will run NPM dev script in all workspaces.
 
 If you run this command in integrated terminal of VS Code and you have Debugger auto attach enabled, breakpoints in editor should be bind to the processes and you can debug all services at the same time.

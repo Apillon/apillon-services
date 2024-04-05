@@ -1,6 +1,6 @@
 # Apillon IPFS Storage Service - IPFS
 
-IPFS service provides endpoint for uploading and managing user's files. User files are stored into "bucket" virtual folder. Files from buckets are eventually stored to IPFS node and distributed on Crust network. Buckets can also be used for hosting static web pages on IPFS network.
+Storage and IPFS service provides endpoint for uploading and managing user's files. User files are stored into "bucket" virtual folder. Files from buckets are eventually stored to IPFS node and distributed on Crust network. Buckets can also be used for hosting static web pages on IPFS network.
 
 Storage service also uses background worker processes for uploading to IPFS nodes and communicating with Crust blockchain.
 
@@ -17,7 +17,7 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 
 ## Configuration
 
-Environment variables that has to be set:
+Environment variables that have to be set:
 
 ```ts
 /************************************************************

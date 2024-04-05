@@ -205,7 +205,7 @@ export interface IEnv {
   STORAGE_AWS_WORKER_LAMBDA_NAME: string;
 
   /************************************************************
-   * BIS - Apillon Blockchain Integration Service
+   * BCS - Apillon Blockchain Integration Service
    ************************************************************/
   BLOCKCHAIN_FUNCTION_NAME: string;
   BLOCKCHAIN_FUNCTION_NAME_TEST: string;

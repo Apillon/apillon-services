@@ -1,8 +1,8 @@
 # Apillon Computing Service - Computing
 
 Computing Service provides functionality for deploying and interaction with
-secure execution environments (SEE). For Phala this is done by Deploying a
-smart contract and calling it's methods which are then executed in SEE.
+secure execution environments (SEE). Under the hood it utilizes the Phala parachain and this is done by deploying a custom-built
+smart contract on Phala and calling its methods which are then executed in SEE.
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ microservice locally.
 
 ## Configuration
 
-Environment variables that has to be set:
+Environment variables that have to be set:
 
 ```ts
   /************************************************************
@@ -63,6 +63,10 @@ Environment variables that has to be set:
   COMPUTING_AWS_WORKER_SQS_URL: string;
   COMPUTING_AWS_WORKER_LAMBDA_NAME: string;
 ```
+
+## Schrodinger's NFT service
+
+The schrodinger's NFT service/tool is currently powered by the computing microservice and Phala. You can view a demo of the service and learn how it works at [https://phala-demo.apillon.io/](https://phala-demo.apillon.io/)
 
 ## Deployment
 
