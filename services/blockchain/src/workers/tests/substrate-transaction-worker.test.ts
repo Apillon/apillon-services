@@ -51,7 +51,6 @@ describe('Substrate tests', () => {
           chain,
           chainType: CHAIN_TYPE,
           address: '4qb612mWyrA2Ga2WhXRgYE7tqo8rGs6f6UBZciqcJvfYUGTp',
-          // This is actually not correct - the seed should match the address
           seed: mnemonicGenerate(),
           lastParsedBlock: startBlock,
         },

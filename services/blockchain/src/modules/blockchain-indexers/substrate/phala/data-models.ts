@@ -1,9 +1,9 @@
 import { BaseTransaction } from '../base-transaction-model';
+import { BaseContractTransaction } from '../base-contract-transaction-model';
 
-export interface PhatContractsInstantiatingTransaction extends BaseTransaction {
-  readonly account?: string | undefined;
+export interface PhatContractsInstantiatingTransaction
+  extends BaseContractTransaction {
   readonly cluster?: string | undefined;
-  readonly contract?: string | undefined;
 }
 
 export interface PhatContractTransfer extends BaseTransaction {

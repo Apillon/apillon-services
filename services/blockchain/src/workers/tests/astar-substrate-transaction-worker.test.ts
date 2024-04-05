@@ -14,22 +14,23 @@ import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { Transaction } from '../../common/models/transaction';
 import { Wallet } from '../../modules/wallet/wallet.model';
 import { WorkerName } from '../worker-executor';
-import { SubsocialTransactionWorker } from '../subsocial-transaction-worker';
+import { SubstrateContractTransactionWorker } from '../substrate-contract-transaction-worker';
 import { getConfig } from '@apillon/tests-lib';
 
 const CHAIN_TYPE = ChainType.SUBSTRATE;
-const CHAIN = SubstrateChain.SUBSOCIAL;
-const TEST_ADDRESS = '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6';
+const CHAIN = SubstrateChain.ASTAR;
+const TEST_ADDRESS = 'bTdmScYtDDGg12mG1pvQ5zAooMXMK45WHBt3meGDXrNBKua';
 
-describe('subsocial transaction worker tests', () => {
+describe('Astar Substrate tests', () => {
   let stage: Stage;
-  let config: any;
   let wallet: Wallet;
-  const startBlock = 4755750;
+  let config: any;
+
   beforeAll(async () => {
-    config = getConfig();
+    config = await getConfig();
     stage = await setupTest();
-    env.BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER = config.subsocial.indexerUrl;
+    env.BLOCKCHAIN_ASTAR_SUBSTRATE_GRAPHQL_SERVER =
+      config.astar_substrate.indexerUrl;
 
     wallet = await new Wallet(
       {
@@ -37,7 +38,8 @@ describe('subsocial transaction worker tests', () => {
         chainType: CHAIN_TYPE,
         address: TEST_ADDRESS,
         seed: mnemonicGenerate(),
-        lastParsedBlock: startBlock,
+        blockParseSize: 200,
+        lastParsedBlock: 5964393,
       },
       stage.context,
     ).insert();
@@ -48,9 +50,18 @@ describe('subsocial transaction worker tests', () => {
   });
 
   test('Single wallet transactions', async () => {
-    const successCreateSpaceTxHash =
-      '0x97ed404dd962939e8bcaf509fb0955dd6cf3c873cd4f1de0cb200836f50022c8';
-    for (const transactionHash of [successCreateSpaceTxHash]) {
+    const successContractTxHash =
+      '0xc652dfd71f5236fa1824afe1d7303074ed79230174112c5c9e23885a1b7d3728';
+    const successOtherTxHash =
+      '0xd3efaf9ccfcf3d2de1a9170ec11b596bab301e62564977a96d3144910e92d515';
+    const failedTxHash =
+      '0xf33441e8307f44fefc3bb05abb3d06b69f6fc5e123b3b598f19b96e17d4df754';
+    const transactionHashes = [
+      successContractTxHash,
+      successOtherTxHash,
+      failedTxHash,
+    ];
+    for (const transactionHash of transactionHashes) {
       await new Transaction(
         {
           address: wallet.address,
@@ -71,13 +82,13 @@ describe('subsocial transaction worker tests', () => {
     };
     const workerDefinition = new WorkerDefinition(
       serviceDef,
-      WorkerName.VERIFY_SUBSOCIAL_TRANSACTIONS,
+      WorkerName.VERIFY_ASTAR_SUBSTRATE_TRANSACTIONS,
       {
         parameters: { FunctionName: 'test', chainId: CHAIN },
       },
     );
 
-    await new SubsocialTransactionWorker(
+    await new SubstrateContractTransactionWorker(
       workerDefinition,
       stage.context,
     ).runExecutor();
@@ -88,14 +99,30 @@ describe('subsocial transaction worker tests', () => {
       wallet.address,
       0,
     );
-    expect(txs.length).toBe(1);
-    //success create space tX
-    const successCreateSpaceTx = txs.find(
-      (x) => x.transactionHash === successCreateSpaceTxHash,
+    expect(txs.length).toBe(3);
+    //success contract tX
+    const successContractTx = txs.find(
+      (x) => x.transactionHash === successContractTxHash,
     );
-    expect(successCreateSpaceTx.transactionStatus).toEqual(
+    expect(successContractTx.transactionStatus).toEqual(
       TransactionStatus.CONFIRMED,
     );
-    expect(successCreateSpaceTx.data).toBeTruthy();
+    expect(successContractTx.data).toEqual(
+      'be7JaWwuopcmZTcBXhj8wUfekDQj4fWkYraR3uQTdocDPZd',
+    );
+    //success other tx
+    const successOtherTx = txs.find(
+      (x) => x.transactionHash === successOtherTxHash,
+    );
+    expect(successOtherTx.transactionStatus).toEqual(
+      TransactionStatus.CONFIRMED,
+    );
+    expect(successOtherTx.data).toEqual(null);
+    //failed tx
+    const failedTx = txs.find((x) => x.transactionHash === failedTxHash);
+    expect(failedTx.transactionStatus).toEqual(TransactionStatus.FAILED);
+    expect(failedTx.data).toEqual(null);
+
+    expect(txs.find((x) => !x['webhookTriggered'])).toBeFalsy();
   });
 });
