@@ -15,12 +15,12 @@ export async function upgrade(
                                      \`timeout\`)
     VALUES ('TransmitAstarSubstrateTransactions', 0, '*/2 * * * *',
             '2023-01-25 10:00:00',
-            '{"chain": ${SubstrateChain.PHALA}}',
-            '{"chain": ${SubstrateChain.PHALA}, "channel": 0}', 5, 900),
+            '{"chain": ${SubstrateChain.ASTAR}}',
+            '{"chain": ${SubstrateChain.ASTAR}, "channel": 0}', 5, 900),
            ('VerifyAstarSubstrateTransactions', 0, '*/1 * * * *',
             '2023-01-25 10:00:00',
-            '{"chainId": ${SubstrateChain.PHALA}}',
-            '{"chainId": ${SubstrateChain.PHALA}, "channel": 0}', 5, 900);
+            '{"chainId": ${SubstrateChain.ASTAR}}',
+            '{"chainId": ${SubstrateChain.ASTAR}, "channel": 0}', 5, 900);
   `);
 }
 
