@@ -40,6 +40,7 @@ function getTokenDecimalsFromChain(chainType: ChainType, chain: Chain) {
       [SubstrateChain.CRUST]: 12,
       [SubstrateChain.KILT]: 15,
       [SubstrateChain.PHALA]: 12,
+      [SubstrateChain.ASTAR]: 18,
     },
   };
   return options[chainType]?.[chain] || null;

@@ -3,6 +3,7 @@ import { CrustBlockchainIndexer } from '../modules/blockchain-indexers/substrate
 import { KiltBlockchainIndexer } from '../modules/blockchain-indexers/substrate/kilt/indexer.service';
 import { PhalaBlockchainIndexer } from '../modules/blockchain-indexers/substrate/phala/indexer.service';
 import { SubsocialBlockchainIndexer } from '../modules/blockchain-indexers/substrate/subsocial/indexer.service';
+import { AstarSubstrateBlockchainIndexer } from '../modules/blockchain-indexers/substrate/astar/indexer.service';
 
 // TODO: Maybe move worker name to env, so it can be configurable
 export const ParachainConfig = {
@@ -40,5 +41,12 @@ export const ParachainConfig = {
     webhookWorkerName: 'TransactionStatusWorker',
     sqsUrl: env.SOCIAL_AWS_WORKER_SQS_URL,
     indexer: SubsocialBlockchainIndexer,
+  },
+  ASTAR: {
+    id: SubstrateChain.ASTAR,
+    name: 'ASTAR',
+    webhookWorkerName: 'TransactionStatusWorker',
+    sqsUrl: env.NFTS_AWS_WORKER_SQS_URL,
+    indexer: AstarSubstrateBlockchainIndexer,
   },
 };
