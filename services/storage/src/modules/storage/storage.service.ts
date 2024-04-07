@@ -2,8 +2,8 @@ import {
   ApiName,
   AppEnvironment,
   AWS_S3,
-  BucketQueryFilter,
   CacheKeyPrefix,
+  CacheKeyTTL,
   checkProjectSubscription,
   CreateS3UrlsForUploadDto,
   DomainQueryFilter,
@@ -11,16 +11,17 @@ import {
   env,
   FilesQueryFilter,
   FileUploadsQueryFilter,
+  GetQuotaDto,
   invalidateCacheMatch,
   Lmas,
   LogType,
   QuotaCode,
+  runCachedFunction,
   runWithWorkers,
   Scs,
   SerializeFor,
   ServiceName,
   SqlModelStatus,
-  WebsiteQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
@@ -58,12 +59,6 @@ import { generateJwtSecret } from '../../lib/ipfs-utils';
 import { Directory } from '../directory/models/directory.model';
 
 export class StorageService {
-  /**
-   * Get storage info for project
-   * @param event
-   * @param context
-   * @returns available storage, used storage
-   */
   static async getStorageInfo(
     event: { project_uuid: string },
     context: ServiceContext,
@@ -72,58 +67,39 @@ export class StorageService {
     usedStorage: number;
     availableBandwidth: number;
     usedBandwidth: number;
-    bucketCount: number;
-    websiteCount: number;
-    fileCount: number;
   }> {
     const project_uuid = event.project_uuid;
-    //Storage space
-    const maxStorageQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_STORAGE,
-      project_uuid,
-    });
-    const availableStorage = (maxStorageQuota?.value || 3) * 1_073_741_824;
 
-    const bucket = new Bucket({ project_uuid }, context);
-    const usedStorage = await bucket.getTotalSizeUsedByProject();
+    return await runCachedFunction(
+      `${CacheKeyPrefix.STORAGE_INFO}:${project_uuid}`,
+      async () => {
+        const [quotas, usedStorage, usedBandwidth] = await Promise.all([
+          new Scs(context).getQuotas(
+            new GetQuotaDto({
+              project_uuid,
+            }),
+          ),
+          new Bucket({ project_uuid }, context).getTotalSizeUsedByProject(),
+          new IpfsBandwidth({}, context).populateByProjectAndDate(project_uuid),
+        ]);
 
-    //Bandwidth
-    const bandwidthQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_BANDWIDTH,
-      project_uuid,
-    });
-    const availableBandwidth =
-      (bandwidthQuota?.value || Defaults.DEFAULT_BANDWIDTH) * 1_073_741_824;
+        const storageQuota =
+          quotas.find((q) => q.id === QuotaCode.MAX_STORAGE)?.value ||
+          Defaults.DEFAULT_STORAGE;
 
-    const usedBandwidth = await new IpfsBandwidth(
-      {},
-      context,
-    ).populateByProjectAndDate(project_uuid);
+        const bandwidthQuota =
+          quotas.find((q) => q.id === QuotaCode.MAX_BANDWIDTH)?.value ||
+          Defaults.DEFAULT_BANDWIDTH;
 
-    // Total objects
-    const { total: bucketCount } = await bucket.getList(
-      context,
-      new BucketQueryFilter({ project_uuid }),
+        return {
+          availableStorage: storageQuota * 1_073_741_824,
+          usedStorage,
+          availableBandwidth: bandwidthQuota * 1_073_741_824,
+          usedBandwidth: usedBandwidth.exists() ? usedBandwidth.bandwidth : 0,
+        };
+      },
+      CacheKeyTTL.SHORT,
     );
-    const { total: websiteCount } = await new Website(
-      { project_uuid },
-      context,
-    ).getList(context, new WebsiteQueryFilter({ project_uuid }));
-
-    const fileCount = await new File(
-      { project_uuid },
-      context,
-    ).getFileCountOnProject(project_uuid);
-
-    return {
-      availableStorage,
-      usedStorage,
-      availableBandwidth,
-      usedBandwidth: usedBandwidth.exists() ? usedBandwidth.bandwidth : 0,
-      bucketCount,
-      websiteCount,
-      fileCount,
-    };
   }
 
   /**
