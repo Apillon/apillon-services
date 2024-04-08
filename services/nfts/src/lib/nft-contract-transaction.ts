@@ -16,6 +16,8 @@ import { ContractVersion } from '../modules/nfts/models/contractVersion.model';
 export class NftTransaction {
   /**
    * @param params CreateCollectionDTO parameters
+   * @param abi contract ABI
+   * @param bytecode contract bytecode
    * @returns UnsignedTransaction
    */
   static async createDeployContractTransaction(
@@ -54,7 +56,8 @@ export class NftTransaction {
           params.dropStart,
           maxSupply,
           params.dropReserve,
-          params.royaltiesAddress,
+          params.royaltiesAddress ??
+            '0x0000000000000000000000000000000000000000',
           royaltiesFees,
         );
         break;
@@ -107,7 +110,7 @@ export class NftTransaction {
     newOwner: string,
     abi: string,
   ): Promise<UnsignedTransaction> {
-    const { contractAddress, collectionType, contractVersion_id } = collection;
+    const { contractAddress, collectionType } = collection;
 
     console.log(
       `[${EvmChain[chain]}] Creating NFT transfer ownership (NFT contract address=${contractAddress}, collection type=${collectionType}) transaction to wallet address: ${newOwner}`,
@@ -137,7 +140,7 @@ export class NftTransaction {
     uri: string,
     abi: string,
   ): Promise<UnsignedTransaction> {
-    const { contractAddress, collectionType, contractVersion_id } = collection;
+    const { contractAddress, collectionType } = collection;
 
     console.log(
       `[${EvmChain[chain]}] Creating NFT set base token URI transaction (contract=${contractAddress}, uri=${uri}, collection type=${collectionType}).`,
@@ -167,7 +170,7 @@ export class NftTransaction {
     params: MintNftDTO,
     abi: string,
   ): Promise<UnsignedTransaction> {
-    const { contractAddress, collectionType, contractVersion_id } = collection;
+    const { contractAddress, collectionType } = collection;
 
     console.log(
       `[${EvmChain[chain]}] Creating NFT (NFT contract=${contractAddress}) mint transaction (toAddress=${params.receivingAddress}, collection type=${collectionType}).`,
@@ -194,6 +197,7 @@ export class NftTransaction {
   }
 
   /**
+   * @param context application context
    * @param chain EVM chain used
    * @param parentCollectionAddress collection under which we are mint nesting NFT
    * @param parentNftId NFT id under which we are mint nesting NFT
@@ -250,7 +254,7 @@ export class NftTransaction {
     tokenId: number,
     abi: string,
   ): Promise<UnsignedTransaction> {
-    const { contractAddress, collectionType, contractVersion_id } = collection;
+    const { contractAddress, collectionType } = collection;
 
     console.log(
       `[${EvmChain[chain]}] Creating NFT (NFT contract=${contractAddress}) burn NFT transaction (tokenId=${tokenId}, collection type=${collectionType}).`,

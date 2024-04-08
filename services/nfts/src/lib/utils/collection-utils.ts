@@ -116,7 +116,7 @@ export async function deployNFTCollectionContract(
         collection.drop ? collection.dropStart : 0, //public_sale_start_at
         collection.drop ? BN_MAX_INTEGER.toNumber() : 0, //public_sale_end_at
         0, //launchpad_fee
-        collection.royaltiesAddress, //project_treasury
+        collection.royaltiesAddress ?? collection.deployerAddress, //project_treasury
         collection.deployerAddress, //launchpad_treasury
       ]);
       response = await new BlockchainMicroservice(

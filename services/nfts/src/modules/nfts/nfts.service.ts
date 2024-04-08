@@ -81,9 +81,6 @@ export class NftsService {
   ) {
     console.log(`Creating NFT collections: ${JSON.stringify(params.body)}`);
 
-    // If royalties address is not defined, set it to 0 address.
-    params.body.royaltiesAddress ||=
-      '0x0000000000000000000000000000000000000000';
     //Create collection object
     const collection: Collection = new Collection(
       params.body,
