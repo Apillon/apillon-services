@@ -17,6 +17,7 @@ import { Endpoint } from '../../common/models/endpoint';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import { Transaction } from '../../common/models/transaction';
+import { getConfig } from '@apillon/tests-lib';
 
 const CHAIN_TYPE = ChainType.SUBSTRATE;
 const CHAIN = SubstrateChain.SUBSOCIAL;
@@ -89,6 +90,7 @@ const mockAxios = new MockAdapter(axios);
 
 describe('Subsocial transaction Log Worker unit test', () => {
   let stage: Stage;
+  let config: any;
   let wallet: Wallet;
   let phalaLogCount: number;
   let writeEventLogMock: any;
@@ -96,8 +98,9 @@ describe('Subsocial transaction Log Worker unit test', () => {
   let worker: TransactionLogWorker;
 
   beforeAll(async () => {
+    config = await getConfig();
     stage = await setupTest();
-    env.BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER = 'http://3.251.2.33:8087/graphql';
+    env.BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER = config.subsocial.indexerUrl;
 
     wallet = new Wallet(
       {
@@ -135,9 +138,9 @@ describe('Subsocial transaction Log Worker unit test', () => {
 
     await new Endpoint(
       {
-        url: 'wss://para.f3joule.space',
-        chain: CHAIN,
-        chainType: CHAIN_TYPE,
+        ...config.subsocial.endpoint,
+        chain: config.subsocial.chain,
+        chainType: config.subsocial.chainType,
       },
       stage.context,
     ).insert();

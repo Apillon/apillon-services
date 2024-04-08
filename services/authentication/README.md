@@ -1,6 +1,6 @@
 # Apillon Authentication Service
 
-Authentication Service provides functionality for Apillon OAUTH application. It enables developers to use Apillon OAUTH service on their websites. End users can then login to ther websites with help of Kilt blockchain protocol.
+Authentication Service provides functionality for Apillon OAuth application. It enables developers to use Apillon OAuth service on their websites. End users can then login to ther websites with help of Kilt blockchain protocol.
 
 ## Getting Started
 
@@ -8,7 +8,7 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 
 ## Configuration
 
-Environment variables that has to be set:
+Environment variables that have to be set:
 
 ```ts
    /************************************************************
@@ -125,10 +125,10 @@ Verifies a presentation sent by the claimer for a given credential.
 
 
 ### modules/apillon-api/modules/authentication
-GET auth/session-token
-> Returns the session token, which can then be used with all subsequential requests.
+**GET** auth/session-token
+> Returns the session token, which can then be used with all subsequential requests as a bearer token.
 
-GET auth/verify-login
+**POST** auth/verify-login
 > Verifies the acquired session token with Apillon's secret signing key. This method is used for OAuth, when the 3rd party project verifies if a user has successfully logged in
 
 ## OAuth 2.0 controllers

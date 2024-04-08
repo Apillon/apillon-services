@@ -34,6 +34,7 @@ import {
 } from '../modules/blockchain-indexers/substrate/data-models';
 import { StorageOrderTransaction } from '../modules/blockchain-indexers/substrate/crust/data-models';
 import { SubsocialBlockchainIndexer } from '../modules/blockchain-indexers/substrate/subsocial/indexer.service';
+import { AstarSubstrateBlockchainIndexer } from '../modules/blockchain-indexers/substrate/astar/indexer.service';
 
 export class TransactionLogWorker extends BaseQueueWorker {
   public constructor(
@@ -352,6 +353,76 @@ export class TransactionLogWorker extends BaseQueueWorker {
                 toBlock,
               );
             console.log(`Got ${transfers.length} Subsocial transfers!`);
+            // prepare transfer data
+            const transactionLogs: TransactionLog[] = [];
+            // collect transfers without system events (deposits)
+            for (const transfer of transfers) {
+              const systemEvent = systems.find(
+                (s) =>
+                  transfer.blockNumber === s.blockNumber &&
+                  transfer.extrinsicHash === s.extrinsicHash,
+              );
+              if (systemEvent) {
+                continue;
+              }
+              transactionLogs.push(
+                new TransactionLog(
+                  {},
+                  this.context,
+                ).createFromSubstrateIndexerData(
+                  {
+                    system: null,
+                    transfer,
+                  },
+                  wallet,
+                ),
+              );
+            }
+            // collect transfers with system events
+            for (const s of systems) {
+              const transfer = transfers.find(
+                (t) =>
+                  t.blockNumber === s.blockNumber &&
+                  t.extrinsicHash === s.extrinsicHash,
+              );
+              transactionLogs.push(
+                new TransactionLog(
+                  {},
+                  this.context,
+                ).createFromSubstrateIndexerData(
+                  {
+                    system: s,
+                    transfer,
+                  },
+                  wallet,
+                ),
+              );
+            }
+
+            await wallet.updateLastLoggedBlock(toBlock);
+
+            return transactionLogs;
+          },
+          [SubstrateChain.ASTAR]: async () => {
+            const indexer = new AstarSubstrateBlockchainIndexer();
+            const blockHeight = await indexer.getBlockHeight();
+            const toBlock =
+              wallet.lastLoggedBlock + wallet.blockParseSize < blockHeight
+                ? wallet.lastLoggedBlock + wallet.blockParseSize
+                : blockHeight;
+            const systems = await indexer.getAllSystemEvents(
+              wallet.address,
+              lastBlock,
+              toBlock,
+            );
+            console.log(`Got ${systems.length} Astar system events!`);
+            const { transfers } =
+              await indexer.getAccountBalanceTransfersForTxs(
+                wallet.address,
+                lastBlock,
+                toBlock,
+              );
+            console.log(`Got ${transfers.length} Astar transfers!`);
             // prepare transfer data
             const transactionLogs: TransactionLog[] = [];
             // collect transfers without system events (deposits)

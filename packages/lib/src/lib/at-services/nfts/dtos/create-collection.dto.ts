@@ -11,13 +11,20 @@ import {
   NFTCollectionType,
   PopulateFrom,
   SerializeFor,
+  SubstrateChain,
   ValidatorErrorCode,
 } from '../../../../config/types';
-import { enumInclusionValidator } from '../../../validators';
+import {
+  conditionalPresenceValidator,
+  enumInclusionValidator,
+} from '../../../validators';
 import { dropReserveLowerOrEqualToMaxSupplyValidator } from '../validators/create-collection-drop-reserve-validator';
 import { validateDropPriceIfDrop } from '../validators/create-collection-drop-price-validator';
+import { SubstrateChainPrefix } from '../../substrate/types';
+import { substrateAddressValidator } from '../../substrate/validators/address-validator';
 
-export class CreateCollectionDTOBase extends ModelBase {
+// Contains properties which are present for all collections
+class CreateCollectionDTOBase extends ModelBase {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -68,6 +75,19 @@ export class CreateCollectionDTOBase extends ModelBase {
     ],
   })
   public name: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_DEPLOY_PROJECT_UUID_NOT_PRESENT,
+      },
+    ],
+  })
+  public project_uuid: string;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -186,57 +206,16 @@ export class CreateCollectionDTOBase extends ModelBase {
   public description: string;
 
   @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_PRESENT,
-      },
-      {
-        resolver: enumInclusionValidator(EvmChain),
-        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_VALID,
-      },
-    ],
-  })
-  public chain: EvmChain;
-
-  @prop({
-    parser: { resolver: booleanParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_COLLECTION_REVOKABLE_NOT_PRESENT,
-      },
-    ],
-  })
-  public isRevokable: boolean;
-
-  @prop({
-    parser: { resolver: booleanParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_COLLECTION_SOULBOUND_NOT_PRESENT,
-      },
-    ],
-  })
-  public isSoulbound: boolean;
-
-  @prop({
-    parser: { resolver: booleanParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
-    defaultValue: true,
   })
-  public isAutoIncrement: boolean;
+  public baseUri: string;
+}
 
+// Contains properties from base DTO, with baseUri nullable and additional properties
+export class CreateCollectionDTO extends CreateCollectionDTOBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -260,42 +239,99 @@ export class CreateCollectionDTOBase extends ModelBase {
     ],
   })
   public royaltiesFees: number;
-}
 
-export class CreateCollectionDTO extends CreateCollectionDTOBase {
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_DEPLOY_PROJECT_UUID_NOT_PRESENT,
+        code: ValidatorErrorCode.NFT_COLLECTION_REVOKABLE_NOT_PRESENT,
       },
     ],
+    defaultValue: false,
   })
-  public project_uuid: string;
+  public isRevokable: boolean;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_SOULBOUND_NOT_PRESENT,
+      },
+    ],
+    defaultValue: false,
+  })
+  public isSoulbound: boolean;
+
+  @prop({
+    parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
+    defaultValue: true,
   })
-  public baseUri: string;
-}
+  public isAutoIncrement: boolean;
 
-export class ApillonApiCreateCollectionDTO extends CreateCollectionDTOBase {
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_COLLECTION_BASE_URI_NOT_PRESENT,
+        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(EvmChain),
+        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_VALID,
       },
     ],
   })
-  public baseUri: string;
+  public chain: EvmChain;
+}
+
+// Same as base DTO with baseUri required.
+// Substrate NFTs do not support properties such as isRevokable, isSoulboud, isAutoIncrement etc.
+// For now no additional properties, may be added in the future
+export class CreateSubstrateCollectionDTO extends CreateCollectionDTOBase {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [
+      {
+        resolver: conditionalPresenceValidator(
+          'drop',
+          (fieldValue) => fieldValue === true,
+        ),
+        code: ValidatorErrorCode.DATA_NOT_PRESENT,
+      },
+      {
+        resolver: substrateAddressValidator(SubstrateChainPrefix.ASTAR),
+        code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_VALID,
+      },
+    ],
+  })
+  public royaltiesAddress: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_PRESENT,
+      },
+      {
+        resolver: enumInclusionValidator(SubstrateChain),
+        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_VALID,
+      },
+    ],
+  })
+  public chain: SubstrateChain;
 }

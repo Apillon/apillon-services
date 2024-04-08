@@ -9,9 +9,12 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   BaseQueryFilter,
+  CacheKeyPrefix,
+  CacheKeyTTL,
   ConfigureCreditDto,
   CreditTransactionQueryFilter,
   DefaultUserRole,
@@ -21,7 +24,13 @@ import {
   ValidateFor,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import {
+  CacheByProject,
+  CacheInterceptor,
+  Ctx,
+  Permissions,
+  Validation,
+} from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { File } from '../file/models/file.model';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
@@ -33,6 +42,7 @@ import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
 import { InvoicesQueryFilter } from '@apillon/lib';
 
 @Controller('projects')
+@UseInterceptors(CacheInterceptor)
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
@@ -185,6 +195,16 @@ export class ProjectController {
     ).serialize(SerializeFor.PROFILE);
   }
 
+  @Get(':uuid/overview')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  @CacheByProject({ keyPrefix: CacheKeyPrefix.PROJECT_OVERVIEW })
+  async getProjectOverview(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+  ) {
+    return await this.projectService.getProjectOverview(context, uuid);
+  }
   //#region credits
 
   @Get(':uuid/credit')

@@ -78,3 +78,21 @@ export function arrayLengthValidator() {
     return value?.length > 0;
   };
 }
+
+/**
+ * Require presence if field with name fieldName satisfies condition
+ * @param fieldName field for passing to condition
+ * @param condition condition used to enable presenceValidator
+ */
+export function conditionalPresenceValidator(
+  fieldName: string,
+  condition: (fieldValue: any) => boolean,
+) {
+  return async function (this: ModelBase, value: any): Promise<boolean> {
+    if (condition(this[fieldName])) {
+      return presenceValidator()(value);
+    }
+
+    return true;
+  };
+}

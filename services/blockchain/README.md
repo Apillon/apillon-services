@@ -1,6 +1,6 @@
-# Apillon Blockchain Integration Service - BIS
+# Apillon Blockchain Integration Service - BCS
 
-BIS is handling communication between Apillon system services and APIs with different blockchain networks. It's job is to send and store transaction and monitor status of transactions on blockchain.
+BCS is handling communication between Apillon system services and APIs with different blockchain networks. Its job is to send and store transaction and monitor status of transactions on blockchain.
 
 ## Table of Contents
 
@@ -15,11 +15,11 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 
 ## Configuration
 
-Environment variables that has to be set:
+Environment variables that have to be set:
 
 ```ts
   /************************************************************
-   * BIS - Apillon Blockchain Integration Service
+   * BCS - Apillon Blockchain Integration Service
    ************************************************************/
   BLOCKCHAIN_FUNCTION_NAME: string;
   BLOCKCHAIN_FUNCTION_NAME_TEST: string;
@@ -50,30 +50,31 @@ Environment variables that has to be set:
 Please read [Deployment](../../docs/deployment.md) documentation.
 
 ## Structure
+
 ### Modules
 * **Accounting**
-* **Blockchain-indexers** -> Updates transactions 
+* **Blockchain-indexers** -> Updates transactions
 * **Evm**
 * **Substrate**
 * **Wallet**
 
-#### **Substrate** 
-Contains the substrate service, which is responsible for creating and storing transactions into the database, based on the rawTransaction provided by the caller. It also takes care for transmitting transactions to the blockchain, depending on the chainId provided (Currently supported: Crust, Kilt, Phala)
+#### Substrate
+Contains the substrate service, which is responsible for creating and storing transactions into the database, based on the rawTransaction provided by the caller. It also takes care for transmitting transactions to the blockchain, depending on the chainId provided (Currently supported: Crust, Kilt, Phala, Subsocial)
 
-#### **EVM**
-TODO
+#### EVM
+The EVM module is responsible for creating, storing, and transmitting transactions on Ethereum-compatible blockchain networks. It handles interactions with smart contracts and manages Ethereum transaction lifecycle, ensuring successful execution on the network. Supported chains are currently Astar and Moonbeam
 
-#### **Wallet**
-TODO
+#### Wallet
+The Wallet module manages cryptocurrency wallets and their interactions with various blockchain networks. It supports functionalities such as creating wallets, managing private keys, and signing transactions. This module ensures secure management and operation of blockchain assets.
 
 #### **Blockchain-indexers**
-Are divided into **substrate** and **evm**
+Are divided into **Substrate** and **EVM**
 
 **Substrate** indexers contain base files at the root of the folder. All common functions should be added to these files.
 * **base-blockchain-indexer.ts** - is the abstract class, that implemenets the necessary functions of each substrate indexer such as **getAllTransactions**, **getAllSystemEvents**, **getBlockHeight**, **setGraphQlUrl** etc.
 * **base-queries.ts** - Implements the basic queries that are common for all the substrate indexers. Chain specific queries should be defined in chain-queries.ts file or the likes, and should extend base queries.
 
-```
+```ts
 export class KiltGQLQueries extends BaseGQLQueries {
   ...
   static ACCOUNT_TRANSACTION_BY_HASH = `
@@ -96,9 +97,9 @@ export class KiltGQLQueries extends BaseGQLQueries {
 }
 ```
 
-* **base-transaction-model.ts** - Contains the BaseTransaction model, which must be extended in each respective model, such as 
+* **base-transaction-model.ts** - Contains the BaseTransaction model, which must be extended in each respective model, such as
 
-```
+```ts
 export interface DidTransaction extends BaseTransaction {
   readonly didId?: string | undefined;
   readonly account?: string | undefined;
@@ -108,32 +109,23 @@ export interface DidTransaction extends BaseTransaction {
 Example provided from Kilt.
 
 
-**evm** TODO
-
-#### 
-
 ### Workers
 * **substrate-transaction-worker** - The transmit substrate and evm transaction workers are single threded workers, that are executed either via an sqs message or run at an interval (check serverless.yml). They run the transmit transaction function inside evm / substrate.service and transmit all pending transaction in the database.
 * **transmit-substrate-transaction-worker** - The substrate-transaction-worker runs at an interval of 1 minute and fetches all transactions from the blockchain indexers, on a different repo. GraphQL nodes query-nodes are running on an EC2 machine (each per environmnt - dev, stage, production). The transactions are then updated, depending on the state received from the indexer. Only SystemEvents types are necessary to match to the transaction hash, since each extrinsic will always trigger either a SystemSuccess or SystemFailed event.
-* **transaction-log-worker** - The substrate log worker runs exactly the same as the update worker, but updates wallet balances (these two should be merged..).
-* **transmit-evm-transaction-worker** - TODO
-
+* **transaction-log-worker** - The substrate log worker runs exactly the same as the update worker, but updates wallet balances and takes care of transaction accounting which includes tracking wallet deposits, their leftover balance, their price per unit and the cost of each transaction.
+* **transmit-evm-transaction-worker** - Similar to the substrate-transaction-worker, this worker handles the transmission of EVM-based transactions. It monitors the transaction pool for pending transactions, broadcasts them to the Ethereum network, and updates their status upon confirmation or failure.
 
 ### worker-executor
 Takes care to execute correct workers based on event type - lambda event, or sqs message event.
 
-## FLOW
+## Flow
 1. **Transmit** - A caller, let's say the authentication microservice, creates a blockchain service request - it passes in a serialized transaction (the raw transaction hash), a reference table and reference id, and optionally some arbitrary data, which can be returned to the calling service. The reference fields point to the table and the row number of the microservice and is needed when an update is triggered. The blockchain service then creates its own entry of the transaction-request, and transmits the transaction to the blockchain.
-2. **update** - Once the transaction was sucessfully transmited (we call this propagation), the blockchain service waits for a response from the blockchain - either the transction was successfull, or it failed. The substrate-transaction-worker is in charge of this. It fetches all the transactions from the relevant blockchain indexer, then updates the state of the hash inside the transaction database. This step is performed by the substrate-transaction-worker.
+2. **Update** - Once the transaction was sucessfully transmited (we call this propagation), the blockchain service waits for a response from the blockchain - either the transction was successfull, or it failed. The substrate-transaction-worker is in charge of this. It fetches all the transactions from the relevant blockchain indexer, then updates the state of the hash inside the transaction database. This step is performed by the substrate-transaction-worker.
 3. **Trigger webhook** - This steps triggers the webhook, as defined in the **substrate-parachain.ts (ParachainConfig)** file. This is performed by the substrate-transaction-worker.
 4. In parellel, **transaction-log** worker again fetches all the transactions from the blockchain indexer and updates the wallet balances.
 
 
 ![Flow](images/bcs_flow.png "Flow")
-
-
-## Substrate.service
-It has two functions: createTransation and transmitTransaction
 
 ## License
 

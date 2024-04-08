@@ -13,8 +13,6 @@ import {
   WorkerDefinition,
   sendToWorkerQueue,
 } from '@apillon/workers-lib';
-import { StorageErrorCode } from '../../config/types';
-import { StorageCodeException } from '../../lib/exceptions';
 import { getSessionFilesOnS3 } from '../../lib/file-upload-session-s3-files';
 import { PrepareMetadataForCollectionWorker } from '../../workers/prepare-metada-for-collection-worker';
 import { WorkerName } from '../../workers/worker-executor';
@@ -129,6 +127,7 @@ export class NftStorageService {
         imagesSession: event.body.imagesSession,
         metadataSession: event.body.metadataSession,
         ipnsId: ipnsDbRecord?.id,
+        useApillonIpfsGateway: event.body.useApillonIpfsGateway,
       };
       const wd = new WorkerDefinition(
         serviceDef,
@@ -148,6 +147,7 @@ export class NftStorageService {
         imagesSession: event.body.imagesSession,
         metadataSession: event.body.metadataSession,
         ipnsId: ipnsDbRecord?.id,
+        useApillonIpfsGateway: event.body.useApillonIpfsGateway,
       });
 
       if (event.body.useApillonIpfsGateway) {

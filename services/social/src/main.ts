@@ -19,6 +19,8 @@ export async function processEvent(event, context: Context): Promise<any> {
     [SocialEventType.CREATE_POST]: SubsocialService.createPost,
     [SocialEventType.GET_WALLET_IDENTITY]:
       WalletIdentityService.getWalletIdentityData,
+    [SocialEventType.PROJECT_SOCIAL_DETAILS]:
+      SubsocialService.getProjectSocialDetails,
   };
 
   return await processors[event.eventName](event, context);

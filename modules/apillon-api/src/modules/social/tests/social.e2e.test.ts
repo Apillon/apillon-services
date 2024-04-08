@@ -19,6 +19,7 @@ import {
   createTestProject,
   createTestProjectService,
   createTestUser,
+  getConfig,
   getRequestFactory,
   postRequestFactory,
   releaseStage,
@@ -28,6 +29,7 @@ import * as request from 'supertest';
 
 describe('Apillon API social tests', () => {
   let stage: Stage;
+  let config: any;
   let getRequest, postRequest;
 
   let testUser: TestUser;
@@ -46,6 +48,7 @@ describe('Apillon API social tests', () => {
   let defaultSpace: Space;
 
   beforeAll(async () => {
+    config = await getConfig();
     stage = await setupTest();
     //User 1 project & other data
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
@@ -102,7 +105,7 @@ describe('Apillon API social tests', () => {
         project_uuid: 'Integration project uuid',
         about: 'Default space',
         spaceId: 123,
-        walletAddress: '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
+        walletAddress: config.subsocial.wallet.address,
       })
       .insert();
 
@@ -119,10 +122,9 @@ describe('Apillon API social tests', () => {
 
     await new Wallet(
       {
-        chain: SubstrateChain.SUBSOCIAL,
-        chainType: ChainType.SUBSTRATE,
-        seed: 'disorder reveal crumble deer axis slush unique answer catalog junk hazard damp',
-        address: '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
+        ...config.subsocial.wallet,
+        chain: config.subsocial.chain,
+        chainType: config.subsocial.chainType,
         nextNonce: 1,
       },
       stage.blockchainContext,

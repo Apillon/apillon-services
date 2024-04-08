@@ -5,19 +5,18 @@ import {
 } from '@apillon/nfts/src/config/types';
 import { Collection } from '@apillon/nfts/src/modules/nfts/models/collection.model';
 import {
-  createTestProject,
-  createTestUser,
-  overrideDefaultQuota,
-  releaseStage,
   Stage,
   TestBlockchain,
   TestUser,
+  createTestProject,
+  createTestUser,
+  getNftTransactionStatus,
+  insertEvmNftContractVersion,
+  overrideDefaultQuota,
+  releaseStage,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
-import {
-  getNftTransactionStatus,
-  setupTest,
-} from '../../../../test/helpers/setup';
+import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
 
 describe('Apillon Console NFTs tests for Astar', () => {
@@ -32,11 +31,7 @@ describe('Apillon Console NFTs tests for Astar', () => {
   beforeAll(async () => {
     stage = await setupTest();
 
-    const blockchainStage = {
-      db: stage.blockchainSql,
-      context: stage.blockchainContext,
-    };
-    blockchain = new TestBlockchain(blockchainStage, CHAIN_ID);
+    blockchain = TestBlockchain.fromStage(stage, CHAIN_ID);
     await blockchain.start();
 
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
@@ -48,6 +43,8 @@ describe('Apillon Console NFTs tests for Astar', () => {
       QuotaCode.MAX_NFT_COLLECTIONS,
       10,
     );
+
+    await insertEvmNftContractVersion(stage.nftsContext);
   });
 
   describe('Astar NFT Collection tests', () => {
@@ -84,6 +81,7 @@ describe('Apillon Console NFTs tests for Astar', () => {
       expect(newCollection.exists()).toBeTruthy();
       const transactionStatus = await getNftTransactionStatus(
         stage,
+        CHAIN_ID,
         newCollection.collection_uuid,
         TransactionType.DEPLOY_CONTRACT,
       );
@@ -113,6 +111,7 @@ describe('Apillon Console NFTs tests for Astar', () => {
       expect(response.status).toBe(201);
       const transactionStatus = await getNftTransactionStatus(
         stage,
+        CHAIN_ID,
         newCollection.collection_uuid,
         TransactionType.MINT_NFT,
       );
@@ -131,6 +130,7 @@ describe('Apillon Console NFTs tests for Astar', () => {
       expect(response.status).toBe(201);
       const transactionStatus = await getNftTransactionStatus(
         stage,
+        CHAIN_ID,
         newCollection.collection_uuid,
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
       );
@@ -154,7 +154,9 @@ describe('Apillon Console NFTs tests for Astar', () => {
   });
 
   afterAll(async () => {
-    await blockchain.stop();
+    if (blockchain) {
+      await blockchain.stop();
+    }
     await releaseStage(stage);
   });
 });

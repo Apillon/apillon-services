@@ -19,6 +19,7 @@ export enum SubstrateChain {
   POLKADOT = 5,
   SUBSOCIAL = 6,
   XSOCIAL = 7,
+  ASTAR = 8,
 }
 
 export enum EvmChain {
@@ -175,6 +176,7 @@ export enum AuthenticationEventType {
   SPORRAN_SUBMIT_ATTESTATION = 'sporran-submit-attestation',
   SPORRAN_REQUEST_CREDENTIAL = 'sporran-request-credential',
   SPORRAN_VERIFY_CREDENTIAL = 'sporran-verify-credential',
+  GET_TOTAL_DIDS = 'get-total-dids',
 }
 
 export enum MailEventType {
@@ -240,6 +242,7 @@ export enum ComputingEventType {
   ENCRYPT_CONTENT = 'encrypt-content',
   ASSIGN_CID_TO_NFT = 'assign-cid-to-nft',
   LIST_CLUSTER_WALLETS = 'list-cluster-wallets',
+  PROJECT_COMPUTING_DETAILS = 'project-computing-details',
 }
 
 export enum ReferralEventType {
@@ -268,6 +271,7 @@ export enum SocialEventType {
   LIST_POSTS = 'list-posts',
   GET_POST = 'get-post',
   GET_WALLET_IDENTITY = 'get-wallet-identity',
+  PROJECT_SOCIAL_DETAILS = 'project-social-details',
 }
 
 export enum ServiceName {
@@ -602,6 +606,8 @@ export enum ValidatorErrorCode {
   CID_NOT_PRESENT = 42200160,
   REQUIRED_DATA_NOT_PRESENT = 42200161,
   ADD_NFT_REQUIRED_DATA_NOT_PRESENT = 42200162,
+  DATA_NOT_VALID = 42200163,
+  DATA_NOT_PRESENT = 42200164,
 
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
@@ -766,6 +772,7 @@ export enum OauthLinkType {
 
 export enum CacheKeyPrefix {
   BUCKET_LIST = 'bucket-list',
+  STORAGE_INFO = 'storage-info',
 
   AUTH_USER_DATA = 'auth-user-data',
 
@@ -792,6 +799,7 @@ export enum CacheKeyPrefix {
   PRODUCT_PRICE = 'product-price-list',
 
   PLATFORM_STATISTICS = 'platform-statistics',
+  PROJECT_OVERVIEW = 'project-overview',
 }
 
 export enum CacheKeyTTL {
@@ -856,6 +864,12 @@ export enum ProductCode {
   COMPUTING_SCHRODINGER_CREATE = 23,
   COMPUTING_SCHRODINGER_ASSIGN_CID_TO_NFT = 24,
   COMPUTING_SCHRODINGER_TRANSFER_OWNERSHIP = 25,
+
+  NFT_ASTAR_WASM_COLLECTION = 26,
+  NFT_ASTAR_WASM_MINT = 27,
+  NFT_ASTAR_WASM_BURN = 28,
+  NFT_ASTAR_WASM_TRANSFER_COLLECTION = 29,
+  NFT_ASTAR_WASM_SET_BASE_URI = 30,
 }
 
 export enum ProductService {
@@ -871,6 +885,7 @@ export enum ProductCategory {
   MOONBASE_NFT = 'MOONBASE_NFT',
   MOONBEAM_NFT = 'MOONBEAM_NFT',
   ASTAR_NFT = 'ASTAR_NFT',
+  ASTAR_SUBSTRATE_NFT = 'ASTAR_SUBSTRATE_NFT',
   KILT_IDENTITY = 'KILT_IDENTITY',
   GRILLCHAT = 'GRILLCHAT',
   SCHRODINGER = 'SCHRODINGER',

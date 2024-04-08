@@ -4,6 +4,7 @@ import {
   CreateSpaceDto,
   ProductCode,
   ServiceName,
+  SocialPostQueryFilter,
   SpendCreditDto,
   SqlModelStatus,
   env,
@@ -64,13 +65,13 @@ export class SubsocialService {
   }
 
   static async listPosts(
-    event: { space_uuid: string; query: BaseProjectQueryFilter },
+    event: { query: SocialPostQueryFilter },
     context: ServiceContext,
   ) {
     return await new Post(
       { project_uuid: event.query.project_uuid },
       context,
-    ).getList(event.space_uuid, new BaseProjectQueryFilter(event.query));
+    ).getList(new SocialPostQueryFilter(event.query));
   }
 
   static async getPost(event: { post_uuid: string }, context: ServiceContext) {
@@ -124,5 +125,27 @@ export class SubsocialService {
     await spendCreditAction(context, spendCredit, () => post.createPost());
 
     return post.serializeByContext();
+  }
+
+  /**
+   * Get social details for a project.
+   * @param {{ project_uuid: string }} - uuid of the project
+   * @param {ServiceContext} context
+   */
+  static async getProjectSocialDetails(
+    { project_uuid }: { project_uuid: string },
+    context: ServiceContext,
+  ): Promise<{ spaceCount: number; postCount: number }> {
+    const { total: spaceCount } = await SubsocialService.listSpaces(
+      { query: new BaseProjectQueryFilter({ project_uuid }) },
+      context,
+    );
+
+    const postCount = await new Post(
+      { project_uuid },
+      context,
+    ).getPostCountOnProject(project_uuid);
+
+    return { spaceCount, postCount };
   }
 }

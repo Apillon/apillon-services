@@ -21,9 +21,11 @@ export function formatWalletAddress(
   chain: Chain,
   walletAddress: string,
 ) {
-  return `${
-    chainType === ChainType.EVM ? EvmChain[chain] : SubstrateChain[chain]
-  }: ${walletAddress}`;
+  return `${getChainName(chainType, chain)}: ${walletAddress}`;
+}
+
+export function getChainName(chainType: ChainType, chain: Chain) {
+  return chainType === ChainType.EVM ? EvmChain[chain] : SubstrateChain[chain];
 }
 
 function getTokenDecimalsFromChain(chainType: ChainType, chain: Chain) {
@@ -38,6 +40,7 @@ function getTokenDecimalsFromChain(chainType: ChainType, chain: Chain) {
       [SubstrateChain.CRUST]: 12,
       [SubstrateChain.KILT]: 15,
       [SubstrateChain.PHALA]: 12,
+      [SubstrateChain.ASTAR]: 18,
     },
   };
   return options[chainType]?.[chain] || null;

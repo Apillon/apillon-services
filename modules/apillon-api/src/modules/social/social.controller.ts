@@ -27,8 +27,8 @@ export class SocialController {
   constructor(private socialService: SocialService) {}
 
   /*
-    NOTE: 
-    In console and in Apillon api naming of components is different than in social MS. 
+    NOTE:
+    In console and in Apillon api naming of components is different than in social MS.
     Hub --> space
     Channel --> post
   */
@@ -85,7 +85,7 @@ export class SocialController {
     @Ctx() context: ApillonApiContext,
     @Query() query: SocialPostQueryFilter,
   ) {
-    return await this.socialService.listPosts(context, query.hubUuid, query);
+    return await this.socialService.listPosts(context, query);
   }
 
   @Get('channels/:channel_uuid')

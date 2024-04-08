@@ -70,11 +70,7 @@ export class CrustService {
     event: { providerEndpoint: string },
     _context: ServiceContext,
   ) {
-    const provider = new WsProvider(
-      event.providerEndpoint
-        ? event.providerEndpoint
-        : 'wss://crust.api.onfinality.io/ws?apikey=15a3df59-0a99-4216-97b4-e2d242fe64e5',
-    );
+    const provider = new WsProvider(event.providerEndpoint);
     const api = await ApiPromise.create({
       provider,
       typesBundle: typesBundleForPolkadot,

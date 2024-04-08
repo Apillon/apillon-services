@@ -47,4 +47,11 @@ export class CreateEvmTransactionDto extends BaseTransactionDto {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
   public fromAddress?: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public minimumGas?: number;
 }

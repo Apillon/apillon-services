@@ -5,6 +5,7 @@ import {
   CodeException,
   CollectionsQuotaReachedQueryFilter,
   CreateCollectionDTO,
+  CreateSubstrateCollectionDTO,
   DeployCollectionDTO,
   MintNftDTO,
   NestMintNftDTO,
@@ -29,7 +30,7 @@ export class NftsService {
 
   async createCollection(
     context: DevConsoleApiContext,
-    body: CreateCollectionDTO,
+    body: CreateCollectionDTO | CreateSubstrateCollectionDTO,
   ) {
     //check project
     const project: Project = await new Project({}, context).populateByUUID(
@@ -69,7 +70,11 @@ export class NftsService {
       await this.serviceService.createService(context, nftService);
     }
 
-    return (await new NftsMicroservice(context).createCollection(body)).data;
+    return (
+      await new NftsMicroservice(context).createCollection(
+        new CreateCollectionDTO(body.serialize()),
+      )
+    ).data;
   }
 
   async listNftCollections(

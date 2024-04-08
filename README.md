@@ -49,16 +49,4 @@ In this repository you will find source and documentation for microservices, API
 
 ## License
 
-Copyright (c) Apillon 2022 - All Rights Reserved
-
-## Authors
-
-| Name            | Role                 | Email                      |
-| --------------- | -------------------- | -------------------------- |
-| Tadej Vengust   | Tech Lead            | tadej@kalmia.si            |
-| Tine Mlakar     | Architect & DevOps   | tine@kalmia.si             |
-| Vinko Šmid      | Lead Developer       | vinko.smid@kalmia.si       |
-| Urban Kovač     | Frontend Developer   | urban.kovac@kalmia.si      |
-| Luka Golinar    | Full stack developer | luka.golinar@kalmia.si     |
-| Damjan Dimitrov | Backend developer    | damjan.dimitrov@apillon.io |
-| Tadej Rudel     | Backend developer    | tadej.rudel@apillon.io     |
+Copyright (c) Apillon 2024 - All Rights Reserved

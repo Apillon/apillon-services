@@ -7,6 +7,7 @@ import {
   PopulateFrom,
   SerializeFor,
   ServiceName,
+  SocialPostQueryFilter,
   SqlModelStatus,
   SubstrateChain,
   UuidSqlModel,
@@ -255,33 +256,35 @@ export class Post extends UuidSqlModel {
     return this;
   }
 
-  public async getList(space_uuid: string, filter: BaseProjectQueryFilter) {
-    this.canAccess(this.getContext());
+  public async getList(filter: SocialPostQueryFilter) {
+    const context = this.getContext();
+    this.canAccess(context);
 
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
       'p',
-      {
-        id: 'p.id',
-      },
+      { id: 'p.id' },
       filter.serialize(),
     );
 
     const selectFields = this.generateSelectFields(
       'p',
       '',
-      this.getContext().apiName == ApiName.ADMIN_CONSOLE_API
+      context.apiName == ApiName.ADMIN_CONSOLE_API
         ? SerializeFor.ADMIN_SELECT_DB
         : SerializeFor.SELECT_DB,
     );
+    const space_uuid = filter.space_uuid || filter.hubUuid;
+    const isApi = context.apiName == ApiName.APILLON_API;
     const sqlQuery = {
       qSelect: `
         SELECT
-        post_uuid as ${this.getContext().apiName == ApiName.APILLON_API ? 'channel_uuid' : 'post_uuid'},
-        postId as ${this.getContext().apiName == ApiName.APILLON_API ? 'channelId' : 'postId'},
+        post_uuid as ${isApi ? 'channel_uuid' : 'post_uuid'},
+        postId as ${isApi ? 'channelId' : 'postId'},
         ${selectFields},
         s.name as hubName,
-        s.spaceId as hubId
+        s.spaceId as hubId,
+        s.space_uuid as ${isApi ? 'hub_uuid' : 'space_uuid'}
         `,
       qFrom: `
         FROM \`${DbTables.POST}\` p
@@ -298,7 +301,7 @@ export class Post extends UuidSqlModel {
     };
 
     return await selectAndCountQuery(
-      this.getContext().mysql,
+      context.mysql,
       sqlQuery,
       { ...params, space_uuid },
       'p.id',
@@ -341,5 +344,29 @@ export class Post extends UuidSqlModel {
         },
       }).writeToMonitor({ sendAdminAlert: true });
     }
+  }
+
+  /**
+   * Get total post count within a project
+   * @param project_uuid
+   * @returns count of posts
+   */
+  public async getPostCountOnProject(project_uuid: string): Promise<number> {
+    if (!project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+    this.canAccess(this.getContext());
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as postCount
+      FROM \`${DbTables.POST}\` t
+      WHERE project_uuid = @project_uuid
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid },
+    );
+
+    return data?.length ? data[0].postCount : 0;
   }
 }

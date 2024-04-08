@@ -13,6 +13,8 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  ChainType,
+  SubstrateChain,
 } from '@apillon/lib';
 import {
   booleanParser,
@@ -338,6 +340,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
+    defaultValue: false,
     fakeValue: false,
   })
   public isSoulbound: boolean;
@@ -358,7 +361,8 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: true,
+    defaultValue: false,
+    fakeValue: false,
   })
   public isRevokable: boolean;
 
@@ -442,6 +446,7 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.SELECT_DB,
     ],
     fakeValue: 0,
+    defaultValue: 0,
   })
   public royaltiesFees: number;
 
@@ -602,9 +607,30 @@ export class Collection extends ProjectAccessModel {
       SerializeFor.SELECT_DB,
     ],
     validators: [],
+  })
+  public chainType: ChainType;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [],
     fakeValue: EvmChain.MOONBASE,
   })
-  public chain: EvmChain;
+  public chain: EvmChain | SubstrateChain;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -653,6 +679,7 @@ export class Collection extends ProjectAccessModel {
         FROM \`${DbTables.COLLECTION}\` c
         WHERE c.project_uuid = IFNULL(@project_uuid, c.project_uuid)
         AND (@search IS null OR c.name LIKE CONCAT('%', @search, '%') OR c.collection_uuid = @search)
+        AND (@chainType IS null OR c.chainType = @chainType)
         AND (@collectionStatus IS null OR c.collectionStatus = @collectionStatus)
         AND
             (

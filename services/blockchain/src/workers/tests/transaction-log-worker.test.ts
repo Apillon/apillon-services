@@ -9,10 +9,12 @@ import { Wallet } from '../../modules/wallet/wallet.model';
 import { DbTables } from '../../config/types';
 import { TransactionLogWorker } from '../transaction-log-worker';
 
+import { getConfig } from '@apillon/tests-lib';
 import * as fs from 'fs/promises';
 import { Endpoint } from '../../common/models/endpoint';
 
 describe('Transaction Log Worker unit test', () => {
+  let config: any;
   let stage: Stage;
   let crustWallet: Wallet;
 
@@ -29,7 +31,8 @@ describe('Transaction Log Worker unit test', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = 'http://3.251.2.33:8081/graphql';
+    config = await getConfig();
+    env.BLOCKCHAIN_CRUST_GRAPHQL_SERVER = config.crust.indexerUrl;
 
     crustWallet = new Wallet(
       {
@@ -50,9 +53,9 @@ describe('Transaction Log Worker unit test', () => {
 
     await new Endpoint(
       {
-        url: 'wss://rpc.crust.network',
-        chain: SubstrateChain.CRUST,
-        chainType: ChainType.SUBSTRATE,
+        ...config.crust.endpoint,
+        chain: config.crust.chain,
+        chainType: config.crust.chainType,
       },
       stage.context,
     ).insert();
@@ -75,9 +78,9 @@ describe('Transaction Log Worker unit test', () => {
 
     await new Endpoint(
       {
-        url: 'https://moonbeam-alpha.api.onfinality.io/rpc?apikey=15a3df59-0a99-4216-97b4-e2d242fe64e5',
-        chain: EvmChain.MOONBASE,
-        chainType: ChainType.EVM,
+        ...config.moonbase.endpoint,
+        chain: config.moonbase.chain,
+        chainType: config.moonbase.chainType,
       },
       stage.context,
     ).insert();
@@ -99,9 +102,9 @@ describe('Transaction Log Worker unit test', () => {
 
     await new Endpoint(
       {
-        url: 'https://astar.api.onfinality.io/rpc?apikey=15a3df59-0a99-4216-97b4-e2d242fe64e5',
-        chain: EvmChain.ASTAR,
-        chainType: ChainType.EVM,
+        ...config.astar.endpoint,
+        chain: config.astar.chain,
+        chainType: config.astar.chainType,
       },
       stage.context,
     ).insert();
@@ -124,9 +127,9 @@ describe('Transaction Log Worker unit test', () => {
 
     await new Endpoint(
       {
-        url: 'wss://spiritnet.kilt.io/parachain-public-ws',
-        chain: SubstrateChain.KILT,
-        chainType: ChainType.SUBSTRATE,
+        ...config.kilt.endpoint,
+        chain: config.kilt.chain,
+        chainType: config.kilt.chainType,
       },
       stage.context,
     ).insert();

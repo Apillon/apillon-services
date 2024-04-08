@@ -1,6 +1,6 @@
 # Apillon NFTs Service - NFTS
 
-NFTs Service provides functionality for creating NFT collections on blockchains. Currently supports Moonbeam network.
+NFTs Service provides functionality for creating NFT collections on blockchains. Currently supports Moonbeam and Astar network.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 
 ## Configuration
 
-Environment variables that has to be set:
+Environment variables that have to be set:
 
 ```ts
 /************************************************************

@@ -205,7 +205,7 @@ export interface IEnv {
   STORAGE_AWS_WORKER_LAMBDA_NAME: string;
 
   /************************************************************
-   * BIS - Apillon Blockchain Integration Service
+   * BCS - Apillon Blockchain Integration Service
    ************************************************************/
   BLOCKCHAIN_FUNCTION_NAME: string;
   BLOCKCHAIN_FUNCTION_NAME_TEST: string;
@@ -234,6 +234,7 @@ export interface IEnv {
   BLOCKCHAIN_KILT_GRAPHQL_SERVER: string;
   BLOCKCHAIN_PHALA_GRAPHQL_SERVER: string;
   BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_ASTAR_SUBSTRATE_GRAPHQL_SERVER: string;
   BLOCKCHAIN_SECRETS: string;
 
   /**
@@ -718,6 +719,8 @@ export let env: IEnv = {
     process.env['BLOCKCHAIN_ASTAR_GRAPHQL_SERVER'],
   BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER'],
+  BLOCKCHAIN_ASTAR_SUBSTRATE_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_ASTAR_SUBSTRATE_GRAPHQL_SERVER'],
 
   BLOCKCHAIN_SECRETS: process.env['BLOCKCHAIN_SECRETS'],
 
