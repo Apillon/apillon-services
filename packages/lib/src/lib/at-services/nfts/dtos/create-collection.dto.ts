@@ -206,26 +206,13 @@ class CreateCollectionDTOBase extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_COLLECTION_BASE_URI_NOT_PRESENT,
-      },
-    ],
+    validators: [],
   })
   public baseUri: string;
 }
 
 // Contains properties from base DTO, with baseUri nullable and additional properties
 export class CreateCollectionDTO extends CreateCollectionDTOBase {
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
-  })
-  public baseUri: string;
-
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
