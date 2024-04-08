@@ -14,7 +14,10 @@ import {
   SubstrateChain,
   ValidatorErrorCode,
 } from '../../../../config/types';
-import { enumInclusionValidator } from '../../../validators';
+import {
+  conditionalPresenceValidator,
+  enumInclusionValidator,
+} from '../../../validators';
 import { dropReserveLowerOrEqualToMaxSupplyValidator } from '../validators/create-collection-drop-reserve-validator';
 import { validateDropPriceIfDrop } from '../validators/create-collection-drop-price-validator';
 import { SubstrateChainPrefix } from '../../substrate/types';
@@ -301,7 +304,10 @@ export class CreateSubstrateCollectionDTO extends CreateCollectionDTOBase {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
-        resolver: presenceValidator(),
+        resolver: conditionalPresenceValidator(
+          'drop',
+          (fieldValue) => fieldValue === true,
+        ),
         code: ValidatorErrorCode.DATA_NOT_PRESENT,
       },
       {
