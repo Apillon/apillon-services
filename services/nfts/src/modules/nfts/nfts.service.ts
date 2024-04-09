@@ -1064,6 +1064,8 @@ export class NftsService {
 
     if (
       collection.drop &&
+      // for substrate NFTs dropReserve is always 0 so we need to skip this check
+      collection.dropReserve &&
       collection.dropReserve - alreadyMintedCount < params.quantity
     ) {
       throw new NftsCodeException({
