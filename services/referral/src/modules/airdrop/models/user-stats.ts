@@ -38,7 +38,7 @@ export const taskPoints = {
   onSubscriptionPlan: 20,
   creditsPurchased: 5,
   grillChatCreated: 1,
-  computingContractCreated: 0,
+  computingContractCreated: 2,
   kiltIdentityCreated: 10,
   collaboratorAdded: 1,
   usersReferred: 2,

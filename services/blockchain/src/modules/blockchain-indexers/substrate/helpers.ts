@@ -6,6 +6,7 @@ import { CrustBlockchainIndexer } from './crust/indexer.service';
 import { KiltBlockchainIndexer } from './kilt/indexer.service';
 import { PhalaBlockchainIndexer } from './phala/indexer.service';
 import { SubsocialBlockchainIndexer } from './subsocial/indexer.service';
+import { AstarSubstrateBlockchainIndexer } from './astar/indexer.service';
 
 /**
  * Checks indexer to determine if transaction exists (is indexed).
@@ -49,6 +50,13 @@ export async function isTransactionIndexed(
     case SubstrateChain.SUBSOCIAL:
       transactions =
         await new SubsocialBlockchainIndexer().getAccountTransactionsByHash(
+          wallet.address,
+          transactionHash,
+        );
+      break;
+    case SubstrateChain.ASTAR:
+      transactions =
+        await new AstarSubstrateBlockchainIndexer().getAccountTransactionsByHash(
           wallet.address,
           transactionHash,
         );

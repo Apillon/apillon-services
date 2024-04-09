@@ -1,3 +1,4 @@
+import { SocialPostQueryFilter, WalletIdentityDto } from '../../..';
 import { env } from '../../../config/env';
 import { AppEnvironment, SocialEventType } from '../../../config/types';
 import { BaseProjectQueryFilter } from '../../base-models/base-project-query-filter.model';
@@ -47,10 +48,9 @@ export class SocialMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async listPosts(space_uuid: string, params: BaseQueryFilter) {
+  public async listPosts(params: SocialPostQueryFilter) {
     const data = {
       eventName: SocialEventType.LIST_POSTS,
-      space_uuid,
       query: params.serialize(),
     };
     return await this.callService(data);
@@ -70,5 +70,23 @@ export class SocialMicroservice extends BaseService {
       body: params.serialize(),
     };
     return await this.callService(data);
+  }
+
+  //#region wallet-identity
+  public async getWalletIdentity(query: WalletIdentityDto) {
+    return await this.callService({
+      eventName: SocialEventType.GET_WALLET_IDENTITY,
+      query,
+    });
+  }
+  //#endregion
+
+  public async getProjectSocialDetails(
+    project_uuid: string,
+  ): Promise<{ data: { spaceCount: number; postCount: number } }> {
+    return await this.callService({
+      eventName: SocialEventType.PROJECT_SOCIAL_DETAILS,
+      project_uuid,
+    });
   }
 }

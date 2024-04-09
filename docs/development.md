@@ -138,7 +138,7 @@ APIs are built with [Nest.js - a progressive node.js framework](https://nestjs.c
 
 ### Developing in VS Code Workspaces
 
-Run VS Code by opening `at.code-workspace` file to have workspaces setup. File should be updated if new workspaces are added to project. There could also be multiple workspace files if needed.
+Run VS Code by opening `apillon.code-workspace` file to have workspaces setup. File should be updated if new workspaces are added to project. There could also be multiple workspace files if needed.
 
 ### Prepare the framework
 
@@ -187,23 +187,23 @@ Services uses two types of logging - logging to console (cloudWatch) and to moni
 ### Logging to console
 
 Logging to console should be done with [writeLog](/packages/lib/src/lib/logger.ts) function.
-TODO - implement this function
 
 ### Logging with monitoring microservice (LMAS)
 
 In services, call `Lmas().writeLog` function, which supports below parameters:
 
-| Property     | Description                                                                                                                                                                                                                         |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| context      | Service context. Very important, because it contains requestId, user and other stuff from request                                                                                                                                   |
-| user_uuid    | You can directly specify user_uuid, which executes current function. If null, user from context is used                                                                                                                             |
-| project_uuid | Project UUID                                                                                                                                                                                                                        |
-| logType      | Type of log (error, info, ...)                                                                                                                                                                                                      |
-| message      | Log content                                                                                                                                                                                                                         |
-| location     | File and functions, which is writing the log                                                                                                                                                                                        |
-| service      | `ServiceName`                                                                                                                                                                                                                       |
-| data         | Additional data, which holds important information for log. Without this, log is mostly useless. For errors, add whole error object to this property. For some statistical logs, add records that were created, changed, deleted... |
+| Property     | Description                                                                                                                                      |
+|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| context      | Service context. Very important, because it contains requestId, user and other additional data from the request                                  |
+| user_uuid    | You can directly specify user_uuid, which executes current function. If null, user from context is used                                          |
+| project_uuid | Project UUID                                                                                                                                     |
+| logType      | Type of log (error, info, ...)                                                                                                                   |
+| message      | Log content                                                                                                                                      |
+| location     | File and functions, where the log is being written from                                                                                          |
+| service      | `ServiceName`                                                                                                                                    |
+| data         | Additional data, which holds important information about the log. Without this, log is mostly useless. For errors, add whole error object to this property. For some statistical logs, add records that were created, changed, deleted etc. |
 
+**Example:**
 ```ts
 await new Lmas().writeLog({
   context,
@@ -218,10 +218,9 @@ await new Lmas().writeLog({
 
 ### Error codes
 
->
+Error codes have a specific format and structure and are being used for validation or logical errors. Each microservice has its own set of unique error codes and the codes are also mapped on the frontend to translate into user-friendly messages.
 
 **Code format:**
-
 ```ts
 HTTP_CODE | MODULE_CODE | MODULE_INTERNAL_ERROR_CODE
 ```

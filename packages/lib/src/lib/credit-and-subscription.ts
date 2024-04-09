@@ -54,16 +54,9 @@ export async function spendCreditAction<T>(
   spendCreditDto: SpendCreditDto,
   action: () => Promise<T>,
 ): Promise<T> {
-  //Validate input
-  try {
-    await spendCreditDto.validate();
-  } catch (err) {
-    await spendCreditDto.handle(err);
-    if (!spendCreditDto.isValid()) {
-      throw new ValidationException(spendCreditDto);
-    }
-  }
-  //Spend credit
+  // Validate input
+  await spendCreditDto.validateOrThrow(ValidationException);
+  // Spend credit
   await new Scs(context).spendCredit(spendCreditDto).catch((err) => {
     throw new CodeException({
       code: err.code,

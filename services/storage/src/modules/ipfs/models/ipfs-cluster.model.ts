@@ -7,7 +7,6 @@ import {
   prop,
 } from '@apillon/lib';
 import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
-import { CID } from 'ipfs-http-client';
 import { v4 as uuidV4 } from 'uuid';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
@@ -323,6 +322,44 @@ export class IpfsCluster extends AdvancedSQLModel {
   })
   public loadBalancerIp: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public backupClusterServer: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public backupIpfsApi: string;
+
   /**
    * Generate link to CID/IPNS on IPFS gateway for this project
    * @param project_uuid
@@ -337,7 +374,6 @@ export class IpfsCluster extends AdvancedSQLModel {
     path?: string,
   ) {
     let link = '';
-    cid = isIpns ? cid : CID.parse(cid).toV1().toString();
 
     if (this.subdomainGateway) {
       link =

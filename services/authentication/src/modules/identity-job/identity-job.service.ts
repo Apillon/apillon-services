@@ -18,35 +18,17 @@ export class IdentityJobService {
     return identityJob.exists()
       ? identityJob
       : await new IdentityJob({}, context)
-          .populate({
-            identity_id: identity_id,
-            finalState: finalState,
-            data: data,
-          })
+          .populate({ identity_id, finalState, data })
           .insert();
   }
 
   public static async insertIdentityJob(job: IdentityJob) {
-    try {
-      await job.validate();
-    } catch (err) {
-      await job.handle(err);
-      if (!job.isValid()) {
-        throw new AuthenticationValidationException(job);
-      }
-    }
+    await job.validateOrThrow(AuthenticationValidationException);
     await job.insert();
   }
 
   public static async updateIdentityJob(job: IdentityJob) {
-    try {
-      await job.validate();
-    } catch (err) {
-      await job.handle(err);
-      if (!job.isValid()) {
-        throw new AuthenticationValidationException(job);
-      }
-    }
+    await job.validateOrThrow(AuthenticationValidationException);
     await job.update();
   }
 }

@@ -1,6 +1,6 @@
 # Apillon Logging, Monitoring & Alerting Service - LMAS
 
-LMAS service provides endpoint for logging system messages to Mongo database and to notify administrators of system events via various channels (currently slack). Service supposed to be called asynchronously and should not be waited for response (non blocking actions).
+LMAS service provides endpoint for logging system messages, events, dev console and API requests to Mongo database and to notify administrators of system events via various channels (currently slack). Service supposed to be called asynchronously and should not be awaited for response (non blocking actions).
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 
 ## Configuration
 
-Environment variables that has to be set:
+Environment variables that have to be set:
 
 ```ts
  /************************************************************

@@ -1,6 +1,6 @@
 {
   "name": "@apillon/workers-lib",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "",
   "main": "./dist/index.js",
   "source": "./src/index.ts",
@@ -8,7 +8,7 @@
   "files": [
     "dist/**"
   ],
-  "author": "Kalmia d.o.o.",
+  "author": "Apillon",
   "license": "UNLICENSED",
   "scripts": {
     "prebuild": "rimraf dist",
@@ -18,14 +18,14 @@
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "^8.5.9",
+    "@types/jsonwebtoken": "^9.0.6",
     "eslint-config-common": "*",
     "tsconfig": "*"
   },
   "dependencies": {
     "@apillon/lib": "*",
-    "@aws-sdk/client-lambda": "^3.241.0",
-    "@aws-sdk/client-sqs": "^3.241.0",
+    "@aws-sdk/client-lambda": "^3.518.0",
+    "@aws-sdk/client-sqs": "^3.515.0",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",

@@ -16,6 +16,7 @@ export * from './lib/at-services/config/dtos/add-credit.dto';
 export * from './lib/at-services/config/dtos/credit-transaction-query-filter.dto';
 export * from './lib/at-services/config/dtos/pricelist-query-filter.dto';
 export * from './lib/at-services/base-service';
+export * from './lib/at-services/config/dtos/configure-credit.dto';
 
 //#REGION Referral
 export * from './lib/at-services/referral/referral';
@@ -77,6 +78,8 @@ export * from './lib/at-services/nfts/dtos/transfer-collection.dto';
 export * from './lib/at-services/nfts/dtos/create-collection.dto';
 export * from './lib/at-services/nfts/dtos/burn-nft.dto';
 export * from './lib/at-services/nfts/dtos/collections-quota-reached-query-filter.dto';
+export * from './lib/at-services/nfts/dtos/add-nfts-metadata.dto';
+export * from './lib/at-services/nfts/constants';
 
 //#REGION COMPUTING
 export * from './lib/at-services/computing/computing';
@@ -86,8 +89,6 @@ export * from './lib/at-services/computing/dtos/deposit-to-cluster.dto';
 export * from './lib/at-services/computing/dtos/transfer-ownership.dto';
 export * from './lib/at-services/computing/dtos/encrypt-content.dto';
 export * from './lib/at-services/computing/dtos/assign-cid-to-nft.dto';
-export * from './lib/at-services/computing/dtos/phala-log-filter.dto';
-export * from './lib/at-services/computing/dtos/phala-cluster-wallet.dto';
 export * from './lib/at-services/computing/dtos/phala-cluster-deposit-transaction.dto';
 export * from './lib/at-services/computing/dtos/cluster-wallet-query-filter.dto';
 export * from './lib/at-services/computing/dtos/computing-transaction-query-filter.dto';
@@ -102,11 +103,16 @@ export * from './lib/at-services/blockchain/dtos/transaction-webhook-data.dto';
 export * from './lib/at-services/blockchain/dtos/update-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/wallet-transactions-query-filter';
 export * from './lib/at-services/blockchain/dtos/wallet-deposits-query-filter';
+export * from './lib/at-services/blockchain/validators/address-validator';
+
+//#REGION Substrate
+export * from './lib/at-services/substrate/types';
 
 //#REGION Social
 export * from './lib/at-services/social/social';
 export * from './lib/at-services/social/dtos/create-space.dto';
 export * from './lib/at-services/social/dtos/create-post.dto';
+export * from './lib/at-services/social/dtos/post-query-filter.dto';
 
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';

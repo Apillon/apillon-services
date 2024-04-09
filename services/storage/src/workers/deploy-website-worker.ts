@@ -6,6 +6,7 @@ import {
   refundCredit,
   SerializeFor,
   ServiceName,
+  checkProjectSubscription,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -13,13 +14,13 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { CID } from 'ipfs-http-client';
 import { v4 as uuidV4 } from 'uuid';
 import {
   DbTables,
   DeploymentEnvironment,
   DeploymentStatus,
   FileStatus,
+  StorageErrorCode,
 } from '../config/types';
 import { createCloudfrontInvalidationCommand } from '../lib/aws-cloudfront';
 import { generateDirectoriesFromPath } from '../lib/generate-directories-from-path';
@@ -33,7 +34,6 @@ import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { Ipns } from '../modules/ipns/models/ipns.model';
 import { File } from '../modules/storage/models/file.model';
-import { checkProjectSubscription } from '@apillon/lib/src';
 
 /**
  * Worker uploads files from source bucket to IPFS, acquired CID is published to website ipns record.
@@ -133,18 +133,44 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         deployment.environment == DeploymentEnvironment.STAGING ||
         deployment.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
       ) {
-        ipfsRes = await ipfsService.uploadFilesToIPFSFromS3(
-          {
-            files: sourceFiles,
-            wrapWithDirectory: true,
-            wrappingDirectoryPath: `Deployment_${deployment.id}`,
-          },
-          this.context,
-        );
+        try {
+          ipfsRes = await ipfsService.uploadFilesToIPFSFromS3(
+            {
+              files: sourceFiles,
+              wrapWithDirectory: true,
+              wrappingDirectoryPath: `Deployment_${deployment.id}`,
+            },
+            this.context,
+          );
+        } catch (uploadToIpfsErr) {
+          if (
+            uploadToIpfsErr?.options?.code !=
+              StorageErrorCode.STORAGE_IPFS_API_INITIALIZATION_ERROR &&
+            !ipfsService.usingBackupNode
+          ) {
+            //Force reinitialization of ipfs client and retry upload
+            await ipfsService.initializeIPFSClient(true);
+            ipfsRes = await ipfsService
+              .uploadFilesToIPFSFromS3(
+                {
+                  files: sourceFiles,
+                  wrapWithDirectory: true,
+                  wrappingDirectoryPath: `Deployment_${deployment.id}`,
+                },
+                this.context,
+              )
+              .catch((retryUploadToIpfsErr) => {
+                throw retryUploadToIpfsErr;
+              });
+          } else {
+            //ipfs service is already using backup node.
+            throw uploadToIpfsErr;
+          }
+        }
 
         //Set ipfsRes data to deployment
-        deployment.cid = ipfsRes.parentDirCID.toV0().toString();
-        deployment.cidv1 = ipfsRes.parentDirCID.toV1().toString();
+        deployment.cid = ipfsRes.parentDirCID;
+        deployment.cidv1 = ipfsRes.parentDirCID;
         deployment.size = ipfsRes.size;
 
         //If deployment was not already reviewed, and env variable for sending websites to review is set to 1
@@ -159,16 +185,15 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
             this.context,
           ).populateDeploymentByCid(deployment.cid);
 
-          if(!reviewedDeployment.exists())
-          {
+          if (!reviewedDeployment.exists()) {
             //if project is on freemium, website goes to review
             await deployment.sendToReview(website, data.user_uuid);
             return;
           }
         }
 
-        targetBucket.CID = ipfsRes.parentDirCID.toV0().toString();
-        targetBucket.CIDv1 = ipfsRes.parentDirCID.toV1().toString();
+        targetBucket.CID = ipfsRes.parentDirCID;
+        targetBucket.CIDv1 = ipfsRes.parentDirCID;
 
         //Update bucket CID & Size
         targetBucket.size = ipfsRes.size;
@@ -287,7 +312,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           await pinFileToCRUST(
             this.context,
             targetBucket.bucket_uuid,
-            CID.parse(targetBucket.CID),
+            targetBucket.CID,
             cidSize,
             true,
             targetBucket.bucket_uuid,
@@ -338,6 +363,25 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
       });
     } catch (err) {
       console.error(err);
+      //To prevent failure of website deployment, try multiple times (possible problems with IPFS or some other service).
+      if (deployment.retryCount < 3) {
+        deployment.retryCount += 1;
+        await deployment.update().catch(async (upgError) => {
+          await this.writeEventLog(
+            {
+              logType: LogType.ERROR,
+              project_uuid: website.project_uuid,
+              message: 'Error updating deployment retryCount',
+              service: ServiceName.STORAGE,
+              err: upgError,
+            },
+            LogOutput.SYS_ERROR,
+          );
+        });
+        //Error is thrown from worker, so this sqs message will be processed again
+        throw err;
+      }
+
       await this.writeEventLog(
         {
           logType: LogType.ERROR,

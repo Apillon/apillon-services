@@ -5,6 +5,7 @@ import {
   Context,
   DefaultUserRole,
   JSONParser,
+  JwtExpireTime,
   JwtTokenType,
   PoolConnection,
   PopulateFrom,
@@ -20,7 +21,7 @@ import {
 import { stringParser } from '@rawmodel/parsers';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import * as bcrypt from 'bcryptjs';
-import { AmsErrorCode, DbTables, TokenExpiresInStr } from '../../config/types';
+import { AmsErrorCode, DbTables } from '../../config/types';
 import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { CryptoHash } from '../../lib/hash-with-crypto';
 import { AuthToken } from '../auth-token/auth-token.model';
@@ -276,16 +277,12 @@ export class AuthUser extends AdvancedSQLModel {
       tokenHash: await CryptoHash.hash(this.token),
       user_uuid: this.user_uuid,
       tokenType: JwtTokenType.USER_AUTHENTICATION,
-      expiresIn: TokenExpiresInStr.EXPIRES_IN_1_DAY,
+      expiresIn: JwtExpireTime.ONE_DAY,
     };
 
     authToken.populate(tokenData, PopulateFrom.SERVICE);
 
-    try {
-      await authToken.validate();
-    } catch (err) {
-      throw new AmsValidationException(authToken);
-    }
+    await authToken.validateOrThrow(AmsValidationException);
 
     try {
       await this.invalidateOldToken();
@@ -297,7 +294,10 @@ export class AuthUser extends AdvancedSQLModel {
       throw await new AmsCodeException({
         status: 500,
         code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({ user_uuid: this.user_uuid });
+      }).writeToMonitor({
+        user_uuid: this.user_uuid,
+        data: { err, authToken: authToken.serialize() },
+      });
     }
   }
 
@@ -308,7 +308,7 @@ export class AuthUser extends AdvancedSQLModel {
       throw await new AmsCodeException({
         status: 500,
         code: AmsErrorCode.ERROR_WRITING_TO_DATABASE,
-      }).writeToMonitor({ user_uuid: this.user_uuid });
+      }).writeToMonitor({ user_uuid: this.user_uuid, data: { err } });
     }
   }
 
@@ -321,7 +321,7 @@ export class AuthUser extends AdvancedSQLModel {
   }
 
   public setPassword(password: string) {
-    this.password = bcrypt.hashSync(password, 10);
+    this.password = bcrypt.hashSync(password);
   }
 
   public async setDefaultRole(conn: PoolConnection) {

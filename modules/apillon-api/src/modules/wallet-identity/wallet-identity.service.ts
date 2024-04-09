@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
-import { BlockchainMicroservice, WalletIdentityDto } from '@apillon/lib';
+import { SocialMicroservice, WalletIdentityDto } from '@apillon/lib';
 
 @Injectable()
 export class WalletIdentityService {
@@ -8,7 +8,7 @@ export class WalletIdentityService {
     context: ApillonApiContext,
     query: WalletIdentityDto,
   ) {
-    return (await new BlockchainMicroservice(context).getWalletIdentity(query))
+    return (await new SocialMicroservice(context).getWalletIdentity(query))
       .data;
   }
 }

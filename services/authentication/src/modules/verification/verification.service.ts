@@ -1,4 +1,4 @@
-import { VerificationIdentityDto } from '@apillon/lib';
+import { JwtExpireTime, VerificationIdentityDto } from '@apillon/lib';
 import {
   env,
   generateJwtToken,
@@ -75,7 +75,7 @@ export class VerificationService {
     const token = generateJwtToken(
       JwtTokenType.OAUTH_TOKEN,
       { email, project_uuid },
-      '10min',
+      JwtExpireTime.TWENTY_MINUTES,
     );
 
     return { verified: true, data: token };

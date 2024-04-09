@@ -13,10 +13,10 @@ export class OverrideService {
     dto: CreateQuotaOverrideDto,
     context: ServiceContext,
   ) {
-    const override = await OverrideService.getOverrideByQuota(dto, context);
+    const override = await new Override({}, context).findByQuotaAndUuid(dto);
 
     // If an override exists, update it, else create a new override
-    if (override?.exists()) {
+    if (override.exists()) {
       override.populate(dto, PopulateFrom.ADMIN);
       await override.update();
       return override;
@@ -26,7 +26,7 @@ export class OverrideService {
   }
 
   static async deleteOverride(dto: QuotaOverrideDto, context: ServiceContext) {
-    const override = await OverrideService.getOverrideByQuota(dto, context);
+    const override = await new Override({}, context).findByQuotaAndUuid(dto);
     if (!override?.exists()) {
       throw new ScsCodeException({
         status: 404,
@@ -35,15 +35,5 @@ export class OverrideService {
     }
     await override.delete();
     return true;
-  }
-
-  static async getOverrideByQuota(
-    dto: QuotaOverrideDto,
-    context: ServiceContext,
-  ) {
-    const overrides = await new Override({}, context).findByProjectObjectUuid(
-      dto,
-    );
-    return overrides.find((override) => override.quota_id === dto.quota_id);
   }
 }

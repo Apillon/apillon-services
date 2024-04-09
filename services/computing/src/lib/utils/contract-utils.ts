@@ -1,5 +1,7 @@
 import {
   BlockchainMicroservice,
+  ChainType,
+  Context,
   CreateSubstrateTransactionDto,
   PoolConnection,
   SerializeFor,
@@ -18,14 +20,26 @@ import { TransactionService } from '../../modules/transaction/transaction.servic
 import { PhalaClient } from '../../modules/services/phala.client';
 import { ContractAbi } from '../../modules/computing/models/contractAbi.model';
 
+export async function getPhalaEndpoint(context: Context) {
+  const rpcEndpoint = (
+    await new BlockchainMicroservice(context).getChainEndpoint(
+      SubstrateChain.PHALA,
+      ChainType.SUBSTRATE,
+    )
+  ).data.url;
+  console.log('rpcEndpoint', rpcEndpoint);
+  return rpcEndpoint;
+}
+
 export async function deployPhalaContract(
   context: ServiceContext,
+  transaction_uuid: string,
   contract: Contract,
   contractAbi: ContractAbi,
   conn: PoolConnection,
 ) {
-  const phalaClient = new PhalaClient(context);
-  contract.data['clusterId'] = await phalaClient.getClusterId();
+  const rpcUrl = await getPhalaEndpoint(context);
+  const phalaClient = new PhalaClient(rpcUrl);
   const transaction = await phalaClient.createDeployTransaction(
     contract,
     contractAbi,
@@ -45,17 +59,23 @@ export async function deployPhalaContract(
     context,
   ).createSubstrateTransaction(blockchainServiceRequest);
 
+  const clusterId = await phalaClient.getClusterId();
+  const pruntimeUrl = await phalaClient.getPruntimeUrl();
+
   const dbTxRecord = new Transaction({}, context);
   dbTxRecord.populate({
+    transaction_uuid,
     walletAddress: response.data.address,
     transactionType: TransactionType.DEPLOY_CONTRACT,
     contract_id: contract.id,
     transactionHash: response.data.transactionHash,
     transactionStatus: ComputingTransactionStatus.PENDING,
+    metadata: { pruntimeUrl },
   });
 
   //Insert to DB
   await TransactionService.saveTransaction(dbTxRecord, conn);
+  contract.data['clusterId'] = clusterId;
   contract.contractStatus = ContractStatus.DEPLOY_INITIATED;
   contract.deployerAddress = response.data.address;
   await contract.update(SerializeFor.UPDATE_DB, conn);
@@ -67,7 +87,8 @@ export async function depositToPhalaCluster(
   accountAddress: string,
   amount: number,
 ) {
-  const phalaClient = new PhalaClient(context);
+  const rpcUrl = await getPhalaEndpoint(context);
+  const phalaClient = new PhalaClient(rpcUrl);
   const transaction = await phalaClient.createDepositToClusterTransaction(
     clusterId,
     accountAddress,
@@ -97,6 +118,7 @@ export async function depositToPhalaCluster(
 
 export async function transferContractOwnership(
   context: ServiceContext,
+  transaction_uuid: string,
   projectUuid: string,
   contract_id: number,
   contractAbi: { [key: string]: any },
@@ -104,9 +126,9 @@ export async function transferContractOwnership(
   newOwnerAddress: string,
 ) {
   const nonce = PhalaClient.getRandomNonce();
-  const transaction = await new PhalaClient(
-    context,
-  ).createTransferOwnershipTransaction(
+  const rpcUrl = await getPhalaEndpoint(context);
+  const phalaClient = new PhalaClient(rpcUrl);
+  const transaction = await phalaClient.createTransferOwnershipTransaction(
     contractAbi,
     contractAddress,
     nonce,
@@ -125,14 +147,17 @@ export async function transferContractOwnership(
   const response = await new BlockchainMicroservice(
     context,
   ).createSubstrateTransaction(blockchainServiceRequest);
+  const pruntimeUrl = await phalaClient.getPruntimeUrl();
   const dbTxRecord = new Transaction(
     {
+      transaction_uuid,
       walletAddress: response.data.address,
       transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-      contract_id: contract_id,
+      contract_id,
       transactionHash: response.data.transactionHash,
       nonce,
       transactionStatus: ComputingTransactionStatus.PENDING,
+      metadata: { pruntimeUrl },
     },
     context,
   );
@@ -145,7 +170,8 @@ export async function encryptContent(
   contractAddress: string,
   content: string,
 ) {
-  return await new PhalaClient(context).encryptContent(
+  const rpcUrl = await getPhalaEndpoint(context);
+  return await new PhalaClient(rpcUrl).encryptContent(
     contractAbi,
     contractAddress,
     content,
@@ -154,6 +180,7 @@ export async function encryptContent(
 
 export async function assignCidToNft(
   context: ServiceContext,
+  transaction_uuid: string,
   projectUuid: string,
   contract_id: number,
   contractAbi: { [key: string]: any },
@@ -162,9 +189,9 @@ export async function assignCidToNft(
   nftId: number,
 ) {
   const nonce = PhalaClient.getRandomNonce();
-  const transaction = await new PhalaClient(
-    context,
-  ).createAssignCidToNftTransaction(
+  const rpcUrl = await getPhalaEndpoint(context);
+  const phalaClient = new PhalaClient(rpcUrl);
+  const transaction = await phalaClient.createAssignCidToNftTransaction(
     contractAbi,
     contractAddress,
     nonce,
@@ -184,14 +211,17 @@ export async function assignCidToNft(
   const response = await new BlockchainMicroservice(
     context,
   ).createSubstrateTransaction(blockchainServiceRequest);
+  const pruntimeUrl = await phalaClient.getPruntimeUrl();
   const dbTxRecord = new Transaction(
     {
+      transaction_uuid,
       walletAddress: response.data.address,
       transactionType: TransactionType.ASSIGN_CID_TO_NFT,
-      contract_id: contract_id,
+      contract_id,
       transactionHash: response.data.transactionHash,
       nonce,
       transactionStatus: ComputingTransactionStatus.PENDING,
+      metadata: { pruntimeUrl },
     },
     context,
   );

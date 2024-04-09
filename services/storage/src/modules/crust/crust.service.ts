@@ -1,5 +1,6 @@
 import {
   BlockchainMicroservice,
+  ChainType,
   Context,
   CreateSubstrateTransactionDto,
   SubstrateChain,
@@ -7,12 +8,11 @@ import {
 import { ServiceContext } from '@apillon/service-lib';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { CID } from 'ipfs-http-client';
 
 export class CrustService {
   static async placeStorageOrderToCRUST(
     params: {
-      cid: CID;
+      cid: string;
       size: number;
       isDirectory: boolean;
       refTable?: string;
@@ -24,14 +24,22 @@ export class CrustService {
     console.info('placeStorageOrderToCRUST', params);
 
     // Construct place-storage-order tx
-    const fileCid = params.cid.toV0().toString(); // IPFS CID, take `Qm123` as example
+    const fileCid = params.cid;
     const fileSize = params.size; // Let's say 2 gb(in byte)
     const tips = 0;
     const memo = params.isDirectory ? 'folder' : '';
 
+    //Get endpoint from BCS
+    const rpcEndpoint = (
+      await new BlockchainMicroservice(context).getChainEndpoint(
+        SubstrateChain.CRUST,
+        ChainType.SUBSTRATE,
+      )
+    ).data.url;
+
     // Pin dist directory on Crust
     const api = await ApiPromise.create({
-      provider: new WsProvider('wss://rpc.crust.network'),
+      provider: new WsProvider(rpcEndpoint),
       typesBundle: typesBundleForPolkadot,
       throwOnConnect: true,
     });
@@ -62,11 +70,7 @@ export class CrustService {
     event: { providerEndpoint: string },
     _context: ServiceContext,
   ) {
-    const provider = new WsProvider(
-      event.providerEndpoint
-        ? event.providerEndpoint
-        : 'wss://crust.api.onfinality.io/ws?apikey=15a3df59-0a99-4216-97b4-e2d242fe64e5',
-    );
+    const provider = new WsProvider(event.providerEndpoint);
     const api = await ApiPromise.create({
       provider,
       typesBundle: typesBundleForPolkadot,

@@ -8,7 +8,7 @@ custom:
   webpack:
     webpackConfig: ./webpack.config.js
     includeModules:
-      modeModulesRelativeDir: '../../'
+      #      nodeModulesRelativeDir: '../../'
       forceExclude:
         - aws-sdk
     packagerOptions:
@@ -21,7 +21,7 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs16.x
+  runtime: nodejs20.x
   region: eu-west-1
   stage: ${opt:stage, 'dev'}
   iam:

@@ -226,7 +226,6 @@ export class MySql {
         //   details: result,
         // });
 
-        //TODO: better error output
         throw new Error(resultSet[0].Message);
       }
     }

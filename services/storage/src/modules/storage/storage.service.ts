@@ -2,6 +2,7 @@ import {
   ApiName,
   AppEnvironment,
   AWS_S3,
+  BucketQueryFilter,
   CacheKeyPrefix,
   checkProjectSubscription,
   CreateS3UrlsForUploadDto,
@@ -19,8 +20,9 @@ import {
   SerializeFor,
   ServiceName,
   SqlModelStatus,
+  WebsiteQueryFilter,
 } from '@apillon/lib';
-import { getSerializationStrategy, ServiceContext } from '@apillon/service-lib';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
   sendToWorkerQueue,
@@ -53,7 +55,6 @@ import { FileUploadSession } from './models/file-upload-session.model';
 import { File } from './models/file.model';
 import { IpfsBandwidth } from '../ipfs/models/ipfs-bandwidth';
 import { generateJwtSecret } from '../../lib/ipfs-utils';
-import { CID } from 'ipfs-http-client';
 import { Directory } from '../directory/models/directory.model';
 
 export class StorageService {
@@ -71,35 +72,57 @@ export class StorageService {
     usedStorage: number;
     availableBandwidth: number;
     usedBandwidth: number;
+    bucketCount: number;
+    websiteCount: number;
+    fileCount: number;
   }> {
+    const project_uuid = event.project_uuid;
     //Storage space
     const maxStorageQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_STORAGE,
-      project_uuid: event.project_uuid,
+      project_uuid,
     });
-    const availableStorage = (maxStorageQuota?.value || 3) * 1073741824;
+    const availableStorage = (maxStorageQuota?.value || 3) * 1_073_741_824;
 
-    const bucket = new Bucket({ project_uuid: event.project_uuid }, context);
+    const bucket = new Bucket({ project_uuid }, context);
     const usedStorage = await bucket.getTotalSizeUsedByProject();
 
     //Bandwidth
     const bandwidthQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_BANDWIDTH,
-      project_uuid: event.project_uuid,
+      project_uuid,
     });
     const availableBandwidth =
-      (bandwidthQuota?.value || Defaults.DEFAULT_BANDWIDTH) * 1073741824;
+      (bandwidthQuota?.value || Defaults.DEFAULT_BANDWIDTH) * 1_073_741_824;
 
     const usedBandwidth = await new IpfsBandwidth(
       {},
       context,
-    ).populateByProjectAndDate(event.project_uuid);
+    ).populateByProjectAndDate(project_uuid);
+
+    // Total objects
+    const { total: bucketCount } = await bucket.getList(
+      context,
+      new BucketQueryFilter({ project_uuid }),
+    );
+    const { total: websiteCount } = await new Website(
+      { project_uuid },
+      context,
+    ).getList(context, new WebsiteQueryFilter({ project_uuid }));
+
+    const fileCount = await new File(
+      { project_uuid },
+      context,
+    ).getFileCountOnProject(project_uuid);
 
     return {
       availableStorage,
       usedStorage,
       availableBandwidth,
       usedBandwidth: usedBandwidth.exists() ? usedBandwidth.bandwidth : 0,
+      bucketCount,
+      websiteCount,
+      fileCount,
     };
   }
 
@@ -166,8 +189,16 @@ export class StorageService {
       bucket.bucketType != BucketType.HOSTING &&
       !(await checkProjectSubscription(context, bucket.project_uuid))
     ) {
-      console.info('Project WO subscription. Checking fileNames for upload');
-      if (event.body.files.find((x) => x.fileName.includes('.html'))) {
+      console.info(
+        `Project W/O subscription (${bucket.project_uuid}). Checking fileNames for upload`,
+      );
+      // Content type can also be checked, but it may not always be provided
+      // Disallow files with htm or html extension
+      if (
+        ['htm', 'html'].some((ext) =>
+          event.body.files.find((f) => f.fileName.endsWith(ext)),
+        )
+      ) {
         throw new StorageCodeException({
           code: StorageErrorCode.HTML_FILES_NOT_ALLOWED,
           status: 400,
@@ -550,7 +581,7 @@ export class StorageService {
 
     await file.populateLink();
 
-    return file.serialize(getSerializationStrategy(context));
+    return file.serializeByContext();
   }
 
   static async deleteFile(
@@ -663,7 +694,7 @@ export class StorageService {
       project_uuid: f.project_uuid,
     });
 
-    return f.serialize(getSerializationStrategy(context));
+    return f.serializeByContext();
   }
 
   /**
@@ -795,23 +826,20 @@ export class StorageService {
    * @returns link on ipfs gateway
    */
   static async getLink(
-    event: { cid: string; project_uuid: string },
+    event: { cid: string; project_uuid: string; type: string },
     context: ServiceContext,
   ) {
-    let isIpns = false;
-    try {
-      CID.parse(event.cid);
-    } catch (err) {
-      isIpns = true;
-    }
-
     const ipfsCluster = await new ProjectConfig(
       { project_uuid: event.project_uuid },
       context,
     ).getIpfsCluster();
 
     return {
-      link: ipfsCluster.generateLink(event.project_uuid, event.cid, isIpns),
+      link: ipfsCluster.generateLink(
+        event.project_uuid,
+        event.cid,
+        event.type.toLowerCase() == 'ipns',
+      ),
     };
   }
 }

@@ -102,14 +102,7 @@ export class HostingService {
     body: DeployWebsiteDto,
   ) {
     body.populate({ website_uuid });
-    try {
-      await body.validate();
-    } catch (err) {
-      await body.handle(err);
-      if (!body.isValid()) {
-        throw new ValidationException(body, ValidatorErrorCode);
-      }
-    }
+    await body.validateOrThrow(ValidationException, ValidatorErrorCode);
     return (await new StorageMicroservice(context).deployWebsite(body)).data;
   }
 

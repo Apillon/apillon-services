@@ -18,6 +18,7 @@ import {
   getFullDidDocument,
   createPresentation,
 } from './utils';
+import { JwtExpireTime } from '@apillon/lib';
 
 describe('VERFICATION', () => {
   let stage: Stage;
@@ -41,18 +42,14 @@ describe('VERFICATION', () => {
 
     identityToken = generateJwtToken(
       JwtTokenType.IDENTITY_VERIFICATION,
-      {
-        email: testEmail,
-      },
-      '1d',
+      { email: testEmail },
+      JwtExpireTime.ONE_DAY,
     );
 
     authSessionToken = generateJwtToken(
       JwtTokenType.AUTH_SESSION,
-      {
-        email: testEmail,
-      },
-      '10m',
+      { email: testEmail },
+      JwtExpireTime.TWENTY_MINUTES,
     );
   });
 

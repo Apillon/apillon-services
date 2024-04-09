@@ -1,6 +1,7 @@
 import { Keyring } from '@polkadot/keyring';
 import { Wallet } from '../wallet/wallet.model';
 import {
+  AppEnvironment,
   ChainType,
   ClusterDepositTransaction,
   env,
@@ -8,8 +9,6 @@ import {
   IsolationLevel,
   Lmas,
   LogType,
-  PhalaClusterWalletDto,
-  PhalaLogFilterDto,
   SerializeFor,
   ServiceName,
   SubstrateChain,
@@ -25,14 +24,10 @@ import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { getWalletSeed } from '../../lib/seed';
 import { SubstrateRpcApi } from './rpc-api';
-//import { OnChainRegistry, types as PhalaTypesBundle } from '@phala/sdk';
+import { types as PhalaTypesBundle } from './types-bundle/phala-types';
 import { substrateChainToWorkerName } from '../../lib/helpers';
-import { typesBundle as SubsocialTypesBundle } from '@subsocial/types';
+import { typesBundle as SubsocialTypesBundle } from './types-bundle/subsocial/definitions';
 import { PhalaBlockchainIndexer } from '../blockchain-indexers/substrate/phala/indexer.service';
-
-function removeObjectKeysWithNullValue(obj: any) {
-  return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null));
-}
 
 export class SubstrateService {
   static async createTransaction(
@@ -74,19 +69,23 @@ export class SubstrateService {
         break;
       }
       case SubstrateChain.CRUST: {
-        keyring = new Keyring({ type: 'sr25519' });
+        keyring = new Keyring({ ss58Format: 66, type: 'sr25519' });
         typesBundle = CrustTypesBundle;
         break;
       }
-      /*case SubstrateChain.PHALA: {
+      case SubstrateChain.PHALA: {
         keyring = new Keyring({ type: 'sr25519' });
         typesBundle = PhalaTypesBundle;
         break;
-      }*/
+      }
       case SubstrateChain.XSOCIAL:
       case SubstrateChain.SUBSOCIAL: {
         keyring = new Keyring({ type: 'sr25519' });
         typesBundle = SubsocialTypesBundle;
+        break;
+      }
+      case SubstrateChain.ASTAR: {
+        keyring = new Keyring({type: 'sr25519'});
         break;
       }
       default: {
@@ -120,6 +119,37 @@ export class SubstrateService {
           ChainType.SUBSTRATE,
           conn,
         );
+      }
+
+      if (!wallet.exists()) {
+        throw new BlockchainCodeException({
+          code: BlockchainErrorCode.WALLET_DOES_NOT_EXISTS,
+          status: 500,
+        });
+      }
+
+      // If wallet balance is below minimum balance for sending a tx, throw an error
+      const balanceData = await wallet.checkAndUpdateBalance(conn);
+      if (balanceData.isBelowTransactionThreshold) {
+        throw await new BlockchainCodeException({
+          code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
+          errorMessage: `Transaction can not be sent - balance below transaction minimum for wallet ${wallet.address} and chain ${SubstrateChain[wallet.chain]}`,
+          sourceFunction: 'SubstrateService.createTransaction',
+          status: 500,
+        }).writeToMonitor({
+          logType: LogType.ERROR,
+          service: ServiceName.BLOCKCHAIN,
+          data: {
+            ...balanceData,
+            transaction: params.transaction,
+            chain: params.chain,
+            chainType: ChainType.SUBSTRATE,
+            address: params.fromAddress,
+            referenceTable: params.referenceTable,
+            referenceId: params.referenceId,
+          },
+          sendAdminAlert: true,
+        });
       }
 
       console.log('Wallet', wallet.serialize());
@@ -174,38 +204,47 @@ export class SubstrateService {
         },
       });
 
-      try {
-        await sendToWorkerQueue(
-          env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
-          substrateChainToWorkerName(params.chain),
-          [
-            {
-              chain: params.chain,
-            },
-          ],
-          null,
-          null,
-        );
-      } catch (e) {
-        await new Lmas().writeLog({
-          logType: LogType.ERROR,
-          message:
-            'Error triggering TRANSMIT_SUBSTRATE_TRANSACTION worker queue',
-          location: 'SubstrateService.createTransaction',
-          service: ServiceName.BLOCKCHAIN,
-          data: {
-            error: e,
-          },
-        });
+      if (
+        env.APP_ENV != AppEnvironment.TEST &&
+        env.APP_ENV != AppEnvironment.LOCAL_DEV
+      ) {
+        try {
+          await sendToWorkerQueue(
+            env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
+            substrateChainToWorkerName(params.chain),
+            [
+              {
+                chain: params.chain,
+              },
+            ],
+            null,
+            null,
+          );
+        } catch (e) {
+          await new Lmas().writeLog({
+            logType: LogType.ERROR,
+            message: `Error triggering TRANSMIT_SUBSTRATE_TRANSACTION worker queue: ${e}`,
+            location: 'SubstrateService.createTransaction',
+            service: ServiceName.BLOCKCHAIN,
+            data: { error: e },
+            sendAdminAlert: true,
+          });
+        }
       }
       return transaction.serialize(SerializeFor.PROFILE);
     } catch (e) {
-      //Write log to LMAS
       console.log(e);
-      await new Lmas().writeLog({
+      await conn.rollback();
+      if (e instanceof BlockchainCodeException) {
+        throw e;
+      }
+      throw await new BlockchainCodeException({
+        code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
+        errorMessage: `Error creating substrate transaction: ${e}`,
+        sourceFunction: 'SubstrateService.createTransaction',
+        status: 500,
+      }).writeToMonitor({
         logType: LogType.ERROR,
-        message: 'Error creating transaction',
-        location: 'SubstrateService.createTransaction',
         service: ServiceName.BLOCKCHAIN,
         data: {
           error: e,
@@ -216,11 +255,7 @@ export class SubstrateService {
           referenceTable: params.referenceTable,
           referenceId: params.referenceId,
         },
-      });
-      await conn.rollback();
-      throw new BlockchainCodeException({
-        code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
-        status: 500,
+        sendAdminAlert: true,
       });
     } finally {
       await api.destroy();
@@ -243,100 +278,6 @@ export class SubstrateService {
       });
     }
     return transaction.serialize(SerializeFor.PROFILE);
-  }
-
-  static async getPhalaLogRecordsAndGasPrice(
-    event: {
-      phalaLogFilter: PhalaLogFilterDto;
-    },
-    context: ServiceContext,
-  ) {
-    return undefined;
-    /*const phalaLogFilter = event.phalaLogFilter;
-    const endpoint = await new Endpoint({}, context).populateByChain(
-      SubstrateChain.PHALA,
-      ChainType.SUBSTRATE,
-    );
-    console.log('Fetching gas price and logs with filter: ', {
-      ...phalaLogFilter,
-      endpoint: endpoint.url,
-    });
-    const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
-    try {
-      const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
-        clusterId: phalaLogFilter.clusterId,
-      });
-      const gasPrice = phatRegistry.gasPrice.toNumber();
-      console.log(`Retrieved gas price=${gasPrice}.`);
-      const { records } = await phatRegistry.loggerContract.tail(
-        100,
-        removeObjectKeysWithNullValue(phalaLogFilter),
-      );
-      console.log(`Retrieved ${records.length} log records.`);
-      return { records, gasPrice };
-    } catch (e: unknown) {
-      await new Lmas().writeLog({
-        logType: LogType.ERROR,
-        message: `Error fetching phala logs or gas price.`,
-        location: 'SubstrateService.getPhalaClusterWalletBalance',
-        service: ServiceName.BLOCKCHAIN,
-        data: {
-          error: e,
-          clusterId: phalaLogFilter.clusterId,
-          contract: phalaLogFilter.contract,
-          nonce: phalaLogFilter.nonce,
-          type: phalaLogFilter.type,
-        },
-      });
-      throw e;
-    } finally {
-      await api.destroy();
-    }*/
-  }
-
-  static async getPhalaClusterWalletBalance(
-    event: {
-      phalaClusterWallet: PhalaClusterWalletDto;
-    },
-    context: ServiceContext,
-  ) {
-    return undefined;
-    /*const endpoint = await new Endpoint({}, context).populateByChain(
-      SubstrateChain.PHALA,
-      ChainType.SUBSTRATE,
-    );
-    const api = new SubstrateRpcApi(endpoint.url, PhalaTypesBundle);
-    try {
-      const phatRegistry = await OnChainRegistry.create(await api.getApi(), {
-        clusterId: event.phalaClusterWallet.clusterId,
-      });
-      const balance = await phatRegistry.getClusterBalance(
-        event.phalaClusterWallet.walletAddress,
-      );
-
-      console.log(
-        `Retrieved balance total ${balance.total} and free ${balance.free}`,
-      );
-      return {
-        total: balance.total.toNumber(),
-        free: balance.free.toNumber(),
-      };
-    } catch (e: unknown) {
-      await new Lmas().writeLog({
-        logType: LogType.ERROR,
-        message: `Error fetching cluster ${event.phalaClusterWallet.walletAddress} balance.`,
-        location: 'SubstrateService.getPhalaClusterWalletBalance',
-        service: ServiceName.BLOCKCHAIN,
-        data: {
-          error: e,
-          clusterId: event.phalaClusterWallet.clusterId,
-          walletAddress: event.phalaClusterWallet.walletAddress,
-        },
-      });
-      throw e;
-    } finally {
-      await api.destroy();
-    }*/
   }
 
   static async getPhalaClusterDepositTransaction(
@@ -387,10 +328,10 @@ export class SubstrateService {
         typesBundle = CrustTypesBundle;
         break;
       }
-      /*case SubstrateChain.PHALA: {
+      case SubstrateChain.PHALA: {
         typesBundle = PhalaTypesBundle;
         break;
-      }*/
+      }
       case SubstrateChain.XSOCIAL:
       case SubstrateChain.SUBSOCIAL: {
         typesBundle = SubsocialTypesBundle;

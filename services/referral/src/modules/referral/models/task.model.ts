@@ -182,7 +182,7 @@ export class Task extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: getFaker().date.future(1),
+    fakeValue: () => getFaker().date.future(1),
     validators: [],
   })
   public activeTo: Date;
@@ -272,14 +272,7 @@ export class Task extends AdvancedSQLModel {
       player_id,
     });
 
-    try {
-      await realization.validate();
-    } catch (err) {
-      await realization.handle(err);
-      if (!realization.isValid()) {
-        throw new ReferralValidationException(realization);
-      }
-    }
+    await realization.validateOrThrow(ReferralValidationException);
 
     await realization.insert(SerializeFor.INSERT_DB, conn);
 

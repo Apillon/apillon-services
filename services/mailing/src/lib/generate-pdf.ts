@@ -1,4 +1,4 @@
-import { BaseService, Context, env, getEnvSecrets } from '@apillon/lib';
+import { BaseService, Context, getEnvSecrets } from '@apillon/lib';
 import { MailErrorCode } from '../config/types';
 import { MailCodeException } from './exceptions';
 

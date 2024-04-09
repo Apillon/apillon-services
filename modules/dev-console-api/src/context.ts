@@ -11,7 +11,7 @@ import { User } from './modules/user/models/user.model';
 export class DevConsoleApiContext extends Context {
   token: string;
   /**
-   * Strategy that should be used, to populate model. TODO: In authenticate, fill this!!!!
+   * Strategy that should be used, to populate model.
    * @returns
    */
   populationStrategy: PopulateFrom = PopulateFrom.PROFILE;

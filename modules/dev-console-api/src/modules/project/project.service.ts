@@ -26,6 +26,12 @@ import {
   BaseQueryFilter,
   EmailDataDto,
   EmailTemplate,
+  ConfigureCreditDto,
+  StorageMicroservice,
+  NftsMicroservice,
+  SocialMicroservice,
+  ComputingMicroservice,
+  AuthenticationMicroservice,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -209,14 +215,7 @@ export class ProjectService {
 
     project.populate(data, PopulateFrom.PROFILE);
 
-    try {
-      await project.validate();
-    } catch (err) {
-      await project.handle(err);
-      if (!project.isValid()) {
-        throw new ValidationException(project, ValidatorErrorCode);
-      }
-    }
+    await project.validateOrThrow(ValidationException, ValidatorErrorCode);
 
     await project.update();
     await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);
@@ -366,7 +365,7 @@ export class ProjectService {
             templateName: EmailTemplate.NEW_USER_ADDED_TO_PROJECT,
             templateData: {
               projectName: project.name,
-              actionUrl: `${env.APP_URL}/register/confirmed/?token=${token}`,
+              actionUrl: `${env.APP_URL}/register/confirmed?token=${token}`,
             },
           }),
         );
@@ -406,6 +405,58 @@ export class ProjectService {
     }
 
     return true;
+  }
+
+  async getProjectOverview(context, project_uuid) {
+    await new Project({}, context).populateByUUIDAndCheckAccess(
+      project_uuid,
+      context,
+    );
+
+    const results = await Promise.allSettled([
+      new StorageMicroservice(context)
+        .getStorageInfo(project_uuid)
+        .then(({ data }) => ({ storageInfo: data }))
+        .catch(),
+      new NftsMicroservice(context)
+        .getProjectCollectionDetails(project_uuid)
+        .then(({ data }) => ({ projectCollectionDetails: data }))
+        .catch(),
+      new AuthenticationMicroservice(context)
+        .getTotalDidsCreated(project_uuid)
+        .then(({ data }) => ({ didCount: data }))
+        .catch(),
+      new ComputingMicroservice(context as any)
+        .getProjectComputingDetails(project_uuid)
+        .then(({ data }) => ({ computingDetails: data }))
+        .catch(),
+      new SocialMicroservice(context)
+        .getProjectSocialDetails(project_uuid)
+        .then(({ data }) => ({ socialDetails: data }))
+        .catch(),
+    ]);
+
+    const {
+      storageInfo,
+      projectCollectionDetails,
+      didCount,
+      computingDetails,
+      socialDetails,
+    } = results.reduce((acc, result) => {
+      // Filter out unfulfilled promises
+      // and join results together in one object
+      return result.status === 'fulfilled'
+        ? { ...acc, ...(result.value || {}) }
+        : acc;
+    }, {}) as any;
+
+    return {
+      ...storageInfo,
+      ...computingDetails,
+      ...socialDetails,
+      ...projectCollectionDetails,
+      didCount,
+    };
   }
 
   /**
@@ -614,6 +665,13 @@ export class ProjectService {
 
   async getProjectCredit(context: DevConsoleApiContext, project_uuid: string) {
     return (await new Scs(context).getProjectCredit(project_uuid)).data;
+  }
+
+  async configureCreditSettings(
+    context: DevConsoleApiContext,
+    body: ConfigureCreditDto,
+  ) {
+    return (await new Scs(context).configureCredit(body)).data;
   }
 
   async getCreditTransactions(

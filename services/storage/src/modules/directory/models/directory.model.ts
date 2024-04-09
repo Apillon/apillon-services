@@ -308,7 +308,7 @@ export class Directory extends UuidSqlModel {
       { bucket_id },
     );
     const res = [];
-    if (data && data.length) {
+    if (data?.length) {
       for (const d of data) {
         res.push(new Directory({}, context).populate(d, PopulateFrom.DB));
       }
@@ -344,7 +344,7 @@ export class Directory extends UuidSqlModel {
     const qSelects = [
       {
         qSelect: `
-        SELECT d.directory_uuid as uuid, ${ObjectType.DIRECTORY} as type, d.name, d.CID, d.createTime, d.updateTime,
+        SELECT d.directory_uuid as uuid, ${ObjectType.DIRECTORY} as type, d.name, d.CIDv1 as CID, d.createTime, d.updateTime,
         NULL as contentType, NULL as size, pd.directory_uuid as directoryUuid,
         NULL as fileStatus
         `,
@@ -360,8 +360,8 @@ export class Directory extends UuidSqlModel {
       },
       {
         qSelect: `
-        SELECT d.file_uuid as uuid, ${ObjectType.FILE} as type, d.name, d.CID, d.createTime, d.updateTime,
-        d.contentType as contentType, d.size as size, pd.directory_uuid as directoryUuid, 
+        SELECT d.file_uuid as uuid, ${ObjectType.FILE} as type, d.name, d.CIDv1 as CID, d.createTime, d.updateTime,
+        d.contentType as contentType, d.size as size, pd.directory_uuid as directoryUuid,
         d.fileStatus as fileStatus
         `,
         qFrom: `

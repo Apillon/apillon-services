@@ -34,6 +34,7 @@ import {
 } from '../modules/blockchain-indexers/substrate/data-models';
 import { StorageOrderTransaction } from '../modules/blockchain-indexers/substrate/crust/data-models';
 import { SubsocialBlockchainIndexer } from '../modules/blockchain-indexers/substrate/subsocial/indexer.service';
+import { AstarSubstrateBlockchainIndexer } from '../modules/blockchain-indexers/substrate/astar/indexer.service';
 
 export class TransactionLogWorker extends BaseQueueWorker {
   public constructor(
@@ -402,6 +403,76 @@ export class TransactionLogWorker extends BaseQueueWorker {
 
             return transactionLogs;
           },
+          [SubstrateChain.ASTAR]: async () => {
+            const indexer = new AstarSubstrateBlockchainIndexer();
+            const blockHeight = await indexer.getBlockHeight();
+            const toBlock =
+              wallet.lastLoggedBlock + wallet.blockParseSize < blockHeight
+                ? wallet.lastLoggedBlock + wallet.blockParseSize
+                : blockHeight;
+            const systems = await indexer.getAllSystemEvents(
+              wallet.address,
+              lastBlock,
+              toBlock,
+            );
+            console.log(`Got ${systems.length} Astar system events!`);
+            const { transfers } =
+              await indexer.getAccountBalanceTransfersForTxs(
+                wallet.address,
+                lastBlock,
+                toBlock,
+              );
+            console.log(`Got ${transfers.length} Astar transfers!`);
+            // prepare transfer data
+            const transactionLogs: TransactionLog[] = [];
+            // collect transfers without system events (deposits)
+            for (const transfer of transfers) {
+              const systemEvent = systems.find(
+                (s) =>
+                  transfer.blockNumber === s.blockNumber &&
+                  transfer.extrinsicHash === s.extrinsicHash,
+              );
+              if (systemEvent) {
+                continue;
+              }
+              transactionLogs.push(
+                new TransactionLog(
+                  {},
+                  this.context,
+                ).createFromSubstrateIndexerData(
+                  {
+                    system: null,
+                    transfer,
+                  },
+                  wallet,
+                ),
+              );
+            }
+            // collect transfers with system events
+            for (const s of systems) {
+              const transfer = transfers.find(
+                (t) =>
+                  t.blockNumber === s.blockNumber &&
+                  t.extrinsicHash === s.extrinsicHash,
+              );
+              transactionLogs.push(
+                new TransactionLog(
+                  {},
+                  this.context,
+                ).createFromSubstrateIndexerData(
+                  {
+                    system: s,
+                    transfer,
+                  },
+                  wallet,
+                ),
+              );
+            }
+
+            await wallet.updateLastLoggedBlock(toBlock);
+
+            return transactionLogs;
+          },
         };
         return (await subOptions[wallet.chain]()) || false;
       },
@@ -455,7 +526,6 @@ export class TransactionLogWorker extends BaseQueueWorker {
     wallet: Wallet,
     transactions: TransactionLog[],
   ) {
-    const tokenPriceUsd = await getTokenPriceUsd(wallet.token);
     // Process wallet deposits
     const deposits = transactions
       .filter(
@@ -469,6 +539,10 @@ export class TransactionLogWorker extends BaseQueueWorker {
       `Found ${deposits.length} deposits for wallet ${wallet.seed}|${wallet.address}`,
     );
 
+    let tokenPriceUsd: number;
+    if (deposits.length > 0) {
+      tokenPriceUsd = await getTokenPriceUsd(wallet.token);
+    }
     for (const deposit of deposits) {
       const conn = await this.context.mysql.start();
       try {

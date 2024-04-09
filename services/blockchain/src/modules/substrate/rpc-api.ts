@@ -4,6 +4,7 @@ import { isTransactionIndexed } from '../blockchain-indexers/substrate/helpers';
 import '@polkadot/api-augment';
 import '@polkadot/rpc-augment';
 import '@polkadot/types-augment';
+import { SubmittableExtrinsic } from '@polkadot/api/types';
 
 export class SubstrateRpcApi {
   protected endpointUrl: string = null;
@@ -27,14 +28,40 @@ export class SubstrateRpcApi {
     console.log('Timing after destroy', this.getTiming(), 's');
   }
 
-  async getUnsignedTransaction(transaction: string) {
+  async getUnsignedTransaction(
+    transaction: string,
+  ): Promise<SubmittableExtrinsic<'promise', any>> {
     console.log('Timing before unsigned transaction', this.getTiming(), 's');
     return (await this.getApi()).tx(transaction);
   }
 
-  async send(rawTransaction: string) {
+  async send(rawTransaction: string): Promise<any> {
     console.log('Timing before send', this.getTiming(), 's');
     return (await this.getApi()).tx(rawTransaction).send();
+    // return await new Promise(async (resolve, reject) => {
+    //   try {
+    //     const api = await this.getApi();
+    //     await api.tx(rawTransaction).send((result) => {
+    //       console.log('Got transaction send result:', result);
+    //       if (result.status.isInBlock) {
+    //         for (const e of result.events) {
+    //           const {
+    //             event: { method, section },
+    //           } = e;
+    //           if (section === 'system' && method === 'ExtrinsicFailed') {
+    //             return reject(result);
+    //           }
+    //         }
+    //         return resolve(result);
+    //       }
+    //       if (result.isError) {
+    //         return reject(result);
+    //       }
+    //     });
+    //   } catch (e: unknown) {
+    //     reject(e);
+    //   }
+    // });
   }
 
   /**

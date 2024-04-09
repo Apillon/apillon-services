@@ -17,6 +17,7 @@ import { Endpoint } from '../../common/models/endpoint';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import { Transaction } from '../../common/models/transaction';
+import { getConfig } from '@apillon/tests-lib';
 
 const CHAIN_TYPE = ChainType.SUBSTRATE;
 const CHAIN = SubstrateChain.PHALA;
@@ -214,12 +215,14 @@ describe('Phala transaction Log Worker unit test', () => {
   let wallet: Wallet;
   let phalaLogCount: number;
   let writeEventLogMock: any;
+  let config: any;
 
   let worker: TransactionLogWorker;
 
   beforeAll(async () => {
+    config = await getConfig();
     stage = await setupTest();
-    env.BLOCKCHAIN_PHALA_GRAPHQL_SERVER = 'http://3.251.2.33:8086/graphql';
+    env.BLOCKCHAIN_PHALA_GRAPHQL_SERVER = config.phala.indexerUrl;
 
     wallet = new Wallet(
       {
@@ -257,9 +260,9 @@ describe('Phala transaction Log Worker unit test', () => {
 
     await new Endpoint(
       {
-        url: 'wss://poc6.phala.network/ws',
-        chain: CHAIN,
-        chainType: CHAIN_TYPE,
+        ...config.phala.endpoint,
+        chain: config.phala.chain,
+        chainType: config.phala.chainType,
       },
       stage.context,
     ).insert();

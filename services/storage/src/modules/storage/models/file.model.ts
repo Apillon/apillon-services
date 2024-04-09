@@ -355,7 +355,7 @@ export class File extends UuidSqlModel {
       this.getContext(),
     ).getIpfsCluster();
 
-    this.link = ipfsCluster.generateLink(this.project_uuid, this.CID);
+    this.link = ipfsCluster.generateLink(this.project_uuid, this.CIDv1);
   }
 
   /**
@@ -418,7 +418,7 @@ export class File extends UuidSqlModel {
     //Populate link
     for (const item of data.items) {
       if (item.CID) {
-        item.link = ipfsCluster.generateLink(b.project_uuid, item.CID);
+        item.link = ipfsCluster.generateLink(b.project_uuid, item.CIDv1);
       }
     }
 
@@ -487,7 +487,7 @@ export class File extends UuidSqlModel {
       if (item.CID) {
         item.link = ipfsCluster.generateLink(
           env.DEV_CONSOLE_API_DEFAULT_PROJECT_UUID,
-          item.CID,
+          item.CIDv1,
         );
       }
     }
@@ -517,13 +517,10 @@ export class File extends UuidSqlModel {
       `,
       { bucket_id },
     );
-    const res = [];
-    if (data && data.length) {
-      for (const d of data) {
-        res.push(new File({}, context).populate(d, PopulateFrom.DB));
-      }
-    }
-    return res;
+
+    return (
+      data?.map((d) => new File({}, context).populate(d, PopulateFrom.DB)) || []
+    );
   }
 
   /**
@@ -540,18 +537,17 @@ export class File extends UuidSqlModel {
       `
       SELECT *
       FROM \`${DbTables.FILE}\`
-      WHERE project_uuid = @project_uuid 
+      WHERE project_uuid = @project_uuid
       AND status <> ${SqlModelStatus.DELETED};
       `,
       { project_uuid },
     );
-    const res = [];
-    if (data && data.length) {
-      for (const d of data) {
-        res.push(new File({}, this.getContext()).populate(d, PopulateFrom.DB));
-      }
-    }
-    return res;
+
+    return (
+      data?.map((d) =>
+        new File({}, this.getContext()).populate(d, PopulateFrom.DB),
+      ) || []
+    );
   }
 
   /**
@@ -569,7 +565,7 @@ export class File extends UuidSqlModel {
     INSERT INTO \`${DbTables.BLACKLIST}\` (cid)
     SELECT f.CID
     FROM \`${DbTables.FILE}\` f
-    WHERE f.project_uuid = @project_uuid 
+    WHERE f.project_uuid = @project_uuid
     AND f.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.BLOCKED})
     `,
       { project_uuid },
@@ -579,11 +575,34 @@ export class File extends UuidSqlModel {
       `
     UPDATE \`${DbTables.FILE}\`
     SET status = ${SqlModelStatus.BLOCKED}
-    WHERE project_uuid = @project_uuid 
+    WHERE project_uuid = @project_uuid
     AND status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.BLOCKED})
     `,
       { project_uuid },
     );
     return true;
+  }
+
+  /**
+   * Get total file count for project
+   * @param project_uuid
+   * @returns count of files
+   */
+  public async getFileCountOnProject(project_uuid: string): Promise<number> {
+    if (!project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT COUNT(*) as fileCount
+      FROM \`${DbTables.FILE}\`
+      WHERE project_uuid = @project_uuid
+      AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { project_uuid },
+    );
+
+    return data?.length ? data[0].fileCount : 0;
   }
 }

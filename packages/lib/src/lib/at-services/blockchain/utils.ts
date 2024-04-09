@@ -21,9 +21,11 @@ export function formatWalletAddress(
   chain: Chain,
   walletAddress: string,
 ) {
-  return `${
-    chainType === ChainType.EVM ? EvmChain[chain] : SubstrateChain[chain]
-  }: ${walletAddress}`;
+  return `${getChainName(chainType, chain)}: ${walletAddress}`;
+}
+
+export function getChainName(chainType: ChainType, chain: Chain) {
+  return chainType === ChainType.EVM ? EvmChain[chain] : SubstrateChain[chain];
 }
 
 function getTokenDecimalsFromChain(chainType: ChainType, chain: Chain) {
@@ -37,13 +39,14 @@ function getTokenDecimalsFromChain(chainType: ChainType, chain: Chain) {
     [ChainType.SUBSTRATE]: {
       [SubstrateChain.CRUST]: 12,
       [SubstrateChain.KILT]: 15,
-      [SubstrateChain.PHALA]: 18,
+      [SubstrateChain.PHALA]: 12,
+      [SubstrateChain.ASTAR]: 18,
     },
   };
   return options[chainType]?.[chain] || null;
 }
 
-export async function getTokenPriceUsd(token: string) {
+export async function getTokenPriceUsd(token: string): Promise<number> {
   const networkTokenMap = {
     CRU: 'crust-network',
     ASTR: 'astar',

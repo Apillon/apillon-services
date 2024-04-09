@@ -59,7 +59,7 @@ if [ "$MODULES_LIB" == "true" ]
 then
   echo "Linking modules-lib"
   npm link @apillon/modules-lib --omit=dev
-else 
+else
   echo "Linking service-lib"
   npm link @apillon/service-lib --omit=dev
 fi
@@ -71,6 +71,9 @@ fi
 
 echo "Instaling build dependencies"
 npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
+
+echo "Instalation of dependancies complete"
+npm ls
 
 if [ "$DB_MIGRATIONS" == "true" ]
 then

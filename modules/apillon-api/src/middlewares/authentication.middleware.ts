@@ -1,4 +1,4 @@
-import { BadRequestErrorCode, CodeException } from '@apillon/lib';
+import { ApiName, BadRequestErrorCode, CodeException } from '@apillon/lib';
 import { HttpStatus, Injectable, NestMiddleware } from '@nestjs/common';
 
 // const AUTHORIZATION_HEADER = 'Authorization';
@@ -36,6 +36,7 @@ export class AuthenticateApiKeyMiddleware implements NestMiddleware {
 
     if (apiKey && apiKeySecret) {
       await context.authenticate(apiKey, apiKeySecret);
+      context.apiName = ApiName.APILLON_API;
     } else {
       throw new CodeException({
         code: BadRequestErrorCode.INVALID_AUTHORIZATION_HEADER,

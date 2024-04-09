@@ -11,6 +11,7 @@ import { TransactionQueryFilter } from './dtos/transaction-query-filter.dto';
 import { TransferCollectionDTO } from './dtos/transfer-collection.dto';
 import { BurnNftDto } from './dtos/burn-nft.dto';
 import { CollectionsQuotaReachedQueryFilter } from './dtos/collections-quota-reached-query-filter.dto';
+import { AddNftsMetadataDto } from './dtos/add-nfts-metadata.dto';
 
 export class NftsMicroservice extends BaseService {
   lambdaFunctionName =
@@ -147,10 +148,20 @@ export class NftsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getProjectCollectionDetails(project_uuid: string) {
+  public async getProjectCollectionDetails(project_uuid: string): Promise<{
+    data: { numOfCollections: number; nftTransactionCount: number };
+  }> {
     const data = {
       eventName: NftsEventType.PROJECT_COLLECTION_DETAILS,
       project_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async addNftsMetadata(params: AddNftsMetadataDto) {
+    const data = {
+      eventName: NftsEventType.ADD_NFTS_METADATA,
+      body: params.serialize(),
     };
     return await this.callService(data);
   }

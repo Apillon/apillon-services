@@ -109,20 +109,15 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             undefined,
           )
         : { files: [], wrappedDirCid: undefined };
-    if (
-      imageFURs.filter(
-        (x) => x.fileStatus == FileUploadRequestFileStatus.UPLOAD_COMPLETED,
-      ).length > 0
-    ) {
-      //get uploaded files and add them to imageFiles object
-      for (const f of imageFURs.filter(
-        (x) => x.fileStatus == FileUploadRequestFileStatus.UPLOAD_COMPLETED,
-      )) {
-        const tmpFile: File = await new File({}, this.context).populateByUUID(
-          f.file_uuid,
-        );
-        imageFiles.files.push(tmpFile);
-      }
+
+    //get uploaded files and add them to imageFiles object
+    for (const f of imageFURs.filter(
+      (x) => x.fileStatus == FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+    )) {
+      const tmpFile: File = await new File({}, this.context).populateByUUID(
+        f.file_uuid,
+      );
+      imageFiles.files.push(tmpFile);
     }
 
     //#endregion
@@ -164,7 +159,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             metadataFUR.s3FileKey,
           ))
         ) {
-          //NOTE: Define flow, what happen in this case. My gues - we should probably throw error
+          //NOTE: Define flow, what happen in this case. My guess - we should probably throw error
           return;
         }
         const file = await s3Client.get(
@@ -183,7 +178,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           if (data.useApillonIpfsGateway) {
             fileContent.image = ipfsCluster.generateLink(
               bucket.project_uuid,
-              imageFile.CID,
+              imageFile.CIDv1,
             );
           } else {
             fileContent.image = 'ipfs://' + imageFile.CID;
@@ -225,6 +220,11 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
     );
 
     if (data.useApillonIpfsGateway) {
+      //If ipnsId is not specified in data, get first ipns record in bucket
+      if (!data.ipnsId) {
+        const ipnses = await bucket.getBucketIpnsRecords();
+        data.ipnsId = ipnses[0].id;
+      }
       //Pin to IPNS
       const ipnsDbRecord: Ipns = await new Ipns({}, this.context).populateById(
         data.ipnsId,

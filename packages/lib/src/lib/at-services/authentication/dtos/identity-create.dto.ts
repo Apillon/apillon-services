@@ -22,7 +22,6 @@ import { BaseIdentityDto } from './base-identity.dto';
 // };
 export class IdentityCreateDto extends BaseIdentityDto {
   @prop({
-    // TODO: parser -> This is an object, so do we really need to parse anything?
     populatable: [PopulateFrom.PROFILE],
     validators: [
       {

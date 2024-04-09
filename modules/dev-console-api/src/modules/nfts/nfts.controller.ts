@@ -13,6 +13,8 @@ import {
   CollectionsQuotaReachedQueryFilter,
   DefaultPermission,
   RoleGroup,
+  AddNftsMetadataDto,
+  CreateSubstrateCollectionDTO,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
@@ -35,7 +37,7 @@ import { NftsService } from './nfts.service';
 export class NftsController {
   constructor(private readonly nftsService: NftsService) {}
 
-  @Post('collections')
+  @Post(['collections', 'collections/evm'])
   @Validation({ dto: CreateCollectionDTO })
   @UseGuards(ValidationGuard)
   @Permissions(
@@ -46,6 +48,21 @@ export class NftsController {
   async createCollection(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateCollectionDTO,
+  ) {
+    return await this.nftsService.createCollection(context, body);
+  }
+
+  @Post('collections/substrate')
+  @Validation({ dto: CreateSubstrateCollectionDTO })
+  @UseGuards(ValidationGuard)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async createSubstrateCollection(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: CreateSubstrateCollectionDTO,
   ) {
     return await this.nftsService.createCollection(context, body);
   }
@@ -207,6 +224,25 @@ export class NftsController {
     @Body() body: DeployCollectionDTO,
   ) {
     return await this.nftsService.deployCollection(
+      context,
+      collectionUuid,
+      body,
+    );
+  }
+
+  @Post('collections/:collectionUuid/nfts-metadata')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @Validation({ dto: AddNftsMetadataDto })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async addNftsMetadata(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collectionUuid') collectionUuid: string,
+    @Body() body: AddNftsMetadataDto,
+  ) {
+    return await this.nftsService.addNftsMetadata(
       context,
       collectionUuid,
       body,

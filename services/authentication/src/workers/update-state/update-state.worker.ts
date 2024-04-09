@@ -1,6 +1,7 @@
 import {
   EmailDataDto,
   EmailTemplate,
+  JwtExpireTime,
   LogType,
   Mailing,
   ServiceName,
@@ -187,10 +188,8 @@ export class UpdateStateWorker extends BaseQueueWorker {
 
                 const token = generateJwtToken(
                   JwtTokenType.IDENTITY_VERIFICATION,
-                  {
-                    email,
-                  },
-                  '10min',
+                  { email },
+                  JwtExpireTime.TWENTY_MINUTES,
                 );
 
                 await new Mailing(ctx).sendMail(

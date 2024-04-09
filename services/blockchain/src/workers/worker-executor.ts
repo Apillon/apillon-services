@@ -24,6 +24,8 @@ import { EvmTransactionWorker } from './evm-transaction-worker';
 import { SubstrateTransactionWorker } from './substrate-transaction-worker';
 import { PhalaTransactionWorker } from './phala-transaction-worker';
 import { SubsocialTransactionWorker } from './subsocial-transaction-worker';
+import { CheckPendingTransactionsWorker } from './check-pending-transactions-worker';
+import { SubstrateContractTransactionWorker } from './substrate-contract-transaction-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -38,16 +40,19 @@ export enum WorkerName {
   TRANSMIT_XSOCIAL_TRANSACTION = 'TransmitXsocialTransactions',
   TRANSMIT_SUBSOCIAL_TRANSACTION = 'TransmitSubsocialTransactions',
   TRANSMIT_ASTAR_TRANSACTIONS = 'TransmitAstarTransactions',
+  TRANSMIT_ASTAR_SUBSTRATE_TRANSACTIONS = 'TransmitAstarSubstrateTransactions',
   VERIFY_CRUST_TRANSACTIONS = 'VerifyCrustTransactions',
   VERIFY_KILT_TRANSACTIONS = 'VerifyKiltTransactions',
   VERIFY_PHALA_TRANSACTIONS = 'VerifyPhalaTransactions',
   VERIFY_SUBSOCIAL_TRANSACTIONS = 'VerifySubsocialTransactions',
   VERIFY_XSOCIAL_TRANSACTIONS = 'VerifyXsocialTransactions',
+  VERIFY_ASTAR_SUBSTRATE_TRANSACTIONS = 'VerifyAstarSubstrateTransactions',
   VERIFY_MOONBEAM_TRANSACTIONS = 'VerifyMoonbeamTransactions',
   VERIFY_MOONBASE_TRANSACTIONS = 'VerifyMoonbaseTransactions',
   VERIFY_ASTAR_TRANSACTIONS = 'VerifyAstarTransactions',
   TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
   TRANSACTION_LOG = 'TransactionLog',
+  CHECK_PENDING_TRANSACTIONS = 'CheckPendingTransactions',
 }
 
 export async function handler(event: any) {
@@ -149,6 +154,7 @@ export async function handleLambdaEvent(
     case WorkerName.TRANSMIT_PHALA_TRANSACTIONS:
     case WorkerName.TRANSMIT_SUBSOCIAL_TRANSACTION:
     case WorkerName.TRANSMIT_XSOCIAL_TRANSACTION:
+    case WorkerName.TRANSMIT_ASTAR_SUBSTRATE_TRANSACTIONS:
       await new TransmitSubstrateTransactionWorker(
         workerDefinition,
         context,
@@ -168,6 +174,12 @@ export async function handleLambdaEvent(
     case WorkerName.VERIFY_SUBSOCIAL_TRANSACTIONS:
     case WorkerName.VERIFY_XSOCIAL_TRANSACTIONS:
       await new SubsocialTransactionWorker(workerDefinition, context).run();
+      break;
+    case WorkerName.VERIFY_ASTAR_SUBSTRATE_TRANSACTIONS:
+      await new SubstrateContractTransactionWorker(
+        workerDefinition,
+        context,
+      ).run();
       break;
     // --- EVM ---
     case WorkerName.VERIFY_MOONBEAM_TRANSACTIONS:
@@ -192,6 +204,14 @@ export async function handleLambdaEvent(
         QueueWorkerType.PLANNER,
       ).run();
       break;
+    case WorkerName.CHECK_PENDING_TRANSACTIONS: {
+      const checkPendingTransactionsWorker = new CheckPendingTransactionsWorker(
+        workerDefinition,
+        context,
+      );
+      await checkPendingTransactionsWorker.run();
+      break;
+    }
     default:
       console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
@@ -249,6 +269,7 @@ export async function handleSqsMessages(
         case WorkerName.TRANSMIT_CRUST_TRANSACTIONS:
         case WorkerName.TRANSMIT_KILT_TRANSACTIONS:
         case WorkerName.TRANSMIT_PHALA_TRANSACTIONS:
+        case WorkerName.TRANSMIT_ASTAR_SUBSTRATE_TRANSACTIONS:
           await new TransmitSubstrateTransactionWorker(
             workerDefinition,
             context,
@@ -278,8 +299,20 @@ export async function handleSqsMessages(
 
         case WorkerName.VERIFY_CRUST_TRANSACTIONS:
         case WorkerName.VERIFY_KILT_TRANSACTIONS:
-        case WorkerName.VERIFY_PHALA_TRANSACTIONS:
           await new SubstrateTransactionWorker(workerDefinition, context).run();
+          break;
+        case WorkerName.VERIFY_PHALA_TRANSACTIONS:
+          await new PhalaTransactionWorker(workerDefinition, context).run();
+          break;
+        case WorkerName.VERIFY_SUBSOCIAL_TRANSACTIONS:
+        case WorkerName.VERIFY_XSOCIAL_TRANSACTIONS:
+          await new SubsocialTransactionWorker(workerDefinition, context).run();
+          break;
+        case WorkerName.VERIFY_ASTAR_SUBSTRATE_TRANSACTIONS:
+          await new SubstrateContractTransactionWorker(
+            workerDefinition,
+            context,
+          ).run();
           break;
         case WorkerName.TRANSACTION_WEBHOOKS:
           await new TransactionWebhookWorker(

@@ -46,7 +46,7 @@ export class CreateSubscriptionDto extends ModelBase {
       SerializeFor.ADMIN, //
       SerializeFor.SERVICE,
     ],
-    fakeValue: getFaker().internet.email(),
+    fakeValue: () => getFaker().internet.email(),
   })
   public subscriberEmail: string;
 
@@ -61,7 +61,7 @@ export class CreateSubscriptionDto extends ModelBase {
       PopulateFrom.PROFILE,
       SerializeFor.SERVICE,
     ],
-    fakeValue: getFaker().date.soon(30),
+    fakeValue: () => getFaker().date.soon(30),
   })
   public expiresOn: Date;
 

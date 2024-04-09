@@ -50,6 +50,16 @@ export class SystemService {
       blockedProjects.push({ project_uuid: projectOverQuota, status: 10 });
     });
 
-    return blockedProjects;
+    //Get Website domains of blocked projects
+    const domains = (await new StorageMicroservice(context).getDomains()).data;
+
+    return {
+      blockedProjects,
+      domains: domains
+        .filter((x) =>
+          blockedProjects.find((p) => p.project_uuid == x.project_uuid),
+        )
+        .map((x) => x.domain),
+    };
   }
 }

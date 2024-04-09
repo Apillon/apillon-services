@@ -15,6 +15,7 @@ import {
   spendCreditAction,
   EmailDataDto,
   EmailTemplate,
+  JwtExpireTime,
 } from '@apillon/lib';
 import { Identity } from './models/identity.model';
 import {
@@ -85,11 +86,8 @@ export class IdentityService {
 
     const token = generateJwtToken(
       JwtTokenType.IDENTITY_VERIFICATION,
-      {
-        email,
-        project_uuid,
-      },
-      '10min',
+      { email, project_uuid },
+      JwtExpireTime.TWENTY_MINUTES,
     );
     let auth_app_page = 'registration';
     const inProgressStates = IdentityState.getProcessInProgressStates();
@@ -277,14 +275,7 @@ export class IdentityService {
     // Don't update here, but in the request below
     await identity.setState(IdentityState.SUBMITTED_DID_CREATE_REQ, false);
 
-    try {
-      await identity.validate();
-    } catch (err) {
-      await identity.handle(err);
-      if (!identity.isValid()) {
-        throw new AuthenticationValidationException(identity);
-      }
-    }
+    await identity.validateOrThrow(AuthenticationValidationException);
     await identity.update();
 
     writeLog(LogType.INFO, 'Sending blockchain request..');
@@ -381,14 +372,7 @@ export class IdentityService {
     // Set state but don't update
     await identity.setState(IdentityState.SUBMITTED_ATTESATION_REQ, false);
 
-    try {
-      await identity.validate();
-    } catch (err) {
-      await identity.handle(err);
-      if (!identity.isValid()) {
-        throw new AuthenticationValidationException(identity);
-      }
-    }
+    await identity.validateOrThrow(AuthenticationValidationException);
     await identity.update();
 
     const conn = await context.mysql.start();
@@ -576,9 +560,8 @@ export class IdentityService {
     const api = ConfigService.get('api');
 
     const identifier = Did.toChain(identity.didUri as DidUri);
-    const endpointsCountForDid = await api.query.did.didEndpointsCount(
-      identifier,
-    );
+    const endpointsCountForDid =
+      await api.query.did.didEndpointsCount(identifier);
 
     const depositReClaimExtrinsic = api.tx.did.reclaimDeposit(
       identifier,
@@ -607,5 +590,18 @@ export class IdentityService {
     }
 
     return { success: true };
+  }
+
+  /**
+   * Get count of created DIDs by project and user email
+   * @param {{ project_uuid: string }}
+   * @param {ServiceContext} context
+   * @returns count of identities
+   */
+  static async getTotalDidsCreated({ project_uuid }, context: ServiceContext) {
+    return new Identity({ project_uuid }, context).getIdentitiesCount(
+      project_uuid,
+      context.user.email,
+    );
   }
 }

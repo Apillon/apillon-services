@@ -42,8 +42,7 @@ export class UpdateCrustStatusWorker extends BaseQueueWorker {
               file.fileStatus = FileStatus.PINNED_TO_CRUST;
               await file.update();
             } else {
-              // error
-              // TODO:
+              // An error occurred
               await this.writeEventLog(
                 {
                   logType: LogType.ERROR,

@@ -110,7 +110,6 @@ export class EvmService {
         const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
         console.log(estimatedBaseFee);
         // Ensuring that transaction is desirable for at least 6 blocks.
-        // TODO: On production check how gas estimate is calculated
         maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
         type = 2;
         gasPrice = null;
@@ -123,7 +122,6 @@ export class EvmService {
         const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
         console.log(estimatedBaseFee);
         // Ensuring that transaction is desirable for at least 6 blocks.
-        // TODO: On production check how gas estimate is calculated
         maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
         type = 2;
         gasPrice = null;
@@ -190,7 +188,11 @@ export class EvmService {
       // Override gas limit in transaction with minimum.
       // This is useful for transactions like minting before contract is deployed on chain where
       // estimate gas would return a much to low limit since it would assume normal transfer.
-      if (params.minimumGas && params.minimumGas > gasLimit) {
+      if (
+        params.minimumGas &&
+        params.minimumGas > gasLimit &&
+        gasLimit < 30000
+      ) {
         gasLimit = params.minimumGas;
       }
       unsignedTx.gasLimit = ethers.BigNumber.from(gasLimit);
@@ -250,12 +252,13 @@ export class EvmService {
         } catch (e) {
           await new Lmas().writeLog({
             logType: LogType.ERROR,
-            message: 'Error triggering TRANSMIT_EVM_TRANSACTION worker queue',
+            message: `Error triggering TRANSMIT_EVM_TRANSACTION worker queue: ${e}`,
             location: 'EvmService.createTransaction',
             service: ServiceName.BLOCKCHAIN,
             data: {
               error: e,
             },
+            sendAdminAlert: true,
           });
         }
       }
@@ -263,11 +266,15 @@ export class EvmService {
       return transaction.serialize(SerializeFor.PROFILE);
     } catch (e) {
       console.log(e);
-      //Write log to LMAS
-      await new Lmas().writeLog({
+      await conn.rollback();
+      // Write log to LMAS
+      throw await new BlockchainCodeException({
+        code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
+        errorMessage: `Error creating EVM transaction: ${e}`,
+        sourceFunction: 'EvmService.createTransaction',
+        status: 500,
+      }).writeToMonitor({
         logType: LogType.ERROR,
-        message: 'Error creating transaction',
-        location: 'EvmService.createTransaction',
         service: ServiceName.BLOCKCHAIN,
         data: {
           error: e,
@@ -278,11 +285,7 @@ export class EvmService {
           referenceTable: params.referenceTable,
           referenceId: params.referenceId,
         },
-      });
-      await conn.rollback();
-      throw new BlockchainCodeException({
-        code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
-        status: 500,
+        sendAdminAlert: true,
       });
     }
     //#region
@@ -466,11 +469,10 @@ export class EvmService {
         }
       }
 
-      if (latestSuccess) {
+      if (latestSuccess !== null) {
         const dbWallet = new Wallet(wallet, context);
         await dbWallet.updateLastProcessedNonce(latestSuccess);
       }
-
       await eventLogger(
         {
           logType: LogType.COST,

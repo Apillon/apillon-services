@@ -305,7 +305,7 @@ export class Contract extends UuidSqlModel {
   public data: {
     nftContractAddress: string;
     nftChainRpcUrl: string;
-    restrictToOwner: string;
+    restrictToOwner: boolean;
     ipfsGatewayUrl: string;
     clusterId: string;
   };
@@ -344,6 +344,7 @@ export class Contract extends UuidSqlModel {
 
   public async getList(context: ServiceContext, filter: ContractQueryFilter) {
     this.canAccess(context);
+
     const fieldMap = {
       id: 'c.id',
     };

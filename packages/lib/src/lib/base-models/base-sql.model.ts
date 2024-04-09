@@ -1,5 +1,5 @@
 import { prop } from '@rawmodel/core';
-import { PopulateFrom, SerializeFor } from '../../config/types';
+import { SerializeFor } from '../../config/types';
 import { PoolConnection } from 'mysql2/promise';
 // import 'reflect-metadata';
 import { BaseDBModel } from './base-db.model';
@@ -52,42 +52,6 @@ export abstract class BaseSQLModel extends BaseDBModel {
 
     return this;
   }
-
-  // public async replace(conn?: PoolConnection): Promise<this> {
-  //   const serializedModel = this.serialize(SerializeFor.INSERT_DB);
-
-  //   let isSingleTrans = false;
-  //   if (!conn) {
-  //     isSingleTrans = true;
-  //     conn = await this.getContext().mysql.start();
-  //   }
-
-  //   try {
-  //     const query = `
-  //     REPLACE INTO \`${this.tableName}\`
-  //     ( ${Object.keys(serializedModel)
-  //         .map((x) => `\`${x}\``)
-  //         .join(', ')} )
-  //     VALUES (
-  //       ${Object.keys(serializedModel)
-  //         .map((key) => `@${key}`)
-  //         .join(', ')}
-  //     )`;
-
-  //     await this.db().paramExecute(query, this.serialize(SerializeFor.INSERT_DB), conn);
-
-  //     if (isSingleTrans) {
-  //       await this.getContext().mysql.commit(conn);
-  //     }
-  //   } catch (err) {
-  //     if (isSingleTrans) {
-  //       await this.getContext().mysql.rollback(conn);
-  //     }
-  //     throw new Error(err);
-  //   }
-
-  //   return this;
-  // }
 
   /**
    * Creates or updates model data in the database. Upsert can only be used if ID is present, otherwise INSERT will be called.
@@ -225,36 +189,6 @@ export abstract class BaseSQLModel extends BaseDBModel {
     return this;
   }
 
-  public populateWithPrefix(
-    data: any,
-    prefix: string,
-    strategy?: PopulateFrom,
-  ) {
-    const filteredData = {};
-    prefix = prefix + '__';
-    for (const key of Object.keys(data)) {
-      if (data.hasOwnProperty(key) && key.startsWith(prefix)) {
-        filteredData[key.replace(prefix, '')] = data[key];
-      }
-    }
-    return this.populate(filteredData, strategy);
-  }
-
-  public populate(data: any, strategy?: PopulateFrom): this {
-    const mappedObj = {};
-    if (!data) {
-      return super.populate(mappedObj, strategy);
-    }
-    for (const key of Object.keys(this.__props)) {
-      if (data.hasOwnProperty(key)) {
-        mappedObj[key] = data[key];
-        // } else if (data.hasOwnProperty(getFieldName(this, key))) {
-        //   mappedObj[key] = data[getFieldName(this, key)];
-      }
-    }
-    return super.populate(mappedObj, strategy);
-  }
-
   protected db(): MySql {
     return this.getContext().mysql as MySql;
   }
@@ -282,7 +216,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
         .map(
           (x) =>
             `${prefix ? `\`${prefix}\`.` : ''}\`${x}\` as '${
-              asPrefix ? asPrefix + '__' : ''
+              asPrefix ? `${asPrefix}__` : ''
             }${x}'`,
         )
         .join(',\n') || `${prefix ? `\`${prefix}\`.` : ''}*`
@@ -306,7 +240,7 @@ export abstract class BaseSQLModel extends BaseDBModel {
       Object.keys(serialized)
         .map(
           (x) =>
-            `'${asPrefix ? asPrefix + '__' : ''}${x}', ${
+            `'${asPrefix ? `${asPrefix}__` : ''}${x}', ${
               prefix ? `${prefix}.` : ''
             }${x}`,
         )

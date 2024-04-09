@@ -1,6 +1,6 @@
 # Apillon Access Management Service - AMS
 
-This service is to stores and provides information and permissions of registered users and API keys. All parts of the system should query this service for permissions of any non-public actions. Although some of the user data could be duplicated in other services, data provided by this service is considered the most accurate.
+This service is to store and provide information about metadata, roles and permissions of registered users and API keys. All parts of the system should query this service for permissions of any non-public actions. Although some of the user data could be duplicated in other services, data provided by this service is considered the most accurate.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 
 ## Configuration
 
-Environment variables that has to be set:
+Environment variables that have to be set:
 
 ```ts
   /*************************************************************

@@ -9,10 +9,7 @@
       "request": "launch",
       "name": "Referral",
       "runtimeExecutable": "nodemon",
-      "runtimeArgs": [
-        "./src/scripts/dev/run-server.ts",
-        "--inspect=9236",
-      ],
+      "runtimeArgs": ["./src/scripts/dev/run-server.ts", "--inspect=9236"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     },

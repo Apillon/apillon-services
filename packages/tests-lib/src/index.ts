@@ -13,3 +13,5 @@ export * from './lib/helpers/collection';
 export * from './lib/helpers/blockchain';
 export * from './lib/helpers/override-config';
 export * from './lib/helpers/requests';
+export * from './lib/helpers/config';
+export * from './lib/helpers/contract-version';

@@ -1,5 +1,10 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 import {
+  IEntry,
+  INamePublishResult,
+  IpfsKuboRpcHttpClient,
+} from '@apillon/ipfs-kubo-rpc-http-client';
+import {
   AWS_S3,
   Context,
   env,
@@ -13,7 +18,6 @@ import {
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import axios from 'axios';
-import { CID, create, IPFSHTTPClient } from 'ipfs-http-client';
 import {
   FileUploadRequestFileStatus,
   StorageErrorCode,
@@ -24,36 +28,90 @@ import { ProjectConfig } from '../config/models/project-config.model';
 import { FileUploadRequest } from '../storage/models/file-upload-request.model';
 import { File } from '../storage/models/file.model';
 import { uploadItemsToIPFSRes } from './interfaces/upload-items-to-ipfs-res.interface';
-import { IpfsCluster } from './models/ipfs-cluster.model';
 import { IpfsBandwidth } from './models/ipfs-bandwidth';
+import { IpfsCluster } from './models/ipfs-cluster.model';
 
 export class IPFSService {
-  private client: IPFSHTTPClient;
+  //private client: IPFSHTTPClient;
+  private kuboRpcApiClient: IpfsKuboRpcHttpClient;
+  private ipfsCluster: IpfsCluster;
   private project_uuid: string;
   private context: ServiceContext;
+  public usingBackupNode = false;
 
   public constructor(context: ServiceContext, project_uuid: string) {
     this.project_uuid = project_uuid;
     this.context = context;
   }
 
-  public async initializeIPFSClient() {
-    if (this.client) {
+  /**
+   * Get IpfsCluster for project. Initialize kuboRpcApi client and call endpoint to get kubo version (health check).
+   * If primary node is not responding, use backup api if present
+   */
+  public async initializeIPFSClient(force = false) {
+    if (this.kuboRpcApiClient && !force) {
       //IPFS Client is already initialized
       return;
     }
 
     //Get IPFS gateway
-
-    const ipfsCluster = await new ProjectConfig(
+    this.ipfsCluster = await new ProjectConfig(
       { project_uuid: this.project_uuid },
       this.context,
     ).getIpfsCluster();
 
-    if (ipfsCluster.ipfsApi.endsWith('/')) {
-      ipfsCluster.ipfsApi = ipfsCluster.ipfsApi.slice(0, -1);
+    this.kuboRpcApiClient = new IpfsKuboRpcHttpClient(this.ipfsCluster.ipfsApi);
+
+    //health check
+    try {
+      await this.kuboRpcApiClient.version(2000);
+    } catch (err) {
+      if (this.ipfsCluster.backupIpfsApi) {
+        //Initialize client with backup api
+        this.kuboRpcApiClient = new IpfsKuboRpcHttpClient(
+          this.ipfsCluster.backupIpfsApi,
+        );
+        await this.kuboRpcApiClient
+          .version(1000)
+          .then(() => {
+            this.usingBackupNode = true;
+            //Override with backup node values
+            this.ipfsCluster.clusterServer =
+              this.ipfsCluster.backupClusterServer;
+            this.ipfsCluster.ipfsApi = this.ipfsCluster.backupIpfsApi;
+          })
+          .catch((err) => {
+            //backup node is also not working
+            console.error(
+              'Error performing health check of backup ipfs api',
+              err,
+            );
+          });
+      }
+      //Send alert. Even if backup node works
+      await new Lmas().writeLog({
+        logType: LogType.ALERT,
+        message: `Error initializing IPFS Client. Failed to get ipfs version (ipfs api health check failed). Backup api status: ${this.usingBackupNode ? 'OK' : 'ERROR'}`,
+        location: 'IPFSService.initializeIPFSClient',
+        service: ServiceName.STORAGE,
+        data: {
+          usingBackupNode: this.usingBackupNode,
+          error: err,
+        },
+        sendAdminAlert: true,
+      });
+
+      //Ipfs api does not work - throw error
+      if (!this.usingBackupNode) {
+        throw new StorageCodeException({
+          code: StorageErrorCode.STORAGE_IPFS_API_INITIALIZATION_ERROR,
+          status: 500,
+          context: this.context,
+          errorMessage: 'Error initializing IPFS Client',
+          details: err,
+        });
+      }
     }
-    this.client = await create({ url: ipfsCluster.ipfsApi });
   }
 
   /**
@@ -65,7 +123,7 @@ export class IPFSService {
   public async uploadFURToIPFSFromS3(
     event: { fileUploadRequest: FileUploadRequest; project_uuid: string },
     context,
-  ): Promise<{ CID: CID; cidV0: string; cidV1: string; size: number }> {
+  ): Promise<{ cidV0: string; cidV1: string; size: number }> {
     //Initialize IPFS client
     await this.initializeIPFSClient();
 
@@ -87,17 +145,18 @@ export class IPFSService {
     }
 
     console.info('Getting file from S3', event.fileUploadRequest.s3FileKey);
+
     const file = await s3Client.get(
       env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
       event.fileUploadRequest.s3FileKey,
     );
 
     console.info('Add file to IPFS, ...');
-    const filesOnIPFS = await this.client.add({
-      content: file.Body as any,
+    const filesOnIPFS = await this.kuboRpcApiClient.add({
+      content: file.Body as ReadableStream,
     });
 
-    await this.pinCidToCluster(filesOnIPFS.cid.toV0().toString());
+    await this.pinCidToCluster(filesOnIPFS.Hash);
 
     try {
       (file.Body as any).destroy();
@@ -115,17 +174,16 @@ export class IPFSService {
       data: {
         fileUploadRequest: event.fileUploadRequest.serialize(),
         ipfsResponse: {
-          cidV0: filesOnIPFS.cid.toV0().toString(),
+          cidV0: filesOnIPFS.Hash,
           filesOnIPFS,
         },
       },
     });
 
     return {
-      CID: filesOnIPFS.cid,
-      cidV0: filesOnIPFS.cid.toV0().toString(),
-      cidV1: filesOnIPFS.cid.toV1().toString(),
-      size: filesOnIPFS.size,
+      cidV0: filesOnIPFS.Hash,
+      cidV1: filesOnIPFS.Hash,
+      size: filesOnIPFS.Size,
     };
   }
 
@@ -178,14 +236,16 @@ export class IPFSService {
             fileUploadReq.s3FileKey,
           );
 
-          await this.client.files.write(
-            mfsDirectoryPath +
+          await this.kuboRpcApiClient.files.write({
+            content: file.Body as ReadableStream,
+            path:
+              mfsDirectoryPath +
               '/' +
               (fileUploadReq.path ? fileUploadReq.path + '/' : '') +
               fileUploadReq.fileName,
-            file.Body as any,
-            { create: true, parents: true },
-          );
+            create: true,
+            parents: true,
+          });
 
           try {
             (file.Body as any).destroy();
@@ -217,8 +277,10 @@ export class IPFSService {
       'runWithWorkers to get files from s3 and add them to IPFS files FINISHED.',
     );
 
-    const mfsDirectoryCID = await this.client.files.stat(mfsDirectoryPath);
-    console.info('DIR CID: ', mfsDirectoryCID.cid.toV0().toString());
+    const mfsDirectoryCID = await this.kuboRpcApiClient.files.stat({
+      path: mfsDirectoryPath,
+    });
+    console.info('DIR CID: ', mfsDirectoryCID.Hash);
 
     /**Directories on IPFS - each dir on IPFS gets CID */
     const ipfsDirectories = [];
@@ -231,23 +293,23 @@ export class IPFSService {
     console.info(`MFS folder (${mfsDirectoryPath}) content.`, itemInIpfsMfs);
 
     for (const item of itemInIpfsMfs) {
-      if (item.type == 'directory') {
-        ipfsDirectories.push({ path: item.name, cid: item.cid });
+      if (item.Type == 1) {
+        ipfsDirectories.push({ path: item.Name, cid: item.Hash });
       } else {
         const fileRequest = event.fileUploadRequests.find(
-          (x) => (x.path || '') + x.fileName == item.name,
+          (x) => (x.path || '') + x.fileName == item.Name,
         );
         if (fileRequest) {
-          fileRequest.CID = item.cid;
-          fileRequest.size = item.size;
-          totalSizeOfFiles += item.size;
+          fileRequest.CID = item.Hash;
+          fileRequest.size = item.Size;
+          totalSizeOfFiles += item.Size;
         }
       }
     }
 
-    if (mfsDirectoryCID?.cid) {
+    if (mfsDirectoryCID?.Hash) {
       //It's probably enough to pin just the parent folder - content should be automatically pinned
-      await this.pinCidToCluster(mfsDirectoryCID?.cid.toV0().toString());
+      await this.pinCidToCluster(mfsDirectoryCID?.Hash);
     }
 
     //Write log to LMAS
@@ -259,12 +321,12 @@ export class IPFSService {
       service: ServiceName.STORAGE,
       data: {
         session_id: event.fileUploadRequests[0].session_id,
-        mfsDirectoryCID: mfsDirectoryCID.cid.toV0().toString(),
+        mfsDirectoryCID: mfsDirectoryCID.Hash,
       },
     });
 
     return {
-      parentDirCID: mfsDirectoryCID?.cid,
+      parentDirCID: mfsDirectoryCID?.Hash,
       ipfsDirectories: ipfsDirectories,
       size: totalSizeOfFiles,
     };
@@ -279,23 +341,25 @@ export class IPFSService {
   public async recursiveListIPFSDirectoryContent(
     mfsBasePath: string,
     subPath: string,
-  ) {
+  ): Promise<IEntry[]> {
     //Initialize IPFS client
     await this.initializeIPFSClient();
 
     const content: any[] = [];
 
-    const dirContent = this.client.files.ls(mfsBasePath + subPath);
-    for await (const f of dirContent) {
-      if (f.type == 'directory') {
+    const dirContent = await this.kuboRpcApiClient.files.ls({
+      path: mfsBasePath + subPath,
+    });
+    for (const f of dirContent) {
+      if (f.Type == 1) {
         content.push(
           ...(await this.recursiveListIPFSDirectoryContent(
             mfsBasePath,
-            subPath + '/' + f.name,
+            subPath + '/' + f.Name,
           )),
         );
       }
-      f.name = (subPath + '/' + f.name).substring(1);
+      f.Name = (subPath + '/' + f.Name).substring(1);
       content.push(f);
     }
 
@@ -341,8 +405,8 @@ export class IPFSService {
     //Update CID and size properties of event.files, as files are returned to parent function by reference
     for (const file of event.files) {
       const fur = fileUploadRequests.find((x) => x.file_uuid == file.file_uuid);
-      file.CID = fur.CID.toV0().toString();
-      file.CIDv1 = fur.CID.toV1().toString();
+      file.CID = fur.CID;
+      file.CIDv1 = fur.CID;
       file.size = fur.size;
     }
 
@@ -362,20 +426,23 @@ export class IPFSService {
     //Initialize IPFS client
     await this.initializeIPFSClient();
 
-    let ipnsRes = undefined;
+    let ipnsRes: INamePublishResult = undefined;
     try {
-      ipnsRes = await this.client.name.publish(cid, {
+      ipnsRes = await this.kuboRpcApiClient.name.publish({
+        cid,
         key: ipfsKey,
         resolve: false,
         ttl: '0h5m0s',
       });
     } catch (err) {
       if (err.message == 'no key by the given name was found') {
-        await this.client.key.gen(ipfsKey, {
+        await this.kuboRpcApiClient.key.gen({
+          name: ipfsKey,
           type: 'rsa',
           size: 2048,
         });
-        ipnsRes = await this.client.name.publish(cid, {
+        ipnsRes = await this.kuboRpcApiClient.name.publish({
+          cid,
           key: ipfsKey,
           resolve: false,
           ttl: '0h5m0s',
@@ -384,7 +451,7 @@ export class IPFSService {
         throw err;
       }
     }
-    return ipnsRes;
+    return { name: ipnsRes.Name, value: ipnsRes.Value };
   }
 
   /**
@@ -401,53 +468,21 @@ export class IPFSService {
     //Initialize IPFS client
     await this.initializeIPFSClient();
 
-    await this.client.key.gen(ipfsKey, {
+    await this.kuboRpcApiClient.key.gen({
+      name: ipfsKey,
       type: 'rsa',
       size: 2048,
     });
 
     let ipnsRes = undefined;
-    ipnsRes = await this.client.name.publish(cid, {
+    ipnsRes = await this.kuboRpcApiClient.name.publish({
+      cid,
       key: ipfsKey,
       resolve: false,
       ttl: '0h5m0s',
     });
 
-    return ipnsRes;
-  }
-
-  public async getFileFromIPFS(params: { cid: string }) {
-    //Initialize IPFS client
-    await this.initializeIPFSClient();
-
-    const file = await this.client.get(params.cid);
-
-    const res = [];
-
-    for await (const f of file) {
-      res.push(f);
-    }
-
-    return res;
-  }
-
-  public async listIPFSDirectory(param: any) {
-    //Initialize IPFS client
-    await this.initializeIPFSClient();
-
-    const ls = await this.client.ls(param.cid);
-
-    const filesInDirectory = [];
-    for await (const f of ls) {
-      console.info(f);
-      filesInDirectory.push({
-        cidV0: f.cid.toV0().toString(),
-        cidV1: f.cid.toV1().toString(),
-        ...f,
-      });
-    }
-
-    return filesInDirectory;
+    return { name: ipnsRes.Name, value: ipnsRes.Value };
   }
 
   /**
@@ -455,13 +490,15 @@ export class IPFSService {
    * @param cid cid to be pinned
    */
   public async pinCidToCluster(cid: string) {
-    const ipfsCluster = await new ProjectConfig(
-      { project_uuid: this.project_uuid },
-      this.context,
-    ).getIpfsCluster();
+    //Initialize IPFS client
+    await this.initializeIPFSClient();
 
     try {
-      await axios.post(ipfsCluster.clusterServer + `pins/ipfs/${cid}`, {}, {});
+      await axios.post(
+        this.ipfsCluster.clusterServer + `pins/ipfs/${cid}`,
+        {},
+        {},
+      );
     } catch (err) {
       writeLog(
         LogType.ERROR,
@@ -479,18 +516,18 @@ export class IPFSService {
    */
   public async unpinCidFromCluster(cid: string, ipfsCluster?: IpfsCluster) {
     if (!ipfsCluster) {
-      ipfsCluster = await new ProjectConfig(
-        { project_uuid: this.project_uuid },
-        this.context,
-      ).getIpfsCluster();
+      //Initialize IPFS client
+      await this.initializeIPFSClient();
+    } else {
+      this.ipfsCluster = ipfsCluster;
     }
 
     //If cluster server is not set, unpin directly from node
-    if (!ipfsCluster.clusterServer) {
+    if (!this.ipfsCluster.clusterServer) {
       await this.unpinFile(cid);
     } else {
       try {
-        await axios.delete(ipfsCluster.clusterServer + `pins/ipfs/${cid}`);
+        await axios.delete(this.ipfsCluster.clusterServer + `pins/ipfs/${cid}`);
       } catch (err) {
         writeLog(
           LogType.ERROR,
@@ -512,7 +549,7 @@ export class IPFSService {
     try {
       //Initialize IPFS client
       await this.initializeIPFSClient();
-      await this.client.pin.rm(cid);
+      await this.kuboRpcApiClient.pin.rm({ cids: [cid] });
     } catch (err) {
       console.error('Error unpinning file', cid, err);
     }
@@ -530,8 +567,8 @@ export class IPFSService {
     //Initialize IPFS client
     await this.initializeIPFSClient();
     try {
-      const lsRes = await this.client.pin.ls({ paths: [CID.parse(cid)] });
-      for await (const {} of lsRes) {
+      const lsRes = await this.kuboRpcApiClient.pin.ls({ cid });
+      if (lsRes.length) {
         return true;
       }
     } catch (err) {
@@ -556,31 +593,14 @@ export class IPFSService {
     await this.initializeIPFSClient();
 
     //Add to IPFS
-    const fileOnIPFS = await this.client.add({
-      path: params.path,
+    const fileOnIPFS = await this.kuboRpcApiClient.add({
       content: params.content,
     });
 
     return {
-      cidV0: fileOnIPFS.cid.toV0().toString(),
-      cidV1: fileOnIPFS.cid.toV1().toString(),
+      cidV0: fileOnIPFS.Hash,
+      cidV1: fileOnIPFS.Hash,
     };
-  }
-
-  public async getCIDSize(cid: string) {
-    //Initialize IPFS client
-    await this.initializeIPFSClient();
-
-    const ls = await this.client.ls(cid);
-
-    for await (const f of ls) {
-      console.info(f);
-      if (f.cid.toV0().toString() == cid) {
-        return f.size;
-      }
-    }
-
-    return 0;
   }
 
   /**

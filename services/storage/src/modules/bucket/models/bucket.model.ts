@@ -19,6 +19,7 @@ import { v4 as uuidV4 } from 'uuid';
 import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import { StorageCodeException } from '../../../lib/exceptions';
 import { StorageService } from '../../storage/storage.service';
+import { Ipns } from '../../ipns/models/ipns.model';
 
 export class Bucket extends UuidSqlModel {
   public readonly tableName = DbTables.BUCKET;
@@ -290,7 +291,11 @@ export class Bucket extends UuidSqlModel {
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'b.id');
   }
 
-  public async clearBucketContent(context: Context, conn: PoolConnection, updateBucketSize = true) {
+  public async clearBucketContent(
+    context: Context,
+    conn: PoolConnection,
+    updateBucketSize = true,
+  ) {
     await context.mysql.paramExecute(
       `
         UPDATE \`${DbTables.DIRECTORY}\`
@@ -313,8 +318,7 @@ export class Bucket extends UuidSqlModel {
       conn,
     );
 
-    if(updateBucketSize)
-    {
+    if (updateBucketSize) {
       this.size = 0;
       await this.update(SerializeFor.UPDATE_DB, conn);
     }
@@ -349,7 +353,7 @@ export class Bucket extends UuidSqlModel {
         SELECT SUM(size) as totalSize
         FROM \`${DbTables.BUCKET}\`
         WHERE project_uuid = @project_uuid
-          AND status <> ${SqlModelStatus.DELETED};
+        AND status <> ${SqlModelStatus.DELETED};
       `,
       { project_uuid: this.project_uuid },
     );
@@ -367,12 +371,30 @@ export class Bucket extends UuidSqlModel {
         SELECT f.id
         FROM \`${DbTables.FILE}\` f
         WHERE f.bucket_id = @bucket_id
-          AND status <> ${SqlModelStatus.DELETED} LIMIT 1;
+        AND status <> ${SqlModelStatus.DELETED} LIMIT 1;
       `,
       { bucket_id: this.id },
     );
 
     return data.length > 0;
+  }
+
+  public async getBucketIpnsRecords(): Promise<Ipns[]> {
+    if (!this.id) {
+      throw new Error('bucket_id should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${DbTables.IPNS}\`
+      WHERE bucket_id = @bucket_id AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { bucket_id: this.id },
+    );
+    return data.map((d) =>
+      new Ipns({}, this.getContext()).populate(d, PopulateFrom.DB),
+    );
   }
 
   /**
