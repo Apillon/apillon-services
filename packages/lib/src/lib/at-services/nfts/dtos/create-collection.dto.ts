@@ -22,6 +22,7 @@ import { dropReserveLowerOrEqualToMaxSupplyValidator } from '../validators/creat
 import { validateDropPriceIfDrop } from '../validators/create-collection-drop-price-validator';
 import { SubstrateChainPrefix } from '../../substrate/types';
 import { substrateAddressValidator } from '../../substrate/validators/address-validator';
+import { SUBSTRATE_NFTS_MAX_SUPPLY } from '../constants';
 
 // Contains properties which are present for all collections
 class CreateCollectionDTOBase extends ModelBase {
@@ -88,23 +89,6 @@ class CreateCollectionDTOBase extends ModelBase {
     ],
   })
   public project_uuid: string;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_DEPLOY_MAX_SUPPLY_NOT_PRESENT,
-      },
-      {
-        resolver: numberSizeValidator({ minOrEqual: 0 }),
-        code: ValidatorErrorCode.NFT_DEPLOY_MAX_SUPPLY_NOT_VALID,
-      },
-    ],
-  })
-  public maxSupply: number;
 
   @prop({
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -217,6 +201,23 @@ class CreateCollectionDTOBase extends ModelBase {
 // Contains properties from base DTO, with baseUri nullable and additional properties
 export class CreateCollectionDTO extends CreateCollectionDTOBase {
   @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_DEPLOY_MAX_SUPPLY_NOT_PRESENT,
+      },
+      {
+        resolver: numberSizeValidator({ min: 0 }),
+        code: ValidatorErrorCode.NFT_DEPLOY_MAX_SUPPLY_NOT_VALID,
+      },
+    ],
+  })
+  public maxSupply: number;
+
+  @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
@@ -299,6 +300,26 @@ export class CreateCollectionDTO extends CreateCollectionDTOBase {
 // Substrate NFTs do not support properties such as isRevokable, isSoulboud, isAutoIncrement etc.
 // For now no additional properties, may be added in the future
 export class CreateSubstrateCollectionDTO extends CreateCollectionDTOBase {
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_DEPLOY_MAX_SUPPLY_NOT_PRESENT,
+      },
+      {
+        resolver: numberSizeValidator({
+          min: 0,
+          maxOrEqual: SUBSTRATE_NFTS_MAX_SUPPLY,
+        }),
+        code: ValidatorErrorCode.NFT_DEPLOY_MAX_SUPPLY_NOT_VALID,
+      },
+    ],
+  })
+  public maxSupply: number;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],

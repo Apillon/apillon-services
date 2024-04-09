@@ -7,6 +7,7 @@ import {
   EvmChain,
   PoolConnection,
   SerializeFor,
+  SUBSTRATE_NFTS_MAX_SUPPLY,
   SubstrateChain,
   TransactionStatus,
 } from '@apillon/lib';
@@ -97,7 +98,7 @@ export async function deployNFTCollectionContract(
 
       const maxSupply =
         collection.maxSupply === 0
-          ? BN_MAX_INTEGER.toNumber()
+          ? SUBSTRATE_NFTS_MAX_SUPPLY
           : collection.maxSupply;
       const dropPrice = collection.drop
         ? collection.dropPrice
