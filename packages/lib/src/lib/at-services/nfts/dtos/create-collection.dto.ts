@@ -210,7 +210,7 @@ export class CreateCollectionDTO extends CreateCollectionDTOBase {
         code: ValidatorErrorCode.NFT_DEPLOY_MAX_SUPPLY_NOT_PRESENT,
       },
       {
-        resolver: numberSizeValidator({ min: 0 }),
+        resolver: numberSizeValidator({ minOrEqual: 0 }),
         code: ValidatorErrorCode.NFT_DEPLOY_MAX_SUPPLY_NOT_VALID,
       },
     ],
@@ -311,7 +311,7 @@ export class CreateSubstrateCollectionDTO extends CreateCollectionDTOBase {
       },
       {
         resolver: numberSizeValidator({
-          min: 0,
+          minOrEqual: 0,
           maxOrEqual: SUBSTRATE_NFTS_MAX_SUPPLY,
         }),
         code: ValidatorErrorCode.NFT_DEPLOY_MAX_SUPPLY_NOT_VALID,
