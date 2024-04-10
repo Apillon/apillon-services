@@ -8,7 +8,7 @@ The following is a set of contribution guidelines. Use your best judgment, and f
 
 ### Reporting Bugs
 
-Before creating a bug report, please check the existing issues to see whether the problem has already been reported. If it hasn't, open a new issue and provide a clear and detailed description of the problem, including steps to reproduce it.
+Before creating a bug report, please check the existing issues to see whether the problem has already been reported. If it hasn't, open a new issue and provide a clear and detailed description of the problem, including steps to reproduce it. Please also make sure to read our [bug bounty program](./BUG_BOUNTY.md)
 
 ### Suggesting Upgrades
 
@@ -31,6 +31,7 @@ When submitting a pull request, please follow these guidelines:
 
 - [Issue Tracker](https://github.com/Apillon/apillon-services/issues): Report bugs or suggest enhancements
 - [Code Repository](https://github.com/Apillon/apillon-services): Fork and submit pull requests
+- [Bug bounty](./BUG_BOUNTY.md): Our bug bounty program
 
 ## Contact
 
