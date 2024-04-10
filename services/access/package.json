@@ -1,11 +1,10 @@
 {
   "name": "@apillon/access",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": "Apillon",
-  "license": "UNLICENSED",
+  "license": "GNU GPL V3",
   "description": "Access management service",
   "main": "index.js",
-  "private": true,
   "scripts": {
     "prebuild": "rimraf dist",
     "test-service": "jest --passWithNoTests",
