@@ -49,4 +49,4 @@ In this repository you will find source and documentation for microservices, API
 
 ## License
 
-Copyright (c) Apillon 2024 - All Rights Reserved
+Please view [LICENSE.md](LICENSE.md)
