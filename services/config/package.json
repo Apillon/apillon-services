@@ -1,11 +1,10 @@
 {
   "name": "@apillon/config",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": "Apillon",
-  "license": "UNLICENSED",
+  "license": "GNU GPL V3",
   "description": "System configuration service",
   "main": "index.js",
-  "private": true,
   "scripts": {
     "prebuild": "rimraf dist",
     "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit --silent",
