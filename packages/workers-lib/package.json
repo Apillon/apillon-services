@@ -1,7 +1,7 @@
 {
   "name": "@apillon/workers-lib",
-  "version": "1.2.0",
-  "description": "",
+  "version": "1.3.0",
+  "description": "Apillon common worker code library",
   "main": "./dist/index.js",
   "source": "./src/index.ts",
   "types": "./dist/index.d.ts",
@@ -9,7 +9,7 @@
     "dist/**"
   ],
   "author": "Apillon",
-  "license": "UNLICENSED",
+  "license": "GNU GPL V3",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "tsc --declarationMap",

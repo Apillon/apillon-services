@@ -1,10 +1,9 @@
 {
   "name": "@apillon/authentication",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": "Apillon",
-  "license": "UNLICENSED",
-  "description": "",
-  "private": true,
+  "license": "GNU GPL V3",
+  "description": "Apillon authentication (OAuth) service",
   "scripts": {
     "prebuild": "rimraf dist",
     "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit --verbose",
