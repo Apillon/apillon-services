@@ -4,8 +4,8 @@ import { ValidationException } from '@apillon/lib';
 import {
   IValidationOptions,
   VALIDATION_OPTIONS_KEY,
+  IRequest,
 } from '@apillon/modules-lib';
-import { IRequest } from '@apillon/modules-lib';
 import { ValidatorErrorCode } from '../config/types';
 
 @Injectable()

@@ -24,12 +24,13 @@
   },
   "dependencies": {
     "@apillon/lib": "*",
-    "@aws-sdk/client-lambda": "^3.518.0",
-    "@aws-sdk/client-sqs": "^3.515.0",
+    "@aws-sdk/client-lambda": "^3.552.0",
+    "@aws-sdk/client-sqs": "^3.552.0",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
-    "cron-parser": "^4.7.0",
-    "moment": "^2.29.1"
+    "cron-parser": "^4.9.0",
+    "moment": "^2.30.1",
+    "mysql2": "^3.9.4"
   }
 }

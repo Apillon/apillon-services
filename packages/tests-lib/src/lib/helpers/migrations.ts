@@ -133,6 +133,7 @@ export async function upgradeTestDatabases(): Promise<void> {
 
 export async function downgradeTestDatabases(): Promise<void> {
   await initMigrations();
+
   try {
     await Promise.all([
       dbAmsMigration.down(-1),

@@ -28,19 +28,19 @@
     "db-rebuild-test": "npx turbo run db-rebuild-test"
   },
   "devDependencies": {
-    "@jest/globals": "^29.5.0",
-    "@types/aws-lambda": "^8.10.108",
-    "@types/jest": "^29.5.1",
+    "@jest/globals": "^29.7.0",
+    "@types/aws-lambda": "^8.10.137",
+    "@types/jest": "^29.5.12",
     "copyfiles": "^2.4.1",
     "cross-env": "^7.0.3",
-    "esbuild": "^0.19.5",
+    "esbuild": "^0.20.2",
     "eslint-config-common": "*",
-    "http-request-mock": "^1.8.17",
-    "nodemon": "^2.0.19",
+    "http-request-mock": "^1.8.18",
+    "nodemon": "^3.1.0",
     "prettier": "latest",
-    "serverless-webpack": "^5.9.1",
-    "ts-node": "^10.9.1",
-    "turbo": "^1.7.4"
+    "serverless-webpack": "^5.13.0",
+    "ts-node": "^10.9.2",
+    "turbo": "^1.13.2"
   },
   "overrides": {
     "ipfs-utils": "9.0.6"
