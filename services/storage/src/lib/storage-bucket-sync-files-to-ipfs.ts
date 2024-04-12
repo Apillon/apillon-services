@@ -44,7 +44,7 @@ export async function storageBucketSyncFilesToIPFS(
   wrapWithDirectory: boolean,
   wrappingDirectoryPath: string,
 ) {
-  const transferedFiles: File[] = [];
+  const transferredFiles: File[] = [];
   let wrappedDirCid: string = undefined;
 
   //get directories in bucket
@@ -71,7 +71,6 @@ export async function storageBucketSyncFilesToIPFS(
       ).uploadFURsToIPFSFromS3(
         {
           fileUploadRequests: files,
-          wrapWithDirectory: wrapWithDirectory,
           wrappingDirectoryPath,
         },
         context,
@@ -168,7 +167,7 @@ export async function storageBucketSyncFilesToIPFS(
             });
 
             await existingFile.update();
-            transferedFiles.push(existingFile);
+            transferredFiles.push(existingFile);
           } else {
             //Create new file
             const fileDirectory = await generateDirectoriesForFUR(
@@ -196,7 +195,7 @@ export async function storageBucketSyncFilesToIPFS(
               })
               .insert();
 
-            transferedFiles.push(tmpF);
+            transferredFiles.push(tmpF);
           }
         } catch (err) {
           await new Lmas().writeLog({
@@ -332,7 +331,7 @@ export async function storageBucketSyncFilesToIPFS(
             });
 
             await existingFile.update();
-            transferedFiles.push(existingFile);
+            transferredFiles.push(existingFile);
           } else {
             //Create new file - this should probably newer happen. But will leave for now.
             const fileDirectory = await generateDirectoriesForFUR(
@@ -359,7 +358,7 @@ export async function storageBucketSyncFilesToIPFS(
               })
               .insert();
 
-            transferedFiles.push(tmpF);
+            transferredFiles.push(tmpF);
           }
         } catch (err) {
           await new Lmas().writeLog({
@@ -418,17 +417,17 @@ export async function storageBucketSyncFilesToIPFS(
     );
 
     await runWithWorkers(
-      transferedFiles,
+      transferredFiles,
       20,
       context,
-      async (transferedFile) => {
+      async (transferredFile) => {
         await pinFileToCRUST(
           context,
           bucket.bucket_uuid,
-          transferedFile.CID,
-          transferedFile.size,
+          transferredFile.CID,
+          transferredFile.size,
           false,
-          transferedFile.file_uuid,
+          transferredFile.file_uuid,
           DbTables.FILE,
         );
       },
@@ -488,5 +487,5 @@ export async function storageBucketSyncFilesToIPFS(
     project_uuid: bucket.project_uuid,
   });
 
-  return { files: transferedFiles, wrappedDirCid: wrappedDirCid };
+  return { files: transferredFiles, wrappedDirCid: wrappedDirCid };
 }

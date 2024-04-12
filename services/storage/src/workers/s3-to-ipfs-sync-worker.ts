@@ -84,39 +84,6 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       ).filter(
         (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
       );
-    }
-    //Check if message from s3
-    else if (data.Records && data.Records.length > 0) {
-      for (const record of data.Records) {
-        const tmpFur = await new FileUploadRequest(
-          {},
-          this.context,
-        ).populateByS3FileKey(
-          decodeURIComponent(record.s3.object.key).replace(/\+/g, ' '),
-        );
-
-        if (
-          tmpFur.exists() &&
-          tmpFur.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED
-        ) {
-          if (bucket == undefined) {
-            //get bucket
-            bucket = await new Bucket({}, this.context).populateById(
-              tmpFur.bucket_id,
-            );
-          }
-          //Update file-upload-request status
-          tmpFur.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_S3;
-          await tmpFur.update();
-          //Push to files, that will be processed
-          files.push(tmpFur);
-        } else {
-          throw new StorageCodeException({
-            code: StorageErrorCode.FILE_UPLOAD_REQUEST_NOT_FOUND,
-            status: 500,
-          });
-        }
-      }
     } else {
       throw new StorageCodeException({
         code: StorageErrorCode.INVALID_BODY_FOR_WORKER,
@@ -125,13 +92,13 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
     }
 
     if (files.length > 0) {
-      let transferedFiles = [];
+      let transferredFiles = [];
 
       if (
         bucket.bucketType == BucketType.STORAGE ||
         bucket.bucketType == BucketType.NFT_METADATA
       ) {
-        transferedFiles = (
+        transferredFiles = (
           await storageBucketSyncFilesToIPFS(
             this.context,
             `${this.constructor.name}/runExecutor`,
@@ -159,7 +126,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       await sendTransferredFilesToBucketWebhook(
         this.context,
         bucket,
-        transferedFiles,
+        transferredFiles,
       );
 
       await this.writeEventLog({
@@ -168,7 +135,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         message: 'Sync to IPFS worker completed',
         service: ServiceName.STORAGE,
         data: {
-          transferedFiles,
+          transferedFiles: transferredFiles,
           data,
         },
       });
