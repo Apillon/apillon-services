@@ -11,7 +11,6 @@ import { BaseService } from '../base-service';
 import { CreateQuotaOverrideDto } from './dtos/create-quota-override.dto';
 import { QuotaOverrideDto } from './dtos/quota-override.dto';
 import { QuotaDto } from './dtos/quota.dto';
-import { TermsDto } from './dtos/terms.dto';
 import { GetQuotaDto } from './dtos/get-quota.dto';
 import { CreditTransactionQueryFilter } from './dtos/credit-transaction-query-filter.dto';
 import { AddCreditDto } from './dtos/add-credit.dto';
@@ -84,16 +83,6 @@ export class Scs extends BaseService {
     };
 
     return await this.callService(data);
-  }
-
-  public async getActiveTerms(): Promise<Array<TermsDto>> {
-    const data = {
-      eventName: ScsEventType.GET_ACTIVE_TERMS,
-    };
-
-    const scsResponse = await this.callService(data);
-
-    return scsResponse.data.map((x) => new TermsDto().populate(x));
   }
 
   //#region credit
