@@ -26,7 +26,6 @@ import { Directory } from '../modules/directory/models/directory.model';
 import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to-ipfs-res.interface';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
-import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { File } from '../modules/storage/models/file.model';
 import { pinFileToCRUST } from './pin-file-to-crust';
 
@@ -40,7 +39,6 @@ export async function storageBucketSyncFilesToIPFS(
   location,
   bucket: Bucket,
   files: FileUploadRequest[],
-  session: FileUploadSession,
   wrapWithDirectory: boolean,
   wrappingDirectoryPath: string,
 ) {

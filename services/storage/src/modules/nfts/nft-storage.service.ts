@@ -144,6 +144,7 @@ export class NftStorageService {
       );
       await worker.runExecutor({
         collection_uuid: event.body.collection_uuid,
+        bucket_uuid: bucket.bucket_uuid,
         imagesSession: event.body.imagesSession,
         metadataSession: event.body.metadataSession,
         ipnsId: ipnsDbRecord?.id,
@@ -166,6 +167,7 @@ export class NftStorageService {
         [
           {
             collection_uuid: event.body.collection_uuid,
+            bucket_uuid: bucket.bucket_uuid,
             imagesSession: event.body.imagesSession,
             metadataSession: event.body.metadataSession,
             ipnsId: ipnsDbRecord?.id,

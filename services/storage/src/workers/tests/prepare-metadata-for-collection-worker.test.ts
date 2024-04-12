@@ -216,6 +216,7 @@ describe('PrepareMetadataForCollectionWorker integration test', () => {
     await worker.run({
       executeArg: JSON.stringify({
         collection_uuid: uuidV4(),
+        bucket_uuid: collectionBucket.bucket_uuid,
         imagesSession: imageSession.session_uuid,
         metadataSession: metadataSession.session_uuid,
         ipnsId: collectionIpns.id,
@@ -328,6 +329,7 @@ describe('PrepareMetadataForCollectionWorker integration test', () => {
     await worker.run({
       executeArg: JSON.stringify({
         collection_uuid: uuidV4(),
+        bucket_uuid: collectionBucket.bucket_uuid,
         imagesSession: imageSession.session_uuid,
         metadataSession: metadataSession.session_uuid,
         useApillonIpfsGateway: true,

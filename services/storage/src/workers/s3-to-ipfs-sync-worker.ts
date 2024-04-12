@@ -8,6 +8,7 @@ import {
 import {
   BaseQueueWorker,
   QueueWorkerType,
+  sendToWorkerQueue,
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import {
@@ -18,11 +19,12 @@ import {
 } from '../config/types';
 import { sendTransferredFilesToBucketWebhook } from '../lib/bucket-webhook';
 import { StorageCodeException } from '../lib/exceptions';
+import { processSessionFiles } from '../lib/process-session-files';
 import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
-import { processSessionFiles } from '../lib/process-session-files';
+import { WorkerName } from './worker-executor';
 
 export class SyncToIPFSWorker extends BaseQueueWorker {
   public constructor(
@@ -75,14 +77,17 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         );
       }
 
-      //Get files in session (fileStatus must be of status 1)
+      //Get files in session that were not yet transferred
       files = (
         await new FileUploadRequest(
           {},
           this.context,
         ).populateFileUploadRequestsInSession(session.id, this.context)
       ).filter(
-        (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+        (x) =>
+          x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED &&
+          x.fileStatus !=
+            FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3,
       );
     } else {
       throw new StorageCodeException({
@@ -103,8 +108,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
             this.context,
             `${this.constructor.name}/runExecutor`,
             bucket,
-            files,
-            session,
+            files.slice(0, env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS),
             data?.wrapWithDirectory,
             data?.wrappingDirectoryName,
           )
@@ -114,12 +118,6 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
           code: StorageErrorCode.INVALID_BUCKET_TYPE_FOR_IPFS_SYNC_WORKER,
           status: 400,
         });
-      }
-
-      //update session status
-      if (session) {
-        session.sessionStatus = FileUploadSessionStatus.FINISHED;
-        await session.update();
       }
 
       //if webhook is set for this bucket, SEND POST request with transferred data
@@ -132,15 +130,36 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       await this.writeEventLog({
         logType: LogType.INFO,
         project_uuid: bucket.project_uuid,
-        message: 'Sync to IPFS worker completed',
+        message: `Sync to IPFS worker completed. Uploaded ${transferredFiles.length}/${files.length}`,
         service: ServiceName.STORAGE,
         data: {
           transferedFiles: transferredFiles,
           data,
         },
       });
+    }
+
+    //update session status
+    if (files.length <= env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS) {
+      session.sessionStatus = FileUploadSessionStatus.FINISHED;
+      await session.update();
     } else {
-      console.info('NO FILES FOR TRANSFER!');
+      //Send message to sqs to start upload of next batch
+      console.info('Sending remaining files to another sync iteration.');
+      await sendToWorkerQueue(
+        env.STORAGE_AWS_WORKER_SQS_URL,
+        WorkerName.SYNC_TO_IPFS_WORKER,
+        [
+          {
+            session_uuid: session.session_uuid,
+            wrapWithDirectory: data?.wrapWithDirectory,
+            wrappingDirectoryName: data?.directoryPath,
+            processFilesInSyncWorker: false, //Files were processed in first iteration
+          },
+        ],
+        null,
+        null,
+      );
     }
 
     return true;
