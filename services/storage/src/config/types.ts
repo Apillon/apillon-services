@@ -213,5 +213,5 @@ export enum Defaults {
     Defaults.GYGABYTE_IN_BYTES,
   DEFAULT_STORAGE = 3,
   DEFAULT_STORAGE_IN_BYTES = Defaults.DEFAULT_STORAGE *
-    Defaults.DEFAULT_STORAGE,
+    Defaults.GYGABYTE_IN_BYTES,
 }
