@@ -2,7 +2,6 @@ import {
   ApiName,
   AppEnvironment,
   AWS_S3,
-  BucketQueryFilter,
   CacheKeyPrefix,
   checkProjectSubscription,
   CreateS3UrlsForUploadDto,
@@ -11,6 +10,7 @@ import {
   env,
   FilesQueryFilter,
   FileUploadsQueryFilter,
+  GetQuotaDto,
   invalidateCacheMatch,
   Lmas,
   LogType,
@@ -20,7 +20,6 @@ import {
   SerializeFor,
   ServiceName,
   SqlModelStatus,
-  WebsiteQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
@@ -72,57 +71,32 @@ export class StorageService {
     usedStorage: number;
     availableBandwidth: number;
     usedBandwidth: number;
-    bucketCount: number;
-    websiteCount: number;
-    fileCount: number;
   }> {
     const project_uuid = event.project_uuid;
-    //Storage space
-    const maxStorageQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_STORAGE,
-      project_uuid,
-    });
-    const availableStorage = (maxStorageQuota?.value || 3) * 1_073_741_824;
 
-    const bucket = new Bucket({ project_uuid }, context);
-    const usedStorage = await bucket.getTotalSizeUsedByProject();
+    const [quotas, usedStorage, usedBandwidth] = await Promise.all([
+      new Scs(context).getQuotas(
+        new GetQuotaDto({
+          project_uuid,
+        }),
+      ),
+      new Bucket({ project_uuid }, context).getTotalSizeUsedByProject(),
+      new IpfsBandwidth({}, context).populateByProjectAndDate(project_uuid),
+    ]);
 
-    //Bandwidth
-    const bandwidthQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_BANDWIDTH,
-      project_uuid,
-    });
-    const availableBandwidth =
-      (bandwidthQuota?.value || Defaults.DEFAULT_BANDWIDTH) * 1_073_741_824;
+    const storageQuota =
+      quotas.find((q) => q.id === QuotaCode.MAX_STORAGE)?.value ||
+      Defaults.DEFAULT_STORAGE;
 
-    const usedBandwidth = await new IpfsBandwidth(
-      {},
-      context,
-    ).populateByProjectAndDate(project_uuid);
-
-    // Total objects
-    const { total: bucketCount } = await bucket.getList(
-      context,
-      new BucketQueryFilter({ project_uuid }),
-    );
-    const { total: websiteCount } = await new Website(
-      { project_uuid },
-      context,
-    ).getList(context, new WebsiteQueryFilter({ project_uuid }));
-
-    const fileCount = await new File(
-      { project_uuid },
-      context,
-    ).getFileCountOnProject(project_uuid);
+    const bandwidthQuota =
+      quotas.find((q) => q.id === QuotaCode.MAX_BANDWIDTH)?.value ||
+      Defaults.DEFAULT_BANDWIDTH;
 
     return {
-      availableStorage,
+      availableStorage: storageQuota * Defaults.GYGABYTE_IN_BYTES,
       usedStorage,
-      availableBandwidth,
+      availableBandwidth: bandwidthQuota * Defaults.GYGABYTE_IN_BYTES,
       usedBandwidth: usedBandwidth.exists() ? usedBandwidth.bandwidth : 0,
-      bucketCount,
-      websiteCount,
-      fileCount,
     };
   }
 
