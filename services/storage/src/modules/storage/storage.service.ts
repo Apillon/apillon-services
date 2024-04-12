@@ -3,7 +3,6 @@ import {
   AppEnvironment,
   AWS_S3,
   CacheKeyPrefix,
-  CacheKeyTTL,
   checkProjectSubscription,
   CreateS3UrlsForUploadDto,
   DomainQueryFilter,
@@ -16,7 +15,6 @@ import {
   Lmas,
   LogType,
   QuotaCode,
-  runCachedFunction,
   runWithWorkers,
   Scs,
   SerializeFor,
@@ -59,6 +57,12 @@ import { generateJwtSecret } from '../../lib/ipfs-utils';
 import { Directory } from '../directory/models/directory.model';
 
 export class StorageService {
+  /**
+   * Get storage info for project
+   * @param event
+   * @param context
+   * @returns available storage, used storage
+   */
   static async getStorageInfo(
     event: { project_uuid: string },
     context: ServiceContext,
@@ -70,36 +74,30 @@ export class StorageService {
   }> {
     const project_uuid = event.project_uuid;
 
-    return await runCachedFunction(
-      `${CacheKeyPrefix.STORAGE_INFO}:${project_uuid}`,
-      async () => {
-        const [quotas, usedStorage, usedBandwidth] = await Promise.all([
-          new Scs(context).getQuotas(
-            new GetQuotaDto({
-              project_uuid,
-            }),
-          ),
-          new Bucket({ project_uuid }, context).getTotalSizeUsedByProject(),
-          new IpfsBandwidth({}, context).populateByProjectAndDate(project_uuid),
-        ]);
+    const [quotas, usedStorage, usedBandwidth] = await Promise.all([
+      new Scs(context).getQuotas(
+        new GetQuotaDto({
+          project_uuid,
+        }),
+      ),
+      new Bucket({ project_uuid }, context).getTotalSizeUsedByProject(),
+      new IpfsBandwidth({}, context).populateByProjectAndDate(project_uuid),
+    ]);
 
-        const storageQuota =
-          quotas.find((q) => q.id === QuotaCode.MAX_STORAGE)?.value ||
-          Defaults.DEFAULT_STORAGE;
+    const storageQuota =
+      quotas.find((q) => q.id === QuotaCode.MAX_STORAGE)?.value ||
+      Defaults.DEFAULT_STORAGE;
 
-        const bandwidthQuota =
-          quotas.find((q) => q.id === QuotaCode.MAX_BANDWIDTH)?.value ||
-          Defaults.DEFAULT_BANDWIDTH;
+    const bandwidthQuota =
+      quotas.find((q) => q.id === QuotaCode.MAX_BANDWIDTH)?.value ||
+      Defaults.DEFAULT_BANDWIDTH;
 
-        return {
-          availableStorage: storageQuota * 1_073_741_824,
-          usedStorage,
-          availableBandwidth: bandwidthQuota * 1_073_741_824,
-          usedBandwidth: usedBandwidth.exists() ? usedBandwidth.bandwidth : 0,
-        };
-      },
-      CacheKeyTTL.SHORT,
-    );
+    return {
+      availableStorage: storageQuota * Defaults.GYGABYTE_IN_BYTES,
+      usedStorage,
+      availableBandwidth: bandwidthQuota * Defaults.GYGABYTE_IN_BYTES,
+      usedBandwidth: usedBandwidth.exists() ? usedBandwidth.bandwidth : 0,
+    };
   }
 
   /**

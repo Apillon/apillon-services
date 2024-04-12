@@ -771,7 +771,6 @@ export enum OauthLinkType {
 
 export enum CacheKeyPrefix {
   BUCKET_LIST = 'bucket-list',
-  STORAGE_INFO = 'storage-info',
 
   AUTH_USER_DATA = 'auth-user-data',
 
