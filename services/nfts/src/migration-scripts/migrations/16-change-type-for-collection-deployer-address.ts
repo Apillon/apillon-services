@@ -16,6 +16,6 @@ export async function downgrade(
   await queryFn(`
     ALTER TABLE \`${DbTables.COLLECTION}\`
       MODIFY COLUMN \`deployerAddress\` VARCHAR (42),
-      MODIFY COLUMN \`royaltiesAddress\` VARCHAR (42),;
+      MODIFY COLUMN \`royaltiesAddress\` VARCHAR (42);
   `);
 }

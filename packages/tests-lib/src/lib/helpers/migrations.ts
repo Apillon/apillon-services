@@ -136,16 +136,17 @@ export async function downgradeTestDatabases(): Promise<void> {
   try {
     await Promise.all([
       dbAmsMigration.down(-1),
-      dbConsoleMigration.down(-1),
-      dbStorageMigration.down(-1),
       dbConfigMigration.down(-1),
-      dbAuthApiMigration.down(-1),
-      dbReferralMigration.down(-1),
       dbNftsMigration.down(-1),
-      dbComputingMigration.down(-1),
       dbBcsMigration.down(-1),
       dbSocialMigration.down(-1),
     ]);
+
+    await dbConsoleMigration.down(-1);
+    await dbStorageMigration.down(-1);
+    await dbAuthApiMigration.down(-1);
+    await dbReferralMigration.down(-1);
+    await dbComputingMigration.down(-1);
   } catch (err) {
     console.error('error at migrations.down()', err);
     throw err;

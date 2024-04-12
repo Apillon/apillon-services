@@ -14,6 +14,6 @@ export async function downgrade(
 ): Promise<void> {
   await queryFn(`
     ALTER TABLE \`${DbTables.CONTRACT_VERSION}\`
-      MODIFY bytecode TEXT DEFAULT NOT NULL;
+      MODIFY bytecode TEXT NOT NULL;
   `);
 }

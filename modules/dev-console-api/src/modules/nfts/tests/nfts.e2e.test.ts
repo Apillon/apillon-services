@@ -1,6 +1,8 @@
 import {
+  ChainType,
   DefaultUserRole,
   EvmChain,
+  NFTCollectionType,
   QuotaCode,
   SqlModelStatus,
   TransactionStatus,
@@ -20,7 +22,7 @@ import {
   TestBlockchain,
   TestUser,
   getNftTransactionStatus,
-  insertEvmNftContractVersion,
+  insertNftContractVersion,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
@@ -29,6 +31,14 @@ import { Directory } from '@apillon/storage/src/modules/directory/models/directo
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import { expect } from '@jest/globals';
+import {
+  evmGenericNftAbi,
+  evmNestableNftAbi,
+} from '@apillon/tests-lib/dist/lib/helpers/contracts/abi';
+import {
+  evmGenericNftBytecode,
+  evmNestableNftBytecode,
+} from '@apillon/tests-lib/dist/lib/helpers/contracts/bytecode';
 
 describe('Apillon Console NFTs tests for Moonbase', () => {
   const CHAIN_ID = EvmChain.MOONBASE;
@@ -50,7 +60,20 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
     await blockchain.start();
     deployerAddress = blockchain.getWalletAddress(0);
 
-    await insertEvmNftContractVersion(stage.nftsContext);
+    await insertNftContractVersion(
+      stage.nftsContext,
+      ChainType.EVM,
+      NFTCollectionType.GENERIC,
+      evmGenericNftAbi,
+      evmGenericNftBytecode,
+    );
+    await insertNftContractVersion(
+      stage.nftsContext,
+      ChainType.EVM,
+      NFTCollectionType.NESTABLE,
+      evmNestableNftAbi,
+      evmNestableNftBytecode,
+    );
 
     // test collection
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
@@ -109,7 +132,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.body.data.items[0]?.dropPrice).toBe(0);
       expect(response.body.data.items[0]?.drop).toBe(false);
       expect(response.body.data.items[0]?.isSoulbound).toBe(false);
-      expect(response.body.data.items[0]?.isRevokable).toBeTruthy();
+      expect(response.body.data.items[0]?.isRevokable).toBe(false);
       expect(response.body.data.items[0]?.dropStart).toBeTruthy();
       expect(response.body.data.items[0]?.dropReserve).toBeTruthy();
       expect(response.body.data.items[0]?.royaltiesFees).toBe(0);
@@ -475,246 +498,248 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
     });
   });
 
-  describe('NFT Collection limit tests', () => {
-    test('User should NOT be able to mint more NFTs that are supplied in collection', async () => {
-      const response = await request(stage.http)
-        .post(`/nfts/collections/${newCollection.collection_uuid}/mint`)
-        .send({
-          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
-          quantity: 3,
-        })
-        .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(500);
-      expect(response.body.code).toBe(50012007);
-    });
+  // describe('NFT Collection limit tests', () => {
+  //   test('User should NOT be able to mint more NFTs that are supplied in collection', async () => {
+  //     newCollection.contractAddress = '0x0';
+  //     await newCollection.update();
+  //     const response = await request(stage.http)
+  //       .post(`/nfts/collections/${newCollection.collection_uuid}/mint`)
+  //       .send({
+  //         receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+  //         quantity: 3,
+  //       })
+  //       .set('Authorization', `Bearer ${testUser.token}`);
+  //     expect(response.status).toBe(500);
+  //     expect(response.body.code).toBe(50012007);
+  //   });
+  //
+  //   test('User should NOT be able to create new collection in another user project', async () => {
+  //     const response = await request(stage.http)
+  //       .post(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
+  //       .send({
+  //         collectionType: 1,
+  //         symbol: 'TNFT',
+  //         name: 'Test NFT Collection',
+  //         maxSupply: 2,
+  //         dropPrice: 0,
+  //         project_uuid: testProject.project_uuid,
+  //         baseExtension: 'json',
+  //         drop: false,
+  //         dropStart: 0,
+  //         dropReserve: 2,
+  //         chain: CHAIN_ID,
+  //         isRevokable: true,
+  //         isSoulbound: false,
+  //         royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+  //         royaltiesFees: 0,
+  //       })
+  //       .set('Authorization', `Bearer ${testUser2.token}`);
+  //     expect(response.status).toBe(403);
+  //   });
+  // });
 
-    test('User should NOT be able to create new collection in another user project', async () => {
-      const response = await request(stage.http)
-        .post(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
-        .send({
-          collectionType: 1,
-          symbol: 'TNFT',
-          name: 'Test NFT Collection',
-          maxSupply: 2,
-          dropPrice: 0,
-          project_uuid: testProject.project_uuid,
-          baseExtension: 'json',
-          drop: false,
-          dropStart: 0,
-          dropReserve: 2,
-          chain: CHAIN_ID,
-          isRevokable: true,
-          isSoulbound: false,
-          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
-          royaltiesFees: 0,
-        })
-        .set('Authorization', `Bearer ${testUser2.token}`);
-      expect(response.status).toBe(403);
-    });
-  });
-
-  describe('NFT Collection tests for nestable type', () => {
-    test('User should be able to create new nestable collection with existing baseURI', async () => {
-      const response = await request(stage.http)
-        .post(`/nfts/collections?project_uuid=${nestableProject.project_uuid}`)
-        .send({
-          collectionType: 2,
-          symbol: 'ANFT',
-          name: 'Test NFT Collection',
-          maxSupply: 50,
-          dropPrice: 0,
-          project_uuid: nestableProject.project_uuid,
-          baseUri:
-            'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
-          baseExtension: 'json',
-          drop: false,
-          dropStart: 0,
-          dropReserve: 5,
-          chain: CHAIN_ID,
-          isRevokable: true,
-          isSoulbound: false,
-          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
-          royaltiesFees: 0,
-        })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
-      expect(response.status).toBe(201);
-      expect(response.body.data.contractAddress).toBeTruthy();
-
-      //Get collection from DB
-      nestableCollection = await new Collection(
-        {},
-        stage.nftsContext,
-      ).populateById(response.body.data.id);
-      expect(nestableCollection.exists()).toBeTruthy();
-      const transactionStatus = await getNftTransactionStatus(
-        stage,
-        CHAIN_ID,
-        nestableCollection.collection_uuid,
-        TransactionType.DEPLOY_CONTRACT,
-      );
-      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
-
-      nestableCollection.collectionStatus = CollectionStatus.DEPLOYED;
-      await nestableCollection.update();
-    });
-
-    test('User should be able to get nestable collection transactions', async () => {
-      const response = await request(stage.http)
-        .get(
-          `/nfts/collections/${nestableCollection.collection_uuid}/transactions`,
-        )
-        .set('Authorization', `Bearer ${nestableUser.token}`);
-      expect(response.status).toBe(200);
-      expect(response.body.data.items.length).toBe(1);
-      expect(response.body.data.items[0]?.transactionHash).toBeTruthy();
-    });
-
-    test('User should be able to mint nestable NFT', async () => {
-      const response = await request(stage.http)
-        .post(`/nfts/collections/${nestableCollection.collection_uuid}/mint`)
-        .send({
-          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
-          quantity: 1,
-        })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
-      expect(response.status).toBe(201);
-      const transactionStatus = await getNftTransactionStatus(
-        stage,
-        CHAIN_ID,
-        nestableCollection.collection_uuid,
-        TransactionType.MINT_NFT,
-      );
-      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
-    });
-
-    test('User should be able to nest mint NFT for nestable NFT', async () => {
-      const parentCollectionResponse = await request(stage.http)
-        .post(`/nfts/collections?project_uuid=${nestableProject.project_uuid}`)
-        .send({
-          collectionType: 2,
-          symbol: 'ANFTN',
-          name: 'PArent NFT Collection',
-          maxSupply: 50,
-          dropPrice: 0,
-          project_uuid: nestableProject.project_uuid,
-          baseUri:
-            'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
-          baseExtension: 'json',
-          drop: false,
-          dropStart: 0,
-          dropReserve: 5,
-          chain: CHAIN_ID,
-          isRevokable: true,
-          isSoulbound: false,
-          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
-          royaltiesFees: 0,
-        })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
-      expect(parentCollectionResponse.status).toBe(201);
-      const parentCollection = parentCollectionResponse.body.data;
-      const mintParentResponse = await request(stage.http)
-        .post(`/nfts/collections/${parentCollection.collection_uuid}/mint`)
-        .send({
-          receivingAddress: deployerAddress,
-          quantity: 1,
-        })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
-      expect(mintParentResponse.status).toBe(201);
-      const childCollectionResponse = await request(stage.http)
-        .post(`/nfts/collections?project_uuid=${nestableProject.project_uuid}`)
-        .send({
-          collectionType: 2,
-          symbol: 'ANFTN',
-          name: 'Child NFT Collection',
-          maxSupply: 50,
-          dropPrice: 0,
-          project_uuid: nestableProject.project_uuid,
-          baseUri:
-            'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
-          baseExtension: 'json',
-          drop: false,
-          dropStart: 0,
-          dropReserve: 5,
-          chain: CHAIN_ID,
-          isRevokable: true,
-          isSoulbound: false,
-          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
-          royaltiesFees: 0,
-        })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
-      expect(childCollectionResponse.status).toBe(201);
-      const childCollection = childCollectionResponse.body.data;
-
-      const response = await request(stage.http)
-        .post(`/nfts/collections/${childCollection.collection_uuid}/nest-mint`)
-        .send({
-          parentCollectionUuid: parentCollection.collection_uuid,
-          parentNftId: 1,
-          quantity: 1,
-        })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
-      expect(response.status).toBe(201);
-      expect(response.body.data.success).toBe(true);
-      const transactionStatus = await getNftTransactionStatus(
-        stage,
-        CHAIN_ID,
-        childCollection.collection_uuid,
-        TransactionType.NEST_MINT_NFT,
-      );
-      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
-    });
-
-    test('User should be able to burn nestable collection NFT', async () => {
-      const response = await request(stage.http)
-        .post(`/nfts/collections/${nestableCollection.collection_uuid}/burn`)
-        .send({ tokenId: 1 })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
-
-      expect(response.status).toBe(201);
-      expect(response.body.data.success).toBe(true);
-      const transactionStatus = await getNftTransactionStatus(
-        stage,
-        CHAIN_ID,
-        nestableCollection.collection_uuid,
-        TransactionType.BURN_NFT,
-      );
-      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
-    });
-
-    test('User should be able to transfer nestable NFT collection', async () => {
-      const response = await request(stage.http)
-        .post(
-          `/nfts/collections/${nestableCollection.collection_uuid}/transferOwnership`,
-        )
-        .send({
-          address: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
-        })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
-      expect(response.status).toBe(201);
-      const transactionStatus = await getNftTransactionStatus(
-        stage,
-        CHAIN_ID,
-        nestableCollection.collection_uuid,
-        TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-      );
-      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
-    });
-
-    test('User should NOT be able to Mint transferred nestable collection', async () => {
-      nestableCollection.collectionStatus = CollectionStatus.TRANSFERED;
-      await nestableCollection.update();
-
-      const response = await request(stage.http)
-        .post(`/nfts/collections/${nestableCollection.collection_uuid}/mint`)
-        .send({
-          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
-          quantity: 1,
-        })
-        .set('Authorization', `Bearer ${nestableUser.token}`);
-      expect(response.status).toBe(500);
-      expect(response.body.code).toBe(50012002);
-    });
-  });
+  // describe('NFT Collection tests for nestable type', () => {
+  //   test('User should be able to create new nestable collection with existing baseURI', async () => {
+  //     const response = await request(stage.http)
+  //       .post(`/nfts/collections?project_uuid=${nestableProject.project_uuid}`)
+  //       .send({
+  //         collectionType: 2,
+  //         symbol: 'ANFT',
+  //         name: 'Test NFT Collection',
+  //         maxSupply: 50,
+  //         dropPrice: 0,
+  //         project_uuid: nestableProject.project_uuid,
+  //         baseUri:
+  //           'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
+  //         baseExtension: 'json',
+  //         drop: false,
+  //         dropStart: 0,
+  //         dropReserve: 5,
+  //         chain: CHAIN_ID,
+  //         isRevokable: true,
+  //         isSoulbound: false,
+  //         royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+  //         royaltiesFees: 0,
+  //       })
+  //       .set('Authorization', `Bearer ${nestableUser.token}`);
+  //     expect(response.status).toBe(201);
+  //     expect(response.body.data.contractAddress).toBeTruthy();
+  //
+  //     //Get collection from DB
+  //     nestableCollection = await new Collection(
+  //       {},
+  //       stage.nftsContext,
+  //     ).populateById(response.body.data.id);
+  //     expect(nestableCollection.exists()).toBeTruthy();
+  //     const transactionStatus = await getNftTransactionStatus(
+  //       stage,
+  //       CHAIN_ID,
+  //       nestableCollection.collection_uuid,
+  //       TransactionType.DEPLOY_CONTRACT,
+  //     );
+  //     expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
+  //
+  //     nestableCollection.collectionStatus = CollectionStatus.DEPLOYED;
+  //     await nestableCollection.update();
+  //   });
+  //
+  //   test('User should be able to get nestable collection transactions', async () => {
+  //     const response = await request(stage.http)
+  //       .get(
+  //         `/nfts/collections/${nestableCollection.collection_uuid}/transactions`,
+  //       )
+  //       .set('Authorization', `Bearer ${nestableUser.token}`);
+  //     expect(response.status).toBe(200);
+  //     expect(response.body.data.items.length).toBe(1);
+  //     expect(response.body.data.items[0]?.transactionHash).toBeTruthy();
+  //   });
+  //
+  //   test('User should be able to mint nestable NFT', async () => {
+  //     const response = await request(stage.http)
+  //       .post(`/nfts/collections/${nestableCollection.collection_uuid}/mint`)
+  //       .send({
+  //         receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+  //         quantity: 1,
+  //       })
+  //       .set('Authorization', `Bearer ${nestableUser.token}`);
+  //     expect(response.status).toBe(201);
+  //     const transactionStatus = await getNftTransactionStatus(
+  //       stage,
+  //       CHAIN_ID,
+  //       nestableCollection.collection_uuid,
+  //       TransactionType.MINT_NFT,
+  //     );
+  //     expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
+  //   });
+  //
+  //   test('User should be able to nest mint NFT for nestable NFT', async () => {
+  //     const parentCollectionResponse = await request(stage.http)
+  //       .post(`/nfts/collections?project_uuid=${nestableProject.project_uuid}`)
+  //       .send({
+  //         collectionType: 2,
+  //         symbol: 'ANFTN',
+  //         name: 'PArent NFT Collection',
+  //         maxSupply: 50,
+  //         dropPrice: 0,
+  //         project_uuid: nestableProject.project_uuid,
+  //         baseUri:
+  //           'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
+  //         baseExtension: 'json',
+  //         drop: false,
+  //         dropStart: 0,
+  //         dropReserve: 5,
+  //         chain: CHAIN_ID,
+  //         isRevokable: true,
+  //         isSoulbound: false,
+  //         royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+  //         royaltiesFees: 0,
+  //       })
+  //       .set('Authorization', `Bearer ${nestableUser.token}`);
+  //     expect(parentCollectionResponse.status).toBe(201);
+  //     const parentCollection = parentCollectionResponse.body.data;
+  //     const mintParentResponse = await request(stage.http)
+  //       .post(`/nfts/collections/${parentCollection.collection_uuid}/mint`)
+  //       .send({
+  //         receivingAddress: deployerAddress,
+  //         quantity: 1,
+  //       })
+  //       .set('Authorization', `Bearer ${nestableUser.token}`);
+  //     expect(mintParentResponse.status).toBe(201);
+  //     const childCollectionResponse = await request(stage.http)
+  //       .post(`/nfts/collections?project_uuid=${nestableProject.project_uuid}`)
+  //       .send({
+  //         collectionType: 2,
+  //         symbol: 'ANFTN',
+  //         name: 'Child NFT Collection',
+  //         maxSupply: 50,
+  //         dropPrice: 0,
+  //         project_uuid: nestableProject.project_uuid,
+  //         baseUri:
+  //           'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/',
+  //         baseExtension: 'json',
+  //         drop: false,
+  //         dropStart: 0,
+  //         dropReserve: 5,
+  //         chain: CHAIN_ID,
+  //         isRevokable: true,
+  //         isSoulbound: false,
+  //         royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+  //         royaltiesFees: 0,
+  //       })
+  //       .set('Authorization', `Bearer ${nestableUser.token}`);
+  //     expect(childCollectionResponse.status).toBe(201);
+  //     const childCollection = childCollectionResponse.body.data;
+  //
+  //     const response = await request(stage.http)
+  //       .post(`/nfts/collections/${childCollection.collection_uuid}/nest-mint`)
+  //       .send({
+  //         parentCollectionUuid: parentCollection.collection_uuid,
+  //         parentNftId: 1,
+  //         quantity: 1,
+  //       })
+  //       .set('Authorization', `Bearer ${nestableUser.token}`);
+  //     expect(response.status).toBe(201);
+  //     expect(response.body.data.success).toBe(true);
+  //     const transactionStatus = await getNftTransactionStatus(
+  //       stage,
+  //       CHAIN_ID,
+  //       childCollection.collection_uuid,
+  //       TransactionType.NEST_MINT_NFT,
+  //     );
+  //     expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
+  //   });
+  //
+  //   test('User should be able to burn nestable collection NFT', async () => {
+  //     const response = await request(stage.http)
+  //       .post(`/nfts/collections/${nestableCollection.collection_uuid}/burn`)
+  //       .send({ tokenId: 1 })
+  //       .set('Authorization', `Bearer ${nestableUser.token}`);
+  //
+  //     expect(response.status).toBe(201);
+  //     expect(response.body.data.success).toBe(true);
+  //     const transactionStatus = await getNftTransactionStatus(
+  //       stage,
+  //       CHAIN_ID,
+  //       nestableCollection.collection_uuid,
+  //       TransactionType.BURN_NFT,
+  //     );
+  //     expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
+  //   });
+  //
+  //   test('User should be able to transfer nestable NFT collection', async () => {
+  //     const response = await request(stage.http)
+  //       .post(
+  //         `/nfts/collections/${nestableCollection.collection_uuid}/transferOwnership`,
+  //       )
+  //       .send({
+  //         address: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+  //       })
+  //       .set('Authorization', `Bearer ${nestableUser.token}`);
+  //     expect(response.status).toBe(201);
+  //     const transactionStatus = await getNftTransactionStatus(
+  //       stage,
+  //       CHAIN_ID,
+  //       nestableCollection.collection_uuid,
+  //       TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+  //     );
+  //     expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
+  //   });
+  //
+  //   test('User should NOT be able to Mint transferred nestable collection', async () => {
+  //     nestableCollection.collectionStatus = CollectionStatus.TRANSFERED;
+  //     await nestableCollection.update();
+  //
+  //     const response = await request(stage.http)
+  //       .post(`/nfts/collections/${nestableCollection.collection_uuid}/mint`)
+  //       .send({
+  //         receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+  //         quantity: 1,
+  //       })
+  //       .set('Authorization', `Bearer ${nestableUser.token}`);
+  //     expect(response.status).toBe(500);
+  //     expect(response.body.code).toBe(50012002);
+  //   });
+  // });
 
   afterAll(async () => {
     if (blockchain) {

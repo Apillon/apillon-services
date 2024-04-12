@@ -127,4 +127,30 @@ export class SubstrateRpcApi {
     }
     return (new Date().getTime() - this.started.getTime()) / 1000;
   }
+
+  /**
+   * NOTE: Method used for testing. It retrieves last block transaction status and contract
+   * address if block includes instantiation event.
+   */
+  async getLastTransaction() {
+    const { hash, parentHash } = await this.apiPromise.rpc.chain.getHeader();
+    const events = await this.apiPromise.query.system.events.at(hash);
+
+    let contractAddress = null;
+    let success = false;
+    events.forEach(({ event }) => {
+      console.log(`${event.section}.${event.method}:`, event.data.toHuman());
+      if (event.section === 'contracts') {
+        if (event.method === 'Instantiated') {
+          const data = event.data.toJSON();
+          contractAddress = data[1];
+          success = true;
+        } else if (event.method === 'Called') {
+          success = true;
+        }
+      }
+    });
+
+    return { contractAddress, success };
+  }
 }

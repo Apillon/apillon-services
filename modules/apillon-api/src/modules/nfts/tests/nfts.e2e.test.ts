@@ -10,7 +10,7 @@ import {
   TestBlockchain,
   TestUser,
   getNftTransactionStatus,
-  insertEvmNftContractVersion,
+  insertNftContractVersion,
 } from '@apillon/tests-lib';
 import {
   ApiKeyRoleBaseDto,
@@ -38,6 +38,14 @@ import {
   postRequestFactory,
 } from '@apillon/tests-lib/src/lib/helpers/requests';
 import { ethers } from 'ethers';
+import {
+  evmGenericNftAbi,
+  evmNestableNftAbi,
+} from '@apillon/tests-lib/dist/lib/helpers/contracts/abi';
+import {
+  evmGenericNftBytecode,
+  evmNestableNftBytecode,
+} from '@apillon/tests-lib/dist/lib/helpers/contracts/bytecode';
 
 const TEST_COLLECTION_BASE_URI =
   'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/';
@@ -64,7 +72,20 @@ describe('Apillon API NFTs tests', () => {
     blockchain = TestBlockchain.fromStage(stage, CHAIN_ID);
     await blockchain.start();
 
-    await insertEvmNftContractVersion(stage.nftsContext);
+    await insertNftContractVersion(
+      stage.nftsContext,
+      ChainType.EVM,
+      NFTCollectionType.GENERIC,
+      evmGenericNftAbi,
+      evmGenericNftBytecode,
+    );
+    await insertNftContractVersion(
+      stage.nftsContext,
+      ChainType.EVM,
+      NFTCollectionType.NESTABLE,
+      evmNestableNftAbi,
+      evmNestableNftBytecode,
+    );
 
     //User 1 project & other data
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
