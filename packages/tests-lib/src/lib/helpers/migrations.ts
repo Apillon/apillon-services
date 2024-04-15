@@ -135,6 +135,7 @@ export async function downgradeTestDatabases(): Promise<void> {
   await initMigrations();
   try {
     await dbReferralMigration.down(-1);
+    await dbConsoleMigration.down(-1);
 
     await Promise.all([
       dbAmsMigration.down(-1),
