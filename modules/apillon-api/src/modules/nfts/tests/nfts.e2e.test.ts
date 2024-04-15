@@ -18,7 +18,6 @@ import {
   ChainType,
   DefaultApiKeyRole,
   NFTCollectionType,
-  QuotaCode,
   SqlModelStatus,
   TransactionStatus,
 } from '@apillon/lib';
@@ -38,14 +37,11 @@ import {
   postRequestFactory,
 } from '@apillon/tests-lib/src/lib/helpers/requests';
 import { ethers } from 'ethers';
-import {
-  evmGenericNftAbi,
-  evmNestableNftAbi,
-} from '@apillon/tests-lib/dist/lib/helpers/contracts/abi';
+import { evmGenericNftAbi, evmNestableNftAbi } from '@apillon/tests-lib';
 import {
   evmGenericNftBytecode,
   evmNestableNftBytecode,
-} from '@apillon/tests-lib/dist/lib/helpers/contracts/bytecode';
+} from '@apillon/tests-lib';
 
 const TEST_COLLECTION_BASE_URI =
   'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/';

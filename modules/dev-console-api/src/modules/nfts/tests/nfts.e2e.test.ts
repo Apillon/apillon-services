@@ -31,14 +31,11 @@ import { Directory } from '@apillon/storage/src/modules/directory/models/directo
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import { expect } from '@jest/globals';
-import {
-  evmGenericNftAbi,
-  evmNestableNftAbi,
-} from '@apillon/tests-lib/dist/lib/helpers/contracts/abi';
+import { evmGenericNftAbi, evmNestableNftAbi } from '@apillon/tests-lib';
 import {
   evmGenericNftBytecode,
   evmNestableNftBytecode,
-} from '@apillon/tests-lib/dist/lib/helpers/contracts/bytecode';
+} from '@apillon/tests-lib';
 
 describe('Apillon Console NFTs tests for Moonbase', () => {
   const CHAIN_ID = EvmChain.MOONBASE;

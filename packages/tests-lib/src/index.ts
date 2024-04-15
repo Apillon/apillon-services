@@ -16,3 +16,5 @@ export * from './lib/helpers/override-config';
 export * from './lib/helpers/requests';
 export * from './lib/helpers/config';
 export * from './lib/helpers/contract-version';
+export * from './lib/helpers/contracts/abi';
+export * from './lib/helpers/contracts/bytecode';

@@ -24,14 +24,11 @@ import {
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
-import {
-  evmGenericNftAbi,
-  evmNestableNftAbi,
-} from '@apillon/tests-lib/dist/lib/helpers/contracts/abi';
+import { evmGenericNftAbi, evmNestableNftAbi } from '@apillon/tests-lib';
 import {
   evmGenericNftBytecode,
   evmNestableNftBytecode,
-} from '@apillon/tests-lib/dist/lib/helpers/contracts/bytecode';
+} from '@apillon/tests-lib';
 
 describe('Apillon Console NFTs tests for Astar', () => {
   const CHAIN_ID = EvmChain.ASTAR;

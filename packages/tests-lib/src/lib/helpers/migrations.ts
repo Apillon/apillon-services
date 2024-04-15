@@ -134,6 +134,8 @@ export async function upgradeTestDatabases(): Promise<void> {
 export async function downgradeTestDatabases(): Promise<void> {
   await initMigrations();
   try {
+    await dbReferralMigration.down(-1);
+
     await Promise.all([
       dbAmsMigration.down(-1),
       dbConfigMigration.down(-1),
@@ -145,7 +147,6 @@ export async function downgradeTestDatabases(): Promise<void> {
     await dbConsoleMigration.down(-1);
     await dbStorageMigration.down(-1);
     await dbAuthApiMigration.down(-1);
-    await dbReferralMigration.down(-1);
     await dbComputingMigration.down(-1);
   } catch (err) {
     console.error('error at migrations.down()', err);
