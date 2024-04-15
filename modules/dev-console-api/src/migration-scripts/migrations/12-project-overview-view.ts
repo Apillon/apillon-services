@@ -35,49 +35,56 @@ export async function upgrade(
     SELECT p.project_uuid,
     (
       SELECT COUNT(*) from ${databases.storageDb}.bucket bucket
-        where bucket.project_uuid = p.project_uuid
-        and bucket.status = ${SqlModelStatus.ACTIVE}
+        WHERE bucket.project_uuid = p.project_uuid
+        AND bucket.status = ${SqlModelStatus.ACTIVE}
+        AND bucket.bucketType IN (1,3) # exclude hosting buckets
     ) as bucketCount,
     (
       SELECT COUNT(*) from ${databases.storageDb}.file file
-        where file.project_uuid = p.project_uuid
-        and file.status = ${SqlModelStatus.ACTIVE}
+        WHERE file.project_uuid = p.project_uuid
+        AND file.status = ${SqlModelStatus.ACTIVE}
     ) as fileCount,
     (
       SELECT COUNT(*) from ${databases.storageDb}.website website
-        where website.project_uuid = p.project_uuid
-        and website.status = ${SqlModelStatus.ACTIVE}
+        WHERE website.project_uuid = p.project_uuid
+        AND website.status = ${SqlModelStatus.ACTIVE}
     ) as websiteCount,
     (
       SELECT COUNT(*) from ${databases.nftsDb}.collection collection
-        where collection.project_uuid = p.project_uuid
+        WHERE collection.project_uuid = p.project_uuid
+        AND collection.collectionStatus <> 5 # failed
     ) as collectionCount,
     (
       SELECT COUNT(*) from ${databases.nftsDb}.transaction transaction
         JOIN ${databases.nftsDb}.collection collection ON collection.id = transaction.refId
-        where collection.project_uuid = p.project_uuid
+        WHERE collection.project_uuid = p.project_uuid
+        AND transaction.transactionStatus = 2 # confirmed
     ) as nftTransactionCount,
     (
       SELECT COUNT(*) from ${databases.authDb}.identity identity
-        where identity.project_uuid = p.project_uuid
-        and identity.state IN ('revoked', 'attested')
+        WHERE identity.project_uuid = p.project_uuid
+        AND identity.state IN ('revoked', 'attested')
     ) as didCount,
     (
       SELECT COUNT(*) from ${databases.computeDb}.contract contract
-        where contract.project_uuid = p.project_uuid
+        WHERE contract.project_uuid = p.project_uuid
+        AND contract.contractStatus <> 6 # failed
     ) as contractCount,
     (
       SELECT COUNT(*) from ${databases.computeDb}.transaction transaction
         JOIN ${databases.computeDb}.contract contract ON contract.id = transaction.contract_id
-        where contract.project_uuid = p.project_uuid
+        WHERE contract.project_uuid = p.project_uuid
+        AND transaction.transactionStatus = 2 # confirmed
     ) as computingTransactionCount,
     (
       SELECT COUNT(*) from ${databases.socialDb}.space space
-        where space.project_uuid = p.project_uuid
+        WHERE space.project_uuid = p.project_uuid
+        AND space.status = ${SqlModelStatus.ACTIVE}
     ) as spaceCount,
     (
       SELECT COUNT(*) from ${databases.socialDb}.post post
-        where post.project_uuid = p.project_uuid
+        WHERE post.project_uuid = p.project_uuid
+        AND post.status = ${SqlModelStatus.ACTIVE}
     ) as postCount
     FROM ${databases.consoleApiDb}.project p
   `);
