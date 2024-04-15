@@ -135,7 +135,7 @@ export class FileUploadSession extends AdvancedSQLModel {
 
     const sqlQuery = {
       qSelect: `
-        SELECT ${this.generateSelectFields('s', '')}, COUNT(fur.*) as numOfFileUploadRequests, COUNT(f.*) as numOfFiles
+        SELECT s.session_uuid, s.sessionStatus, COUNT(fur.id) as numOfFileUploadRequests, COUNT(f.id) as numOfUploadedFiles
         `,
       qFrom: `
         FROM \`${DbTables.FILE_UPLOAD_SESSION}\` s
@@ -143,7 +143,9 @@ export class FileUploadSession extends AdvancedSQLModel {
         LEFT JOIN \`${DbTables.FILE_UPLOAD_REQUEST}\` fur ON fur.session_id = s.id
         LEFT JOIN \`${DbTables.FILE}\` f ON f.file_uuid = fur.file_uuid AND f.fileStatus IN (${FileStatus.UPLOADED_TO_IPFS}, ${FileStatus.PINNING_TO_CRUST}, ${FileStatus.PINNED_TO_CRUST})
         WHERE b.bucket_uuid = @bucket_uuid
+        AND (@search IS null OR s.session_uuid LIKE CONCAT('%', @search, '%'))
         AND s.status <> ${SqlModelStatus.DELETED}
+        GROUP BY s.session_uuid, s.sessionStatus
       `,
       qFilter: `
         ORDER BY ${filters.orderStr ? filters.orderStr : 's.createTime DESC'}

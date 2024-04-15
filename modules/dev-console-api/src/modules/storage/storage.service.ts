@@ -3,6 +3,7 @@ import {
   CreateS3UrlsForUploadDto,
   EndFileUploadSessionDto,
   FileDetailsQueryFilter,
+  FileUploadSessionQueryFilter,
   FileUploadsQueryFilter,
   FilesQueryFilter,
   LinkOnIpfsQueryFilter,
@@ -57,6 +58,17 @@ export class StorageService {
   ) {
     query.bucket_uuid = bucket_uuid;
     return (await new StorageMicroservice(context).listFileUploads(query)).data;
+  }
+
+  async listFileUploadSessions(
+    context: DevConsoleApiContext,
+    bucket_uuid: string,
+    query: FileUploadSessionQueryFilter,
+  ) {
+    query.bucket_uuid = bucket_uuid;
+    return (
+      await new StorageMicroservice(context).listFileUploadSessions(query)
+    ).data;
   }
 
   /**

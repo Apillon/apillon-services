@@ -22,6 +22,8 @@ export async function processEvent(event, context: Context): Promise<any> {
       StorageService.endFileUploadSession,
     [StorageEventType.END_FILE_UPLOAD]: StorageService.endFileUpload,
     [StorageEventType.LIST_FILE_UPLOAD]: StorageService.listFileUploads,
+    [StorageEventType.LIST_FILE_UPLOAD_SESSIONS]:
+      StorageService.listFileUploadSessions,
 
     [StorageEventType.LIST_BUCKETS]: BucketService.listBuckets,
     [StorageEventType.GET_BUCKET]: BucketService.getBucket,

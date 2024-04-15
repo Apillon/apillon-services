@@ -11,6 +11,7 @@ import {
   EndFileUploadSessionDto,
   BaseProjectQueryFilter,
   CacheKeyTTL,
+  FileUploadSessionQueryFilter,
 } from '@apillon/lib';
 import {
   CacheInterceptor,
@@ -91,6 +92,25 @@ export class StorageController {
     @Query() query: FileUploadsQueryFilter,
   ) {
     return await this.storageService.listFileUploads(
+      context,
+      bucket_uuid,
+      query,
+    );
+  }
+
+  @Get(':bucket_uuid/file-upload-sessions')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({
+    dto: FileUploadSessionQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async listFileUploadSessions(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('bucket_uuid') bucket_uuid: string,
+    @Query() query: FileUploadSessionQueryFilter,
+  ) {
+    return await this.storageService.listFileUploadSessions(
       context,
       bucket_uuid,
       query,
