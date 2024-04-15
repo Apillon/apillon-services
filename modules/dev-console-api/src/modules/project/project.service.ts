@@ -32,6 +32,7 @@ import {
   SocialMicroservice,
   ComputingMicroservice,
   AuthenticationMicroservice,
+  Context,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -407,56 +408,33 @@ export class ProjectService {
     return true;
   }
 
-  async getProjectOverview(context, project_uuid) {
+  async getProjectOverview(
+    context: DevConsoleApiContext,
+    project_uuid: string,
+  ) {
     await new Project({}, context).populateByUUIDAndCheckAccess(
       project_uuid,
       context,
     );
 
-    const results = await Promise.allSettled([
+    const results = await Promise.all([
       new StorageMicroservice(context)
         .getStorageInfo(project_uuid)
-        .then(({ data }) => ({ storageInfo: data }))
+        .then(({ data }) => ({ ...data }))
         .catch(),
-      new NftsMicroservice(context)
-        .getProjectCollectionDetails(project_uuid)
-        .then(({ data }) => ({ projectCollectionDetails: data }))
-        .catch(),
-      new AuthenticationMicroservice(context)
-        .getTotalDidsCreated(project_uuid)
-        .then(({ data }) => ({ didCount: data }))
-        .catch(),
-      new ComputingMicroservice(context as any)
-        .getProjectComputingDetails(project_uuid)
-        .then(({ data }) => ({ computingDetails: data }))
-        .catch(),
-      new SocialMicroservice(context)
-        .getProjectSocialDetails(project_uuid)
-        .then(({ data }) => ({ socialDetails: data }))
+      context.mysql
+        .paramExecute(
+          `
+          SELECT * FROM v_projectOverview
+          WHERE project_uuid = @project_uuid
+          `,
+          { project_uuid },
+        )
+        .then(({ 0: overviewData }) => ({ ...overviewData }))
         .catch(),
     ]);
 
-    const {
-      storageInfo,
-      projectCollectionDetails,
-      didCount,
-      computingDetails,
-      socialDetails,
-    } = results.reduce((acc, result) => {
-      // Filter out unfulfilled promises
-      // and join results together in one object
-      return result.status === 'fulfilled'
-        ? { ...acc, ...(result.value || {}) }
-        : acc;
-    }, {}) as any;
-
-    return {
-      ...storageInfo,
-      ...computingDetails,
-      ...socialDetails,
-      ...projectCollectionDetails,
-      didCount,
-    };
+    return { ...results[0], ...results[1] };
   }
 
   /**
