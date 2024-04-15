@@ -11,11 +11,12 @@ export async function upgrade(
 }
 
 export async function downgrade(
-  queryFn: (query: string, values?: any[]) => Promise<any[]>,
+  _queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
-  await queryFn(`
-    ALTER TABLE \`${DbTables.COLLECTION}\`
-      MODIFY COLUMN \`deployerAddress\` VARCHAR (42),
-      MODIFY COLUMN \`royaltiesAddress\` VARCHAR (42);
-  `);
+  // this was removed because it fails on downgrade id data in column is longer than 42 char
+  // await queryFn(`
+  //   ALTER TABLE \`${DbTables.COLLECTION}\`
+  //     MODIFY COLUMN \`deployerAddress\` VARCHAR (42),
+  //     MODIFY COLUMN \`royaltiesAddress\` VARCHAR (42);
+  // `);
 }
