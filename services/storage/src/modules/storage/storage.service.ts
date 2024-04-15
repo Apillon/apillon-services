@@ -10,6 +10,7 @@ import {
   EndFileUploadSessionDto,
   env,
   FilesQueryFilter,
+  FileUploadSessionQueryFilter,
   FileUploadsQueryFilter,
   invalidateCacheMatch,
   Lmas,
@@ -499,6 +500,16 @@ export class StorageService {
       return true;
     }
     return false;
+  }
+
+  static async listFileUploadSessions(
+    event: { query: FileUploadSessionQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new FileUploadSession({}, context).getList(
+      context,
+      new FileUploadSessionQueryFilter(event.query),
+    );
   }
 
   static async listFileUploads(

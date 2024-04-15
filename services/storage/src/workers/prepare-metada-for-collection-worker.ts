@@ -16,7 +16,12 @@ import {
   sendToWorkerQueue,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { BucketType, FileUploadRequestFileStatus } from '../config/types';
+import {
+  BucketType,
+  FileUploadRequestFileStatus,
+  FileUploadSessionStatus,
+  PrepareCollectionMetadataSteps,
+} from '../config/types';
 import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { ProjectConfig } from '../modules/config/models/project-config.model';
@@ -26,6 +31,7 @@ import { FileUploadRequest } from '../modules/storage/models/file-upload-request
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { File } from '../modules/storage/models/file.model';
 import { WorkerName } from './worker-executor';
+import { CollectionMetadata } from '../modules/nfts/modules/collection-metadata.model';
 
 export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
   public constructor(
@@ -45,21 +51,30 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       data,
     );
 
+    const collectionMetadata = await new CollectionMetadata(
+      {},
+      this.context,
+    ).populateById(data.collectionMetadataId);
+
     //S3 client
     const s3Client: AWS_S3 = new AWS_S3();
 
     //bucket
     const bucket = await new Bucket({}, this.context).populateByUUID(
-      data.bucket_uuid,
+      collectionMetadata.bucket_uuid,
     );
 
     //Load data, execute validations, upload images --> STEP 1
-    if (!data.currentStep || data.currentStep == 1) {
+    if (
+      !collectionMetadata.currentStep ||
+      collectionMetadata.currentStep ==
+        PrepareCollectionMetadataSteps.UPLOAD_IMAGES_TO_IPFS
+    ) {
       //Get sessions
       const imagesSession = await new FileUploadSession(
         {},
         this.context,
-      ).populateByUUID(data.imagesSession);
+      ).populateByUUID(collectionMetadata.imagesSession);
 
       console.info(
         'imageSession, metadataSession and bucket acquired. Getting image FURS...',
@@ -86,6 +101,17 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       );
 
       if (
+        remainingImageFURs.length < env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS
+      ) {
+        imagesSession.sessionStatus = FileUploadSessionStatus.FINISHED;
+        await imagesSession.update();
+
+        collectionMetadata.currentStep =
+          PrepareCollectionMetadataSteps.UPDATE_JSONS_ON_S3;
+        collectionMetadata.update();
+      }
+
+      if (
         env.APP_ENV != AppEnvironment.TEST &&
         env.APP_ENV != AppEnvironment.LOCAL_DEV
       ) {
@@ -95,25 +121,21 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
           [
             {
-              ...data,
-              currentStep:
-                remainingImageFURs.length >=
-                env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS
-                  ? 1
-                  : 2,
+              collectionMetadataId: collectionMetadata.id,
             },
           ],
           null,
           null,
         );
-        return true;
-      } else {
-        data.currentStep = 2;
       }
+      return true;
     }
 
     //Prepare NFT metadata - STEP 2
-    if (data.currentStep == 2) {
+    if (
+      collectionMetadata.currentStep ==
+      PrepareCollectionMetadataSteps.UPDATE_JSONS_ON_S3
+    ) {
       //Download each metadata file from s3, update image property and upload back to s3
 
       const imagesInBucket = await new File(
@@ -124,7 +146,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       const metadataSession = await new FileUploadSession(
         {},
         this.context,
-      ).populateByUUID(data.metadataSession);
+      ).populateByUUID(collectionMetadata.metadataSession);
 
       //Get files in session (fileStatus must be of status 1)
       const metadataFURs = (
@@ -174,7 +196,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
               (x) => x.name == fileContent.image,
             );
 
-            if (data.useApillonIpfsGateway) {
+            if (collectionMetadata.useApillonIpfsGateway) {
               fileContent.image = ipfsCluster.generateLink(
                 bucket.project_uuid,
                 imageFile.CIDv1,
@@ -196,6 +218,11 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       console.info(
         'Collection metadata successfully prepared on s3. Starting upload to IPFS.',
       );
+
+      collectionMetadata.currentStep =
+        PrepareCollectionMetadataSteps.UPLOAD_METADATA_TO_IPFS;
+      await collectionMetadata.update();
+
       if (
         env.APP_ENV != AppEnvironment.TEST &&
         env.APP_ENV != AppEnvironment.LOCAL_DEV
@@ -205,25 +232,25 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
           [
             {
-              ...data,
-              currentStep: 3,
+              collectionMetadataId: collectionMetadata.id,
             },
           ],
           null,
           null,
         );
-        return true;
-      } else {
-        data.currentStep = 3;
       }
+      return true;
     }
 
     //Sync metadata to IPFS --> STEP 3
-    if (data.currentStep == 3) {
+    if (
+      collectionMetadata.currentStep ==
+      PrepareCollectionMetadataSteps.UPLOAD_METADATA_TO_IPFS
+    ) {
       const metadataSession = await new FileUploadSession(
         {},
         this.context,
-      ).populateByUUID(data.metadataSession);
+      ).populateByUUID(collectionMetadata.metadataSession);
 
       const metadataFURs = (
         await new FileUploadRequest(
@@ -249,8 +276,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
           [
             {
-              ...data,
-              currentStep: 3,
+              collectionMetadataId: collectionMetadata.id,
             },
           ],
           null,
@@ -258,6 +284,9 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
         );
 
         return true;
+      } else {
+        metadataSession.sessionStatus = FileUploadSessionStatus.FINISHED;
+        await metadataSession.update();
       }
 
       //Publish to IPNS, Pin to IPFS, Remove from S3, ...
@@ -266,7 +295,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
         `pinning metadata CID (${metadataFiles.wrappedDirCid}) to IPNS`,
       );
 
-      if (data.useApillonIpfsGateway) {
+      if (collectionMetadata.useApillonIpfsGateway) {
         //If ipnsId is not specified in data, get first ipns record in bucket
         if (!data.ipnsId) {
           const ipnses = await bucket.getBucketIpnsRecords();
@@ -323,6 +352,10 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
         env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
         `${BucketType[bucket.bucketType]}_sessions/${bucket.id}`,
       );
+
+      collectionMetadata.currentStep =
+        PrepareCollectionMetadataSteps.METADATA_SUCCESSFULLY_PREPARED;
+      await collectionMetadata.update();
 
       await this.writeEventLog({
         logType: LogType.INFO,

@@ -21,6 +21,7 @@ import { ProjectConfig } from '../config/models/project-config.model';
 import { IPFSService } from '../ipfs/ipfs.service';
 import { Ipns } from '../ipns/models/ipns.model';
 import { StorageService } from '../storage/storage.service';
+import { CollectionMetadata } from './modules/collection-metadata.model';
 
 export class NftStorageService {
   static async prepareBaseUriForCollection(
@@ -111,6 +112,16 @@ export class NftStorageService {
       );
     }
 
+    //Create collection metadata db record
+    const collectionMetadata = await new CollectionMetadata(
+      {
+        ...event.body,
+        bucket_uuid: bucket.bucket_uuid,
+        ipnsId: ipnsDbRecord.id,
+      },
+      context,
+    ).insert();
+
     //Start worker which will prepare images and metadata and deploy contract
     if (
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||
@@ -123,11 +134,7 @@ export class NftStorageService {
         params: { FunctionName: 'test' },
       };
       const parameters = {
-        collection_uuid: event.body.collection_uuid,
-        imagesSession: event.body.imagesSession,
-        metadataSession: event.body.metadataSession,
-        ipnsId: ipnsDbRecord?.id,
-        useApillonIpfsGateway: event.body.useApillonIpfsGateway,
+        collectionMetadataId: collectionMetadata.id,
       };
       const wd = new WorkerDefinition(
         serviceDef,
@@ -143,12 +150,7 @@ export class NftStorageService {
         QueueWorkerType.EXECUTOR,
       );
       await worker.runExecutor({
-        collection_uuid: event.body.collection_uuid,
-        bucket_uuid: bucket.bucket_uuid,
-        imagesSession: event.body.imagesSession,
-        metadataSession: event.body.metadataSession,
-        ipnsId: ipnsDbRecord?.id,
-        useApillonIpfsGateway: event.body.useApillonIpfsGateway,
+        collectionMetadataId: collectionMetadata.id,
       });
 
       if (event.body.useApillonIpfsGateway) {
@@ -166,12 +168,7 @@ export class NftStorageService {
         WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
         [
           {
-            collection_uuid: event.body.collection_uuid,
-            bucket_uuid: bucket.bucket_uuid,
-            imagesSession: event.body.imagesSession,
-            metadataSession: event.body.metadataSession,
-            ipnsId: ipnsDbRecord?.id,
-            useApillonIpfsGateway: event.body.useApillonIpfsGateway,
+            collectionMetadataId: collectionMetadata.id,
           },
         ],
         null,
