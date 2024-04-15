@@ -41,6 +41,8 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
 
     const processFilesInSyncWorker = data?.processFilesInSyncWorker;
     const session_uuid = data?.session_uuid;
+    data.wrappingDirectoryName = data?.wrappingDirectoryName?.trim();
+
     let files = [];
     let bucket: Bucket = undefined;
     let session: FileUploadSession = undefined;
