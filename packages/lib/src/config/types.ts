@@ -750,7 +750,6 @@ export enum QuotaCode {
   MAX_NFT_COLLECTIONS = 9,
   MAX_STORAGE = 10,
   MAX_BANDWIDTH = 11,
-  MAX_COMPUTING_CONTRACTS = 12,
 }
 
 /**
@@ -772,7 +771,6 @@ export enum OauthLinkType {
 
 export enum CacheKeyPrefix {
   BUCKET_LIST = 'bucket-list',
-  STORAGE_INFO = 'storage-info',
 
   AUTH_USER_DATA = 'auth-user-data',
 
