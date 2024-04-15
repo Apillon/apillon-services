@@ -1,4 +1,3 @@
-import { Server } from 'ganache';
 import { ServiceStage, Stage } from '../interfaces/stage.interface';
 import { Wallet } from '@apillon/blockchain/src/modules/wallet/wallet.model';
 import { ChainType, SubstrateChain } from '@apillon/lib';
@@ -31,7 +30,6 @@ export class TestSubstrateBlockchain {
   private readonly chainId: SubstrateChain;
   private readonly host: string;
   private readonly port: number;
-  private readonly server: Server;
   private readonly accounts: string[] = [];
   private readonly keys = KEYS;
   private controller: AbortController;
@@ -77,7 +75,7 @@ export class TestSubstrateBlockchain {
         '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY';
       const deployerPrivateKey = this.getPrivateKey(deployerAddress);
       await this.storeWallet(deployerAddress, deployerPrivateKey);
-      console.info('startGanacheRPCServer SUCCESS!');
+      console.info('startSwankyRPCServer SUCCESS!');
     } catch (error) {
       console.error('ERROR configuring endpoints and wallets!');
       console.error(error);
