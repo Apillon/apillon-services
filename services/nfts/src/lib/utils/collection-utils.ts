@@ -167,6 +167,7 @@ export async function deployNFTCollectionContract(
   collection.transactionHash = response.data.transactionHash;
   const { id } = await new ContractVersion({}, context).getContractVersion(
     collection.collectionType,
+    collection.chainType,
   );
   collection.contractVersion_id = id;
 
