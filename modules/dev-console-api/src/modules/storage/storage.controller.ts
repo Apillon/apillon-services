@@ -1,26 +1,17 @@
 import {
+  BaseProjectQueryFilter,
   CreateS3UrlsForUploadDto,
   DefaultPermission,
-  FileUploadsQueryFilter,
-  RoleGroup,
-  FilesQueryFilter,
-  LinkOnIpfsQueryFilter,
-  CacheKeyPrefix,
-  ValidateFor,
   DefaultUserRole,
   EndFileUploadSessionDto,
-  BaseProjectQueryFilter,
-  CacheKeyTTL,
   FileUploadSessionQueryFilter,
+  FileUploadsQueryFilter,
+  FilesQueryFilter,
+  LinkOnIpfsQueryFilter,
+  RoleGroup,
+  ValidateFor,
 } from '@apillon/lib';
-import {
-  CacheInterceptor,
-  Cache,
-  Ctx,
-  Permissions,
-  Validation,
-  CacheByProject,
-} from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -32,16 +23,13 @@ import {
   Post,
   Query,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { StorageService } from './storage.service';
-
-@Controller('storage')
 @Permissions({ permission: DefaultPermission.STORAGE })
-@UseInterceptors(CacheInterceptor)
+// @UseInterceptors(CacheInterceptor)
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
@@ -49,10 +37,6 @@ export class StorageController {
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: BaseProjectQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
-  @CacheByProject({
-    keyPrefix: CacheKeyPrefix.STORAGE_INFO,
-    ttl: CacheKeyTTL.SHORT,
-  })
   async getStorageInfo(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseProjectQueryFilter,
