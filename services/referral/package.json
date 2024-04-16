@@ -27,7 +27,6 @@
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
     "aws-lambda": "^1.0.7",
-    "axios": "^1.6.8",
     "twitter-api-v2": "^1.16.1"
   },
   "devDependencies": {

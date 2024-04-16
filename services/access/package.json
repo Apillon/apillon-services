@@ -29,7 +29,6 @@
     "@apillon/lib": "*",
     "@apillon/sdk": "^3.0.0",
     "@apillon/service-lib": "*",
-    "axios": "^1.6.8",
     "bcryptjs": "^2.4.3"
   },
   "devDependencies": {

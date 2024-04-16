@@ -27,7 +27,6 @@
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
-    "axios": "^1.6.8",
     "colors": "^1.4.0",
     "dotenv": "^16.4.5",
     "ethers": "^5.7.2",

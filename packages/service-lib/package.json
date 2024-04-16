@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@apillon/lib": "*",
-    "@middy/core": "^3.3.1"
+    "@middy/core": "^3.3.1",
+    "axios": "^1.6.7"
   }
 }

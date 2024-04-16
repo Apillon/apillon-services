@@ -33,7 +33,6 @@
     "@polkadot/api": "10.12.2",
     "@polkadot/keyring": "^10.1.9",
     "@polkadot/util": "^10.1.10",
-    "axios": "^1.6.8",
     "valid-url": "^1.0.9"
   },
   "devDependencies": {
