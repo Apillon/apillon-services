@@ -215,3 +215,8 @@ export enum Defaults {
   DEFAULT_STORAGE_IN_BYTES = Defaults.DEFAULT_STORAGE *
     Defaults.GYGABYTE_IN_BYTES,
 }
+
+export enum IpfsBandwidthAlertStatus {
+  NEAR_QUOTA_ALERT_SENT = 1,
+  EXCEEDED_QUOTA_ALERT_SENT = 2,
+}

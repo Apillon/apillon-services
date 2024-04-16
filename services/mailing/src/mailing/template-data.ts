@@ -281,6 +281,53 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
+    [EmailTemplate.IPFS_BANDWIDTH_NEAR_QUOTA]: {
+      subject: `Important: Your storage bandwidth is close to the limit`,
+      title: `Your storage bandwidth is close to the limit`,
+      text: `
+      <p>Dear Apillonian,</p><br>
+
+      <p>Your project has consumed almost all of the storage bandwidth it has available for this month.<p><br>
+      <p><b>Used storage bandwidth: ${data.usedBandwidth}${data.availableBandwidth}/</b></p><br><br>
+      <p>Ip project exceeds storage bandwidth, then Apillon IPFS gateway starts to block request.</p>
+      <p>This means that all files, NFT metadata and most important all websites in this project, won't be accessible via Apillon IPFS gateway. </p>
+
+      <p>You can increase available storage bandwidth by subscribing to higher plan in <a href="https://app.apillon.io/dashboard/payments">Billing and Usage section</a>.</p><br>`,
+      actionUrl: data.actionUrl,
+      actionText: 'Subscribe to plan',
+      text2: `
+      <p>You will receive another email, when and if project exceeds storage bandwidth.</p><br>
+      <p>
+        If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        <br/><br/><br/>
+        Cheers,<br/>
+        The Apillon team
+      </p>
+      `,
+    },
+    [EmailTemplate.IPFS_BANDWIDTH_EXCEEDED_QUOTA]: {
+      subject: `Important: Your storage bandwidth has exceeded the limit`,
+      title: `Your storage bandwidth has exceeded the limit`,
+      text: `
+      <p>Dear Apillonian,</p><br>
+
+      <p>Your project has consumed all of the available storage bandwidth for this month.<p><br>
+      <p><b>Used storage bandwidth: ${data.usedBandwidth}${data.availableBandwidth}/</b></p><br><br>
+      <p>Apillon IPFS gateway will start to block request for your content on IPFS.</p>
+      <p>All files, NFT metadata and most important all websites in this project, are now not accessible via Apillon IPFS gateway.</p>
+
+      <p>You can increase available storage bandwidth by subscribing to higher plan in <a href="https://app.apillon.io/dashboard/payments">Billing and Usage section</a>.</p><br>`,
+      actionUrl: data.actionUrl,
+      actionText: 'Subscribe to plan',
+      text2: `
+      <p>
+        If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        <br/><br/><br/>
+        Cheers,<br/>
+        The Apillon team
+      </p>
+      `,
+    },
   };
 
   return templateData[key];

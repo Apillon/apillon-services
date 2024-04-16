@@ -67,6 +67,17 @@ export class IpfsBandwidth extends AdvancedSQLModel {
   })
   public bandwidth: number;
 
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public alertStatus: number;
+
   /**
    * Populates used ipfs bandwidth for project
    * @param project_uuid
