@@ -57,9 +57,15 @@ export class TestSubstrateBlockchain {
   async start() {
     this.controller = new AbortController();
     const packageRoot = path.resolve(__dirname, '../../..');
-    spawn('npm', ['run', 'swanky:node'], {
+    const swankyNode = spawn('npm', ['run', 'swanky:node'], {
       signal: this.controller.signal,
       cwd: packageRoot,
+    });
+    swankyNode.stderr.on('data', (data) => {
+      console.log('SWANKY_NODE:', data.toString());
+    });
+    swankyNode.on('close', (code) => {
+      console.log(`SWANKY_NODE process exited with code ${code}`);
     });
     exec('npm run swanky:deploy', {
       cwd: packageRoot,
