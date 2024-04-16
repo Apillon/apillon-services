@@ -10,7 +10,6 @@ import {
   Stage,
   TestUser,
   createTestReferralProduct,
-  createTestProject,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
@@ -118,7 +117,7 @@ describe('Referral tests', () => {
     });
 
     test('Confirm user retweet', async () => {
-      await stage.referralSql.paramExecute(
+      await stage.sql.referral.paramExecute(
         `
         UPDATE ${DbTables.PLAYER}
         SET twitter_id = @twitter_id
@@ -162,7 +161,7 @@ describe('Referral tests', () => {
       expect(response.status).toBe(400);
     });
     test('User should be able to order product with sufficient balance once', async () => {
-      await stage.referralSql.paramExecute(
+      await stage.sql.referral.paramExecute(
         `
         INSERT INTO ${DbTables.TRANSACTION} (player_id, direction, amount, status)
         VALUES (@player_id, ${TransactionDirection.DEPOSIT}, 14, 5)
@@ -186,7 +185,7 @@ describe('Referral tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
 
-      await stage.referralSql.paramExecute(
+      await stage.sql.referral.paramExecute(
         `
       INSERT INTO ${DbTables.TRANSACTION} (player_id, direction, amount, status)
       VALUES (@player_id, ${TransactionDirection.DEPOSIT}, 14, 5)

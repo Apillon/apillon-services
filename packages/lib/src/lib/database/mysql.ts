@@ -1,9 +1,10 @@
 import * as mysql from 'mysql2/promise';
 import { PoolConnection } from 'mysql2/promise';
-import { writeLog } from './../logger';
+import { writeLog } from '../logger';
 import { env } from '../../config/env';
 import { AppEnvironment, LogType } from '../../config/types';
 import { isPlainObject } from '../utils';
+import { ConnectionOptions } from 'mysql2';
 
 export { PoolConnection } from 'mysql2/promise';
 
@@ -30,13 +31,7 @@ export class MySql {
   /**
    * MySql client constructor
    */
-  public constructor(connectionOptions: {
-    host: string;
-    port: number;
-    database: string;
-    user: string;
-    password: string;
-  }) {
+  public constructor(connectionOptions: ConnectionOptions) {
     this.host = connectionOptions.host;
     this.port = connectionOptions.port;
     this.database = connectionOptions.database;
@@ -183,6 +178,8 @@ export class MySql {
    *
    * @param procedure procedure name
    * @param data Object with call parameters
+   * @param connection pool connection
+   * @param options connection options
    * @returns array of results from database
    */
   public async call(

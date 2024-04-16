@@ -61,7 +61,7 @@ export class TestBlockchain {
   static fromStage(stage: Stage, chainId: EvmChain, port = 8545) {
     return new TestBlockchain(
       {
-        db: stage.blockchainSql,
+        db: stage.sql.blockchain,
         context: stage.blockchainContext,
       },
       chainId,

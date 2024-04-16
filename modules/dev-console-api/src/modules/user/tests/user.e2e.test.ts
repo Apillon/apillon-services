@@ -1,17 +1,21 @@
 import {
   generateJwtToken,
   getFaker,
+  JwtExpireTime,
   JwtTokenType,
   parseJwtToken,
 } from '@apillon/lib';
 import * as request from 'supertest';
-import { releaseStage, Stage } from '@apillon/tests-lib';
-import { createTestUser, TestUser } from '@apillon/tests-lib';
+import {
+  createTestUser,
+  releaseStage,
+  Stage,
+  TestUser,
+} from '@apillon/tests-lib';
 import { ValidateEmailDto } from '../dtos/validate-email.dto';
 import { setupTest } from '../../../../test/helpers/setup';
 import { createTestKeyring } from '@polkadot/keyring';
 import { u8aToHex } from '@polkadot/util';
-import { JwtExpireTime } from '@apillon/lib';
 
 describe('Auth tests', () => {
   let stage: Stage;
@@ -69,7 +73,7 @@ describe('Auth tests', () => {
     newUserData.authToken = response2.body.data.token;
     newUserData.user_uuid = response2.body.data.user_uuid;
 
-    const sqlRes1 = await stage.devConsoleSql.paramExecute(
+    const sqlRes1 = await stage.sql.devConsole.paramExecute(
       `SELECT * from user WHERE user_uuid = @uuid`,
       { uuid: newUserData.user_uuid },
     );
@@ -77,7 +81,7 @@ describe('Auth tests', () => {
     expect(sqlRes1.length).toBe(1);
     expect(sqlRes1[0].user_uuid).toBe(response2.body.data.user_uuid);
 
-    const sqlRes2 = await stage.amsSql.paramExecute(
+    const sqlRes2 = await stage.sql.ams.paramExecute(
       `SELECT * from authUser WHERE user_uuid = @uuid`,
       { uuid: newUserData.user_uuid },
     );
@@ -268,10 +272,9 @@ describe('Auth tests', () => {
     const authMsgResp = await request(stage.http).get('/users/auth-msg');
     expect(authMsgResp.status).toBe(200);
 
-    const signature = u8aToHex(
+    input.signature = u8aToHex(
       testUserKeyPair2.sign(authMsgResp.body.data.message),
     );
-    input.signature = signature;
     input.timestamp = authMsgResp.body.data.timestamp;
     response = await request(stage.http)
       .post('/users/validate-email')
@@ -354,7 +357,7 @@ describe('Auth tests', () => {
     expect(resp1.body.data.user_uuid).toBeTruthy();
 
     const userData = resp1.body.data;
-    const sqlRes1 = await stage.devConsoleSql.paramExecute(
+    const sqlRes1 = await stage.sql.devConsole.paramExecute(
       `SELECT * from user WHERE user_uuid = @uuid`,
       { uuid: userData.user_uuid },
     );
@@ -362,7 +365,7 @@ describe('Auth tests', () => {
     expect(sqlRes1.length).toBe(1);
     expect(sqlRes1[0].user_uuid).toBe(resp1.body.data.user_uuid);
 
-    const sqlRes2 = await stage.amsSql.paramExecute(
+    const sqlRes2 = await stage.sql.ams.paramExecute(
       `SELECT * from authUser WHERE user_uuid = @uuid`,
       { uuid: userData.user_uuid },
     );
