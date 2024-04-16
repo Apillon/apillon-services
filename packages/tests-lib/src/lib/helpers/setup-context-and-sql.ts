@@ -194,7 +194,7 @@ export async function setupTestContextAndSql(): Promise<Stage> {
     };
   } catch (e) {
     console.error(e);
-    throw new Error('Unable to set up test conteksts and sqls');
+    throw new Error(`Unable to set up test contexts and SQLs: ${e}`);
   }
 }
 
@@ -295,6 +295,22 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
       await stage.blockchainSql.close();
     } catch (error) {
       throw new Error('Error when releasing Blockchain stage: ' + error);
+    }
+  }
+
+  if (stage.computingSql) {
+    try {
+      await stage.computingSql.close();
+    } catch (error) {
+      throw new Error('Error when releasing Computing stage: ' + error);
+    }
+  }
+
+  if (stage.socialSql) {
+    try {
+      await stage.socialSql.close();
+    } catch (error) {
+      throw new Error('Error when releasing Social stage: ' + error);
     }
   }
 };

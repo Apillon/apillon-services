@@ -1,8 +1,7 @@
 import {
   ChainType,
-  EvmChain,
   NFTCollectionType,
-  QuotaCode,
+  SubstrateChain,
   TransactionStatus,
 } from '@apillon/lib';
 import {
@@ -11,28 +10,23 @@ import {
 } from '@apillon/nfts/src/config/types';
 import { Collection } from '@apillon/nfts/src/modules/nfts/models/collection.model';
 import {
-  Stage,
-  TestBlockchain,
-  TestUser,
   createTestProject,
   createTestUser,
   getNftTransactionStatus,
   insertNftContractVersion,
-  overrideDefaultQuota,
   releaseStage,
+  Stage,
+  substrateGenericNftAbi,
+  TestSubstrateBlockchain,
+  TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
-import { evmGenericNftAbi, evmNestableNftAbi } from '@apillon/tests-lib';
-import {
-  evmGenericNftBytecode,
-  evmNestableNftBytecode,
-} from '@apillon/tests-lib';
 
-describe('Apillon Console NFTs tests for Astar', () => {
-  const CHAIN_ID = EvmChain.ASTAR;
-  let blockchain: TestBlockchain;
+describe('Apillon Console NFTs tests for Astar substrate', () => {
+  const CHAIN_ID = SubstrateChain.ASTAR;
+  let blockchain: TestSubstrateBlockchain;
   let stage: Stage;
 
   let testUser: TestUser;
@@ -42,43 +36,29 @@ describe('Apillon Console NFTs tests for Astar', () => {
   beforeAll(async () => {
     stage = await setupTest();
 
-    blockchain = TestBlockchain.fromStage(stage, CHAIN_ID);
+    blockchain = TestSubstrateBlockchain.fromStage(stage, CHAIN_ID);
     await blockchain.start();
 
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
     testProject = await createTestProject(testUser, stage);
 
-    await overrideDefaultQuota(
-      stage,
-      testProject.project_uuid,
-      QuotaCode.MAX_NFT_COLLECTIONS,
-      10,
-    );
-
     await insertNftContractVersion(
       stage.nftsContext,
-      ChainType.EVM,
+      ChainType.SUBSTRATE,
       NFTCollectionType.GENERIC,
-      evmGenericNftAbi,
-      evmGenericNftBytecode,
-    );
-    await insertNftContractVersion(
-      stage.nftsContext,
-      ChainType.EVM,
-      NFTCollectionType.NESTABLE,
-      evmNestableNftAbi,
-      evmNestableNftBytecode,
+      substrateGenericNftAbi,
     );
   });
 
-  describe('Astar NFT Collection tests', () => {
+  describe('Astar substrate NFT Collection tests', () => {
     test('User should be able to create new Astar collection with existing baseURI', async () => {
       const response = await request(stage.http)
-        .post(`/nfts/collections?project_uuid=${testProject.project_uuid}`)
+        .post('/nfts/collections/substrate')
         .send({
           collectionType: 1,
+          chainType: ChainType.SUBSTRATE,
           symbol: 'ANFT',
-          name: 'Astar Test NFT Collection',
+          name: 'Astar Substrate Test NFT Collection',
           maxSupply: 50,
           dropPrice: 0,
           project_uuid: testProject.project_uuid,
@@ -91,11 +71,14 @@ describe('Apillon Console NFTs tests for Astar', () => {
           chain: CHAIN_ID,
           isRevokable: true,
           isSoulbound: false,
-          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
+          royaltiesAddress: 'WUxAYMWgkdyLYmGHio2YFPQqkjPUuwgdLvzweurbsgJxzdA',
           royaltiesFees: 0,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
+      expect(response.body.data.collectionStatus).toBe(
+        CollectionStatus.DEPLOYING,
+      );
       expect(response.body.data.contractAddress).toBeTruthy();
 
       //Get collection from DB
@@ -128,7 +111,7 @@ describe('Apillon Console NFTs tests for Astar', () => {
       const response = await request(stage.http)
         .post(`/nfts/collections/${newCollection.collection_uuid}/mint`)
         .send({
-          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+          receivingAddress: 'WUxAYMWgkdyLYmGHio2YFPQqkjPUuwgdLvzweurbsgJxzdA',
           quantity: 1,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
@@ -148,7 +131,7 @@ describe('Apillon Console NFTs tests for Astar', () => {
           `/nfts/collections/${newCollection.collection_uuid}/transferOwnership`,
         )
         .send({
-          address: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+          address: 'WUxAYMWgkdyLYmGHio2YFPQqkjPUuwgdLvzweurbsgJxzdA',
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
@@ -168,7 +151,7 @@ describe('Apillon Console NFTs tests for Astar', () => {
       const response = await request(stage.http)
         .post(`/nfts/collections/${newCollection.collection_uuid}/mint`)
         .send({
-          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
+          receivingAddress: 'WUxAYMWgkdyLYmGHio2YFPQqkjPUuwgdLvzweurbsgJxzdA',
           quantity: 1,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
