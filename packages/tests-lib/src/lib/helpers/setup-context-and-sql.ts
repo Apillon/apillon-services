@@ -79,12 +79,15 @@ const SQL_CONFIGS: ServiceObject<ConnectionOptions> = {
   },
 };
 
-async function createServiceContext(config: ConnectionOptions) {
+async function createServiceContext(
+  serviceName: string,
+  config: ConnectionOptions,
+) {
   const mysql = new MySql(config);
   await mysql.connect();
-  const ctx = new TestContext();
-  ctx.mysql = mysql;
-  return ctx;
+  const context = new TestContext();
+  context.mysql = mysql;
+  return { serviceName, context };
 }
 
 export async function setupTestContextAndSql(): Promise<Stage> {
@@ -101,11 +104,14 @@ export async function setupTestContextAndSql(): Promise<Stage> {
 
     // init contexts and SQL
     const sql = {};
-    const context: Partial<ServiceObject<TestContext>> = {};
-    for (const [serviceName, config] of Object.entries(SQL_CONFIGS)) {
-      const ctx = await createServiceContext(config);
-      context[serviceName] = ctx;
-      sql[serviceName] = ctx.mysql;
+    const contexts: Partial<ServiceObject<TestContext>> = {};
+    const promises = Object.entries(SQL_CONFIGS).map(([serviceName, config]) =>
+      createServiceContext(serviceName, config),
+    );
+    const results = await Promise.all(promises);
+    for (const { serviceName, context } of results) {
+      contexts[serviceName] = context;
+      sql[serviceName] = context.mysql;
     }
 
     return {
@@ -113,21 +119,29 @@ export async function setupTestContextAndSql(): Promise<Stage> {
       app: undefined,
       lmasMongo,
       lmasContext,
-      devConsoleContext: context.devConsole,
-      amsContext: context.ams,
-      storageContext: context.storage,
-      configContext: context.config,
-      authApiContext: context.authApi,
-      referralContext: context.referral,
-      nftsContext: context.nfts,
-      blockchainContext: context.blockchain,
-      socialContext: context.social,
-      computingContext: context.computing,
+      devConsoleContext: contexts.devConsole,
+      amsContext: contexts.ams,
+      storageContext: contexts.storage,
+      configContext: contexts.config,
+      authApiContext: contexts.authApi,
+      referralContext: contexts.referral,
+      nftsContext: contexts.nfts,
+      blockchainContext: contexts.blockchain,
+      socialContext: contexts.social,
+      computingContext: contexts.computing,
       sql: sql as ServiceObject<MySql>,
     };
   } catch (e) {
     console.error(e);
     throw new Error(`Unable to set up test contexts and SQLs: ${e}`);
+  }
+}
+
+async function closeSqlConnection(serviceName: string, sql: MySql) {
+  try {
+    await sql.close();
+  } catch (error) {
+    throw Error(`Unable to close sql connection for ${serviceName}: ${error}`);
   }
 }
 
@@ -163,17 +177,15 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
   }
 
   // close SQL connections
-  const closeSqlErrors = [];
-  for (const [serviceName, sql] of Object.entries(stage.sql)) {
-    try {
-      await sql.close();
-    } catch (error) {
-      closeSqlErrors.push(serviceName);
-    }
-  }
-  if (closeSqlErrors.length > 0) {
-    throw new Error(
-      'Error when releasing stages: ' + closeSqlErrors.join(', '),
+  const promises = Object.entries(stage.sql).map(([serviceName, sql]) =>
+    closeSqlConnection(serviceName, sql),
+  );
+  const results = await Promise.allSettled(promises);
+  const errors = results.filter((result) => result.status === 'rejected');
+  if (errors.length > 0) {
+    console.error(
+      'Error when releasing stages: ' +
+        errors.map((error) => error['reason']).join(',\n'),
     );
   }
 };
