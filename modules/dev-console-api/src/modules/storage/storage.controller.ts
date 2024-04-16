@@ -14,7 +14,6 @@ import {
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
-  Controller,
   Delete,
   Get,
   HttpCode,

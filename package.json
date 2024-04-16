@@ -20,6 +20,7 @@
     "test-server-min": "npx turbo run test-server --filter=!@apillon/referral --filter=!@apillon/mailing --filter=!@apillon/blockchain  --filter=!@apillon/nfts --filter=!@apillon/authentication",
     "test-server-referral": "npx turbo run test-server --filter=@apillon/referral --filter=@apillon/access --filter=@apillon/monitoring",
     "test-server-nfts": "npx turbo run test-server --filter=@apillon/access --filter=@apillon/monitoring --filter=@apillon/storage --filter=@apillon/mailing --filter=@apillon/config  --filter=@apillon/blockchain --filter=@apillon/nfts",
+    "test-server-storage": "npx turbo run test-server --filter=@apillon/access --filter=@apillon/monitoring --filter=@apillon/storage --filter=@apillon/mailing --filter=@apillon/config  --filter=@apillon/blockchain",
     "lint": "npx turbo run lint --force",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "deploy:dev": "npx turbo run deploy:dev -vvv --force --continue=false --filter=!@apillon/api --filter=!@apillon/authentication-api",
