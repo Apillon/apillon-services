@@ -40,7 +40,7 @@ export class TestSubstrateBlockchain {
     this.host = '127.0.0.1';
     this.port = port;
 
-    this.accounts = Object.keys(this.keys);
+    // this.accounts = Object.keys(this.keys);
   }
 
   static fromStage(stage: Stage, chainId: SubstrateChain, port = 9944) {
