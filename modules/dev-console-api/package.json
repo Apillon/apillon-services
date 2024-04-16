@@ -41,16 +41,12 @@
     "@nestjs/platform-express": "^10.3.7",
     "@polkadot/util": "^11.0.2",
     "@polkadot/util-crypto": "^11.0.2",
-    "@rawmodel/core": "^3.3.4",
-    "@rawmodel/parsers": "^3.3.4",
-    "@rawmodel/validators": "^3.3.4",
     "@types/supertest": "^2.0.11",
     "aws-serverless-express": "^3.4.0",
     "helmet": "^7.1.0",
     "reflect-metadata": "^0.2.2",
     "safe-buffer": "^5.2.1",
-    "stripe": "^15.0.0",
-    "uuid": "^9.0.1"
+    "stripe": "^15.1.0"
   },
   "devDependencies": {
     "@apillon/tests-lib": "*",
@@ -62,9 +58,8 @@
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.12.7",
-    "@types/uuid": "^9.0.8",
     "eslint-config-common": "*",
-    "jest": "29.7.0",
+    "jest": "^29.7.0",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.5",
     "source-map-support": "^0.5.21",
