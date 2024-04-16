@@ -1,6 +1,8 @@
 import {
+  ChainType,
   DefaultUserRole,
   EvmChain,
+  NFTCollectionType,
   QuotaCode,
   SqlModelStatus,
   TransactionStatus,
@@ -20,7 +22,7 @@ import {
   TestBlockchain,
   TestUser,
   getNftTransactionStatus,
-  insertEvmNftContractVersion,
+  insertNftContractVersion,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
@@ -29,6 +31,11 @@ import { Directory } from '@apillon/storage/src/modules/directory/models/directo
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import { expect } from '@jest/globals';
+import { evmGenericNftAbi, evmNestableNftAbi } from '@apillon/tests-lib';
+import {
+  evmGenericNftBytecode,
+  evmNestableNftBytecode,
+} from '@apillon/tests-lib';
 
 describe('Apillon Console NFTs tests for Moonbase', () => {
   const CHAIN_ID = EvmChain.MOONBASE;
@@ -50,7 +57,20 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
     await blockchain.start();
     deployerAddress = blockchain.getWalletAddress(0);
 
-    await insertEvmNftContractVersion(stage.nftsContext);
+    await insertNftContractVersion(
+      stage.nftsContext,
+      ChainType.EVM,
+      NFTCollectionType.GENERIC,
+      evmGenericNftAbi,
+      evmGenericNftBytecode,
+    );
+    await insertNftContractVersion(
+      stage.nftsContext,
+      ChainType.EVM,
+      NFTCollectionType.NESTABLE,
+      evmNestableNftAbi,
+      evmNestableNftBytecode,
+    );
 
     // test collection
     testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
@@ -109,7 +129,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.body.data.items[0]?.dropPrice).toBe(0);
       expect(response.body.data.items[0]?.drop).toBe(false);
       expect(response.body.data.items[0]?.isSoulbound).toBe(false);
-      expect(response.body.data.items[0]?.isRevokable).toBeTruthy();
+      expect(response.body.data.items[0]?.isRevokable).toBe(false);
       expect(response.body.data.items[0]?.dropStart).toBeTruthy();
       expect(response.body.data.items[0]?.dropReserve).toBeTruthy();
       expect(response.body.data.items[0]?.royaltiesFees).toBe(0);
@@ -477,6 +497,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
 
   describe('NFT Collection limit tests', () => {
     test('User should NOT be able to mint more NFTs that are supplied in collection', async () => {
+      newCollection.contractAddress = '0x0';
+      await newCollection.update();
       const response = await request(stage.http)
         .post(`/nfts/collections/${newCollection.collection_uuid}/mint`)
         .send({

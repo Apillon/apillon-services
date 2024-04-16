@@ -40,7 +40,7 @@ export async function setupTest(
     await rebuildTestDatabases();
   } catch (err) {
     console.error(err);
-    throw new Error('rebuildTestDatabases failed');
+    throw new Error(`rebuildTestDatabases failed: ${err}`);
   }
 
   try {
@@ -64,6 +64,6 @@ export async function setupTest(
     return stage;
   } catch (e) {
     console.error(e);
-    throw new Error('Unable to set up env');
+    throw new Error(`Unable to set up env: ${e}`);
   }
 }
