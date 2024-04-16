@@ -152,6 +152,19 @@ export class CollectionMetadata extends UuidSqlModel {
   })
   public currentStep: number;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public lastError: string;
+
   /*public async getList(context: ServiceContext, filter: IpnsQueryFilter) {
     const b: Bucket = await new Bucket({}, context).populateByUUID(
       filter.bucket_uuid,

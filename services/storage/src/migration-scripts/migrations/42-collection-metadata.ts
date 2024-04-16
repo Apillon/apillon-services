@@ -14,6 +14,7 @@ export async function upgrade(
   \`useApillonIpfsGateway\` BOOLEAN DEFAULT 1,
   \`ipnsId\` INT NULL,
   \`currentStep\` INT NULL,
+  \`lastError\` TEXT NULL,
   \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   \`createUser\` INT NULL,
   \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
