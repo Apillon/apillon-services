@@ -43,7 +43,6 @@
     "@polkadot/util-crypto": "^11.0.2",
     "@types/supertest": "^2.0.11",
     "aws-serverless-express": "^3.4.0",
-    "helmet": "^7.1.0",
     "reflect-metadata": "^0.2.2",
     "safe-buffer": "^5.2.1",
     "stripe": "^15.1.0"

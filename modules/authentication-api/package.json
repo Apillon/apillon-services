@@ -37,7 +37,6 @@
     "aws-serverless-express": "^3.4.0",
     "bn": "^1.0.5",
     "error-stack-parser": "^2.1.4",
-    "helmet": "^7.1.0",
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {

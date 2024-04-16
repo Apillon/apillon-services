@@ -38,8 +38,6 @@
     "@nestjs/platform-express": "^10.3.7",
     "aws-crt": "^1.21.1",
     "aws-serverless-express": "^3.4.0",
-    "debug": "^4.3.4",
-    "helmet": "^7.1.0",
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
