@@ -13,6 +13,13 @@ export class FileUploadsQueryFilter extends BaseQueryFilter {
   public bucket_uuid: string;
 
   @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public session_uuid: string;
+
+  @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
