@@ -47,11 +47,9 @@ describe('Referral tests', () => {
     test('User should be able to create referral player', async () => {
       const response = await request(stage.http)
         .post(`/referral`)
-        .send({ termsAccepted: true })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
       expect(response.body.data.refCode).toHaveLength(5);
-      // expect(response.body.data.termsAccepted).toBeTruthy();
       playerId = response.body.data.id;
       refCode = response.body.data.refCode;
     });
@@ -83,14 +81,7 @@ describe('Referral tests', () => {
   });
 
   describe('Get referral player tests', () => {
-    test.skip('User should not be able to get referral if did not accept terms', async () => {
-      const response = await request(stage.http)
-        .get(`/referral`)
-        .set('Authorization', `Bearer ${newUserData.authToken}`);
-      expect(response.status).toBe(400);
-    });
-
-    test('User should be able to get referral if he accepted terms', async () => {
+    test('User should be able to get referral', async () => {
       const response = await request(stage.http)
         .get(`/referral`)
         .set('Authorization', `Bearer ${testUser.token}`);
@@ -210,7 +201,7 @@ describe('Referral tests', () => {
         .get(`/referral/airdrop-tasks`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      console.log(response.body.data);
+      expect(response.body.data.totalPoints).toBeGreaterThanOrEqual(10);
     });
   });
 });

@@ -25,6 +25,7 @@ import {
 } from './dtos/create-s3-urls-for-upload.dto';
 import { DomainQueryFilter } from './dtos/domain-query-filter.dto';
 import { FilesQueryFilter } from './dtos/files-query-filter.dto';
+import { FileUploadSessionQueryFilter } from './dtos/file-upload-session-query-filter.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -227,6 +228,14 @@ export class StorageMicroservice extends BaseService {
   public async listFileUploads(params: FileUploadsQueryFilter) {
     const data = {
       eventName: StorageEventType.LIST_FILE_UPLOAD,
+      query: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async listFileUploadSessions(params: FileUploadSessionQueryFilter) {
+    const data = {
+      eventName: StorageEventType.LIST_FILE_UPLOAD_SESSIONS,
       query: params.serialize(),
     };
     return await this.callService(data);

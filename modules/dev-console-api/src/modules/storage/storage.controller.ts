@@ -1,14 +1,15 @@
 import {
+  BaseProjectQueryFilter,
   CreateS3UrlsForUploadDto,
   DefaultPermission,
-  FileUploadsQueryFilter,
-  RoleGroup,
-  FilesQueryFilter,
-  LinkOnIpfsQueryFilter,
-  ValidateFor,
   DefaultUserRole,
   EndFileUploadSessionDto,
-  BaseProjectQueryFilter,
+  FileUploadSessionQueryFilter,
+  FileUploadsQueryFilter,
+  FilesQueryFilter,
+  LinkOnIpfsQueryFilter,
+  RoleGroup,
+  ValidateFor,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
@@ -22,7 +23,6 @@ import {
   Post,
   Query,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
@@ -31,7 +31,6 @@ import { StorageService } from './storage.service';
 
 @Controller('storage')
 @Permissions({ permission: DefaultPermission.STORAGE })
-// @UseInterceptors(CacheInterceptor)
 export class StorageController {
   constructor(private storageService: StorageService) {}
 
@@ -78,6 +77,25 @@ export class StorageController {
     @Query() query: FileUploadsQueryFilter,
   ) {
     return await this.storageService.listFileUploads(
+      context,
+      bucket_uuid,
+      query,
+    );
+  }
+
+  @Get(':bucket_uuid/file-upload-sessions')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({
+    dto: FileUploadSessionQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async listFileUploadSessions(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('bucket_uuid') bucket_uuid: string,
+    @Query() query: FileUploadSessionQueryFilter,
+  ) {
+    return await this.storageService.listFileUploadSessions(
       context,
       bucket_uuid,
       query,
