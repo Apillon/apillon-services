@@ -23,11 +23,14 @@ describe('Admin User tests', () => {
       env.ADMIN_CONSOLE_API_PORT_TEST,
       env.ADMIN_CONSOLE_API_HOST_TEST,
     );
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     testUserUuid = testUser.user.user_uuid;
     adminTestUser = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
+      stage.context.devConsole,
+      stage.context.access,
       DefaultUserRole.ADMIN,
     );
 
@@ -123,7 +126,7 @@ describe('Admin User tests', () => {
       ).toBeTruthy();
       expect(postResponse.body.data.user_uuid).toBe(testUserUuid);
 
-      const data = await stage.amsContext.mysql.paramExecute(
+      const data = await stage.context.access.mysql.paramExecute(
         `SELECT * FROM authUser_role where authUser_id = ${testUser.user.id}`,
       );
       const userRoleIds = data.map((r) => r.role_id);
@@ -142,7 +145,7 @@ describe('Admin User tests', () => {
       ).toBeFalsy();
       expect(response.body.data.user_uuid).toBe(testUserUuid);
 
-      const data = await stage.amsContext.mysql.paramExecute(
+      const data = await stage.context.access.mysql.paramExecute(
         `SELECT * FROM authUser_role where authUser_id = ${testUser.user.id}`,
       );
       const userRoleIds = data.map((r) => r.role_id);
@@ -181,7 +184,7 @@ describe('Admin User tests', () => {
       expect(postResponse.body.data.value).toBe(10);
       expect(postResponse.body.data.description).toBe('testing123');
 
-      const data = await stage.configContext.mysql.paramExecute(`
+      const data = await stage.context.config.mysql.paramExecute(`
         SELECT * from override WHERE object_uuid = '${testUserUuid}' and quota_id = ${QuotaCode.MAX_PROJECT_COUNT}`);
       expect(data[0].quota_id).toBe(QuotaCode.MAX_PROJECT_COUNT);
       expect(data[0].value).toBe(10); // From previous POST request insert
@@ -195,7 +198,7 @@ describe('Admin User tests', () => {
       expect(postResponse.status).toBe(200);
       expect(postResponse.body.data.data).toEqual(true);
 
-      const data = await stage.configContext.mysql.paramExecute(`
+      const data = await stage.context.config.mysql.paramExecute(`
         SELECT * from override WHERE object_uuid = '${testUserUuid}' and quota_id = ${QuotaCode.MAX_PROJECT_COUNT}`);
       expect(data).toHaveLength(0);
 

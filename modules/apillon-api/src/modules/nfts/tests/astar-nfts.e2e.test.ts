@@ -65,14 +65,14 @@ describe('Apillon API NFTs tests on Astar', () => {
     await blockchain.start();
 
     await insertNftContractVersion(
-      stage.nftsContext,
+      stage.context.nfts,
       ChainType.EVM,
       NFTCollectionType.GENERIC,
       evmGenericNftAbi,
       evmGenericNftBytecode,
     );
     await insertNftContractVersion(
-      stage.nftsContext,
+      stage.context.nfts,
       ChainType.EVM,
       NFTCollectionType.NESTABLE,
       evmNestableNftAbi,
@@ -80,7 +80,10 @@ describe('Apillon API NFTs tests on Astar', () => {
     );
 
     //User 1 project & other data
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.stage.context.access,
+    );
 
     testProject = await createTestProject(testUser, stage);
     await overrideDefaultQuota(
@@ -91,11 +94,14 @@ describe('Apillon API NFTs tests on Astar', () => {
     );
 
     testService = await createTestProjectService(
-      stage.devConsoleContext,
+      stage.context.devConsole,
       testProject,
     );
 
-    apiKey = await createTestApiKey(stage.amsContext, testProject.project_uuid);
+    apiKey = await createTestApiKey(
+      stage.stage.context.access,
+      testProject.project_uuid,
+    );
     await apiKey.assignRole(
       new ApiKeyRoleBaseDto().populate({
         role_id: DefaultApiKeyRole.KEY_EXECUTE,
@@ -151,7 +157,7 @@ describe('Apillon API NFTs tests on Astar', () => {
       expect(response.body.data.contractAddress).toBeTruthy();
       newCollection = await new Collection(
         {},
-        stage.nftsContext,
+        stage.context.nfts,
       ).populateByUUID(response.body.data.collectionUuid);
       expect(newCollection.exists()).toBeTruthy();
       expect(newCollection.name).toBe(testCollectionName);
@@ -168,13 +174,13 @@ describe('Apillon API NFTs tests on Astar', () => {
     test('User should be able to get collection transactions', async () => {
       const collection = await createTestNFTCollection(
         testUser,
-        stage.nftsContext,
+        stage.context.nfts,
         testProject,
         SqlModelStatus.ACTIVE,
         CollectionStatus.CREATED,
         { collectionType: 1 },
       );
-      const transaction = new Transaction({}, stage.nftsContext).populate({
+      const transaction = new Transaction({}, stage.context.nfts).populate({
         chainId: 123,
         transactionType: TransactionType.MINT_NFT,
         transactionHash: 'transaction_hash',
@@ -234,7 +240,7 @@ describe('Apillon API NFTs tests on Astar', () => {
     test('User should NOT be able to Mint transferred collection', async () => {
       const newCollection = await createTestNFTCollection(
         testUser,
-        stage.nftsContext,
+        stage.context.nfts,
         testProject,
         SqlModelStatus.DRAFT,
         CollectionStatus.CREATED,
@@ -278,7 +284,7 @@ describe('Apillon API NFTs tests on Astar', () => {
       expect(response.body.data.contractAddress).toBeTruthy();
       newCollection = await new Collection(
         {},
-        stage.nftsContext,
+        stage.context.nfts,
       ).populateByUUID(response.body.data.collectionUuid);
 
       expect(newCollection.exists()).toBeTruthy();

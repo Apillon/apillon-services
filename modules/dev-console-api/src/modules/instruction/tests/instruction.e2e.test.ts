@@ -17,9 +17,12 @@ describe('Instructions tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
 
-    testInstruction = await new Instruction({}, stage.devConsoleContext)
+    testInstruction = await new Instruction({}, stage.context.devConsole)
       .populate({
         title: 'My test instruction',
         instructionType: 1,
@@ -28,7 +31,7 @@ describe('Instructions tests', () => {
       })
       .insert();
 
-    await new Instruction({}, stage.devConsoleContext)
+    await new Instruction({}, stage.context.devConsole)
       .populate({
         title: 'Another instruction',
         instructionType: 1,

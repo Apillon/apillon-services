@@ -47,7 +47,7 @@ export class TestSubstrateBlockchain {
     return new TestSubstrateBlockchain(
       {
         db: stage.db.blockchain,
-        context: stage.blockchainContext,
+        context: stage.context.blockchain,
       },
       chainId,
       port,

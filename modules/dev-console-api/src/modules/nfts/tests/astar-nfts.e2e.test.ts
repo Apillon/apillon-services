@@ -45,7 +45,10 @@ describe('Apillon Console NFTs tests for Astar', () => {
     blockchain = TestBlockchain.fromStage(stage, CHAIN_ID);
     await blockchain.start();
 
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     testProject = await createTestProject(testUser, stage);
 
     await overrideDefaultQuota(
@@ -56,14 +59,14 @@ describe('Apillon Console NFTs tests for Astar', () => {
     );
 
     await insertNftContractVersion(
-      stage.nftsContext,
+      stage.context.nfts,
       ChainType.EVM,
       NFTCollectionType.GENERIC,
       evmGenericNftAbi,
       evmGenericNftBytecode,
     );
     await insertNftContractVersion(
-      stage.nftsContext,
+      stage.context.nfts,
       ChainType.EVM,
       NFTCollectionType.NESTABLE,
       evmNestableNftAbi,
@@ -99,7 +102,7 @@ describe('Apillon Console NFTs tests for Astar', () => {
       expect(response.body.data.contractAddress).toBeTruthy();
 
       //Get collection from DB
-      newCollection = await new Collection({}, stage.nftsContext).populateById(
+      newCollection = await new Collection({}, stage.context.nfts).populateById(
         response.body.data.id,
       );
       expect(newCollection.exists()).toBeTruthy();

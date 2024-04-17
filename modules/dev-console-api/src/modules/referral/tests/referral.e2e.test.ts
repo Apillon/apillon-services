@@ -33,10 +33,13 @@ describe('Referral tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     // const project = await createTestProject(testUser, stage, 7000);
-    // await createTestReferralTasks(stage.referralContext);
-    product = await createTestReferralProduct(stage.referralContext);
+    // await createTestReferralTasks(stage.context.referral);
+    product = await createTestReferralProduct(stage.context.referral);
   });
 
   afterAll(async () => {
@@ -73,7 +76,7 @@ describe('Referral tests', () => {
 
       const player = await new Player(
         {},
-        stage.referralContext,
+        stage.context.referral,
       ).populateByUserUuid(newUserData.user_uuid);
 
       expect(player.referrer_id).toBe(playerId);

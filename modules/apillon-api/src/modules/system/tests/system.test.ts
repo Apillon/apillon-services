@@ -36,9 +36,18 @@ describe('System APIs tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     //User 1 project & other data
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser3 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
+    testUser3 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
 
     testProject = await createTestProject(testUser, stage);
     testProject2 = await createTestProject(testUser2, stage);
@@ -48,9 +57,12 @@ describe('System APIs tests', () => {
     testProject3.status = SqlModelStatus.BLOCKED;
     await testProject3.update();
 
-    apiKey = await createTestApiKey(stage.amsContext, testProject.project_uuid);
+    apiKey = await createTestApiKey(
+      stage.context.access,
+      testProject.project_uuid,
+    );
 
-    systemApiKey = await generateSystemApiKey(stage.amsContext);
+    systemApiKey = await generateSystemApiKey(stage.context.access);
 
     getRequest = getRequestFactory(stage.http, systemApiKey);
   });
@@ -88,7 +100,7 @@ describe('System APIs tests', () => {
           year: new Date().getFullYear(),
           bandwidth: 15000,
         },
-        stage.storageContext,
+        stage.context.storage,
       ).insert();
 
       await new IpfsBandwidth(
@@ -98,7 +110,7 @@ describe('System APIs tests', () => {
           year: new Date().getFullYear(),
           bandwidth: 5565555555434323,
         },
-        stage.storageContext,
+        stage.context.storage,
       ).insert();
     });
 

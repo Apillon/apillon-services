@@ -94,7 +94,7 @@ describe('Identity', () => {
     test('Valid email but attestation exists', async () => {
       const testEmail = 'test3@mailinator.com';
 
-      const identity = new Identity({}, stage.authApiContext);
+      const identity = new Identity({}, stage.context.authentication);
       identity.populate({
         email: testEmail,
         state: IdentityState.ATTESTED,
@@ -159,7 +159,7 @@ describe('Identity', () => {
       const tokenT = generateJwtToken(JwtTokenType.IDENTITY_VERIFICATION, {
         testEmail4,
       });
-      const identity = new Identity({}, stage.authApiContext);
+      const identity = new Identity({}, stage.context.authentication);
       identity.populate({
         email: testEmail4,
         state: IdentityState.IN_PROGRESS,
@@ -185,9 +185,9 @@ describe('Identity', () => {
     beforeEach(async () => {
       const testEmail = identityMock.email;
       // IDENTITY 1 - IN_PROGRESS
-      const identity = new Identity({}, stage.authApiContext);
+      const identity = new Identity({}, stage.context.authentication);
       identity.populate({
-        context: stage.authApiContext,
+        context: stage.context.authentication,
         email: testEmail,
         state: IdentityState.IN_PROGRESS,
         token: identityMock.verification_token,
@@ -198,8 +198,8 @@ describe('Identity', () => {
       // Double check
       const identityDb = await new Identity(
         {},
-        stage.authApiContext,
-      ).populateByUserEmail(stage.authApiContext, testEmail);
+        stage.context.authentication,
+      ).populateByUserEmail(stage.context.authentication, testEmail);
       expect(identityDb).not.toBeUndefined();
       expect(identityDb.email).toEqual(testEmail);
       expect(identityDb.state).toEqual(IdentityState.IN_PROGRESS);
@@ -211,9 +211,9 @@ describe('Identity', () => {
       const data = resp.body.data;
       expect(data.state).toEqual('in-progress');
       // IDENTITY 2 - ATTESTED
-      const identityAttested = new Identity({}, stage.authApiContext);
+      const identityAttested = new Identity({}, stage.context.authentication);
       identityAttested.populate({
-        context: stage.authApiContext,
+        context: stage.context.authentication,
         email: 'attested@mailinator.com',
         state: IdentityState.ATTESTED,
         token: identityMock.verification_token,
@@ -223,8 +223,8 @@ describe('Identity', () => {
       await identityAttested.insert(SerializeFor.INSERT_DB);
       const identityAttestedDb = await new Identity(
         {},
-        stage.authApiContext,
-      ).populateByUserEmail(stage.authApiContext, testEmailAttested);
+        stage.context.authentication,
+      ).populateByUserEmail(stage.context.authentication, testEmailAttested);
       expect(identityAttestedDb).not.toBeUndefined();
       expect(identityAttestedDb.email).toEqual(testEmailAttested);
       expect(identityAttestedDb.state).toEqual(IdentityState.ATTESTED);
@@ -238,7 +238,7 @@ describe('Identity', () => {
     });
 
     afterEach(async () => {
-      await stage.authApiContext.mysql.paramExecute(
+      await stage.context.authentication.mysql.paramExecute(
         `
         DELETE FROM \`${DbTables.IDENTITY}\` i
         `,

@@ -35,17 +35,8 @@ export async function setupTestContextAndSql(): Promise<Stage> {
       app: undefined,
       lmasMongo,
       lmasContext,
-      devConsoleContext: contexts.devConsole,
-      amsContext: contexts.access,
-      storageContext: contexts.storage,
-      configContext: contexts.config,
-      authApiContext: contexts.authentication,
-      referralContext: contexts.referral,
-      nftsContext: contexts.nfts,
-      blockchainContext: contexts.blockchain,
-      socialContext: contexts.social,
-      computingContext: contexts.computing,
       db: databases as StageObject<MySql>,
+      context: contexts as StageObject<TestContext>,
     };
   } catch (e) {
     console.error(e);

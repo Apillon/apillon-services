@@ -48,24 +48,30 @@ describe('Apillon API hosting tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     //User 1 project & other data
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.stage.context.access,
+    );
 
     testProject = await createTestProject(testUser, stage, 1200, 2);
     testService = await createTestProjectService(
-      stage.devConsoleContext,
+      stage.context.devConsole,
       testProject,
     );
 
     //Create test web page record
-    testWebsite = await new Website({}, stage.storageContext)
+    testWebsite = await new Website({}, stage.context.storage)
       .populate({
         project_uuid: testProject.project_uuid,
         name: 'Test web page',
         domain: 'https://hosting-e2e-tests.si',
       })
-      .createNewWebsite(stage.storageContext, uuidV4());
+      .createNewWebsite(stage.context.storage, uuidV4());
 
-    apiKey = await createTestApiKey(stage.amsContext, testProject.project_uuid);
+    apiKey = await createTestApiKey(
+      stage.stage.context.access,
+      testProject.project_uuid,
+    );
     await apiKey.assignRole(
       new ApiKeyRoleBaseDto().populate({
         role_id: DefaultApiKeyRole.KEY_EXECUTE,
@@ -92,15 +98,18 @@ describe('Apillon API hosting tests', () => {
     );
 
     //User 2 project & other data
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     testProject2 = await createTestProject(testUser2, stage, 1200, 2);
     testService2 = await createTestProjectService(
-      stage.devConsoleContext,
+      stage.context.devConsole,
       testProject2,
     );
 
     apiKey2 = await createTestApiKey(
-      stage.amsContext,
+      stage.context.access,
       testProject2.project_uuid,
     );
     await apiKey2.assignRole(
@@ -203,7 +212,7 @@ describe('Apillon API hosting tests', () => {
       //check if files were created in bucket
       const file: File = await new File(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(file1FURRes.fileUuid);
 
       expect(file.exists()).toBeTruthy();
@@ -253,10 +262,10 @@ describe('Apillon API hosting tests', () => {
       //check if files were created in staging bucket and have CID
       const filesInBucket = await new File(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateFilesInBucket(
         testWebsite.stagingBucket_id,
-        stage.storageContext,
+        stage.context.storage,
       );
       expect(filesInBucket.length).toBe(2);
       expect(filesInBucket[0].CID).toBeTruthy();
@@ -264,18 +273,18 @@ describe('Apillon API hosting tests', () => {
       //check if directory was created
       const dirsInBucket = await new Directory(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateDirectoriesInBucket(
         testWebsite.stagingBucket_id,
-        stage.storageContext,
+        stage.context.storage,
       );
       expect(dirsInBucket.length).toBe(1);
 
       //Check if source bucket was cleared
       const filesInBucketForUpload = await new File(
         {},
-        stage.storageContext,
-      ).populateFilesInBucket(testWebsite.bucket_id, stage.storageContext);
+        stage.context.storage,
+      ).populateFilesInBucket(testWebsite.bucket_id, stage.context.storage);
       expect(filesInBucketForUpload.length).toBe(0);
     });
 
@@ -302,10 +311,10 @@ describe('Apillon API hosting tests', () => {
       //check if files were created in production bucket and have CID
       const filesInBucket = await new File(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateFilesInBucket(
         testWebsite.productionBucket_id,
-        stage.storageContext,
+        stage.context.storage,
       );
       expect(filesInBucket.length).toBe(2);
       expect(filesInBucket[0].CID).toBeTruthy();
@@ -313,10 +322,10 @@ describe('Apillon API hosting tests', () => {
       //check if directory was created
       const dirsInBucket = await new Directory(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateDirectoriesInBucket(
         testWebsite.productionBucket_id,
-        stage.storageContext,
+        stage.context.storage,
       );
       expect(dirsInBucket.length).toBe(1);
     });
@@ -382,7 +391,7 @@ describe('Apillon API hosting tests', () => {
 
       const ipfsCluster = await new ProjectConfig(
         { project_uuid: testWebsite.project_uuid },
-        stage.storageContext,
+        stage.context.storage,
       ).getIpfsCluster();
 
       ipnsStagingLink = ipfsCluster.generateLink(
@@ -486,8 +495,8 @@ describe('Apillon API hosting tests', () => {
       //check if files were created in bucket
       const filesInBucket = await new File(
         {},
-        stage.storageContext,
-      ).populateFilesInBucket(testWebsite.bucket_id, stage.storageContext);
+        stage.context.storage,
+      ).populateFilesInBucket(testWebsite.bucket_id, stage.context.storage);
       expect(filesInBucket.length).toBe(3);
     });
 
@@ -509,17 +518,17 @@ describe('Apillon API hosting tests', () => {
       //check if files were created in staging bucket and have CID
       const filesInBucket = await new File(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateFilesInBucket(
         testWebsite.stagingBucket_id,
-        stage.storageContext,
+        stage.context.storage,
       );
       expect(filesInBucket.length).toBe(3);
       expect(filesInBucket[0].CID).toBeTruthy();
 
       const tmpWebsite: Website = await new Website(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateById(testWebsite.id);
       await tmpWebsite.populateBucketsAndLink();
       //check that staging bucket CID is different than production bucket CID (production is stil in previous version)
@@ -546,17 +555,17 @@ describe('Apillon API hosting tests', () => {
       //check if files were created in production bucket and have CID
       const filesInBucket = await new File(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateFilesInBucket(
         testWebsite.productionBucket_id,
-        stage.storageContext,
+        stage.context.storage,
       );
       expect(filesInBucket.length).toBe(3);
       expect(filesInBucket[0].CID).toBeTruthy();
 
       const tmpWebsite: Website = await new Website(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateById(testWebsite.id);
       await tmpWebsite.populateBucketsAndLink();
       //check that staging bucket CID is same as production bucket CID
@@ -566,7 +575,7 @@ describe('Apillon API hosting tests', () => {
 
       const ipfsCluster = await new ProjectConfig(
         { project_uuid: tmpWebsite.project_uuid },
-        stage.storageContext,
+        stage.context.storage,
       ).getIpfsCluster();
 
       //Check, that index.html page was updated
@@ -587,12 +596,12 @@ describe('Apillon API hosting tests', () => {
     let directDeployTestWebsite;
     beforeAll(async () => {
       //create new website
-      directDeployTestWebsite = await new Website({}, stage.storageContext)
+      directDeployTestWebsite = await new Website({}, stage.context.storage)
         .populate({
           project_uuid: testProject.project_uuid,
           name: 'Direct deploy test website',
         })
-        .createNewWebsite(stage.storageContext, uuidV4());
+        .createNewWebsite(stage.context.storage, uuidV4());
     });
     test('Application (through Apillon API) should be able to deploy directly to production', async () => {
       let response = await request(stage.http)
@@ -659,10 +668,10 @@ describe('Apillon API hosting tests', () => {
       //check if files were created in staging bucket and have CID
       const filesInBucket = await new File(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateFilesInBucket(
         directDeployTestWebsite.productionBucket_id,
-        stage.storageContext,
+        stage.context.storage,
       );
       expect(filesInBucket.length).toBe(1);
       expect(filesInBucket[0].CID).toBeTruthy();

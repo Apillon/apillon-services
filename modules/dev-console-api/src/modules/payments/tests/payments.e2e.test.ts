@@ -29,7 +29,10 @@ describe('Payments controller e2e tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
 
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     testProject = await createTestProject(testUser, stage);
   });
 
@@ -124,7 +127,7 @@ describe('Payments controller e2e tests', () => {
 
   describe('Credit and subscription packages tests', () => {
     test('Get all credit packages', async () => {
-      const creditPackages = await stage.configContext.mysql.paramExecute(
+      const creditPackages = await stage.context.config.mysql.paramExecute(
         `SELECT * from creditPackage WHERE status = ${SqlModelStatus.ACTIVE}`,
       );
       expect(creditPackages.length).toBeGreaterThanOrEqual(3); // From seed
@@ -142,9 +145,11 @@ describe('Payments controller e2e tests', () => {
     });
 
     test('Get all subscription packages', async () => {
-      const subscriptionPackages = await stage.configContext.mysql.paramExecute(
-        `SELECT * from subscriptionPackage`,
-      );
+      const subscriptionPackages =
+        await stage.context.config.mysql.paramExecute(
+          `SELECT *
+           from subscriptionPackage`,
+        );
       expect(subscriptionPackages).toHaveLength(4); // From seed
       const response = await request(stage.http)
         .get('/payments/subscription/packages')

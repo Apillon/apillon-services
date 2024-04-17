@@ -51,15 +51,21 @@ describe('Apillon API social tests', () => {
     config = await getConfig();
     stage = await setupTest();
     //User 1 project & other data
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.stage.context.access,
+    );
 
     testProject = await createTestProject(testUser, stage, 1200, 2);
     testService = await createTestProjectService(
-      stage.devConsoleContext,
+      stage.context.devConsole,
       testProject,
     );
 
-    apiKey = await createTestApiKey(stage.amsContext, testProject.project_uuid);
+    apiKey = await createTestApiKey(
+      stage.stage.context.access,
+      testProject.project_uuid,
+    );
     await apiKey.assignRole(
       new ApiKeyRoleBaseDto().populate({
         role_id: DefaultApiKeyRole.KEY_EXECUTE,
@@ -86,7 +92,7 @@ describe('Apillon API social tests', () => {
     );
 
     //insert test space
-    testSpace = await new Space({}, stage.socialContext)
+    testSpace = await new Space({}, stage.context.social)
       .fake()
       .populate({
         status: SqlModelStatus.ACTIVE,
@@ -97,7 +103,7 @@ describe('Apillon API social tests', () => {
       .insert();
 
     //insert default (apillon) space
-    defaultSpace = await new Space({}, stage.socialContext)
+    defaultSpace = await new Space({}, stage.context.social)
       .fake()
       .populate({
         space_uuid: '109ec07b-cfd5-486f-ac9e-831ef0d6ec6f',
@@ -110,7 +116,7 @@ describe('Apillon API social tests', () => {
       .insert();
 
     //Insert test post
-    testPost = await new Post({}, stage.socialContext)
+    testPost = await new Post({}, stage.context.social)
       .fake()
       .populate({
         space_id: testSpace.id,
@@ -127,22 +133,25 @@ describe('Apillon API social tests', () => {
         chainType: config.subsocial.chainType,
         nextNonce: 1,
       },
-      stage.blockchainContext,
+      stage.context.blockchain,
     ).insert();
 
     getRequest = getRequestFactory(stage.http, apiKey);
     postRequest = postRequestFactory(stage.http, apiKey);
 
     //User 2 project & other data
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     testProject2 = await createTestProject(testUser2, stage, 1200, 2);
     testService2 = await createTestProjectService(
-      stage.devConsoleContext,
+      stage.context.devConsole,
       testProject2,
     );
 
     apiKey2 = await createTestApiKey(
-      stage.amsContext,
+      stage.context.access,
       testProject2.project_uuid,
     );
     await apiKey2.assignRole(
@@ -278,10 +287,10 @@ describe('Apillon API social tests', () => {
       expect(response.body.data.title).toBeTruthy();
       expect(response.body.data.body).toBeTruthy();
 
-      const tmpChannel = await new Post({}, stage.socialContext).populateByUUID(
-        response.body.data.channelUuid,
-        'post_uuid',
-      );
+      const tmpChannel = await new Post(
+        {},
+        stage.context.social,
+      ).populateByUUID(response.body.data.channelUuid, 'post_uuid');
       expect(tmpChannel.exists).toBeTruthy();
       expect(tmpChannel.space_id).toBe(testSpace.id);
     });
@@ -298,10 +307,10 @@ describe('Apillon API social tests', () => {
       expect(response.body.data.title).toBeTruthy();
       expect(response.body.data.body).toBeTruthy();
 
-      const tmpChannel = await new Post({}, stage.socialContext).populateByUUID(
-        response.body.data.channelUuid,
-        'post_uuid',
-      );
+      const tmpChannel = await new Post(
+        {},
+        stage.context.social,
+      ).populateByUUID(response.body.data.channelUuid, 'post_uuid');
       expect(tmpChannel.exists).toBeTruthy();
       expect(tmpChannel.space_id).toBe(defaultSpace.id);
     });

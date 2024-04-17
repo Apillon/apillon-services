@@ -36,19 +36,25 @@ describe('Storage directory tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
 
     testProject = await createTestProject(testUser, stage);
 
     testBucket = await createTestBucket(
       testUser,
-      stage.storageContext,
+      stage.context.storage,
       testProject,
     );
 
     testDirectory = await createTestBucketDirectory(
-      stage.storageContext,
+      stage.context.storage,
       testProject,
       testBucket,
       true,
@@ -59,7 +65,7 @@ describe('Storage directory tests', () => {
 
     //Add additional file to dir - file exists on IPFS
     testDirectoryFile = await createTestBucketFile(
-      stage.storageContext,
+      stage.context.storage,
       testBucket,
       'fileInDirectory.txt',
       'text/plain',
@@ -124,7 +130,7 @@ describe('Storage directory tests', () => {
 
       const d: Directory = await new Directory(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(response.body.data.directory_uuid);
       expect(d.exists()).toBeTruthy();
       try {
@@ -159,7 +165,7 @@ describe('Storage directory tests', () => {
 
       const d: Directory = await new Directory(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(testDirectory.directory_uuid);
       expect(d.exists()).toBeTruthy();
       try {
@@ -188,7 +194,7 @@ describe('Storage directory tests', () => {
 
       const d: Directory = await new Directory(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(response.body.data.directory_uuid);
       expect(d.exists()).toBeTruthy();
       expect(d.parentDirectory_uuid).toBe(testDirectory.directory_uuid);
@@ -199,20 +205,20 @@ describe('Storage directory tests', () => {
     beforeAll(async () => {
       //Insert new user with access to testProject as PROJECT_USER - can view, cannot modify
       testUser3 = await createTestUser(
-        stage.devConsoleContext,
-        stage.amsContext,
+        stage.context.devConsole,
+        stage.context.access,
         DefaultUserRole.PROJECT_USER,
         SqlModelStatus.ACTIVE,
         testProject.project_uuid,
       );
       adminTestUser = await createTestUser(
-        stage.devConsoleContext,
-        stage.amsContext,
+        stage.context.devConsole,
+        stage.context.access,
         DefaultUserRole.ADMIN,
       );
 
       testDirectory2 = await createTestBucketDirectory(
-        stage.storageContext,
+        stage.context.storage,
         testProject,
         testBucket,
         true,
@@ -260,7 +266,7 @@ describe('Storage directory tests', () => {
     beforeAll(async () => {
       //Create new directories, to test delete functions
       testDirectoryToDelete = await createTestBucketDirectory(
-        stage.storageContext,
+        stage.context.storage,
         testProject,
         testBucket,
         true,
@@ -277,7 +283,7 @@ describe('Storage directory tests', () => {
 
       const d: Directory = await new Directory(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(testDirectoryToDelete.directory_uuid);
       expect(d.exists()).toBeTruthy();
       expect(d.status).toBe(SqlModelStatus.ACTIVE);
@@ -291,12 +297,12 @@ describe('Storage directory tests', () => {
 
       let d: Directory = await new Directory(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(testDirectoryToDelete.directory_uuid);
       expect(d.exists()).toBeFalsy();
 
       //Check if other directories and files are still active
-      d = await new Directory({}, stage.storageContext).populateById(
+      d = await new Directory({}, stage.context.storage).populateById(
         testDirectory.id,
       );
       expect(d.exists()).toBeTruthy();
@@ -306,7 +312,7 @@ describe('Storage directory tests', () => {
       //Dir with subdirs and files in it
       const testDirectoryWithSubdirectories: Directory = new Directory(
         {},
-        stage.storageContext,
+        stage.context.storage,
       )
         .fake()
         .populate({
@@ -319,7 +325,7 @@ describe('Storage directory tests', () => {
       await testDirectoryWithSubdirectories.insert();
       //Add files
       const deleteBucketTestFile1 = await createTestBucketFile(
-        stage.storageContext,
+        stage.context.storage,
         testBucket,
         'xyz.txt',
         'text/plain',
@@ -328,13 +334,13 @@ describe('Storage directory tests', () => {
       );
 
       const ipfsService = new IPFSService(
-        stage.storageContext,
+        stage.context.storage,
         testProject.project_uuid,
       );
 
       //Subdir
       const testDirectorySubDir = await createTestBucketDirectory(
-        stage.storageContext,
+        stage.context.storage,
         testProject,
         testBucket,
         false,
@@ -343,7 +349,7 @@ describe('Storage directory tests', () => {
       );
 
       const deleteBucketTestFile2 = await createTestBucketFile(
-        stage.storageContext,
+        stage.context.storage,
         testBucket,
         'xyzz.txt',
         'text/plain',
@@ -360,25 +366,25 @@ describe('Storage directory tests', () => {
       expect(response.status).toBe(200);
 
       //Test variables
-      let d = await new Directory({}, stage.storageContext).populateById(
+      let d = await new Directory({}, stage.context.storage).populateById(
         testDirectoryWithSubdirectories.id,
       );
       expect(d.exists()).toBeFalsy();
 
       //Check if subdirectory is deleted
-      d = await new Directory({}, stage.storageContext).populateById(
+      d = await new Directory({}, stage.context.storage).populateById(
         testDirectorySubDir.id,
       );
       expect(d.exists()).toBeFalsy();
 
       //Check if files in directory are deleted and unpined
-      let f: File = await new File({}, stage.storageContext).populateById(
+      let f: File = await new File({}, stage.context.storage).populateById(
         deleteBucketTestFile1.id,
       );
       expect(f.exists()).toBeFalsy();
       expect(await ipfsService.isCIDPinned(f.CID)).toBeFalsy();
 
-      f = await new File({}, stage.storageContext).populateById(
+      f = await new File({}, stage.context.storage).populateById(
         deleteBucketTestFile2.id,
       );
       expect(f.exists()).toBeFalsy();
@@ -386,18 +392,18 @@ describe('Storage directory tests', () => {
       //Check if bucket size was decreased
       const tmpB: Bucket = await new Bucket(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateById(testBucket.id);
 
       expect(tmpB.size).toBeLessThan(testBucket.size);
 
       //Check if other directories and files are still active
-      d = await new Directory({}, stage.storageContext).populateById(
+      d = await new Directory({}, stage.context.storage).populateById(
         testDirectory.id,
       );
       expect(d.exists()).toBeTruthy();
 
-      f = await new File({}, stage.storageContext).populateById(
+      f = await new File({}, stage.context.storage).populateById(
         testDirectoryFile.id.toString(),
       );
       expect(f.exists()).toBeTruthy();
@@ -406,7 +412,7 @@ describe('Storage directory tests', () => {
 
     test('User should be able to delete restore files and its parent directories', async () => {
       //Dir with subdirs and files in it
-      const parentDirectory = await new Directory({}, stage.storageContext)
+      const parentDirectory = await new Directory({}, stage.context.storage)
         .fake()
         .populate({
           project_uuid: testProject.project_uuid,
@@ -418,7 +424,7 @@ describe('Storage directory tests', () => {
 
       //Add files
       const file = await createTestBucketFile(
-        stage.storageContext,
+        stage.context.storage,
         testBucket,
         'deleteMe.txt',
         'text/plain',
@@ -434,11 +440,11 @@ describe('Storage directory tests', () => {
 
       let tmpParentDirectory = await new Directory(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateById(parentDirectory.id);
       expect(tmpParentDirectory.exists()).toBeFalsy();
 
-      let tmpFile = await new File({}, stage.storageContext).populateById(
+      let tmpFile = await new File({}, stage.context.storage).populateById(
         file.id,
       );
       expect(tmpFile.exists()).toBeFalsy();
@@ -450,12 +456,12 @@ describe('Storage directory tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(restoreResponse.status).toBe(200);
 
-      tmpFile = await new File({}, stage.storageContext).populateById(file.id);
+      tmpFile = await new File({}, stage.context.storage).populateById(file.id);
       expect(tmpFile.exists()).toBeTruthy();
 
       tmpParentDirectory = await new Directory(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateById(parentDirectory.id);
       expect(tmpParentDirectory.exists()).toBeTruthy();
     });
