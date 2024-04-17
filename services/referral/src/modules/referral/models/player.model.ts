@@ -217,26 +217,6 @@ export class Player extends AdvancedSQLModel {
   public shippingInfo: any;
 
   @prop({
-    parser: { resolver: dateParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
-    validators: [],
-  })
-  public termsAccepted: Date;
-
-  @prop({
     populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
     serializable: [SerializeFor.ADMIN, SerializeFor.PROFILE],
     validators: [],
@@ -270,7 +250,7 @@ export class Player extends AdvancedSQLModel {
 
   /**
    * Populates model fields by loading the document with the provided user id from the database.
-   * @param user_id Referr's user ID.
+   * @param user_uuid Player's user UUID.
    */
   public async populateByUserUuid(
     user_uuid: number | string,
