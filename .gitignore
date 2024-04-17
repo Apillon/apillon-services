@@ -54,3 +54,5 @@ test-config.js
 
 **/swanky-node
 **/swanky.log
+
+**/hardhat.log
