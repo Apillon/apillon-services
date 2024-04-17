@@ -85,15 +85,11 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
   }
 
   // close SQL connections
-  const errors = [];
   for (const [serviceName, sql] of Object.entries(stage.db)) {
     try {
       await sql.close();
     } catch (error) {
-      errors.push(serviceName);
+      console.error(`Error when releasing stages for ${serviceName}:`, error);
     }
-  }
-  if (errors.length > 0) {
-    console.error('Error when releasing stages: ' + errors.join(',\n'));
   }
 };
