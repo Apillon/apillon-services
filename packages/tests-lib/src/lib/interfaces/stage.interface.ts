@@ -2,18 +2,22 @@ import { HttpServer, INestApplication } from '@nestjs/common';
 import { Context, Mongo, MySql } from '@apillon/lib';
 import { TestContext } from '../helpers/context';
 
-export interface ServiceObject<Type> {
-  devConsole: Type;
-  ams: Type;
-  storage: Type;
-  config: Type;
-  authApi: Type;
-  referral: Type;
-  nfts: Type;
-  blockchain: Type;
-  social: Type;
-  computing: Type;
+export enum StageName {
+  DEV_CONSOLE = 'devConsole',
+  ACCESS = 'access',
+  STORAGE = 'storage',
+  CONFIG = 'config',
+  AUTH_API = 'authentication',
+  REFERRAL = 'referral',
+  NFTS = 'nfts',
+  BLOCKCHAIN = 'blockchain',
+  COMPUTING = 'computing',
+  SOCIAL = 'social',
 }
+
+export type StageObject<Type> = {
+  [key in StageName]: Type;
+};
 
 export interface Stage {
   amsContext: TestContext;
@@ -30,7 +34,7 @@ export interface Stage {
   blockchainContext: TestContext;
   socialContext: TestContext;
   computingContext: TestContext;
-  sql: ServiceObject<MySql>;
+  db: StageObject<MySql>;
 }
 
 export interface ServiceStage {

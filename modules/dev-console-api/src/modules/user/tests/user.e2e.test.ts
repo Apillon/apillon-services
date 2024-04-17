@@ -73,7 +73,7 @@ describe('Auth tests', () => {
     newUserData.authToken = response2.body.data.token;
     newUserData.user_uuid = response2.body.data.user_uuid;
 
-    const sqlRes1 = await stage.sql.devConsole.paramExecute(
+    const sqlRes1 = await stage.db.devConsole.paramExecute(
       `SELECT * from user WHERE user_uuid = @uuid`,
       { uuid: newUserData.user_uuid },
     );
@@ -81,13 +81,13 @@ describe('Auth tests', () => {
     expect(sqlRes1.length).toBe(1);
     expect(sqlRes1[0].user_uuid).toBe(response2.body.data.user_uuid);
 
-    const sqlRes2 = await stage.sql.ams.paramExecute(
+    const sqlRes2 = await stage.db.access.paramExecute(
       `SELECT * from authUser WHERE user_uuid = @uuid`,
       { uuid: newUserData.user_uuid },
     );
 
     expect(sqlRes2.length).toBe(1);
-    expect(sqlRes2[0].email).toBe(input.email);
+    expect(sqlRes2[0].email).toBe(input.email.toLowerCase());
   });
 
   test('User should be able to login', async () => {
@@ -357,7 +357,7 @@ describe('Auth tests', () => {
     expect(resp1.body.data.user_uuid).toBeTruthy();
 
     const userData = resp1.body.data;
-    const sqlRes1 = await stage.sql.devConsole.paramExecute(
+    const sqlRes1 = await stage.db.devConsole.paramExecute(
       `SELECT * from user WHERE user_uuid = @uuid`,
       { uuid: userData.user_uuid },
     );
@@ -365,7 +365,7 @@ describe('Auth tests', () => {
     expect(sqlRes1.length).toBe(1);
     expect(sqlRes1[0].user_uuid).toBe(resp1.body.data.user_uuid);
 
-    const sqlRes2 = await stage.sql.ams.paramExecute(
+    const sqlRes2 = await stage.db.access.paramExecute(
       `SELECT * from authUser WHERE user_uuid = @uuid`,
       { uuid: userData.user_uuid },
     );

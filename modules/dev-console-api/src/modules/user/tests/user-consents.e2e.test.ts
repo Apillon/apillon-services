@@ -53,7 +53,7 @@ describe('User consents tests', () => {
     ];
 
     for (const x of inserts) {
-      await stage.sql.config.paramExecute(x);
+      await stage.db.config.paramExecute(x);
     }
   });
 
@@ -110,7 +110,7 @@ describe('User consents tests', () => {
   });
 
   test('User should see new terms', async () => {
-    await stage.sql.config.paramExecute(`
+    await stage.db.config.paramExecute(`
       UPDATE terms
       SET
       status = 5,
