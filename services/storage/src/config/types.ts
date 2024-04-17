@@ -25,7 +25,7 @@ export enum DbViews {
 export enum StorageErrorCode {
   //400
   DEFAULT_BAD_REQUEST_EROR = 40006000,
-  FILE_UPLOAD_SESSION_ALREADY_TRANSFERED = 40006001,
+  FILE_UPLOAD_SESSION_ALREADY_ENDED = 40006001,
   MAX_USED_STORAGE_REACHED = 40006002,
   NOT_ENOUGH_STORAGE_SPACE = 40006003,
   MAX_BUCKETS_REACHED = 40006004,
@@ -164,7 +164,7 @@ export enum FileStatus {
 export enum FileUploadSessionStatus {
   CREATED = 1,
   /**
-   * End session was called - folder and file structure has been generated.
+   * Session was ended - upload is not possible anymore. Sync to IPFS will start...
    */
   PROCESSED = 2,
   /**
@@ -218,7 +218,7 @@ export enum Defaults {
     Defaults.GYGABYTE_IN_BYTES,
 }
 
-export enum PrepareCollectionMetadataSteps {
+export enum PrepareCollectionMetadataStep {
   UPLOAD_IMAGES_TO_IPFS = 1,
   UPDATE_JSONS_ON_S3 = 2,
   UPLOAD_METADATA_TO_IPFS = 3,

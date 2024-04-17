@@ -207,7 +207,7 @@ export class StorageService {
         });
       } else if (session.sessionStatus != FileUploadSessionStatus.CREATED) {
         throw new StorageCodeException({
-          code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
+          code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_ENDED,
           status: 400,
         });
       }
@@ -300,12 +300,16 @@ export class StorageService {
     );
     bucket.canAccess(context);
 
-    if (session.sessionStatus == FileUploadSessionStatus.FINISHED) {
+    if (session.sessionStatus != FileUploadSessionStatus.CREATED) {
       throw new StorageCodeException({
-        code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
+        code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_ENDED,
         status: 400,
       });
     }
+
+    //update session
+    session.sessionStatus = FileUploadSessionStatus.PROCESSED;
+    await session.update();
 
     if (
       bucket.bucketType == BucketType.STORAGE ||

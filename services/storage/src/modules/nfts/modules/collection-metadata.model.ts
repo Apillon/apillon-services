@@ -9,7 +9,7 @@ import { booleanParser, stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   DbTables,
-  PrepareCollectionMetadataSteps,
+  PrepareCollectionMetadataStep,
   StorageErrorCode,
 } from '../../../config/types';
 
@@ -147,8 +147,8 @@ export class CollectionMetadata extends UuidSqlModel {
         code: StorageErrorCode.COLLECTION_METADATA_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
-    defaultValue: PrepareCollectionMetadataSteps.UPLOAD_IMAGES_TO_IPFS,
-    fakeValue: PrepareCollectionMetadataSteps.UPLOAD_IMAGES_TO_IPFS,
+    defaultValue: PrepareCollectionMetadataStep.UPLOAD_IMAGES_TO_IPFS,
+    fakeValue: PrepareCollectionMetadataStep.UPLOAD_IMAGES_TO_IPFS,
   })
   public currentStep: number;
 

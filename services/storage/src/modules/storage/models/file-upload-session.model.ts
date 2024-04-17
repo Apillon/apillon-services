@@ -141,7 +141,9 @@ export class FileUploadSession extends AdvancedSQLModel {
         FROM \`${DbTables.FILE_UPLOAD_SESSION}\` s
         INNER JOIN \`${DbTables.BUCKET}\` b ON s.bucket_id = b.id
         LEFT JOIN \`${DbTables.FILE_UPLOAD_REQUEST}\` fur ON fur.session_id = s.id
-        LEFT JOIN \`${DbTables.FILE}\` f ON f.file_uuid = fur.file_uuid AND f.fileStatus IN (${FileStatus.UPLOADED_TO_IPFS}, ${FileStatus.PINNING_TO_CRUST}, ${FileStatus.PINNED_TO_CRUST})
+        LEFT JOIN \`${DbTables.FILE}\` f 
+          ON f.file_uuid = fur.file_uuid 
+          AND f.fileStatus IN (${FileStatus.UPLOADED_TO_IPFS}, ${FileStatus.PINNING_TO_CRUST}, ${FileStatus.PINNED_TO_CRUST})
         WHERE b.bucket_uuid = @bucket_uuid
         AND (@search IS null OR s.session_uuid LIKE CONCAT('%', @search, '%'))
         AND s.status <> ${SqlModelStatus.DELETED}

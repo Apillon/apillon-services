@@ -8,7 +8,7 @@ import fs from 'fs';
 import request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { Stage, releaseStage, setupTest } from '../../../test/setup';
-import { BucketType, PrepareCollectionMetadataSteps } from '../../config/types';
+import { BucketType, PrepareCollectionMetadataStep } from '../../config/types';
 import { createFURAndS3Url } from '../../lib/create-fur-and-s3-url';
 import { Bucket } from '../../modules/bucket/models/bucket.model';
 import { Directory } from '../../modules/directory/models/directory.model';
@@ -222,7 +222,7 @@ describe('PrepareMetadataForCollectionWorker integration test', () => {
         metadataSession: metadataSession.session_uuid,
         useApillonIpfsGateway: true,
         ipnsId: collectionIpns.id,
-        currentStep: PrepareCollectionMetadataSteps.UPLOAD_IMAGES_TO_IPFS,
+        currentStep: PrepareCollectionMetadataStep.UPLOAD_IMAGES_TO_IPFS,
       },
       stage.context,
     ).insert();
@@ -240,7 +240,7 @@ describe('PrepareMetadataForCollectionWorker integration test', () => {
     ).populateById(collectionMetadata.id);
 
     expect(tmpCollectionMetadata.currentStep).toBe(
-      PrepareCollectionMetadataSteps.UPDATE_JSONS_ON_S3,
+      PrepareCollectionMetadataStep.UPDATE_JSONS_ON_S3,
     );
 
     //Second step
@@ -256,7 +256,7 @@ describe('PrepareMetadataForCollectionWorker integration test', () => {
     ).populateById(collectionMetadata.id);
 
     expect(tmpCollectionMetadata.currentStep).toBe(
-      PrepareCollectionMetadataSteps.UPLOAD_METADATA_TO_IPFS,
+      PrepareCollectionMetadataStep.UPLOAD_METADATA_TO_IPFS,
     );
 
     //Third step
@@ -272,7 +272,7 @@ describe('PrepareMetadataForCollectionWorker integration test', () => {
     ).populateById(collectionMetadata.id);
 
     expect(tmpCollectionMetadata.currentStep).toBe(
-      PrepareCollectionMetadataSteps.METADATA_SUCCESSFULLY_PREPARED,
+      PrepareCollectionMetadataStep.METADATA_SUCCESSFULLY_PREPARED,
     );
 
     //check files in bucket
@@ -384,7 +384,7 @@ describe('PrepareMetadataForCollectionWorker integration test', () => {
         imagesSession: imageSession.session_uuid,
         metadataSession: metadataSession.session_uuid,
         useApillonIpfsGateway: true,
-        currentStep: PrepareCollectionMetadataSteps.UPLOAD_IMAGES_TO_IPFS,
+        currentStep: PrepareCollectionMetadataStep.UPLOAD_IMAGES_TO_IPFS,
       },
       stage.context,
     ).insert();

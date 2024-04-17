@@ -14,6 +14,7 @@ import {
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
+  Controller,
   Delete,
   Get,
   HttpCode,
@@ -27,8 +28,9 @@ import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { StorageService } from './storage.service';
+
+@Controller('storage')
 @Permissions({ permission: DefaultPermission.STORAGE })
-// @UseInterceptors(CacheInterceptor)
 export class StorageController {
   constructor(private storageService: StorageService) {}
 

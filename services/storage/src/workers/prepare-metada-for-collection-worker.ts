@@ -12,6 +12,7 @@ import {
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
+  LogOutput,
   QueueWorkerType,
   sendToWorkerQueue,
   WorkerDefinition,
@@ -20,7 +21,7 @@ import {
   BucketType,
   FileUploadRequestFileStatus,
   FileUploadSessionStatus,
-  PrepareCollectionMetadataSteps,
+  PrepareCollectionMetadataStep,
 } from '../config/types';
 import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 import { Bucket } from '../modules/bucket/models/bucket.model';
@@ -56,6 +57,17 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       this.context,
     ).populateById(data.collectionMetadataId);
 
+    if (!collectionMetadata.exists()) {
+      await this.writeEventLog({
+        logType: LogType.ERROR,
+        message: 'Invalid collectionMetadataId for Prepare metadata worker.',
+        service: ServiceName.STORAGE,
+        data: {
+          data,
+        },
+      });
+    }
+
     //S3 client
     const s3Client: AWS_S3 = new AWS_S3();
 
@@ -69,7 +81,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       if (
         !collectionMetadata.currentStep ||
         collectionMetadata.currentStep ==
-          PrepareCollectionMetadataSteps.UPLOAD_IMAGES_TO_IPFS
+          PrepareCollectionMetadataStep.UPLOAD_IMAGES_TO_IPFS
       ) {
         //Get sessions
         const imagesSession = await new FileUploadSession(
@@ -101,11 +113,13 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           remainingImageFURs.length < env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS
         ) {
           imagesSession.sessionStatus = FileUploadSessionStatus.FINISHED;
-          await imagesSession.update();
-
           collectionMetadata.currentStep =
-            PrepareCollectionMetadataSteps.UPDATE_JSONS_ON_S3;
-          collectionMetadata.update();
+            PrepareCollectionMetadataStep.UPDATE_JSONS_ON_S3;
+
+          await Promise.all([
+            imagesSession.update(),
+            collectionMetadata.update(),
+          ]);
         }
 
         if (
@@ -131,7 +145,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       //Prepare NFT metadata - STEP 2
       if (
         collectionMetadata.currentStep ==
-        PrepareCollectionMetadataSteps.UPDATE_JSONS_ON_S3
+        PrepareCollectionMetadataStep.UPDATE_JSONS_ON_S3
       ) {
         //Download each metadata file from s3, update image property and upload back to s3
 
@@ -220,7 +234,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
         );
 
         collectionMetadata.currentStep =
-          PrepareCollectionMetadataSteps.UPLOAD_METADATA_TO_IPFS;
+          PrepareCollectionMetadataStep.UPLOAD_METADATA_TO_IPFS;
         await collectionMetadata.update();
 
         if (
@@ -245,7 +259,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       //Sync metadata to IPFS --> STEP 3
       if (
         collectionMetadata.currentStep ==
-        PrepareCollectionMetadataSteps.UPLOAD_METADATA_TO_IPFS
+        PrepareCollectionMetadataStep.UPLOAD_METADATA_TO_IPFS
       ) {
         const metadataSession = await new FileUploadSession(
           {},
@@ -355,7 +369,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
         );
 
         collectionMetadata.currentStep =
-          PrepareCollectionMetadataSteps.METADATA_SUCCESSFULLY_PREPARED;
+          PrepareCollectionMetadataStep.METADATA_SUCCESSFULLY_PREPARED;
         await collectionMetadata.update();
 
         await this.writeEventLog({
@@ -369,7 +383,6 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
         });
       }
     } catch (error) {
-      console.error(error);
       collectionMetadata.lastError = `Error message: ${error.message}. ${JSON.stringify(error)}`;
       await collectionMetadata.update().catch((upgError) => {
         console.error(
@@ -377,6 +390,21 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           upgError,
         );
       });
+
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          project_uuid: bucket.project_uuid,
+          message: 'PrepareMetadataForCollectionWorker error!',
+          service: ServiceName.STORAGE,
+          data: {
+            data,
+            error: collectionMetadata.lastError,
+          },
+          err: error,
+        },
+        LogOutput.NOTIFY_ALERT,
+      );
 
       throw error;
     }
