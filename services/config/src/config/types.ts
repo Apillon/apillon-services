@@ -1,7 +1,6 @@
 export enum DbTables {
   QUOTA = 'quota',
   OVERRIDE = 'override',
-  TERMS = 'terms',
   CREDIT = 'credit',
   CREDIT_TRANSACTION = 'creditTransaction',
   CREDIT_PACKAGE = 'creditPackage',

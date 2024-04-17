@@ -179,24 +179,6 @@ export class AuthUser extends AdvancedSQLModel {
   })
   public token: string;
 
-  /**
-   * terms consents
-   */
-  @prop({
-    parser: { resolver: JSONParser() },
-    populatable: [
-      PopulateFrom.SERVICE, //
-      PopulateFrom.DB, //
-    ],
-    serializable: [
-      SerializeFor.ADMIN, //
-      SerializeFor.SERVICE,
-      SerializeFor.INSERT_DB, //
-      SerializeFor.UPDATE_DB,
-    ],
-  })
-  public consents: any;
-
   public constructor(data: any, context: Context) {
     super(data, context);
   }
