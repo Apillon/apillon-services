@@ -282,21 +282,21 @@ export function generateTemplateData(key: string, data: any) {
       `,
     },
     [EmailTemplate.IPFS_BANDWIDTH_NEAR_QUOTA]: {
-      subject: `Important: Your storage bandwidth is close to the limit`,
-      title: `Your storage bandwidth is close to the limit`,
+      subject: `Important: Your storage bandwidth is approaching the limit`,
+      title: `Your storage bandwidth is approaching the limit`,
       text: `
       <p>Dear Apillonian,</p><br>
 
-      <p>Your project has consumed almost all of the storage bandwidth it has available for this month.<p><br>
+      <p>Your project has consumed almost all of this month's available storage bandwidth.<p><br>
       <p><b>Used storage bandwidth: ${data.usedBandwidth}${data.availableBandwidth}/</b></p><br><br>
-      <p>Ip project exceeds storage bandwidth, then Apillon IPFS gateway starts to block request.</p>
-      <p>This means that all files, NFT metadata and most important all websites in this project, won't be accessible via Apillon IPFS gateway. </p>
+      <p>If your project exceeds the storage bandwidth limit, the Apillon IPFS gateway will start to block requests. 
+      This means that all files, NFT metadata, and, most importantly, all websites in this project will become inaccessible via the Apillon IPFS gateway.</p>
 
-      <p>You can increase available storage bandwidth by subscribing to higher plan in <a href="https://app.apillon.io/dashboard/payments">Billing and Usage section</a>.</p><br>`,
+      <p>You can increase the available storage bandwidth by upgrading your subscription plan in the <a href="https://app.apillon.io/dashboard/payments">Billing and Usage section</a>.</p><br>`,
       actionUrl: data.actionUrl,
       actionText: 'Subscribe to plan',
       text2: `
-      <p>You will receive another email, when and if project exceeds storage bandwidth.</p><br>
+      <p>You will receive another email if and when your project exceeds the storage bandwidth limit.</p><br>
       <p>
         If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
         <br/><br/><br/>
@@ -306,17 +306,17 @@ export function generateTemplateData(key: string, data: any) {
       `,
     },
     [EmailTemplate.IPFS_BANDWIDTH_EXCEEDED_QUOTA]: {
-      subject: `Important: Your storage bandwidth has exceeded the limit`,
-      title: `Your storage bandwidth has exceeded the limit`,
+      subject: `Important: Your storage bandwidth has exceeded the limit - Upgrade for continued access!`,
+      title: `Your storage bandwidth has exceeded the limit - Upgrade for continued access!`,
       text: `
       <p>Dear Apillonian,</p><br>
 
-      <p>Your project has consumed all of the available storage bandwidth for this month.<p><br>
+      <p>Your project has consumed all of this month's available storage bandwidth.<p><br>
       <p><b>Used storage bandwidth: ${data.usedBandwidth}${data.availableBandwidth}/</b></p><br><br>
-      <p>Apillon IPFS gateway will start to block request for your content on IPFS.</p>
-      <p>All files, NFT metadata and most important all websites in this project, are now not accessible via Apillon IPFS gateway.</p>
+      <p>Apillon IPFS gateway will now start blocking requests for your content on IPFS. 
+      All files, NFT metadata, and, most importantly, all websites in this project will become inaccessible via the Apillon IPFS gateway.</p>
 
-      <p>You can increase available storage bandwidth by subscribing to higher plan in <a href="https://app.apillon.io/dashboard/payments">Billing and Usage section</a>.</p><br>`,
+      <p>You can increase the available storage bandwidth by upgrading your subscription plan in the <a href="https://app.apillon.io/dashboard/payments">Billing and Usage section</a>.</p><br>`,
       actionUrl: data.actionUrl,
       actionText: 'Subscribe to plan',
       text2: `

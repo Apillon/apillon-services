@@ -662,14 +662,20 @@ export class IPFSService {
         Defaults.GYGABYTE_IN_BYTES;
 
       let templateName;
-      //Compare ipfsBandwidth with actial quota and set alertStatus
-      if (ipfsBandwidth.bandwidth > bandwidthQuotaInBytes) {
+      //Compare ipfsBandwidth with actual quota and set alertStatus
+      if (
+        ipfsBandwidth.bandwidth > bandwidthQuotaInBytes &&
+        ipfsBandwidth.alertStatus !=
+          IpfsBandwidthAlertStatus.EXCEEDED_QUOTA_ALERT_SENT
+      ) {
         ipfsBandwidth.alertStatus =
           IpfsBandwidthAlertStatus.EXCEEDED_QUOTA_ALERT_SENT;
         templateName = EmailTemplate.IPFS_BANDWIDTH_EXCEEDED_QUOTA;
       } else if (
         ipfsBandwidth.bandwidth >
-        bandwidthQuotaInBytes - Defaults.GYGABYTE_IN_BYTES * 2
+          bandwidthQuotaInBytes - Defaults.GYGABYTE_IN_BYTES * 2 &&
+        ipfsBandwidth.alertStatus !=
+          IpfsBandwidthAlertStatus.NEAR_QUOTA_ALERT_SENT
       ) {
         ipfsBandwidth.alertStatus =
           IpfsBandwidthAlertStatus.NEAR_QUOTA_ALERT_SENT;
