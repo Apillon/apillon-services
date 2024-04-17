@@ -30,6 +30,8 @@
     "@apillon/service-lib": "*",
     "@nestjs/common": "^9.2.1",
     "bcrypt": "^5.1.0",
-    "ganache": "^7.9.2"
+    "hardhat": "^2.22.2",
+    "ethers": "^5.7.2",
+    "terminate": "2.6.1"
   }
 }
