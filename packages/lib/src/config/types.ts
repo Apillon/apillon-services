@@ -130,6 +130,7 @@ export enum StorageEventType {
   BUCKET_WEBHOOK_UPDATE = 'update-bucket-webhook',
   BUCKET_WEBHOOK_DELETE = 'delete-bucket-webhook',
   LIST_FILE_UPLOAD = 'list-file-upload',
+  LIST_FILE_UPLOAD_SESSIONS = 'list-file-upload-sessions',
   MAX_BUCKETS_QUOTA_REACHED = 'max-buckets-quota-reached',
   IPNS_LIST = 'list-ipns',
   IPNS_CREATE = 'create-ipns',
@@ -188,7 +189,6 @@ export enum MailEventType {
 export enum ScsEventType {
   GET_QUOTA = 'get-quota',
   GET_ALL_QUOTAS = 'get-all-quotas',
-  GET_ACTIVE_TERMS = 'get-active-terms',
   CREATE_OVERRIDE = 'create-override',
   DELETE_OVERRIDE = 'delete-override',
   ADD_CREDIT = 'add-credit',

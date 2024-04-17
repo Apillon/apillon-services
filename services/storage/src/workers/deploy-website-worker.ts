@@ -137,7 +137,6 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           ipfsRes = await ipfsService.uploadFilesToIPFSFromS3(
             {
               files: sourceFiles,
-              wrapWithDirectory: true,
               wrappingDirectoryPath: `Deployment_${deployment.id}`,
             },
             this.context,
@@ -154,7 +153,6 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
               .uploadFilesToIPFSFromS3(
                 {
                   files: sourceFiles,
-                  wrapWithDirectory: true,
                   wrappingDirectoryPath: `Deployment_${deployment.id}`,
                 },
                 this.context,

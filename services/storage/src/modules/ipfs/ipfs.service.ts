@@ -207,7 +207,6 @@ export class IPFSService {
   public async uploadFURsToIPFSFromS3(
     event: {
       fileUploadRequests: FileUploadRequest[];
-      wrapWithDirectory: boolean;
       wrappingDirectoryPath: string;
     },
     context: Context,
@@ -385,28 +384,20 @@ export class IPFSService {
   public async uploadFilesToIPFSFromS3(
     event: {
       files: File[];
-      wrapWithDirectory: boolean;
       wrappingDirectoryPath: string;
     },
     context: Context,
   ): Promise<uploadItemsToIPFSRes> {
     //Create array of fileUploadRequests - some properties does not match, so they have to be populated
-    const fileUploadRequests: FileUploadRequest[] = [];
-    for (const file of event.files) {
-      const fur: FileUploadRequest = new FileUploadRequest(
-        file,
-        context,
-      ).populate({
+    const fileUploadRequests = event.files.map((file) =>
+      new FileUploadRequest(file, context).populate({
         fileName: file.name,
-      });
-
-      fileUploadRequests.push(fur);
-    }
+      }),
+    );
 
     const syncToIpfsRes = await this.uploadFURsToIPFSFromS3(
       {
         fileUploadRequests: fileUploadRequests,
-        wrapWithDirectory: event.wrapWithDirectory,
         wrappingDirectoryPath: event.wrappingDirectoryPath,
       },
       context,

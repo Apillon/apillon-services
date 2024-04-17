@@ -4,7 +4,7 @@ export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    CREATE TABLE IF NOT EXISTS collection_metadata (
+    CREATE TABLE IF NOT EXISTS \`${DbTables.COLLECTION_METADATA}\` (
   \`id\` INT NOT NULL AUTO_INCREMENT,
   \`status\` INT NULL,
   \`collection_uuid\` VARCHAR(36) NOT NULL,
@@ -13,7 +13,7 @@ export async function upgrade(
   \`metadataSession\` VARCHAR(36) NOT NULL,
   \`useApillonIpfsGateway\` BOOLEAN DEFAULT 1,
   \`ipnsId\` INT NULL,
-  \`currentStep\` INT NULL,
+  \`currentStep\` INT NOT NULL,
   \`lastError\` TEXT NULL,
   \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   \`createUser\` INT NULL,
@@ -27,6 +27,6 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    DROP TABLE IF EXISTS collection_metadata;
+    DROP TABLE IF EXISTS \`${DbTables.COLLECTION_METADATA}\`;
   `);
 }

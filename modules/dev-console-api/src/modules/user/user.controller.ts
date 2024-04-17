@@ -39,13 +39,6 @@ export class UserController {
     return await this.userService.getUserProfile(context);
   }
 
-  @Get('terms')
-  @Permissions({ role: DefaultUserRole.USER })
-  @UseGuards(AuthGuard)
-  async getPendingTermsForUser(@Ctx() context: DevConsoleApiContext) {
-    return await this.userService.getPendingTermsForUser(context);
-  }
-
   @Patch('me')
   @Permissions({ role: DefaultUserRole.USER })
   @Validation({ dto: UpdateUserDto })
@@ -179,12 +172,6 @@ export class UserController {
     @Ctx() context: DevConsoleApiContext,
   ): any {
     return this.userService.walletConnect(body, context);
-  }
-
-  @Post('consents')
-  @UseGuards(AuthGuard)
-  async userConsents(@Body() body: any, @Ctx() context: DevConsoleApiContext) {
-    return await this.userService.setUserConsents(body, context);
   }
 
   @Get('/oauth-session')

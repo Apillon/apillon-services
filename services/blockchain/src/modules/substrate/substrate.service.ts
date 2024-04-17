@@ -28,6 +28,7 @@ import { types as PhalaTypesBundle } from './types-bundle/phala-types';
 import { substrateChainToWorkerName } from '../../lib/helpers';
 import { typesBundle as SubsocialTypesBundle } from './types-bundle/subsocial/definitions';
 import { PhalaBlockchainIndexer } from '../blockchain-indexers/substrate/phala/indexer.service';
+import { transmitAndProcessSubstrateTransaction } from '../../lib/transmit-and-process-substrate-transaction';
 
 export class SubstrateService {
   static async createTransaction(
@@ -85,7 +86,7 @@ export class SubstrateService {
         break;
       }
       case SubstrateChain.ASTAR: {
-        keyring = new Keyring({type: 'sr25519'});
+        keyring = new Keyring({ type: 'sr25519' });
         break;
       }
       default: {
@@ -205,9 +206,11 @@ export class SubstrateService {
       });
 
       if (
-        env.APP_ENV != AppEnvironment.TEST &&
-        env.APP_ENV != AppEnvironment.LOCAL_DEV
+        env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
       ) {
+        await transmitAndProcessSubstrateTransaction(context, api, transaction);
+      } else {
         try {
           await sendToWorkerQueue(
             env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
