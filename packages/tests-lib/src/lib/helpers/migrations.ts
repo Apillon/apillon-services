@@ -120,14 +120,12 @@ export async function downgradeTestDatabases(): Promise<void> {
     await migrations[StageName.DEV_CONSOLE].down(-1);
 
     await Promise.all(
-      Object.entries(SQL_CONFIGS)
+      Object.values(StageName)
         .filter(
-          ([stageName]) =>
-            ![StageName.REFERRAL, StageName.DEV_CONSOLE].includes(
-              stageName as StageName,
-            ),
+          (stageName) =>
+            ![StageName.REFERRAL, StageName.DEV_CONSOLE].includes(stageName),
         )
-        .map(([stageName]) => migrations[stageName].down(-1)),
+        .map((stageName) => migrations[stageName].down(-1)),
     );
   } catch (err) {
     console.error('error at migrations.down()', err);
@@ -141,9 +139,7 @@ export async function unseedTestDatabases(): Promise<void> {
   await initSeeds();
   try {
     await Promise.all(
-      Object.entries(SQL_CONFIGS).map(([stageName]) =>
-        seeds[stageName]?.down(-1),
-      ),
+      Object.values(StageName).map((stageName) => seeds[stageName]?.down(-1)),
     );
   } catch (err) {
     console.error('error at seeds.down()', err);
@@ -154,7 +150,7 @@ export async function unseedTestDatabases(): Promise<void> {
 
 export async function destroyTestMigrations(): Promise<void> {
   await Promise.all(
-    Object.entries(SQL_CONFIGS).map(([stageName]) =>
+    Object.values(StageName).map((stageName) =>
       migrations[stageName].destroy(),
     ),
   );
@@ -163,9 +159,7 @@ export async function destroyTestMigrations(): Promise<void> {
 
 export async function destroyTestSeeds(): Promise<void> {
   await Promise.all(
-    Object.entries(SQL_CONFIGS).map(([stageName]) =>
-      seeds[stageName]?.destroy(),
-    ),
+    Object.values(StageName).map((stageName) => seeds[stageName]?.destroy()),
   );
   seeds = {};
 }
@@ -176,14 +170,12 @@ export async function rebuildTestDatabases(): Promise<void> {
   console.info('initMigrations success');
   try {
     const migrationResults = await Promise.allSettled(
-      Object.entries(SQL_CONFIGS)
+      Object.values(StageName)
         .filter(
-          ([stageName]) =>
-            ![StageName.REFERRAL, StageName.DEV_CONSOLE].includes(
-              stageName as StageName,
-            ),
+          (stageName) =>
+            ![StageName.REFERRAL, StageName.DEV_CONSOLE].includes(stageName),
         )
-        .map(([stageName]) => migrations[stageName].reset()),
+        .map((stageName) => migrations[stageName].reset()),
     );
 
     // migrations using DB tables that depend on migrations above
@@ -207,9 +199,7 @@ export async function rebuildTestDatabases(): Promise<void> {
   await initSeeds();
   try {
     const migrationResults = await Promise.allSettled(
-      Object.entries(SQL_CONFIGS).map(([stageName]) =>
-        seeds[stageName]?.reset(),
-      ),
+      Object.values(StageName).map((stageName) => seeds[stageName]?.reset()),
     );
     for (const res of migrationResults) {
       if (res.status === 'rejected') {
