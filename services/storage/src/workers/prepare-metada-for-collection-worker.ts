@@ -52,10 +52,23 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       data,
     );
 
-    const collectionMetadata = await new CollectionMetadata(
-      {},
-      this.context,
-    ).populateById(data.collectionMetadataId);
+    let collectionMetadata;
+
+    if (data.collectionMetadataId) {
+      collectionMetadata = await new CollectionMetadata(
+        {},
+        this.context,
+      ).populateById(data.collectionMetadataId);
+    } else if (data.collection_uuid) {
+      //Sqs message from nft microservice (add nft metadata). collectionMetadata record doesn't exists yet - create new one.
+      collectionMetadata = await new CollectionMetadata(
+        {
+          ...data,
+          currentStep: PrepareCollectionMetadataStep.UPLOAD_IMAGES_TO_IPFS,
+        },
+        this.context,
+      ).insert();
+    }
 
     if (!collectionMetadata.exists()) {
       await this.writeEventLog({
@@ -314,15 +327,15 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
 
         if (collectionMetadata.useApillonIpfsGateway) {
           //If ipnsId is not specified in data, get first ipns record in bucket
-          if (!data.ipnsId) {
+          if (!collectionMetadata.ipnsId) {
             const ipnses = await bucket.getBucketIpnsRecords();
-            data.ipnsId = ipnses[0].id;
+            collectionMetadata.ipnsId = ipnses[0].id;
           }
           //Pin to IPNS
           const ipnsDbRecord: Ipns = await new Ipns(
             {},
             this.context,
-          ).populateById(data.ipnsId);
+          ).populateById(collectionMetadata.ipnsId);
           const ipnsRecord = await new IPFSService(
             this.context,
             ipnsDbRecord.project_uuid,
@@ -343,7 +356,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             await new NftsMicroservice(
               this.context,
             ).executeDeployCollectionWorker({
-              collection_uuid: data.collection_uuid,
+              collection_uuid: collectionMetadata.collection_uuid,
               baseUri: 'ipfs://' + metadataFiles.wrappedDirCid,
             });
           } else {
@@ -352,7 +365,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
               'DeployCollectionWorker',
               [
                 {
-                  collection_uuid: data.collection_uuid,
+                  collection_uuid: collectionMetadata.collection_uuid,
                   baseUri: 'ipfs://' + metadataFiles.wrappedDirCid,
                 },
               ],
@@ -378,7 +391,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           message: 'PrepareMetadataForCollectionWorker finished!',
           service: ServiceName.STORAGE,
           data: {
-            data,
+            collectionMetadata: collectionMetadata.serialize(),
           },
         });
       }
@@ -399,6 +412,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           service: ServiceName.STORAGE,
           data: {
             data,
+            collectionMetadata: collectionMetadata.serialize(),
             error: collectionMetadata.lastError,
           },
           err: error,
