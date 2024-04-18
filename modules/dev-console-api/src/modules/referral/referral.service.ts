@@ -7,6 +7,7 @@ import {
   TwitterOauthDto,
   ProductOrderDto,
   BaseQueryFilter,
+  ClaimTokensDto,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 
@@ -146,5 +147,14 @@ export class ReferralService {
         context.user.user_uuid,
       )
     ).data;
+  }
+
+  /**
+   * Claim airdrop NCTR tokens
+   * @param {DevConsoleApiContext} context
+   * @param {ClaimTokensDto} body
+   */
+  async claimTokens(context: DevConsoleApiContext, body: ClaimTokensDto) {
+    return (await new ReferralMicroservice(context).claimTokens(body)).data;
   }
 }

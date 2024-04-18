@@ -3,6 +3,7 @@ import { AppEnvironment, ReferralEventType } from '../../../config/types';
 import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { ClaimTokensDto } from './dtos/claim-tokens.dto';
 import { ConfirmRetweetDto } from './dtos/confirm-retweet.dto';
 import { CreateReferralDto } from './dtos/create-referral.dto';
 import { GithubOauthDto } from './dtos/github-oauth.dto';
@@ -127,6 +128,13 @@ export class ReferralMicroservice extends BaseService {
     return await this.callService({
       eventName: ReferralEventType.GET_AIRDROP_TASKS,
       user_uuid,
+    });
+  }
+
+  public async claimTokens(body: ClaimTokensDto) {
+    return await this.callService({
+      eventName: ReferralEventType.CLAIM_TOKENS,
+      body: body.serialize(),
     });
   }
 }

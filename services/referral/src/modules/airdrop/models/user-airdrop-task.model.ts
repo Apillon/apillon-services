@@ -338,7 +338,7 @@ export class UserAirdropTask extends BaseSQLModel {
       : this.reset();
   }
 
-  public async insertOrUpdate(): Promise<void> {
+  public async insertOrUpdate(): Promise<this> {
     const serializedData = this.serialize(SerializeFor.INSERT_DB);
 
     const updateFields = Object.keys(serializedData)
@@ -351,9 +351,10 @@ export class UserAirdropTask extends BaseSQLModel {
     `;
 
     await this.getContext().mysql.paramExecute(query, serializedData);
+    return this;
   }
 
-  public async getNewStats(user_uuid: string) {
+  public async getNewStats(user_uuid: string): Promise<this> {
     this.reset();
     this.user_uuid = user_uuid;
     const res = await this.db().paramExecute(
@@ -391,9 +392,7 @@ export class UserAirdropTask extends BaseSQLModel {
     ]);
 
     this.recalculateTotalPoints();
-    await this.insertOrUpdate();
-    console.info('Finished assigning airdrop tasks');
-    return this;
+    return await this.insertOrUpdate();
   }
 
   public recalculateTotalPoints() {
