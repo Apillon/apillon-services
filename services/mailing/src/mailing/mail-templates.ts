@@ -9,7 +9,7 @@ export class MailTemplates {
    * @static
    * @memberof MailTemplates
    */
-  public static templates: unknown = {};
+  public static templates: object = {};
 
   /**
    * Returns compiled mail template. If its not cached in collection it is read from file system.
@@ -21,7 +21,7 @@ export class MailTemplates {
    */
   public static getTemplate(templateName: string) {
     const templateDir = env.MAIL_TEMPLATE_PATH || `${__dirname}/templates`;
-    if (!this.templates.hasOwnProperty(templateName)) {
+    if (!(templateName in this.templates)) {
       try {
         // eslint-disable-next-line security/detect-non-literal-fs-filename
         const html = fs.readFileSync(

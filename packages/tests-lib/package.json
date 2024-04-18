@@ -20,16 +20,16 @@
     "swanky:deploy": "swanky contract deploy paras_launchpad --account alice -g 100000000000 -a [\"ApillonGenericNFT\"]  [\"AGNFT\"]  ['ipfs://myIpfsUri/']  '.json'  10  1  1  1  0  0  0  1682899200000  9  'bTdmScYtDDGg12mG1pvQ5zAooMXMK45WHBt3meGDXrNBKua'  'bTdmScYtDDGg12mG1pvQ5zAooMXMK45WHBt3meGDXrNBKua'"
   },
   "devDependencies": {
+    "@astar-network/swanky-cli": "3.1.0",
     "@types/jsonwebtoken": "^9.0.6",
     "eslint-config-common": "*",
-    "@astar-network/swanky-cli": "3.1.0",
     "tsconfig": "*"
   },
   "dependencies": {
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
-    "@nestjs/common": "^9.2.1",
-    "bcrypt": "^5.1.0",
+    "@nestjs/common": "^10.3.7",
+    "bcrypt": "^5.1.1",
     "ganache": "^7.9.2"
   }
 }
