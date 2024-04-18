@@ -360,8 +360,9 @@ export class SubstrateService {
 
       let latestSuccess = null;
       let transmitted = 0;
+      let selfRepaired = 0;
       // TODO: consider batching transaction api.tx.utility.batch
-      for (const transaction of transactions) {
+      for (const [index, transaction] of transactions.entries()) {
         console.log(
           `Processing transaction with id ${transaction.id} (status=${transaction.transactionStatus}, ` +
             `nonce=${transaction.nonce},last updated=${transaction.updateTime}).`,
@@ -392,24 +393,36 @@ export class SubstrateService {
         try {
           const result = await api.send(transaction.rawTransaction);
           console.log(
-            `successfully transmitted tx with id ${transaction.id}:`,
-            result,
+            `successfully transmitted tx with id ${transaction.id} on chain ${transaction.chainType}:`,
+            result.toJSON(),
           );
           latestSuccess = transaction.nonce;
           transmitted++;
         } catch (err: any) {
+          console.log(
+            `error transmitting tx with id ${transaction.id} and nonce ${transaction.nonce}:`,
+            err,
+          );
           //try self repair else error
           if (
             err?.data === 'Transaction is outdated' ||
             (typeof err?.message === 'string' &&
               err.message.includes('Transaction is temporarily banned'))
           ) {
+            // only repair TX if it is preceded by transaction that was already transmitted
+            if (index > transmitted + selfRepaired) {
+              console.warn(
+                `Skipping self repair at index ${index} since previous transactions failed (${transmitted}  transmitted, ${selfRepaired} selfRepaired).`,
+              );
+              continue;
+            }
             const selfRepairNonce = await api.trySelfRepairNonce(
               wallet,
               transaction.transactionHash,
             );
             latestSuccess = selfRepairNonce;
             if (selfRepairNonce) {
+              selfRepaired++;
               await eventLogger(
                 {
                   logType: LogType.INFO,
@@ -476,6 +489,7 @@ export class SubstrateService {
             wallet,
             numOfTransactions: transactions.length,
             transmitted,
+            selfRepaired,
           },
         },
         LogOutput.EVENT_INFO,
