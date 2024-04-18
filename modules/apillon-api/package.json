@@ -32,7 +32,7 @@
   "dependencies": {
     "@apillon/lib": "*",
     "@apillon/modules-lib": "*",
-    "@aws-sdk/signature-v4-crt": "^3.556.0",
+    "@aws-sdk/signature-v4-crt": "^3.515.0",
     "@nestjs/common": "^10.3.7",
     "@nestjs/core": "^10.3.7",
     "@nestjs/platform-express": "^10.3.7",

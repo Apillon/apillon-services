@@ -24,11 +24,11 @@
     "tsconfig": "*"
   },
   "dependencies": {
-    "@aws-sdk/client-lambda": "^3.556.0",
-    "@aws-sdk/client-s3": "^3.556.0",
-    "@aws-sdk/client-secrets-manager": "^3.556.0",
-    "@aws-sdk/client-sqs": "^3.556.0",
-    "@aws-sdk/s3-request-presigner": "^3.556.0",
+    "@aws-sdk/client-lambda": "^3.518.0",
+    "@aws-sdk/client-s3": "^3.515.0",
+    "@aws-sdk/client-secrets-manager": "^3.515.0",
+    "@aws-sdk/client-sqs": "^3.515.0",
+    "@aws-sdk/s3-request-presigner": "^3.515.0",
     "@polkadot/util-crypto": "^12.6.2",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",

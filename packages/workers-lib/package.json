@@ -24,8 +24,8 @@
   },
   "dependencies": {
     "@apillon/lib": "*",
-    "@aws-sdk/client-lambda": "^3.556.0",
-    "@aws-sdk/client-sqs": "^3.556.0",
+    "@aws-sdk/client-lambda": "^3.518.0",
+    "@aws-sdk/client-sqs": "^3.515.0",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
