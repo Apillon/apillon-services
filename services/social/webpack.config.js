@@ -26,7 +26,7 @@ module.exports = {
       cardinal: false,
       'electron-fetch': false,
       'electron': false,
-      'aws-sdk/credential-providers': false,
+      '@aws-sdk/credential-providers': false,
       'gcp-metadata': false,
       'socks': false
       // '@nestjs/websockets/socket-module': false,
