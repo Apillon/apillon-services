@@ -33,12 +33,12 @@
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
-    "@types/uuid": "^9.0.8",
     "axios": "^1.6.8",
     "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
+    "@types/uuid": "^9.0.8",
     "eslint-config-common": "*",
     "ts-loader": "^9.5.1",
     "tsconfig": "*",

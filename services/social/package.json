@@ -34,13 +34,13 @@
     "@polkadot/api": "10.12.2",
     "@polkadot/keyring": "^12.3.2",
     "@polkadot/util": "^12.3.2",
-    "@types/uuid": "^9.0.8",
     "node-fetch": "3.3.2"
   },
   "devDependencies": {
     "eslint-config-common": "*",
     "tsconfig": "*",
-    "@apillon/tests-lib": "*"
+    "@apillon/tests-lib": "*",
+    "@types/uuid": "^9.0.8"
   },
   "overrides": {
     "ipfs-utils": "9.0.6"

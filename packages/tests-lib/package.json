@@ -30,7 +30,6 @@
     "@apillon/service-lib": "*",
     "@nestjs/common": "^10.3.7",
     "bcrypt": "^5.1.1",
-    "ganache": "^7.9.2",
-    "mysql2": "^3.9.6"
+    "ganache": "^7.9.2"
   }
 }
