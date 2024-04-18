@@ -19,17 +19,17 @@
   "dependencies": {
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
-    "@middy/core": "^2.5.7",
-    "axios": "^1.6.7",
-    "handlebars": "^4.7.7",
-    "nodemailer": "^6.8.0"
+    "@middy/core": "^3.3.1",
+    "axios": "^1.6.8",
+    "handlebars": "^4.7.8",
+    "nodemailer": "^6.9.13"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^9.0.1",
     "eslint-config-common": "*",
-    "ts-loader": "^9.2.3",
+    "ts-loader": "^9.5.1",
     "tsconfig": "*",
-    "webpack": "^5.90.3",
+    "webpack": "^5.91.0",
     "webpack-node-externals": "^3.0.0"
   }
 }
