@@ -218,6 +218,11 @@ export enum Defaults {
     Defaults.GYGABYTE_IN_BYTES,
 }
 
+export enum IpfsBandwidthAlertStatus {
+  NEAR_QUOTA_ALERT_SENT = 1,
+  EXCEEDED_QUOTA_ALERT_SENT = 2,
+}
+
 export enum PrepareCollectionMetadataStep {
   UPLOAD_IMAGES_TO_IPFS = 1,
   UPDATE_JSONS_ON_S3 = 2,
