@@ -28,17 +28,19 @@
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
-    "@polkadot/api": "10.12.2",
-    "@polkadot/keyring": "^12.6.2",
-    "@polkadot/util": "^12.3.2",
+    "@middy/core": "^2.5.7",
     "@subsocial/api": "^0.8.14",
     "@subsocial/types": "^0.6.8",
-    "node-fetch": "3.3.2"
+    "@polkadot/api": "10.12.2",
+    "@polkadot/keyring": "^12.3.2",
+    "@polkadot/util": "^12.3.2",
+    "@types/uuid": "^8.3.4",
+    "node-fetch": "2.6.7"
   },
   "devDependencies": {
-    "@apillon/tests-lib": "*",
     "eslint-config-common": "*",
-    "tsconfig": "*"
+    "tsconfig": "*",
+    "@apillon/tests-lib": "*"
   },
   "overrides": {
     "ipfs-utils": "9.0.6"

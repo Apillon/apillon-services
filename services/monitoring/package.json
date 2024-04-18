@@ -21,14 +21,15 @@
   "dependencies": {
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
-    "@slack/web-api": "^7.0.3",
+    "@middy/core": "^3.3.1",
+    "@slack/web-api": "^6.8.0",
     "mongodb": "^6.5.0"
   },
   "devDependencies": {
     "eslint-config-common": "*",
-    "ts-loader": "^9.5.1",
+    "ts-loader": "^9.2.3",
     "tsconfig": "*",
-    "webpack": "^5.91.0",
+    "webpack": "^5.90.3",
     "webpack-node-externals": "^3.0.0"
   },
   "jest": {

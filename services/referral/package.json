@@ -26,8 +26,13 @@
   "dependencies": {
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
+    "@middy/core": "^2.5.7",
     "aws-lambda": "^1.0.7",
-    "twitter-api-v2": "^1.16.1"
+    "axios": "^1.2.0",
+    "twitter-api-v2": "^1.12.10",
+    "@rawmodel/core": "^3.3.4",
+    "@rawmodel/parsers": "^3.3.4",
+    "@rawmodel/validators": "^3.3.4"
   },
   "devDependencies": {
     "eslint-config-common": "*",
