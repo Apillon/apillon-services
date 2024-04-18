@@ -155,7 +155,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
           {
             session_uuid: session.session_uuid,
             wrapWithDirectory: data?.wrapWithDirectory,
-            wrappingDirectoryName: data?.directoryPath,
+            wrappingDirectoryName: data.wrappingDirectoryName,
             processFilesInSyncWorker: false, //Files were processed in first iteration
           },
         ],
