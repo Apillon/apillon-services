@@ -44,13 +44,13 @@
     "ethers": "^5.7.2",
     "graphql": "^16.6.0",
     "graphql-request": "^5.2.0",
-    "node-fetch": "2.6.7"
+    "node-fetch": "^2.6.7"
   },
   "devDependencies": {
     "@apillon/tests-lib": "*",
-    "@types/uuid": "^9.0.8",
     "@types/bcryptjs": "^2.4.2",
     "@types/jest": "^29.5.12",
+    "@types/uuid": "^9.0.8",
     "axios-mock-adapter": "^1.22.0",
     "eslint-config-common": "*",
     "jest": "29.7.0",
