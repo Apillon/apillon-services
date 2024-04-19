@@ -22,15 +22,19 @@ import { evmChainToWorkerName, WorkerType } from '../../lib/helpers';
 import { getWalletSeed } from '../../lib/seed';
 import { transmitAndProcessEvmTransaction } from '../../lib/transmit-and-process-evm-transaction';
 
+export async function getNextNonce(
+  provider: ethers.providers.JsonRpcProvider,
+  walletAddress: string,
+) {
+  return await provider.getTransactionCount(walletAddress, 'pending');
+}
+
 async function trySelfRepairNonce(
   provider: ethers.providers.JsonRpcProvider,
   context: ServiceContext,
   wallet: Wallet,
 ) {
-  const lastOnChainNonce = await provider.getTransactionCount(
-    wallet.address,
-    'pending',
-  );
+  const lastOnChainNonce = await getNextNonce(provider, wallet.address);
   if (!lastOnChainNonce) {
     return;
   }
