@@ -12,7 +12,8 @@ import { CheckPendingTransactionsWorker } from '../check-pending-transactions-wo
 import { ethers } from 'ethers';
 import { DbTables } from '../../config/types';
 
-const RESET_LAST_PROCESSED_NONCE = 1;
+//mock returns 1 as next onchain nonce so last nonce is 0
+const RESET_LAST_PROCESSED_NONCE = 0;
 jest.mock('@polkadot/api', () => ({
   WsProvider: jest.fn().mockImplementation(() => {
     return {

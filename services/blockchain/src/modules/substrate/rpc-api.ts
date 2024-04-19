@@ -61,7 +61,7 @@ export class SubstrateRpcApi {
     // });
   }
 
-  async getNextNonce(walletAddress: string) {
+  async getNextOnChainNonce(walletAddress: string) {
     const api = await this.getApi();
     const accountInfo = await api.query.system.account(walletAddress);
 
@@ -74,11 +74,11 @@ export class SubstrateRpcApi {
    */
   async trySelfRepairNonce(wallet: Wallet, transactionHash: string) {
     console.log('Timing before self repair', this.getTiming(), 's');
-    const nextNonce = await this.getNextNonce(wallet.address);
-    if (!nextNonce) {
+    const nextOnChainNonce = await this.getNextOnChainNonce(wallet.address);
+    if (!nextOnChainNonce) {
       return;
     }
-    const lastProcessedNonce = nextNonce - 1;
+    const lastProcessedNonce = nextOnChainNonce - 1;
     if (wallet.lastProcessedNonce > lastProcessedNonce) {
       return;
     }

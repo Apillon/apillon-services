@@ -17,7 +17,7 @@ import {
 import { DbTables } from '../config/types';
 import { SubstrateRpcApi } from '../modules/substrate/rpc-api';
 import { ethers } from 'ethers';
-import { getNextNonce } from '../modules/evm/evm.service';
+import { getNextOnChainNonce } from '../modules/evm/evm.service';
 
 export class CheckPendingTransactionsWorker extends BaseWorker {
   protected context: Context;
@@ -61,14 +61,15 @@ export class CheckPendingTransactionsWorker extends BaseWorker {
     for (const data of res) {
       // if we didn't reset yet or if we reset nonce in the past (for different nonce)
       if (data.lastResetNonce === null || data.minNonce > data.lastResetNonce) {
-        const nextNonce = await this.getLastNonce(
+        const nextOnChainNonce = await this.getNextOnChainNonce(
           data.address,
           data.chainType,
           data.endpointUrl,
         );
-        if (nextNonce < data.lastProcessedNonce) {
+        const lastProcessedNonce = nextOnChainNonce - 1;
+        if (lastProcessedNonce < data.lastProcessedNonce) {
           console.log(
-            `Last processed nonce was reset from ${data.lastProcessedNonce} to ${nextNonce} for ${data.address}.`,
+            `Last processed nonce was reset from ${data.lastProcessedNonce} to ${nextOnChainNonce} for ${data.address}.`,
           );
           await this.context.mysql.paramExecute(
             `
@@ -77,7 +78,7 @@ export class CheckPendingTransactionsWorker extends BaseWorker {
                   lastResetNonce    = @nonce
               WHERE id = @walletId
             `,
-            { walletId: data.walletId, nonce: nextNonce },
+            { walletId: data.walletId, nonce: lastProcessedNonce },
           );
         }
       } else {
@@ -128,7 +129,7 @@ export class CheckPendingTransactionsWorker extends BaseWorker {
     throw new Error('Method not implemented.');
   }
 
-  private async getLastNonce(
+  private async getNextOnChainNonce(
     address: string,
     chainType: ChainType,
     endpointUrl: string,
@@ -136,12 +137,12 @@ export class CheckPendingTransactionsWorker extends BaseWorker {
     switch (chainType) {
       case ChainType.EVM: {
         const provider = new ethers.providers.JsonRpcProvider(endpointUrl);
-        return await getNextNonce(provider, address);
+        return await getNextOnChainNonce(provider, address);
       }
       case ChainType.SUBSTRATE: {
         const api = new SubstrateRpcApi(endpointUrl);
         try {
-          return await api.getNextNonce(address);
+          return await api.getNextOnChainNonce(address);
         } finally {
           await api.destroy();
         }
