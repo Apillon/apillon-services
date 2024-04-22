@@ -288,7 +288,7 @@ export function generateTemplateData(key: string, data: any) {
       <p>Dear Apillonian,</p><br>
 
       <p>Your project has consumed almost all of this month's available storage bandwidth.<p><br>
-      <p><b>Used storage bandwidth: ${data.usedBandwidth}${data.availableBandwidth}/</b></p><br><br>
+      <p><b>Used storage bandwidth: ${data.usedBandwidth}/${data.availableBandwidth}</b></p><br><br>
       <p>If your project exceeds the storage bandwidth limit, the Apillon IPFS gateway will start to block requests. 
       This means that all files, NFT metadata, and, most importantly, all websites in this project will become inaccessible via the Apillon IPFS gateway.</p>
 
@@ -312,7 +312,7 @@ export function generateTemplateData(key: string, data: any) {
       <p>Dear Apillonian,</p><br>
 
       <p>Your project has consumed all of this month's available storage bandwidth.<p><br>
-      <p><b>Used storage bandwidth: ${data.usedBandwidth}${data.availableBandwidth}/</b></p><br><br>
+      <p><b>Used storage bandwidth: ${data.usedBandwidth}/${data.availableBandwidth}</b></p><br><br>
       <p>Apillon IPFS gateway will now start blocking requests for your content on IPFS. 
       All files, NFT metadata, and, most importantly, all websites in this project will become inaccessible via the Apillon IPFS gateway.</p>
 

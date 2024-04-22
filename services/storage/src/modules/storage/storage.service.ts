@@ -94,9 +94,9 @@ export class StorageService {
       Defaults.DEFAULT_BANDWIDTH;
 
     return {
-      availableStorage: storageQuota * Defaults.GYGABYTE_IN_BYTES,
+      availableStorage: storageQuota * Defaults.GIGABYTE_IN_BYTES,
       usedStorage,
-      availableBandwidth: bandwidthQuota * Defaults.GYGABYTE_IN_BYTES,
+      availableBandwidth: bandwidthQuota * Defaults.GIGABYTE_IN_BYTES,
       usedBandwidth: usedBandwidth.exists() ? usedBandwidth.bandwidth : 0,
     };
   }
@@ -308,7 +308,7 @@ export class StorageService {
     }
 
     //update session
-    session.sessionStatus = FileUploadSessionStatus.PROCESSED;
+    session.sessionStatus = FileUploadSessionStatus.IN_PROGRESS;
     await session.update();
 
     if (

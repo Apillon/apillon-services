@@ -100,7 +100,7 @@ export class IPFSService {
       }
       //Send alert. Even if backup node works
       await new Lmas().writeLog({
-        logType: LogType.ALERT,
+        logType: this.usingBackupNode ? LogType.WARN : LogType.ALERT,
         message: `Error initializing IPFS Client. Failed to get ipfs version (ipfs api health check failed). Backup api status: ${this.usingBackupNode ? 'OK' : 'ERROR'}`,
         location: 'IPFSService.initializeIPFSClient',
         service: ServiceName.STORAGE,
@@ -606,6 +606,7 @@ export class IPFSService {
 
   /**
    * Increase used bandwidth for project in month
+   * Execute email alert if used bandwidth is near or has reached the limit
    * @param project_uuid
    * @param month
    * @param year
@@ -646,7 +647,7 @@ export class IPFSService {
       ipfsBandwidth.alertStatus !=
         IpfsBandwidthAlertStatus.EXCEEDED_QUOTA_ALERT_SENT &&
       ipfsBandwidth.bandwidth >
-        Defaults.DEFAULT_BANDWIDTH_IN_BYTES - Defaults.GYGABYTE_IN_BYTES * 2
+        Defaults.DEFAULT_BANDWIDTH_IN_BYTES - Defaults.GIGABYTE_IN_BYTES * 2
     ) {
       /* Project has reached default bandwidth - 2Gb. Get actual quota for this project*/
       let bandwidthQuota: QuotaDto;
@@ -659,7 +660,7 @@ export class IPFSService {
 
       const bandwidthQuotaInBytes =
         (bandwidthQuota?.value || Defaults.DEFAULT_BANDWIDTH) *
-        Defaults.GYGABYTE_IN_BYTES;
+        Defaults.GIGABYTE_IN_BYTES;
 
       let templateName;
       //Compare ipfsBandwidth with actual quota and set alertStatus
@@ -673,7 +674,7 @@ export class IPFSService {
         templateName = EmailTemplate.IPFS_BANDWIDTH_EXCEEDED_QUOTA;
       } else if (
         ipfsBandwidth.bandwidth >
-          bandwidthQuotaInBytes - Defaults.GYGABYTE_IN_BYTES * 2 &&
+          bandwidthQuotaInBytes - Defaults.GIGABYTE_IN_BYTES * 2 &&
         ipfsBandwidth.alertStatus !=
           IpfsBandwidthAlertStatus.NEAR_QUOTA_ALERT_SENT
       ) {
@@ -697,10 +698,14 @@ export class IPFSService {
             new EmailDataDto({
               mailAddresses: [projectOwner.email],
               templateName,
-              usedBandwidth: (
-                ipfsBandwidth.bandwidth / Defaults.GYGABYTE_IN_BYTES
-              ).toFixed(2),
-              availableBandwidth: bandwidthQuotaInBytes.toFixed(0),
+              templateData: {
+                usedBandwidth: (
+                  ipfsBandwidth.bandwidth / Defaults.GIGABYTE_IN_BYTES
+                ).toFixed(2),
+                availableBandwidth: (
+                  bandwidthQuotaInBytes / Defaults.GIGABYTE_IN_BYTES
+                ).toFixed(0),
+              },
             }),
           );
         }
