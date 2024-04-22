@@ -274,10 +274,17 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
         collectionMetadata.currentStep ==
         PrepareCollectionMetadataStep.UPLOAD_METADATA_TO_IPFS
       ) {
+        //Get metadata session and set it's status if necessary
         const metadataSession = await new FileUploadSession(
           {},
           this.context,
         ).populateByUUID(collectionMetadata.metadataSession);
+        if (
+          metadataSession.sessionStatus != FileUploadSessionStatus.IN_PROGRESS
+        ) {
+          metadataSession.sessionStatus = FileUploadSessionStatus.IN_PROGRESS;
+          await metadataSession.update();
+        }
 
         const metadataFURs = (
           await new FileUploadRequest(

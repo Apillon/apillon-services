@@ -203,7 +203,7 @@ describe('IpfsBandwidthWorker integration test', () => {
         cid: 'Qmek1ARHExdviRX8wpXRWT5WG9QQpDZjeAqnEFRcRhsY8X',
         reqBytes: 100,
         respBytes:
-          (Defaults.DEFAULT_BANDWIDTH - 2) * Defaults.GYGABYTE_IN_BYTES,
+          (Defaults.DEFAULT_BANDWIDTH - 2) * Defaults.GIGABYTE_IN_BYTES,
         responseTime: 42,
         ts: new Date(),
       });
@@ -235,7 +235,7 @@ describe('IpfsBandwidthWorker integration test', () => {
         project_uuid: project_uuid,
         cid: 'Qmek1ARHExdviRX8wpXRWT5WG9QQpDZjeAqnEFRcRhsY8X',
         reqBytes: 100,
-        respBytes: 2 * Defaults.GYGABYTE_IN_BYTES,
+        respBytes: 2 * Defaults.GIGABYTE_IN_BYTES,
         responseTime: 42,
         ts: new Date(),
       });
