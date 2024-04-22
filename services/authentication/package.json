@@ -30,7 +30,7 @@
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
     "@kiltprotocol/sdk-js": "^0.31.1",
-    "@middy/core": "^2.5.7",
+    "@middy/core": "^3.3.1",
     "@polkadot/api": "10.12.2",
     "@polkadot/keyring": "^10.1.9",
     "@polkadot/util": "^10.1.10",
@@ -38,10 +38,10 @@
     "valid-url": "^1.0.9"
   },
   "devDependencies": {
-    "@types/uuid": "^9.0.8",
     "eslint-config-common": "*",
-    "rimraf": "^5.0.5",
-    "tsconfig": "*"
+    "tsconfig": "*",
+    "@types/uuid": "^9.0.8",
+    "rimraf": "^5.0.5"
   },
   "overrides": {
     "ipfs-utils": "9.0.6"
