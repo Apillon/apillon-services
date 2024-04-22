@@ -150,6 +150,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             ],
             null,
             null,
+            remainingImageFURs.length > 2000 ? 999 : 0,
           );
         }
         return true;
@@ -318,6 +319,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             ],
             null,
             null,
+            metadataFURs.length > 2000 ? 999 : 0,
           );
 
           return true;
