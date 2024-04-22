@@ -318,10 +318,8 @@ export class StorageService {
       //If more than 1000 files in session, initial file generation should be performed in worker, otherwise timeout can occur.
       const processFilesInSyncWorker =
         (await session.getNumOfFilesInSession()) > 1000;
-      if (
-        session.sessionStatus == FileUploadSessionStatus.CREATED &&
-        !processFilesInSyncWorker
-      ) {
+
+      if (!processFilesInSyncWorker) {
         await processSessionFiles(context, bucket, session, event.body);
       }
       if (

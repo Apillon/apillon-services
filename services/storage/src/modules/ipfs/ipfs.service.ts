@@ -683,7 +683,7 @@ export class IPFSService {
         templateName = EmailTemplate.IPFS_BANDWIDTH_NEAR_QUOTA;
       }
 
-      if (ipfsBandwidth.alertStatus) {
+      if (ipfsBandwidth.alertStatus && templateName) {
         //Get project owner
         let projectOwner;
         if (env.APP_ENV != AppEnvironment.TEST) {

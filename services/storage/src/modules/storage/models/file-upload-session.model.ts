@@ -135,7 +135,7 @@ export class FileUploadSession extends AdvancedSQLModel {
 
     const sqlQuery = {
       qSelect: `
-        SELECT s.session_uuid, s.sessionStatus, s.createTime, s.updateTime COUNT(fur.id) as numOfFileUploadRequests, COUNT(f.id) as numOfUploadedFiles
+        SELECT s.session_uuid, s.sessionStatus, s.createTime, s.updateTime, COUNT(fur.id) as numOfFileUploadRequests, COUNT(f.id) as numOfUploadedFiles
         `,
       qFrom: `
         FROM \`${DbTables.FILE_UPLOAD_SESSION}\` s
