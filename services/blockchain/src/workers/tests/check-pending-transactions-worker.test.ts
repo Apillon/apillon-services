@@ -154,8 +154,8 @@ describe('Handle evm transactions', () => {
               ${SubstrateChain.CRUST},
               ${ChainType.SUBSTRATE},
               'seed,',
-              4001,
-              4000,
+              3001,
+              3000,
               null,
               '${dateToSqlString(createTime2)}')
     `);
@@ -193,19 +193,47 @@ describe('Handle evm transactions', () => {
     await releaseStage(stage);
   });
 
-  test('nonce get reset if it wasnt reset yet', async () => {
+  test('notification is sent if lastProcessedNonce is the same as current on-chain nonce', async () => {
+    let success = true;
+    try {
+      await new CheckPendingTransactionsWorker(
+        workerDefinition,
+        stage.context,
+      ).run();
+    } catch (e) {
+      success = false;
+    }
+
+    expect(success).toBe(true);
+    expect(mockSendAdminAlert).toBeCalledTimes(1);
+    expect(mockWriteLog).toBeCalledTimes(1);
+  });
+
+  test('nonce gets reset', async () => {
     await stage.context.mysql.paramExecute(
       `
         UPDATE ${DbTables.WALLET}
         SET lastResetNonce=@lastResetNonce,
             lastProcessedNonce=@lastProcessedNonce
-        WHERE address IN (@moonbaseAddress, @crustAddress)
+        WHERE address = @address
       `,
       {
-        moonbaseAddress,
-        crustAddress,
+        address: moonbaseAddress,
         lastResetNonce: null,
-        lastProcessedNonce: 4001,
+        lastProcessedNonce: 5,
+      },
+    );
+    await stage.context.mysql.paramExecute(
+      `
+        UPDATE ${DbTables.WALLET}
+        SET lastResetNonce=@lastResetNonce,
+            lastProcessedNonce=@lastProcessedNonce
+        WHERE address = @address
+      `,
+      {
+        address: crustAddress,
+        lastResetNonce: null,
+        lastProcessedNonce: 3001,
       },
     );
 
@@ -227,6 +255,7 @@ describe('Handle evm transactions', () => {
       `SELECT address, lastProcessedNonce, lastResetNonce
        FROM ${DbTables.WALLET}
        WHERE address IN (@moonbaseAddress, @crustAddress)
+       ORDER BY id
       `,
       {
         moonbaseAddress,
@@ -235,14 +264,14 @@ describe('Handle evm transactions', () => {
     );
     expect(wallets).toStrictEqual([
       {
-        address: crustAddress,
-        lastProcessedNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
-        lastResetNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
-      },
-      {
         address: moonbaseAddress,
         lastProcessedNonce: LAST_PROCESSED_EVM_NONCE,
         lastResetNonce: LAST_PROCESSED_EVM_NONCE,
+      },
+      {
+        address: crustAddress,
+        lastProcessedNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
+        lastResetNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
       },
     ]);
   });
@@ -272,8 +301,8 @@ describe('Handle evm transactions', () => {
       `,
       {
         address: moonbaseAddress,
-        lastProcessedNonce: LAST_PROCESSED_EVM_NONCE,
-        lastResetNonce: LAST_PROCESSED_EVM_NONCE - 1,
+        lastProcessedNonce: LAST_PROCESSED_EVM_NONCE + 1,
+        lastResetNonce: LAST_PROCESSED_EVM_NONCE,
       },
     );
     await stage.context.mysql.paramExecute(
@@ -285,8 +314,8 @@ describe('Handle evm transactions', () => {
       `,
       {
         address: crustAddress,
-        lastProcessedNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
-        lastResetNonce: LAST_PROCESSED_SUBSTRATE_NONCE - 1,
+        lastProcessedNonce: LAST_PROCESSED_SUBSTRATE_NONCE + 1,
+        lastResetNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
       },
     );
     let success = true;
@@ -306,6 +335,7 @@ describe('Handle evm transactions', () => {
       `SELECT address, lastProcessedNonce, lastResetNonce
        FROM ${DbTables.WALLET}
        WHERE address IN (@moonbaseAddress, @crustAddress)
+       ORDER BY id
       `,
       {
         moonbaseAddress,
@@ -314,19 +344,19 @@ describe('Handle evm transactions', () => {
     );
     expect(wallets).toStrictEqual([
       {
-        address: crustAddress,
-        lastProcessedNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
-        lastResetNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
-      },
-      {
         address: moonbaseAddress,
         lastProcessedNonce: LAST_PROCESSED_EVM_NONCE,
         lastResetNonce: LAST_PROCESSED_EVM_NONCE,
       },
+      {
+        address: crustAddress,
+        lastProcessedNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
+        lastResetNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
+      },
     ]);
   });
 
-  test('send notification instead of fixing if on chain nonce is lower than min. TX nonce', async () => {
+  test('send notification instead of resetting nonce if on chain nonce is lower than min. TX nonce', async () => {
     await stage.context.mysql.paramExecute(
       `
         UPDATE ${DbTables.TRANSACTION_QUEUE}
@@ -335,6 +365,17 @@ describe('Handle evm transactions', () => {
       `,
       {
         nonce: 3001,
+        transactionStatus: TransactionStatus.CONFIRMED,
+      },
+    );
+    await stage.context.mysql.paramExecute(
+      `
+        UPDATE ${DbTables.TRANSACTION_QUEUE}
+        SET transactionStatus=@lastProcessedNonce
+        WHERE nonce = @nonce
+      `,
+      {
+        nonce: 5,
         transactionStatus: TransactionStatus.CONFIRMED,
       },
     );
