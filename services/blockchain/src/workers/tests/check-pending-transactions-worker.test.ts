@@ -12,8 +12,9 @@ import { CheckPendingTransactionsWorker } from '../check-pending-transactions-wo
 import { ethers } from 'ethers';
 import { DbTables } from '../../config/types';
 
-//mock returns 1 as next onchain nonce so last nonce is 0
-const RESET_LAST_PROCESSED_NONCE = 3000;
+//mock returns x as next onchain nonce so last nonce is x +1
+const LAST_PROCESSED_EVM_NONCE = 4;
+const LAST_PROCESSED_SUBSTRATE_NONCE = 3000;
 jest.mock('@polkadot/api', () => ({
   WsProvider: jest.fn().mockImplementation(() => {
     return {
@@ -43,7 +44,7 @@ jest.mock('ethers', () => {
         ...actualEthers.ethers.providers,
         JsonRpcProvider: jest.fn().mockImplementation(() => {
           return {
-            getTransactionCount: jest.fn().mockResolvedValue(3001),
+            getTransactionCount: jest.fn().mockResolvedValue(5),
           };
         }),
       },
@@ -92,7 +93,7 @@ describe('Handle evm transactions', () => {
               ${EvmChain.MOONBASE},
               ${ChainType.EVM},
               ${TransactionStatus.CONFIRMED},
-              3000,
+              4,
               'raw',
               '0x9357c063719ac34946b159d76551e56bf2a79e399082cee446909705359f95d0',
               '${dateToSqlString(createTime)}'),
@@ -108,7 +109,7 @@ describe('Handle evm transactions', () => {
               ${EvmChain.MOONBASE},
               ${ChainType.EVM},
               ${TransactionStatus.PENDING},
-              3001,
+              5,
               'raw',
               '0x9357c063719ac34946b159d76551e56bf2a79e399082cee446909705359f95de',
               '${dateToSqlString(createTime)}'),
@@ -124,7 +125,7 @@ describe('Handle evm transactions', () => {
               ${EvmChain.MOONBASE},
               ${ChainType.EVM},
               ${TransactionStatus.PENDING},
-              3002,
+              6,
               'raw',
               '0x9357c063719ac34946b159d76551e56bf2a79e399082cee446909705359f95d1',
               '${dateToSqlString(createTime)}'),
@@ -145,8 +146,8 @@ describe('Handle evm transactions', () => {
               ${EvmChain.MOONBASE},
               ${ChainType.EVM},
               'seed,',
-              4001,
-              4000,
+              5,
+              4,
               null,
               '${dateToSqlString(createTime)}'),
              ('${crustAddress}',
@@ -222,21 +223,31 @@ describe('Handle evm transactions', () => {
     expect(mockSendAdminAlert).toBeCalledTimes(0);
     expect(mockWriteLog).toBeCalledTimes(0);
     // nonce was changed
-    const count = await stage.context.mysql.paramExecute(
-      `SELECT COUNT(id) as wallets
+    const wallets = await stage.context.mysql.paramExecute(
+      `SELECT address, lastProcessedNonce, lastResetNonce
        FROM ${DbTables.WALLET}
-       WHERE lastProcessedNonce = @lastProcessedNonce
-         AND address IN (@moonbaseAddress, @crustAddress)`,
+       WHERE address IN (@moonbaseAddress, @crustAddress)
+      `,
       {
         moonbaseAddress,
         crustAddress,
-        lastProcessedNonce: RESET_LAST_PROCESSED_NONCE,
       },
     );
-    expect(count[0]['wallets']).toBe(2);
+    expect(wallets).toStrictEqual([
+      {
+        address: crustAddress,
+        lastProcessedNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
+        lastResetNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
+      },
+      {
+        address: moonbaseAddress,
+        lastProcessedNonce: LAST_PROCESSED_EVM_NONCE,
+        lastResetNonce: LAST_PROCESSED_EVM_NONCE,
+      },
+    ]);
   });
 
-  test('notification is sent after nonce has been reset recently', async () => {
+  test('notification is sent after nonce has been reset and lastProcessedNonce remained same', async () => {
     let success = true;
     try {
       await new CheckPendingTransactionsWorker(
@@ -249,6 +260,70 @@ describe('Handle evm transactions', () => {
     expect(success).toBe(true);
     expect(mockSendAdminAlert).toBeCalledTimes(1);
     expect(mockWriteLog).toBeCalledTimes(1);
+  });
+
+  test('nonce is reset even if it was reset before but lastProcessedNonce was increased', async () => {
+    await stage.context.mysql.paramExecute(
+      `
+        UPDATE ${DbTables.WALLET}
+        SET lastProcessedNonce=@lastProcessedNonce,
+            lastResetNonce=@lastResetNonce
+        WHERE address = @address
+      `,
+      {
+        address: moonbaseAddress,
+        lastProcessedNonce: LAST_PROCESSED_EVM_NONCE,
+        lastResetNonce: LAST_PROCESSED_EVM_NONCE - 1,
+      },
+    );
+    await stage.context.mysql.paramExecute(
+      `
+        UPDATE ${DbTables.WALLET}
+        SET lastProcessedNonce=@lastProcessedNonce,
+            lastResetNonce=@lastResetNonce
+        WHERE address = @address
+      `,
+      {
+        address: crustAddress,
+        lastProcessedNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
+        lastResetNonce: LAST_PROCESSED_SUBSTRATE_NONCE - 1,
+      },
+    );
+    let success = true;
+    try {
+      await new CheckPendingTransactionsWorker(
+        workerDefinition,
+        stage.context,
+      ).run();
+    } catch (e) {
+      success = false;
+    }
+    expect(success).toBe(true);
+    expect(mockSendAdminAlert).toBeCalledTimes(0);
+    expect(mockWriteLog).toBeCalledTimes(0);
+    // nonce was changed
+    const wallets = await stage.context.mysql.paramExecute(
+      `SELECT address, lastProcessedNonce, lastResetNonce
+       FROM ${DbTables.WALLET}
+       WHERE address IN (@moonbaseAddress, @crustAddress)
+      `,
+      {
+        moonbaseAddress,
+        crustAddress,
+      },
+    );
+    expect(wallets).toStrictEqual([
+      {
+        address: crustAddress,
+        lastProcessedNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
+        lastResetNonce: LAST_PROCESSED_SUBSTRATE_NONCE,
+      },
+      {
+        address: moonbaseAddress,
+        lastProcessedNonce: LAST_PROCESSED_EVM_NONCE,
+        lastResetNonce: LAST_PROCESSED_EVM_NONCE,
+      },
+    ]);
   });
 
   test('send notification instead of fixing if on chain nonce is lower than min. TX nonce', async () => {

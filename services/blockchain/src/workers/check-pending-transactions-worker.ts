@@ -70,7 +70,7 @@ export class CheckPendingTransactionsWorker extends BaseWorker {
           data.endpointUrl,
         );
         const lastOnChainNonce = nextOnChainNonce - 1;
-        if (lastOnChainNonce <= data.minNonce) {
+        if (lastOnChainNonce < data.minNonce) {
           console.log(
             `Last processed nonce was reset from ${data.lastProcessedNonce} to ${nextOnChainNonce} for ${data.address}.`,
           );
