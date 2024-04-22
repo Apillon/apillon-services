@@ -60,35 +60,38 @@ export class CheckPendingTransactionsWorker extends BaseWorker {
     let message = '';
     for (const data of res) {
       // if we didn't reset yet or if we reset nonce in the past (for different nonce)
-      if (data.lastResetNonce === null || data.minNonce > data.lastResetNonce) {
+      if (
+        data.lastResetNonce === null ||
+        data.lastProcessedNonce > data.lastResetNonce
+      ) {
         const nextOnChainNonce = await this.getNextOnChainNonce(
           data.address,
           data.chainType,
           data.endpointUrl,
         );
-        const lastProcessedNonce = nextOnChainNonce - 1;
-        if (lastProcessedNonce < data.lastProcessedNonce) {
+        const lastOnChainNonce = nextOnChainNonce - 1;
+        if (lastOnChainNonce <= data.minNonce) {
           console.log(
             `Last processed nonce was reset from ${data.lastProcessedNonce} to ${nextOnChainNonce} for ${data.address}.`,
           );
           await this.context.mysql.paramExecute(
             `
               UPDATE ${DbTables.WALLET}
-              SET lastProcessedNonce=@nonce,
-                  lastResetNonce    = @nonce
+              SET lastProcessedNonce = @nonce,
+                  lastResetNonce     = @nonce
               WHERE id = @walletId
             `,
-            { walletId: data.walletId, nonce: lastProcessedNonce },
+            { walletId: data.walletId, nonce: lastOnChainNonce },
           );
+          continue;
         }
-      } else {
-        message =
-          message +
-          `
+      }
+      message =
+        message +
+        `
           Wallet ${data.address} (chain ${getChainName(data.chainType, data.chain)})
           has pending transactions not resolved since ${data.minTime}, nonce: ${data.minNonce} \n
         `;
-      }
     }
 
     if (message != '') {
