@@ -5,6 +5,7 @@ import {
   ChainType,
   ClusterDepositTransaction,
   env,
+  getChainName,
   getEnumKey,
   IsolationLevel,
   Lmas,
@@ -134,7 +135,7 @@ export class SubstrateService {
       if (balanceData.isBelowTransactionThreshold) {
         throw await new BlockchainCodeException({
           code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
-          errorMessage: `Transaction can not be sent - balance below transaction minimum for wallet ${wallet.address} and chain ${SubstrateChain[wallet.chain]}`,
+          errorMessage: `Transaction can not be sent - balance below transaction minimum for wallet ${wallet.address} and chain ${getChainName(wallet.chainType, wallet.chain)}`,
           sourceFunction: 'SubstrateService.createTransaction',
           status: 500,
         }).writeToMonitor({
