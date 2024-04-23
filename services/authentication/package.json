@@ -38,10 +38,10 @@
     "valid-url": "^1.0.9"
   },
   "devDependencies": {
-    "eslint-config-common": "*",
-    "tsconfig": "*",
     "@types/uuid": "^9.0.8",
-    "rimraf": "^5.0.5"
+    "eslint-config-common": "*",
+    "rimraf": "^5.0.5",
+    "tsconfig": "*"
   },
   "overrides": {
     "ipfs-utils": "9.0.6"
