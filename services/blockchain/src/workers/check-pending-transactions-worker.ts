@@ -59,6 +59,7 @@ export class CheckPendingTransactionsWorker extends BaseWorker {
 
     let message = '';
     for (const data of res) {
+      const chainName = getChainName(data.chainType, data.chain);
       // if we didn't reset yet or if we reset nonce in the past (for different nonce)
       if (
         data.lastResetNonce === null ||
@@ -75,7 +76,8 @@ export class CheckPendingTransactionsWorker extends BaseWorker {
           lastOnChainNonce < data.lastProcessedNonce
         ) {
           console.log(
-            `Last processed nonce was reset from ${data.lastProcessedNonce} to ${nextOnChainNonce} for ${data.address}.`,
+            `Last processed nonce was reset from ${data.lastProcessedNonce} to
+            ${nextOnChainNonce} for ${data.address} on chain ${chainName}.`,
           );
           await this.context.mysql.paramExecute(
             `
@@ -92,7 +94,7 @@ export class CheckPendingTransactionsWorker extends BaseWorker {
       message =
         message +
         `
-          Wallet ${data.address} (chain ${getChainName(data.chainType, data.chain)})
+          Wallet ${data.address} (chain ${chainName})
           has pending transactions not resolved since ${data.minTime}, nonce: ${data.minNonce} \n
         `;
     }
