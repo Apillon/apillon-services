@@ -49,15 +49,13 @@
     "tsconfig": "*"
   },
   "overrides": {
-    "@phala/sdk": {
-      "@polkadot/api": "$@polkadot/api",
-      "@polkadot/api-contract": "$@polkadot/api-contract",
-      "@polkadot/keyring": "$@polkadot/keyring",
-      "@polkadot/types": "$@polkadot/types",
-      "@polkadot/types-augment": "$@polkadot/types-augment",
-      "@polkadot/util": "$@polkadot/util",
-      "@polkadot/util-crypto": "$@polkadot/util-crypto"
-    }
+    "@polkadot/api": "10.9.1",
+    "@polkadot/api-contract": "10.9.1",
+    "@polkadot/keyring": "12.3.2",
+    "@polkadot/types": "10.9.1",
+    "@polkadot/types-augment": "10.9.1",
+    "@polkadot/util": "12.3.2",
+    "@polkadot/util-crypto": "12.3.2"
   },
   "jest": {
     "testTimeout": 1800000,
