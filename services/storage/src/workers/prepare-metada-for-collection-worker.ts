@@ -150,7 +150,10 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             ],
             null,
             null,
-            remainingImageFURs.length > 2000 ? 900 : 0,
+            remainingImageFURs.length >
+              env.STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY
+              ? 900
+              : 0,
           );
         }
         return true;
@@ -319,7 +322,10 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             ],
             null,
             null,
-            metadataFURs.length > 2000 ? 900 : 0,
+            metadataFURs.length >
+              env.STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY
+              ? 900
+              : 0,
           );
 
           return true;

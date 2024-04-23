@@ -158,7 +158,9 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         ],
         null,
         null,
-        files.length > 2000 ? 900 : 0, //Delay message for 15 mins if more than 2k files in session
+        files.length > env.STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY
+          ? 900
+          : 0, //Delay message for 15 mins if more than 2k files in session
       );
     }
 
