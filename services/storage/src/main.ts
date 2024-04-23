@@ -75,6 +75,8 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [StorageEventType.PREPARE_COLLECTION_BASE_URI]:
       NftStorageService.prepareBaseUriForCollection,
+    [StorageEventType.COLLECTION_METADATA_LIST]:
+      NftStorageService.listCollectionMetadata,
 
     [StorageEventType.TEST_CRUST_PROVIDER]: CrustService.testCrustProvider,
 
