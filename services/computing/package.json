@@ -48,6 +48,17 @@
     "ts-loader": "^9.5.1",
     "tsconfig": "*"
   },
+  "overrides": {
+    "@phala/sdk": {
+      "@polkadot/api": "$@polkadot/api",
+      "@polkadot/api-contract": "$@polkadot/api-contract",
+      "@polkadot/keyring": "$@polkadot/keyring",
+      "@polkadot/types": "$@polkadot/types",
+      "@polkadot/types-augment": "$@polkadot/types-augment",
+      "@polkadot/util": "$@polkadot/util",
+      "@polkadot/util-crypto": "$@polkadot/util-crypto"
+    }
+  },
   "jest": {
     "testTimeout": 1800000,
     "moduleFileExtensions": [
