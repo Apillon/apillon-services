@@ -104,7 +104,7 @@ export * from './lib/at-services/blockchain/dtos/transaction-webhook-data.dto';
 export * from './lib/at-services/blockchain/dtos/update-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/wallet-transactions-query-filter';
 export * from './lib/at-services/blockchain/dtos/wallet-deposits-query-filter';
-export * from './lib/at-services/blockchain/validators/address-validator';
+// export * from './lib/at-services/blockchain/validators/address-validator';
 
 //#REGION Substrate
 export * from './lib/at-services/substrate/types';
