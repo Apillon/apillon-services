@@ -69,11 +69,11 @@ then
   npm link @apillon/workers-lib --omit=dev
 fi
 
-echo "Instaling build dependencies"
+echo "Installing build dependencies"
 npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
 
-echo "Instalation of dependancies complete"
-npm ls -all
+echo "Installation of dependencies complete"
+npm ls
 
 if [ "$DB_MIGRATIONS" == "true" ]
 then

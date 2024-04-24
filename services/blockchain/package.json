@@ -18,6 +18,7 @@
     "deploy:staging": "serverless deploy --stage staging",
     "deploy:dev": "serverless deploy --stage dev",
     "deploy:test": "serverless deploy --stage test",
+    "dev:send-raw-transaction": "node -r ts-node/register  ./src/scripts/dev/send-raw-transaction",
     "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
     "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
     "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
