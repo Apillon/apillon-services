@@ -9,7 +9,7 @@ export async function upgrade(
       \`wallet\` VARCHAR(42) NULL,
       \`ip_address\` VARCHAR(50) NULL,
       \`fingerprint\` VARCHAR(50) NULL,
-      \`tokensClaimed\` INT NOT NULL DEFAULT 0,
+      \`totalClaimed\` INT NOT NULL DEFAULT 0,
       \`status\` INT NULL,
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` INT NULL,

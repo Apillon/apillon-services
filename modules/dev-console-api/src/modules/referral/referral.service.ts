@@ -10,9 +10,11 @@ import {
   ClaimTokensDto,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class ReferralService {
+  constructor(private userService: UserService) {}
   /**
    * Creates a new referral player.
    *
@@ -155,6 +157,12 @@ export class ReferralService {
    * @param {ClaimTokensDto} body
    */
   async claimTokens(context: DevConsoleApiContext, body: ClaimTokensDto) {
+    const { address } = await this.userService.validateWalletSignature(
+      body,
+      'ReferralService/claimTokens',
+      context,
+    );
+    body.wallet = address;
     return (await new ReferralMicroservice(context).claimTokens(body)).data;
   }
 }

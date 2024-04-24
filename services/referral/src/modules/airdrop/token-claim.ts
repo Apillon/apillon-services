@@ -42,7 +42,12 @@ export class TokenClaim extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SELECT_DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
     fakeValue: () => getFaker().internet.ip(),
   })
   public ip_address: string;
@@ -50,7 +55,12 @@ export class TokenClaim extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SELECT_DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+    ],
     fakeValue: () => getFaker().random.word(),
   })
   public fingerprint: string;
@@ -65,7 +75,7 @@ export class TokenClaim extends AdvancedSQLModel {
     ],
     defaultValue: 0,
   })
-  public tokensClaimed: number;
+  public totalClaimed: number;
 
   @prop({
     parser: { resolver: booleanParser() },
@@ -77,6 +87,10 @@ export class TokenClaim extends AdvancedSQLModel {
   })
   public blocked: boolean;
 
+  public override exists(): boolean {
+    return !!this.user_uuid;
+  }
+
   /**
    * Populates a TokenClaim model instance based on IP address and fingerprint.
    * @param conn Optional database connection to use for the query.
@@ -85,7 +99,7 @@ export class TokenClaim extends AdvancedSQLModel {
   public async populateByIpAndFingerprint(
     conn?: PoolConnection,
   ): Promise<TokenClaim> {
-    if (!this.ip_address || !this.fingerprint) {
+    if (!this.ip_address && !this.fingerprint) {
       throw new Error('IP address or fingerprint must be provided.');
     }
     const data = await this.db().paramExecute(
@@ -93,12 +107,10 @@ export class TokenClaim extends AdvancedSQLModel {
         SELECT * FROM \`${DbTables.TOKEN_CLAIM}\`
         WHERE (@ip_address IS NULL OR ip_address = @ip_address)
         AND (@fingerprint IS NULL OR fingerprint = @fingerprint)
-        AND wallet <> @wallet
       `,
       {
         ip_address: this.ip_address,
         fingerprint: this.fingerprint,
-        wallet: this.wallet,
       },
       conn,
     );

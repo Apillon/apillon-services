@@ -168,7 +168,7 @@ export class ReferralController {
     @IpAddress() ip: string,
     @Body() body: ClaimTokensDto,
   ) {
-    body.ip = ip;
+    body.ip_address = ip;
     return await this.referralService.claimTokens(context, body);
   }
 }
