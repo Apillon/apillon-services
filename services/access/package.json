@@ -27,22 +27,22 @@
   },
   "dependencies": {
     "@apillon/lib": "*",
-    "@apillon/sdk": "^2.0.0",
+    "@apillon/sdk": "^3.0.0",
     "@apillon/service-lib": "*",
     "@middy/core": "^3.3.1",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
-    "@types/uuid": "^8.3.4",
-    "axios": "^1.2.0",
+    "axios": "^1.6.8",
     "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
+    "@types/uuid": "^9.0.8",
     "eslint-config-common": "*",
-    "ts-loader": "^9.2.3",
+    "ts-loader": "^9.5.1",
     "tsconfig": "*",
-    "webpack": "^5.90.3",
+    "webpack": "^5.91.0",
     "webpack-node-externals": "^3.0.0"
   }
 }

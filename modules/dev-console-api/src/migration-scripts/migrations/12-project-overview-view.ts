@@ -74,7 +74,7 @@ export async function upgrade(
       SELECT COUNT(*) from ${databases.computeDb}.transaction transaction
         JOIN ${databases.computeDb}.contract contract ON contract.id = transaction.contract_id
         WHERE contract.project_uuid = p.project_uuid
-        AND transaction.transactionStatus = 2 # confirmed
+        AND transaction.transactionStatus = 5 # worker-success
     ) as computingTransactionCount,
     (
       SELECT COUNT(*) from ${databases.socialDb}.space space

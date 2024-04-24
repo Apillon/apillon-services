@@ -182,6 +182,14 @@ export interface IEnv {
   URL_SCREENSHOT_FUNCTION_NAME: string;
   URL_SCREENSHOT_API_URL: string;
   SEND_WEBSITES_TO_REVIEW: number;
+  /**
+   * Max number of files that can be transferred to ipfs in one worker iteration
+   */
+  STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS: number;
+  /**
+   * Maximum number of files in session without delay between worker iterations
+   */
+  STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY: number;
 
   STORAGE_MYSQL_HOST: string;
   STORAGE_MYSQL_PORT: number;
@@ -664,6 +672,11 @@ export let env: IEnv = {
   URL_SCREENSHOT_API_URL: process.env['URL_SCREENSHOT_API_URL'],
   SEND_WEBSITES_TO_REVIEW:
     parseInt(process.env['SEND_WEBSITES_TO_REVIEW']) || 1,
+  STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS:
+    parseInt(process.env['STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS']) || 1000,
+  STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY:
+    parseInt(process.env['STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY']) ||
+    2000,
 
   /**STORAGE microservice DB*/
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],

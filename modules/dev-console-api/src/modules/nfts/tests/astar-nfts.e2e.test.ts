@@ -1,4 +1,10 @@
-import { EvmChain, QuotaCode, TransactionStatus } from '@apillon/lib';
+import {
+  ChainType,
+  EvmChain,
+  NFTCollectionType,
+  QuotaCode,
+  TransactionStatus,
+} from '@apillon/lib';
 import {
   CollectionStatus,
   TransactionType,
@@ -11,13 +17,18 @@ import {
   createTestProject,
   createTestUser,
   getNftTransactionStatus,
-  insertEvmNftContractVersion,
+  insertNftContractVersion,
   overrideDefaultQuota,
   releaseStage,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
+import { evmGenericNftAbi, evmNestableNftAbi } from '@apillon/tests-lib';
+import {
+  evmGenericNftBytecode,
+  evmNestableNftBytecode,
+} from '@apillon/tests-lib';
 
 describe('Apillon Console NFTs tests for Astar', () => {
   const CHAIN_ID = EvmChain.ASTAR;
@@ -44,7 +55,20 @@ describe('Apillon Console NFTs tests for Astar', () => {
       10,
     );
 
-    await insertEvmNftContractVersion(stage.nftsContext);
+    await insertNftContractVersion(
+      stage.nftsContext,
+      ChainType.EVM,
+      NFTCollectionType.GENERIC,
+      evmGenericNftAbi,
+      evmGenericNftBytecode,
+    );
+    await insertNftContractVersion(
+      stage.nftsContext,
+      ChainType.EVM,
+      NFTCollectionType.NESTABLE,
+      evmNestableNftAbi,
+      evmNestableNftBytecode,
+    );
   });
 
   describe('Astar NFT Collection tests', () => {

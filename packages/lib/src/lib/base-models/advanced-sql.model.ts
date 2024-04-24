@@ -147,7 +147,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
       throw new Error('ID should not be null');
     }
 
-    if (!this.hasOwnProperty('id')) {
+    if (!('id' in this)) {
       throw new Error('Object does not contain id property');
     }
 
@@ -175,7 +175,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     conn?: PoolConnection,
     forUpdate = false,
   ): Promise<this> {
-    if (!this.hasOwnProperty('name')) {
+    if (!('name' in this)) {
       throw new Error('Object does not contain name property');
     }
 

@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { checkCaptcha } from '@apillon/lib';
 import {
@@ -9,7 +14,7 @@ import { IRequest } from '../interfaces/i-request';
 
 @Injectable()
 export class CaptchaGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(@Inject(Reflector.name) private readonly reflector: Reflector) {}
 
   public async canActivate(execCtx: ExecutionContext): Promise<boolean> {
     const options = this.reflector.getAllAndMerge(VALIDATION_OPTIONS_KEY, [

@@ -3,6 +3,7 @@ import {
   EndFileUploadSessionDto,
   Lmas,
   LogType,
+  SerializeFor,
   ServiceName,
   invalidateCacheMatch,
   runWithWorkers,
@@ -120,7 +121,7 @@ export async function processSessionFiles(
               size: s3File.Size,
               fileStatus: FileStatus.UPLOADED_TO_S3,
             })
-            .insert();
+            .insert(SerializeFor.INSERT_DB, undefined, true);
         } catch (err) {
           await new Lmas().writeLog({
             context: context,
@@ -151,16 +152,9 @@ export async function processSessionFiles(
 
           throw err;
         }
-        //update file-upload-request status --> Commented out, because this is only informational and can be skipped for sake of optimization
-        /*fur.fileStatus = FileUploadRequestFileStatus.UPLOADED_TO_S3;
-        await fur.update();*/
       }
     },
   );
-
-  //update session
-  session.sessionStatus = FileUploadSessionStatus.PROCESSED;
-  await session.update();
 
   await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
     project_uuid: bucket.project_uuid,

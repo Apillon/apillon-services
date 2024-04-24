@@ -133,14 +133,16 @@ export async function upgradeTestDatabases(): Promise<void> {
 
 export async function downgradeTestDatabases(): Promise<void> {
   await initMigrations();
+
   try {
+    await dbReferralMigration.down(-1);
+    await dbConsoleMigration.down(-1);
+
     await Promise.all([
       dbAmsMigration.down(-1),
-      dbConsoleMigration.down(-1),
       dbStorageMigration.down(-1),
       dbConfigMigration.down(-1),
       dbAuthApiMigration.down(-1),
-      dbReferralMigration.down(-1),
       dbNftsMigration.down(-1),
       dbComputingMigration.down(-1),
       dbBcsMigration.down(-1),
@@ -296,7 +298,6 @@ export async function rebuildTestDatabases(): Promise<void> {
   try {
     const migrationResults = await Promise.allSettled([
       dbAmsMigration.reset(),
-      dbConsoleMigration.reset(),
       dbStorageMigration.reset(),
       dbConfigMigration.reset(),
       dbAuthApiMigration.reset(),
@@ -306,8 +307,13 @@ export async function rebuildTestDatabases(): Promise<void> {
       dbSocialMigration.reset(),
     ]);
 
-    // referral depends on other db!
-    await dbReferralMigration.reset();
+    // migrations using DB tables that depend on migrations above
+    migrationResults.push(
+      ...(await Promise.allSettled([
+        dbConsoleMigration.reset(),
+        dbReferralMigration.reset(),
+      ])),
+    );
 
     for (const res of migrationResults) {
       if (res.status === 'rejected') {

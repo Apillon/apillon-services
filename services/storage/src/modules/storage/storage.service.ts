@@ -9,6 +9,7 @@ import {
   EndFileUploadSessionDto,
   env,
   FilesQueryFilter,
+  FileUploadSessionQueryFilter,
   FileUploadsQueryFilter,
   GetQuotaDto,
   invalidateCacheMatch,
@@ -93,9 +94,9 @@ export class StorageService {
       Defaults.DEFAULT_BANDWIDTH;
 
     return {
-      availableStorage: storageQuota * Defaults.GYGABYTE_IN_BYTES,
+      availableStorage: storageQuota * Defaults.GIGABYTE_IN_BYTES,
       usedStorage,
-      availableBandwidth: bandwidthQuota * Defaults.GYGABYTE_IN_BYTES,
+      availableBandwidth: bandwidthQuota * Defaults.GIGABYTE_IN_BYTES,
       usedBandwidth: usedBandwidth.exists() ? usedBandwidth.bandwidth : 0,
     };
   }
@@ -206,7 +207,7 @@ export class StorageService {
         });
       } else if (session.sessionStatus != FileUploadSessionStatus.CREATED) {
         throw new StorageCodeException({
-          code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
+          code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_ENDED,
           status: 400,
         });
       }
@@ -299,12 +300,16 @@ export class StorageService {
     );
     bucket.canAccess(context);
 
-    if (session.sessionStatus == FileUploadSessionStatus.FINISHED) {
+    if (session.sessionStatus != FileUploadSessionStatus.CREATED) {
       throw new StorageCodeException({
-        code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_TRANSFERED,
+        code: StorageErrorCode.FILE_UPLOAD_SESSION_ALREADY_ENDED,
         status: 400,
       });
     }
+
+    //update session
+    session.sessionStatus = FileUploadSessionStatus.IN_PROGRESS;
+    await session.update();
 
     if (
       bucket.bucketType == BucketType.STORAGE ||
@@ -313,10 +318,8 @@ export class StorageService {
       //If more than 1000 files in session, initial file generation should be performed in worker, otherwise timeout can occur.
       const processFilesInSyncWorker =
         (await session.getNumOfFilesInSession()) > 1000;
-      if (
-        session.sessionStatus == FileUploadSessionStatus.CREATED &&
-        !processFilesInSyncWorker
-      ) {
+
+      if (!processFilesInSyncWorker) {
         await processSessionFiles(context, bucket, session, event.body);
       }
       if (
@@ -473,6 +476,16 @@ export class StorageService {
       return true;
     }
     return false;
+  }
+
+  static async listFileUploadSessions(
+    event: { query: FileUploadSessionQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new FileUploadSession({}, context).getList(
+      context,
+      new FileUploadSessionQueryFilter(event.query),
+    );
   }
 
   static async listFileUploads(

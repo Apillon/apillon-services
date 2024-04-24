@@ -53,14 +53,6 @@ export class ReferralService {
 
     player.referrer_id = referrer?.id;
 
-    // if (
-    //   (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) &&
-    //   event?.body?.termsAccepted
-    // ) {
-    //   player.termsAccepted ||= new Date();
-    //   player.status = SqlModelStatus.ACTIVE;
-    // }
-
     await player.validateOrThrow(ReferralValidationException);
 
     if (player.exists()) {
@@ -145,14 +137,6 @@ export class ReferralService {
         false,
       );
     }
-
-    // Missing accepted terms - ignored since airdrop
-    // if (!player.termsAccepted || player.status === SqlModelStatus.INCOMPLETE) {
-    //   throw new ReferralCodeException({
-    //     code: ReferralErrorCode.MISSING_TERMS_ACCEPTANCE,
-    //     status: 400,
-    //   });
-    // }
 
     await player.populateSubmodels();
 

@@ -619,6 +619,7 @@ export class NftsService {
       [
         {
           collection_uuid: body.collection_uuid,
+          bucket_uuid: collection.bucket_uuid,
           imagesSession: body.imagesSession,
           metadataSession: body.metadataSession,
           useApillonIpfsGateway: !collection.baseUri.startsWith('ipfs://'),

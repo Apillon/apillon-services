@@ -5,6 +5,7 @@ import {
   ChainType,
   ClusterDepositTransaction,
   env,
+  getChainName,
   getEnumKey,
   IsolationLevel,
   Lmas,
@@ -28,6 +29,7 @@ import { types as PhalaTypesBundle } from './types-bundle/phala-types';
 import { substrateChainToWorkerName } from '../../lib/helpers';
 import { typesBundle as SubsocialTypesBundle } from './types-bundle/subsocial/definitions';
 import { PhalaBlockchainIndexer } from '../blockchain-indexers/substrate/phala/indexer.service';
+import { transmitAndProcessSubstrateTransaction } from '../../lib/transmit-and-process-substrate-transaction';
 
 export class SubstrateService {
   static async createTransaction(
@@ -85,7 +87,7 @@ export class SubstrateService {
         break;
       }
       case SubstrateChain.ASTAR: {
-        keyring = new Keyring({type: 'sr25519'});
+        keyring = new Keyring({ type: 'sr25519' });
         break;
       }
       default: {
@@ -133,7 +135,7 @@ export class SubstrateService {
       if (balanceData.isBelowTransactionThreshold) {
         throw await new BlockchainCodeException({
           code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
-          errorMessage: `Transaction can not be sent - balance below transaction minimum for wallet ${wallet.address} and chain ${SubstrateChain[wallet.chain]}`,
+          errorMessage: `Transaction can not be sent - balance below transaction minimum for wallet ${wallet.address} and chain ${getChainName(wallet.chainType, wallet.chain)}`,
           sourceFunction: 'SubstrateService.createTransaction',
           status: 500,
         }).writeToMonitor({
@@ -205,9 +207,11 @@ export class SubstrateService {
       });
 
       if (
-        env.APP_ENV != AppEnvironment.TEST &&
-        env.APP_ENV != AppEnvironment.LOCAL_DEV
+        env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
       ) {
+        await transmitAndProcessSubstrateTransaction(context, api, transaction);
+      } else {
         try {
           await sendToWorkerQueue(
             env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
@@ -357,8 +361,9 @@ export class SubstrateService {
 
       let latestSuccess = null;
       let transmitted = 0;
+      let selfRepaired = 0;
       // TODO: consider batching transaction api.tx.utility.batch
-      for (const transaction of transactions) {
+      for (const [index, transaction] of transactions.entries()) {
         console.log(
           `Processing transaction with id ${transaction.id} (status=${transaction.transactionStatus}, ` +
             `nonce=${transaction.nonce},last updated=${transaction.updateTime}).`,
@@ -389,28 +394,41 @@ export class SubstrateService {
         try {
           const result = await api.send(transaction.rawTransaction);
           console.log(
-            `successfully transmitted tx with id ${transaction.id}:`,
-            result,
+            `successfully transmitted tx with id ${transaction.id} on chain ${transaction.chainType}:`,
+            result.toJSON(),
           );
           latestSuccess = transaction.nonce;
           transmitted++;
         } catch (err: any) {
+          console.log(
+            `error transmitting tx with id ${transaction.id} and nonce ${transaction.nonce}:`,
+            err,
+          );
+          const chainName = getEnumKey(SubstrateChain, _event.chain);
           //try self repair else error
           if (
             err?.data === 'Transaction is outdated' ||
             (typeof err?.message === 'string' &&
               err.message.includes('Transaction is temporarily banned'))
           ) {
+            // only repair TX if it is preceded by transaction that was already transmitted
+            if (index > transmitted + selfRepaired) {
+              console.warn(
+                `Skipping self repair at index ${index} since previous transactions failed (${transmitted}  transmitted, ${selfRepaired} selfRepaired).`,
+              );
+              continue;
+            }
             const selfRepairNonce = await api.trySelfRepairNonce(
               wallet,
               transaction.transactionHash,
             );
             latestSuccess = selfRepairNonce;
             if (selfRepairNonce) {
+              selfRepaired++;
               await eventLogger(
                 {
                   logType: LogType.INFO,
-                  message: `Last success nonce was repaired and set to ${selfRepairNonce}.`,
+                  message: `Last success nonce was repaired on chain ${chainName} for wallet address ${wallet.address} and set to ${selfRepairNonce} (hash=${transaction.transactionHash}).`,
                   service: ServiceName.BLOCKCHAIN,
                   data: {
                     wallet: wallet.address,
@@ -423,10 +441,7 @@ export class SubstrateService {
               await eventLogger(
                 {
                   logType: LogType.ERROR,
-                  message: `Could not repair last success nonce for chain ${getEnumKey(
-                    SubstrateChain,
-                    _event.chain,
-                  )} and wallet address ${wallet.address}.`,
+                  message: `Could not repair last success nonce on chain ${chainName} for wallet address ${wallet.address} (nonce=${transaction.nonce}, hash=${transaction.transactionHash}).`,
                   service: ServiceName.BLOCKCHAIN,
                   data: {
                     wallet: wallet.address,
@@ -442,10 +457,7 @@ export class SubstrateService {
             await eventLogger(
               {
                 logType: LogType.ERROR,
-                message: `Error transmitting transaction on chain ${getEnumKey(
-                  SubstrateChain,
-                  _event.chain,
-                )}! Hash: ${transaction.transactionHash}`,
+                message: `Error transmitting transaction on chain ${chainName} for wallet address ${wallet.address} (nonce=${transaction.nonce}, hash=${transaction.transactionHash})!`,
                 service: ServiceName.BLOCKCHAIN,
                 data: {
                   error: err,
@@ -473,6 +485,7 @@ export class SubstrateService {
             wallet,
             numOfTransactions: transactions.length,
             transmitted,
+            selfRepaired,
           },
         },
         LogOutput.EVENT_INFO,

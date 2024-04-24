@@ -18,7 +18,8 @@ It is highly recommended to read this docs along with [res-API-specs](/docs/rest
 
 ## Getting Started
 
-This monorepo project is configured to run with `npm` and `turborepo` build system (<https://turborepo.org/docs>). For deployment to AWS `serverless` framework is used (<https://serverless.com/docs>)
+This monorepo project is configured to run with `npm` and `turborepo` build system (<https://turborepo.org/docs>). Make sure you have the latest turborepo version installed globally by running `npm install turbo --global`.
+For deployment to AWS `serverless` framework is used (<https://serverless.com/docs>).
 
 ### Environment variables
 
