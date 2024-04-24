@@ -908,6 +908,9 @@ export enum EmailTemplate {
   CRYPTO_PAYMENT_SUCCESSFUL = 'crypto-payment-successful',
 
   CREDIT_BALANCE_BELOW_THRESHOLD = 'credit-balance-below-threshold',
+
+  IPFS_BANDWIDTH_NEAR_QUOTA = 'ipfs-bandwidth-near-quota',
+  IPFS_BANDWIDTH_EXCEEDED_QUOTA = 'ipfs-bandwidth-exceeded-quota',
 }
 
 export enum JwtExpireTime {

@@ -115,6 +115,7 @@ async function initSeeds() {
 
 export async function downgradeTestDatabases(): Promise<void> {
   await initMigrations();
+
   try {
     await migrations[StageName.REFERRAL].down(-1);
     await migrations[StageName.DEV_CONSOLE].down(-1);

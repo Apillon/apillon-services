@@ -54,8 +54,8 @@ export async function setupTest(
 
     await app.init();
 
-    await app.listen(apiPort, apiHost);
-    http = app.getHttpServer();
+    // await app.listen(apiPort, apiHost);
+    http = app.getHttpServer().listen(0);
 
     const stage: Stage = await setupTestContextAndSql();
     stage.app = app;

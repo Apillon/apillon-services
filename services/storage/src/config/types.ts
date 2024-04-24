@@ -164,9 +164,9 @@ export enum FileStatus {
 export enum FileUploadSessionStatus {
   CREATED = 1,
   /**
-   * Session was ended - upload is not possible anymore. Sync to IPFS will start...
+   * Session was ended - upload is not possible anymore. Sync to IPFS is in progress
    */
-  PROCESSED = 2,
+  IN_PROGRESS = 2,
   /**
    * Files in session has been synced to IPFS
    */
@@ -209,13 +209,18 @@ export enum CrustPinningStatus {
 }
 
 export enum Defaults {
-  GYGABYTE_IN_BYTES = 1_073_741_824,
+  GIGABYTE_IN_BYTES = 1_073_741_824,
   DEFAULT_BANDWIDTH = 20,
   DEFAULT_BANDWIDTH_IN_BYTES = Defaults.DEFAULT_BANDWIDTH *
-    Defaults.GYGABYTE_IN_BYTES,
+    Defaults.GIGABYTE_IN_BYTES,
   DEFAULT_STORAGE = 3,
   DEFAULT_STORAGE_IN_BYTES = Defaults.DEFAULT_STORAGE *
-    Defaults.GYGABYTE_IN_BYTES,
+    Defaults.GIGABYTE_IN_BYTES,
+}
+
+export enum IpfsBandwidthAlertStatus {
+  NEAR_QUOTA_ALERT_SENT = 1,
+  EXCEEDED_QUOTA_ALERT_SENT = 2,
 }
 
 export enum PrepareCollectionMetadataStep {

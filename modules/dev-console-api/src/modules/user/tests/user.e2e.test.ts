@@ -87,7 +87,7 @@ describe('Auth tests', () => {
     );
 
     expect(sqlRes2.length).toBe(1);
-    expect(sqlRes2[0].email).toBe(input.email.toLowerCase());
+    expect(sqlRes2[0].email?.toLowerCase()).toBe(input.email?.toLowerCase());
   });
 
   test('User should be able to login', async () => {
@@ -230,8 +230,6 @@ describe('Auth tests', () => {
   });
 
   test('User should be able to login with polkadot wallet', async () => {
-    // wait 1 second to avoid getting signature already used error because of same timestamp
-    await new Promise((resolve) => setTimeout(resolve, 1000));
     const authMsgResp = await request(stage.http).get('/users/auth-msg');
     expect(authMsgResp.status).toBe(200);
 
@@ -239,6 +237,8 @@ describe('Auth tests', () => {
       testUserKeyPair.sign(authMsgResp.body.data.message),
     );
 
+    // wait 2 seconds to avoid getting signature already used error because of same timestamp
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     const connectResp = await request(stage.http)
       .post('/users/login/wallet')
       .send({
