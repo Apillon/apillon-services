@@ -361,9 +361,8 @@ export class SubstrateService {
 
       let latestSuccess = null;
       let transmitted = 0;
-      let selfRepaired = 0;
       // TODO: consider batching transaction api.tx.utility.batch
-      for (const [index, transaction] of transactions.entries()) {
+      for (const transaction of transactions) {
         console.log(
           `Processing transaction with id ${transaction.id} (status=${transaction.transactionStatus}, ` +
             `nonce=${transaction.nonce},last updated=${transaction.updateTime}).`,
@@ -411,20 +410,12 @@ export class SubstrateService {
             (typeof err?.message === 'string' &&
               err.message.includes('Transaction is temporarily banned'))
           ) {
-            // only repair TX if it is preceded by transaction that was already transmitted
-            if (index > transmitted + selfRepaired) {
-              console.warn(
-                `Skipping self repair at index ${index} since previous transactions failed (${transmitted}  transmitted, ${selfRepaired} selfRepaired).`,
-              );
-              continue;
-            }
             const selfRepairNonce = await api.trySelfRepairNonce(
               wallet,
               transaction.transactionHash,
             );
             latestSuccess = selfRepairNonce;
             if (selfRepairNonce) {
-              selfRepaired++;
               await eventLogger(
                 {
                   logType: LogType.INFO,
@@ -452,6 +443,7 @@ export class SubstrateService {
                 },
                 LogOutput.NOTIFY_WARN,
               );
+              break;
             }
           } else {
             await eventLogger(
@@ -485,7 +477,6 @@ export class SubstrateService {
             wallet,
             numOfTransactions: transactions.length,
             transmitted,
-            selfRepaired,
           },
         },
         LogOutput.EVENT_INFO,
