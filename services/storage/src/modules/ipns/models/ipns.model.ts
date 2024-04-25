@@ -241,21 +241,22 @@ export class Ipns extends UuidSqlModel {
     return super.populateByUUID(uuid, uuid_property, conn);
   }
 
-  public async populateByProjectAndName(
-    project_uuid: string,
+  public async populateByBucketAndName(
+    bucket_uuid: string,
     name: string,
   ): Promise<this> {
-    if (!project_uuid || !name) {
+    if (!bucket_uuid || !name) {
       throw new Error('params should not be null');
     }
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT *
-      FROM \`${this.tableName}\`
-      WHERE project_uuid = @project_uuid and name = @name AND status <> ${SqlModelStatus.DELETED};
+      SELECT i.*
+      FROM \`${DbTables.IPNS}\` i
+      JOIN \`${DbTables.BUCKET}\` b ON b.id = i.bucket_id
+      WHERE b.bucket_uuid = @bucket_uuid and i.name = @name AND i.status <> ${SqlModelStatus.DELETED};
       `,
-      { project_uuid, name },
+      { bucket_uuid, name },
     );
 
     return data?.length
@@ -271,7 +272,7 @@ export class Ipns extends UuidSqlModel {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT *
-      FROM \`${this.tableName}\`
+      FROM \`${DbTables.IPNS}\`
       WHERE \`key\` = @key AND status <> ${SqlModelStatus.DELETED};
       `,
       { key },

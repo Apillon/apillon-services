@@ -71,8 +71,8 @@ export class NftStorageService {
       });
 
       //Add IPNS record to bucket
-      ipnsDbRecord = await new Ipns({}, context).populateByProjectAndName(
-        bucket.project_uuid,
+      ipnsDbRecord = await new Ipns({}, context).populateByBucketAndName(
+        bucket.bucket_uuid,
         `${event.body.collectionName} IPNS Record`,
       );
 
