@@ -474,7 +474,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
     });
   });
 
-  describe.skip('NFT Collection limit tests', () => {
+  describe('NFT Collection limit tests', () => {
     test('User should NOT be able to mint more NFTs that are supplied in collection', async () => {
       newCollection.contractAddress = '0x0';
       await newCollection.update();
@@ -514,7 +514,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
     });
   });
 
-  describe.skip('NFT Collection tests for nestable type', () => {
+  describe('NFT Collection tests for nestable type', () => {
     test('User should be able to create new nestable collection with existing baseURI', async () => {
       const response = await request(stage.http)
         .post(`/nfts/collections?project_uuid=${nestableProject.project_uuid}`)
