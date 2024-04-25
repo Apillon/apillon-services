@@ -32,20 +32,26 @@ describe('Storage bucket tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
 
     testProject = await createTestProject(testUser, stage);
     testProject2 = await createTestProject(testUser2, stage);
 
     testBucket = await createTestBucket(
       testUser,
-      stage.storageContext,
+      stage.context.storage,
       testProject,
     );
 
     await createTestBucketFile(
-      stage.storageContext,
+      stage.context.storage,
       testBucket,
       'file.txt',
       'text/plain',
@@ -137,7 +143,7 @@ describe('Storage bucket tests', () => {
 
       const b: Bucket = await new Bucket(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(response.body.data.bucket_uuid);
       expect(b.exists()).toBeTruthy();
       try {
@@ -161,7 +167,7 @@ describe('Storage bucket tests', () => {
 
       const b: Bucket = await new Bucket(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(testBucket.bucket_uuid);
       expect(b.name).toBe('Bucket changed name');
     });
@@ -171,15 +177,15 @@ describe('Storage bucket tests', () => {
     beforeAll(async () => {
       //Insert new user with access to testProject as PROJECT_USER - can view, cannot modify
       testUser3 = await createTestUser(
-        stage.devConsoleContext,
-        stage.amsContext,
+        stage.context.devConsole,
+        stage.context.access,
         DefaultUserRole.PROJECT_USER,
         SqlModelStatus.ACTIVE,
         testProject.project_uuid,
       );
       adminTestUser = await createTestUser(
-        stage.devConsoleContext,
-        stage.amsContext,
+        stage.context.devConsole,
+        stage.context.access,
         DefaultUserRole.ADMIN,
       );
     });
@@ -220,7 +226,7 @@ describe('Storage bucket tests', () => {
     test('User with role "ProjectUser" should NOT be able to delete bucket', async () => {
       const tmpBucket = await createTestBucket(
         testUser,
-        stage.storageContext,
+        stage.context.storage,
         testProject,
       );
 
@@ -231,7 +237,7 @@ describe('Storage bucket tests', () => {
 
       const b: Bucket = await new Bucket(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(tmpBucket.bucket_uuid);
       expect(b.exists()).toBe(true);
     });
@@ -272,7 +278,7 @@ describe('Storage bucket tests', () => {
     test('Admin User should NOT be able to delete bucket', async () => {
       const tmpBucket = await createTestBucket(
         testUser,
-        stage.storageContext,
+        stage.context.storage,
         testProject,
       );
 
@@ -283,7 +289,7 @@ describe('Storage bucket tests', () => {
 
       const b: Bucket = await new Bucket(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(tmpBucket.bucket_uuid);
       expect(b.exists()).toBe(true);
     });
@@ -298,7 +304,7 @@ describe('Storage bucket tests', () => {
 
       const b: Bucket = await new Bucket(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(testBucket.bucket_uuid);
       expect(b.exists()).toBeTruthy();
       expect(b.status).toBe(SqlModelStatus.ACTIVE);
@@ -313,7 +319,7 @@ describe('Storage bucket tests', () => {
 
       const b: Bucket = await new Bucket(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(testBucket.bucket_uuid);
       expect(b.status).toBe(SqlModelStatus.ACTIVE);
     });
@@ -322,7 +328,7 @@ describe('Storage bucket tests', () => {
       //Prepare new test bucket and add some files to it
       const deleteBucketTestBucket = await createTestBucket(
         testUser,
-        stage.storageContext,
+        stage.context.storage,
         testProject,
       );
 
@@ -333,7 +339,7 @@ describe('Storage bucket tests', () => {
 
       const b: Bucket = await new Bucket(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(deleteBucketTestBucket.bucket_uuid);
       expect(b.exists()).toBeFalsy();
     });

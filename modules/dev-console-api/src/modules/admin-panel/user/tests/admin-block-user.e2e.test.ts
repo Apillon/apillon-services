@@ -35,28 +35,31 @@ describe('Admin Block user tests', () => {
       env.ADMIN_CONSOLE_API_PORT_TEST,
       env.ADMIN_CONSOLE_API_HOST_TEST,
     );
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     testProject = await createTestProject(testUser, stage);
     testApiKey = await createTestApiKey(
-      stage.amsContext,
+      stage.context.access,
       testProject.project_uuid,
     );
 
     adminTestUser = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
+      stage.context.devConsole,
+      stage.context.access,
       DefaultUserRole.ADMIN,
     );
 
     //Insert storage data for project
     testBucket = await createTestBucket(
       testUser,
-      stage.storageContext,
+      stage.context.storage,
       testProject,
     );
 
     testFile = await createTestBucketFile(
-      stage.storageContext,
+      stage.context.storage,
       testBucket,
       'testFile.txt',
       'text/plain',
@@ -92,13 +95,13 @@ describe('Admin Block user tests', () => {
       //Check user
       const user: User = await new User(
         {},
-        stage.devConsoleContext,
+        stage.context.devConsole,
       ).populateByUUID(testUser.user.user_uuid);
       expect(user.status).toBe(SqlModelStatus.BLOCKED);
 
       const authUser: AuthUser = await new AuthUser(
         {},
-        stage.amsContext,
+        stage.context.access,
       ).populateByUserUuid(
         testUser.user.user_uuid,
         undefined,
@@ -110,19 +113,19 @@ describe('Admin Block user tests', () => {
       //Check if project was blocked
       const project: Project = await new Project(
         {},
-        stage.devConsoleContext,
+        stage.context.devConsole,
       ).populateByUUID(testProject.project_uuid);
       expect(project.status).toBe(SqlModelStatus.BLOCKED);
 
       //Check if api keys were blocked
       const apiKey: ApiKey = await new ApiKey(
         {},
-        stage.amsContext,
+        stage.context.access,
       ).populateById(testApiKey.id);
       expect(apiKey.status).toBe(SqlModelStatus.BLOCKED);
 
       //Check if files were blocked and if files were added to blacklist
-      const tmpFile = await new File({}, stage.storageContext).populateById(
+      const tmpFile = await new File({}, stage.context.storage).populateById(
         testFile.file_uuid,
       );
       expect(tmpFile.status).toBe(SqlModelStatus.BLOCKED);
@@ -152,13 +155,13 @@ describe('Admin Block user tests', () => {
       //Check user
       const user: User = await new User(
         {},
-        stage.devConsoleContext,
+        stage.context.devConsole,
       ).populateByUUID(testUser.user.user_uuid);
       expect(user.status).toBe(SqlModelStatus.ACTIVE);
 
       const authUser: AuthUser = await new AuthUser(
         {},
-        stage.amsContext,
+        stage.context.access,
       ).populateByUserUuid(
         testUser.user.user_uuid,
         undefined,
@@ -170,14 +173,14 @@ describe('Admin Block user tests', () => {
       //Check if project was unblocked
       const project: Project = await new Project(
         {},
-        stage.devConsoleContext,
+        stage.context.devConsole,
       ).populateByUUID(testProject.project_uuid);
       expect(project.status).toBe(SqlModelStatus.ACTIVE);
 
       //Check if api keys were unblocked
       const apiKey: ApiKey = await new ApiKey(
         {},
-        stage.amsContext,
+        stage.context.access,
       ).populateById(testApiKey.id);
       expect(apiKey.status).toBe(SqlModelStatus.ACTIVE);
     });

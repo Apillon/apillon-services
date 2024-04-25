@@ -15,6 +15,7 @@ export enum DbTables {
   PROJECT_CONFIG = 'project_config',
   IPFS_BANDWIDTH = 'ipfs_bandwidth',
   IPFS_BANDWIDTH_SYNC = 'ipfs_bandwidth_sync',
+  COLLECTION_METADATA = 'collection_metadata',
 }
 
 export enum DbViews {
@@ -24,7 +25,7 @@ export enum DbViews {
 export enum StorageErrorCode {
   //400
   DEFAULT_BAD_REQUEST_EROR = 40006000,
-  FILE_UPLOAD_SESSION_ALREADY_TRANSFERED = 40006001,
+  FILE_UPLOAD_SESSION_ALREADY_ENDED = 40006001,
   MAX_USED_STORAGE_REACHED = 40006002,
   NOT_ENOUGH_STORAGE_SPACE = 40006003,
   MAX_BUCKETS_REACHED = 40006004,
@@ -90,6 +91,7 @@ export enum StorageErrorCode {
   IPFS_CLUSTER_REQUIRED_DATA_NOT_PRESENT = 42206043,
   PROJECT_CONFIG_REQUIRED_DATA_NOT_PRESENT = 42206044,
   IPNS_REQUIRED_DATA_NOT_PRESENT = 42206045,
+  COLLECTION_METADATA_REQUIRED_DATA_NOT_PRESENT = 42206046,
 
   //404
   DEFAULT_RESOURCE_NOT_FOUND_ERROR = 40406000,
@@ -162,9 +164,9 @@ export enum FileStatus {
 export enum FileUploadSessionStatus {
   CREATED = 1,
   /**
-   * End session was called - folder and file structure has been generated.
+   * Session was ended - upload is not possible anymore. Sync to IPFS is in progress
    */
-  PROCESSED = 2,
+  IN_PROGRESS = 2,
   /**
    * Files in session has been synced to IPFS
    */
@@ -207,11 +209,23 @@ export enum CrustPinningStatus {
 }
 
 export enum Defaults {
-  GYGABYTE_IN_BYTES = 1_073_741_824,
+  GIGABYTE_IN_BYTES = 1_073_741_824,
   DEFAULT_BANDWIDTH = 20,
   DEFAULT_BANDWIDTH_IN_BYTES = Defaults.DEFAULT_BANDWIDTH *
-    Defaults.GYGABYTE_IN_BYTES,
+    Defaults.GIGABYTE_IN_BYTES,
   DEFAULT_STORAGE = 3,
   DEFAULT_STORAGE_IN_BYTES = Defaults.DEFAULT_STORAGE *
-    Defaults.GYGABYTE_IN_BYTES,
+    Defaults.GIGABYTE_IN_BYTES,
+}
+
+export enum IpfsBandwidthAlertStatus {
+  NEAR_QUOTA_ALERT_SENT = 1,
+  EXCEEDED_QUOTA_ALERT_SENT = 2,
+}
+
+export enum PrepareCollectionMetadataStep {
+  UPLOAD_IMAGES_TO_IPFS = 1,
+  UPDATE_JSONS_ON_S3 = 2,
+  UPLOAD_METADATA_TO_IPFS = 3,
+  METADATA_SUCCESSFULLY_PREPARED = 10,
 }

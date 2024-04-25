@@ -56,8 +56,8 @@ export class TestBlockchain {
   static fromStage(stage: Stage, chainId: EvmChain, port = 8545) {
     return new TestBlockchain(
       {
-        db: stage.blockchainSql,
-        context: stage.blockchainContext,
+        db: stage.db.blockchain,
+        context: stage.context.blockchain,
       },
       chainId,
       port,
@@ -206,11 +206,7 @@ export class TestBlockchain {
   }
 
   async storeEndpoint(endpoint: string) {
-    await this.stage.db.paramExecute(
-      `DELETE
-       FROM endpoint`,
-      {},
-    );
+    await this.stage.db.paramExecute(`DELETE FROM endpoint`, {});
     await this.stage.db.paramExecute(
       `
         INSERT INTO endpoint (status, url, chain, chainType)
@@ -224,7 +220,7 @@ export class TestBlockchain {
   public async storeWallet(address: string, privateKey: string) {
     //Configure wallets
     const wallet: Wallet = new Wallet({}, this.stage.context).populate({
-      address: address,
+      address,
       chain: this.chainId,
       chainType: ChainType.EVM,
       seed: privateKey,
@@ -242,14 +238,14 @@ export async function getNftTransactionStatus(
 ) {
   const collectionTxs = await new NftCollectionTx(
     {},
-    stage.nftsContext,
+    stage.context.nfts,
   ).getCollectionTransactions(collectionUuid);
   const collectionTx = collectionTxs.find(
     (x) => x.transactionType == transactionType,
   );
   const blockchainTx = await new BlockchainTx(
     {},
-    stage.blockchainContext,
+    stage.context.blockchain,
   ).getTransactionByChainAndHash(chainId, collectionTx.transactionHash);
 
   return blockchainTx.transactionStatus;

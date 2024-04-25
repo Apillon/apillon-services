@@ -40,7 +40,6 @@ import { UpdateUserDto } from './dtos/update-user.dto';
 import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { User } from './models/user.model';
 import { registerUser } from './utils/authentication-utils';
-import { UserConsentDto, UserConsentStatus } from './dtos/user-consent.dto';
 import { DiscordCodeDto } from './dtos/discord-code.dto';
 import { Identity } from '@apillon/sdk';
 import axios from 'axios';
@@ -446,57 +445,6 @@ export class UserService {
    */
   async getOauthLinks(context: DevConsoleApiContext) {
     return await new Ams(context).getOauthLinks(context.user.user_uuid);
-  }
-
-  /**
-   * Get terms that user needs to review and accept
-   * @param context - The API context with current user session.
-   * @returns new terms for user
-   */
-  async getPendingTermsForUser(context: DevConsoleApiContext) {
-    const terms = await new Scs(context).getActiveTerms();
-    const resp = terms.filter((x) => {
-      return !context.user?.authUser?.consents?.terms.find((c) => c.id == x.id);
-    });
-
-    console.log(resp);
-    return resp;
-  }
-
-  async setUserConsents(body: Array<any>, context: DevConsoleApiContext) {
-    const activeTerms = await new Scs(context).getActiveTerms();
-    const consents = [];
-    for (const data of body) {
-      const consent = new UserConsentDto(data);
-
-      consent.dateOfAgreement =
-        consent.status === UserConsentStatus.ACCEPTED ? new Date() : null;
-      await consent.validateOrThrow(ValidationException, ValidatorErrorCode);
-
-      const term = activeTerms.find(
-        (x) => x.id == consent.id && x.type == consent.type,
-      );
-      if (!term) {
-        throw new CodeException({
-          status: HttpStatus.BAD_REQUEST,
-          code: BadRequestErrorCode.RESOURCE_DOES_NOT_EXISTS,
-          errorCodes: BadRequestErrorCode,
-        });
-      }
-      if (!!term.isRequired && consent.status !== UserConsentStatus.ACCEPTED) {
-        throw new CodeException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          code: ValidatorErrorCode.USER_CONSENT_IS_REQUIRED,
-          errorCodes: ValidatorErrorCode,
-        });
-      }
-      consents.push(consent.serialize());
-    }
-
-    await new Ams(context).updateAuthUser({
-      user_uuid: context.user.user_uuid,
-      consents: { terms: consents },
-    });
   }
 
   /**

@@ -126,7 +126,6 @@ async function createReferralPlayer(
   context: DevConsoleApiContext,
 ) {
   try {
-    // Create referral player - is inactive until accepts terms
     const referralBody = new CreateReferralDto({ refCode }, context);
 
     await new ReferralMicroservice({

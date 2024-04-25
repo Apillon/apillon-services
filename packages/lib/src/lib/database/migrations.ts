@@ -146,11 +146,11 @@ async function initMigrations(
   migrationDirectory?: string,
 ) {
   const poolConfig: ConnectionOptions = {
-    host: host,
-    port: port,
-    user: user,
-    password: password,
-    database: database,
+    host,
+    port,
+    user,
+    password,
+    database,
     // debug: true,
     connectionLimit: 1,
   };

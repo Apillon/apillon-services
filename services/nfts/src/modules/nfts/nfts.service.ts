@@ -12,7 +12,7 @@ import {
   env,
   EvmChain,
   getChainName,
-  isEvmOrSubstrateWalletAddress,
+  // isEvmOrSubstrateWalletAddress,
   Lmas,
   LogType,
   Mailing,
@@ -68,7 +68,8 @@ import {
   getSubstrateContractClient,
 } from '../../lib/utils/collection-utils';
 import { ContractVersion } from './models/contractVersion.model';
-import { SubstrateChainPrefix } from '@apillon/lib';
+
+// import { SubstrateChainPrefix } from '@apillon/lib';
 
 export class NftsService {
   //#region collection functions
@@ -348,20 +349,20 @@ export class NftsService {
       {},
       context,
     ).populateByUUID(body.collection_uuid);
-    if (
-      !isEvmOrSubstrateWalletAddress(
-        body.address,
-        collection.chainType,
-        SubstrateChainPrefix.ASTAR,
-      )
-    ) {
-      throw new NftsCodeException({
-        status: 422,
-        code: NftsErrorCode.INVALID_ADDRESS,
-        context,
-        sourceFunction: 'transferCollectionOwnership',
-      });
-    }
+    // if (
+    //   !isEvmOrSubstrateWalletAddress(
+    //     body.address,
+    //     collection.chainType,
+    //     SubstrateChainPrefix.ASTAR,
+    //   )
+    // ) {
+    //   throw new NftsCodeException({
+    //     status: 422,
+    //     code: NftsErrorCode.INVALID_ADDRESS,
+    //     context,
+    //     sourceFunction: 'transferCollectionOwnership',
+    //   });
+    // }
     await NftsService.checkCollection(
       collection,
       'transferNftOwnership()',
@@ -619,6 +620,7 @@ export class NftsService {
       [
         {
           collection_uuid: body.collection_uuid,
+          bucket_uuid: collection.bucket_uuid,
           imagesSession: body.imagesSession,
           metadataSession: body.metadataSession,
           useApillonIpfsGateway: !collection.baseUri.startsWith('ipfs://'),
@@ -644,20 +646,20 @@ export class NftsService {
       {},
       context,
     ).populateByUUID(body.collection_uuid);
-    if (
-      !isEvmOrSubstrateWalletAddress(
-        body.receivingAddress,
-        collection.chainType,
-        SubstrateChainPrefix.ASTAR,
-      )
-    ) {
-      throw new NftsCodeException({
-        status: 422,
-        code: NftsErrorCode.INVALID_ADDRESS,
-        context,
-        sourceFunction: 'mintNftTo',
-      });
-    }
+    // if (
+    //   !isEvmOrSubstrateWalletAddress(
+    //     body.receivingAddress,
+    //     collection.chainType,
+    //     SubstrateChainPrefix.ASTAR,
+    //   )
+    // ) {
+    //   throw new NftsCodeException({
+    //     status: 422,
+    //     code: NftsErrorCode.INVALID_ADDRESS,
+    //     context,
+    //     sourceFunction: 'mintNftTo',
+    //   });
+    // }
 
     await NftsService.checkCollection(collection, 'mintNftTo()', context);
 

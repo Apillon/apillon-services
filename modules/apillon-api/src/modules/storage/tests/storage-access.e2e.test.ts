@@ -41,34 +41,40 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     //User 1 project & other data
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
 
     testProject = await createTestProject(testUser, stage);
     testService = await createTestProjectService(
-      stage.devConsoleContext,
+      stage.context.devConsole,
       testProject,
       AttachedServiceType.STORAGE,
     );
     authTestService = await createTestProjectService(
-      stage.devConsoleContext,
+      stage.context.devConsole,
       testProject,
       AttachedServiceType.AUTHENTICATION,
     );
     testBucket = await createTestBucket(
       testUser,
-      stage.storageContext,
+      stage.context.storage,
       testProject,
     );
-    testFile = await createTestBucketFile(stage.storageContext, testBucket);
-    apiKey = await createTestApiKey(stage.amsContext, testProject.project_uuid);
+    testFile = await createTestBucketFile(stage.context.storage, testBucket);
+    apiKey = await createTestApiKey(
+      stage.context.access,
+      testProject.project_uuid,
+    );
 
     testProject2 = await createTestProject(testUser, stage);
     testBucket2 = await createTestBucket(
       testUser,
-      stage.storageContext,
+      stage.context.storage,
       testProject2,
     );
-    testFile2 = await createTestBucketFile(stage.storageContext, testBucket2);
+    testFile2 = await createTestBucketFile(stage.context.storage, testBucket2);
   });
 
   afterAll(async () => {

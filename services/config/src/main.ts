@@ -2,7 +2,6 @@ import { ScsEventType } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 
 import { QuotaService } from './modules/quota/quota.service';
-import { TermsService } from './modules/terms/terms.service';
 import { OverrideService } from './modules/override/override.service';
 import { CreditService } from './modules/credit/credit.service';
 import { SubscriptionService } from './modules/subscription/subscription.service';
@@ -24,8 +23,6 @@ export async function processEvent(
     [ScsEventType.GET_ALL_QUOTAS]: QuotaService.getQuotas,
     [ScsEventType.CREATE_OVERRIDE]: OverrideService.createOverride,
     [ScsEventType.DELETE_OVERRIDE]: OverrideService.deleteOverride,
-
-    [ScsEventType.GET_ACTIVE_TERMS]: TermsService.getActiveTerms,
 
     [ScsEventType.ADD_CREDIT]: CreditService.addCredit,
     [ScsEventType.CONFIGURE_CREDIT]: CreditService.configureCredit,

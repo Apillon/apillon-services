@@ -29,7 +29,7 @@
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
-    "cron-parser": "^4.7.0",
-    "moment": "^2.29.1"
+    "cron-parser": "^4.9.0",
+    "moment": "^2.30.1"
   }
 }

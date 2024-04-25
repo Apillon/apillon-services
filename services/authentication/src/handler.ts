@@ -6,7 +6,7 @@ import {
   ResponseFormat,
   logLambdaEvent,
 } from '@apillon/service-lib';
-import middy from '@middy/core';
+import * as middy from '@middy/core';
 import type { Callback, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
 
@@ -57,7 +57,7 @@ const getConnectionParams = () => {
 /**
  *  Exposes the Lambda handler and sets up middleware functions to run before and after the processEvent() function is called.
  */
-export const handler = middy(lambdaHandler);
+export const handler = middy.default(lambdaHandler);
 handler
   .use(InitializeContextAndFillUser())
   .use(MySqlConnect(getConnectionParams))
