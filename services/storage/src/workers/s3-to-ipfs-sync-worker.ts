@@ -43,7 +43,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
 
     const processFilesInSyncWorker = data?.processFilesInSyncWorker;
     const session_uuid = data?.session_uuid;
-    data.wrappingDirectoryName = data?.wrappingDirectoryName?.trim();
+    data.wrappingDirectoryPath = data?.wrappingDirectoryPath?.trim();
 
     let files = [];
     let bucket: Bucket = undefined;
@@ -109,7 +109,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
             bucket,
             files.slice(0, env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS),
             data?.wrapWithDirectory,
-            data?.wrappingDirectoryName,
+            data?.wrappingDirectoryPath,
           )
         ).files;
       } else {
@@ -150,9 +150,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         WorkerName.SYNC_TO_IPFS_WORKER,
         [
           {
-            session_uuid: session.session_uuid,
-            wrapWithDirectory: data?.wrapWithDirectory,
-            wrappingDirectoryName: data.wrappingDirectoryName,
+            ...data,
             processFilesInSyncWorker: false, //Files were processed in first iteration
           },
         ],
