@@ -343,7 +343,7 @@ export class Website extends UuidSqlModel {
       throw new Error('ID should not be null');
     }
 
-    if (!this.hasOwnProperty('id')) {
+    if (!('id' in this)) {
       throw new Error('Object does not contain id property');
     }
 

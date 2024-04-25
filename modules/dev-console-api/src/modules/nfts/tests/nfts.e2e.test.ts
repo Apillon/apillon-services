@@ -499,6 +499,15 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
     });
+
+    test('User should be able to get collection metadata list', async () => {
+      const response = await request(stage.http)
+        .get(`/nfts/collections/${newCollection.collection_uuid}/nfts-metadata`)
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBeGreaterThan(0);
+      expect(response.body.data.items[0].currentStep).toBeTruthy();
+    });
   });
 
   describe('NFT Collection limit tests', () => {

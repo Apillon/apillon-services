@@ -89,8 +89,7 @@ describe('Testing indexer data-fetch', () => {
 
     for (const event of systemEvents) {
       const invalidValue = requiredProperties.reduce(
-        (isValid, currentValue) =>
-          (isValid = event.hasOwnProperty(currentValue)),
+        (isValid, currentValue) => (isValid = currentValue in event),
         false,
       );
       expect(invalidValue).toEqual(true);

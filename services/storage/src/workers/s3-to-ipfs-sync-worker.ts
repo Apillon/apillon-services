@@ -43,58 +43,57 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
 
     const processFilesInSyncWorker = data?.processFilesInSyncWorker;
     const session_uuid = data?.session_uuid;
+    data.wrappingDirectoryPath = data?.wrappingDirectoryPath?.trim();
+
     let files = [];
     let bucket: Bucket = undefined;
     let session: FileUploadSession = undefined;
 
-    if (session_uuid) {
-      //Get session
-      session = await new FileUploadSession({}, this.context).populateByUUID(
-        session_uuid,
-      );
-
-      if (!session.exists()) {
-        throw new StorageCodeException({
-          code: StorageErrorCode.FILE_UPLOAD_SESSION_NOT_FOUND,
-          status: 404,
-        });
-      }
-      //get bucket
-      bucket = await new Bucket({}, this.context).populateById(
-        session.bucket_id,
-      );
-
-      if (processFilesInSyncWorker) {
-        //Files were not processed in endSession endpoint. Because of large amount of files in session, execute file process here
-        await processSessionFiles(
-          this.context,
-          bucket,
-          session,
-          new EndFileUploadSessionDto().populate({
-            wrapWithDirectory: data?.wrapWithDirectory,
-            directoryPath: data?.wrappingDirectoryPath,
-          }),
-        );
-      }
-
-      //Get files in session that were not yet transferred
-      files = (
-        await new FileUploadRequest(
-          {},
-          this.context,
-        ).populateFileUploadRequestsInSession(session.id, this.context)
-      ).filter(
-        (x) =>
-          x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED &&
-          x.fileStatus !=
-            FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3,
-      );
-    } else {
+    if (!session_uuid) {
       throw new StorageCodeException({
         code: StorageErrorCode.INVALID_BODY_FOR_WORKER,
         status: 500,
       });
     }
+
+    //Get session
+    session = await new FileUploadSession({}, this.context).populateByUUID(
+      session_uuid,
+    );
+
+    if (!session.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.FILE_UPLOAD_SESSION_NOT_FOUND,
+        status: 404,
+      });
+    }
+    //get bucket
+    bucket = await new Bucket({}, this.context).populateById(session.bucket_id);
+
+    if (processFilesInSyncWorker) {
+      //Files were not processed in endSession endpoint. Because of large amount of files in session, execute file process here
+      await processSessionFiles(
+        this.context,
+        bucket,
+        session,
+        new EndFileUploadSessionDto().populate({
+          wrapWithDirectory: data?.wrapWithDirectory,
+          directoryPath: data?.wrappingDirectoryPath,
+        }),
+      );
+    }
+
+    //Get files in session that were not yet transferred
+    files = (
+      await new FileUploadRequest(
+        {},
+        this.context,
+      ).populateFileUploadRequestsInSession(session.id, this.context)
+    ).filter(
+      (x) =>
+        x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED &&
+        x.fileStatus != FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3,
+    );
 
     if (files.length > 0) {
       let transferredFiles = [];
@@ -110,7 +109,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
             bucket,
             files.slice(0, env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS),
             data?.wrapWithDirectory,
-            data?.wrappingDirectoryName,
+            data?.wrappingDirectoryPath,
           )
         ).files;
       } else {
@@ -151,14 +150,15 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         WorkerName.SYNC_TO_IPFS_WORKER,
         [
           {
-            session_uuid: session.session_uuid,
-            wrapWithDirectory: data?.wrapWithDirectory,
-            wrappingDirectoryName: data?.directoryPath,
+            ...data,
             processFilesInSyncWorker: false, //Files were processed in first iteration
           },
         ],
         null,
         null,
+        files.length > env.STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY
+          ? 900
+          : 0, //Delay message for 15 mins if more than 2k files in session
       );
     }
 

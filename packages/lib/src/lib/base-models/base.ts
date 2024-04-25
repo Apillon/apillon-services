@@ -37,7 +37,7 @@ export abstract class ModelBase extends Model<any> {
       return super.populate(mappedObj, strategy);
     }
     for (const key of Object.keys(this.__props)) {
-      if (data.hasOwnProperty(key)) {
+      if (key in data) {
         mappedObj[key] = data[key];
         // } else if (data.hasOwnProperty(getFieldName(this, key))) {
         //   mappedObj[key] = data[getFieldName(this, key)];
@@ -61,7 +61,7 @@ export abstract class ModelBase extends Model<any> {
     const filteredData = {};
     prefix = `${prefix}__`;
     for (const key of Object.keys(data)) {
-      if (data.hasOwnProperty(key) && key.startsWith(prefix)) {
+      if (key in data && key.startsWith(prefix)) {
         filteredData[key.replace(prefix, '')] = data[key];
       }
     }

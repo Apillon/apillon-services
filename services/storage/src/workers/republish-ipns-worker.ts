@@ -1,3 +1,4 @@
+import { IpfsKuboRpcHttpClient } from '@apillon/ipfs-kubo-rpc-http-client';
 import { Context, SqlModelStatus, env } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -5,7 +6,6 @@ import {
   WorkerDefinition,
   WorkerLogStatus,
 } from '@apillon/workers-lib';
-import axios from 'axios';
 import { DbTables } from '../config/types';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 
@@ -62,26 +62,28 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
 
     for (const item of data) {
       try {
-        await axios.post(
-          `${item.ipfsApi}/name/publish?arg=${item.cid}&key=${item.keyName}`,
-        );
+        const kuboRpcApiClient = new IpfsKuboRpcHttpClient(item.ipfsApi);
+        await kuboRpcApiClient.name.publish({
+          cid: item.cid,
+          key: item.keyName,
+          resolve: false,
+          ttl: '0h5m0s',
+        });
         console.info('IPNS republished', item);
       } catch (error) {
         console.error('Error republishing IPNS.', error, item);
-        if (
-          error.response?.data?.Message === 'no key by the given name was found'
-        ) {
-          try {
-            console.info(
-              'Calling IPFSService.publishToIPNS so that new key will be generated...',
-            );
-            await new IPFSService(
-              this.context,
-              item.project_uuid,
-            ).generateKeyAndPublishToIPNS(item.cid, item.keyName);
-          } catch (error2) {
-            console.error('Error in IPFSService.publishToIPNS', error2);
-          }
+        if (error.message == 'no key by the given name was found') {
+          console.info(
+            'Calling IPFSService.generateKeyAndPublishToIPNS so that new key will be generated.',
+          );
+          await new IPFSService(this.context, item.project_uuid)
+            .generateKeyAndPublishToIPNS(item.cid, item.keyName)
+            .catch((genKeyAndPublishError) => {
+              console.error(
+                'Error in IPFSService.generateKeyAndPublishToIPNS',
+                genKeyAndPublishError,
+              );
+            });
         }
       }
     }

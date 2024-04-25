@@ -94,9 +94,9 @@ export class StorageService {
       Defaults.DEFAULT_BANDWIDTH;
 
     return {
-      availableStorage: storageQuota * Defaults.GYGABYTE_IN_BYTES,
+      availableStorage: storageQuota * Defaults.GIGABYTE_IN_BYTES,
       usedStorage,
-      availableBandwidth: bandwidthQuota * Defaults.GYGABYTE_IN_BYTES,
+      availableBandwidth: bandwidthQuota * Defaults.GIGABYTE_IN_BYTES,
       usedBandwidth: usedBandwidth.exists() ? usedBandwidth.bandwidth : 0,
     };
   }
@@ -308,7 +308,7 @@ export class StorageService {
     }
 
     //update session
-    session.sessionStatus = FileUploadSessionStatus.PROCESSED;
+    session.sessionStatus = FileUploadSessionStatus.IN_PROGRESS;
     await session.update();
 
     if (
@@ -318,10 +318,8 @@ export class StorageService {
       //If more than 1000 files in session, initial file generation should be performed in worker, otherwise timeout can occur.
       const processFilesInSyncWorker =
         (await session.getNumOfFilesInSession()) > 1000;
-      if (
-        session.sessionStatus == FileUploadSessionStatus.CREATED &&
-        !processFilesInSyncWorker
-      ) {
+
+      if (!processFilesInSyncWorker) {
         await processSessionFiles(context, bucket, session, event.body);
       }
       if (
@@ -357,7 +355,7 @@ export class StorageService {
           await worker.runExecutor({
             session_uuid: session.session_uuid,
             wrapWithDirectory: event.body.wrapWithDirectory,
-            wrappingDirectoryName: event.body.directoryPath,
+            wrappingDirectoryPath: event.body.directoryPath,
             processFilesInSyncWorker,
           });
         }
@@ -370,7 +368,7 @@ export class StorageService {
             {
               session_uuid: session.session_uuid,
               wrapWithDirectory: event.body.wrapWithDirectory,
-              wrappingDirectoryName: event.body.directoryPath,
+              wrappingDirectoryPath: event.body.directoryPath,
               processFilesInSyncWorker,
             },
           ],

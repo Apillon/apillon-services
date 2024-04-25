@@ -230,7 +230,8 @@ export class Transaction extends AdvancedSQLModel {
         AND address = @address
         AND nonce > @nonce
         AND status = ${SqlModelStatus.ACTIVE}
-      order by nonce ASC;
+      order by nonce ASC
+      LIMIT 1000;
       `,
       { chain, chainType, address, nonce },
       conn,

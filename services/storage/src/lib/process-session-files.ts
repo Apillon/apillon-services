@@ -3,6 +3,7 @@ import {
   EndFileUploadSessionDto,
   Lmas,
   LogType,
+  SerializeFor,
   ServiceName,
   invalidateCacheMatch,
   runWithWorkers,
@@ -120,7 +121,7 @@ export async function processSessionFiles(
               size: s3File.Size,
               fileStatus: FileStatus.UPLOADED_TO_S3,
             })
-            .insert();
+            .insert(SerializeFor.INSERT_DB, undefined, true);
         } catch (err) {
           await new Lmas().writeLog({
             context: context,

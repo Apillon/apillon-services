@@ -9,13 +9,6 @@ import {
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 
-/**
- * Testing stage definition.
- */
-export interface DatabaseState {
-  mysql: MySql;
-}
-
 export interface Stage {
   db: MySql;
   context: ServiceContext;

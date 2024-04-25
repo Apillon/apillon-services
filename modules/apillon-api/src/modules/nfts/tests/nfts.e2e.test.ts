@@ -86,7 +86,7 @@ describe('Apillon API NFTs tests', () => {
     //User 1 project & other data
     testUser = await createTestUser(
       stage.context.devConsole,
-      stage.stage.context.access,
+      stage.context.access,
     );
 
     testProject = await createTestProject(testUser, stage, 50000);
@@ -115,7 +115,7 @@ describe('Apillon API NFTs tests', () => {
     );
 
     apiKey = await createTestApiKey(
-      stage.stage.context.access,
+      stage.context.access,
       testProject.project_uuid,
     );
     await apiKey.assignRole(
@@ -819,9 +819,8 @@ describe('Apillon API NFTs tests', () => {
         parentCollection.contractAddress,
         acceptChildData,
       );
-      const acceptChildReceipt = await blockchain.getTransactionReceipt(
-        acceptChildTxHash,
-      );
+      const acceptChildReceipt =
+        await blockchain.getTransactionReceipt(acceptChildTxHash);
       expect(acceptChildReceipt.status).toBe('0x1');
 
       const response = await postRequest(

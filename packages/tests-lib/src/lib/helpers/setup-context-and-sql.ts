@@ -2,8 +2,6 @@ import { env, Mongo, MySql } from '@apillon/lib';
 import { StageObject, Stage } from '../interfaces/stage.interface';
 import { TestContext } from './context';
 import { dropTestDatabases, SQL_CONFIGS } from './migrations';
-// import { startDevServer as startAmsServer } from 'at-ams/src/server';
-// import { startDevServer as startLmasServer } from 'at-lmas/src/server';
 
 export async function setupTestContextAndSql(): Promise<Stage> {
   try {
@@ -18,8 +16,9 @@ export async function setupTestContextAndSql(): Promise<Stage> {
     lmasContext.mongo = lmasMongo;
 
     // init contexts and SQL
-    const databases = {};
+    const databases: Partial<StageObject<MySql>> = {};
     const contexts: Partial<StageObject<TestContext>> = {};
+
     for (const [serviceName, config] of Object.entries(SQL_CONFIGS)) {
       const database = new MySql(config);
       await database.connect();
@@ -57,7 +56,7 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
     try {
       await stage.http.close();
     } catch (error) {
-      throw new Error('Error when closing http server: ' + error);
+      throw new Error(`Error when closing http server: ${error}`);
     }
   }
 
@@ -65,7 +64,7 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
     try {
       await stage.app.close();
     } catch (error) {
-      throw new Error('Error when closing application: ' + error);
+      throw new Error(`Error when closing application: ${error}`);
     }
   }
 
@@ -75,7 +74,7 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
     console.error('Error dropTestDatabases', err);
   }
 
-  // close SQL connections
+  // close SQL connections - Note that closing all in parallel does not work
   for (const [serviceName, sql] of Object.entries(stage.db)) {
     try {
       await sql.close();

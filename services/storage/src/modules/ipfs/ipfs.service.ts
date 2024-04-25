@@ -5,13 +5,21 @@ import {
   IpfsKuboRpcHttpClient,
 } from '@apillon/ipfs-kubo-rpc-http-client';
 import {
+  Ams,
+  AppEnvironment,
   AWS_S3,
   Context,
+  EmailDataDto,
+  EmailTemplate,
   env,
   Lmas,
   LogType,
+  Mailing,
   PoolConnection,
+  QuotaCode,
+  QuotaDto,
   runWithWorkers,
+  Scs,
   SerializeFor,
   ServiceName,
   writeLog,
@@ -19,7 +27,9 @@ import {
 import { ServiceContext } from '@apillon/service-lib';
 import axios from 'axios';
 import {
+  Defaults,
   FileUploadRequestFileStatus,
+  IpfsBandwidthAlertStatus,
   StorageErrorCode,
 } from '../../config/types';
 import { StorageCodeException } from '../../lib/exceptions';
@@ -37,11 +47,17 @@ export class IPFSService {
   private ipfsCluster: IpfsCluster;
   private project_uuid: string;
   private context: ServiceContext;
+  private canUseBackupNode = true;
   public usingBackupNode = false;
 
-  public constructor(context: ServiceContext, project_uuid: string) {
+  public constructor(
+    context: ServiceContext,
+    project_uuid: string,
+    canUseBackupNode = true,
+  ) {
     this.project_uuid = project_uuid;
     this.context = context;
+    this.canUseBackupNode = canUseBackupNode;
   }
 
   /**
@@ -66,7 +82,7 @@ export class IPFSService {
     try {
       await this.kuboRpcApiClient.version(2000);
     } catch (err) {
-      if (this.ipfsCluster.backupIpfsApi) {
+      if (this.ipfsCluster.backupIpfsApi && this.canUseBackupNode) {
         //Initialize client with backup api
         this.kuboRpcApiClient = new IpfsKuboRpcHttpClient(
           this.ipfsCluster.backupIpfsApi,
@@ -90,7 +106,7 @@ export class IPFSService {
       }
       //Send alert. Even if backup node works
       await new Lmas().writeLog({
-        logType: LogType.ALERT,
+        logType: this.usingBackupNode ? LogType.WARN : LogType.ALERT,
         message: `Error initializing IPFS Client. Failed to get ipfs version (ipfs api health check failed). Backup api status: ${this.usingBackupNode ? 'OK' : 'ERROR'}`,
         location: 'IPFSService.initializeIPFSClient',
         service: ServiceName.STORAGE,
@@ -596,6 +612,7 @@ export class IPFSService {
 
   /**
    * Increase used bandwidth for project in month
+   * Execute email alert if used bandwidth is near or has reached the limit
    * @param project_uuid
    * @param month
    * @param year
@@ -631,6 +648,76 @@ export class IPFSService {
       await ipfsBandwidth.insert(SerializeFor.INSERT_DB, conn);
     }
 
+    //Email alert when used bandwidth is near or has reached bandwidth quota
+    if (
+      ipfsBandwidth.alertStatus !=
+        IpfsBandwidthAlertStatus.EXCEEDED_QUOTA_ALERT_SENT &&
+      ipfsBandwidth.bandwidth >
+        Defaults.DEFAULT_BANDWIDTH_IN_BYTES - Defaults.GIGABYTE_IN_BYTES * 2
+    ) {
+      /* Project has reached default bandwidth - 2Gb. Get actual quota for this project*/
+      let bandwidthQuota: QuotaDto;
+      if (env.APP_ENV != AppEnvironment.TEST) {
+        bandwidthQuota = await new Scs(this.context).getQuota({
+          quota_id: QuotaCode.MAX_BANDWIDTH,
+          project_uuid: this.project_uuid,
+        });
+      }
+
+      const bandwidthQuotaInBytes =
+        (bandwidthQuota?.value || Defaults.DEFAULT_BANDWIDTH) *
+        Defaults.GIGABYTE_IN_BYTES;
+
+      let templateName;
+      //Compare ipfsBandwidth with actual quota and set alertStatus
+      if (
+        ipfsBandwidth.bandwidth > bandwidthQuotaInBytes &&
+        ipfsBandwidth.alertStatus !=
+          IpfsBandwidthAlertStatus.EXCEEDED_QUOTA_ALERT_SENT
+      ) {
+        ipfsBandwidth.alertStatus =
+          IpfsBandwidthAlertStatus.EXCEEDED_QUOTA_ALERT_SENT;
+        templateName = EmailTemplate.IPFS_BANDWIDTH_EXCEEDED_QUOTA;
+      } else if (
+        ipfsBandwidth.bandwidth >
+          bandwidthQuotaInBytes - Defaults.GIGABYTE_IN_BYTES * 2 &&
+        ipfsBandwidth.alertStatus !=
+          IpfsBandwidthAlertStatus.NEAR_QUOTA_ALERT_SENT
+      ) {
+        ipfsBandwidth.alertStatus =
+          IpfsBandwidthAlertStatus.NEAR_QUOTA_ALERT_SENT;
+        templateName = EmailTemplate.IPFS_BANDWIDTH_NEAR_QUOTA;
+      }
+
+      if (ipfsBandwidth.alertStatus && templateName) {
+        //Get project owner
+        let projectOwner;
+        if (env.APP_ENV != AppEnvironment.TEST) {
+          projectOwner = (
+            await new Ams(this.context).getProjectOwner(this.project_uuid)
+          ).data;
+        }
+
+        if (projectOwner?.email) {
+          //send email
+          await new Mailing(this.context).sendMail(
+            new EmailDataDto({
+              mailAddresses: [projectOwner.email],
+              templateName,
+              templateData: {
+                usedBandwidth: (
+                  ipfsBandwidth.bandwidth / Defaults.GIGABYTE_IN_BYTES
+                ).toFixed(2),
+                availableBandwidth: (
+                  bandwidthQuotaInBytes / Defaults.GIGABYTE_IN_BYTES
+                ).toFixed(0),
+              },
+            }),
+          );
+        }
+        await ipfsBandwidth.update(SerializeFor.UPDATE_DB, conn);
+      }
+    }
     return ipfsBandwidth;
   }
 }

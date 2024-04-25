@@ -4,7 +4,6 @@ import { isTransactionIndexed } from '../blockchain-indexers/substrate/helpers';
 import '@polkadot/api-augment';
 import '@polkadot/rpc-augment';
 import '@polkadot/types-augment';
-import { SubmittableExtrinsic } from '@polkadot/api/types';
 
 export class SubstrateRpcApi {
   protected endpointUrl: string = null;
@@ -28,14 +27,12 @@ export class SubstrateRpcApi {
     console.log('Timing after destroy', this.getTiming(), 's');
   }
 
-  async getUnsignedTransaction(
-    transaction: string,
-  ): Promise<SubmittableExtrinsic<'promise', any>> {
+  async getUnsignedTransaction(transaction: string) {
     console.log('Timing before unsigned transaction', this.getTiming(), 's');
     return (await this.getApi()).tx(transaction);
   }
 
-  async send(rawTransaction: string): Promise<any> {
+  async send(rawTransaction: string) {
     console.log('Timing before send', this.getTiming(), 's');
     return (await this.getApi()).tx(rawTransaction).send();
     // return await new Promise(async (resolve, reject) => {
@@ -64,6 +61,12 @@ export class SubstrateRpcApi {
     // });
   }
 
+  async getNextOnChainNonce(walletAddress: string) {
+    const api = await this.getApi();
+    const accountInfo = await api.query.system.account(walletAddress);
+
+    return accountInfo.nonce.toNumber();
+  }
   /**
    * Tries to self repair nonce based on last on-chain nonce and indexer state.
    * @param wallet Wallet
@@ -71,9 +74,7 @@ export class SubstrateRpcApi {
    */
   async trySelfRepairNonce(wallet: Wallet, transactionHash: string) {
     console.log('Timing before self repair', this.getTiming(), 's');
-    const api = await this.getApi();
-    const accountInfo = await api.query.system.account(wallet.address);
-    const nextOnChainNonce = accountInfo.nonce.toNumber();
+    const nextOnChainNonce = await this.getNextOnChainNonce(wallet.address);
     if (!nextOnChainNonce) {
       return;
     }
@@ -133,7 +134,7 @@ export class SubstrateRpcApi {
    * address if block includes instantiation event.
    */
   async getLastTransaction() {
-    const { hash, parentHash } = await this.apiPromise.rpc.chain.getHeader();
+    const { hash } = await this.apiPromise.rpc.chain.getHeader();
     const events = await this.apiPromise.query.system.events.at(hash);
 
     let contractAddress = null;

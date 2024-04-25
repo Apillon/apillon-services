@@ -38,6 +38,8 @@ export class NftTransaction {
     const royaltiesFees = Math.round(params.royaltiesFees * 100);
     const maxSupply =
       params.maxSupply === 0 ? constants.MaxUint256 : params.maxSupply;
+    const royaltiesAddress =
+      params.royaltiesAddress ?? '0x0000000000000000000000000000000000000000';
     let txData;
     switch (params.collectionType) {
       case NFTCollectionType.GENERIC:
@@ -56,13 +58,12 @@ export class NftTransaction {
           params.dropStart,
           maxSupply,
           params.dropReserve,
-          params.royaltiesAddress ??
-            '0x0000000000000000000000000000000000000000',
+          royaltiesAddress,
           royaltiesFees,
         );
         break;
       case NFTCollectionType.NESTABLE:
-        txData = await nftContract.getDeployTransaction(
+        txData = nftContract.getDeployTransaction(
           params.name,
           params.symbol,
           params.baseUri,
@@ -76,7 +77,7 @@ export class NftTransaction {
           params.dropStart,
           params.dropReserve,
           {
-            royaltyRecipient: params.royaltiesAddress,
+            royaltyRecipient: royaltiesAddress,
             royaltyPercentageBps: royaltiesFees,
             maxSupply,
             pricePerMint: TransactionUtils.convertBaseToGwei(params.dropPrice),
