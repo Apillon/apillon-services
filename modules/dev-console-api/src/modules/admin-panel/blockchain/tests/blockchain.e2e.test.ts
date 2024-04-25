@@ -36,10 +36,13 @@ describe('Blockchain endpoint tests', () => {
     blockchain = TestBlockchain.fromStage(stage, EvmChain.MOONBEAM);
     await blockchain.start();
 
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     adminTestUser = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
+      stage.context.devConsole,
+      stage.context.access,
       DefaultUserRole.ADMIN,
     );
 
@@ -56,7 +59,7 @@ describe('Blockchain endpoint tests', () => {
         currentBalance: '200000000001',
         decimals: 10,
       },
-      stage.blockchainContext,
+      stage.context.blockchain,
     );
     await testWallet.checkAndUpdateBalance();
     testWallet.calculateTokenBalance();
@@ -77,7 +80,7 @@ describe('Blockchain endpoint tests', () => {
         status: SqlModelStatus.ACTIVE,
         ts: new Date(),
       },
-      stage.blockchainContext,
+      stage.context.blockchain,
     );
     await testTransaction.insert();
     await createTestProject(testUser, stage);
@@ -150,7 +153,7 @@ describe('Blockchain endpoint tests', () => {
       expect(+response.body.data.minBalance).toEqual(minBalance);
       expect(response.body.data.decimals).toEqual(decimals);
       expect(response.body.data.token).toEqual(token);
-      const data = await stage.blockchainContext.mysql.paramExecute(
+      const data = await stage.context.blockchain.mysql.paramExecute(
         `SELECT token, decimals, minBalance from wallet WHERE id = '${testWallet.id}'`,
       );
       expect(data[0].token).toEqual(token);
@@ -166,7 +169,7 @@ describe('Blockchain endpoint tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.data.id).toBeTruthy();
       expect(response.body.data.status).toEqual(status);
-      const data = await stage.blockchainContext.mysql.paramExecute(
+      const data = await stage.context.blockchain.mysql.paramExecute(
         `SELECT status from wallet WHERE id = '${testWallet.id}'`,
       );
       expect(data[0].status).toEqual(status);
@@ -204,7 +207,7 @@ describe('Blockchain endpoint tests', () => {
       expect(response.body.data.id).toEqual(testTransaction.id);
       expect(response.body.data.value).toBe(1.05);
       expect(response.body.data.description).toBe('test123');
-      const data = await stage.blockchainContext.mysql.paramExecute(
+      const data = await stage.context.blockchain.mysql.paramExecute(
         `SELECT value, description from transaction_log WHERE id = '${testTransaction.id}'`,
       );
       expect(data[0]?.value).toBe(value);

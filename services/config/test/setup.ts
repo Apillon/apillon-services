@@ -2,13 +2,6 @@ import { AppEnvironment, env, MySql } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { rebuildTestDatabases, dropTestDatabases } from '@apillon/tests-lib';
 
-/**
- * Testing stage definition.
- */
-export interface DatabaseState {
-  mysql: MySql;
-}
-
 export interface Stage {
   db: MySql;
   context: ServiceContext;
@@ -77,7 +70,7 @@ export const releaseStage = async (stage: Stage): Promise<void> => {
       await stage.db.close();
       await stage.storageContext.mysql.close();
     } catch (error) {
-      throw new Error('Error when releasing database: ' + error);
+      throw new Error(`Error when releasing database: ${error}`);
     }
   }
 };

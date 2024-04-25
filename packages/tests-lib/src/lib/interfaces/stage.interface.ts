@@ -20,21 +20,12 @@ export type StageObject<Type> = {
 };
 
 export interface Stage {
-  amsContext: TestContext;
-  lmasContext: TestContext;
-  devConsoleContext: TestContext;
   app: INestApplication;
   http: HttpServer;
+  lmasContext: TestContext;
   lmasMongo: Mongo;
-  storageContext: TestContext;
-  configContext: TestContext;
-  authApiContext: TestContext;
-  referralContext: TestContext;
-  nftsContext: TestContext;
-  blockchainContext: TestContext;
-  socialContext: TestContext;
-  computingContext: TestContext;
   db: StageObject<MySql>;
+  context: StageObject<TestContext>;
 }
 
 export interface ServiceStage {

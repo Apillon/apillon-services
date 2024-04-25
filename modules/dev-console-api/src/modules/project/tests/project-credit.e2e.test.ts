@@ -23,8 +23,14 @@ describe('Project credit e2e tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
 
     testProject = await createTestProject(testUser, stage, 1000);
   });
@@ -64,7 +70,7 @@ describe('Project credit e2e tests', () => {
       //Check credit balance
       const projectCredit = await new Credit(
         {},
-        stage.configContext,
+        stage.context.config,
       ).populateByProjectUUIDForUpdate(testProject.project_uuid, undefined);
 
       expect(projectCredit.exists()).toBeTruthy();
@@ -75,7 +81,7 @@ describe('Project credit e2e tests', () => {
     test('User should be notified if below threshold', async () => {
       const projectCredit = await new Credit(
         {},
-        stage.configContext,
+        stage.context.config,
       ).populateByProjectUUIDForUpdate(testProject.project_uuid, undefined);
       projectCredit.balance = 150;
       await projectCredit.update();
@@ -94,7 +100,7 @@ describe('Project credit e2e tests', () => {
       //Check credit balance and alert time
       const tmpProjectCredit = await new Credit(
         {},
-        stage.configContext,
+        stage.context.config,
       ).populateByProjectUUIDForUpdate(testProject.project_uuid, undefined);
 
       expect(tmpProjectCredit.exists()).toBeTruthy();
@@ -114,14 +120,14 @@ describe('Project credit e2e tests', () => {
           referenceTable: 'manually_added',
           referenceId: 'some_uuid',
         },
-        stage.devConsoleContext,
+        stage.context.devConsole,
       );
-      await new Scs(stage.devConsoleContext).addCredit(addCreditBody);
+      await new Scs(stage.context.devConsole).addCredit(addCreditBody);
 
       //Check credit balance and alert time
       const tmpProjectCredit = await new Credit(
         {},
-        stage.configContext,
+        stage.context.config,
       ).populateByProjectUUIDForUpdate(testProject.project_uuid, undefined);
 
       expect(tmpProjectCredit.exists()).toBeTruthy();
@@ -140,7 +146,7 @@ describe('Project credit e2e tests', () => {
 
       const tmpProjectCredit = await new Credit(
         {},
-        stage.configContext,
+        stage.context.config,
       ).populateByProjectUUIDForUpdate(testProject.project_uuid, undefined);
       expect(tmpProjectCredit.threshold).toBe(500);
     });
@@ -156,7 +162,7 @@ describe('Project credit e2e tests', () => {
 
       const tmpProjectCredit = await new Credit(
         {},
-        stage.configContext,
+        stage.context.config,
       ).populateByProjectUUIDForUpdate(testProject.project_uuid, undefined);
       expect(tmpProjectCredit.threshold).toBe(0);
     });
@@ -174,7 +180,7 @@ describe('Project credit e2e tests', () => {
     test('User should not be notified if threshold is not set', async () => {
       const projectCredit = await new Credit(
         {},
-        stage.configContext,
+        stage.context.config,
       ).populateByProjectUUIDForUpdate(testProject.project_uuid, undefined);
       projectCredit.balance = 150;
       projectCredit.lastAlertTime = null;
@@ -193,7 +199,7 @@ describe('Project credit e2e tests', () => {
 
       const tmpProjectCredit = await new Credit(
         {},
-        stage.configContext,
+        stage.context.config,
       ).populateByProjectUUIDForUpdate(testProject.project_uuid, undefined);
       expect(tmpProjectCredit.balance).toBeLessThan(150);
       expect(tmpProjectCredit.lastAlertTime).toBeFalsy();

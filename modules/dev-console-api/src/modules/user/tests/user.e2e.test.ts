@@ -33,13 +33,16 @@ describe('Auth tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
 
     const keyring = createTestKeyring();
     testUserKeyPair = keyring.addFromUri('//Alice');
     testUserKeyPair2 = keyring.addFromUri('//Bob');
 
-    await stage.amsContext.mysql.paramExecute(
+    await stage.context.access.mysql.paramExecute(
       `UPDATE authUser SET wallet = '${testUserKeyPair.address}' WHERE user_uuid = '${testUser.authUser.user_uuid}'`,
     );
   });

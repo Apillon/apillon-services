@@ -34,21 +34,24 @@ describe('Ipns tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     adminTestUser = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
+      stage.context.devConsole,
+      stage.context.access,
       DefaultUserRole.ADMIN,
     );
     testProject = await createTestProject(testUser, stage);
     testBucket = await createTestBucket(
       testUser,
-      stage.storageContext,
+      stage.context.storage,
       testProject,
       BucketType.STORAGE,
     );
 
-    ipnsRecord = await new Ipns({}, stage.storageContext)
+    ipnsRecord = await new Ipns({}, stage.context.storage)
       .fake()
       .populate({
         project_uuid: testProject.project_uuid,
@@ -56,7 +59,10 @@ describe('Ipns tests', () => {
       })
       .insert();
 
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     testProject2 = await createTestProject(testUser2, stage);
 
     console.info(
@@ -99,7 +105,7 @@ describe('Ipns tests', () => {
 
       const newIpns: Ipns = await new Ipns(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(response.body.data.ipns_uuid);
       expect(newIpns.exists()).toBeTruthy();
     });
@@ -119,7 +125,7 @@ describe('Ipns tests', () => {
       expect(response.body.data.name).toBe('My updated IPNS record');
       const updatedIpns: Ipns = await new Ipns(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(ipnsRecord.ipns_uuid);
       expect(updatedIpns.exists()).toBeTruthy();
     });
@@ -128,7 +134,7 @@ describe('Ipns tests', () => {
   describe('IPNS Access tests', () => {
     let ipnsRecordToDelete: Ipns;
     beforeAll(async () => {
-      ipnsRecordToDelete = await new Ipns({}, stage.storageContext)
+      ipnsRecordToDelete = await new Ipns({}, stage.context.storage)
         .fake()
         .populate({
           project_uuid: testProject.project_uuid,
@@ -149,7 +155,7 @@ describe('Ipns tests', () => {
 
       const tmpIpns: Ipns = await new Ipns(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(ipnsRecordToDelete.ipns_uuid);
       expect(tmpIpns.exists()).toBeTruthy();
     });
@@ -199,7 +205,7 @@ describe('Ipns tests', () => {
     beforeAll(async () => {
       //Create new file & CID
       file = await createTestBucketFile(
-        stage.storageContext,
+        stage.context.storage,
         testBucket,
         'Test file on IPFS.txt',
         'text/plain',
@@ -229,7 +235,7 @@ describe('Ipns tests', () => {
 
       const publishedIpns: Ipns = await new Ipns(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(response.body.data.ipns_uuid);
       expect(publishedIpns.exists()).toBeTruthy();
       expect(publishedIpns.ipnsName).toBeTruthy();
@@ -242,7 +248,7 @@ describe('Ipns tests', () => {
     test('User should be able to download file from apillon ipns gateway', async () => {
       const ipfsCluster = await new ProjectConfig(
         { project_uuid: ipnsRecord.project_uuid },
-        stage.storageContext,
+        stage.context.storage,
       ).getIpfsCluster();
 
       expect(publishedIpnsName).toBeTruthy();
@@ -261,7 +267,7 @@ describe('Ipns tests', () => {
   describe('IPNS delete tests', () => {
     let ipnsRecordToDelete: Ipns;
     beforeAll(async () => {
-      ipnsRecordToDelete = await new Ipns({}, stage.storageContext)
+      ipnsRecordToDelete = await new Ipns({}, stage.context.storage)
         .fake()
         .populate({
           name: 'ipns to delete',
@@ -281,7 +287,7 @@ describe('Ipns tests', () => {
 
       const tmpIpns: Ipns = await new Ipns(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(ipnsRecordToDelete.ipns_uuid);
       expect(tmpIpns.exists()).toBeFalsy();
     });

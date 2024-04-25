@@ -58,14 +58,14 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
     deployerAddress = blockchain.getWalletAddress(0);
 
     await insertNftContractVersion(
-      stage.nftsContext,
+      stage.context.nfts,
       ChainType.EVM,
       NFTCollectionType.GENERIC,
       evmGenericNftAbi,
       evmGenericNftBytecode,
     );
     await insertNftContractVersion(
-      stage.nftsContext,
+      stage.context.nfts,
       ChainType.EVM,
       NFTCollectionType.NESTABLE,
       evmNestableNftAbi,
@@ -73,11 +73,17 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
     );
 
     // test collection
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     adminTestUser = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
+      stage.context.devConsole,
+      stage.context.access,
       DefaultUserRole.ADMIN,
     );
 
@@ -85,7 +91,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
     await createTestProject(testUser2, stage);
     testCollection = await createTestNFTCollection(
       testUser,
-      stage.nftsContext,
+      stage.context.nfts,
       testProject,
       SqlModelStatus.INCOMPLETE,
       0,
@@ -100,8 +106,8 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
 
     // nestable collection
     nestableUser = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
+      stage.context.devConsole,
+      stage.context.access,
     );
     nestableProject = await createTestProject(nestableUser, stage);
     await overrideDefaultQuota(
@@ -196,7 +202,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.body.data.contractAddress).toBeTruthy();
 
       //Get collection from DB
-      newCollection = await new Collection({}, stage.nftsContext).populateById(
+      newCollection = await new Collection({}, stage.context.nfts).populateById(
         response.body.data.id,
       );
 
@@ -354,7 +360,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.body.data.bucket_uuid).toBeTruthy();
 
       //Get collection from DB
-      newCollection = await new Collection({}, stage.nftsContext).populateById(
+      newCollection = await new Collection({}, stage.context.nfts).populateById(
         response.body.data.id,
       );
       expect(newCollection.exists()).toBeTruthy();
@@ -450,11 +456,41 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       expect(response.status).toBe(201);
 
       //Get collection from DB
-      newCollection = await new Collection({}, stage.nftsContext).populateById(
+      newCollection = await new Collection({}, stage.context.nfts).populateById(
         newCollection.id,
       );
       expect(newCollection.baseUri).toBeTruthy();
 
+      //1.json should be available in baseUri
+      const response2 = await request(
+        newCollection.baseUri + '1' + newCollection.baseExtension,
+      ).get('');
+      expect(response2.status).toBe(200);
+
+      //Bucket should contain 2 directories
+      const collectionBucket = await new Bucket(
+        {},
+        stage.context.storage,
+      ).populateByUUID(newCollection.bucket_uuid);
+
+      const bucketDirs = await new Directory(
+        {},
+        stage.context.storage,
+      ).populateDirectoriesInBucket(collectionBucket.id, stage.context.storage);
+      expect(bucketDirs.length).toBe(2);
+
+      const metadataDir = bucketDirs.find((x) => x.name == 'Metadata');
+      expect(metadataDir).toBeTruthy();
+
+      const collectionMetadataFiles: File[] = await new File(
+        {},
+        stage.context.storage,
+      ).populateFilesInBucket(collectionBucket.id, stage.context.storage);
+
+      expect(collectionMetadataFiles.length).toBe(4);
+      expect(
+        collectionMetadataFiles.find((x) => x.name == '1.json').directory_id,
+      ).toBe(metadataDir.id);
       const transactionStatus = await getNftTransactionStatus(
         stage,
         CHAIN_ID,
@@ -544,7 +580,7 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       //Get collection from DB
       nestableCollection = await new Collection(
         {},
-        stage.nftsContext,
+        stage.context.nfts,
       ).populateById(response.body.data.id);
       expect(nestableCollection.exists()).toBeTruthy();
       const transactionStatus = await getNftTransactionStatus(

@@ -62,7 +62,7 @@ export class TestBlockchain {
     return new TestBlockchain(
       {
         db: stage.db.blockchain,
-        context: stage.blockchainContext,
+        context: stage.context.blockchain,
       },
       chainId,
       port,
@@ -208,14 +208,14 @@ export async function getNftTransactionStatus(
 ) {
   const collectionTxs = await new NftCollectionTx(
     {},
-    stage.nftsContext,
+    stage.context.nfts,
   ).getCollectionTransactions(collectionUuid);
   const collectionTx = collectionTxs.find(
     (x) => x.transactionType == transactionType,
   );
   const blockchainTx = await new BlockchainTx(
     {},
-    stage.blockchainContext,
+    stage.context.blockchain,
   ).getTransactionByChainAndHash(chainId, collectionTx.transactionHash);
 
   return blockchainTx.transactionStatus;

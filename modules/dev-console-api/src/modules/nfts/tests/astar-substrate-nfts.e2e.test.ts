@@ -39,11 +39,14 @@ describe('Apillon Console NFTs tests for Astar substrate', () => {
     blockchain = TestSubstrateBlockchain.fromStage(stage, CHAIN_ID);
     await blockchain.start();
 
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     testProject = await createTestProject(testUser, stage);
 
     await insertNftContractVersion(
-      stage.nftsContext,
+      stage.context.nfts,
       ChainType.SUBSTRATE,
       NFTCollectionType.GENERIC,
       substrateGenericNftAbi,
@@ -82,7 +85,7 @@ describe('Apillon Console NFTs tests for Astar substrate', () => {
       expect(response.body.data.contractAddress).toBeTruthy();
 
       //Get collection from DB
-      newCollection = await new Collection({}, stage.nftsContext).populateById(
+      newCollection = await new Collection({}, stage.context.nfts).populateById(
         response.body.data.id,
       );
       expect(newCollection.exists()).toBeTruthy();
