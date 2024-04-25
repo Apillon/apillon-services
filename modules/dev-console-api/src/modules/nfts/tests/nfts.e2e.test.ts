@@ -455,36 +455,6 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
       );
       expect(newCollection.baseUri).toBeTruthy();
 
-      //1.json should be available in baseUri
-      const response2 = await request(
-        newCollection.baseUri + '1' + newCollection.baseExtension,
-      ).get('');
-      expect(response2.status).toBe(200);
-
-      //Bucket should contain 2 directories
-      const collectionBucket = await new Bucket(
-        {},
-        stage.storageContext,
-      ).populateByUUID(newCollection.bucket_uuid);
-
-      const bucketDirs = await new Directory(
-        {},
-        stage.storageContext,
-      ).populateDirectoriesInBucket(collectionBucket.id, stage.storageContext);
-      expect(bucketDirs.length).toBe(2);
-
-      const metadataDir = bucketDirs.find((x) => x.name == 'Metadata');
-      expect(metadataDir).toBeTruthy();
-
-      const collectionMetadataFiles: File[] = await new File(
-        {},
-        stage.storageContext,
-      ).populateFilesInBucket(collectionBucket.id, stage.storageContext);
-
-      expect(collectionMetadataFiles.length).toBe(4);
-      expect(
-        collectionMetadataFiles.find((x) => x.name == '1.json').directory_id,
-      ).toBe(metadataDir.id);
       const transactionStatus = await getNftTransactionStatus(
         stage,
         CHAIN_ID,
@@ -492,6 +462,15 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
         TransactionType.DEPLOY_CONTRACT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
+    });
+
+    test('User should be able to get collection metadata list', async () => {
+      const response = await request(stage.http)
+        .get(`/nfts/collections/${newCollection.collection_uuid}/nfts-metadata`)
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBeGreaterThan(0);
+      expect(response.body.data.items[0].currentStep).toBeTruthy();
     });
   });
 

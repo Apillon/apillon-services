@@ -47,11 +47,17 @@ export class IPFSService {
   private ipfsCluster: IpfsCluster;
   private project_uuid: string;
   private context: ServiceContext;
+  private canUseBackupNode = true;
   public usingBackupNode = false;
 
-  public constructor(context: ServiceContext, project_uuid: string) {
+  public constructor(
+    context: ServiceContext,
+    project_uuid: string,
+    canUseBackupNode = true,
+  ) {
     this.project_uuid = project_uuid;
     this.context = context;
+    this.canUseBackupNode = canUseBackupNode;
   }
 
   /**
@@ -76,7 +82,7 @@ export class IPFSService {
     try {
       await this.kuboRpcApiClient.version(2000);
     } catch (err) {
-      if (this.ipfsCluster.backupIpfsApi) {
+      if (this.ipfsCluster.backupIpfsApi && this.canUseBackupNode) {
         //Initialize client with backup api
         this.kuboRpcApiClient = new IpfsKuboRpcHttpClient(
           this.ipfsCluster.backupIpfsApi,

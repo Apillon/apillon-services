@@ -22,6 +22,7 @@ import { IPFSService } from '../ipfs/ipfs.service';
 import { Ipns } from '../ipns/models/ipns.model';
 import { StorageService } from '../storage/storage.service';
 import { CollectionMetadata } from './modules/collection-metadata.model';
+import { CollectionMetadataQueryFilter } from '@apillon/lib';
 
 export class NftStorageService {
   static async prepareBaseUriForCollection(
@@ -193,5 +194,15 @@ export class NftStorageService {
     }
 
     return { baseUri };
+  }
+
+  static async listCollectionMetadata(
+    event: { query: CollectionMetadataQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new CollectionMetadata({}, context).getList(
+      context,
+      new CollectionMetadataQueryFilter(event.query),
+    );
   }
 }

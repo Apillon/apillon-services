@@ -15,6 +15,7 @@ import {
   RoleGroup,
   AddNftsMetadataDto,
   CreateSubstrateCollectionDTO,
+  CollectionMetadataQueryFilter,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
@@ -246,6 +247,25 @@ export class NftsController {
       context,
       collectionUuid,
       body,
+    );
+  }
+
+  @Get('collections/:collectionUuid/nfts-metadata')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({
+    dto: CollectionMetadataQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async listCollectionMetadata(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collectionUuid') collectionUuid: string,
+    @Query() query: CollectionMetadataQueryFilter,
+  ) {
+    return await this.nftsService.listCollectionMetadata(
+      context,
+      collectionUuid,
+      query,
     );
   }
 }
