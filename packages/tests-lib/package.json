@@ -22,15 +22,15 @@
   "devDependencies": {
     "@astar-network/swanky-cli": "3.1.0",
     "@types/jsonwebtoken": "^9.0.6",
+    "bcrypt": "^5.1.1",
     "eslint-config-common": "*",
+    "hardhat": "^2.22.2",
+    "terminate": "2.6.1",
     "tsconfig": "*"
   },
   "dependencies": {
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
-    "@nestjs/common": "^10.3.7",
-    "bcrypt": "^5.1.1",
-    "hardhat": "^2.22.2",
-    "terminate": "2.6.1"
+    "@nestjs/common": "^10.3.7"
   }
 }
