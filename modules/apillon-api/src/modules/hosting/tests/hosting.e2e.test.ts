@@ -50,7 +50,7 @@ describe('Apillon API hosting tests', () => {
     //User 1 project & other data
     testUser = await createTestUser(
       stage.context.devConsole,
-      stage.stage.context.access,
+      stage.context.access,
     );
 
     testProject = await createTestProject(testUser, stage, 1200, 2);
@@ -69,7 +69,7 @@ describe('Apillon API hosting tests', () => {
       .createNewWebsite(stage.context.storage, uuidV4());
 
     apiKey = await createTestApiKey(
-      stage.stage.context.access,
+      stage.context.access,
       testProject.project_uuid,
     );
     await apiKey.assignRole(

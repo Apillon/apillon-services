@@ -26,11 +26,11 @@ describe('Project APIs tests', () => {
 
     testUser = await createTestUser(
       stage.context.devConsole,
-      stage.stage.context.access,
+      stage.context.access,
     );
     testProject = await createTestProject(testUser, stage, 1000);
     apiKey = await createTestApiKey(
-      stage.stage.context.access,
+      stage.context.access,
       testProject.project_uuid,
     );
     getRequest = getRequestFactory(stage.http, apiKey);

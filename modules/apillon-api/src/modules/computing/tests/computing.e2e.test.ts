@@ -34,7 +34,7 @@ describe('Computing API tests', () => {
     // Set up test user and project
     testUser = await createTestUser(
       stage.context.devConsole,
-      stage.stage.context.access,
+      stage.context.access,
     );
     testProject = await createTestProject(testUser, stage, 1200, 2);
     testService = await createTestProjectService(
@@ -44,7 +44,7 @@ describe('Computing API tests', () => {
 
     // Generate an API key for testing
     apiKey = await createTestApiKey(
-      stage.stage.context.access,
+      stage.context.access,
       testProject.project_uuid,
     );
     await apiKey.assignRole(

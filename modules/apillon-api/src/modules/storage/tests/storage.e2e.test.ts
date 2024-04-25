@@ -60,7 +60,7 @@ describe('Apillon API storage tests', () => {
     //User 1 project & other data
     testUser = await createTestUser(
       stage.context.devConsole,
-      stage.stage.context.access,
+      stage.context.access,
     );
 
     testProject = await createTestProject(testUser, stage);
@@ -75,7 +75,7 @@ describe('Apillon API storage tests', () => {
     );
 
     apiKey = await createTestApiKey(
-      stage.stage.context.access,
+      stage.context.access,
       testProject.project_uuid,
     );
     await apiKey.assignRole(

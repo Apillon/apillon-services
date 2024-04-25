@@ -52,7 +52,7 @@ describe('Ipns tests', () => {
     stage = await setupTest();
     testUser = await createTestUser(
       stage.context.devConsole,
-      stage.stage.context.access,
+      stage.context.access,
     );
     adminTestUser = await createTestUser(
       stage.context.devConsole,
@@ -92,7 +92,7 @@ describe('Ipns tests', () => {
     );
 
     apiKey = await createTestApiKey(
-      stage.stage.context.access,
+      stage.context.access,
       testProject.project_uuid,
     );
     await apiKey.assignRole(

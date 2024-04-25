@@ -53,7 +53,7 @@ describe('Apillon API social tests', () => {
     //User 1 project & other data
     testUser = await createTestUser(
       stage.context.devConsole,
-      stage.stage.context.access,
+      stage.context.access,
     );
 
     testProject = await createTestProject(testUser, stage, 1200, 2);
@@ -63,7 +63,7 @@ describe('Apillon API social tests', () => {
     );
 
     apiKey = await createTestApiKey(
-      stage.stage.context.access,
+      stage.context.access,
       testProject.project_uuid,
     );
     await apiKey.assignRole(

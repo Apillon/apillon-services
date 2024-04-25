@@ -82,7 +82,7 @@ describe('Apillon API NFTs tests on Astar', () => {
     //User 1 project & other data
     testUser = await createTestUser(
       stage.context.devConsole,
-      stage.stage.context.access,
+      stage.context.access,
     );
 
     testProject = await createTestProject(testUser, stage);
@@ -99,7 +99,7 @@ describe('Apillon API NFTs tests on Astar', () => {
     );
 
     apiKey = await createTestApiKey(
-      stage.stage.context.access,
+      stage.context.access,
       testProject.project_uuid,
     );
     await apiKey.assignRole(
