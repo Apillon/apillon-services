@@ -152,7 +152,7 @@ export async function unseedTestDatabases(): Promise<void> {
 export async function destroyTestMigrations(): Promise<void> {
   await Promise.all(
     Object.values(StageName).map((stageName) =>
-      migrations[stageName].destroy(),
+      migrations[stageName]?.destroy(),
     ),
   );
   migrations = {};

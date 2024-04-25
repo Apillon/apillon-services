@@ -17,3 +17,6 @@ export * from './lib/helpers/config';
 export * from './lib/helpers/contract-version';
 export * from './lib/helpers/contracts/abi';
 export * from './lib/helpers/contracts/bytecode';
+export * from './lib/helpers/configs/hardhat_592.config';
+export * from './lib/helpers/configs/hardhat_1284.config';
+export * from './lib/helpers/configs/hardhat_1287.config';
