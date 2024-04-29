@@ -108,7 +108,7 @@ export class AirdropService {
           : ReferralErrorCode.USER_ALREADY_CLAIMED,
       });
       // TODO: change timestamp at airdrop cutoff date
-    } else if (new Date(context.user.createTime).getTime() > 1713529821058) {
+    } else if (new Date(context.user.createTime).getTime() > 1716163200000) {
       throw new ReferralCodeException({
         status: 403,
         code: ReferralErrorCode.USER_NOT_ELIGIBLE,
