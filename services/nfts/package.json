@@ -27,14 +27,14 @@
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
-    "@middy/core": "^2.5.7",
+    "@middy/core": "^3.3.1",
     "@polkadot/api": "10.12.4",
     "@polkadot/api-contract": "10.12.4",
-    "@types/uuid": "^8.3.4",
     "ethers": "^5.7.2",
-    "node-fetch": "2.6.7"
+    "node-fetch": "^2.6.7"
   },
   "devDependencies": {
+    "@types/uuid": "^9.0.8",
     "eslint-config-common": "*",
     "tsconfig": "*"
   },

@@ -33,10 +33,13 @@ describe('Admin Project tests', () => {
       env.ADMIN_CONSOLE_API_PORT_TEST,
       env.ADMIN_CONSOLE_API_HOST_TEST,
     );
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     adminTestUser = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
+      stage.context.devConsole,
+      stage.context.access,
       DefaultUserRole.ADMIN,
     );
     testProject = await createTestProject(testUser, stage);
@@ -48,7 +51,7 @@ describe('Admin Project tests', () => {
         quota_id: QuotaCode.MAX_WEBSITES,
         value: 20,
       },
-      stage.configContext,
+      stage.context.config,
     ).insert(SerializeFor.SELECT_DB); // Override properties are not marked as serializable for INSERT_DB
 
     await new Override(
@@ -57,7 +60,7 @@ describe('Admin Project tests', () => {
         quota_id: QuotaCode.MAX_USERS_ON_PROJECT,
         value: 40,
       },
-      stage.configContext,
+      stage.context.config,
     ).insert(SerializeFor.SELECT_DB); // Override properties are not marked as serializable for INSERT_DB
 
     const bucket = await new Bucket(
@@ -68,7 +71,7 @@ describe('Admin Project tests', () => {
         bucketType: 1,
         size: 2000,
       },
-      stage.storageContext,
+      stage.context.storage,
     ).insert();
 
     await new Website(
@@ -79,7 +82,7 @@ describe('Admin Project tests', () => {
         productionBucket_id: bucket.id,
         name: 'test',
       },
-      stage.storageContext,
+      stage.context.storage,
     ).insert();
 
     await new Collection(
@@ -99,7 +102,7 @@ describe('Admin Project tests', () => {
         royaltiesFees: 0,
         royaltiesAddress: '',
       },
-      stage.nftsContext,
+      stage.context.nfts,
     ).insert();
   });
 
@@ -184,7 +187,7 @@ describe('Admin Project tests', () => {
       expect(response.body.data.value).toBe(20);
       expect(response.body.data.description).toBe('testing123');
 
-      const data = await stage.configContext.mysql.paramExecute(`
+      const data = await stage.context.config.mysql.paramExecute(`
         SELECT * from override WHERE project_uuid = '${testProject.project_uuid}' and quota_id = ${QuotaCode.MAX_API_KEYS}`);
       expect(data[0].quota_id).toBe(QuotaCode.MAX_API_KEYS);
       expect(data[0].value).toBe(20); // From previous POST request insert
@@ -198,7 +201,7 @@ describe('Admin Project tests', () => {
       expect(postResponse.status).toBe(200);
       expect(postResponse.body.data.data).toEqual(true);
 
-      const data = await stage.configContext.mysql.paramExecute(`
+      const data = await stage.context.config.mysql.paramExecute(`
         SELECT * from override WHERE project_uuid = '${testProject.project_uuid}' and quota_id = ${QuotaCode.MAX_API_KEYS}`);
       expect(data).toHaveLength(0);
 

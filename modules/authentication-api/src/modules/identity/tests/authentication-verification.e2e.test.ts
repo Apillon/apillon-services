@@ -54,7 +54,7 @@ describe('VERFICATION', () => {
   });
 
   afterEach(async () => {
-    await stage.authApiContext.mysql.paramExecute(
+    await stage.context.authentication.mysql.paramExecute(
       `
         DELETE FROM \`${DbTables.IDENTITY}\` i
       `,
@@ -64,9 +64,9 @@ describe('VERFICATION', () => {
   describe('Identity test', () => {
     test('Identity attestation', async () => {
       // IDENTITY 1 - ATTESTED
-      const identityAttested = new Identity({}, stage.authApiContext);
+      const identityAttested = new Identity({}, stage.context.authentication);
       identityAttested.populate({
-        context: stage.authApiContext,
+        context: stage.context.authentication,
         email: testEmail,
         state: IdentityState.ATTESTED,
         identityToken,
@@ -77,8 +77,8 @@ describe('VERFICATION', () => {
 
       const identityAttestedDb = await new Identity(
         {},
-        stage.authApiContext,
-      ).populateByUserEmail(stage.authApiContext, testEmail);
+        stage.context.authentication,
+      ).populateByUserEmail(stage.context.authentication, testEmail);
 
       expect(identityAttestedDb).not.toBeUndefined();
       expect(identityAttestedDb.email).toEqual(testEmail);

@@ -24,12 +24,18 @@ describe('Project services tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
 
     testProject = await createTestProject(testUser, stage);
     testProjectService = await createTestProjectService(
-      stage.devConsoleContext,
+      stage.context.devConsole,
       testProject,
     );
     testProject2 = await createTestProject(testUser2, stage);
@@ -110,7 +116,7 @@ describe('Project services tests', () => {
 
       const s: Service = await new Service(
         {},
-        stage.devConsoleContext,
+        stage.context.devConsole,
       ).populateByUUID(response.body.data.service_uuid);
 
       expect(s.exists()).toBeTruthy();
@@ -130,7 +136,7 @@ describe('Project services tests', () => {
 
       const s: Service = await new Service(
         {},
-        stage.devConsoleContext,
+        stage.context.devConsole,
       ).populateByUUID(response.body.data.service_uuid);
 
       expect(s.exists()).toBeTruthy();
@@ -153,7 +159,7 @@ describe('Project services tests', () => {
 
       const s: Service = await new Service(
         {},
-        stage.devConsoleContext,
+        stage.context.devConsole,
       ).populateByUUID(testProjectService.service_uuid);
 
       expect(s.exists()).toBeFalsy();

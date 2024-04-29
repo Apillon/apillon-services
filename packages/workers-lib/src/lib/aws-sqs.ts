@@ -18,6 +18,7 @@ export async function sendToWorkerQueue(
   msgData: Array<any>,
   id: number,
   parameters: any[] = null,
+  delaySeconds = 0,
 ): Promise<{ errCount: number; errMsgs: string[] }> {
   const sqs = createSqsClient();
   let errCount = 0;
@@ -51,6 +52,7 @@ export async function sendToWorkerQueue(
       // MessageDeduplicationId: 'TheWhistler',  // Required for FIFO queues
       // MessageGroupId: 'Group1',  // Required for FIFO queues
       QueueUrl: queueUrl,
+      DelaySeconds: delaySeconds,
     };
     if (!parameters) {
       delete message.MessageAttributes.parameters;

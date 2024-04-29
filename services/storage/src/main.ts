@@ -22,6 +22,8 @@ export async function processEvent(event, context: Context): Promise<any> {
       StorageService.endFileUploadSession,
     [StorageEventType.END_FILE_UPLOAD]: StorageService.endFileUpload,
     [StorageEventType.LIST_FILE_UPLOAD]: StorageService.listFileUploads,
+    [StorageEventType.LIST_FILE_UPLOAD_SESSIONS]:
+      StorageService.listFileUploadSessions,
 
     [StorageEventType.LIST_BUCKETS]: BucketService.listBuckets,
     [StorageEventType.GET_BUCKET]: BucketService.getBucket,
@@ -73,6 +75,8 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [StorageEventType.PREPARE_COLLECTION_BASE_URI]:
       NftStorageService.prepareBaseUriForCollection,
+    [StorageEventType.COLLECTION_METADATA_LIST]:
+      NftStorageService.listCollectionMetadata,
 
     [StorageEventType.TEST_CRUST_PROVIDER]: CrustService.testCrustProvider,
 

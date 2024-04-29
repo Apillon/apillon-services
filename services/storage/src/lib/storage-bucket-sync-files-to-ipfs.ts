@@ -26,7 +26,6 @@ import { Directory } from '../modules/directory/models/directory.model';
 import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to-ipfs-res.interface';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
-import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { File } from '../modules/storage/models/file.model';
 import { pinFileToCRUST } from './pin-file-to-crust';
 
@@ -40,11 +39,10 @@ export async function storageBucketSyncFilesToIPFS(
   location,
   bucket: Bucket,
   files: FileUploadRequest[],
-  session: FileUploadSession,
   wrapWithDirectory: boolean,
   wrappingDirectoryPath: string,
 ) {
-  const transferedFiles: File[] = [];
+  const transferredFiles: File[] = [];
   let wrappedDirCid: string = undefined;
 
   //get directories in bucket
@@ -60,18 +58,17 @@ export async function storageBucketSyncFilesToIPFS(
     //This means, that files, that were uploaded to S3, within session, will be added to parent CID.
     //In this CID, files will have structure, that was defined with path variable in file-upload-request.
 
-    //Check if size of files is greater than allowed bucket size.
     const s3Client: AWS_S3 = new AWS_S3();
+
+    /*Each IPFS node has it's own MFS. 
+      In this case, MFS writes must be performed to master node, that's why ipfs service shouldn't use backup node here.*/
+    const ipfsService = new IPFSService(context, bucket.project_uuid, false);
 
     let ipfsRes: uploadItemsToIPFSRes = undefined;
     try {
-      ipfsRes = await new IPFSService(
-        context,
-        bucket.project_uuid,
-      ).uploadFURsToIPFSFromS3(
+      ipfsRes = await ipfsService.uploadFURsToIPFSFromS3(
         {
           fileUploadRequests: files,
-          wrapWithDirectory: wrapWithDirectory,
           wrappingDirectoryPath,
         },
         context,
@@ -168,7 +165,7 @@ export async function storageBucketSyncFilesToIPFS(
             });
 
             await existingFile.update();
-            transferedFiles.push(existingFile);
+            transferredFiles.push(existingFile);
           } else {
             //Create new file
             const fileDirectory = await generateDirectoriesForFUR(
@@ -196,7 +193,7 @@ export async function storageBucketSyncFilesToIPFS(
               })
               .insert();
 
-            transferedFiles.push(tmpF);
+            transferredFiles.push(tmpF);
           }
         } catch (err) {
           await new Lmas().writeLog({
@@ -332,7 +329,7 @@ export async function storageBucketSyncFilesToIPFS(
             });
 
             await existingFile.update();
-            transferedFiles.push(existingFile);
+            transferredFiles.push(existingFile);
           } else {
             //Create new file - this should probably newer happen. But will leave for now.
             const fileDirectory = await generateDirectoriesForFUR(
@@ -359,7 +356,7 @@ export async function storageBucketSyncFilesToIPFS(
               })
               .insert();
 
-            transferedFiles.push(tmpF);
+            transferredFiles.push(tmpF);
           }
         } catch (err) {
           await new Lmas().writeLog({
@@ -418,17 +415,17 @@ export async function storageBucketSyncFilesToIPFS(
     );
 
     await runWithWorkers(
-      transferedFiles,
+      transferredFiles,
       20,
       context,
-      async (transferedFile) => {
+      async (transferredFile) => {
         await pinFileToCRUST(
           context,
           bucket.bucket_uuid,
-          transferedFile.CID,
-          transferedFile.size,
+          transferredFile.CID,
+          transferredFile.size,
           false,
-          transferedFile.file_uuid,
+          transferredFile.file_uuid,
           DbTables.FILE,
         );
       },
@@ -488,5 +485,5 @@ export async function storageBucketSyncFilesToIPFS(
     project_uuid: bucket.project_uuid,
   });
 
-  return { files: transferedFiles, wrappedDirCid: wrappedDirCid };
+  return { files: transferredFiles, wrappedDirCid: wrappedDirCid };
 }

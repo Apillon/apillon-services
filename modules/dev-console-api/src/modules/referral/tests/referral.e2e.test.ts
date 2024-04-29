@@ -10,7 +10,6 @@ import {
   Stage,
   TestUser,
   createTestReferralProduct,
-  createTestProject,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
@@ -34,10 +33,13 @@ describe('Referral tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     // const project = await createTestProject(testUser, stage, 7000);
-    // await createTestReferralTasks(stage.referralContext);
-    product = await createTestReferralProduct(stage.referralContext);
+    // await createTestReferralTasks(stage.context.referral);
+    product = await createTestReferralProduct(stage.context.referral);
   });
 
   afterAll(async () => {
@@ -48,11 +50,9 @@ describe('Referral tests', () => {
     test('User should be able to create referral player', async () => {
       const response = await request(stage.http)
         .post(`/referral`)
-        .send({ termsAccepted: true })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
       expect(response.body.data.refCode).toHaveLength(5);
-      // expect(response.body.data.termsAccepted).toBeTruthy();
       playerId = response.body.data.id;
       refCode = response.body.data.refCode;
     });
@@ -76,7 +76,7 @@ describe('Referral tests', () => {
 
       const player = await new Player(
         {},
-        stage.referralContext,
+        stage.context.referral,
       ).populateByUserUuid(newUserData.user_uuid);
 
       expect(player.referrer_id).toBe(playerId);
@@ -84,14 +84,7 @@ describe('Referral tests', () => {
   });
 
   describe('Get referral player tests', () => {
-    test.skip('User should not be able to get referral if did not accept terms', async () => {
-      const response = await request(stage.http)
-        .get(`/referral`)
-        .set('Authorization', `Bearer ${newUserData.authToken}`);
-      expect(response.status).toBe(400);
-    });
-
-    test('User should be able to get referral if he accepted terms', async () => {
+    test('User should be able to get referral', async () => {
       const response = await request(stage.http)
         .get(`/referral`)
         .set('Authorization', `Bearer ${testUser.token}`);
@@ -118,7 +111,7 @@ describe('Referral tests', () => {
     });
 
     test('Confirm user retweet', async () => {
-      await stage.referralSql.paramExecute(
+      await stage.db.referral.paramExecute(
         `
         UPDATE ${DbTables.PLAYER}
         SET twitter_id = @twitter_id
@@ -162,7 +155,7 @@ describe('Referral tests', () => {
       expect(response.status).toBe(400);
     });
     test('User should be able to order product with sufficient balance once', async () => {
-      await stage.referralSql.paramExecute(
+      await stage.db.referral.paramExecute(
         `
         INSERT INTO ${DbTables.TRANSACTION} (player_id, direction, amount, status)
         VALUES (@player_id, ${TransactionDirection.DEPOSIT}, 14, 5)
@@ -186,7 +179,7 @@ describe('Referral tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
 
-      await stage.referralSql.paramExecute(
+      await stage.db.referral.paramExecute(
         `
       INSERT INTO ${DbTables.TRANSACTION} (player_id, direction, amount, status)
       VALUES (@player_id, ${TransactionDirection.DEPOSIT}, 14, 5)
@@ -211,7 +204,7 @@ describe('Referral tests', () => {
         .get(`/referral/airdrop-tasks`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      console.log(response.body.data);
+      expect(response.body.data.totalPoints).toBeGreaterThanOrEqual(10);
     });
   });
 });

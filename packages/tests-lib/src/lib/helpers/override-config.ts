@@ -14,7 +14,7 @@ export async function overrideDefaultQuota(
   quotaCode: QuotaCode,
   quotaValue: number,
 ) {
-  await stage.configContext.mysql.paramExecute(`
+  await stage.context.config.mysql.paramExecute(`
     INSERT INTO override (status, quota_id, project_uuid, object_uuid, package_id, value)
     VALUES (5,
             ${quotaCode},

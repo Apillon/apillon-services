@@ -51,3 +51,8 @@ env.*yml
 
 tmp/
 test-config.js
+
+**/swanky-node
+**/swanky.log
+
+**/hardhat.log

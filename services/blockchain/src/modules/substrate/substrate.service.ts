@@ -5,6 +5,7 @@ import {
   ChainType,
   ClusterDepositTransaction,
   env,
+  getChainName,
   getEnumKey,
   IsolationLevel,
   Lmas,
@@ -28,6 +29,7 @@ import { types as PhalaTypesBundle } from './types-bundle/phala-types';
 import { substrateChainToWorkerName } from '../../lib/helpers';
 import { typesBundle as SubsocialTypesBundle } from './types-bundle/subsocial/definitions';
 import { PhalaBlockchainIndexer } from '../blockchain-indexers/substrate/phala/indexer.service';
+import { transmitAndProcessSubstrateTransaction } from '../../lib/transmit-and-process-substrate-transaction';
 
 export class SubstrateService {
   static async createTransaction(
@@ -85,7 +87,7 @@ export class SubstrateService {
         break;
       }
       case SubstrateChain.ASTAR: {
-        keyring = new Keyring({type: 'sr25519'});
+        keyring = new Keyring({ type: 'sr25519' });
         break;
       }
       default: {
@@ -133,7 +135,7 @@ export class SubstrateService {
       if (balanceData.isBelowTransactionThreshold) {
         throw await new BlockchainCodeException({
           code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
-          errorMessage: `Transaction can not be sent - balance below transaction minimum for wallet ${wallet.address} and chain ${SubstrateChain[wallet.chain]}`,
+          errorMessage: `Transaction can not be sent - balance below transaction minimum for wallet ${wallet.address} and chain ${getChainName(wallet.chainType, wallet.chain)}`,
           sourceFunction: 'SubstrateService.createTransaction',
           status: 500,
         }).writeToMonitor({
@@ -205,9 +207,11 @@ export class SubstrateService {
       });
 
       if (
-        env.APP_ENV != AppEnvironment.TEST &&
-        env.APP_ENV != AppEnvironment.LOCAL_DEV
+        env.APP_ENV == AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV == AppEnvironment.TEST
       ) {
+        await transmitAndProcessSubstrateTransaction(context, api, transaction);
+      } else {
         try {
           await sendToWorkerQueue(
             env.BLOCKCHAIN_AWS_WORKER_SQS_URL,
@@ -389,12 +393,17 @@ export class SubstrateService {
         try {
           const result = await api.send(transaction.rawTransaction);
           console.log(
-            `successfully transmitted tx with id ${transaction.id}:`,
-            result,
+            `successfully transmitted tx with id ${transaction.id} on chain ${transaction.chainType}:`,
+            result.toJSON(),
           );
           latestSuccess = transaction.nonce;
           transmitted++;
         } catch (err: any) {
+          console.log(
+            `error transmitting tx with id ${transaction.id} and nonce ${transaction.nonce}:`,
+            err,
+          );
+          const chainName = getEnumKey(SubstrateChain, _event.chain);
           //try self repair else error
           if (
             err?.data === 'Transaction is outdated' ||
@@ -410,7 +419,7 @@ export class SubstrateService {
               await eventLogger(
                 {
                   logType: LogType.INFO,
-                  message: `Last success nonce was repaired and set to ${selfRepairNonce}.`,
+                  message: `Last success nonce was repaired on chain ${chainName} for wallet address ${wallet.address} and set to ${selfRepairNonce} (hash=${transaction.transactionHash}).`,
                   service: ServiceName.BLOCKCHAIN,
                   data: {
                     wallet: wallet.address,
@@ -423,10 +432,7 @@ export class SubstrateService {
               await eventLogger(
                 {
                   logType: LogType.ERROR,
-                  message: `Could not repair last success nonce for chain ${getEnumKey(
-                    SubstrateChain,
-                    _event.chain,
-                  )} and wallet address ${wallet.address}.`,
+                  message: `Could not repair last success nonce on chain ${chainName} for wallet address ${wallet.address} (nonce=${transaction.nonce}, hash=${transaction.transactionHash}).`,
                   service: ServiceName.BLOCKCHAIN,
                   data: {
                     wallet: wallet.address,
@@ -437,15 +443,13 @@ export class SubstrateService {
                 },
                 LogOutput.NOTIFY_WARN,
               );
+              break;
             }
           } else {
             await eventLogger(
               {
                 logType: LogType.ERROR,
-                message: `Error transmitting transaction on chain ${getEnumKey(
-                  SubstrateChain,
-                  _event.chain,
-                )}! Hash: ${transaction.transactionHash}`,
+                message: `Error transmitting transaction on chain ${chainName} for wallet address ${wallet.address} (nonce=${transaction.nonce}, hash=${transaction.transactionHash})!`,
                 service: ServiceName.BLOCKCHAIN,
                 data: {
                   error: err,

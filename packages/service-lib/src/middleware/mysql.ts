@@ -40,7 +40,7 @@ export function MySqlConnect(
   const after = async (_response) => {
     if (autoDisconnect) {
       try {
-        await (instances[instanceName] as MySql).close();
+        await (instances[instanceName] as MySql)?.close();
         console.log(
           `MySQL client instance ${instanceName} is DISCONNECTED from server!`,
         );

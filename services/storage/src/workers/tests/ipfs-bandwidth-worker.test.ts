@@ -4,7 +4,11 @@ import { IpfsBandwidthWorker } from '../ipfs-bandwidth-worker';
 import { MongoCollections } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import { IpfsBandwidth } from '../../modules/ipfs/models/ipfs-bandwidth';
-import { DbTables } from '../../config/types';
+import {
+  DbTables,
+  Defaults,
+  IpfsBandwidthAlertStatus,
+} from '../../config/types';
 import { Website } from '../../modules/hosting/models/website.model';
 
 describe('IpfsBandwidthWorker integration test', () => {
@@ -112,6 +116,7 @@ describe('IpfsBandwidthWorker integration test', () => {
     );
     expect(ipfsBandwidth.exists()).toBe(true);
     expect(ipfsBandwidth.bandwidth).toBe(7000);
+    expect(ipfsBandwidth.alertStatus).toBeFalsy();
   });
 
   test('Ipfs bandwidth worker should create ipfsBandwidthSync record', async () => {
@@ -130,7 +135,7 @@ describe('IpfsBandwidthWorker integration test', () => {
   });
 
   test('Ipfs bandwidth worker should add bandwidth to existing ipfsBandwidth record for project, month and year. ', async () => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 5000));
     await stage.lmasMongo.db
       .collection(MongoCollections.IPFS_TRAFFIC_LOG)
       .insertOne({
@@ -157,6 +162,7 @@ describe('IpfsBandwidthWorker integration test', () => {
     );
     expect(ipfsBandwidth.exists()).toBe(true);
     expect(ipfsBandwidth.bandwidth).toBe(12000);
+    expect(ipfsBandwidth.alertStatus).toBeFalsy();
   });
 
   test('Ipfs bandwidth worker should account bandwidth based on host - website traffic', async () => {
@@ -170,5 +176,83 @@ describe('IpfsBandwidthWorker integration test', () => {
     );
     expect(ipfsBandwidth.exists()).toBe(true);
     expect(ipfsBandwidth.bandwidth).toBe(2700);
+  });
+
+  test('Ipfs bandwidth worker should account bandwidth based on host - website traffic', async () => {
+    const ipfsBandwidth: IpfsBandwidth = await new IpfsBandwidth(
+      {},
+      stage.context,
+    ).populateByProjectAndDate(
+      testWebsite.project_uuid,
+      new Date().getMonth() + 1,
+      new Date().getFullYear(),
+    );
+    expect(ipfsBandwidth.exists()).toBe(true);
+    expect(ipfsBandwidth.bandwidth).toBe(2700);
+  });
+
+  test('Ipfs bandwidth worker should send alert when project has less than 2 Gb of available storage bandwidth.', async () => {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await stage.lmasMongo.db
+      .collection(MongoCollections.IPFS_TRAFFIC_LOG)
+      .insertOne({
+        node: 'IPFSTestNode',
+        host: 'ipfs-eu1.apillon.io',
+        path: 'some ipfs path',
+        project_uuid: project_uuid,
+        cid: 'Qmek1ARHExdviRX8wpXRWT5WG9QQpDZjeAqnEFRcRhsY8X',
+        reqBytes: 100,
+        respBytes:
+          (Defaults.DEFAULT_BANDWIDTH - 2) * Defaults.GIGABYTE_IN_BYTES,
+        responseTime: 42,
+        ts: new Date(),
+      });
+
+    await ipfsBandwidthWorker.run();
+
+    const ipfsBandwidth: IpfsBandwidth = await new IpfsBandwidth(
+      {},
+      stage.context,
+    ).populateByProjectAndDate(
+      project_uuid,
+      new Date().getMonth() + 1,
+      new Date().getFullYear(),
+    );
+    expect(ipfsBandwidth.exists()).toBe(true);
+    expect(ipfsBandwidth.alertStatus).toBe(
+      IpfsBandwidthAlertStatus.NEAR_QUOTA_ALERT_SENT,
+    );
+  });
+
+  test('Ipfs bandwidth worker should send alert when project exceeds available storage bandwidth.', async () => {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await stage.lmasMongo.db
+      .collection(MongoCollections.IPFS_TRAFFIC_LOG)
+      .insertOne({
+        node: 'IPFSTestNode',
+        host: 'ipfs-eu1.apillon.io',
+        path: 'some ipfs path',
+        project_uuid: project_uuid,
+        cid: 'Qmek1ARHExdviRX8wpXRWT5WG9QQpDZjeAqnEFRcRhsY8X',
+        reqBytes: 100,
+        respBytes: 2 * Defaults.GIGABYTE_IN_BYTES,
+        responseTime: 42,
+        ts: new Date(),
+      });
+
+    await ipfsBandwidthWorker.run();
+
+    const ipfsBandwidth: IpfsBandwidth = await new IpfsBandwidth(
+      {},
+      stage.context,
+    ).populateByProjectAndDate(
+      project_uuid,
+      new Date().getMonth() + 1,
+      new Date().getFullYear(),
+    );
+    expect(ipfsBandwidth.exists()).toBe(true);
+    expect(ipfsBandwidth.alertStatus).toBe(
+      IpfsBandwidthAlertStatus.EXCEEDED_QUOTA_ALERT_SENT,
+    );
   });
 });

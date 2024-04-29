@@ -39,11 +39,17 @@ describe('Hosting tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     adminTestUser = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
+      stage.context.devConsole,
+      stage.context.access,
       DefaultUserRole.ADMIN,
     );
 
@@ -51,13 +57,13 @@ describe('Hosting tests', () => {
     testProject2 = await createTestProject(testUser2, stage, 1200, 2);
 
     //Create test Website record
-    testWebsite = await new Website({}, stage.storageContext)
+    testWebsite = await new Website({}, stage.context.storage)
       .populate({
         project_uuid: testProject.project_uuid,
         name: 'Test Website',
         domain: 'https://tests.si',
       })
-      .createNewWebsite(stage.storageContext, uuidV4());
+      .createNewWebsite(stage.context.storage, uuidV4());
   });
 
   afterAll(async () => {
@@ -115,7 +121,7 @@ describe('Hosting tests', () => {
 
       const wp: Website = await new Website(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(response.body.data.website_uuid);
       expect(wp.exists()).toBeTruthy();
       try {
@@ -126,9 +132,10 @@ describe('Hosting tests', () => {
       }
 
       //Also check that bucket exists
-      const b: Bucket = await new Bucket({}, stage.storageContext).populateById(
-        wp.bucket_id,
-      );
+      const b: Bucket = await new Bucket(
+        {},
+        stage.context.storage,
+      ).populateById(wp.bucket_id);
       expect(b.exists()).toBeTruthy();
     });
 
@@ -158,7 +165,7 @@ describe('Hosting tests', () => {
 
       const wp: Website = await new Website(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(response.body.data.website_uuid);
       expect(wp.exists()).toBeTruthy();
       expect(wp.name).toBe('Updated Website name');
@@ -179,7 +186,7 @@ describe('Hosting tests', () => {
     test('User should be able to update website domain after 15 minutes', async () => {
       let wp: Website = await new Website(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateById(testWebsite.id);
       wp.domainChangeDate = new Date(Date.now() - 16000 * 60); //Minus 16 minutes
       await wp.update();
@@ -192,7 +199,7 @@ describe('Hosting tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
 
-      wp = await new Website({}, stage.storageContext).populateById(
+      wp = await new Website({}, stage.context.storage).populateById(
         response.body.data.website_uuid,
       );
       expect(wp.domain).toBe('https://tests-2.si');
@@ -305,7 +312,7 @@ describe('Hosting tests', () => {
       //check if files were created in bucket
       const file: File = await new File(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(file1Fur.file_uuid);
 
       expect(file.exists()).toBeTruthy();
@@ -325,10 +332,10 @@ describe('Hosting tests', () => {
       //check if files were created in staging bucket and have CID
       const filesInBucket = await new File(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateFilesInBucket(
         testWebsite.stagingBucket_id,
-        stage.storageContext,
+        stage.context.storage,
       );
       expect(filesInBucket.length).toBe(2);
       expect(filesInBucket[0].CID).toBeTruthy();
@@ -336,10 +343,10 @@ describe('Hosting tests', () => {
       //check if directory was created
       const dirsInBucket = await new Directory(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateDirectoriesInBucket(
         testWebsite.stagingBucket_id,
-        stage.storageContext,
+        stage.context.storage,
       );
       expect(dirsInBucket.length).toBe(1);
     });
@@ -357,10 +364,10 @@ describe('Hosting tests', () => {
       //check if files were created in production bucket and have CID
       const filesInBucket = await new File(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateFilesInBucket(
         testWebsite.productionBucket_id,
-        stage.storageContext,
+        stage.context.storage,
       );
       expect(filesInBucket.length).toBe(2);
       expect(filesInBucket[0].CID).toBeTruthy();
@@ -368,10 +375,10 @@ describe('Hosting tests', () => {
       //check if directory was created
       const dirsInBucket = await new Directory(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateDirectoriesInBucket(
         testWebsite.productionBucket_id,
-        stage.storageContext,
+        stage.context.storage,
       );
       expect(dirsInBucket.length).toBe(1);
     });
@@ -420,14 +427,14 @@ describe('Hosting tests', () => {
     let dirToDelete: Directory;
     beforeAll(async () => {
       fileToDelete = await createTestBucketFile(
-        stage.storageContext,
+        stage.context.storage,
         testWebsite.bucket,
         'delete file test.txt',
         'text/plain',
         false,
       );
       dirToDelete = await createTestBucketDirectory(
-        stage.storageContext,
+        stage.context.storage,
         testProject,
         testWebsite.bucket,
         true,
@@ -449,7 +456,7 @@ describe('Hosting tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
 
-      const f: File = await new File({}, stage.storageContext).populateById(
+      const f: File = await new File({}, stage.context.storage).populateById(
         fileToDelete.id,
       );
       expect(f.exists()).toBeFalsy();
@@ -463,7 +470,7 @@ describe('Hosting tests', () => {
 
       const d: Directory = await new Directory(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateById(dirToDelete.id);
       expect(d.exists()).toBeTruthy();
     });
@@ -476,7 +483,7 @@ describe('Hosting tests', () => {
 
       const d: Directory = await new Directory(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateById(dirToDelete.id);
       expect(d.exists()).toBeFalsy();
     });
@@ -489,8 +496,8 @@ describe('Hosting tests', () => {
 
       const filesInBucket: File[] = await new File(
         {},
-        stage.storageContext,
-      ).populateFilesInBucket(testWebsite.bucket.id, stage.storageContext);
+        stage.context.storage,
+      ).populateFilesInBucket(testWebsite.bucket.id, stage.context.storage);
       expect(filesInBucket.length).toBe(0);
     });
 
@@ -505,7 +512,7 @@ describe('Hosting tests', () => {
     test('User should receive status 402 when not enough credits is available for project', async () => {
       const projectCredit: Credit = await new Credit(
         {},
-        stage.configContext,
+        stage.context.config,
       ).populateByUUID(testProject2.project_uuid);
       projectCredit.balance = 1;
       await projectCredit.update();
@@ -529,12 +536,12 @@ describe('Hosting tests', () => {
       freemiumProject = await createTestProject(testUser, stage);
 
       //Create test Website record
-      testWebsite = await new Website({}, stage.storageContext)
+      testWebsite = await new Website({}, stage.context.storage)
         .populate({
           project_uuid: freemiumProject.project_uuid,
           name: 'Test Website',
         })
-        .createNewWebsite(stage.storageContext, uuidV4());
+        .createNewWebsite(stage.context.storage, uuidV4());
     });
 
     test('User should be able to upload files to website', async () => {
@@ -590,7 +597,7 @@ describe('Hosting tests', () => {
       //deployment should be in review
       const deployment = await new Deployment(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(response.body.data.deployment_uuid, 'deployment_uuid');
 
       expect(deployment.exists()).toBeTruthy();
@@ -606,7 +613,7 @@ describe('Hosting tests', () => {
 
       const stagingBucket = await new Bucket(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateById(testWebsite.stagingBucket_id);
 
       expect(stagingBucket.exists()).toBeTruthy();
@@ -624,7 +631,7 @@ describe('Hosting tests', () => {
 
       const deployment = await new Deployment(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(deployment_uuid, 'deployment_uuid');
       expect(deployment.deploymentStatus).toBe(DeploymentStatus.SUCCESSFUL);
     });
@@ -648,7 +655,7 @@ describe('Hosting tests', () => {
 
       const stagingBucket = await new Bucket(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateById(testWebsite.stagingBucket_id);
 
       expect(stagingBucket.exists()).toBeTruthy();
@@ -657,7 +664,7 @@ describe('Hosting tests', () => {
       //Test if website is accessible on ipfs
       const ipfsCluster = await new ProjectConfig(
         { project_uuid: testWebsite.project_uuid },
-        stage.storageContext,
+        stage.context.storage,
       ).getIpfsCluster();
 
       const ipnsLink = ipfsCluster.generateLink(
@@ -695,7 +702,7 @@ describe('Hosting tests', () => {
       //Check deployment status
       const deployment = await new Deployment(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateByUUID(response.body.data.deployment_uuid, 'deployment_uuid');
       expect(deployment.deploymentStatus).toBe(DeploymentStatus.REJECTED);
     });
