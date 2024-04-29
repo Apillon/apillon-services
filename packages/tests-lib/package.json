@@ -25,6 +25,7 @@
     "bcrypt": "^5.1.1",
     "eslint-config-common": "*",
     "hardhat": "^2.22.2",
+    "mysql2": "^3.9.7",
     "terminate": "2.6.1",
     "tsconfig": "*"
   },

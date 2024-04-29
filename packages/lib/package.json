@@ -41,7 +41,7 @@
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
     "mongodb": "6.5.0",
-    "mysql2": "^3.9.6",
+    "mysql2": "^3.9.7",
     "redis": "^4.6.13",
     "saslprep": "^1.0.3",
     "sqlstring": "^2.3.3",
