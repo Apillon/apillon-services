@@ -1,9 +1,8 @@
-import { env, MySql } from '@apillon/lib';
+import { env, MySql, PoolConnection } from '@apillon/lib';
 import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda';
 import type { InvokeCommandInput } from '@aws-sdk/client-lambda';
 import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import type { SendMessageCommandInput } from '@aws-sdk/client-sqs';
-import { PoolConnection } from 'mysql2/promise';
 import { DbTables } from '../../config/types';
 import { ServiceDefinitionType } from './interfaces';
 import { WorkerDefinition } from './worker-definition';
