@@ -24,9 +24,15 @@ describe('Project APIs tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
 
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     testProject = await createTestProject(testUser, stage, 1000);
-    apiKey = await createTestApiKey(stage.amsContext, testProject.project_uuid);
+    apiKey = await createTestApiKey(
+      stage.context.access,
+      testProject.project_uuid,
+    );
     getRequest = getRequestFactory(stage.http, apiKey);
   });
 

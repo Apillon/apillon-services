@@ -18,6 +18,9 @@ describe('Evm service unit test', () => {
   });
   afterAll(async () => {
     await releaseStage(stage);
+    if (blockchain) {
+      await blockchain.stop();
+    }
   });
 
   test('Test service', async () => {

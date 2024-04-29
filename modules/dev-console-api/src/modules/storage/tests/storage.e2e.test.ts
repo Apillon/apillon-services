@@ -47,11 +47,17 @@ describe('Storage tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     adminTestUser = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
+      stage.context.devConsole,
+      stage.context.access,
       DefaultUserRole.ADMIN,
     );
 
@@ -59,7 +65,7 @@ describe('Storage tests', () => {
 
     testBucket = await createTestBucket(
       testUser,
-      stage.storageContext,
+      stage.context.storage,
       testProject,
     );
   });
@@ -127,7 +133,7 @@ describe('Storage tests', () => {
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
-        testFile = await new File({}, stage.storageContext).populateByUUID(
+        testFile = await new File({}, stage.context.storage).populateByUUID(
           testS3FileUUID,
         );
 
@@ -151,7 +157,7 @@ describe('Storage tests', () => {
 
         const tmpTestBucket = await createTestBucket(
           testUser,
-          stage.storageContext,
+          stage.context.storage,
           testProjectWOSubscription,
         );
 
@@ -258,11 +264,11 @@ describe('Storage tests', () => {
         //Check if files exists
         let file: File = await new File(
           {},
-          stage.storageContext,
+          stage.context.storage,
         ).populateByUUID(myTestFile2Fur.file_uuid);
 
         expect(file.exists()).toBeTruthy();
-        file = await new File({}, stage.storageContext).populateByUUID(
+        file = await new File({}, stage.context.storage).populateByUUID(
           myTestFile3Fur.file_uuid,
         );
         expect(file.exists()).toBeTruthy();
@@ -270,8 +276,8 @@ describe('Storage tests', () => {
         //Check if directories exists and are in correct hiearchy
         const dirs: Directory[] = await new Directory(
           {},
-          stage.storageContext,
-        ).populateDirectoriesInBucket(testBucket.id, stage.storageContext);
+          stage.context.storage,
+        ).populateDirectoriesInBucket(testBucket.id, stage.context.storage);
 
         expect(dirs.length).toBe(3);
 
@@ -345,11 +351,11 @@ describe('Storage tests', () => {
         //Check if files exists
         let file: File = await new File(
           {},
-          stage.storageContext,
+          stage.context.storage,
         ).populateByUUID(abcdUrlResponse.file_uuid);
 
         expect(file.exists()).toBeTruthy();
-        file = await new File({}, stage.storageContext).populateByUUID(
+        file = await new File({}, stage.context.storage).populateByUUID(
           abcdUrlResponse.file_uuid,
         );
         expect(file.exists()).toBeTruthy();
@@ -416,7 +422,7 @@ describe('Storage tests', () => {
         //Check if index.html file exists
         const indexFile: File = await new File(
           {},
-          stage.storageContext,
+          stage.context.storage,
         ).populateByUUID(file1FUR.file_uuid);
 
         expect(indexFile.exists()).toBeTruthy();
@@ -424,9 +430,10 @@ describe('Storage tests', () => {
         expect(indexFile.directory_id).toBeTruthy();
 
         //Check if styles.css file exists
-        const cssFile = await new File({}, stage.storageContext).populateByUUID(
-          file2FUR.file_uuid,
-        );
+        const cssFile = await new File(
+          {},
+          stage.context.storage,
+        ).populateByUUID(file2FUR.file_uuid);
         expect(cssFile.exists()).toBeTruthy();
         expect(cssFile.CID).toBeTruthy();
         expect(cssFile.directory_id).toBeTruthy();
@@ -434,8 +441,8 @@ describe('Storage tests', () => {
         //Check directories
         const dirs: Directory[] = await new Directory(
           {},
-          stage.storageContext,
-        ).populateDirectoriesInBucket(testBucket.id, stage.storageContext);
+          stage.context.storage,
+        ).populateDirectoriesInBucket(testBucket.id, stage.context.storage);
 
         const wrappingDir: Directory = dirs.find(
           (x) => x.name == 'my test page',
@@ -455,12 +462,12 @@ describe('Storage tests', () => {
       beforeAll(async () => {
         testBucketWithWebhook = await createTestBucket(
           testUser,
-          stage.storageContext,
+          stage.context.storage,
           testProject,
         );
 
         await createTestBucketWebhook(
-          stage.storageContext,
+          stage.context.storage,
           testBucketWithWebhook,
         );
       });
@@ -491,7 +498,7 @@ describe('Storage tests', () => {
 
         const file: File = await new File(
           {},
-          stage.storageContext,
+          stage.context.storage,
         ).populateByUUID(file_uuid);
 
         expect(file.exists()).toBeTruthy();
@@ -505,12 +512,12 @@ describe('Storage tests', () => {
       beforeAll(async () => {
         testBucket2 = await createTestBucket(
           testUser,
-          stage.storageContext,
+          stage.context.storage,
           testProject,
         );
         //Insert some fake file-upload-requests
 
-        fur1 = await new FileUploadRequest({}, stage.storageContext)
+        fur1 = await new FileUploadRequest({}, stage.context.storage)
           .populate({
             bucket_id: testBucket2.id,
             file_uuid: uuidV4(),
@@ -522,7 +529,7 @@ describe('Storage tests', () => {
           })
           .insert();
 
-        fur2 = await new FileUploadRequest({}, stage.storageContext)
+        fur2 = await new FileUploadRequest({}, stage.context.storage)
           .populate({
             bucket_id: testBucket2.id,
             file_uuid: uuidV4(),
@@ -577,12 +584,12 @@ describe('Storage tests', () => {
       beforeAll(async () => {
         bucketForDeleteTests = await createTestBucket(
           testUser,
-          stage.storageContext,
+          stage.context.storage,
           testProject,
         );
 
         deleteBucketTestFile1 = await createTestBucketFile(
-          stage.storageContext,
+          stage.context.storage,
           bucketForDeleteTests,
           'delete file test.txt',
           'text/plain',
@@ -590,7 +597,7 @@ describe('Storage tests', () => {
         );
 
         testFile2 = await createTestBucketFile(
-          stage.storageContext,
+          stage.context.storage,
           bucketForDeleteTests,
           'This file should not be deleted.txt',
           'text/plain',
@@ -608,24 +615,26 @@ describe('Storage tests', () => {
 
         let f: File = await new File(
           {},
-          stage.storageContext,
+          stage.context.storage,
         ).populateDeletedById(deleteBucketTestFile1.id);
         expect(f.status).toBe(SqlModelStatus.DELETED);
 
         //Check if bucket size was decreased
         const tmpB: Bucket = await new Bucket(
           {},
-          stage.storageContext,
+          stage.context.storage,
         ).populateById(bucketForDeleteTests.id);
 
         expect(tmpB.size).toBeLessThan(bucketForDeleteTests.size);
 
         //Check that other files were not affected / deleted
-        f = await new File({}, stage.storageContext).populateById(testFile2.id);
+        f = await new File({}, stage.context.storage).populateById(
+          testFile2.id,
+        );
         expect(f.exists()).toBeTruthy();
         expect(
           await new IPFSService(
-            stage.storageContext,
+            stage.context.storage,
             testFile2.project_uuid,
           ).isCIDPinned(testFile2.CID),
         ).toBeTruthy();
@@ -650,7 +659,7 @@ describe('Storage tests', () => {
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
-        const f: File = await new File({}, stage.storageContext).populateById(
+        const f: File = await new File({}, stage.context.storage).populateById(
           deleteBucketTestFile1.id,
         );
         expect(f.exists()).toBeTruthy();
@@ -658,7 +667,7 @@ describe('Storage tests', () => {
         //Check if bucket size was increased
         const tmpB: Bucket = await new Bucket(
           {},
-          stage.storageContext,
+          stage.context.storage,
         ).populateById(bucketForDeleteTests.id);
 
         expect(tmpB.size).toBe(bucketForDeleteTests.size);
@@ -671,12 +680,12 @@ describe('Storage tests', () => {
       beforeAll(async () => {
         bucketForAccessTests = await createTestBucket(
           testUser,
-          stage.storageContext,
+          stage.context.storage,
           testProject,
         );
 
         deleteBucketTestFile1 = await createTestBucketFile(
-          stage.storageContext,
+          stage.context.storage,
           bucketForAccessTests,
           'delete file test.txt',
           'text/plain',
@@ -741,7 +750,7 @@ describe('Storage tests', () => {
           .set('Authorization', `Bearer ${testUser2.token}`);
         expect(response.status).toBe(403);
 
-        const f: File = await new File({}, stage.storageContext).populateById(
+        const f: File = await new File({}, stage.context.storage).populateById(
           deleteBucketTestFile1.id,
         );
         expect(f.exists()).toBeTruthy();
@@ -763,7 +772,7 @@ describe('Storage tests', () => {
           .set('Authorization', `Bearer ${adminTestUser.token}`);
         expect(response.status).toBe(403);
 
-        const f: File = await new File({}, stage.storageContext).populateById(
+        const f: File = await new File({}, stage.context.storage).populateById(
           deleteBucketTestFile1.id,
         );
         expect(f.exists()).toBeTruthy();
@@ -787,7 +796,7 @@ describe('Storage tests', () => {
       test('User should be able to get ipfs cluster info', async () => {
         const ipfsCluster = await new ProjectConfig(
           { project_uuid: testProject.project_uuid },
-          stage.storageContext,
+          stage.context.storage,
         ).getIpfsCluster();
 
         const response = await request(stage.http)

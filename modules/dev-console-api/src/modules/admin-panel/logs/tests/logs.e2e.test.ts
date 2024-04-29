@@ -24,11 +24,14 @@ describe('Admin Logs', () => {
       env.ADMIN_CONSOLE_API_HOST_TEST,
     );
 
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
 
     adminTestUser = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
+      stage.context.devConsole,
+      stage.context.access,
       DefaultUserRole.ADMIN,
     );
   });

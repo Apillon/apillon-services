@@ -3,6 +3,7 @@ import {
   AttachedServiceType,
   BurnNftDto,
   CodeException,
+  CollectionMetadataQueryFilter,
   CollectionsQuotaReachedQueryFilter,
   CreateCollectionDTO,
   CreateSubstrateCollectionDTO,
@@ -12,6 +13,7 @@ import {
   NFTCollectionQueryFilter,
   NftsMicroservice,
   SetCollectionBaseUriDTO,
+  StorageMicroservice,
   TransactionQueryFilter,
   TransferCollectionDTO,
 } from '@apillon/lib';
@@ -178,5 +180,16 @@ export class NftsService {
   ) {
     body.collection_uuid = collection_uuid;
     return (await new NftsMicroservice(context).addNftsMetadata(body)).data;
+  }
+
+  async listCollectionMetadata(
+    context: DevConsoleApiContext,
+    collection_uuid: string,
+    query: CollectionMetadataQueryFilter,
+  ) {
+    query.collection_uuid = collection_uuid;
+    return (
+      await new StorageMicroservice(context).listCollectionMetadata(query)
+    ).data;
   }
 }

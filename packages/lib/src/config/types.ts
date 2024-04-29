@@ -152,6 +152,7 @@ export enum StorageEventType {
   DEPLOYMENT_APPROVE = 'deployment-approve',
   DEPLOYMENT_REJECT = 'deployment-reject',
   PREPARE_COLLECTION_BASE_URI = 'prepare-collection-base-uri',
+  COLLECTION_METADATA_LIST = 'list-collection-metadata',
   TEST_CRUST_PROVIDER = 'test-crust-provider',
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
   STORAGE_INFO = 'get-storage-info',

@@ -33,10 +33,13 @@ describe('Referral tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     // const project = await createTestProject(testUser, stage, 7000);
-    // await createTestReferralTasks(stage.referralContext);
-    product = await createTestReferralProduct(stage.referralContext);
+    // await createTestReferralTasks(stage.context.referral);
+    product = await createTestReferralProduct(stage.context.referral);
   });
 
   afterAll(async () => {
@@ -73,7 +76,7 @@ describe('Referral tests', () => {
 
       const player = await new Player(
         {},
-        stage.referralContext,
+        stage.context.referral,
       ).populateByUserUuid(newUserData.user_uuid);
 
       expect(player.referrer_id).toBe(playerId);
@@ -108,7 +111,7 @@ describe('Referral tests', () => {
     });
 
     test('Confirm user retweet', async () => {
-      await stage.referralSql.paramExecute(
+      await stage.db.referral.paramExecute(
         `
         UPDATE ${DbTables.PLAYER}
         SET twitter_id = @twitter_id
@@ -152,7 +155,7 @@ describe('Referral tests', () => {
       expect(response.status).toBe(400);
     });
     test('User should be able to order product with sufficient balance once', async () => {
-      await stage.referralSql.paramExecute(
+      await stage.db.referral.paramExecute(
         `
         INSERT INTO ${DbTables.TRANSACTION} (player_id, direction, amount, status)
         VALUES (@player_id, ${TransactionDirection.DEPOSIT}, 14, 5)
@@ -176,7 +179,7 @@ describe('Referral tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
 
-      await stage.referralSql.paramExecute(
+      await stage.db.referral.paramExecute(
         `
       INSERT INTO ${DbTables.TRANSACTION} (player_id, direction, amount, status)
       VALUES (@player_id, ${TransactionDirection.DEPOSIT}, 14, 5)

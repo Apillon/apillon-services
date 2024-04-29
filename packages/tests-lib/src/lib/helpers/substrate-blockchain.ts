@@ -30,7 +30,7 @@ export class TestSubstrateBlockchain {
   private readonly chainId: SubstrateChain;
   private readonly host: string;
   private readonly port: number;
-  private readonly accounts: string[] = [];
+  // private readonly accounts: string[] = [];
   private readonly keys = KEYS;
   private controller: AbortController;
 
@@ -40,14 +40,14 @@ export class TestSubstrateBlockchain {
     this.host = '127.0.0.1';
     this.port = port;
 
-    this.accounts = Object.keys(this.keys);
+    // this.accounts = Object.keys(this.keys);
   }
 
   static fromStage(stage: Stage, chainId: SubstrateChain, port = 9944) {
     return new TestSubstrateBlockchain(
       {
-        db: stage.blockchainSql,
-        context: stage.blockchainContext,
+        db: stage.db.blockchain,
+        context: stage.context.blockchain,
       },
       chainId,
       port,

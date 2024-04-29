@@ -2,8 +2,11 @@ import {
   Context,
   PopulateFrom,
   SerializeFor,
+  SqlModelStatus,
   UuidSqlModel,
+  getQueryParams,
   prop,
+  selectAndCountQuery,
 } from '@apillon/lib';
 import { booleanParser, stringParser, integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
@@ -12,6 +15,8 @@ import {
   PrepareCollectionMetadataStep,
   StorageErrorCode,
 } from '../../../config/types';
+import { ServiceContext } from '@apillon/service-lib';
+import { CollectionMetadataQueryFilter } from '../../../../../../packages/lib/dist';
 
 export class CollectionMetadata extends UuidSqlModel {
   public readonly tableName = DbTables.COLLECTION_METADATA;
@@ -25,7 +30,6 @@ export class CollectionMetadata extends UuidSqlModel {
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.INSERT_DB,
-      SerializeFor.SELECT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
@@ -122,7 +126,6 @@ export class CollectionMetadata extends UuidSqlModel {
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.INSERT_DB,
-      SerializeFor.SELECT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
@@ -161,57 +164,38 @@ export class CollectionMetadata extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
   })
   public lastError: string;
 
-  /*public async getList(context: ServiceContext, filter: IpnsQueryFilter) {
-    const b: Bucket = await new Bucket({}, context).populateByUUID(
-      filter.bucket_uuid,
-    );
-    if (!b.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.BUCKET_NOT_FOUND,
-        status: 404,
-      });
-    }
-    this.project_uuid = b.project_uuid;
-
-    this.canAccess(context);
-
-    //Get IPFS-->IPNS gateway
-    const ipfsCluster = await new ProjectConfig(
-      { project_uuid: this.project_uuid },
-      this.getContext(),
-    ).getIpfsCluster();
-
+  public async getList(
+    context: ServiceContext,
+    filter: CollectionMetadataQueryFilter,
+  ) {
     // Map url query with sql fields.
     const fieldMap = {
-      id: 'b.id',
+      id: 'cm.id',
     };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
-      'i',
+      'cm',
       fieldMap,
       filter.serialize(),
     );
 
     const sqlQuery = {
       qSelect: `
-          SELECT ${this.generateSelectFields('i', '')},
-          i.updateTime
+          SELECT ${this.generateSelectFields('cm', '')},
+          cm.createTime, cm.updateTime
           `,
       qFrom: `
-          FROM \`${DbTables.IPNS}\` i
-          JOIN \`${DbTables.BUCKET}\` b on b.id = i.bucket_id
-          WHERE b.bucket_uuid = @bucket_uuid
-          AND (@search IS null OR i.name LIKE CONCAT('%', @search, '%'))
-          AND (@ipnsName IS null OR i.ipnsName LIKE CONCAT('%', @ipnsName, '%'))
-          AND (@ipnsValue IS null OR i.ipnsValue LIKE CONCAT('%', @ipnsValue, '%'))
-          AND i.status <> ${SqlModelStatus.DELETED}
+          FROM \`${DbTables.COLLECTION_METADATA}\` cm
+          WHERE cm.collection_uuid = @collection_uuid
+          AND cm.status <> ${SqlModelStatus.DELETED}
         `,
       qFilter: `
-          ORDER BY ${filters.orderStr}
+          ORDER BY cm.createTime DESC
           LIMIT ${filters.limit} OFFSET ${filters.offset};
         `,
     };
@@ -219,20 +203,10 @@ export class CollectionMetadata extends UuidSqlModel {
     const data = await selectAndCountQuery(
       context.mysql,
       sqlQuery,
-      { ...params, project_uuid: this.project_uuid },
-      'i.id',
+      params,
+      'cm.id',
     );
 
-    for (const item of data.items) {
-      if (item.ipnsName) {
-        item.link = ipfsCluster.generateLink(
-          b.project_uuid,
-          item.ipnsName,
-          true,
-        );
-      }
-    }
-
     return data;
-  }*/
+  }
 }

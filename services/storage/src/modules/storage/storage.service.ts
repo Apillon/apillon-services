@@ -355,7 +355,7 @@ export class StorageService {
           await worker.runExecutor({
             session_uuid: session.session_uuid,
             wrapWithDirectory: event.body.wrapWithDirectory,
-            wrappingDirectoryName: event.body.directoryPath,
+            wrappingDirectoryPath: event.body.directoryPath,
             processFilesInSyncWorker,
           });
         }
@@ -368,7 +368,7 @@ export class StorageService {
             {
               session_uuid: session.session_uuid,
               wrapWithDirectory: event.body.wrapWithDirectory,
-              wrappingDirectoryName: event.body.directoryPath,
+              wrappingDirectoryPath: event.body.directoryPath,
               processFilesInSyncWorker,
             },
           ],

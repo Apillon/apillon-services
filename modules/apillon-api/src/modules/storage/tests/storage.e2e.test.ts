@@ -58,20 +58,26 @@ describe('Apillon API storage tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     //User 1 project & other data
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
 
     testProject = await createTestProject(testUser, stage);
     testService = await createTestProjectService(
-      stage.devConsoleContext,
+      stage.context.devConsole,
       testProject,
     );
     testBucket = await createTestBucket(
       testUser,
-      stage.storageContext,
+      stage.context.storage,
       testProject,
     );
 
-    apiKey = await createTestApiKey(stage.amsContext, testProject.project_uuid);
+    apiKey = await createTestApiKey(
+      stage.context.access,
+      testProject.project_uuid,
+    );
     await apiKey.assignRole(
       new ApiKeyRoleBaseDto().populate({
         role_id: DefaultApiKeyRole.KEY_EXECUTE,
@@ -98,15 +104,18 @@ describe('Apillon API storage tests', () => {
     );
 
     //User 2 project & other data
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     testProject2 = await createTestProject(testUser2, stage);
     testService2 = await createTestProjectService(
-      stage.devConsoleContext,
+      stage.context.devConsole,
       testProject2,
     );
 
     apiKey2 = await createTestApiKey(
-      stage.amsContext,
+      stage.context.access,
       testProject2.project_uuid,
     );
     await apiKey2.assignRole(
@@ -179,10 +188,10 @@ describe('Apillon API storage tests', () => {
         //Run direct sync to IPFS
         await StrageMSService.endFileUpload(
           { file_uuid: testS3FileUUID },
-          stage.storageContext,
+          stage.context.storage,
         );
 
-        testFile = await new File({}, stage.storageContext).populateByUUID(
+        testFile = await new File({}, stage.context.storage).populateByUUID(
           testS3FileUUID,
         );
 
@@ -267,7 +276,7 @@ describe('Apillon API storage tests', () => {
 
         const ipfsCluster = await new ProjectConfig(
           { project_uuid: testFile.project_uuid },
-          stage.storageContext,
+          stage.context.storage,
         ).getIpfsCluster();
 
         const response = await request(
@@ -424,7 +433,7 @@ describe('Apillon API storage tests', () => {
             ).toString('base64')}`,
           );
         expect(response.status).toBe(200);
-        testFile = await new File({}, stage.storageContext).populateById(
+        testFile = await new File({}, stage.context.storage).populateById(
           testFile.file_uuid,
         );
         expect(testFile.exists()).toBeFalsy();
@@ -433,7 +442,7 @@ describe('Apillon API storage tests', () => {
       test('Application should be able to delete directory', async () => {
         const testDirectory: Directory = await new Directory(
           {},
-          stage.storageContext,
+          stage.context.storage,
         )
           .fake()
           .populate({
@@ -445,7 +454,7 @@ describe('Apillon API storage tests', () => {
 
         //Add files
         const testDirectoryFile = await createTestBucketFile(
-          stage.storageContext,
+          stage.context.storage,
           testBucket,
           'xyz.txt',
           'text/plain',
@@ -465,12 +474,12 @@ describe('Apillon API storage tests', () => {
           );
         expect(response.status).toBe(200);
 
-        const d = await new Directory({}, stage.storageContext).populateById(
+        const d = await new Directory({}, stage.context.storage).populateById(
           testDirectory.id,
         );
         expect(d.exists()).toBeFalsy();
 
-        const f = await new File({}, stage.storageContext).populateById(
+        const f = await new File({}, stage.context.storage).populateById(
           testDirectoryFile.id,
         );
         expect(f.exists()).toBeFalsy();
@@ -544,11 +553,11 @@ describe('Apillon API storage tests', () => {
         //Check if files exists
         let file: File = await new File(
           {},
-          stage.storageContext,
+          stage.context.storage,
         ).populateByUUID(abcdUrlResponse.fileUuid);
 
         expect(file.exists()).toBeTruthy();
-        file = await new File({}, stage.storageContext).populateByUUID(
+        file = await new File({}, stage.context.storage).populateByUUID(
           abcdUrlResponse.fileUuid,
         );
         expect(file.exists()).toBeTruthy();
@@ -574,7 +583,7 @@ describe('Apillon API storage tests', () => {
       test('Application should be able to get ipfs cluster info', async () => {
         const ipfsCluster = await new ProjectConfig(
           { project_uuid: apiKey.project_uuid },
-          stage.storageContext,
+          stage.context.storage,
         ).getIpfsCluster();
 
         const response = await request(stage.http)

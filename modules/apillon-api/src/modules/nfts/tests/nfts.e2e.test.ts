@@ -69,14 +69,14 @@ describe('Apillon API NFTs tests', () => {
     await blockchain.start();
 
     await insertNftContractVersion(
-      stage.nftsContext,
+      stage.context.nfts,
       ChainType.EVM,
       NFTCollectionType.GENERIC,
       evmGenericNftAbi,
       evmGenericNftBytecode,
     );
     await insertNftContractVersion(
-      stage.nftsContext,
+      stage.context.nfts,
       ChainType.EVM,
       NFTCollectionType.NESTABLE,
       evmNestableNftAbi,
@@ -84,23 +84,26 @@ describe('Apillon API NFTs tests', () => {
     );
 
     //User 1 project & other data
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
 
     testProject = await createTestProject(testUser, stage, 50000);
 
     testService = await createTestProjectService(
-      stage.devConsoleContext,
+      stage.context.devConsole,
       testProject,
     );
 
     const { id } = await new ContractVersion(
       {},
-      stage.nftsContext,
+      stage.context.nfts,
     ).getContractVersion(NFTCollectionType.GENERIC);
 
     transferredCollection = await createTestNFTCollection(
       testUser,
-      stage.nftsContext,
+      stage.context.nfts,
       testProject,
       SqlModelStatus.ACTIVE,
       CollectionStatus.DEPLOYED,
@@ -111,7 +114,10 @@ describe('Apillon API NFTs tests', () => {
       },
     );
 
-    apiKey = await createTestApiKey(stage.amsContext, testProject.project_uuid);
+    apiKey = await createTestApiKey(
+      stage.context.access,
+      testProject.project_uuid,
+    );
     await apiKey.assignRole(
       new ApiKeyRoleBaseDto().populate({
         role_id: DefaultApiKeyRole.KEY_EXECUTE,
@@ -142,12 +148,12 @@ describe('Apillon API NFTs tests', () => {
 
     // nestable collection
     const nestableUser = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
+      stage.context.devConsole,
+      stage.context.access,
     );
     nestableProject = await createTestProject(nestableUser, stage);
     nestableApiKey = await createTestApiKey(
-      stage.amsContext,
+      stage.context.access,
       nestableProject.project_uuid,
     );
     await nestableApiKey.assignRole(
@@ -175,7 +181,7 @@ describe('Apillon API NFTs tests', () => {
       }),
     );
 
-    const data = await stage.nftsContext.mysql.paramExecute(`
+    const data = await stage.context.nfts.mysql.paramExecute(`
       SELECT abi
       FROM \`contract_version\`
       WHERE collectionType = ${NFTCollectionType.NESTABLE}
@@ -211,7 +217,7 @@ describe('Apillon API NFTs tests', () => {
       expect(response.body.data.contractAddress).toBeTruthy();
       genericCollection = await new Collection(
         {},
-        stage.nftsContext,
+        stage.context.nfts,
       ).populateByUUID(response.body.data.collectionUuid);
       expect(genericCollection.exists()).toBeTruthy();
       const transactionStatus = await getNftTransactionStatus(
@@ -251,16 +257,16 @@ describe('Apillon API NFTs tests', () => {
 
     test('User should not be able to list collections from another project', async () => {
       const otherUser = await createTestUser(
-        stage.devConsoleContext,
-        stage.amsContext,
+        stage.context.devConsole,
+        stage.context.access,
       );
       const otherProject = await createTestProject(otherUser, stage);
       const otherService = await createTestProjectService(
-        stage.devConsoleContext,
+        stage.context.devConsole,
         otherProject,
       );
       const otherApiKey = await createTestApiKey(
-        stage.amsContext,
+        stage.context.access,
         otherProject.project_uuid,
       );
       await otherApiKey.assignRole(
@@ -304,12 +310,12 @@ describe('Apillon API NFTs tests', () => {
     test('User should be able to get collection transactions', async () => {
       const collection = await createTestNFTCollection(
         testUser,
-        stage.nftsContext,
+        stage.context.nfts,
         testProject,
         SqlModelStatus.ACTIVE,
         CollectionStatus.CREATED,
       );
-      const transaction = new Transaction({}, stage.nftsContext).populate({
+      const transaction = new Transaction({}, stage.context.nfts).populate({
         chainId: 123,
         transactionType: TransactionType.MINT_NFT,
         transactionHash: 'transaction_hash',
@@ -473,7 +479,7 @@ describe('Apillon API NFTs tests', () => {
 
       const collection = await new Collection(
         {},
-        stage.nftsContext,
+        stage.context.nfts,
       ).populateByUUID(response.body.data.collectionUuid);
 
       expect(collection.isAutoIncrement).toBeFalsy();
@@ -533,7 +539,7 @@ describe('Apillon API NFTs tests', () => {
       expect(response.body.data.contractAddress).toBeTruthy();
       nestableCollection = await new Collection(
         {},
-        stage.nftsContext,
+        stage.context.nfts,
       ).populateByUUID(response.body.data.collectionUuid);
       expect(nestableCollection.exists()).toBeTruthy();
       expect(nestableCollection.name).toBe(testCollectionName);
@@ -552,13 +558,13 @@ describe('Apillon API NFTs tests', () => {
     test('User should be able to get nestable collection transactions', async () => {
       const collection = await createTestNFTCollection(
         testUser,
-        stage.nftsContext,
+        stage.context.nfts,
         nestableProject,
         SqlModelStatus.ACTIVE,
         CollectionStatus.CREATED,
         { collectionType: 2 },
       );
-      const transaction = new Transaction({}, stage.nftsContext).populate({
+      const transaction = new Transaction({}, stage.context.nfts).populate({
         chainId: 123,
         transactionType: TransactionType.MINT_NFT,
         transactionHash: 'transaction_hash',
@@ -649,12 +655,12 @@ describe('Apillon API NFTs tests', () => {
     test('User should be able to transfer nestable NFT collection', async () => {
       const { id } = await new ContractVersion(
         {},
-        stage.nftsContext,
+        stage.context.nfts,
       ).getContractVersion(NFTCollectionType.NESTABLE);
 
       const newCollection = await createTestNFTCollection(
         testUser,
-        stage.nftsContext,
+        stage.context.nfts,
         nestableProject,
         SqlModelStatus.DRAFT,
         CollectionStatus.CREATED,
@@ -681,7 +687,7 @@ describe('Apillon API NFTs tests', () => {
     test('User should NOT be able to Mint transferred nestable collection', async () => {
       const newCollection = await createTestNFTCollection(
         testUser,
-        stage.nftsContext,
+        stage.context.nfts,
         nestableProject,
         SqlModelStatus.DRAFT,
         CollectionStatus.CREATED,
@@ -746,7 +752,7 @@ describe('Apillon API NFTs tests', () => {
       expect(parentCollectionResponse.status).toBe(201);
       const parentCollection = await new Collection(
         {},
-        stage.nftsContext,
+        stage.context.nfts,
       ).populateByUUID(parentCollectionResponse.body.data.collectionUuid);
       //mint parent NFT
       const parentOwnerIndex = 0;
@@ -785,7 +791,7 @@ describe('Apillon API NFTs tests', () => {
       expect(childCollectionResponse.status).toBe(201);
       const childCollection = await new Collection(
         {},
-        stage.nftsContext,
+        stage.context.nfts,
       ).populateByUUID(childCollectionResponse.body.data.collectionUuid);
       //nest mint child under parent
       const nestMintResponse = await postRequest(
@@ -813,9 +819,8 @@ describe('Apillon API NFTs tests', () => {
         parentCollection.contractAddress,
         acceptChildData,
       );
-      const acceptChildReceipt = await blockchain.getTransactionReceipt(
-        acceptChildTxHash,
-      );
+      const acceptChildReceipt =
+        await blockchain.getTransactionReceipt(acceptChildTxHash);
       expect(acceptChildReceipt.status).toBe('0x1');
 
       const response = await postRequest(

@@ -58,15 +58,15 @@ export async function storageBucketSyncFilesToIPFS(
     //This means, that files, that were uploaded to S3, within session, will be added to parent CID.
     //In this CID, files will have structure, that was defined with path variable in file-upload-request.
 
-    //Check if size of files is greater than allowed bucket size.
     const s3Client: AWS_S3 = new AWS_S3();
+
+    /*Each IPFS node has it's own MFS. 
+      In this case, MFS writes must be performed to master node, that's why ipfs service shouldn't use backup node here.*/
+    const ipfsService = new IPFSService(context, bucket.project_uuid, false);
 
     let ipfsRes: uploadItemsToIPFSRes = undefined;
     try {
-      ipfsRes = await new IPFSService(
-        context,
-        bucket.project_uuid,
-      ).uploadFURsToIPFSFromS3(
+      ipfsRes = await ipfsService.uploadFURsToIPFSFromS3(
         {
           fileUploadRequests: files,
           wrappingDirectoryPath,

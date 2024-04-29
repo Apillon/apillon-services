@@ -52,6 +52,7 @@ export * from './lib/at-services/storage/dtos/domain-query-filter.dto';
 export * from './lib/at-services/storage/dtos/files-query-filter.dto';
 export * from './lib/at-services/storage/dtos/link-on-ipfs-query-filter.dto';
 export * from './lib/at-services/storage/dtos/file-upload-session-query-filter.dto';
+export * from './lib/at-services/storage/dtos/collection-metadata-query-filter.dto';
 
 //#REGION Authentication API
 export * from './lib/at-services/authentication/authentication';
@@ -105,7 +106,7 @@ export * from './lib/at-services/blockchain/dtos/transaction-webhook-data.dto';
 export * from './lib/at-services/blockchain/dtos/update-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/wallet-transactions-query-filter';
 export * from './lib/at-services/blockchain/dtos/wallet-deposits-query-filter';
-export * from './lib/at-services/blockchain/validators/address-validator';
+// export * from './lib/at-services/blockchain/validators/address-validator';
 
 //#REGION Substrate
 export * from './lib/at-services/substrate/types';

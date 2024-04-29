@@ -27,23 +27,35 @@ describe('Discord bot APIs', () => {
   beforeAll(async () => {
     stage = await setupTest();
     //User 1 project & other data
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser3 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
+    testUser3 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     testProject = await createTestProject(testUser, stage);
 
-    await stage.amsContext.mysql.paramExecute(`
+    await stage.context.access.mysql.paramExecute(`
     INSERT INTO oauthLink (authUser_id, type, status, externalUserId, externalUsername)
-    VALUES 
+    VALUES
     (${testUser.authUser.id}, ${OauthLinkType.DISCORD}, ${SqlModelStatus.ACTIVE}, '1', '${testUser.user.name}'),
     (${testUser2.authUser.id}, ${OauthLinkType.DISCORD}, ${SqlModelStatus.ACTIVE}, '2', '${testUser2.user.name}'),
     (${testUser3.authUser.id}, ${OauthLinkType.DISCORD}, ${SqlModelStatus.ACTIVE}, '3', '${testUser3.user.name}')
     ;
     `);
 
-    apiKey = await createTestApiKey(stage.amsContext, testProject.project_uuid);
+    apiKey = await createTestApiKey(
+      stage.context.access,
+      testProject.project_uuid,
+    );
 
-    systemApiKey = await generateSystemApiKey(stage.amsContext);
+    systemApiKey = await generateSystemApiKey(stage.context.access);
   });
 
   afterAll(async () => {
