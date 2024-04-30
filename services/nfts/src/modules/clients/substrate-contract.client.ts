@@ -60,6 +60,12 @@ export class SubstrateContractClient {
     return SubstrateContractClient.instance;
   }
 
+  toChainInt(value: number) {
+    const decimals = this.api.registry.chainDecimals[0];
+
+    return value * Math.pow(10, decimals);
+  }
+
   async createDeployTransaction(
     constructorArguments: any[] = [],
   ): Promise<SubmittableExtrinsic<'promise'>> {
@@ -127,7 +133,7 @@ export class SubstrateContractClient {
     ]);
 
     if (response.result.isErr) {
-      let display = '';
+      let display: string;
       if (response.result.asErr.isModule) {
         const dispatchError = this.api.registry.findMetaError(
           response.result.asErr.asModule,
