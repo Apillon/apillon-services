@@ -11,6 +11,9 @@ custom:
       #      nodeModulesRelativeDir: '../../'
       forceExclude:
         - aws-sdk
+      forceInclude:
+        - "@polkadot/api"
+        - "@polkadot/api-contract"
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
@@ -18,6 +21,9 @@ custom:
 plugins:
   - serverless-webpack
   # - serverless-plugin-typescript
+
+packaging:
+  packager: 'npm'
 
 provider:
   name: aws
