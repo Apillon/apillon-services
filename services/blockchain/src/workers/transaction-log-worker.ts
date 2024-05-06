@@ -706,11 +706,6 @@ export class TransactionLogWorker extends BaseQueueWorker {
 
   private async checkWalletBalance(wallet: Wallet) {
     const balanceData = await wallet.checkAndUpdateBalance();
-    console.log('checkWalletBalance balanceData:', balanceData);
-    console.log(
-      'checkWalletBalance wallet.currentBalance:',
-      wallet.currentBalance,
-    );
 
     if (!balanceData.minBalance) {
       await this.sendErrorAlert(
