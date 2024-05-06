@@ -1,6 +1,6 @@
 {
   "name": "@apillon/tests-lib",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Apillon common test code library",
   "main": "./dist/index.js",
   "source": "./src/index.ts",
@@ -25,6 +25,7 @@
     "bcrypt": "^5.1.1",
     "eslint-config-common": "*",
     "hardhat": "^2.22.2",
+    "mysql2": "^3.9.7",
     "terminate": "2.6.1",
     "tsconfig": "*"
   },
