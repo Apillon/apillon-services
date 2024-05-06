@@ -720,8 +720,7 @@ export class TransactionLogWorker extends BaseQueueWorker {
           wallet.address,
         )}  ==> balance: ${formatTokenWithDecimals(
           balanceData.balance,
-          wallet.chainType,
-          wallet.chain,
+          wallet.decimals,
         )}`,
         { ...balanceData, wallet: wallet.address },
         LogType.WARN,
@@ -737,12 +736,10 @@ export class TransactionLogWorker extends BaseQueueWorker {
           wallet.address,
         )} ==> balance: ${formatTokenWithDecimals(
           balanceData.balance,
-          wallet.chainType,
-          wallet.chain,
+          wallet.decimals,
         )} / ${formatTokenWithDecimals(
           balanceData.minBalance,
-          wallet.chainType,
-          wallet.chain,
+          wallet.decimals,
         )}`,
         { ...balanceData, wallet: wallet.address },
         LogType.WARN,
