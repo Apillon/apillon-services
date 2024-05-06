@@ -101,8 +101,12 @@ export async function deployNFTCollectionContract(
           ? SUBSTRATE_NFTS_MAX_SUPPLY
           : collection.maxSupply;
       const dropPrice = collection.drop
-        ? collection.dropPrice
-        : BN_MAX_INTEGER.toNumber();
+        ? `${substrateContractClient.toChainInt(collection.dropPrice)}`
+        : BN_MAX_INTEGER.toString();
+      // address is hardcoded since at this point/time we don't have deployer address
+      const royaltiesAddress =
+        collection.royaltiesAddress ??
+        'aZT7hRB5TkBLC5ouScMuRfAV86poS5eBmvbYKYqJJXEoKhk';
       const tx = await substrateContractClient.createDeployTransaction([
         [collection.name],
         [collection.symbol],
@@ -117,8 +121,8 @@ export async function deployNFTCollectionContract(
         collection.drop ? collection.dropStart : 0, //public_sale_start_at
         collection.drop ? BN_MAX_INTEGER.toNumber() : 0, //public_sale_end_at
         0, //launchpad_fee
-        collection.royaltiesAddress, //project_treasury
-        collection.royaltiesAddress, //launchpad_treasury
+        royaltiesAddress, //project_treasury
+        royaltiesAddress, //launchpad_treasury
       ]);
       response = await new BlockchainMicroservice(
         context,
