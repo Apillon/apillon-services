@@ -7,13 +7,9 @@ export type Chain = SubstrateChain | EvmChain;
 
 export function formatTokenWithDecimals(
   amount: string, // string rep of big number
-  chainType: ChainType,
-  chain: Chain,
+  decimals: number,
 ): string {
-  return formatUnits(
-    ethers.BigNumber.from(amount),
-    getTokenDecimalsFromChain(chainType, chain),
-  );
+  return formatUnits(ethers.BigNumber.from(amount), decimals);
 }
 
 export function formatWalletAddress(
@@ -26,24 +22,6 @@ export function formatWalletAddress(
 
 export function getChainName(chainType: ChainType, chain: Chain) {
   return chainType === ChainType.EVM ? EvmChain[chain] : SubstrateChain[chain];
-}
-
-function getTokenDecimalsFromChain(chainType: ChainType, chain: Chain) {
-  const options = {
-    [ChainType.EVM]: {
-      [EvmChain.MOONBEAM]: 18,
-      [EvmChain.MOONBASE]: 18,
-      [EvmChain.ASTAR]: 18,
-      [EvmChain.ASTAR_SHIBUYA]: 18,
-    },
-    [ChainType.SUBSTRATE]: {
-      [SubstrateChain.CRUST]: 12,
-      [SubstrateChain.KILT]: 15,
-      [SubstrateChain.PHALA]: 12,
-      [SubstrateChain.ASTAR]: 18,
-    },
-  };
-  return options[chainType]?.[chain] || null;
 }
 
 export async function getTokenPriceUsd(token: string): Promise<number> {
