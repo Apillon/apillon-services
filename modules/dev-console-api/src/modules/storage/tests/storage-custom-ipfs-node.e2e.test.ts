@@ -32,11 +32,14 @@ describe('Storage with custom IPFS node tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     testProject = await createTestProject(testUser, stage);
     testBucket = await createTestBucket(
       testUser,
-      stage.storageContext,
+      stage.context.storage,
       testProject,
     );
 
@@ -54,7 +57,7 @@ describe('Storage with custom IPFS node tests', () => {
         isDefault: false,
         secret: 'secret123',
       },
-      stage.storageContext,
+      stage.context.storage,
     ).insert();
 
     await new ProjectConfig(
@@ -62,7 +65,7 @@ describe('Storage with custom IPFS node tests', () => {
         project_uuid: testProject.project_uuid,
         ipfsCluster_id: customCluster.id,
       },
-      stage.storageContext,
+      stage.context.storage,
     ).insert();
   });
 
@@ -110,7 +113,7 @@ describe('Storage with custom IPFS node tests', () => {
       expect(response.status).toBe(200);
 
       //Check if files exists
-      testFile = await new File({}, stage.storageContext).populateByUUID(
+      testFile = await new File({}, stage.context.storage).populateByUUID(
         fur.file_uuid,
       );
       expect(testFile.exists()).toBeTruthy();

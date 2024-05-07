@@ -1,6 +1,7 @@
 import {
   CallHandler,
   ExecutionContext,
+  Inject,
   Injectable,
   NestInterceptor,
   StreamableFile,
@@ -19,7 +20,8 @@ import { CACHE_OPTIONS, ICacheOptions } from '../decorators/cache.decorator';
 @Injectable()
 export class CacheInterceptor implements NestInterceptor {
   protected allowedMethods = ['GET'];
-  constructor(private reflector: Reflector) {}
+
+  constructor(@Inject(Reflector.name) private readonly reflector: Reflector) {}
 
   async intercept(
     execCtx: ExecutionContext,

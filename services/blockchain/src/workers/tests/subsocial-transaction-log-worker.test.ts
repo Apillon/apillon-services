@@ -92,7 +92,6 @@ describe('Subsocial transaction Log Worker unit test', () => {
   let stage: Stage;
   let config: any;
   let wallet: Wallet;
-  let phalaLogCount: number;
   let writeEventLogMock: any;
 
   let worker: TransactionLogWorker;
@@ -165,6 +164,10 @@ describe('Subsocial transaction Log Worker unit test', () => {
     );
   });
 
+  beforeEach(() => {
+    mockAxios.reset();
+  });
+
   afterAll(async () => {
     await releaseStage(stage);
   });
@@ -189,6 +192,38 @@ describe('Subsocial transaction Log Worker unit test', () => {
     expect(mockAxios.history.get[0].url).toBe(
       'https://api.coingecko.com/api/v3/simple/price?ids=subsocial&vs_currencies=USD',
     );
+
+    expect(writeEventLogMock.mock.calls).toStrictEqual([
+      [
+        {
+          data: {
+            balance: '1463883520',
+            isBelowThreshold: true,
+            isBelowTransactionThreshold: false,
+            minBalance: '10000000000',
+            wallet: '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
+          },
+          err: undefined,
+          logType: 'WARNING',
+          message:
+            '[test-subsocial-transaction-worker]: LOW WALLET BALANCE! SUBSOCIAL: 3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6 ==> balance: 0.00000000146388352 / 0.00000001',
+          service: 'BLOCKCHAIN',
+        },
+        9,
+      ],
+      [
+        {
+          data: {
+            wallet: '3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
+          },
+          logType: 'INFO',
+          message:
+            '[test-subsocial-transaction-worker]: Logged 4 transactions for SUBSOCIAL:3prwzdu9UPS1vEhReXwGVLfo8qhjLm9qCR2D2FJCCde3UTm6',
+          service: 'BLOCKCHAIN',
+        },
+        1,
+      ],
+    ]);
 
     // logTransactions
     const transactionLogs = (

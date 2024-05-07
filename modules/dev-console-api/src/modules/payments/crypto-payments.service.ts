@@ -40,9 +40,8 @@ export class CryptoPaymentsService {
     const project_uuid = paymentSessionDto.project_uuid;
     await this.paymentsService.checkProjectExists(context, project_uuid);
 
-    const creditPackages = await this.paymentsService.getCreditPackages(
-      context,
-    );
+    const creditPackages =
+      await this.paymentsService.getCreditPackages(context);
 
     const creditPackage = creditPackages.find(
       (c) => c.id == paymentSessionDto.package_id,
@@ -164,7 +163,7 @@ export class CryptoPaymentsService {
       await Promise.all([
         new Mailing().sendMail(
           new EmailDataDto({
-            mailAddresses: [email],
+            mailAddresses: [email, env.CONTACT_EMAIL_TO],
             templateName: EmailTemplate.CRYPTO_PAYMENT_SUCCESSFUL,
             templateData: {
               email,

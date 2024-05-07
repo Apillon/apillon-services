@@ -32,14 +32,20 @@ describe('Social tests', () => {
   beforeAll(async () => {
     config = await getConfig();
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
 
     testProject = await createTestProject(testUser, stage, 5000);
     testProject2 = await createTestProject(testUser2, stage);
 
     //insert test space
-    testSpace = await new Space({}, stage.socialContext)
+    testSpace = await new Space({}, stage.context.social)
       .fake()
       .populate({
         space_uuid: uuidV4(),
@@ -51,7 +57,7 @@ describe('Social tests', () => {
       .insert();
 
     //insert default (apillon) space
-    defaultSpace = await new Space({}, stage.socialContext)
+    defaultSpace = await new Space({}, stage.context.social)
       .fake()
       .populate({
         space_uuid: '109ec07b-cfd5-486f-ac9e-831ef0d6ec6f',
@@ -67,7 +73,7 @@ describe('Social tests', () => {
     env.SOCIAL_DEFAULT_SPACE = defaultSpace.space_uuid;
 
     //Insert test post
-    testPost = await new Post({}, stage.socialContext)
+    testPost = await new Post({}, stage.context.social)
       .fake()
       .populate({
         space_id: testSpace.id,
@@ -83,7 +89,7 @@ describe('Social tests', () => {
         chainType: config.subsocial.chainType,
         nextNonce: 1,
       },
-      stage.blockchainContext,
+      stage.context.blockchain,
     ).insert();
   });
 
@@ -155,7 +161,7 @@ describe('Social tests', () => {
       expect(response.body.data.space_uuid).toBeTruthy();
       expect(response.body.data.status).toBe(SqlModelStatus.DRAFT);
 
-      const tmpSpace = await new Space({}, stage.socialContext).populateByUUID(
+      const tmpSpace = await new Space({}, stage.context.social).populateByUUID(
         response.body.data.space_uuid,
         'space_uuid',
       );
@@ -247,7 +253,7 @@ describe('Social tests', () => {
       expect(response.body.data.post_uuid).toBeTruthy();
       expect(response.body.data.status).toBe(SqlModelStatus.DRAFT);
 
-      const tmpPost = await new Post({}, stage.socialContext).populateByUUID(
+      const tmpPost = await new Post({}, stage.context.social).populateByUUID(
         response.body.data.post_uuid,
         'post_uuid',
       );
@@ -268,7 +274,7 @@ describe('Social tests', () => {
       expect(response.body.data.post_uuid).toBeTruthy();
       expect(response.body.data.status).toBe(SqlModelStatus.DRAFT);
 
-      const tmpPost = await new Post({}, stage.socialContext).populateByUUID(
+      const tmpPost = await new Post({}, stage.context.social).populateByUUID(
         response.body.data.post_uuid,
         'post_uuid',
       );

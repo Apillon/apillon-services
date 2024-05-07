@@ -484,8 +484,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
     );
     const balanceDecimal = formatTokenWithDecimals(
       clusterWallet.currentBalance,
-      ChainType.SUBSTRATE,
-      SubstrateChain.PHALA,
+      clusterWallet.decimals,
     );
     if (!clusterWallet.minBalance) {
       const message = `MIN BALANCE IS NOT SET! for wallet address ${formattedWalletAddress} of cluster ${clusterId}  ==> balance: ${balanceDecimal}`;
@@ -507,8 +506,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
     if (clusterWallet.isBelowThreshold) {
       const minBalanceDecimal = formatTokenWithDecimals(
         clusterWallet.minBalance,
-        ChainType.SUBSTRATE,
-        SubstrateChain.PHALA,
+        clusterWallet.decimals,
       );
       const message = `LOW CLUSTER WALLET BALANCE! ${formattedWalletAddress} (${clusterId}) ==> balance: ${balanceDecimal} / ${minBalanceDecimal}`;
       await this.writeEventLog(

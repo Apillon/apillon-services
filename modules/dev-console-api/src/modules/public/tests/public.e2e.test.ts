@@ -15,14 +15,14 @@ describe('Public controller tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     const user1 = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
+      stage.context.devConsole,
+      stage.context.access,
     );
     const user2 = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
+      stage.context.devConsole,
+      stage.context.access,
     );
-    await createTestUser(stage.devConsoleContext, stage.amsContext);
+    await createTestUser(stage.context.devConsole, stage.context.access);
 
     await createTestProject(user1, stage);
     await createTestProject(user2, stage);
@@ -36,7 +36,7 @@ describe('Public controller tests', () => {
         nextNonce: 6,
         lastProcessedNonce: 5,
       },
-      stage.blockchainContext,
+      stage.context.blockchain,
     ).insert();
   });
 

@@ -8,16 +8,17 @@ import fs from 'fs';
 import request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { Stage, releaseStage, setupTest } from '../../../test/setup';
-import { BucketType } from '../../config/types';
+import { BucketType, PrepareCollectionMetadataStep } from '../../config/types';
 import { createFURAndS3Url } from '../../lib/create-fur-and-s3-url';
 import { Bucket } from '../../modules/bucket/models/bucket.model';
+import { Directory } from '../../modules/directory/models/directory.model';
+import { IPFSService } from '../../modules/ipfs/ipfs.service';
 import { Ipns } from '../../modules/ipns/models/ipns.model';
+import { CollectionMetadata } from '../../modules/nfts/modules/collection-metadata.model';
 import { FileUploadRequest } from '../../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../../modules/storage/models/file-upload-session.model';
 import { File } from '../../modules/storage/models/file.model';
 import { PrepareMetadataForCollectionWorker } from '../prepare-metada-for-collection-worker';
-import { IPFSService } from '../../modules/ipfs/ipfs.service';
-import { Directory } from '../../modules/directory/models/directory.model';
 
 describe('PrepareMetadataForCollectionWorker integration test', () => {
   let stage: Stage;
@@ -213,15 +214,66 @@ describe('PrepareMetadataForCollectionWorker integration test', () => {
   });
 
   test('Test prepare metadata for collection worker', async () => {
-    await worker.run({
-      executeArg: JSON.stringify({
+    const collectionMetadata = await new CollectionMetadata(
+      {
+        bucket_uuid: collectionBucket.bucket_uuid,
         collection_uuid: uuidV4(),
         imagesSession: imageSession.session_uuid,
         metadataSession: metadataSession.session_uuid,
-        ipnsId: collectionIpns.id,
         useApillonIpfsGateway: true,
+        ipnsId: collectionIpns.id,
+        currentStep: PrepareCollectionMetadataStep.UPLOAD_IMAGES_TO_IPFS,
+      },
+      stage.context,
+    ).insert();
+
+    //First step
+    await worker.run({
+      executeArg: JSON.stringify({
+        collectionMetadataId: collectionMetadata.id,
       }),
     });
+
+    let tmpCollectionMetadata = await new CollectionMetadata(
+      {},
+      stage.context,
+    ).populateById(collectionMetadata.id);
+
+    expect(tmpCollectionMetadata.currentStep).toBe(
+      PrepareCollectionMetadataStep.UPDATE_JSONS_ON_S3,
+    );
+
+    //Second step
+    await worker.run({
+      executeArg: JSON.stringify({
+        collectionMetadataId: collectionMetadata.id,
+      }),
+    });
+
+    tmpCollectionMetadata = await new CollectionMetadata(
+      {},
+      stage.context,
+    ).populateById(collectionMetadata.id);
+
+    expect(tmpCollectionMetadata.currentStep).toBe(
+      PrepareCollectionMetadataStep.UPLOAD_METADATA_TO_IPFS,
+    );
+
+    //Third step
+    await worker.run({
+      executeArg: JSON.stringify({
+        collectionMetadataId: collectionMetadata.id,
+      }),
+    });
+
+    tmpCollectionMetadata = await new CollectionMetadata(
+      {},
+      stage.context,
+    ).populateById(collectionMetadata.id);
+
+    expect(tmpCollectionMetadata.currentStep).toBe(
+      PrepareCollectionMetadataStep.METADATA_SUCCESSFULLY_PREPARED,
+    );
 
     //check files in bucket
     const filesInBucket = await new File(
@@ -325,12 +377,34 @@ describe('PrepareMetadataForCollectionWorker integration test', () => {
 
     //#endregion
 
-    await worker.run({
-      executeArg: JSON.stringify({
+    const collectionMetadata = await new CollectionMetadata(
+      {
+        bucket_uuid: collectionBucket.bucket_uuid,
         collection_uuid: uuidV4(),
         imagesSession: imageSession.session_uuid,
         metadataSession: metadataSession.session_uuid,
         useApillonIpfsGateway: true,
+        currentStep: PrepareCollectionMetadataStep.UPLOAD_IMAGES_TO_IPFS,
+      },
+      stage.context,
+    ).insert();
+
+    //Execute 3 runs
+    await worker.run({
+      executeArg: JSON.stringify({
+        collectionMetadataId: collectionMetadata.id,
+      }),
+    });
+
+    await worker.run({
+      executeArg: JSON.stringify({
+        collectionMetadataId: collectionMetadata.id,
+      }),
+    });
+
+    await worker.run({
+      executeArg: JSON.stringify({
+        collectionMetadataId: collectionMetadata.id,
       }),
     });
 

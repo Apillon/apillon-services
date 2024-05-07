@@ -17,7 +17,7 @@ export async function createTestProject(
   credit = 20000,
   subscriptionPackage_id?: number,
 ): Promise<Project> {
-  const project = new Project({}, stage.devConsoleContext)
+  const project = new Project({}, stage.context.devConsole)
     .fake()
     .populate({ project_uuid: uuidV4() });
   await project.insert();
@@ -25,7 +25,7 @@ export async function createTestProject(
   //add user to project and assign role
   const projectUser: ProjectUser = new ProjectUser(
     {},
-    stage.devConsoleContext,
+    stage.context.devConsole,
   ).populate({
     project_id: project.id,
     user_id: user.user.id,
@@ -46,7 +46,7 @@ export async function createTestProject(
       project_uuid: project.project_uuid,
       balance: credit,
     },
-    stage.configContext,
+    stage.context.config,
   ).insert();
 
   //If subscription package is specified, subscribe project to that subscription package
@@ -59,7 +59,7 @@ export async function createTestProject(
         subscriberEmail: 'subscriber@gmail.com',
         stripeId: 1,
       },
-      stage.configContext,
+      stage.context.config,
     ).insert();
   }
 

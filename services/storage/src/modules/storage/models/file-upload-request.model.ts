@@ -396,11 +396,13 @@ export class FileUploadRequest extends AdvancedSQLModel {
         `,
       qFrom: `
         FROM \`${DbTables.FILE_UPLOAD_REQUEST}\` fr
-        INNER JOIN \`${DbTables.BUCKET}\` b ON fr.bucket_id = b.id
+        JOIN \`${DbTables.BUCKET}\` b ON fr.bucket_id = b.id
+        JOIN \`${DbTables.FILE_UPLOAD_SESSION}\` s ON s.id = fr.session_id
         LEFT JOIN \`${DbTables.FILE}\` f ON f.file_uuid = fr.file_uuid
         WHERE b.bucket_uuid = @bucket_uuid
         AND (@search IS null OR fr.fileName LIKE CONCAT('%', @search, '%'))
         AND (@fileStatus IS NULL OR fr.fileStatus = @fileStatus)
+        AND (@session_uuid IS NULL OR s.session_uuid = @session_uuid)
         AND fr.status <> ${SqlModelStatus.DELETED}
       `,
       qFilter: `

@@ -33,25 +33,31 @@ describe('Storage bucket tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
 
     testProject = await createTestProject(testUser, stage);
-    // testProject2 = await createTestProject(testUser2, stage.devConsoleContext);
+    // testProject2 = await createTestProject(testUser2, stage.context.devConsole);
 
     testBucket = await createTestBucket(
       testUser,
-      stage.storageContext,
+      stage.context.storage,
       testProject,
     );
     testWebhook = await createTestBucketWebhook(
-      stage.storageContext,
+      stage.context.storage,
       testBucket,
     );
 
     testBucket2 = await createTestBucket(
       testUser,
-      stage.storageContext,
+      stage.context.storage,
       testProject,
     );
   });
@@ -109,7 +115,7 @@ describe('Storage bucket tests', () => {
 
       const webhook: BucketWebhook = await new BucketWebhook(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateById(response.body.data.id);
       expect(webhook.exists()).toBeTruthy();
       try {
@@ -135,7 +141,7 @@ describe('Storage bucket tests', () => {
 
       const webhook: BucketWebhook = await new BucketWebhook(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateById(response.body.data.id);
       expect(webhook.exists()).toBeTruthy();
       expect(webhook.authMethod).toBe(BucketWebhookAuthMethod.TOKEN);
@@ -152,15 +158,15 @@ describe('Storage bucket tests', () => {
     beforeAll(async () => {
       //Insert new user with access to testProject as PROJECT_USER - can view, cannot modify
       testUser3 = await createTestUser(
-        stage.devConsoleContext,
-        stage.amsContext,
+        stage.context.devConsole,
+        stage.context.access,
         DefaultUserRole.PROJECT_USER,
         SqlModelStatus.ACTIVE,
         testProject.project_uuid,
       );
       adminTestUser = await createTestUser(
-        stage.devConsoleContext,
-        stage.amsContext,
+        stage.context.devConsole,
+        stage.context.access,
         DefaultUserRole.ADMIN,
       );
     });
@@ -216,7 +222,7 @@ describe('Storage bucket tests', () => {
 
       const webhook: BucketWebhook = await new BucketWebhook(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateById(testWebhook.id);
       expect(webhook.exists()).toBeTruthy();
     });
@@ -229,7 +235,7 @@ describe('Storage bucket tests', () => {
 
       const webhook: BucketWebhook = await new BucketWebhook(
         {},
-        stage.storageContext,
+        stage.context.storage,
       ).populateById(response.body.data.id);
       expect(webhook.exists()).toBeFalsy();
     });

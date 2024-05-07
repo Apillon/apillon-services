@@ -27,10 +27,13 @@ describe('API key tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     testProject = await createTestProject(testUser, stage);
     testProjectService = await createTestProjectService(
-      stage.devConsoleContext,
+      stage.context.devConsole,
       testProject,
     );
   });
@@ -54,7 +57,7 @@ describe('API key tests', () => {
     expect(response.body.data.apiKeySecret).toBeTruthy();
     expect(response.body.data.apiKeySecret).toHaveLength(12);
 
-    const ap: ApiKey = await new ApiKey({}, stage.amsContext).populateById(
+    const ap: ApiKey = await new ApiKey({}, stage.context.access).populateById(
       response.body.data.id,
     );
 
@@ -87,13 +90,13 @@ describe('API key tests', () => {
     expect(response.body.data.apiKey).toBeTruthy();
     expect(response.body.data.apiKeySecret).toBeTruthy();
 
-    const ap: ApiKey = await new ApiKey({}, stage.amsContext).populateById(
+    const ap: ApiKey = await new ApiKey({}, stage.context.access).populateById(
       response.body.data.id,
     );
 
     expect(ap.exists()).toBeTruthy();
     //Check APIkey roles
-    const apr: ApiKeyRole = new ApiKeyRole({}, stage.amsContext).populate({
+    const apr: ApiKeyRole = new ApiKeyRole({}, stage.context.access).populate({
       apiKey_id: response.body.data.id,
       service_uuid: testProjectService.service_uuid,
       project_uuid: testProject.project_uuid,
@@ -145,7 +148,7 @@ describe('API key tests', () => {
       })
       .set('Authorization', `Bearer ${testUser.token}`);
 
-    const apr: ApiKeyRole = new ApiKeyRole({}, stage.amsContext).populate({
+    const apr: ApiKeyRole = new ApiKeyRole({}, stage.context.access).populate({
       apiKey_id: response.body.data.id,
       service_uuid: testProjectService.service_uuid,
       project_uuid: testProject.project_uuid,
@@ -175,7 +178,7 @@ describe('API key tests', () => {
       .set('Authorization', `Bearer ${testUser.token}`);
     expect(response.body.data).toBeTruthy();
 
-    const apr: ApiKeyRole = new ApiKeyRole({}, stage.amsContext).populate({
+    const apr: ApiKeyRole = new ApiKeyRole({}, stage.context.access).populate({
       apiKey_id: apiKey.id,
       service_uuid: testProjectService.service_uuid,
       project_uuid: testProject.project_uuid,
@@ -197,7 +200,7 @@ describe('API key tests', () => {
       .set('Authorization', `Bearer ${testUser.token}`);
     expect(response.body.data).toBeTruthy();
 
-    const apr: ApiKeyRole = new ApiKeyRole({}, stage.amsContext).populate({
+    const apr: ApiKeyRole = new ApiKeyRole({}, stage.context.access).populate({
       apiKey_id: apiKey.id,
       service_uuid: testProjectService.service_uuid,
       project_uuid: testProject.project_uuid,
@@ -214,7 +217,7 @@ describe('API key tests', () => {
       .set('Authorization', `Bearer ${testUser.token}`);
     expect(response.status).toBe(200);
 
-    const ap: ApiKey = await new ApiKey({}, stage.amsContext).populateById(
+    const ap: ApiKey = await new ApiKey({}, stage.context.access).populateById(
       apiKey.id,
     );
     expect(ap.exists()).toBeFalsy();
@@ -237,13 +240,16 @@ describe('API key tests', () => {
 
     beforeAll(async () => {
       quotaTestsUser = await createTestUser(
-        stage.devConsoleContext,
-        stage.amsContext,
+        stage.context.devConsole,
+        stage.context.access,
       );
       quotaTestProject = await createTestProject(quotaTestsUser, stage);
       //add 20 api keys to quotaTestProject - max api keys on project quota reached
       for (let i = 0; i < 20; i++) {
-        await createTestApiKey(stage.amsContext, quotaTestProject.project_uuid);
+        await createTestApiKey(
+          stage.context.access,
+          quotaTestProject.project_uuid,
+        );
       }
     });
 

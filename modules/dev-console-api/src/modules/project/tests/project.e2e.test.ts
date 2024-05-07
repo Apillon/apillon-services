@@ -26,15 +26,21 @@ describe('Project tests', () => {
 
   beforeAll(async () => {
     stage = await setupTest();
-    testUser = await createTestUser(stage.devConsoleContext, stage.amsContext);
-    testUser2 = await createTestUser(stage.devConsoleContext, stage.amsContext);
+    testUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
+    testUser2 = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+    );
     adminTestUser = await createTestUser(
-      stage.devConsoleContext,
-      stage.amsContext,
+      stage.context.devConsole,
+      stage.context.access,
       DefaultUserRole.ADMIN,
     );
 
-    await stage.configContext.mysql.paramExecute(`
+    await stage.context.config.mysql.paramExecute(`
     INSERT INTO override (status, quota_id, project_uuid,  object_uuid, package_id, value)
     VALUES
       (
@@ -107,7 +113,7 @@ describe('Project tests', () => {
 
       const p: Project = await new Project(
         {},
-        stage.devConsoleContext,
+        stage.context.devConsole,
       ).populateByUUID(response.body.data.project_uuid);
       expect(p.exists()).toBe(true);
       createdProject = p;
@@ -145,7 +151,7 @@ describe('Project tests', () => {
 
       const p: Project = await new Project(
         {},
-        stage.devConsoleContext,
+        stage.context.devConsole,
       ).populateByUUID(response.body.data.project_uuid);
       expect(p.exists()).toBe(true);
       expect(p.name).toBe('Spremenjen naziv projekta');
@@ -195,7 +201,7 @@ describe('Project tests', () => {
 
       const userOnProject = await new ProjectUser(
         {},
-        stage.devConsoleContext,
+        stage.context.devConsole,
       ).isUserOnProject(testProject.id, testUser2.user.id);
 
       expect(userOnProject).toBe(true);
@@ -216,7 +222,7 @@ describe('Project tests', () => {
       const pu: ProjectUserPendingInvitation =
         await new ProjectUserPendingInvitation(
           {},
-          stage.devConsoleContext,
+          stage.context.devConsole,
         ).populateByEmailAndProject(
           testProject.id,
           'nek-testni-mail-123@gmail.com',
@@ -236,7 +242,7 @@ describe('Project tests', () => {
 
       const pu = await new ProjectUser(
         {},
-        stage.devConsoleContext,
+        stage.context.devConsole,
       ).populateByProjectAndUser(testProject.id, testUser2.user.id);
 
       expect(pu.exists()).toBeTruthy();
@@ -251,7 +257,7 @@ describe('Project tests', () => {
 
       const pu = await new ProjectUser(
         {},
-        stage.devConsoleContext,
+        stage.context.devConsole,
       ).populateByProjectAndUser(testProject.id, testUser2.user.id);
 
       expect(pu.exists()).toBeFalsy();
@@ -269,7 +275,7 @@ describe('Project tests', () => {
       const pu: ProjectUserPendingInvitation =
         await new ProjectUserPendingInvitation(
           {},
-          stage.devConsoleContext,
+          stage.context.devConsole,
         ).populateByEmailAndProject(
           testProject.id,
           'nek-testni-mail-123@gmail.com',
@@ -283,15 +289,15 @@ describe('Project tests', () => {
     beforeAll(async () => {
       //Insert new user with access to testProject as PROJECT_USER - can view, cannot modify
       testUser3 = await createTestUser(
-        stage.devConsoleContext,
-        stage.amsContext,
+        stage.context.devConsole,
+        stage.context.access,
         DefaultUserRole.PROJECT_USER,
         SqlModelStatus.ACTIVE,
         testProject.project_uuid,
       );
       adminTestUser = await createTestUser(
-        stage.devConsoleContext,
-        stage.amsContext,
+        stage.context.devConsole,
+        stage.context.access,
         DefaultUserRole.ADMIN,
       );
     });
@@ -351,15 +357,15 @@ describe('Project tests', () => {
 
     beforeAll(async () => {
       quotaTestsUser = await createTestUser(
-        stage.devConsoleContext,
-        stage.amsContext,
+        stage.context.devConsole,
+        stage.context.access,
       );
       quotaTestProject = await createTestProject(quotaTestsUser, stage);
       //add 10 users to quotaTestProject - max users on project quota reached
       for (let i = 0; i < 10; i++) {
         await createTestUser(
-          stage.devConsoleContext,
-          stage.amsContext,
+          stage.context.devConsole,
+          stage.context.access,
           DefaultUserRole.PROJECT_USER,
           SqlModelStatus.ACTIVE,
           quotaTestProject.project_uuid,
