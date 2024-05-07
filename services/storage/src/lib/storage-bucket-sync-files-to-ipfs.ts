@@ -49,7 +49,7 @@ export async function storageBucketSyncFilesToIPFS(
   const directories = await new Directory(
     {},
     context,
-  ).populateDirectoriesInBucket(files[0].bucket_id, context);
+  ).populateDirectoriesInBucket(bucket.id, context);
 
   //size of files, that were pushed to ipfs
   let tmpSize = 0;
