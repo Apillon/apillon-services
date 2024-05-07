@@ -141,6 +141,7 @@ export enum StorageEventType {
   WEBSITE_LIST = 'list-websites',
   WEBSITE_CREATE = 'create-website',
   WEBSITE_UPDATE = 'update-website',
+  WEBSITE_ARCHIVE = 'archive-website',
   WEBSITE_GET = 'get-website',
   WEBSITE_DEPLOY = 'deploy-website',
   WEBSITE_LIST_DOMAINS = 'list-website-domains',
@@ -231,6 +232,7 @@ export enum NftsEventType {
   EXECUTE_DEPLOY_COLLECTION_WORKER = 'execute-deploy-collection-worker',
   PROJECT_COLLECTION_DETAILS = 'project-collections-details',
   ADD_NFTS_METADATA = 'add-nfts-metadata',
+  ARCHIVE_COLLECTION = 'archive-collection',
 }
 
 export enum ComputingEventType {
@@ -244,6 +246,7 @@ export enum ComputingEventType {
   ASSIGN_CID_TO_NFT = 'assign-cid-to-nft',
   LIST_CLUSTER_WALLETS = 'list-cluster-wallets',
   PROJECT_COMPUTING_DETAILS = 'project-computing-details',
+  ARCHIVE_CONTRACT = 'archive-contract',
 }
 
 export enum ReferralEventType {
@@ -343,7 +346,7 @@ export enum SqlModelStatus {
   INACTIVE = 3,
   ACTIVE = 5,
   BLOCKED = 7,
-  MARKED_FOR_DELETION = 8,
+  ARCHIVED = 8,
   DELETED = 9,
 }
 

@@ -21,6 +21,7 @@ import {
   ServiceName,
   spendCreditAction,
   SpendCreditDto,
+  SqlModelStatus,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
   writeLog,
@@ -35,6 +36,7 @@ import {
 } from '../../config/types';
 import {
   StorageCodeException,
+  StorageNotFoundException,
   StorageValidationException,
 } from '../../lib/exceptions';
 import { Bucket } from '../bucket/models/bucket.model';
@@ -74,10 +76,7 @@ export class HostingService {
     );
 
     if (!website.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.WEBSITE_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
     }
     website.canAccess(context);
 
@@ -149,10 +148,7 @@ export class HostingService {
     );
 
     if (!website.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.WEBSITE_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
     }
     website.canModify(context);
 
@@ -193,6 +189,28 @@ export class HostingService {
     return website.serialize(SerializeFor.PROFILE);
   }
 
+  /**
+   * Set a website's status to archived
+   * @param {{ website_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Website>}
+   */
+  static async archiveWebsite(
+    event: { website_uuid: string },
+    context: ServiceContext,
+  ): Promise<Website> {
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+    website.canModify(context);
+
+    return await website.markDeleted(null, SqlModelStatus.ARCHIVED);
+  }
+
   static async maxWebsitesQuotaReached(
     event: { query: WebsitesQuotaReachedQueryFilter },
     context: ServiceContext,
@@ -225,10 +243,7 @@ export class HostingService {
     );
 
     if (!website.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.WEBSITE_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
     }
 
     website.canAccess(context);
@@ -266,10 +281,7 @@ export class HostingService {
     );
 
     if (!website.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.WEBSITE_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
     }
     website.canModify(context);
 
@@ -409,10 +421,7 @@ export class HostingService {
     ).populateByUUID(event.deployment_uuid, 'deployment_uuid');
 
     if (!deployment.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.DEPLOYMENT_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.DEPLOYMENT_NOT_FOUND);
     }
     await deployment.canAccess(context);
 
@@ -438,10 +447,7 @@ export class HostingService {
       event.query.website_uuid,
     );
     if (!website.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.WEBSITE_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
     }
     website.canAccess(context);
 
@@ -461,10 +467,7 @@ export class HostingService {
     ).populateByUUID(event.deployment_uuid, 'deployment_uuid');
 
     if (!deployment.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.DEPLOYMENT_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.DEPLOYMENT_NOT_FOUND);
     }
 
     if (deployment.deploymentStatus != DeploymentStatus.IN_REVIEW) {
@@ -492,10 +495,7 @@ export class HostingService {
     ).populateByUUID(event.deployment_uuid, 'deployment_uuid');
 
     if (!deployment.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.DEPLOYMENT_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.DEPLOYMENT_NOT_FOUND);
     }
 
     if (deployment.deploymentStatus != DeploymentStatus.IN_REVIEW) {

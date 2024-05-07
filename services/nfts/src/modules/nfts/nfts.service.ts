@@ -11,6 +11,7 @@ import {
   DeployCollectionDTO,
   env,
   EvmChain,
+  ForbiddenErrorCodes,
   getChainName,
   isEvmOrSubstrateWalletAddress,
   Lmas,
@@ -1023,6 +1024,30 @@ export class NftsService {
     return { success: true, transactionHash: data.transactionHash };
   }
 
+  /**
+   * Set a collection's status to archived
+   * @param {{ collecton_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Collection>}
+   */
+  static async archiveCollection(
+    event: { collection_uuid: string },
+    context: ServiceContext,
+  ): Promise<Collection> {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(event.collection_uuid);
+
+    await NftsService.checkCollection(
+      collection,
+      'archiveCollection()',
+      context,
+    );
+
+    return await collection.markDeleted(null, SqlModelStatus.ARCHIVED);
+  }
+
   private static async checkCollection(
     collection: Collection,
     sourceFunction: string,
@@ -1035,8 +1060,8 @@ export class NftsService {
       collection.collectionStatus == CollectionStatus.TRANSFERED
     ) {
       throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
+        status: 403,
+        code: ForbiddenErrorCodes.FORBIDDEN,
         context,
         sourceFunction,
       });

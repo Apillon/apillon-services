@@ -329,7 +329,7 @@ export class File extends UuidSqlModel {
       FROM \`${DbTables.FILE}\` f
       LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
       WHERE (f.id LIKE @id OR f.cid LIKE @id OR f.file_uuid LIKE @id)
-      AND f.status IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.MARKED_FOR_DELETION});
+      AND f.status = ${SqlModelStatus.DELETED};
       `,
       { id },
     );

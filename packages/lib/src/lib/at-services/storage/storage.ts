@@ -403,10 +403,19 @@ export class StorageMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
   public async updateWebsite(params: { website_uuid: string; data: any }) {
     const data = {
       eventName: StorageEventType.WEBSITE_UPDATE,
       ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async archiveWebsite(website_uuid: string) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_ARCHIVE,
+      website_uuid,
     };
     return await this.callService(data);
   }

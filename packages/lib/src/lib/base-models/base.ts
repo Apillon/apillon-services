@@ -57,7 +57,7 @@ export abstract class ModelBase extends Model<any> {
     data: Partial<this> | Record<string, any>,
     prefix: string,
     strategy?: PopulateFrom,
-  ) {
+  ): this {
     const filteredData = {};
     prefix = `${prefix}__`;
     for (const key of Object.keys(data)) {

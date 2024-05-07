@@ -218,12 +218,12 @@ export class ComputingService {
    * Gets a contract by UUID
    * @param {{ uuid: string }} event
    * @param {ServiceContext} context
-   * @returns {Contract}
+   * @returns {Promise<Contract>}
    */
   static async getContractByUuid(
     event: { uuid: string },
     context: ServiceContext,
-  ) {
+  ): Promise<Contract> {
     const contract = await new Contract({}, context).populateByUUID(event.uuid);
 
     if (!contract.exists()) {
@@ -231,7 +231,27 @@ export class ComputingService {
     }
     contract.canAccess(context);
 
-    return contract.serializeByContext();
+    return contract.serializeByContext() as Contract;
+  }
+
+  /**
+   * Set a contract's status to archived
+   * @param {{ uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Contract>}
+   */
+  static async archiveContract(
+    event: { uuid: string },
+    context: ServiceContext,
+  ): Promise<Contract> {
+    const contract = await new Contract({}, context).populateByUUID(event.uuid);
+
+    if (!contract.exists()) {
+      throw new ComputingNotFoundException();
+    }
+    contract.canModify(context);
+
+    return await contract.markDeleted(null, SqlModelStatus.ARCHIVED);
   }
 
   /**

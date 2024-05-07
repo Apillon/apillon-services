@@ -685,7 +685,7 @@ export class Collection extends ProjectAccessModel {
             (
                 (@status IS null AND c.status <> ${SqlModelStatus.DELETED})
                 OR
-                (@status = c.status)
+                (c.status = @status)
             )
       `,
       qFilter: `

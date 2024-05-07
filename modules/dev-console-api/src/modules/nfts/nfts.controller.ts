@@ -21,6 +21,7 @@ import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -267,5 +268,19 @@ export class NftsController {
       collectionUuid,
       query,
     );
+  }
+
+  @Delete('collections/:collectionUuid')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @Validation({ dto: AddNftsMetadataDto })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async archiveCollection(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collectionUuid') collectionUuid: string,
+  ) {
+    return await this.nftsService.archiveCollection(context, collectionUuid);
   }
 }
