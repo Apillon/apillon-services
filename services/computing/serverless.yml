@@ -11,20 +11,12 @@ custom:
     includeModules: true
     forceExclude:
       - aws-sdk
-    #    includeModules:
-    #      nodeModulesRelativeDir: '../../'
-    #      forceExclude:
-    #        - aws-sdk
-    #      forceInclude:
-    #        - "@polkadot/api"
-    #        - "@polkadot/api-contract"
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
 
 plugins:
   - serverless-webpack
-  # - serverless-plugin-typescript
 
 provider:
   name: aws
@@ -43,8 +35,6 @@ provider:
 
   environment:
     ${file(../../bin/deploy/env/env.yml)}
-  # ACCESS_FUNCTION_NAME: 'apillon-computing-service-${self:provider.stage}'
-  # MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
 
 # you can add packaging information here
 package:

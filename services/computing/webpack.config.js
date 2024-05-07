@@ -1,9 +1,6 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
 const webpack = require('webpack');
 const slsw = require('serverless-webpack');
-// const nodeExternals = require('webpack-node-externals');
-// const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   context: __dirname,
@@ -27,13 +24,6 @@ module.exports = {
       '@aws-sdk/credential-providers': false,
       'gcp-metadata': false,
       socks: false,
-      // '@nestjs/websockets/socket-module': false,
-      // 'cache-manager': false,
-      // 'class-validator': false,
-      // 'class-transformer': false,
-      // '@nestjs/microservices/microservices-module': false,
-      // '@nestjs/microservices': false,
-      //'@apillon/lib': path.join(__dirname, '..', '..', 'packages', 'lib', 'dist')
     },
   },
   output: {
@@ -45,16 +35,6 @@ module.exports = {
   node: {
     __dirname: true,
   },
-  // externals: [
-  //   nodeExternals({
-  //     allowlist: [
-  //       '@apillon/lib',
-  //       '@apillon/service-lib',
-  //       '@apillon/workers-lib',
-  //     ],
-  //   }),
-  // ],
-  // externals: [nodeExternals()],
   module: {
     rules: [
       // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`
@@ -80,13 +60,6 @@ module.exports = {
       WebSocket: 'ws',
       fetch: ['node-fetch', 'default'],
     }),
-    //   new CopyPlugin({
-    //     patterns: [
-    //       { from: './src/templates/mail/*.html' },
-    //       { from: './src/templates/pdf/*.html' },
-    //       { from: './src/locales/*.json' },
-    //     ],
-    //   }),
   ],
   optimization: {
     usedExports: true,
