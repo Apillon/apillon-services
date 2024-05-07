@@ -7,18 +7,17 @@ frameworkVersion: '3'
 custom:
   webpack:
     webpackConfig: ./webpack.config.js
-    includeModules:
-      #      nodeModulesRelativeDir: '../../'
-      forceExclude:
-        - aws-sdk
-      forceInclude:
-        - "@polkadot/api"
-        - "@polkadot/api-contract"
-        - "@polkadot/keyring"
-        - "@polkadot/types"
-        - "@polkadot/types-augment"
-        - "@polkadot/util"
-        - "@polkadot/util-crypto"
+    packager: "npm"
+    includeModules: true
+    forceExclude:
+      - aws-sdk
+    #    includeModules:
+    #      nodeModulesRelativeDir: '../../'
+    #      forceExclude:
+    #        - aws-sdk
+    #      forceInclude:
+    #        - "@polkadot/api"
+    #        - "@polkadot/api-contract"
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
@@ -26,9 +25,6 @@ custom:
 plugins:
   - serverless-webpack
   # - serverless-plugin-typescript
-
-packaging:
-  packager: 'npm'
 
 provider:
   name: aws
@@ -52,6 +48,7 @@ provider:
 
 # you can add packaging information here
 package:
+  individually: true
   patterns:
     - '!dist/**'
   excludeDevDependencies: true

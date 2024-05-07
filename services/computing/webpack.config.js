@@ -2,7 +2,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const slsw = require('serverless-webpack');
-const nodeExternals = require('webpack-node-externals');
+// const nodeExternals = require('webpack-node-externals');
 // const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
@@ -26,7 +26,7 @@ module.exports = {
       cardinal: false,
       '@aws-sdk/credential-providers': false,
       'gcp-metadata': false,
-      'socks': false,
+      socks: false,
       // '@nestjs/websockets/socket-module': false,
       // 'cache-manager': false,
       // 'class-validator': false,
@@ -45,15 +45,15 @@ module.exports = {
   node: {
     __dirname: true,
   },
-  externals: [
-    nodeExternals({
-      allowlist: [
-        '@apillon/lib',
-        '@apillon/service-lib',
-        '@apillon/workers-lib',
-      ],
-    }),
-  ],
+  // externals: [
+  //   nodeExternals({
+  //     allowlist: [
+  //       '@apillon/lib',
+  //       '@apillon/service-lib',
+  //       '@apillon/workers-lib',
+  //     ],
+  //   }),
+  // ],
   // externals: [nodeExternals()],
   module: {
     rules: [
