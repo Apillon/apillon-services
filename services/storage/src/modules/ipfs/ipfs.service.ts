@@ -104,7 +104,7 @@ export class IPFSService {
             );
           });
       }
-      //Send alert. Even if backup node works
+
       await new Lmas().writeLog({
         logType: this.usingBackupNode ? LogType.WARN : LogType.ALERT,
         message: `Error initializing IPFS Client. Failed to get ipfs version (ipfs api health check failed). Backup api status: ${this.usingBackupNode ? 'OK' : 'ERROR'}`,
@@ -114,7 +114,7 @@ export class IPFSService {
           usingBackupNode: this.usingBackupNode,
           error: err,
         },
-        sendAdminAlert: true,
+        sendAdminAlert: !this.usingBackupNode,
       });
 
       //Ipfs api does not work - throw error
