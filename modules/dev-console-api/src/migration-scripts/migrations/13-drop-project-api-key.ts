@@ -5,7 +5,7 @@ export const upgrade = async (
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> => {
   await queryFn(`
-    DROP TABLE IF EXISTS \`${DbTables.PROJECT_API_KEY}\`;
+    DROP TABLE IF EXISTS \`project_api_key\`;
   `);
 };
 
@@ -13,7 +13,7 @@ export const downgrade = async (
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> => {
   await queryFn(`
-  CREATE TABLE IF NOT EXISTS \`${DbTables.PROJECT_API_KEY}\` (
+  CREATE TABLE IF NOT EXISTS \`project_api_key\` (
     \`id\` INT NOT NULL AUTO_INCREMENT,
     \`project_id\` INT NOT NULL,
     \`key\` VARCHAR(250) NOT NULL,

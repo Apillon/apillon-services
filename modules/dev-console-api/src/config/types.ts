@@ -4,9 +4,6 @@ export enum DbTables {
   SERVICE_TYPE = 'service_type',
   SERVICE = 'service',
   PROJECT_USER = 'project_user',
-  FILE = 'file',
-  PROJECT_API_KEY = 'project_api_key',
-  INSTRUCTION = 'instruction',
   PROJECT_USER_PENDING_INVITATION = 'project_user_pending_invitation',
 }
 

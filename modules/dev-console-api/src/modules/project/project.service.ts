@@ -28,11 +28,6 @@ import {
   EmailTemplate,
   ConfigureCreditDto,
   StorageMicroservice,
-  NftsMicroservice,
-  SocialMicroservice,
-  ComputingMicroservice,
-  AuthenticationMicroservice,
-  Context,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -41,8 +36,6 @@ import {
   ValidatorErrorCode,
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
-import { FileService } from '../file/file.service';
-import { File } from '../file/models/file.model';
 import { User } from '../user/models/user.model';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
 import { ProjectUserUpdateRoleDto } from './dtos/project_user-update-role.dto';
@@ -54,8 +47,6 @@ import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
 
 @Injectable()
 export class ProjectService {
-  constructor(private readonly fileService: FileService) {}
-
   async createProject(
     context: DevConsoleApiContext,
     body: Project,
@@ -607,36 +598,6 @@ export class ProjectService {
     }
 
     return true;
-  }
-
-  async updateProjectImage(
-    context: DevConsoleApiContext,
-    project_uuid: string,
-    uploadedFile: File,
-  ) {
-    const project = await new Project({}, context).populateByUUID(project_uuid);
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-    project.canModify(context);
-    const createdFile = await this.fileService.createFile(
-      context,
-      uploadedFile,
-    );
-
-    const existingProjectImageID = project.imageFile_id;
-    project.imageFile_id = createdFile.id;
-    await project.update();
-
-    if (existingProjectImageID) {
-      await this.fileService.deleteFileById(context, existingProjectImageID);
-    }
-
-    return createdFile;
   }
 
   //#region credit
