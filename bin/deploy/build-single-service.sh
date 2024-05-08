@@ -20,7 +20,7 @@ cat ./bin/deploy/env/env.yml
 echo "Building libraries..."
 cd packages/lib/
 echo "Building @apillon/lib"
-npm cache verify
+npm cache clean
 npm install --omit=dev
 npm run build
 npm link
