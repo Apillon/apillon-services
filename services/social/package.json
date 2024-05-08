@@ -29,9 +29,6 @@
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
     "@middy/core": "^3.3.1",
-    "@polkadot/api": "10.12.2",
-    "@polkadot/keyring": "^12.3.2",
-    "@polkadot/util": "^12.3.2",
     "@subsocial/api": "^0.8.14",
     "@subsocial/types": "^0.6.8",
     "node-fetch": "^2.6.7"
