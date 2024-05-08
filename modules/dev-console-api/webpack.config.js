@@ -1,16 +1,11 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
 const slsw = require('serverless-webpack');
-const nodeExternals = require('webpack-node-externals');
-// const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   context: __dirname,
   mode: slsw.lib.webpack.isLocal ? 'development' : 'production',
-  // mode: 'production',
   entry: slsw.lib.entries,
-  // devtool: slsw.lib.webpack.isLocal ? 'cheap-module-eval-source-map' : 'source-map',
-  devtool: 'source-map',
+  devtool: slsw.lib.webpack.isLocal ? 'source-map' : false,
   resolve: {
     extensions: ['.mjs', '.json', '.ts', '.js'],
     symlinks: false,
@@ -23,7 +18,6 @@ module.exports = {
       'class-transformer': false,
       '@nestjs/microservices/microservices-module': false,
       '@nestjs/microservices': false,
-      // '@nestjs/platform-express': false,
       'bson-ext': false,
       kerberos: false,
       '@mongodb-js/zstd': false,
@@ -32,7 +26,6 @@ module.exports = {
       aws4: false,
       'mongodb-client-encryption': false,
       cardinal: false,
-      // '@apillon/lib': path.join(__dirname, '..', '..', 'packages', 'lib')
     },
   },
   output: {
@@ -44,12 +37,6 @@ module.exports = {
   node: {
     __dirname: true,
   },
-  externals: [
-    // nodeExternals()
-    nodeExternals({
-      allowlist: ['@apillon/lib', '@apillon/modules-lib'],
-    }),
-  ],
   module: {
     rules: [
       // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`
@@ -70,17 +57,7 @@ module.exports = {
       },
     ],
   },
-  // plugins: [
-  //   new CopyPlugin({
-  //     patterns: [
-  //       {
-  //         from: './../../packages/@apillon/lib/dist/lib/mailing/templates/*.html',
-  //         to: './../../packages/@apillon/lib/dist/lib/mailing/templates/'
-  //       }
-  //       // { from: './src/templates/mail/*.html' },
-  //       // { from: './src/templates/pdf/*.html' },
-  //       // { from: './src/locales/*.json' },
-  //     ],
-  //   }),
-  // ],
+  optimization: {
+    usedExports: true,
+  },
 };
