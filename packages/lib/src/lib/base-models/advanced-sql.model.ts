@@ -395,6 +395,13 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     }
   }
 
+  /**
+   * Marks document in the database as archived.
+   */
+  public async markArchived(conn?: PoolConnection) {
+    return await this.markDeleted(conn, SqlModelStatus.ARCHIVED);
+  }
+
   /*
    * Deletes document from the database
    */

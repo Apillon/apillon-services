@@ -208,7 +208,7 @@ export class HostingService {
     }
     website.canModify(context);
 
-    return await website.markDeleted(null, SqlModelStatus.ARCHIVED);
+    return await website.markArchived();
   }
 
   static async maxWebsitesQuotaReached(

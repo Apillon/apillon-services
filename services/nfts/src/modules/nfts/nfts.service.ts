@@ -1045,7 +1045,7 @@ export class NftsService {
       context,
     );
 
-    return await collection.markDeleted(null, SqlModelStatus.ARCHIVED);
+    return await collection.markArchived();
   }
 
   private static async checkCollection(

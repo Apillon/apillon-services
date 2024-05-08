@@ -67,7 +67,10 @@ export class ComputingController {
   }
 
   @Delete('contracts/:uuid')
-  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
   @UseGuards(AuthGuard)
   async archiveContract(
     @Ctx() context: DevConsoleApiContext,

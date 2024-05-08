@@ -251,7 +251,7 @@ export class ComputingService {
     }
     contract.canModify(context);
 
-    return await contract.markDeleted(null, SqlModelStatus.ARCHIVED);
+    return await contract.markArchived();
   }
 
   /**

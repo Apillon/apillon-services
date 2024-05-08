@@ -275,8 +275,7 @@ export class NftsController {
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @Validation({ dto: AddNftsMetadataDto })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @UseGuards(AuthGuard)
   async archiveCollection(
     @Ctx() context: DevConsoleApiContext,
     @Param('collectionUuid') collectionUuid: string,

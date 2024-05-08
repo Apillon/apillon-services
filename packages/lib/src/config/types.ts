@@ -271,9 +271,11 @@ export enum SocialEventType {
   CREATE_SPACE = 'create-space',
   LIST_SPACES = 'list-spaces',
   GET_SPACE = 'get-space',
+  ARCHIVE_SPACE = 'archive-space',
   CREATE_POST = 'create-post',
   LIST_POSTS = 'list-posts',
   GET_POST = 'get-post',
+  ARCHIVE_POST = 'archive-post',
   GET_WALLET_IDENTITY = 'get-wallet-identity',
   PROJECT_SOCIAL_DETAILS = 'project-social-details',
 }

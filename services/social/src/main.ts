@@ -13,9 +13,11 @@ export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
     [SocialEventType.LIST_SPACES]: SubsocialService.listSpaces,
     [SocialEventType.GET_SPACE]: SubsocialService.getSpace,
+    [SocialEventType.ARCHIVE_SPACE]: SubsocialService.archiveSpace,
     [SocialEventType.CREATE_SPACE]: SubsocialService.createSpace,
     [SocialEventType.LIST_POSTS]: SubsocialService.listPosts,
     [SocialEventType.GET_POST]: SubsocialService.getPost,
+    [SocialEventType.ARCHIVE_POST]: SubsocialService.archivePost,
     [SocialEventType.CREATE_POST]: SubsocialService.createPost,
     [SocialEventType.GET_WALLET_IDENTITY]:
       WalletIdentityService.getWalletIdentityData,
