@@ -16,7 +16,10 @@ aws s3 cp ${S3_CONFIG} ./bin/deploy/env/env.yml
 cat ./bin/deploy/env/env.yml
 
 # prepare the environemnt
+npm -v
 npm install -g npm@latest
+npm -v
+npm cache clean --force
 echo "Building libraries..."
 cd packages/lib/
 echo "Building @apillon/lib"
