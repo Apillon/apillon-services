@@ -12,7 +12,9 @@ custom:
       forceExclude:
         - aws-sdk
       forceInclude:
-        - follow-redirects
+        - @nestjs/common
+        - @nestjs/core
+        - @nestjs/platform-express
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|**/test/**/|**/*\.spec\.ts|**/*\.spec\.js'
