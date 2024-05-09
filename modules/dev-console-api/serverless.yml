@@ -7,14 +7,11 @@ frameworkVersion: '3'
 custom:
   webpack:
     webpackConfig: ./webpack.config.js
-    packager: "npm"
     includeModules:
       forceExclude:
         - aws-sdk
       forceInclude:
-        - '@nestjs/common'
-        - '@nestjs/core'
-        - '@nestjs/platform-express'
+        - follow-redirects
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|**/test/**/|**/*\.spec\.ts|**/*\.spec\.js'
@@ -43,7 +40,6 @@ provider:
     ${file(../../bin/deploy/env/env.yml)}
 
 package:
-  individually: true
   patterns:
     - '!dist/**'
   excludeDevDependencies: true

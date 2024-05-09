@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
 const slsw = require('serverless-webpack');
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
   context: __dirname,
@@ -18,6 +20,7 @@ module.exports = {
       'class-transformer': false,
       '@nestjs/microservices/microservices-module': false,
       '@nestjs/microservices': false,
+      // '@nestjs/platform-express': false,
       'bson-ext': false,
       kerberos: false,
       '@mongodb-js/zstd': false,
@@ -37,6 +40,12 @@ module.exports = {
   node: {
     __dirname: true,
   },
+  externals: [
+    // nodeExternals()
+    nodeExternals({
+      allowlist: ['@apillon/lib', '@apillon/modules-lib'],
+    }),
+  ],
   module: {
     rules: [
       // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`
@@ -56,8 +65,5 @@ module.exports = {
         },
       },
     ],
-  },
-  optimization: {
-    usedExports: true,
   },
 };
