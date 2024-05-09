@@ -7,7 +7,12 @@ frameworkVersion: '3'
 custom:
   webpack:
     webpackConfig: ./webpack.config.js
-    includeModules: true
+    includeModules:
+      #      nodeModulesRelativeDir: '../../'
+      forceExclude:
+        - aws-sdk
+      forceInclude:
+        - follow-redirects
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|**/test/**/|**/*\.spec\.ts|**/*\.spec\.js'
