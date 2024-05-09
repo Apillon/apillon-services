@@ -29,9 +29,6 @@
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
     "@middy/core": "^3.3.1",
-    "@polkadot/api": "10.12.2",
-    "@polkadot/keyring": "^12.6.2",
-    "@polkadot/util": "^12.6.2",
     "@subsocial/api": "^0.8.14",
     "@subsocial/types": "^0.6.8",
     "node-fetch": "^2.6.7"
@@ -43,7 +40,18 @@
     "tsconfig": "*"
   },
   "overrides": {
-    "ipfs-utils": "9.0.6"
+    "ipfs-utils": "9.0.6",
+    "@subsocial/api": {
+      "@polkadot/api": "10.12.2",
+      "@polkadot/types": "10.12.2",
+      "@polkadot/types-known": "10.12.2",
+      "@polkadot/types-support": "10.12.2"
+    },
+    "@subsocial/types": {
+      "@polkadot/types": "10.12.2",
+      "@polkadot/types-known": "10.12.2",
+      "@polkadot/types-support": "10.12.2"
+    }
   },
   "jest": {
     "testTimeout": 1800000,
