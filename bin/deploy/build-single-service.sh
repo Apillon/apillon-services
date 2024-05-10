@@ -71,7 +71,7 @@ then
 fi
 
 echo "Installing build dependencies"
-yarn i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
+yarn add serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
 
 echo "Installation of dependencies complete"
 yarn list
