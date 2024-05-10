@@ -16,9 +16,14 @@ aws s3 cp ${S3_CONFIG} ./bin/deploy/env/env.yml
 cat ./bin/deploy/env/env.yml
 
 # prepare the environemnt
+npm -v
+npm install -g npm@latest
+npm -v
+npm cache clean --force
 echo "Building libraries..."
 cd packages/lib/
 echo "Building @apillon/lib"
+npm cache verify
 npm install --omit=dev
 npm run build
 npm link
@@ -28,6 +33,7 @@ if [ "$MODULES_LIB" == "true" ]
 then
   echo "Building @apillon/modules-lib"
   cd packages/modules-lib/
+  npm cache verify
   npm install --omit=dev
   npm run build
   npm link
@@ -35,6 +41,7 @@ then
 else
   echo "Building @apillon/service-lib"
   cd packages/service-lib/
+  npm cache verify
   npm install --omit=dev
   npm run build
   npm link
@@ -45,6 +52,7 @@ if [ "$WORKERS_LIB" == "true" ]
 then
   echo "Building @apillon/workers-lib"
   cd packages/workers-lib/
+  npm cache verify
   npm install --omit=dev
   npm run build
   npm link
@@ -54,6 +62,7 @@ fi
 echo "Building service:"
 echo $SERVICE_PATH
 cd ${SERVICE_PATH}
+npm cache verify
 npm link @apillon/lib --omit=dev
 if [ "$MODULES_LIB" == "true" ]
 then
