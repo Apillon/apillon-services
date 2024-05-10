@@ -6,7 +6,7 @@ phases:
     commands:
       - npm install -g yarn@latest
       - >
-        yarn install --location=global
+        yarn global add
         typescript
         serverless serverless-webpack
         copy-webpack-plugin
