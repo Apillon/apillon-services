@@ -7,7 +7,7 @@ echo $TIMESTAMP
 
 # clean the environemnt
 rm node_modules -r
-cd packages/at-lib/
+cd packages/lib/
 rm node_modules -r
 cd ../../modules/dev-console-api/
 rm node_modules -r
