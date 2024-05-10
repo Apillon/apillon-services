@@ -54,7 +54,7 @@ fi
 
 echo "Building service:"
 echo $SERVICE_PATH
-cd ${SERVICE_PATH
+cd ${SERVICE_PATH}
 yarn link @apillon/lib --omit=dev
 if [ "$MODULES_LIB" == "true" ]
 then
