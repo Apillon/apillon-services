@@ -16,7 +16,6 @@ aws s3 cp ${S3_CONFIG} ./bin/deploy/env/env.yml
 cat ./bin/deploy/env/env.yml
 
 # prepare the environemnt
-npm install -g yarn@latest
 yarn -v
 echo "Building libraries..."
 cd packages/lib/
