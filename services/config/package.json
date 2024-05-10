@@ -5,6 +5,7 @@
   "license": "GNU GPL V3",
   "description": "System configuration service",
   "main": "index.js",
+  "private": true,
   "scripts": {
     "prebuild": "rimraf dist",
     "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit --silent",

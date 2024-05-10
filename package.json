@@ -6,6 +6,7 @@
     "services/*",
     "modules/*"
   ],
+  "private": true,
   "scripts": {
     "build": "npx turbo run build",
     "build-libs": "npx turbo run build --filter=@apillon/lib --filter=@apillon/modules-lib --filter=@apillon/service-lib --filter=@apillon/workers-lib --filter=@apillon/tests-lib",
@@ -48,7 +49,8 @@
   },
   "engines": {
     "npm": ">=10.0.0",
+    "yarn": ">=1.22.22",
     "node": ">=20.0.0"
   },
-  "packageManager": "npm@8.4.0"
+  "packageManager": "yarn@1.22.22"
 }

@@ -4,6 +4,7 @@
   "author": "Apillon",
   "license": "GNU GPL V3",
   "description": "Apillon monitoring service",
+  "private": true,
   "scripts": {
     "prebuild": "rimraf dist",
     "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit --verbose",

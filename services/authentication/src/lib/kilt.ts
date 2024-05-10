@@ -102,7 +102,7 @@ export async function getFullDidDocument(keypairs: any) {
 
   const didUri = Did.getFullDidUriFromKey(keypairs.authentication);
   const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
-  const { document } = Did.linkedInfoFromChain(encodedFullDid);
+  const { document } = Did.linkedInfoFromChain(encodedFullDid as any);
 
   if (!document) {
     await new Lmas().writeLog({
@@ -177,7 +177,7 @@ export async function getNextNonce(didUri: DidUri) {
   const api = ConfigService.get('api');
   const queried = await api.query.did.did(Did.toChain(didUri));
   const currentNonce = parseInt(
-    Did.documentFromChain(queried).lastTxCounter.toString(),
+    Did.documentFromChain(queried as any).lastTxCounter.toString(),
   );
   return currentNonce + 1;
 }
@@ -229,7 +229,7 @@ export async function createCompleteFullDid(
   const encodedUpdatedDidDetails = await api.call.did.query(
     Did.toChain(fullDid),
   );
-  return Did.linkedInfoFromChain(encodedUpdatedDidDetails).document;
+  return Did.linkedInfoFromChain(encodedUpdatedDidDetails as any).document;
 }
 
 // SECTION - Sign callbacks

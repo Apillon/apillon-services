@@ -77,7 +77,7 @@ export class Logger {
     const query = new LogsQueryFilter(event.query);
     const logsCollection = context.mongo.db.collection(query.collectionName);
 
-    return Logger.executeMongoLogsQuery(logsCollection, query);
+    return Logger.executeMongoLogsQuery(logsCollection as any, query);
   }
 
   /**
@@ -92,7 +92,7 @@ export class Logger {
     const query = new RequestLogsQueryFilter(event.query);
     const requestLogsColl = context.mongo.db.collection(query.collectionName);
 
-    return Logger.executeMongoLogsQuery(requestLogsColl, query);
+    return Logger.executeMongoLogsQuery(requestLogsColl as any, query);
   }
 
   /**
