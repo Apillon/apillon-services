@@ -443,6 +443,7 @@ export class SubstrateService {
                 },
                 LogOutput.NOTIFY_WARN,
               );
+              // stop transmitting TX after first self repair
               break;
             }
           } else {
@@ -459,6 +460,7 @@ export class SubstrateService {
               },
               LogOutput.NOTIFY_WARN,
             );
+            // stop transmitting TX after first exception
             break;
           }
         }
