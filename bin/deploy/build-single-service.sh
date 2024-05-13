@@ -83,7 +83,7 @@ then
 fi
 
 # missing ts-node issue fix
-npm link ts-node
+npm i ts-node
 
 echo "Installation of dependencies complete"
 npm ls
