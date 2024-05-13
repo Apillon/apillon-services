@@ -34,7 +34,6 @@
     "node-fetch": "^2.6.7"
   },
   "devDependencies": {
-    "@types/uuid": "^9.0.8",
     "eslint-config-common": "*",
     "tsconfig": "*"
   },

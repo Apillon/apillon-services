@@ -27,10 +27,7 @@
   },
   "devDependencies": {
     "eslint-config-common": "*",
-    "ts-loader": "^9.5.1",
-    "tsconfig": "*",
-    "webpack": "^5.91.0",
-    "webpack-node-externals": "^3.0.0"
+    "tsconfig": "*"
   },
   "jest": {
     "testTimeout": 1800000,
