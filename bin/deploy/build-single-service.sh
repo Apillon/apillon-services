@@ -18,7 +18,6 @@ cat ./bin/deploy/env/env.yml
 export NODE_ENV=production
 
 echo "Installing build dependencies"
-npm install --location=global serverless copyfiles rimraf turbo
 
 # prepare the environemnt
 echo "Building libraries..."
