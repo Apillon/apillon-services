@@ -15,6 +15,19 @@ echo $S3_CONFIG
 aws s3 cp ${S3_CONFIG} ./bin/deploy/env/env.yml
 cat ./bin/deploy/env/env.yml
 
+export NODE_ENV=production
+
+echo "Installing build dependencies"
+npm install --location=global \
+  serverless serverless-webpack \
+  copy-webpack-plugin \
+  webpack webpack-node-externals \
+  ts-loader ts-node \
+  copyfiles rimraf \
+  turbo
+  
+# npm i -g serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
+
 # prepare the environemnt
 echo "Building libraries..."
 cd packages/lib/
@@ -69,8 +82,6 @@ then
   npm link @apillon/workers-lib --omit=dev
 fi
 
-echo "Installing build dependencies"
-npm i serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
 
 echo "Installation of dependencies complete"
 npm ls

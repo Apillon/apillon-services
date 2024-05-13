@@ -5,14 +5,14 @@ phases:
       nodejs: 20
     commands:
       - npm cache verify
-      - >
-        npm install --location=global
-        serverless serverless-webpack
-        copy-webpack-plugin
-        webpack webpack-node-externals
-        ts-loader ts-node
-        copyfiles rimraf
-        turbo
+      # - >
+      #   npm install --location=global
+      #   serverless serverless-webpack
+      #   copy-webpack-plugin
+      #   webpack webpack-node-externals
+      #   ts-loader ts-node
+      #   copyfiles rimraf
+      #   turbo
   pre_build:
     commands:
       - printenv
