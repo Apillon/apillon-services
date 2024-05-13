@@ -15,7 +15,7 @@ echo $S3_CONFIG
 aws s3 cp ${S3_CONFIG} ./bin/deploy/env/env.yml
 cat ./bin/deploy/env/env.yml
 
-# export NODE_ENV=production
+export NODE_ENV=production
 
 echo "Installing build dependencies"
 
