@@ -25,7 +25,7 @@ npm install --location=global \
   ts-loader ts-node \
   copyfiles rimraf \
   turbo
-  
+
 # npm i -g serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
 
 # prepare the environemnt
@@ -82,6 +82,8 @@ then
   npm link @apillon/workers-lib --omit=dev
 fi
 
+# missing ts-node issue fix
+npm link ts-node
 
 echo "Installation of dependencies complete"
 npm ls
