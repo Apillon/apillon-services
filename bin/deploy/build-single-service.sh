@@ -18,15 +18,7 @@ cat ./bin/deploy/env/env.yml
 export NODE_ENV=production
 
 echo "Installing build dependencies"
-npm install --location=global \
-  serverless serverless-webpack \
-  copy-webpack-plugin \
-  webpack webpack-node-externals \
-  ts-loader ts-node \
-  copyfiles rimraf \
-  turbo
-
-# npm i -g serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
+npm install --location=global serverless copyfiles rimraf turbo
 
 # prepare the environemnt
 echo "Building libraries..."
@@ -82,8 +74,8 @@ then
   npm link @apillon/workers-lib --omit=dev
 fi
 
-# missing ts-node issue fix
-npm i ts-node
+# install libs that doesn't work form global
+npm i ts-node serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
 
 echo "Installation of dependencies complete"
 npm ls
