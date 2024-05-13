@@ -57,9 +57,7 @@
     "jest": "29.7.0",
     "ts-jest": "29.1.2",
     "ts-loader": "^9.5.1",
-    "tsconfig": "*",
-    "webpack": "^5.91.0",
-    "webpack-node-externals": "^3.0.0"
+    "tsconfig": "*"
   },
   "overrides": {
     "ipfs-utils": "9.0.6"
