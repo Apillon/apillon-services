@@ -4,7 +4,6 @@
   "author": "Apillon",
   "license": "GNU GPL V3",
   "description": "Apillon mailing service",
-  "private": true,
   "scripts": {
     "prebuild": "rimraf dist",
     "test-service": "jest --passWithNoTests",

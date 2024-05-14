@@ -5,7 +5,6 @@
   "license": "GNU GPL V3",
   "description": "Access management service",
   "main": "index.js",
-  "private": true,
   "scripts": {
     "prebuild": "rimraf dist",
     "test-service": "jest --passWithNoTests",

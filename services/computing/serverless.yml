@@ -7,7 +7,7 @@ frameworkVersion: '3'
 custom:
   webpack:
     webpackConfig: ./webpack.config.js
-    packager: "yarn"
+    packager: "npm"
     includeModules: true
     packagerOptions:
       lockFile: '../../package-lock.json'

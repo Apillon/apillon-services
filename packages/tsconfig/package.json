@@ -2,7 +2,6 @@
   "name": "tsconfig",
   "version": "0.0.0",
   "main": "index.js",
-  "private": true,
   "files": [
     "api.json",
     "base.json",

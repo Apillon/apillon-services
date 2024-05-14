@@ -5,13 +5,6 @@
   "license": "GNU GPL V3",
   "description": "Apillon computing service",
   "main": "index.js",
-  "private": true,
-  "workspaces": {
-    "nohoist": [
-      "@polkadot/*",
-      "@phala/*"
-    ]
-  },
   "scripts": {
     "prebuild": "rimraf dist",
     "test-service": "jest --passWithNoTests",

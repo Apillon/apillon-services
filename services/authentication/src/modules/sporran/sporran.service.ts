@@ -65,7 +65,7 @@ export class SporranService {
     const didUri = Did.getFullDidUriFromKey(authentication);
 
     const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
-    const { document } = Did.linkedInfoFromChain(encodedFullDid as any);
+    const { document } = Did.linkedInfoFromChain(encodedFullDid);
     // If there is no DID, or the DID does not have any key agreement key, return
     if (!document.keyAgreement || !document.keyAgreement[0]) {
       throw new AuthenticationCodeException({
@@ -398,9 +398,7 @@ export class SporranService {
       await Credential.verifyPresentation(presentation);
 
       attestation = Attestation.fromChain(
-        (await api.query.attestation.attestations(
-          presentation.rootHash,
-        )) as any,
+        await api.query.attestation.attestations(presentation.rootHash),
         presentation.rootHash,
       );
     } catch (error) {

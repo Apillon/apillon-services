@@ -140,7 +140,7 @@ export async function getFullDidDocument(keypairs: any) {
   const api = ConfigService.get('api');
   const didUri = Did.getFullDidUriFromKey(keypairs.authentication);
   const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
-  const { document } = Did.linkedInfoFromChain(encodedFullDid as any);
+  const { document } = Did.linkedInfoFromChain(encodedFullDid);
 
   if (!document) {
     throw 'No documento';

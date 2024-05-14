@@ -4,7 +4,6 @@
   "description": "Apillon authentication (OAuth) API",
   "author": "Apillon",
   "license": "GNU GPL V3",
-  "private": true,
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",

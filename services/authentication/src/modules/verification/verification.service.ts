@@ -36,9 +36,7 @@ export class VerificationService {
 
       // Onchain
       attestation = Attestation.fromChain(
-        (await api.query.attestation.attestations(
-          presentation.rootHash,
-        )) as any,
+        await api.query.attestation.attestations(presentation.rootHash),
         presentation.rootHash,
       );
       if (attestation.revoked) {
