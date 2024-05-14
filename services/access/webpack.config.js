@@ -28,13 +28,6 @@ module.exports = {
       'gcp-metadata': false,
       socks: false,
       '@faker-js/faker': false,
-      // '@nestjs/websockets/socket-module': false,
-      // 'cache-manager': false,
-      // 'class-validator': false,
-      // 'class-transformer': false,
-      // '@nestjs/microservices/microservices-module': false,
-      // '@nestjs/microservices': false,
-      //'@apillon/lib': path.join(__dirname, '..', '..', 'packages', 'lib', 'dist')
     },
   },
   output: {
