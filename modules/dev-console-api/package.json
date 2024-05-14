@@ -41,7 +41,6 @@
     "@nestjs/platform-express": "^10.3.7",
     "@polkadot/util": "^11.0.2",
     "@polkadot/util-crypto": "^11.0.2",
-    "@polkadot/keyring": "^11.0.2",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
@@ -58,7 +57,6 @@
     "@apillon/tests-lib": "*",
     "eslint-config-common": "*",
     "tsconfig": "*"
-    
   },
   "jest": {
     "testTimeout": 1800000,
