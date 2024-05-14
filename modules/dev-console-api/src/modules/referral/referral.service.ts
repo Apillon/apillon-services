@@ -7,7 +7,7 @@ import {
   TwitterOauthDto,
   ProductOrderDto,
   BaseQueryFilter,
-  ClaimTokensDto,
+  ReviewTasksDto,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { UserService } from '../user/user.service';
@@ -154,15 +154,15 @@ export class ReferralService {
   /**
    * Claim airdrop NCTR tokens
    * @param {DevConsoleApiContext} context
-   * @param {ClaimTokensDto} body
+   * @param {ReviewTasksDto} body
    */
-  async claimTokens(context: DevConsoleApiContext, body: ClaimTokensDto) {
+  async reviewTasks(context: DevConsoleApiContext, body: ReviewTasksDto) {
     const { address } = await this.userService.validateWalletSignature(
       body,
       'ReferralService/claimTokens',
       context,
     );
     body.wallet = address;
-    return (await new ReferralMicroservice(context).claimTokens(body)).data;
+    return (await new ReferralMicroservice(context).reviewTasks(body)).data;
   }
 }

@@ -18,7 +18,7 @@ import {
   BaseQueryFilter,
   CacheKeyPrefix,
   CacheKeyTTL,
-  ClaimTokensDto,
+  ReviewTasksDto,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -159,16 +159,16 @@ export class ReferralController {
     return await this.referralService.getAirdropTasks(context);
   }
 
-  @Post('claim-tokens')
+  @Post('review-tasks')
   @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard, ValidationGuard)
-  @Validation({ dto: ClaimTokensDto })
+  @Validation({ dto: ReviewTasksDto })
   async claimTokens(
     @Ctx() context: DevConsoleApiContext,
     @IpAddress() ip: string,
-    @Body() body: ClaimTokensDto,
+    @Body() body: ReviewTasksDto,
   ) {
     body.ip_address = ip;
-    return await this.referralService.claimTokens(context, body);
+    return await this.referralService.reviewTasks(context, body);
   }
 }

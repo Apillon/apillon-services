@@ -5,7 +5,7 @@ import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { UserWalletAuthDto } from '../../ams/dtos/user-wallet-auth.dto';
 import { getFaker } from '../../../utils';
 
-export class ClaimTokensDto extends UserWalletAuthDto {
+export class ReviewTasksDto extends UserWalletAuthDto {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],

@@ -3,7 +3,7 @@ import { AppEnvironment, ReferralEventType } from '../../../config/types';
 import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
-import { ClaimTokensDto } from './dtos/claim-tokens.dto';
+import { ReviewTasksDto } from './dtos/review-tasks.dto';
 import { ConfirmRetweetDto } from './dtos/confirm-retweet.dto';
 import { CreateReferralDto } from './dtos/create-referral.dto';
 import { GithubOauthDto } from './dtos/github-oauth.dto';
@@ -131,9 +131,9 @@ export class ReferralMicroservice extends BaseService {
     });
   }
 
-  public async claimTokens(body: ClaimTokensDto) {
+  public async reviewTasks(body: ReviewTasksDto) {
     return await this.callService({
-      eventName: ReferralEventType.CLAIM_TOKENS,
+      eventName: ReferralEventType.REVIEW_TASKS,
       body: body.serialize(),
     });
   }

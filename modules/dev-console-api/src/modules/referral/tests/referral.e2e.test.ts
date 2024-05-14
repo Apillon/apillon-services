@@ -1,5 +1,5 @@
 import {
-  ClaimTokensDto,
+  ReviewTasksDto,
   EvmChain,
   generateJwtToken,
   isEVMWallet,
@@ -228,7 +228,7 @@ describe('Referral tests', () => {
       blockchain.getWalletPrivateKey(walletIndex),
     ).signMessage(message);
 
-    return new ClaimTokensDto()
+    return new ReviewTasksDto()
       .fake()
       .populate({
         wallet: blockchain.getWalletAddress(walletIndex),

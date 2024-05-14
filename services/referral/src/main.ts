@@ -31,7 +31,7 @@ export async function processEvent(
     [ReferralEventType.ADD_PROMO_CODE_CREDITS]:
       PromoCodeService.addPromoCodeCredits,
     [ReferralEventType.GET_AIRDROP_TASKS]: AirdropService.getAirdropTasks,
-    [ReferralEventType.CLAIM_TOKENS]: AirdropService.claimTokens,
+    [ReferralEventType.REVIEW_TASKS]: AirdropService.reviewTasks,
   };
 
   return await processors[event.eventName](event, context);
