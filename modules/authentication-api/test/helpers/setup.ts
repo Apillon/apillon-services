@@ -13,7 +13,7 @@ import { AppModule } from '../../src/app.module';
  * Testing stage definition.
  */
 export async function setupTest(): Promise<Stage> {
-  let app: INestApplication = null;
+  let app = null;
   let http: HttpServer = null;
 
   env.APP_ENV = AppEnvironment.TEST;
