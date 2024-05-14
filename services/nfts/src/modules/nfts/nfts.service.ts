@@ -11,7 +11,6 @@ import {
   DeployCollectionDTO,
   env,
   EvmChain,
-  ForbiddenErrorCodes,
   getChainName,
   isEvmOrSubstrateWalletAddress,
   Lmas,
@@ -1060,8 +1059,8 @@ export class NftsService {
       collection.collectionStatus == CollectionStatus.TRANSFERED
     ) {
       throw new NftsCodeException({
-        status: 403,
-        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: 500,
+        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
         context,
         sourceFunction,
       });
