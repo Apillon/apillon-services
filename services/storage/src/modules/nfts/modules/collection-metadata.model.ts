@@ -160,6 +160,7 @@ export class CollectionMetadata extends UuidSqlModel {
     populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
