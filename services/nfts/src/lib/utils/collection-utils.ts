@@ -142,7 +142,7 @@ export async function deployNFTCollectionContract(
             code: NftsErrorCode.GENERAL_SERVER_ERROR,
           });
       }
-      const tx = await EVMContractClient.createDeployTransaction(
+      const txData = EVMContractClient.createDeployTransaction(
         abi,
         bytecode,
         contractArguments,
@@ -153,7 +153,7 @@ export async function deployNFTCollectionContract(
             chain: collection.chain,
             transaction: ethers.utils.serializeTransaction({
               to: null,
-              data: tx.data,
+              data: txData,
               type: 2,
             }),
             referenceTable: DbTables.COLLECTION,

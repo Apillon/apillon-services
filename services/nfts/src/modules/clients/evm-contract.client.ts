@@ -1,9 +1,4 @@
-import {
-  Contract,
-  ContractFactory,
-  providers,
-  UnsignedTransaction,
-} from 'ethers';
+import { Contract, ContractFactory, providers } from 'ethers';
 import { PopulatedTransaction } from '@ethersproject/contracts';
 
 export class EVMContractClient {
@@ -28,17 +23,17 @@ export class EVMContractClient {
     return EVMContractClient.instance;
   }
 
-  static async createDeployTransaction(
+  static createDeployTransaction(
     contractAbi: string,
     byteCode?: string,
     constructorArguments: any[] = [],
-  ): Promise<UnsignedTransaction> {
+  ): string {
     const contractFactory = new ContractFactory(contractAbi, byteCode);
 
-    return await contractFactory.getDeployTransaction.apply(
-      null,
+    return contractFactory.getDeployTransaction.apply(
+      contractFactory,
       constructorArguments,
-    );
+    ).data;
   }
 
   async query(methodName: string, methodArguments: any[] = []): Promise<any> {
