@@ -18,12 +18,16 @@ module.exports = {
     alias: {
       'bson-ext': false,
       kerberos: false,
-      // '@mongodb-js/zstd': false,
+      '@mongodb-js/zstd': false,
       snappy: false,
       'snappy/package.json': false,
       aws4: false,
       'mongodb-client-encryption': false,
       cardinal: false,
+      '@aws-sdk/credential-providers': false,
+      'gcp-metadata': false,
+      socks: false,
+      '@faker-js/faker': false,
       // '@nestjs/websockets/socket-module': false,
       // 'cache-manager': false,
       // 'class-validator': false,
@@ -43,6 +47,7 @@ module.exports = {
     __dirname: true,
   },
   externals: [
+    { '@faker-js/faker': '@faker-js/faker' },
     nodeExternals({
       allowlist: ['@apillon/lib', '@apillon/service-lib'],
     }),
