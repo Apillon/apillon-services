@@ -96,9 +96,9 @@ export class TokenClaim extends AdvancedSQLModel {
    * @param conn Optional database connection to use for the query.
    * @returns The populated model instance or a reset instance if no match is found.
    */
-  public async populateByIpAndFingerprint(
+  public async findAllByIpAndFingerprint(
     conn?: PoolConnection,
-  ): Promise<TokenClaim> {
+  ): Promise<TokenClaim[]> {
     if (!this.ip_address && !this.fingerprint) {
       throw new Error('IP address or fingerprint must be provided.');
     }
@@ -115,8 +115,17 @@ export class TokenClaim extends AdvancedSQLModel {
       conn,
     );
 
-    return data?.length
-      ? this.populate(data[0], PopulateFrom.DB)
-      : this.reset();
+    return data.map((d) =>
+      new TokenClaim({}, this.getContext()).populate(d, PopulateFrom.DB),
+    );
+  }
+
+  /**
+   * Marks token claim user as blocked
+   */
+  public async markBlocked(conn?: PoolConnection): Promise<this> {
+    this.status = SqlModelStatus.BLOCKED;
+    await this.update(SerializeFor.INSERT_DB, conn);
+    return this;
   }
 }

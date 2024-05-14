@@ -10,7 +10,7 @@ export async function upgrade(
       \`ip_address\` VARCHAR(50) NULL,
       \`fingerprint\` VARCHAR(50) NULL,
       \`totalClaimed\` INT NOT NULL DEFAULT 0,
-      \`status\` INT NULL,
+      \`status\` INT NOT NULL,
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` INT NULL,
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

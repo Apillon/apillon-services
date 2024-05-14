@@ -1,9 +1,4 @@
-import {
-  SerializeFor,
-  ClaimTokensDto,
-  PoolConnection,
-  SqlModelStatus,
-} from '@apillon/lib';
+import { SerializeFor, ReviewTasksDto, SqlModelStatus } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { ReferralErrorCode } from '../../config/types';
 import { ReferralCodeException } from '../../lib/exceptions';
@@ -15,32 +10,32 @@ export class AirdropService {
   /**
    * Get completed airdrop tasks and total points for a user
    * @param {user_uuid} - UUID of the user requesting the airdrop tasks
-   * @returns {UserAirdropTask} - UserAirdropTask model from Referral MS
+   * @returns {Promise<UserAirdropTask>} - UserAirdropTask model from Referral MS
    */
   static async getAirdropTasks(
     event: { user_uuid: string },
     context: ServiceContext,
-  ) {
+  ): Promise<UserAirdropTask> {
     const stats = await new UserAirdropTask({}, context).populateByUserUuid(
       event.user_uuid,
     );
-    return stats.serialize(SerializeFor.SERVICE);
+    return stats.serialize(SerializeFor.SERVICE) as UserAirdropTask;
   }
 
   /**
-   * Claim NCTR tokens from airdrop campaign
-   * @param {{ body: ClaimTokensDto }} event
+   * Review NCTR token tasks from airdrop campaign and save data in DB
+   * @param {{ body: ReviewTasksDto }} event
    * @param {ServiceContext} context
    */
-  static async claimTokens(
-    event: { body: ClaimTokensDto },
+  static async reviewTasks(
+    event: { body: ReviewTasksDto },
     context: ServiceContext,
   ) {
-    const claimTokenDto = new ClaimTokensDto(event.body);
-    const conn = await context.mysql.start();
+    const claimTokenDto = new ReviewTasksDto(event.body);
+    // Check if user is elligible to claim
+    await AirdropService.checkClaimConditions(event.body, context);
+
     try {
-      // Check if user is elligible to claim
-      await AirdropService.checkClaimConditions(event, context, conn);
       // Get last populated user completed tasks and points
       const stats = await new UserAirdropTask({}, context).populateByUserUuid(
         context.user.user_uuid,
@@ -49,17 +44,22 @@ export class AirdropService {
         claimTokenDto.wallet,
       );
       const totalClaimed = stats.totalPoints + galxePoints;
-      // TODO: send NCTR to wallet logic
 
-      const newt = new TokenClaim(claimTokenDto, context).populate({
+      if (!totalClaimed) {
+        throw new ReferralCodeException({
+          status: 403,
+          code: ReferralErrorCode.USER_NOT_ELIGIBLE,
+        });
+      }
+
+      const newTokenClaim = new TokenClaim(claimTokenDto, context).populate({
         totalClaimed,
         user_uuid: context.user.user_uuid,
       });
-      await newt.insert(SerializeFor.INSERT_DB, conn);
-      await context.mysql.commit(conn);
+
+      await newTokenClaim.insert(SerializeFor.INSERT_DB);
       return { success: true, totalClaimed };
     } catch (err) {
-      await context.mysql.rollback(conn);
       if (err instanceof ReferralCodeException) {
         throw err;
       } else {
@@ -69,7 +69,7 @@ export class AirdropService {
           context,
           errorMessage: err?.message,
           sourceFunction: 'claimTokens()',
-          sourceModule: 'ReferralService',
+          sourceModule: 'AirdropService',
         }).writeToMonitor({
           user_uuid: context?.user?.user_uuid,
           data: claimTokenDto.serialize(),
@@ -83,14 +83,12 @@ export class AirdropService {
    * Check if user is elligible to claim tokens
    * No fraudulent or duplicate accounts
    * No claiming with account created after snapshot
-   * @param {{ body: ClaimTokensDto }} event
+   * @param {ReviewTasksDto} claimTokensDto - The DTO containing claim data
    * @param {ServiceContext} context
-   * @param {PoolConnection} conn
    */
   static async checkClaimConditions(
-    event: { body: ClaimTokensDto },
+    claimTokensDto: ReviewTasksDto,
     context: ServiceContext,
-    conn: PoolConnection,
   ) {
     const user_uuid = context.user.user_uuid;
 
@@ -98,8 +96,8 @@ export class AirdropService {
     const claimUser = await new TokenClaim({}, context).populateByUUID(
       user_uuid,
       'user_uuid',
-      conn,
     );
+
     if (claimUser.exists()) {
       throw new ReferralCodeException({
         status: claimUser.blocked ? 403 : 400,
@@ -107,30 +105,27 @@ export class AirdropService {
           ? ReferralErrorCode.CLAIM_FORBIDDEN
           : ReferralErrorCode.USER_ALREADY_CLAIMED,
       });
-      // TODO: change timestamp at airdrop cutoff date
-    } else if (new Date(context.user.createTime).getTime() > 1716163200000) {
-      throw new ReferralCodeException({
-        status: 403,
-        code: ReferralErrorCode.USER_NOT_ELIGIBLE,
-      });
     }
 
-    const claimer = await new TokenClaim(
-      event.body,
+    const claimers = await new TokenClaim(
+      claimTokensDto,
       context,
-    ).populateByIpAndFingerprint(conn);
+    ).findAllByIpAndFingerprint();
 
-    if (!claimer.exists()) {
+    if (!claimers.length) {
       return;
     }
-    // Insert new claimer and set to blocked, because IP and fingerprint matches with another user
-    await claimer
-      .populate({
-        user_uuid, // user_uuid is table PK
-        wallet: event.body.wallet,
-        status: SqlModelStatus.BLOCKED,
-      })
-      .insert(SerializeFor.INSERT_DB);
+
+    // Insert new claimer and set all to blocked, because IP and fingerprint matches with another user
+    await Promise.allSettled([
+      new TokenClaim(claimTokensDto, context)
+        .populate({
+          user_uuid, // user_uuid is table PK
+          status: SqlModelStatus.BLOCKED,
+        })
+        .insert(SerializeFor.INSERT_DB),
+      ...claimers.map((c) => c.markBlocked()),
+    ]);
 
     throw new ReferralCodeException({
       status: 403,
@@ -145,7 +140,7 @@ export class AirdropService {
    * @returns {Promise<number>}
    */
   static async getGalxePoints(wallet: string): Promise<number> {
-    // TODO: Store file to S3
+    // TODO: Store file to S3 or IPFS
     const wallets = fs
       .readFileSync(`${__dirname}/data/galxe-tokens.csv`, 'utf8')
       .split('\n')
