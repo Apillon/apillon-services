@@ -1,79 +1,79 @@
 {
   "folders": [
     {
-      "name": "🌐@services/access [@apillon/access]",
+      "name": "🌐@services_access [@apillon_access]",
       "path": "services/access"
     },
     {
-      "name": "🌐@services/monitoring [@apillon/monitoring]",
+      "name": "🌐@services_monitoring [@apillon_monitoring]",
       "path": "services/monitoring"
     },
     {
-      "name": "🌐@services/storage [@apillon/storage]",
+      "name": "🌐@services_storage [@apillon_storage]",
       "path": "services/storage"
     },
     {
-      "name": "🌐@services/mailing [@apillon/mailing]",
+      "name": "🌐@services_mailing [@apillon_mailing]",
       "path": "services/mailing"
     },
     {
-      "name": "🌐@services/config [@apillon/config]",
+      "name": "🌐@services_config [@apillon_config]",
       "path": "services/config"
     },
     {
-      "name": "🌐@services/blockchain [@apillon/blockchain]",
+      "name": "🌐@services_blockchain [@apillon_blockchain]",
       "path": "services/blockchain"
     },
     {
-      "name": "🌐@services/nfts [@apillon/nfts]",
+      "name": "🌐@services_nfts [@apillon_nfts]",
       "path": "services/nfts"
     },
     {
-      "name": "🌐@services/referral [@apillon/referral]",
+      "name": "🌐@services_referral [@apillon_referral]",
       "path": "services/referral"
     },
     {
-      "name": "🌐@services/authentication [@apillon/authentication]",
+      "name": "🌐@services_authentication [@apillon_authentication]",
       "path": "services/authentication"
     },
     {
-      "name": "🌐@services/computing [@apillon/computing]",
+      "name": "🌐@services_computing [@apillon_computing]",
       "path": "services/computing"
     },
     {
-      "name": "🌐@services/social [@apillon/social]",
+      "name": "🌐@services_social [@apillon_social]",
       "path": "services/social"
     },
     {
-      "name": "😎@modules/dev-console-api",
+      "name": "😎@modules_dev-console-api",
       "path": "modules/dev-console-api"
     },
     {
-      "name": "😎@modules/apillon-api",
+      "name": "😎@modules_apillon-api",
       "path": "modules/apillon-api"
     },
     {
-      "name": "😎@modules/authentication-api",
+      "name": "😎@modules_authentication-api",
       "path": "modules/authentication-api"
     },
     {
-      "name": "📦@packages/lib",
+      "name": "📦@packages_lib",
       "path": "packages/lib"
     },
     {
-      "name": "📦@packages/modules-lib",
+      "name": "📦@packages_modules-lib",
       "path": "packages/modules-lib"
     },
     {
-      "name": "📦@packages/service-lib",
+      "name": "📦@packages_service-lib",
       "path": "packages/service-lib"
     },
     {
-      "name": "📦@packages/workers-lib",
+      "name": "📦@packages_workers-lib",
       "path": "packages/workers-lib"
     },
     {
-      "name": "📦@packages/tests-lib",
+      "name": "📦@packages_tests-lib",
       "path": "packages/tests-lib"
     },
     {

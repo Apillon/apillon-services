@@ -287,6 +287,10 @@ describe('Phala transaction Log Worker unit test', () => {
     );
   });
 
+  beforeEach(() => {
+    mockAxios.reset();
+  });
+
   afterAll(async () => {
     await releaseStage(stage);
   });

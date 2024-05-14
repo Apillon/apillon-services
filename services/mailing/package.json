@@ -25,11 +25,7 @@
     "nodemailer": "^6.9.13"
   },
   "devDependencies": {
-    "copy-webpack-plugin": "^12.0.2",
     "eslint-config-common": "*",
-    "ts-loader": "^9.5.1",
-    "tsconfig": "*",
-    "webpack": "^5.91.0",
-    "webpack-node-externals": "^3.0.0"
+    "tsconfig": "*"
   }
 }
