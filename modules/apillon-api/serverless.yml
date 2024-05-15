@@ -13,6 +13,7 @@ custom:
         - '@nestjs/core'
         - '@nestjs/common'
         - '@nestjs/platform-express'
+        - '@apillon/modules-lib'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|/test/**/*'
   serverless-offline:
     httpPort: 6001
