@@ -124,8 +124,15 @@ export class TokenClaim extends AdvancedSQLModel {
    * Marks token claim user as blocked
    */
   public async markBlocked(conn?: PoolConnection): Promise<this> {
-    this.status = SqlModelStatus.BLOCKED;
-    await this.update(SerializeFor.INSERT_DB, conn);
+    await this.getContext().mysql.paramExecute(
+      `
+      UPDATE ${DbTables.TOKEN_CLAIM}
+      SET status = ${SqlModelStatus.BLOCKED}
+      WHERE user_uuid = @user_uuid
+      `,
+      { user_uuid: this.user_uuid },
+      conn,
+    );
     return this;
   }
 }

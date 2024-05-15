@@ -35,31 +35,41 @@ export class AirdropService {
     // Check if user is elligible to claim
     await AirdropService.checkClaimConditions(event.body, context);
 
+    // Get last populated user completed tasks and points
+    const userAirdropStats = await new UserAirdropTask(
+      {},
+      context,
+    ).populateByUserUuid(context.user.user_uuid);
+
+    if (!userAirdropStats.exists()) {
+      throw new ReferralCodeException({
+        status: 403,
+        code: ReferralErrorCode.USER_NOT_ELIGIBLE,
+      });
+    }
+
+    const conn = await context.mysql.start();
     try {
-      // Get last populated user completed tasks and points
-      const stats = await new UserAirdropTask({}, context).populateByUserUuid(
-        context.user.user_uuid,
-      );
-      const galxePoints = await AirdropService.getGalxePoints(
+      const galxeTasksCompleted = await AirdropService.getGalxeTasksCompleted(
         claimTokenDto.wallet,
       );
-      const totalClaimed = stats.totalPoints + galxePoints;
 
-      if (!totalClaimed) {
-        throw new ReferralCodeException({
-          status: 403,
-          code: ReferralErrorCode.USER_NOT_ELIGIBLE,
-        });
-      }
+      // Update points after adding galxe points for user
+      await userAirdropStats.addGalxePoints(galxeTasksCompleted, conn);
 
-      const newTokenClaim = new TokenClaim(claimTokenDto, context).populate({
-        totalClaimed,
-        user_uuid: context.user.user_uuid,
-      });
+      // Create new token claim entry
+      await new TokenClaim(claimTokenDto, context)
+        .populate({
+          totalClaimed: userAirdropStats.totalPoints,
+          user_uuid: context.user.user_uuid,
+        })
+        .insert(SerializeFor.INSERT_DB, conn);
 
-      await newTokenClaim.insert(SerializeFor.INSERT_DB);
-      return { success: true, totalClaimed };
+      await context.mysql.commit(conn);
+
+      return userAirdropStats;
     } catch (err) {
+      await context.mysql.rollback(conn);
       if (err instanceof ReferralCodeException) {
         throw err;
       } else {
@@ -134,28 +144,22 @@ export class AirdropService {
   }
 
   /**
-   * Get additional NCTR if user completed tasks on Galxe
+   * Get number of tasks completed on Galxe for wallet
    * @param {string} wallet
    * @param {ServiceContext} context
    * @returns {Promise<number>}
    */
-  static async getGalxePoints(wallet: string): Promise<number> {
-    // TODO: Store file to S3 or IPFS
+  static async getGalxeTasksCompleted(wallet: string): Promise<number> {
     const wallets = fs
       .readFileSync(`${__dirname}/data/galxe-tokens.csv`, 'utf8')
-      .split('\n')
-      .map((row) => row.split(',')[1]);
+      .split('\n');
 
-    // TODO: Modify based on requirements
-    const NCTR_PER_TOKEN = 5;
-    // Multiply number of occurences for wallet by NCTR_PER_TOKEN
-    return (
-      wallets.reduce(
-        (count, rowWallet) =>
-          count +
-          (rowWallet.toLowerCase().includes(wallet.toLowerCase()) ? 1 : 0),
-        0,
-      ) * NCTR_PER_TOKEN
+    // Get number of occurences for wallet in CSV file
+    return wallets.reduce(
+      (count, rowWallet) =>
+        count +
+        (rowWallet.toLowerCase().includes(wallet.toLowerCase()) ? 1 : 0),
+      0,
     );
   }
 }

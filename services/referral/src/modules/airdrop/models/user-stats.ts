@@ -46,4 +46,5 @@ export const taskPoints = {
   identitySdkUsed: 2,
   fileUploadedViaApi: 5,
   nftMintedApi: 5,
+  galxeTasksCompleted: 10,
 };

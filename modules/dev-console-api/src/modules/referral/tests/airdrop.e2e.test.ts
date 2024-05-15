@@ -8,6 +8,7 @@ import {
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
+import { UserAirdropTask } from '@apillon/referral/src/modules/airdrop/models/user-airdrop-task.model';
 import { ethers } from 'ethers';
 
 describe('Airdrop tests', () => {
@@ -30,6 +31,15 @@ describe('Airdrop tests', () => {
     testUser3 = await createTestUser(
       stage.context.devConsole,
       stage.context.access,
+    );
+
+    await Promise.all(
+      [testUser, testUser2, testUser3].map(({ user }) =>
+        new UserAirdropTask(
+          { user_uuid: user.user_uuid, totalPoints: 10 },
+          stage.context.referral,
+        ).insert(),
+      ),
     );
 
     blockchain = TestBlockchain.fromStage(stage, EvmChain.ASTAR);
@@ -76,7 +86,6 @@ describe('Airdrop tests', () => {
 
     test('User should receive 401 if not authenticated', async () => {
       const response = await request(stage.http).get(`/referral/airdrop-tasks`);
-
       expect(response.status).toBe(401);
     });
 
@@ -88,23 +97,26 @@ describe('Airdrop tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
 
       expect(response.status).toBe(201);
-      expect(response.body.data.success).toBeTruthy();
-      expect(response.body.totalClaimed).toBeGreaterThanOrEqual(10);
+      expect(response.body.data.totalPoints).toBeGreaterThanOrEqual(10);
 
       const { 0: tokenClaim } = await stage.db.referral.paramExecute(
         `SELECT * FROM token_claim`,
       );
       expect(tokenClaim.user_uuid).toEqual(testUser.user.user_uuid);
       expect(tokenClaim.fingerprint).toEqual(body.fingerprint);
-      expect(tokenClaim.wallet).toEqual(body.wallet);
-      expect(tokenClaim.totalClaimed).toEqual(response.body.totalClaimed);
+      expect(tokenClaim.wallet.toLowerCase()).toEqual(
+        body.wallet.toLowerCase(),
+      );
+      expect(tokenClaim.totalClaimed).toEqual(response.body.data.totalPoints);
     });
 
     test('User should receive 403 if trying to claim from same IP and fingerprint', async () => {
+      const body = await claimBody(1);
+
       // Claim for the first time
       let response = await request(stage.http)
         .post('/referral/review-tasks')
-        .send(await claimBody(0))
+        .send(body)
         .set('Authorization', `Bearer ${testUser2.token}`);
 
       expect(response.status).toBe(201);
@@ -112,7 +124,7 @@ describe('Airdrop tests', () => {
       // Another usser attempts to claim with the same IP and fingerprint
       response = await request(stage.http)
         .post('/referral/review-tasks')
-        .send(await claimBody(0))
+        .send(body)
         .set('Authorization', `Bearer ${testUser3.token}`);
 
       expect(response.status).toBe(403);
@@ -122,8 +134,9 @@ describe('Airdrop tests', () => {
         `SELECT * FROM token_claim`,
       );
       // Verify that both users with same IP and fingerprint got blocked
-      expect(tokenClaims[1].status).toEqual(SqlModelStatus.BLOCKED);
-      expect(tokenClaims[2].status).toEqual(SqlModelStatus.BLOCKED);
+      expect(
+        tokenClaims.filter((t) => t.status === SqlModelStatus.BLOCKED),
+      ).toHaveLength(2);
     });
 
     test('User should receive 400 if trying to claim more than once', async () => {
