@@ -33,23 +33,24 @@ export class EVMContractClient {
   ): string {
     const contractFactory = new ContractFactory(contractAbi, byteCode);
 
-    return contractFactory.getDeployTransaction.apply(
-      contractFactory,
-      constructorArguments,
-    ).data;
+    return contractFactory
+      .getDeployTransaction(...constructorArguments)
+      .data.toString();
   }
 
-  async query(methodName: string, methodArguments: any[] = []): Promise<any> {
-    return await this.contract[methodName].apply(null, methodArguments);
+  async query<T = any>(
+    methodName: string,
+    methodArguments: any[] = [],
+  ): Promise<T> {
+    return await this.contract[methodName](...methodArguments);
   }
 
   async createTransaction(
     methodName: string,
     methodArguments: any[] = [],
   ): Promise<string> {
-    const tx = await this.contract.populateTransaction[methodName].apply(
-      null,
-      methodArguments,
+    const tx = await this.contract.populateTransaction[methodName](
+      ...methodArguments,
     );
     return tx.data;
   }
@@ -58,7 +59,7 @@ export class EVMContractClient {
     data: string,
     to: string = null,
     type: number = 2,
-  ) {
+  ): string {
     return utils.serializeTransaction({
       to,
       data,

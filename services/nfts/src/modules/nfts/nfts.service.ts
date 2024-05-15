@@ -44,7 +44,7 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { constants } from 'ethers';
+import { BigNumber, constants } from 'ethers';
 import { v4 as uuidV4 } from 'uuid';
 import {
   CollectionStatus,
@@ -713,7 +713,7 @@ export class NftsService {
               collection.collectionStatus != CollectionStatus.TRANSFERED) ||
             !collection.contractAddress
               ? 0
-              : await evmContractClient.query('totalSupply');
+              : await evmContractClient.query<number>('totalSupply');
           await NftsService.checkMintConditions(
             body,
             context,
@@ -751,7 +751,7 @@ export class NftsService {
           );
           try {
             const minted =
-              await substrateContractClient.query('psp34::totalSupply');
+              await substrateContractClient.query<number>('psp34::totalSupply');
             await NftsService.checkMintConditions(
               body,
               context,
@@ -867,7 +867,7 @@ export class NftsService {
       childAbi,
       childCollection.contractAddress,
     );
-    const isChildNestable = await childEvmContractClient.query(
+    const isChildNestable = await childEvmContractClient.query<boolean>(
       'supportsInterface',
       ['0x42b0e56f'],
     );
@@ -887,7 +887,8 @@ export class NftsService {
     ) {
       minted = 0;
     } else {
-      const totalSupply = await childEvmContractClient.query('totalSupply');
+      const totalSupply =
+        await childEvmContractClient.query<BigNumber>('totalSupply');
       minted = parseInt(totalSupply._hex, 16);
     }
     await NftsService.checkNestMintConditions(
