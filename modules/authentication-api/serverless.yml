@@ -10,9 +10,9 @@ custom:
     packager: "npm"
     includeModules:
       forceInclude:
-        - @nestjs/core
-        - @nestjs/common
-        - @nestjs/platform-express
+        - '@nestjs/core'
+        - '@nestjs/common'
+        - '@nestjs/platform-express'
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'

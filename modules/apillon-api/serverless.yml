@@ -10,9 +10,9 @@ custom:
     packager: "npm"
     includeModules:
       forceInclude:
-        - @nestjs/core
-        - @nestjs/common
-        - @nestjs/platform-express
+        - '@nestjs/core'
+        - '@nestjs/common'
+        - '@nestjs/platform-express'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|/test/**/*'
   serverless-offline:
     httpPort: 6001
