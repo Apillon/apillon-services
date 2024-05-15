@@ -8,7 +8,11 @@ custom:
   webpack:
     webpackConfig: ./webpack.config.js
     packager: "npm"
-    includeModules: true
+    includeModules:
+      forceInclude:
+        - @nestjs/core
+        - @nestjs/common
+        - @nestjs/platform-express
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|**/test/**/|**/*\.spec\.ts|**/*\.spec\.js'

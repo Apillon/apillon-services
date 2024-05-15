@@ -8,7 +8,11 @@ custom:
   webpack:
     webpackConfig: ./webpack.config.js
     packager: "npm"
-    includeModules: true
+    includeModules:
+      forceInclude:
+        - @nestjs/core
+        - @nestjs/common
+        - @nestjs/platform-express
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|/test/**/*'
   serverless-offline:
     httpPort: 6001
