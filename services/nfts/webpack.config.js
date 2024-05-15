@@ -20,6 +20,10 @@ module.exports = {
       aws4: false,
       'mongodb-client-encryption': false,
       cardinal: false,
+      '@aws-sdk/credential-providers': false,
+      'gcp-metadata': false,
+      socks: false,
+      '@faker-js/faker': false,
     },
   },
   output: {

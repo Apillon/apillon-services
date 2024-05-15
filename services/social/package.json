@@ -36,7 +36,6 @@
   },
   "devDependencies": {
     "@apillon/tests-lib": "*",
-    "@types/uuid": "^9.0.8",
     "eslint-config-common": "*",
     "tsconfig": "*"
   },

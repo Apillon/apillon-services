@@ -4,6 +4,7 @@ import { SubmittableExtrinsic } from '@polkadot/api/types';
 import { ApiPromise, Keyring, WsProvider } from '@polkadot/api';
 import { BN } from '@polkadot/util';
 import { KeyringPair } from '@polkadot/keyring/types';
+import { WeightV2 } from '@polkadot/types/interfaces';
 
 export class SubstrateContractClient {
   private static instance: SubstrateContractClient;
@@ -29,6 +30,12 @@ export class SubstrateContractClient {
     contractAbi: { [key: string]: any },
     contractAddress?: string,
   ) {
+    if (!rpcEndpoint) {
+      throw new Error(
+        'RPC endpoint is not defined for substrate contract client',
+      );
+    }
+
     if (!SubstrateContractClient.instance) {
       const api = await ApiPromise.create({
         provider: new WsProvider(rpcEndpoint),
@@ -71,7 +78,7 @@ export class SubstrateContractClient {
   ): Promise<SubmittableExtrinsic<'promise'>> {
     this.checkBlueprint();
     try {
-      const gasLimit = this.api.registry.createType('WeightV2', {
+      const gasLimit = this.api.registry.createType<WeightV2>('WeightV2', {
         refTime: 70_000_000_000,
         proofSize: 1_000_000,
       });
@@ -81,16 +88,16 @@ export class SubstrateContractClient {
           `${1000000000 + Math.round(Math.random() * 8999999999)}}`,
         ),
       };
-      return this.blueprint.tx.new.apply(null, [
-        options,
-        ...constructorArguments,
-      ]);
+      return this.blueprint.tx.new(...[options, ...constructorArguments]);
     } finally {
       await this.destroy();
     }
   }
 
-  async query(methodName: string, methodArguments: any[] = []): Promise<any> {
+  async query<T = any>(
+    methodName: string,
+    methodArguments: any[] = [],
+  ): Promise<T> {
     this.checkContract();
     const { output } = await this.queryInternal(methodName, methodArguments);
 
@@ -109,15 +116,12 @@ export class SubstrateContractClient {
       callerAddress,
     );
     const multiplier = new BN(1.1);
-    const gasLimit = this.api.registry.createType('WeightV2', {
+    const gasLimit = this.api.registry.createType<WeightV2>('WeightV2', {
       refTime: gasRequired.refTime.toBn().mul(multiplier),
       proofSize: gasRequired.proofSize.toBn().mul(multiplier),
     });
 
-    return this.contract.tx[methodName].apply(null, [
-      { gasLimit },
-      ...methodArguments,
-    ]);
+    return this.contract.tx[methodName](...[{ gasLimit }, ...methodArguments]);
   }
 
   private async queryInternal(
@@ -126,11 +130,13 @@ export class SubstrateContractClient {
     callerAddress: string = null,
   ): Promise<any> {
     const gasLimit = this.getDefaultGasLimit();
-    const response = await this.contract.query[methodName].apply(null, [
-      callerAddress ?? this.dummyAccount.address,
-      { gasLimit, storageDepositLimit: null },
-      ...methodArguments,
-    ]);
+    const response = await this.contract.query[methodName](
+      ...[
+        callerAddress ?? this.dummyAccount.address,
+        { gasLimit, storageDepositLimit: null },
+        ...methodArguments,
+      ],
+    );
 
     if (response.result.isErr) {
       let display: string;
@@ -177,7 +183,7 @@ export class SubstrateContractClient {
   }
 
   private getDefaultGasLimit() {
-    return this.api.registry.createType('WeightV2', {
+    return this.api.registry.createType<WeightV2>('WeightV2', {
       refTime: '500000000000', //maxRefTime
       proofSize: '5242880', //maxProofSize
     });

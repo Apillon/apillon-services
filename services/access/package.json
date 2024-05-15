@@ -37,12 +37,7 @@
     "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.2",
-    "@types/uuid": "^9.0.8",
     "eslint-config-common": "*",
-    "ts-loader": "^9.5.1",
-    "tsconfig": "*",
-    "webpack": "^5.91.0",
-    "webpack-node-externals": "^3.0.0"
+    "tsconfig": "*"
   }
 }

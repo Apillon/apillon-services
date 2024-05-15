@@ -22,6 +22,7 @@ module.exports = {
       '@aws-sdk/credential-providers': false,
       'gcp-metadata': false,
       socks: false,
+      '@faker-js/faker': false,
     },
   },
   output: {
