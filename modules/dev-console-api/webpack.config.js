@@ -1,5 +1,26 @@
 const path = require('path');
 const slsw = require('serverless-webpack');
+const webpack = require('webpack');
+
+const WebPackIgnorePlugin = {
+  checkResource: function (resource) {
+    const lazyImports = [
+      '@nestjs/core',
+      '@nestjs/common',
+      '@nestjs/platform-express',
+    ];
+
+    if (!lazyImports.includes(resource)) return false;
+
+    try {
+      require.resolve(resource);
+    } catch (err) {
+      return true;
+    }
+
+    return false;
+  },
+};
 
 module.exports = {
   context: __dirname,
@@ -64,4 +85,5 @@ module.exports = {
   optimization: {
     usedExports: true,
   },
+  plugins: [new webpack.IgnorePlugin(WebPackIgnorePlugin)],
 };

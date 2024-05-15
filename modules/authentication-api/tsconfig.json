@@ -1,7 +1,9 @@
 {
   "extends": "tsconfig/api.json",
   "compilerOptions": {
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "module": "esnext",
+    "moduleResolution": "node"
   },
   "include": [
     "src/**/*.ts",
@@ -12,5 +14,5 @@
   "exclude": [
     "node_modules",
     "dist"
-  ],
+  ]
 }
