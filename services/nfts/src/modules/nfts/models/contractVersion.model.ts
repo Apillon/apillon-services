@@ -105,7 +105,7 @@ export class ContractVersion extends AdvancedSQLModel {
     version_id: number = null,
   ): Promise<ContractVersion> {
     try {
-      const contractVersion = await runCachedFunction(
+      const data = await runCachedFunction(
         `${CacheKeyPrefix.CONTRACT_VERSION}:${[
           collectionType,
           version_id,
@@ -114,15 +114,13 @@ export class ContractVersion extends AdvancedSQLModel {
         async () => {
           const data = await this.getContext().mysql.paramExecute(
             `
-            SELECT ${this.generateSelectFields()}
-            FROM \`${DbTables.CONTRACT_VERSION}\`
-            WHERE collectionType = @collectionType
-            AND chainType = @chainType
-            ${version_id ? 'AND id = @version_id' : ''}
-            AND status = ${SqlModelStatus.ACTIVE}
-            ${version_id ? '' : 'ORDER BY version DESC LIMIT 1'}
-            ;
-        `,
+              SELECT ${this.generateSelectFields()}
+              FROM \`${DbTables.CONTRACT_VERSION}\`
+              WHERE collectionType = @collectionType
+                AND chainType = @chainType ${version_id ? 'AND id = @version_id' : ''}
+            AND status = ${SqlModelStatus.ACTIVE} ${version_id ? '' : 'ORDER BY version DESC LIMIT 1'}
+              ;
+            `,
             { collectionType, chainType, version_id },
           );
           return data?.length
@@ -131,10 +129,10 @@ export class ContractVersion extends AdvancedSQLModel {
         },
         CacheKeyTTL.EXTRA_LONG,
       );
+      const contractVersion = new ContractVersion(data, this.getContext());
       if (!contractVersion.exists()) {
         throw new Error(`Contract version not found`);
       }
-
       return contractVersion;
     } catch (err) {
       throw await new NftsCodeException({
