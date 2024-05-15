@@ -1,6 +1,5 @@
 const path = require('path');
 const slsw = require('serverless-webpack');
-const webpack = require('webpack');
 
 const WebPackIgnorePlugin = {
   checkResource: function (resource) {
@@ -85,5 +84,5 @@ module.exports = {
   optimization: {
     usedExports: true,
   },
-  plugins: [new webpack.IgnorePlugin(WebPackIgnorePlugin)],
+  plugins: [new slsw.lib.webpack.IgnorePlugin(WebPackIgnorePlugin)],
 };

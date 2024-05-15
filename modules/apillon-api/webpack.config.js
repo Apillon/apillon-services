@@ -84,5 +84,5 @@ module.exports = {
   optimization: {
     usedExports: true,
   },
-  plugins: [new webpack.IgnorePlugin(WebPackIgnorePlugin)],
+  plugins: [new slsw.lib.webpack.IgnorePlugin(WebPackIgnorePlugin)],
 };
