@@ -7,12 +7,9 @@ frameworkVersion: '3'
 custom:
   webpack:
     webpackConfig: ./webpack.config.js
-    packager: "npm"
     includeModules:
-      forceInclude:
-        - '@nestjs/core'
-        - '@nestjs/common'
-        - '@nestjs/platform-express'
+      forceExclude:
+        - aws-sdk
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|/test/**/*'
   serverless-offline:
     httpPort: 6001
@@ -42,7 +39,6 @@ provider:
     ${file(../../bin/deploy/env/env.yml)}
 
 package:
-  individually: true
   patterns:
     - '!dist/**'
   excludeDevDependencies: true
