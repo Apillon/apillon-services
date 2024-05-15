@@ -5,26 +5,51 @@ import {
   CreateEvmTransactionDto,
   CreateSubstrateTransactionDto,
   EvmChain,
+  NFTCollectionType,
   PoolConnection,
   SerializeFor,
   SUBSTRATE_NFTS_MAX_SUPPLY,
   SubstrateChain,
+  TransactionDto,
   TransactionStatus,
 } from '@apillon/lib';
 import {
   CollectionStatus,
   DbTables,
+  NftsErrorCode,
   TransactionType,
 } from '../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { Collection } from '../../modules/nfts/models/collection.model';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { TransactionService } from '../../modules/transaction/transaction.service';
-import { WalletService } from '../../modules/wallet/wallet.service';
-import { ethers } from 'ethers';
+import { constants } from 'ethers';
 import { ContractVersion } from '../../modules/nfts/models/contractVersion.model';
 import { BN_MAX_INTEGER } from '@polkadot/util/bn/consts';
 import { SubstrateContractClient } from '../../modules/clients/substrate-contract.client';
+import { EVMContractClient } from '../../modules/clients/evm-contract.client';
+import { TransactionUtils } from './transaction-utils';
+import { NftsCodeException } from '../exceptions';
+
+export async function getEvmContractClient(
+  context: Context,
+  chain: EvmChain,
+  contractAbi: string,
+  contractAddress?: string,
+) {
+  const rpcEndpoint = (
+    await new BlockchainMicroservice(context).getChainEndpoint(
+      chain,
+      ChainType.EVM,
+    )
+  ).data?.url;
+
+  return await EVMContractClient.getInstance(
+    rpcEndpoint,
+    contractAbi,
+    contractAddress,
+  );
+}
 
 export async function getSubstrateContractClient(
   context: Context,
@@ -37,8 +62,8 @@ export async function getSubstrateContractClient(
       chain,
       ChainType.SUBSTRATE,
     )
-  ).data.url;
-  // return new SubstrateContractClient(rpcEndpoint);
+  ).data?.url;
+
   return await SubstrateContractClient.getInstance(
     rpcEndpoint,
     contractAbi,
@@ -56,23 +81,69 @@ export async function deployNFTCollectionContract(
     context,
   ).getContractVersion(collection.collectionType, collection.chainType);
   // TODO: we should use NftsService.sendTransaction() here since code is the same but weoker call makes it difficult
-  let response;
+  let response: { data: TransactionDto };
   switch (collection.chainType) {
     case ChainType.EVM: {
-      const evmWalletService = new WalletService(
-        context,
-        collection.chain as EvmChain,
-      );
-      const tx = await evmWalletService.createDeployTransaction(
-        collection,
+      const royaltiesFees = Math.round(collection.royaltiesFees * 100);
+      const maxSupply =
+        collection.maxSupply === 0
+          ? constants.MaxUint256
+          : collection.maxSupply;
+      const royaltiesAddress =
+        collection.royaltiesAddress ??
+        '0x0000000000000000000000000000000000000000';
+
+      let contractArguments: any[] = [
+        collection.name,
+        collection.symbol,
+        collection.baseUri,
+        collection.baseExtension,
+        [
+          collection.drop,
+          collection.isSoulbound,
+          collection.isRevokable,
+          collection.isAutoIncrement,
+        ],
+      ];
+      switch (collection.collectionType) {
+        case NFTCollectionType.GENERIC: {
+          contractArguments.push(
+            TransactionUtils.convertBaseToGwei(collection.dropPrice),
+            collection.dropStart,
+            maxSupply,
+            collection.dropReserve,
+            royaltiesAddress,
+            royaltiesFees,
+          );
+          break;
+        }
+        case NFTCollectionType.NESTABLE: {
+          contractArguments.push(collection.dropStart, collection.dropReserve, {
+            royaltyRecipient: royaltiesAddress,
+            royaltyPercentageBps: royaltiesFees,
+            maxSupply,
+            pricePerMint: TransactionUtils.convertBaseToGwei(
+              collection.dropPrice,
+            ),
+          });
+          break;
+        }
+        default:
+          throw new NftsCodeException({
+            status: 500,
+            code: NftsErrorCode.GENERAL_SERVER_ERROR,
+          });
+      }
+      const txData = EVMContractClient.createDeployTransaction(
         abi,
         bytecode,
+        contractArguments,
       );
       response = await new BlockchainMicroservice(context).createEvmTransaction(
         new CreateEvmTransactionDto(
           {
             chain: collection.chain,
-            transaction: ethers.utils.serializeTransaction(tx),
+            transaction: EVMContractClient.serializeTransaction(txData),
             referenceTable: DbTables.COLLECTION,
             referenceId: collection.id,
             project_uuid: collection.project_uuid,

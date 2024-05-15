@@ -1,4 +1,4 @@
-import { NftsCodeException } from './../../../lib/exceptions';
+import { NftsCodeException } from '../../../lib/exceptions';
 import {
   AdvancedSQLModel,
   ChainType,
@@ -105,7 +105,7 @@ export class ContractVersion extends AdvancedSQLModel {
     version_id: number = null,
   ): Promise<ContractVersion> {
     try {
-      const data = await runCachedFunction(
+      const contractVersion = await runCachedFunction(
         `${CacheKeyPrefix.CONTRACT_VERSION}:${[
           collectionType,
           version_id,
@@ -131,10 +131,10 @@ export class ContractVersion extends AdvancedSQLModel {
         },
         CacheKeyTTL.EXTRA_LONG,
       );
-      const contractVersion = new ContractVersion(data, this.getContext());
       if (!contractVersion.exists()) {
         throw new Error(`Contract version not found`);
       }
+
       return contractVersion;
     } catch (err) {
       throw await new NftsCodeException({
