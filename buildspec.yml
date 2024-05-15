@@ -4,9 +4,9 @@ phases:
     runtime-versions:
       nodejs: 20
     commands:
-      - npm install -g yarn@latest
+      - npm cache verify
       - >
-        yarn global add
+        npm install --location=global
         typescript
         serverless serverless-webpack
         copy-webpack-plugin
