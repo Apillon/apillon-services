@@ -23,7 +23,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { Collection } from '../../modules/nfts/models/collection.model';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { TransactionService } from '../../modules/transaction/transaction.service';
-import { constants, ethers } from 'ethers';
+import { constants } from 'ethers';
 import { ContractVersion } from '../../modules/nfts/models/contractVersion.model';
 import { BN_MAX_INTEGER } from '@polkadot/util/bn/consts';
 import { SubstrateContractClient } from '../../modules/clients/substrate-contract.client';
@@ -42,7 +42,7 @@ export async function getEvmContractClient(
       chain,
       ChainType.EVM,
     )
-  ).data.url;
+  ).data?.url;
 
   return await EVMContractClient.getInstance(
     rpcEndpoint,
@@ -62,7 +62,7 @@ export async function getSubstrateContractClient(
       chain,
       ChainType.SUBSTRATE,
     )
-  ).data.url;
+  ).data?.url;
 
   return await SubstrateContractClient.getInstance(
     rpcEndpoint,
@@ -108,32 +108,24 @@ export async function deployNFTCollectionContract(
       switch (collection.collectionType) {
         case NFTCollectionType.GENERIC: {
           contractArguments.push(
-            ...[
-              TransactionUtils.convertBaseToGwei(collection.dropPrice),
-              collection.dropStart,
-              maxSupply,
-              collection.dropReserve,
-              royaltiesAddress,
-              royaltiesFees,
-            ],
+            TransactionUtils.convertBaseToGwei(collection.dropPrice),
+            collection.dropStart,
+            maxSupply,
+            collection.dropReserve,
+            royaltiesAddress,
+            royaltiesFees,
           );
           break;
         }
         case NFTCollectionType.NESTABLE: {
-          contractArguments.push(
-            ...[
-              collection.dropStart,
-              collection.dropReserve,
-              {
-                royaltyRecipient: royaltiesAddress,
-                royaltyPercentageBps: royaltiesFees,
-                maxSupply,
-                pricePerMint: TransactionUtils.convertBaseToGwei(
-                  collection.dropPrice,
-                ),
-              },
-            ],
-          );
+          contractArguments.push(collection.dropStart, collection.dropReserve, {
+            royaltyRecipient: royaltiesAddress,
+            royaltyPercentageBps: royaltiesFees,
+            maxSupply,
+            pricePerMint: TransactionUtils.convertBaseToGwei(
+              collection.dropPrice,
+            ),
+          });
           break;
         }
         default:
@@ -151,11 +143,7 @@ export async function deployNFTCollectionContract(
         new CreateEvmTransactionDto(
           {
             chain: collection.chain,
-            transaction: ethers.utils.serializeTransaction({
-              to: null,
-              data: txData,
-              type: 2,
-            }),
+            transaction: EVMContractClient.serializeTransaction(txData),
             referenceTable: DbTables.COLLECTION,
             referenceId: collection.id,
             project_uuid: collection.project_uuid,

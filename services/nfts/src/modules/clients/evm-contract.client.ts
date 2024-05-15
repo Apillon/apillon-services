@@ -1,5 +1,4 @@
-import { Contract, ContractFactory, providers } from 'ethers';
-import { PopulatedTransaction } from '@ethersproject/contracts';
+import { Contract, ContractFactory, providers, utils } from 'ethers';
 
 export class EVMContractClient {
   private static instance: EVMContractClient;
@@ -14,6 +13,10 @@ export class EVMContractClient {
     contractAbi: string,
     contractAddress: string,
   ) {
+    if (!rpcEndpoint) {
+      throw new Error('RPC endpoint is not defined for EVM contract client');
+    }
+
     if (!EVMContractClient.instance) {
       console.log(`RPC initialization ${rpcEndpoint}`);
       const provider = new providers.JsonRpcProvider(rpcEndpoint);
@@ -43,10 +46,23 @@ export class EVMContractClient {
   async createTransaction(
     methodName: string,
     methodArguments: any[] = [],
-  ): Promise<PopulatedTransaction> {
-    return await this.contract.populateTransaction[methodName].apply(
+  ): Promise<string> {
+    const tx = await this.contract.populateTransaction[methodName].apply(
       null,
       methodArguments,
     );
+    return tx.data;
+  }
+
+  static serializeTransaction(
+    data: string,
+    to: string = null,
+    type: number = 2,
+  ) {
+    return utils.serializeTransaction({
+      to,
+      data,
+      type,
+    });
   }
 }

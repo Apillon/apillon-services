@@ -29,6 +29,12 @@ export class SubstrateContractClient {
     contractAbi: { [key: string]: any },
     contractAddress?: string,
   ) {
+    if (!rpcEndpoint) {
+      throw new Error(
+        'RPC endpoint is not defined for substrate contract client',
+      );
+    }
+
     if (!SubstrateContractClient.instance) {
       const api = await ApiPromise.create({
         provider: new WsProvider(rpcEndpoint),
