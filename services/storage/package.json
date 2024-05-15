@@ -43,8 +43,7 @@
   "devDependencies": {
     "@apillon/tests-lib": "*",
     "eslint-config-common": "*",
-    "tsconfig": "*",
-    "@types/uuid": "^9.0.8"
+    "tsconfig": "*"
   },
   "jest": {
     "testTimeout": 6400000,

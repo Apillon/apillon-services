@@ -25,17 +25,11 @@ module.exports = {
       'mongodb-client-encryption': false,
       cardinal: false,
       'electron-fetch': false,
-      'electron': false,
+      electron: false,
       '@aws-sdk/credential-providers': false,
       'gcp-metadata': false,
-      'socks': false
-      // '@nestjs/websockets/socket-module': false,
-      // 'cache-manager': false,
-      // 'class-validator': false,
-      // 'class-transformer': false,
-      // '@nestjs/microservices/microservices-module': false,
-      // '@nestjs/microservices': false,
-      //'@apillon/lib': path.join(__dirname, '..', '..', 'packages', 'lib', 'dist')
+      socks: false,
+      '@faker-js/faker': false,
     },
   },
   output: {
@@ -48,6 +42,7 @@ module.exports = {
     __dirname: true,
   },
   externals: [
+    { '@faker-js/faker': '@faker-js/faker' },
     nodeExternals({
       allowlist: [
         '@apillon/lib',

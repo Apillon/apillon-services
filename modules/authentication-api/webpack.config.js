@@ -28,7 +28,11 @@ module.exports = {
       'class-transformer': false,
       '@nestjs/microservices/microservices-module': false,
       '@nestjs/microservices': false,
-      //'@apillon/lib': path.join(__dirname, '..', '..', 'packages', '@apillon/lib', 'dist')
+      '@aws-sdk/credential-providers': false,
+      'gcp-metadata': false,
+      socks: false,
+      '@faker-js/faker': false,
+      aws4: false,
     },
   },
   output: {
@@ -41,6 +45,7 @@ module.exports = {
     __dirname: true,
   },
   externals: [
+    { '@faker-js/faker': '@faker-js/faker' },
     nodeExternals({
       allowlist: ['@apillon/lib', '@apillon/modules-lib'],
     }),

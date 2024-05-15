@@ -25,7 +25,8 @@ module.exports = {
       cardinal: false,
       '@aws-sdk/credential-providers': false,
       'gcp-metadata': false,
-      'socks': false,
+      socks: false,
+      '@faker-js/faker': false,
       // '@nestjs/websockets/socket-module': false,
       // 'cache-manager': false,
       // 'class-validator': false,
@@ -45,6 +46,7 @@ module.exports = {
     __dirname: true,
   },
   externals: [
+    { '@faker-js/faker': '@faker-js/faker' },
     nodeExternals({
       allowlist: [
         '@apillon/lib',
