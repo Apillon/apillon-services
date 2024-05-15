@@ -76,10 +76,14 @@ export async function deployNFTCollectionContract(
   collection: Collection,
   conn: PoolConnection,
 ) {
-  const { abi, bytecode } = await new ContractVersion(
-    {},
-    context,
-  ).getContractVersion(collection.collectionType, collection.chainType);
+  const {
+    id: contractVersion_id,
+    abi,
+    bytecode,
+  } = await new ContractVersion({}, context).getContractVersion(
+    collection.collectionType,
+    collection.chainType,
+  );
   // TODO: we should use NftsService.sendTransaction() here since code is the same but weoker call makes it difficult
   let response: { data: TransactionDto };
   switch (collection.chainType) {
@@ -240,11 +244,7 @@ export async function deployNFTCollectionContract(
   collection.contractAddress = response.data.data;
   collection.deployerAddress = response.data.address;
   collection.transactionHash = response.data.transactionHash;
-  const { id } = await new ContractVersion({}, context).getContractVersion(
-    collection.collectionType,
-    collection.chainType,
-  );
-  collection.contractVersion_id = id;
+  collection.contractVersion_id = contractVersion_id;
 
   await collection.update(SerializeFor.UPDATE_DB, conn);
 }
