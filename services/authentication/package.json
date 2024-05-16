@@ -29,7 +29,7 @@
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
-    "@kiltprotocol/sdk-js": "^0.31.1",
+    "@kiltprotocol/sdk-js": "0.31.1",
     "@middy/core": "^3.3.1",
     "@polkadot/api": "10.12.2",
     "@polkadot/keyring": "^10.1.9",
@@ -38,9 +38,7 @@
     "valid-url": "^1.0.9"
   },
   "devDependencies": {
-    "@types/uuid": "^9.0.8",
     "eslint-config-common": "*",
-    "rimraf": "^5.0.5",
     "tsconfig": "*"
   },
   "overrides": {

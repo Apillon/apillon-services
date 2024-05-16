@@ -301,7 +301,7 @@ export class File extends UuidSqlModel {
       SELECT f.*, d.directory_uuid
       FROM \`${DbTables.FILE}\` f
       LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
-      WHERE (f.id LIKE @id OR f.cid LIKE @id OR f.file_uuid LIKE @id)
+      WHERE (f.id LIKE @id OR f.CID LIKE @id OR f.CIDv1 LIKE @id OR f.file_uuid LIKE @id)
       AND f.status <> ${SqlModelStatus.DELETED};
       `,
       { id },
@@ -328,7 +328,7 @@ export class File extends UuidSqlModel {
       SELECT f.*, d.directory_uuid
       FROM \`${DbTables.FILE}\` f
       LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
-      WHERE (f.id LIKE @id OR f.cid LIKE @id OR f.file_uuid LIKE @id)
+      WHERE (f.id LIKE @id OR f.CID LIKE @id OR f.file_uuid LIKE @id)
       AND f.status = ${SqlModelStatus.DELETED};
       `,
       { id },

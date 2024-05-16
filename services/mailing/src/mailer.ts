@@ -80,11 +80,11 @@ export class Mailer {
         await new Lmas().writeLog({
           context,
           logType: LogType.ERROR,
-          message: `Error setting mailerlite field ${field} for email ${email}: ${err.message}`,
+          message: `Error setting mailerlite field`,
           user_uuid: context.user?.user_uuid,
           location: 'Mailer/setMailerliteField',
           service: ServiceName.MAIL,
-          data: { email, field, value },
+          data: { email, field, value, err },
           sendAdminAlert: true,
         });
       }

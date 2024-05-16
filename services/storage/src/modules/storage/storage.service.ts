@@ -674,7 +674,9 @@ export class StorageService {
 
     //Send request to pin file back to IPFS cluster
     if (f.CID) {
-      await new IPFSService(context, f.project_uuid).pinCidToCluster(f.CID);
+      await new IPFSService(context, f.project_uuid, true).pinCidToCluster(
+        f.CID,
+      );
     }
 
     await invalidateCacheMatch(CacheKeyPrefix.BUCKET_LIST, {
@@ -735,7 +737,7 @@ export class StorageService {
       context,
     ).getIpfsCluster();
 
-    const ipfsService = new IPFSService(context, event.project_uuid);
+    const ipfsService = new IPFSService(context, event.project_uuid, true);
 
     await runWithWorkers(
       projectFiles,

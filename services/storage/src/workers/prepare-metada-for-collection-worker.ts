@@ -331,14 +331,42 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           return true;
         } else {
           metadataSession.sessionStatus = FileUploadSessionStatus.FINISHED;
-          await metadataSession.update();
+          collectionMetadata.currentStep =
+            PrepareCollectionMetadataStep.PUBLISH_TO_IPNS;
+
+          await Promise.all([
+            metadataSession.update(),
+            collectionMetadata.update(),
+          ]);
+
+          if (
+            env.APP_ENV != AppEnvironment.TEST &&
+            env.APP_ENV != AppEnvironment.LOCAL_DEV
+          ) {
+            await sendToWorkerQueue(
+              env.STORAGE_AWS_WORKER_SQS_URL,
+              WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
+              [
+                {
+                  collectionMetadataId: collectionMetadata.id,
+                  metadataCid: metadataFiles.wrappedDirCid,
+                },
+              ],
+              null,
+              null,
+            );
+          }
+          return true;
         }
+      }
 
-        //Publish to IPNS, Pin to IPFS, Remove from S3, ...
+      //Publish to IPNS, Pin to IPFS, Remove from S3, ...
 
-        console.info(
-          `pinning metadata CID (${metadataFiles.wrappedDirCid}) to IPNS`,
-        );
+      if (
+        collectionMetadata.currentStep ==
+        PrepareCollectionMetadataStep.PUBLISH_TO_IPNS
+      ) {
+        console.info(`pinning metadata CID (${data.metadataCid}) to IPNS`);
 
         if (collectionMetadata.useApillonIpfsGateway) {
           //If ipnsId is not specified in data, get first ipns record in bucket
@@ -355,12 +383,12 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             this.context,
             ipnsDbRecord.project_uuid,
           ).publishToIPNS(
-            metadataFiles.wrappedDirCid,
+            data.metadataCid,
             `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`,
           );
           ipnsDbRecord.ipnsValue = ipnsRecord.value;
           ipnsDbRecord.key = `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`;
-          ipnsDbRecord.cid = metadataFiles.wrappedDirCid;
+          ipnsDbRecord.cid = data.metadataCid;
           await ipnsDbRecord.update(SerializeFor.UPDATE_DB);
         } else {
           //Metadata is prepared. It won't use apillon gateway ipns as base uri, so run nft deploy with wrapping cid as base URI
@@ -372,7 +400,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
               this.context,
             ).executeDeployCollectionWorker({
               collection_uuid: collectionMetadata.collection_uuid,
-              baseUri: 'ipfs://' + metadataFiles.wrappedDirCid,
+              baseUri: 'ipfs://' + data.metadataCid,
             });
           } else {
             await sendToWorkerQueue(
@@ -381,7 +409,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
               [
                 {
                   collection_uuid: collectionMetadata.collection_uuid,
-                  baseUri: 'ipfs://' + metadataFiles.wrappedDirCid,
+                  baseUri: 'ipfs://' + data.metadataCid,
                 },
               ],
               null,
@@ -411,7 +439,8 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
         });
       }
     } catch (error) {
-      collectionMetadata.lastError = `Error message: ${error.message}. ${JSON.stringify(error)}`;
+      console.error('PrepareMetadataForCollectionWorker error', error);
+      collectionMetadata.lastError = `Error message: ${error?.message || error?.errorMessage}`;
       await collectionMetadata.update().catch((upgError) => {
         console.error(
           'Error updating collection metadata last error field. ',

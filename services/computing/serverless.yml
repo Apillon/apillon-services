@@ -9,8 +9,6 @@ custom:
     webpackConfig: ./webpack.config.js
     packager: "npm"
     includeModules: true
-    forceExclude:
-      - aws-sdk
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
@@ -36,7 +34,6 @@ provider:
   environment:
     ${file(../../bin/deploy/env/env.yml)}
 
-# you can add packaging information here
 package:
   individually: true
   patterns:

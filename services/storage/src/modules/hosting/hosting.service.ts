@@ -512,7 +512,7 @@ export class HostingService {
       deployment.website_id,
     );
     //Unpin CID from IPFS
-    const ipfsService = new IPFSService(context, website.project_uuid);
+    const ipfsService = new IPFSService(context, website.project_uuid, true);
     await ipfsService.unpinCidFromCluster(deployment.cid);
 
     //Get project owner

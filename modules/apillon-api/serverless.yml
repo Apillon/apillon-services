@@ -17,7 +17,6 @@ custom:
 
 plugins:
   - serverless-webpack
-  # - serverless-offline
 
 provider:
   name: aws
@@ -38,16 +37,10 @@ provider:
 
   environment:
     ${file(../../bin/deploy/env/env.yml)}
-    # ACCESS_FUNCTION_NAME: 'apillon-access-service-${self:provider.stage}'
-    # MONITORING_FUNCTION_NAME: 'apillon-monitoring-service-${self:provider.stage}'
 
-# you can add packaging information here
 package:
   patterns:
     - '!dist/**'
-    # - '!**/*.*'
-    # - '!.turbo'
-    # - './dist/**'
   excludeDevDependencies: true
 
 functions:

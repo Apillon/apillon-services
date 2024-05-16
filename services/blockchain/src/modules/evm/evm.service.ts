@@ -403,6 +403,7 @@ export class EvmService {
           latestSuccess = transaction.nonce;
           transmitted++;
         } catch (err) {
+          const chainName = getEnumKey(EvmChain, _event.chain);
           if (
             err?.reason === 'nonce has already been used' ||
             err?.error?.message === 'already known'
@@ -417,7 +418,7 @@ export class EvmService {
               await eventLogger(
                 {
                   logType: LogType.INFO,
-                  message: `Last success nonce was repaired and set to ${selfRepairNonce}.`,
+                  message: `Last success nonce was repaired on chain ${chainName} for wallet address ${wallet.address} and set to ${selfRepairNonce} (hash=${transaction.transactionHash}).`,
                   service: ServiceName.BLOCKCHAIN,
                   data: {
                     selfRepairNonce,
@@ -430,10 +431,7 @@ export class EvmService {
               await eventLogger(
                 {
                   logType: LogType.ERROR,
-                  message: `Could not repair last success nonce for chain ${getEnumKey(
-                    EvmChain,
-                    _event.chain,
-                  )} and wallet address ${wallet.address}.`,
+                  message: `Could not repair last success nonce on chain ${chainName} for wallet address ${wallet.address} (nonce=${transaction.nonce}, hash=${transaction.transactionHash}).`,
                   service: ServiceName.BLOCKCHAIN,
                   data: {
                     wallet: wallet.address,
@@ -444,15 +442,14 @@ export class EvmService {
                 },
                 LogOutput.NOTIFY_WARN,
               );
+              // stop transmitting TX after first self repair
+              break;
             }
           } else {
             await eventLogger(
               {
                 logType: LogType.ERROR,
-                message: `Error transmitting transaction on chain ${getEnumKey(
-                  EvmChain,
-                  _event.chain,
-                )}! Hash: ${transaction.transactionHash}`,
+                message: `Error transmitting transaction on chain ${chainName}! Hash: ${transaction.transactionHash}`,
                 service: ServiceName.BLOCKCHAIN,
                 data: {
                   error: err,
@@ -462,6 +459,7 @@ export class EvmService {
               },
               LogOutput.NOTIFY_WARN,
             );
+            // stop transmitting TX after first exception
             if (
               env.APP_ENV === AppEnvironment.TEST ||
               env.APP_ENV === AppEnvironment.LOCAL_DEV

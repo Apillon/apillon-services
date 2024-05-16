@@ -6,7 +6,6 @@ module.exports = {
   context: __dirname,
   mode: slsw.lib.webpack.isLocal ? 'development' : 'production',
   entry: slsw.lib.entries,
-  // devtool: slsw.lib.webpack.isLocal ? 'cheap-module-eval-source-map' : 'source-map',
   devtool: slsw.lib.webpack.isLocal ? 'source-map' : false,
   resolve: {
     extensions: ['.mjs', '.json', '.ts', '.js'],
@@ -24,6 +23,7 @@ module.exports = {
       '@aws-sdk/credential-providers': false,
       'gcp-metadata': false,
       socks: false,
+      '@faker-js/faker': false,
     },
   },
   output: {
@@ -35,6 +35,7 @@ module.exports = {
   node: {
     __dirname: true,
   },
+  externals: [{ '@faker-js/faker': '@faker-js/faker' }],
   module: {
     rules: [
       // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`

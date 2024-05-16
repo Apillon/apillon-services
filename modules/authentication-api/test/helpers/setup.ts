@@ -1,4 +1,4 @@
-import { HttpServer, INestApplication } from '@nestjs/common';
+import { HttpServer } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppEnvironment, env } from '@apillon/lib';
 import { ExceptionsFilter, ResponseInterceptor } from '@apillon/modules-lib';
@@ -13,7 +13,7 @@ import { AppModule } from '../../src/app.module';
  * Testing stage definition.
  */
 export async function setupTest(): Promise<Stage> {
-  let app: INestApplication = null;
+  let app = null;
   let http: HttpServer = null;
 
   env.APP_ENV = AppEnvironment.TEST;
