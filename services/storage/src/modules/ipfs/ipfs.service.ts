@@ -247,6 +247,7 @@ export class IPFSService {
       50,
       context,
       async (fileUploadReq: FileUploadRequest) => {
+        fileUploadReq = new FileUploadRequest(fileUploadReq, context);
         console.info(
           'Adding file to IPFS, ...',
           (fileUploadReq.path || '') + fileUploadReq.fileName,
@@ -277,14 +278,15 @@ export class IPFSService {
         } catch (error) {
           if (error.Code == 'NoSuchKey') {
             //File does not exists on S3 - update FUR status
-            try {
-              if (fileUploadReq.exists()) {
-                fileUploadReq.fileStatus =
-                  FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
-                await fileUploadReq.update();
-              }
-            } catch (err) {
-              console.error(err);
+            if (fileUploadReq.exists()) {
+              fileUploadReq.fileStatus =
+                FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
+              await fileUploadReq.update().catch((upgErr) => {
+                console.error(
+                  'Error updating file upload request to status ERROR_FILE_NOT_EXISTS_ON_S3. ',
+                  upgErr,
+                );
+              });
             }
           } else {
             //Something else does not work - maybe IPFS node. Throw error.

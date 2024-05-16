@@ -111,7 +111,10 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
         /*Upload nft images to IPFS. If remaining files to upload exceeds DEFAULT_FILE_BATCH_SIZE_FOR_IPFS, 
       worker uploads first batch and sends message to sqs to execute another iteration, until all images are uploaded */
         const remainingImageFURs = imageFURs.filter(
-          (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+          (x) =>
+            x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED &&
+            x.fileStatus !=
+              FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3,
         );
         await storageBucketSyncFilesToIPFS(
           this.context,
@@ -212,6 +215,10 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
               ))
             ) {
               //NOTE: Define flow, what happen in this case. My guess - we should probably throw error
+              console.error(
+                'JSON file does not exists on s3 for File upload request. ',
+                metadataFUR,
+              );
               return;
             }
             const file = await s3Client.get(
@@ -299,7 +306,10 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             this.context,
           )
         ).filter(
-          (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+          (x) =>
+            x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED &&
+            x.fileStatus !=
+              FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3,
         );
 
         const metadataFiles = await storageBucketSyncFilesToIPFS(
