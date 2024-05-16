@@ -12,14 +12,13 @@ import {
   ExecutionContext,
   HttpStatus,
   Injectable,
-  Inject,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ApillonApiContext } from '../context';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(@Inject(Reflector.name) private readonly reflector: Reflector) {}
+  constructor(private reflector: Reflector) {}
 
   public async canActivate(execCtx: ExecutionContext): Promise<boolean> {
     const requiredPermissions = this.reflector.getAllAndMerge<

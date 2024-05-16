@@ -33,7 +33,7 @@
     "@jest/globals": "^29.7.0",
     "@nestjs/cli": "^10.3.2",
     "@nestjs/schematics": "^10.1.1",
-    "@nestjs/testing": "10.3.7",
+    "@nestjs/testing": "^10.3.7",
     "@types/aws-lambda": "^8.10.137",
     "@types/aws-serverless-express": "^3.3.9",
     "@types/bcryptjs": "^2.4.2",
@@ -67,10 +67,7 @@
   },
   "overrides": {
     "ipfs-utils": "9.0.6",
-    "semver": "7.6.1",
-    "@nestjs/common": "10.3.7",
-    "@nestjs/core": "10.3.7",
-    "@nestjs/platform-express": "10.3.7"
+    "semver": "7.6.1"
   },
   "engines": {
     "npm": ">=10.0.0",
