@@ -31,17 +31,16 @@ export class AirdropService {
     event: { body: ReviewTasksDto },
     context: ServiceContext,
   ) {
-    const claimTokenDto = new ReviewTasksDto(event.body);
+    const reviewTasksDto = new ReviewTasksDto(event.body);
     // Check if user is elligible to claim
     await AirdropService.checkClaimConditions(event.body, context);
 
     // Get last populated user completed tasks and points
-    const userAirdropStats = await new UserAirdropTask(
-      {},
-      context,
-    ).populateByUserUuid(context.user.user_uuid);
+    const stats = await new UserAirdropTask({}, context).populateByUserUuid(
+      context.user.user_uuid,
+    );
 
-    if (!userAirdropStats.exists()) {
+    if (!stats.exists()) {
       throw new ReferralCodeException({
         status: 403,
         code: ReferralErrorCode.USER_NOT_ELIGIBLE,
@@ -51,38 +50,38 @@ export class AirdropService {
     const conn = await context.mysql.start();
     try {
       const galxeTasksCompleted = await AirdropService.getGalxeTasksCompleted(
-        claimTokenDto.wallet,
+        reviewTasksDto.wallet,
       );
 
       // Update points after adding galxe points for user
-      await userAirdropStats.addGalxePoints(galxeTasksCompleted, conn);
+      await stats.addGalxePoints(galxeTasksCompleted, conn);
 
       // Create new token claim entry
-      await new TokenClaim(claimTokenDto, context)
+      await new TokenClaim(reviewTasksDto, context)
         .populate({
-          totalClaimed: userAirdropStats.totalPoints,
+          totalClaimed: stats.totalPoints,
           user_uuid: context.user.user_uuid,
         })
         .insert(SerializeFor.INSERT_DB, conn);
 
       await context.mysql.commit(conn);
 
-      return userAirdropStats;
+      return stats.serialize(SerializeFor.SERVICE) as UserAirdropTask;
     } catch (err) {
       await context.mysql.rollback(conn);
       if (err instanceof ReferralCodeException) {
         throw err;
       } else {
         throw await new ReferralCodeException({
-          code: ReferralErrorCode.ERROR_CLAIMING_TOKENS,
+          code: ReferralErrorCode.ERROR_REVIEWING_TASKS,
           status: 500,
           context,
           errorMessage: err?.message,
-          sourceFunction: 'claimTokens()',
+          sourceFunction: 'reviewTasks()',
           sourceModule: 'AirdropService',
         }).writeToMonitor({
           user_uuid: context?.user?.user_uuid,
-          data: claimTokenDto.serialize(),
+          data: reviewTasksDto.serialize(),
           sendAdminAlert: true,
         });
       }
@@ -92,12 +91,11 @@ export class AirdropService {
   /**
    * Check if user is elligible to claim tokens
    * No fraudulent or duplicate accounts
-   * No claiming with account created after snapshot
-   * @param {ReviewTasksDto} claimTokensDto - The DTO containing claim data
+   * @param {ReviewTasksDto} reviewTasksDto - The DTO containing review data
    * @param {ServiceContext} context
    */
   static async checkClaimConditions(
-    claimTokensDto: ReviewTasksDto,
+    reviewTasksDto: ReviewTasksDto,
     context: ServiceContext,
   ) {
     const user_uuid = context.user.user_uuid;
@@ -113,29 +111,28 @@ export class AirdropService {
         status: claimUser.blocked ? 403 : 400,
         code: claimUser.blocked
           ? ReferralErrorCode.CLAIM_FORBIDDEN
-          : ReferralErrorCode.USER_ALREADY_CLAIMED,
+          : ReferralErrorCode.TASKS_ALREADY_REVIEWED,
       });
     }
 
     const claimers = await new TokenClaim(
-      claimTokensDto,
+      reviewTasksDto,
       context,
-    ).findAllByIpAndFingerprint();
+    ).findAllByIpOrFingerprint();
 
     if (!claimers.length) {
       return;
     }
 
-    // Insert new claimer and set all to blocked, because IP and fingerprint matches with another user
-    await Promise.allSettled([
-      new TokenClaim(claimTokensDto, context)
-        .populate({
-          user_uuid, // user_uuid is table PK
-          status: SqlModelStatus.BLOCKED,
-        })
-        .insert(SerializeFor.INSERT_DB),
-      ...claimers.map((c) => c.markBlocked()),
-    ]);
+    // Insert new claimer and set all to blocked, because IP or fingerprint matches with another user
+    await Promise.all(claimers.map((c) => c.markBlocked()));
+
+    await new TokenClaim(reviewTasksDto, context)
+      .populate({
+        user_uuid, // user_uuid is table PK
+        status: SqlModelStatus.BLOCKED,
+      })
+      .insert(SerializeFor.INSERT_DB);
 
     throw new ReferralCodeException({
       status: 403,

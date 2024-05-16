@@ -1,6 +1,6 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
-import { ethAddressValidator, presenceValidator } from '@rawmodel/validators';
+import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { UserWalletAuthDto } from '../../ams/dtos/user-wallet-auth.dto';
 import { getFaker } from '../../../utils';

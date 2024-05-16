@@ -92,11 +92,11 @@ export class TokenClaim extends AdvancedSQLModel {
   }
 
   /**
-   * Populates a TokenClaim model instance based on IP address and fingerprint.
+   * Populates a TokenClaim model instance based on IP address or fingerprint.
    * @param conn Optional database connection to use for the query.
    * @returns The populated model instance or a reset instance if no match is found.
    */
-  public async findAllByIpAndFingerprint(
+  public async findAllByIpOrFingerprint(
     conn?: PoolConnection,
   ): Promise<TokenClaim[]> {
     if (!this.ip_address && !this.fingerprint) {
