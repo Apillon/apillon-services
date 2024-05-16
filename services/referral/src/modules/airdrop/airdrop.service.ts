@@ -4,7 +4,6 @@ import { ReferralErrorCode } from '../../config/types';
 import { ReferralCodeException } from '../../lib/exceptions';
 import { UserAirdropTask } from './models/user-airdrop-task.model';
 import { TokenClaim } from './token-claim';
-import * as fs from 'fs';
 
 export class AirdropService {
   /**
@@ -49,12 +48,8 @@ export class AirdropService {
 
     const conn = await context.mysql.start();
     try {
-      const galxeTasksCompleted = await AirdropService.getGalxeTasksCompleted(
-        reviewTasksDto.wallet,
-      );
-
       // Update points after adding galxe points for user
-      await stats.addGalxePoints(galxeTasksCompleted, conn);
+      await stats.addGalxePoints(event.body.wallet, conn);
 
       // Create new token claim entry
       await new TokenClaim(reviewTasksDto, context)
@@ -138,25 +133,5 @@ export class AirdropService {
       status: 403,
       code: ReferralErrorCode.CLAIM_FORBIDDEN,
     });
-  }
-
-  /**
-   * Get number of tasks completed on Galxe for wallet
-   * @param {string} wallet
-   * @param {ServiceContext} context
-   * @returns {Promise<number>}
-   */
-  static async getGalxeTasksCompleted(wallet: string): Promise<number> {
-    const wallets = fs
-      .readFileSync(`${__dirname}/data/galxe-tokens.csv`, 'utf8')
-      .split('\n');
-
-    // Get number of occurences for wallet in CSV file
-    return wallets.reduce(
-      (count, rowWallet) =>
-        count +
-        (rowWallet.toLowerCase().includes(wallet.toLowerCase()) ? 1 : 0),
-      0,
-    );
   }
 }

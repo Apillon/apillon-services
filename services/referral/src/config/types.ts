@@ -12,6 +12,7 @@ export enum DbTables {
   PROMO_CODE_USER = 'promo_code_user',
   USER_AIRDROP_TASK = 'user_airdrop_task',
   TOKEN_CLAIM = 'token_claim',
+  GALXE_WALLET = 'galxe_wallet',
 }
 
 export enum ReferralErrorCode {

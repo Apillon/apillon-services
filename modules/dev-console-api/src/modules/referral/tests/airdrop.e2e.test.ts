@@ -9,6 +9,7 @@ import {
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 import { UserAirdropTask } from '@apillon/referral/src/modules/airdrop/models/user-airdrop-task.model';
+import { DbTables } from '@apillon/referral/src/config/types';
 import { ethers } from 'ethers';
 
 describe('Airdrop tests', () => {
@@ -44,6 +45,10 @@ describe('Airdrop tests', () => {
 
     blockchain = TestBlockchain.fromStage(stage, EvmChain.ASTAR);
     await blockchain.start();
+
+    await stage.db.referral.paramExecute(
+      `INSERT INTO ${DbTables.GALXE_WALLET} (wallet) VALUES (${blockchain.getWalletAddress(0)})`,
+    );
   });
 
   afterAll(async () => {
@@ -81,7 +86,8 @@ describe('Airdrop tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
 
       expect(response.status).toBe(200);
-      expect(response.body.data.totalPoints).toBeGreaterThanOrEqual(10);
+      // 10 for registering and 10 for galxe points
+      expect(response.body.data.totalPoints).toEqual(20);
     });
 
     test('User should receive 401 if not authenticated', async () => {
@@ -147,7 +153,7 @@ describe('Airdrop tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('USER_ALREADY_CLAIMED');
+      expect(response.body.message).toBe('TASKS_ALREADY_REVIEWED');
     });
   });
 });
