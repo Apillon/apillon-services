@@ -47,13 +47,13 @@ export class IPFSService {
   private ipfsCluster: IpfsCluster;
   private project_uuid: string;
   private context: ServiceContext;
-  private canUseBackupNode = true;
+  private canUseBackupNode = false;
   public usingBackupNode = false;
 
   public constructor(
     context: ServiceContext,
     project_uuid: string,
-    canUseBackupNode = true,
+    canUseBackupNode = false,
   ) {
     this.project_uuid = project_uuid;
     this.context = context;
@@ -105,9 +105,15 @@ export class IPFSService {
           });
       }
 
+      let message = `Error initializing IPFS Client. Failed to get ipfs version (ipfs api health check failed).`;
+      message += ` Can use backup node: ${this.canUseBackupNode ? 'Yes' : 'No'}`;
+      if (this.canUseBackupNode) {
+        message += ` Backup api status: ${this.usingBackupNode ? 'OK' : 'ERROR'}`;
+      }
+
       await new Lmas().writeLog({
         logType: this.usingBackupNode ? LogType.WARN : LogType.ALERT,
-        message: `Error initializing IPFS Client. Failed to get ipfs version (ipfs api health check failed). Backup api status: ${this.usingBackupNode ? 'OK' : 'ERROR'}`,
+        message,
         location: 'IPFSService.initializeIPFSClient',
         service: ServiceName.STORAGE,
         data: {

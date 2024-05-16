@@ -439,8 +439,8 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
         });
       }
     } catch (error) {
-      console.error(error);
-      collectionMetadata.lastError = `Error message: ${error?.message}`;
+      console.error('PrepareMetadataForCollectionWorker error', error);
+      collectionMetadata.lastError = `Error message: ${error?.message || error?.errorMessage}`;
       await collectionMetadata.update().catch((upgError) => {
         console.error(
           'Error updating collection metadata last error field. ',

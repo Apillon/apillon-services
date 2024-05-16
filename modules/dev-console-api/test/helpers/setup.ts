@@ -5,7 +5,7 @@ import {
   setupTestContextAndSql,
   Stage,
 } from '@apillon/tests-lib';
-import { HttpServer, INestApplication } from '@nestjs/common';
+import { HttpServer } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { AdminAppModule } from '../../src/admin-app.module';
@@ -18,7 +18,7 @@ export async function setupTest(
   apiPort = env.DEV_CONSOLE_API_PORT_TEST,
   apiHost = env.DEV_CONSOLE_API_HOST_TEST,
 ): Promise<Stage> {
-  let app: INestApplication = null;
+  let app = null;
   let http: HttpServer = null;
 
   env.APP_ENV = AppEnvironment.TEST;
