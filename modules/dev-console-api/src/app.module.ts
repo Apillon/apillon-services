@@ -8,8 +8,6 @@ import { ContextMiddleware } from './middlewares/context.middleware';
 import { ApiKeyModule } from './modules/api-key/api-key.module';
 import { ComputingModule } from './modules/computing/computing.module';
 import { MySQLModule } from './modules/database/mysql.module';
-import { FileModule } from './modules/file/file.module';
-import { InstructionModule } from './modules/instruction/instruction.module';
 import { NftsModule } from './modules/nfts/nfts.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ProjectModule } from './modules/project/project.module';
@@ -28,9 +26,7 @@ import { SocialModule } from './modules/social/social.module';
     UserModule,
     MySQLModule,
     ProjectModule,
-    FileModule,
     ServicesModule,
-    InstructionModule,
     BucketModule,
     DirectoryModule,
     StorageModule,

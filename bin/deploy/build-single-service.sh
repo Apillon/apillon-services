@@ -20,6 +20,7 @@ export NODE_ENV=production
 echo "Installing build dependencies"
 
 # prepare the environemnt
+npm -v
 echo "Building libraries..."
 cd packages/lib/
 echo "Building @apillon/lib"
@@ -77,7 +78,7 @@ fi
 npm i ts-node serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
 
 echo "Installation of dependencies complete"
-npm ls
+npm list
 
 if [ "$DB_MIGRATIONS" == "true" ]
 then
