@@ -1,11 +1,15 @@
-/* eslint-disable sonarjs/no-useless-catch */
 import { AppEnvironment, env } from '@apillon/lib';
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Inject,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 @Injectable()
 export class DevEnvGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(@Inject(Reflector.name) private readonly reflector: Reflector) {}
 
   public async canActivate(_execCtx: ExecutionContext): Promise<boolean> {
     return (
