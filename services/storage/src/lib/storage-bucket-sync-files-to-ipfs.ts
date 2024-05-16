@@ -28,6 +28,7 @@ import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { File } from '../modules/storage/models/file.model';
 import { pinFileToCRUST } from './pin-file-to-crust';
+import { StorageCodeException } from './exceptions';
 
 /**
  * Transfers file from s3 to IPFS & CRUST
@@ -62,7 +63,7 @@ export async function storageBucketSyncFilesToIPFS(
 
     /*Each IPFS node has it's own MFS. 
       In this case, MFS writes must be performed to master node, that's why ipfs service shouldn't use backup node here.*/
-    const ipfsService = new IPFSService(context, bucket.project_uuid, false);
+    const ipfsService = new IPFSService(context, bucket.project_uuid);
 
     let ipfsRes: uploadItemsToIPFSRes = undefined;
     try {
@@ -74,6 +75,14 @@ export async function storageBucketSyncFilesToIPFS(
         context,
       );
     } catch (err) {
+      console.error(
+        `Error at ipfsService.uploadFURsToIPFSFromS3. Is instance of StorageCodeException: ${err instanceof StorageCodeException}`,
+        err,
+      );
+      if (err instanceof StorageCodeException) {
+        throw err;
+      }
+
       await new Lmas().writeLog({
         context: context,
         project_uuid: bucket.project_uuid,
@@ -270,6 +279,7 @@ export async function storageBucketSyncFilesToIPFS(
           ipfsRes = await new IPFSService(
             context,
             bucket.project_uuid,
+            true,
           ).uploadFURToIPFSFromS3(
             { fileUploadRequest: file, project_uuid: bucket.project_uuid },
             context,

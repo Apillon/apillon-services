@@ -50,7 +50,11 @@ export async function deleteDirectory(
   );
 
   const unpinPromises = [];
-  const ipfsService = await new IPFSService(context, directory.project_uuid);
+  const ipfsService = await new IPFSService(
+    context,
+    directory.project_uuid,
+    true,
+  );
 
   for (const file of filesInDirectory) {
     if (file.CID) {
