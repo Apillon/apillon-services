@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Inject,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ValidationException } from '@apillon/lib';
 import {
@@ -10,7 +15,7 @@ import { ValidatorErrorCode } from '../config/types';
 
 @Injectable()
 export class ValidationGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(@Inject(Reflector.name) private readonly reflector: Reflector) {}
 
   public async canActivate(execCtx: ExecutionContext): Promise<boolean> {
     const options = this.reflector.getAllAndMerge(VALIDATION_OPTIONS_KEY, [
