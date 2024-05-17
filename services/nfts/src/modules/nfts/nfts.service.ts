@@ -243,14 +243,26 @@ export class NftsService {
     //Call Storage MS function, which will prepareBase uri.
     //At the end, this function will trigger workers: DeployCollectionWorker, PrepareMetadataForCollectionWorker
 
-    await new StorageMicroservice(context).prepareCollectionBaseUri({
-      bucket_uuid: collection.bucket_uuid,
-      collection_uuid: collection.collection_uuid,
-      collectionName: collection.name,
-      imagesSession: collection.imagesSession,
-      metadataSession: collection.metadataSession,
-      useApillonIpfsGateway: body.useApillonIpfsGateway,
-    });
+    try {
+      await new StorageMicroservice(context).prepareCollectionBaseUri({
+        bucket_uuid: collection.bucket_uuid,
+        collection_uuid: collection.collection_uuid,
+        collectionName: collection.name,
+        imagesSession: collection.imagesSession,
+        metadataSession: collection.metadataSession,
+        useApillonIpfsGateway: body.useApillonIpfsGateway,
+      });
+    } catch (err) {
+      //Status should be set back to CREATED, so that it is possible to execute deploy again
+      console.error(
+        'Error at prepareCollectionBaseUri. Updating collection status back to CREATED.',
+        err,
+      );
+      collection.collectionStatus = CollectionStatus.CREATED;
+      await collection.update();
+
+      throw err;
+    }
 
     return collection.serializeByContext();
   }
