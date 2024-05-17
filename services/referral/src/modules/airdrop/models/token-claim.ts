@@ -72,6 +72,7 @@ export class TokenClaim extends AdvancedSQLModel {
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: 0,
   })

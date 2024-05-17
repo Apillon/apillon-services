@@ -9,16 +9,21 @@ export class AirdropService {
   /**
    * Get completed airdrop tasks and total points for a user
    * @param {user_uuid} - UUID of the user requesting the airdrop tasks
-   * @returns {Promise<UserAirdropTask>} - UserAirdropTask model from Referral MS
+   * @returns {Promise<{ tokenClaim: TokenClaim; airdropStats: UserAirdropTask }>}
    */
   static async getAirdropTasks(
     event: { user_uuid: string },
     context: ServiceContext,
-  ): Promise<UserAirdropTask> {
-    const stats = await new UserAirdropTask({}, context).populateByUserUuid(
-      event.user_uuid,
-    );
-    return stats.serialize(SerializeFor.SERVICE) as UserAirdropTask;
+  ): Promise<{ tokenClaim: TokenClaim; airdropStats: UserAirdropTask }> {
+    const [stats, tokenClaim] = await Promise.all([
+      new UserAirdropTask({}, context).populateByUserUuid(event.user_uuid),
+      new TokenClaim({}, context).populateByUUID(event.user_uuid, 'user_uuid'),
+    ]);
+
+    return {
+      tokenClaim: tokenClaim.serialize(SerializeFor.PROFILE) as TokenClaim,
+      airdropStats: stats.serialize(SerializeFor.PROFILE) as UserAirdropTask,
+    };
   }
 
   /**
