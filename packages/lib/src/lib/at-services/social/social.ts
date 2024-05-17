@@ -48,6 +48,14 @@ export class SocialMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async archiveSpace(space_uuid: string) {
+    const data = {
+      eventName: SocialEventType.ARCHIVE_SPACE,
+      space_uuid,
+    };
+    return await this.callService(data);
+  }
+
   public async listPosts(params: SocialPostQueryFilter) {
     const data = {
       eventName: SocialEventType.LIST_POSTS,
@@ -68,6 +76,14 @@ export class SocialMicroservice extends BaseService {
     const data = {
       eventName: SocialEventType.CREATE_POST,
       body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async archivePost(post_uuid: string) {
+    const data = {
+      eventName: SocialEventType.ARCHIVE_POST,
+      post_uuid,
     };
     return await this.callService(data);
   }
