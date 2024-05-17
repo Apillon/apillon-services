@@ -30,12 +30,12 @@ export class AirdropService {
    * Review NCTR token tasks from airdrop campaign and save data in DB
    * @param {{ body: ReviewTasksDto }} event
    * @param {ServiceContext} context
-   * @returns {Promise<TokenClaim>}
+   * @returns {Promise<UserAirdropTask>}
    */
   static async reviewTasks(
     event: { body: ReviewTasksDto },
     context: ServiceContext,
-  ): Promise<TokenClaim> {
+  ): Promise<UserAirdropTask> {
     const reviewTasksDto = new ReviewTasksDto(event.body);
     // Check if user is elligible to claim
     await AirdropService.checkClaimConditions(event.body, context);
@@ -58,7 +58,7 @@ export class AirdropService {
       await stats.addGalxePoints(event.body.wallet, conn);
 
       // Create new token claim entry
-      const tokenClaim = await new TokenClaim(reviewTasksDto, context)
+      await new TokenClaim(reviewTasksDto, context)
         .populate({
           totalClaimed: stats.totalPoints,
           user_uuid: context.user.user_uuid,
@@ -67,7 +67,7 @@ export class AirdropService {
 
       await context.mysql.commit(conn);
 
-      return tokenClaim.serialize(SerializeFor.PROFILE) as TokenClaim;
+      return stats.serialize(SerializeFor.SERVICE) as UserAirdropTask;
     } catch (err) {
       await context.mysql.rollback(conn);
       if (err instanceof ReferralCodeException) {
