@@ -152,14 +152,14 @@ export class ReferralService {
   }
 
   /**
-   * Claim airdrop NCTR tokens
+   * Review tasks and total NCTR tokens collected
    * @param {DevConsoleApiContext} context
    * @param {ReviewTasksDto} body
    */
   async reviewTasks(context: DevConsoleApiContext, body: ReviewTasksDto) {
     const { address } = await this.userService.validateWalletSignature(
       body,
-      'ReferralService/claimTokens',
+      'ReferralService/reviewTasks',
       context,
     );
     body.wallet = address;

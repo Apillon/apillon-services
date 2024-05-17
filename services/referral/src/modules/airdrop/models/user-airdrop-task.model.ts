@@ -571,6 +571,7 @@ export class UserAirdropTask extends BaseSQLModel {
         WHERE UPPER(wallet) = UPPER(@wallet)
       `,
       { wallet },
+      conn,
     );
 
     const { galxeTasksCompleted } = data[0];

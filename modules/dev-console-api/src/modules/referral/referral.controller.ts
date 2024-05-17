@@ -163,7 +163,7 @@ export class ReferralController {
   @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard, ValidationGuard)
   @Validation({ dto: ReviewTasksDto })
-  async claimTokens(
+  async reviewTasks(
     @Ctx() context: DevConsoleApiContext,
     @IpAddress() ip: string,
     @Body() body: ReviewTasksDto,

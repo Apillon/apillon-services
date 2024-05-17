@@ -6,9 +6,9 @@ export async function upgrade(
   await queryFn(`
     CREATE TABLE IF NOT EXISTS \`${DbTables.TOKEN_CLAIM}\` (
       \`user_uuid\` VARCHAR(36) NOT NULL,
-      \`wallet\` VARCHAR(42) NULL,
+      \`wallet\` VARCHAR(42) NOT NULL,
       \`ip_address\` VARCHAR(50) NULL,
-      \`fingerprint\` VARCHAR(50) NULL,
+      \`fingerprint\` VARCHAR(50) NOT NULL,
       \`totalClaimed\` INT NOT NULL DEFAULT 0,
       \`status\` INT NOT NULL,
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,

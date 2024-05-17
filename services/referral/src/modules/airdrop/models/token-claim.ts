@@ -8,7 +8,7 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { DbTables } from '../../config/types';
+import { DbTables } from '../../../config/types';
 
 export class TokenClaim extends AdvancedSQLModel {
   public readonly tableName = DbTables.TOKEN_CLAIM;

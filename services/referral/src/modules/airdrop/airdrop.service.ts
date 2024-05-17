@@ -3,7 +3,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { ReferralErrorCode } from '../../config/types';
 import { ReferralCodeException } from '../../lib/exceptions';
 import { UserAirdropTask } from './models/user-airdrop-task.model';
-import { TokenClaim } from './token-claim';
+import { TokenClaim } from './models/token-claim';
 
 export class AirdropService {
   /**
@@ -25,11 +25,12 @@ export class AirdropService {
    * Review NCTR token tasks from airdrop campaign and save data in DB
    * @param {{ body: ReviewTasksDto }} event
    * @param {ServiceContext} context
+   * @returns {Promise<UserAirdropTask>}
    */
   static async reviewTasks(
     event: { body: ReviewTasksDto },
     context: ServiceContext,
-  ) {
+  ): Promise<UserAirdropTask> {
     const reviewTasksDto = new ReviewTasksDto(event.body);
     // Check if user is elligible to claim
     await AirdropService.checkClaimConditions(event.body, context);
@@ -88,11 +89,12 @@ export class AirdropService {
    * No fraudulent or duplicate accounts
    * @param {ReviewTasksDto} reviewTasksDto - The DTO containing review data
    * @param {ServiceContext} context
+   * @throws {ReferralCodeException} - If user already claimed or is blocked
    */
   static async checkClaimConditions(
     reviewTasksDto: ReviewTasksDto,
     context: ServiceContext,
-  ) {
+  ): Promise<void> {
     const user_uuid = context.user.user_uuid;
 
     // Check if user already claimed
