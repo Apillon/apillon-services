@@ -76,7 +76,21 @@ export class TokenClaim extends AdvancedSQLModel {
     ],
     defaultValue: 0,
   })
-  public totalClaimed: number;
+  public totalNctr: number;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.PROFILE,
+    ],
+    defaultValue: false,
+  })
+  public claimCompleted: boolean;
 
   @prop({
     parser: { resolver: booleanParser() },

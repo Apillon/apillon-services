@@ -86,8 +86,10 @@ describe('Airdrop tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
 
       expect(response.status).toBe(200);
+      expect(response.body.data.airdropStats).toBeDefined();
+      expect(response.body.data.tokenClaim).toBeDefined();
       // 10 for registering and 10 for galxe points
-      expect(response.body.data.totalPoints).toEqual(20);
+      expect(response.body.data.airdropStats.totalPoints).toEqual(20);
     });
 
     test('User should receive 401 if not authenticated', async () => {
@@ -113,10 +115,10 @@ describe('Airdrop tests', () => {
       expect(tokenClaim.wallet.toLowerCase()).toEqual(
         body.wallet.toLowerCase(),
       );
-      expect(tokenClaim.totalClaimed).toEqual(response.body.data.totalPoints);
+      expect(tokenClaim.totalNctr).toEqual(response.body.data.totalPoints);
     });
 
-    test('User should receive 403 if trying to claim from same IP and fingerprint', async () => {
+    test('User should be blocked if trying to claim from same IP and fingerprint', async () => {
       const body = await claimBody(1);
 
       // Claim for the first time
@@ -132,9 +134,6 @@ describe('Airdrop tests', () => {
         .post('/referral/review-tasks')
         .send(body)
         .set('Authorization', `Bearer ${testUser3.token}`);
-
-      expect(response.status).toBe(403);
-      expect(response.body.message).toBe('CLAIM_FORBIDDEN');
 
       const tokenClaims = await stage.db.referral.paramExecute(
         `SELECT * FROM token_claim`,
@@ -153,7 +152,7 @@ describe('Airdrop tests', () => {
         .set('Authorization', `Bearer ${testUser.token}`);
 
       expect(response.status).toBe(400);
-      expect(response.body.message).toBe('TASKS_ALREADY_REVIEWED');
+      expect(response.body.message).toBe('REVIEW_ALREADY_SUBMITTED');
     });
   });
 });

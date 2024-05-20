@@ -1,4 +1,9 @@
-import { SerializeFor, ReviewTasksDto, SqlModelStatus } from '@apillon/lib';
+import {
+  SerializeFor,
+  ReviewTasksDto,
+  SqlModelStatus,
+  PopulateFrom,
+} from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { ReferralErrorCode } from '../../config/types';
 import { ReferralCodeException } from '../../lib/exceptions';
@@ -37,8 +42,12 @@ export class AirdropService {
     context: ServiceContext,
   ): Promise<UserAirdropTask> {
     const reviewTasksDto = new ReviewTasksDto(event.body);
-    // Check if user is elligible to claim
-    await AirdropService.checkClaimConditions(event.body, context);
+
+    // Check if user is eligible to claim
+    const isBlocked = await AirdropService.checkClaimConditions(
+      event.body,
+      context,
+    );
 
     // Get last populated user completed tasks and points
     const stats = await new UserAirdropTask({}, context).populateByUserUuid(
@@ -60,11 +69,11 @@ export class AirdropService {
       // Create new token claim entry
       await new TokenClaim(reviewTasksDto, context)
         .populate({
-          totalClaimed: stats.totalPoints,
+          totalNctr: stats.totalPoints,
           user_uuid: context.user.user_uuid,
+          status: isBlocked ? SqlModelStatus.ACTIVE : SqlModelStatus.BLOCKED,
         })
         .insert(SerializeFor.INSERT_DB, conn);
-
       await context.mysql.commit(conn);
 
       return stats.serialize(SerializeFor.SERVICE) as UserAirdropTask;
@@ -90,30 +99,27 @@ export class AirdropService {
   }
 
   /**
-   * Check if user is elligible to claim tokens
+   * Check if user is eligible to claim tokens
    * No fraudulent or duplicate accounts
    * @param {ReviewTasksDto} reviewTasksDto - The DTO containing review data
    * @param {ServiceContext} context
    * @throws {ReferralCodeException} - If user already claimed or is blocked
+   * @returns {Promise<boolean>} - If user is eligible to claim
    */
   static async checkClaimConditions(
     reviewTasksDto: ReviewTasksDto,
     context: ServiceContext,
-  ): Promise<void> {
-    const user_uuid = context.user.user_uuid;
-
+  ): Promise<boolean> {
     // Check if user already claimed
     const claimUser = await new TokenClaim({}, context).populateByUUID(
-      user_uuid,
+      context.user.user_uuid,
       'user_uuid',
     );
 
     if (claimUser.exists()) {
       throw new ReferralCodeException({
-        status: claimUser.blocked ? 403 : 400,
-        code: claimUser.blocked
-          ? ReferralErrorCode.CLAIM_FORBIDDEN
-          : ReferralErrorCode.TASKS_ALREADY_REVIEWED,
+        status: 400,
+        code: ReferralErrorCode.REVIEW_ALREADY_SUBMITTED,
       });
     }
 
@@ -122,23 +128,12 @@ export class AirdropService {
       context,
     ).findAllByIpOrFingerprint();
 
-    if (!claimers.length) {
-      return;
+    if (claimers.length) {
+      // Insert new claimer and set all to blocked, because IP or fingerprint matches with another user
+      await Promise.all(claimers.map((c) => c.markBlocked()));
+      return false;
     }
 
-    // Insert new claimer and set all to blocked, because IP or fingerprint matches with another user
-    await Promise.all(claimers.map((c) => c.markBlocked()));
-
-    await new TokenClaim(reviewTasksDto, context)
-      .populate({
-        user_uuid, // user_uuid is table PK
-        status: SqlModelStatus.BLOCKED,
-      })
-      .insert(SerializeFor.INSERT_DB);
-
-    throw new ReferralCodeException({
-      status: 403,
-      code: ReferralErrorCode.CLAIM_FORBIDDEN,
-    });
+    return true;
   }
 }
