@@ -162,7 +162,7 @@ export class ReferralService {
       'ReferralService/reviewTasks',
       context,
     );
-    body.wallet = address;
+    body.wallet = address.toUpperCase();
     return (await new ReferralMicroservice(context).reviewTasks(body)).data;
   }
 }

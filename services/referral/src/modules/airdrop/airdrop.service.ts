@@ -3,6 +3,8 @@ import {
   ReviewTasksDto,
   SqlModelStatus,
   PopulateFrom,
+  invalidateCacheKey,
+  CacheKeyPrefix,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { ReferralErrorCode } from '../../config/types';
@@ -42,6 +44,7 @@ export class AirdropService {
     context: ServiceContext,
   ): Promise<UserAirdropTask> {
     const reviewTasksDto = new ReviewTasksDto(event.body);
+    const user_uuid = context.user.user_uuid;
 
     // Check if user is eligible to claim
     const isBlocked = await AirdropService.checkClaimConditions(
@@ -51,7 +54,7 @@ export class AirdropService {
 
     // Get last populated user completed tasks and points
     const stats = await new UserAirdropTask({}, context).populateByUserUuid(
-      context.user.user_uuid,
+      user_uuid,
     );
 
     if (!stats.exists()) {
@@ -70,7 +73,7 @@ export class AirdropService {
       await new TokenClaim(reviewTasksDto, context)
         .populate({
           totalNctr: stats.totalPoints,
-          user_uuid: context.user.user_uuid,
+          user_uuid,
           status: isBlocked ? SqlModelStatus.ACTIVE : SqlModelStatus.BLOCKED,
         })
         .insert(SerializeFor.INSERT_DB, conn);
@@ -90,11 +93,13 @@ export class AirdropService {
           sourceFunction: 'reviewTasks()',
           sourceModule: 'AirdropService',
         }).writeToMonitor({
-          user_uuid: context?.user?.user_uuid,
+          user_uuid,
           data: reviewTasksDto.serialize(),
           sendAdminAlert: true,
         });
       }
+    } finally {
+      await invalidateCacheKey(`${CacheKeyPrefix.AIRDROP_TASKS}:${user_uuid}`);
     }
   }
 
