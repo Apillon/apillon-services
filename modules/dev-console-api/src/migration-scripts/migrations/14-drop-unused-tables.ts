@@ -29,15 +29,16 @@ export const downgrade = async (
   `);
 
   await queryFn(`
-    CREATE TABLE IF NOT EXISTS \instruction\` (
+    CREATE TABLE IF NOT EXISTS \`instruction\` (
       \`id\` INT NOT NULL AUTO_INCREMENT,
-      \`instructionEnum\` VARCHAR(100) NOT NULL,
       \`instructionType\` INT NOT NULL,
       \`title\` VARCHAR(250) NULL,
       \`htmlContent\` TEXT NOT NULL,
       \`extendedHtmlContent\` TEXT NULL,
       \`docsUrl\` VARCHAR(500) NULL,
       \`forRoute\` VARCHAR(200) NULL,
+      \`expanded\` BOOLEAN DEFAULT 1,
+      \`sortId\` INT NULL,
       \`status\` INT NOT NULL DEFAULT '${SqlModelStatus.ACTIVE}',
       \`createTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` INT NULL,
