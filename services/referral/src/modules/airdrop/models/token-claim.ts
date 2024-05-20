@@ -95,7 +95,7 @@ export class TokenClaim extends AdvancedSQLModel {
   @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.PROFILE],
-    serializable: [SerializeFor.PROFILE],
+    serializable: [SerializeFor.ADMIN],
     getter() {
       return this.status === SqlModelStatus.BLOCKED;
     },
