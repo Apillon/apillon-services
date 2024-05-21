@@ -566,7 +566,7 @@ export class UserAirdropTask extends BaseSQLModel {
   async addGalxePoints(wallet: string, conn?: PoolConnection) {
     const data = await this.getContext().mysql.paramExecute(
       `
-        SELECT COUNT(*) as galxeTasksCompleted
+        SELECT count
         FROM ${DbTables.GALXE_WALLET}
         WHERE UPPER(wallet) = UPPER(@wallet)
       `,
@@ -574,7 +574,7 @@ export class UserAirdropTask extends BaseSQLModel {
       conn,
     );
 
-    const { galxeTasksCompleted } = data[0];
+    const galxeTasksCompleted = data[0]?.count || 0;
     this.galxeTasksCompleted = galxeTasksCompleted;
     this.recalculateTotalPoints();
 
