@@ -1,4 +1,10 @@
-import { JwtExpireTime, JwtTokenType, generateJwtToken } from '@apillon/lib';
+import {
+  AuthenticationMicroservice,
+  CreateOasisSignatureDto,
+  JwtExpireTime,
+  JwtTokenType,
+  generateJwtToken,
+} from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 
@@ -12,5 +18,14 @@ export class OasisService {
     );
 
     return { sessionToken };
+  }
+
+  async createOasisSignature(
+    context: ApillonApiContext,
+    body: CreateOasisSignatureDto,
+  ) {
+    return (
+      await new AuthenticationMicroservice(context).createOasisSignature(body)
+    ).data;
   }
 }

@@ -39,6 +39,7 @@ export async function processEvent(
       WalletService.listWalletDeposits,
     [BlockchainEventType.GET_TOTAL_WALLET_TRANSACTIONS]:
       WalletService.getTotalWalletTransactions,
+    [BlockchainEventType.CREATE_EVM_SIGNATURE]: EvmService.createSignature,
   };
 
   return await processors[event.eventName](event, context);

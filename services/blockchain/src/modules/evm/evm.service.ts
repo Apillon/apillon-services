@@ -1,5 +1,6 @@
 import {
   AppEnvironment,
+  Chain,
   ChainType,
   env,
   EvmChain,
@@ -490,5 +491,43 @@ export class EvmService {
       );
     }
     // TODO: call transaction checker
+  }
+
+  /**
+   * Create signature for specific Evm chain
+   * @param params timestamp, chain and data to be signed
+   * @param context
+   * @returns
+   */
+  static async createSignature(
+    params: { chain: EvmChain; data: string; timestamp: number },
+    context: ServiceContext,
+  ) {
+    const wallet = await new Wallet({}, context).populateByChain(params.chain);
+    if (!wallet.exists()) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.WALLET_DOES_NOT_EXISTS,
+        status: 500,
+      });
+    }
+
+    const seed = await getWalletSeed(wallet.seed);
+    const signingWallet = new ethers.Wallet(seed);
+
+    const gasPrice = (await signingWallet.provider.getFeeData()).gasPrice;
+
+    const dataHash = ethers.utils.solidityKeccak256(
+      ['uint256', 'uint256', 'bytes32'],
+      [gasPrice, params.timestamp, ethers.utils.keccak256(params.data)],
+    );
+
+    const signature = await signingWallet.signMessage(
+      ethers.utils.toUtf8Bytes(dataHash),
+    );
+
+    return {
+      dataHash,
+      signature,
+    };
   }
 }

@@ -5,13 +5,11 @@ export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<Array<any>>,
 ): Promise<void> {
   await queryFn(
-    `CREATE TABLE IF NOT EXISTS \`${DbTables.OASIS_WALLET}\` (
+    `CREATE TABLE IF NOT EXISTS \`${DbTables.OASIS_SIGNATURE}\` (
       \`id\` INT NOT NULL AUTO_INCREMENT,
       \`status\` INT NULL,
-      \`oasisWallet_uuid\` VARCHAR(36) NOT NULL,
       \`project_uuid\` VARCHAR(36) NOT NULL,
-      \`transactionHash\` VARCHAR(255) NOT NULL,
-      \`contractAddress\` VARCHAR(255) NULL,
+      \`dataHash\` TEXT NOT NULL,
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` INT NULL,
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -26,6 +24,6 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<Array<any>>,
 ): Promise<void> {
   await queryFn(`
-    DROP TABLE IF EXISTS \`${DbTables.OASIS_WALLET}\`;
+    DROP TABLE IF EXISTS \`${DbTables.OASIS_SIGNATURE}\`;
   `);
 }

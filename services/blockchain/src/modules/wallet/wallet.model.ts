@@ -471,6 +471,29 @@ export class Wallet extends AdvancedSQLModel {
     return this.reset();
   }
 
+  public async populateByChain(chain: Chain): Promise<this> {
+    if (!chain) {
+      throw new Error('chain should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${DbTables.WALLET}\`
+      WHERE
+        chainType = @chainType
+        AND status = ${SqlModelStatus.ACTIVE}
+      LIMIT 1;
+      `,
+      { chain },
+    );
+
+    if (data?.length) {
+      return this.populate(data[0], PopulateFrom.DB).calculateTokenBalance();
+    }
+    return this.reset();
+  }
+
   public calculateTokenBalance() {
     if (!this.decimals) {
       return this;

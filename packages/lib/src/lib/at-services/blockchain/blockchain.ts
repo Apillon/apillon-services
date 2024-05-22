@@ -1,3 +1,13 @@
+import {
+  Chain,
+  ClusterDepositTransaction,
+  CreateEvmTransactionDto,
+  CreateSubstrateTransactionDto,
+  TransactionDto,
+  UpdateTransactionDto,
+  WalletDepositsQueryFilter,
+  WalletTransactionsQueryFilter,
+} from '../../..';
 import { env } from '../../../config/env';
 import {
   AppEnvironment,
@@ -9,16 +19,6 @@ import {
 import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
-import {
-  Chain,
-  ClusterDepositTransaction,
-  CreateEvmTransactionDto,
-  CreateSubstrateTransactionDto,
-  TransactionDto,
-  UpdateTransactionDto,
-  WalletDepositsQueryFilter,
-  WalletTransactionsQueryFilter,
-} from '../../..';
 
 export class BlockchainMicroservice extends BaseService {
   lambdaFunctionName =
@@ -74,6 +74,18 @@ export class BlockchainMicroservice extends BaseService {
     const data = {
       eventName: BlockchainEventType.EVM_GET_TRANSACTION,
       id,
+    };
+    return await this.callService(data);
+  }
+
+  public async createEvmSignature(params: {
+    chain: EvmChain;
+    data: string;
+    timestamp: number;
+  }): Promise<{ data: { dataHash: string; signature: string } }> {
+    const data = {
+      eventName: BlockchainEventType.CREATE_EVM_SIGNATURE,
+      params,
     };
     return await this.callService(data);
   }

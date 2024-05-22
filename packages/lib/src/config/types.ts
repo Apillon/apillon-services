@@ -27,6 +27,7 @@ export enum EvmChain {
   MOONBASE = 1287,
   ASTAR_SHIBUYA = 81, // testnet
   ASTAR = 592,
+  OASIS = 42262,
 }
 
 export enum NFTCollectionType {
@@ -102,6 +103,7 @@ export enum BlockchainEventType {
   UPDATE_TRANSACTION = 'update-transaction',
   LIST_WALLET_DEPOSITS = 'list-wallet-deposits',
   GET_TOTAL_WALLET_TRANSACTIONS = 'get-total-wallet-transactions',
+  CREATE_EVM_SIGNATURE = 'create-evm-signature',
 }
 
 export enum StorageEventType {
@@ -180,6 +182,7 @@ export enum AuthenticationEventType {
   SPORRAN_REQUEST_CREDENTIAL = 'sporran-request-credential',
   SPORRAN_VERIFY_CREDENTIAL = 'sporran-verify-credential',
   GET_TOTAL_DIDS = 'get-total-dids',
+  CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
 }
 
 export enum MailEventType {
@@ -617,7 +620,7 @@ export enum ValidatorErrorCode {
   ADD_NFT_REQUIRED_DATA_NOT_PRESENT = 42200162,
   DATA_NOT_VALID = 42200163,
   DATA_NOT_PRESENT = 42200164,
-
+  CREATE_OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT = 42200165,
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
   COMPUTING_CONTRACT_TYPE_NOT_PRESENT = 42200202,
