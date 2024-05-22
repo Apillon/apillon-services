@@ -14,7 +14,6 @@ import {
 import {
   BaseQueryFilter,
   CacheKeyPrefix,
-  CacheKeyTTL,
   ConfigureCreditDto,
   CreditTransactionQueryFilter,
   DefaultUserRole,
@@ -32,7 +31,6 @@ import {
   Validation,
 } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
-import { File } from '../file/models/file.model';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
 import { ProjectUserUpdateRoleDto } from './dtos/project_user-update-role.dto';
 import { Project } from './models/project.model';
@@ -58,21 +56,6 @@ export class ProjectController {
   @UseGuards(AuthGuard)
   async isProjectsQuotaReached(@Ctx() context: DevConsoleApiContext) {
     return await this.projectService.isProjectsQuotaReached(context);
-  }
-
-  @Post(':uuid/image')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
-  @Validation({ dto: File })
-  @UseGuards(AuthGuard, ValidationGuard)
-  async updateProjectImage(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') uuid: string,
-    @Body() body: File,
-  ) {
-    return await this.projectService.updateProjectImage(context, uuid, body);
   }
 
   @Get(':uuid/users')

@@ -1092,6 +1092,30 @@ export class NftsService {
     return { success: true, transactionHash: data.transactionHash };
   }
 
+  /**
+   * Set a collection's status to archived
+   * @param {{ collecton_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Collection>}
+   */
+  static async archiveCollection(
+    event: { collection_uuid: string },
+    context: ServiceContext,
+  ): Promise<Collection> {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(event.collection_uuid);
+
+    await NftsService.checkCollection(
+      collection,
+      'archiveCollection()',
+      context,
+    );
+
+    return await collection.markArchived();
+  }
+
   private static async checkCollection(
     collection: Collection,
     sourceFunction: string,

@@ -265,7 +265,7 @@ export class Space extends UuidSqlModel {
         FROM \`${DbTables.SPACE}\` s
         WHERE s.project_uuid = IFNULL(@project_uuid, s.project_uuid)
         AND (@search IS null OR s.name LIKE CONCAT('%', @search, '%') OR s.space_uuid = @search)
-        AND ((@status IS null AND s.status <> ${SqlModelStatus.DELETED}) OR @status = s.status)
+        AND ((@status IS null AND s.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.ARCHIVED})) OR @status = s.status)
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}

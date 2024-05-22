@@ -18,6 +18,7 @@ import {
   BaseQueryFilter,
   CacheKeyPrefix,
   CacheKeyTTL,
+  ReviewTasksDto,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -28,6 +29,7 @@ import {
   Permissions,
   Validation,
   CacheByUser,
+  IpAddress,
 } from '@apillon/modules-lib';
 import { AuthGuard } from '../../guards/auth.guard';
 
@@ -155,5 +157,18 @@ export class ReferralController {
   })
   async getAirdropTasks(@Ctx() context: DevConsoleApiContext) {
     return await this.referralService.getAirdropTasks(context);
+  }
+
+  @Post('review-tasks')
+  @Permissions({ role: DefaultUserRole.USER })
+  @UseGuards(AuthGuard, ValidationGuard)
+  @Validation({ dto: ReviewTasksDto })
+  async reviewTasks(
+    @Ctx() context: DevConsoleApiContext,
+    @IpAddress() ip: string,
+    @Body() body: ReviewTasksDto,
+  ) {
+    body.ip_address = ip;
+    return await this.referralService.reviewTasks(context, body);
   }
 }

@@ -14,6 +14,7 @@ import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -63,6 +64,19 @@ export class ComputingController {
     @Param('uuid') uuid: string,
   ) {
     return await this.computingService.getContract(context, uuid);
+  }
+
+  @Delete('contracts/:uuid')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async archiveContract(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+  ) {
+    return await this.computingService.archiveContract(context, uuid);
   }
 
   @Get('contracts/:uuid/transactions')

@@ -19,9 +19,9 @@ export const upgrade = async (
     \`updateUser\` INT NULL,
     PRIMARY KEY (\`id\`),
     UNIQUE (project_uuid),
-    CONSTRAINT \`fk_project_file\` 
+    CONSTRAINT \`fk_project_file\`
       FOREIGN KEY (\`imageFile_id\`)
-      REFERENCES \`${DbTables.FILE}\` (\`id\`) 
+      REFERENCES \`file\` (\`id\`)
       ON UPDATE NO ACTION
     )`);
 };

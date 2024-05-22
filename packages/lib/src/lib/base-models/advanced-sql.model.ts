@@ -379,18 +379,27 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
   /**
    * Marks document in the database as deleted.
    */
-  public async markDeleted(conn?: PoolConnection): Promise<this> {
+  public async markDeleted(
+    conn?: PoolConnection,
+    status = SqlModelStatus.DELETED,
+  ): Promise<this> {
     this.updateUser = this.getContext()?.user?.id;
 
-    this.status = SqlModelStatus.DELETED;
+    this.status = status;
 
     try {
-      await this.update(SerializeFor.INSERT_DB, conn);
+      return await this.update(SerializeFor.INSERT_DB, conn);
     } catch (err) {
       this.reset();
       throw err;
     }
-    return this;
+  }
+
+  /**
+   * Marks document in the database as archived.
+   */
+  public async markArchived(conn?: PoolConnection) {
+    return await this.markDeleted(conn, SqlModelStatus.ARCHIVED);
   }
 
   /*

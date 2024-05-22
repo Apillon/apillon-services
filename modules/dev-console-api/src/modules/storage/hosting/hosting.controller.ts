@@ -13,6 +13,7 @@ import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -96,6 +97,20 @@ export class HostingController {
     return await this.hostingService.updateWebsite(context, website_uuid, body);
   }
 
+  @Delete('websites/:website_uuid')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async archiveWebsite(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('website_uuid') website_uuid: string,
+  ) {
+    return await this.hostingService.archiveWebsite(context, website_uuid);
+  }
+
+  //#region deployments
   @Post('websites/:website_uuid/deploy')
   @HttpCode(200)
   @Permissions(
@@ -168,4 +183,5 @@ export class HostingController {
       token,
     );
   }
+  //#endregion
 }

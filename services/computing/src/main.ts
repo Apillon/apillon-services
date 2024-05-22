@@ -25,6 +25,7 @@ export async function processEvent(event: any, context: Context): Promise<any> {
       ComputingService.listClusterWallets,
     [ComputingEventType.PROJECT_COMPUTING_DETAILS]:
       ComputingService.getProjectComputingDetails,
+    [ComputingEventType.ARCHIVE_CONTRACT]: ComputingService.archiveContract,
   };
 
   return await processors[event.eventName](event, context);
