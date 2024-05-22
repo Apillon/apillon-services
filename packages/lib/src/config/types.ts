@@ -363,6 +363,7 @@ export enum AttachedServiceType {
   HOSTING = 4,
   COMPUTING = 5,
   SOCIAL = 6,
+  WALLET = 7,
   SYSTEM = 999,
 }
 
@@ -449,6 +450,7 @@ export enum DefaultPermission {
   AUTHENTICATION = 4,
   COMPUTING = 5,
   SOCIAL = 6,
+  WALLET = 7,
 }
 
 //#endregion
@@ -739,6 +741,7 @@ export enum JwtTokenType {
   // Website review token
   WEBSITE_REVIEW_TOKEN = 'website-review',
   CRYPTO_PAYMENT_DATA = 'crypto-payment-data',
+  OASIS_SDK_TOKEN = 'oasis-sdk-token',
 }
 
 /**
