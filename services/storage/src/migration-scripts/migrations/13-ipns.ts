@@ -18,8 +18,7 @@ export async function upgrade(
   \`createUser\` INT NULL,
   \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   \`updateUser\` INT NULL,
-  PRIMARY KEY (\`id\`),
-  UNIQUE KEY \`ipns_unique_key\` (\`project_uuid\`,\`name\`)
+  PRIMARY KEY (\`id\`)
   )`);
 }
 
