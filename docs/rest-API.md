@@ -64,7 +64,26 @@ Exception classes are defined in `@packages/lib/src/lib/exceptions`.
 
 ### Validation errors
 
-Errors of type `ValidationException`.
+Errors of type `ModelValidationException`.
+
+```json
+{
+  "status": 422,
+  "errors": [
+    {
+      "code": 42200002,
+      "property": "email",
+      "message": "CREATE_USER_DTO_EMAIL_NOT_PRESENT"
+    }
+  ],
+  "path": "/user",
+  "timestamp": "2022-09-16T08:09:29.137Z"
+}
+```
+
+### Model Validation errors
+
+Errors of type `ModelValidationException`.
 
 ```json
 {
