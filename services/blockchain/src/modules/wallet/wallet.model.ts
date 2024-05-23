@@ -481,7 +481,7 @@ export class Wallet extends AdvancedSQLModel {
       SELECT *
       FROM \`${DbTables.WALLET}\`
       WHERE
-        chainType = @chainType
+        chain = @chain
         AND status = ${SqlModelStatus.ACTIVE}
       LIMIT 1;
       `,

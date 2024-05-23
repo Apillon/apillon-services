@@ -506,19 +506,40 @@ export class EvmService {
     const wallet = await new Wallet({}, context).populateByChain(params.chain);
     if (!wallet.exists()) {
       throw new BlockchainCodeException({
-        code: BlockchainErrorCode.WALLET_DOES_NOT_EXISTS,
+        code: BlockchainErrorCode.ERROR_GENERATING_SIGNATURE,
         status: 500,
       });
     }
 
+    //wallet
     const seed = await getWalletSeed(wallet.seed);
     const signingWallet = new ethers.Wallet(seed);
 
-    const gasPrice = (await signingWallet.provider.getFeeData()).gasPrice;
+    //provider
+    const endpoint = await new Endpoint({}, context).populateByChain(
+      params.chain,
+      ChainType.EVM,
+    );
+
+    if (!endpoint.exists()) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.INVALID_CHAIN,
+        status: 400,
+      });
+    }
+
+    console.log('Endpoint: ', endpoint.url);
+    const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
+
+    const gasPrice = (await provider.getFeeData()).gasPrice;
 
     const dataHash = ethers.utils.solidityKeccak256(
       ['uint256', 'uint256', 'bytes32'],
-      [gasPrice, params.timestamp, ethers.utils.keccak256(params.data)],
+      [
+        gasPrice,
+        params.timestamp,
+        ethers.utils.solidityKeccak256(['string'], [params.data]),
+      ],
     );
 
     const signature = await signingWallet.signMessage(

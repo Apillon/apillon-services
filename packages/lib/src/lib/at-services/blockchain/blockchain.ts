@@ -85,7 +85,7 @@ export class BlockchainMicroservice extends BaseService {
   }): Promise<{ data: { dataHash: string; signature: string } }> {
     const data = {
       eventName: BlockchainEventType.CREATE_EVM_SIGNATURE,
-      params,
+      ...params,
     };
     return await this.callService(data);
   }

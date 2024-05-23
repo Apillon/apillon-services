@@ -127,6 +127,7 @@ export enum BlockchainErrorCode {
   ERROR_TRANSMITING_TRANSACTION = 50016004,
   INVALID_DATA_PASSED_TO_WORKER = 50016005,
   WALLET_DOES_NOT_EXISTS = 50016006,
+  ERROR_GENERATING_SIGNATURE = 50016007,
 }
 
 export enum TxStatus {
@@ -153,7 +154,7 @@ export enum TxToken {
   ETHEREUM = 'ETH',
   USDC = 'USDC',
   USDT = 'USDT',
-  SUBSOCIAL_TOKEN = 'SUB'
+  SUBSOCIAL_TOKEN = 'SUB',
 }
 
 export enum TxAction {
