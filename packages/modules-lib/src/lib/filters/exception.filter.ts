@@ -52,6 +52,7 @@ export class ExceptionsFilter implements ExceptionFilter {
         //Validation errors received from microservice - handled in @apillon/lib base-service
         res.status(HttpStatus.UNPROCESSABLE_ENTITY).json({
           id: request?.context?.requestId,
+          code: error.code || SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
           status: error.status,
           message: error.message,
           errors: error.errors,
