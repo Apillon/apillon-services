@@ -55,8 +55,8 @@ import {
 import {
   NftsCodeException,
   NftsContractException,
-  NftsNotFoundException,
   NftsModelValidationException,
+  NftsNotFoundException,
   NftsValidationException,
 } from '../../lib/exceptions';
 import { DeployCollectionWorker } from '../../workers/deploy-collection-worker';
@@ -370,7 +370,10 @@ export class NftsService {
       )
     ) {
       throw new NftsValidationException({
-        code: NftsErrorCode.INVALID_ADDRESS,
+        code:
+          collection.chainType === ChainType.EVM
+            ? NftsErrorCode.INVALID_EVM_ADDRESS
+            : NftsErrorCode.INVALID_SUBSTRATE_ADDRESS,
         property: 'address',
       });
     }
@@ -668,7 +671,10 @@ export class NftsService {
       )
     ) {
       throw new NftsValidationException({
-        code: NftsErrorCode.INVALID_ADDRESS,
+        code:
+          collection.chainType === ChainType.EVM
+            ? NftsErrorCode.INVALID_EVM_ADDRESS
+            : NftsErrorCode.INVALID_SUBSTRATE_ADDRESS,
         property: 'address',
       });
     }

@@ -94,14 +94,15 @@ export class ValidationException extends HttpException {
   errors: IValidationError[];
 
   public constructor(
-    errorCodes: { [key: number]: string },
-    ...errors: IValidationError[]
+    errors: IValidationError | IValidationError[],
+    errorCodes?: { [key: number]: string },
   ) {
-    const errorsWithMessages = errors.map((error) => ({
+    const errorsArray = Array.isArray(errors) ? errors : [errors];
+    const errorsWithMessages = errorsArray.map((error) => ({
       ...error,
       message:
         errorCodes && !error.message
-          ? { ...errorCodes, ...ValidatorErrorCode }[error.code]
+          ? { ...ValidatorErrorCode, ...errorCodes }[error.code]
           : error.message,
     }));
     super(
@@ -139,7 +140,7 @@ export class ModelValidationException extends ValidationException {
         }) as IValidationError,
     );
 
-    super(errorCodes, ...validationErrors);
+    super(validationErrors, errorCodes);
 
     this.modelName = model.constructor.name;
   }

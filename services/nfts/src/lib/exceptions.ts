@@ -28,8 +28,8 @@ export class NftsModelValidationException extends ModelValidationException {
 }
 
 export class NftsValidationException extends ValidationException {
-  constructor(...errors: IValidationError[]) {
-    super(NftsErrorCode, ...errors);
+  constructor(errors: IValidationError | IValidationError[]) {
+    super(errors, NftsErrorCode);
   }
 }
 
