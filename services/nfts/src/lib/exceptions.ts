@@ -3,7 +3,7 @@ import {
   CodeException,
   ErrorOptions,
   ServiceName,
-  ValidationException,
+  ModelValidationException,
 } from '@apillon/lib';
 import { NftsErrorCode } from '../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -19,7 +19,7 @@ export class NftsCodeException extends CodeException {
   }
 }
 
-export class NftsValidationException extends ValidationException {
+export class NftsValidationException extends ModelValidationException {
   constructor(model: Model) {
     super(model, NftsErrorCode);
   }

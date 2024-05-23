@@ -8,6 +8,7 @@ import {
   CreateCollectionDTO,
   CreateEvmTransactionDto,
   CreateSubstrateTransactionDto,
+  ValidationException,
   DeployCollectionDTO,
   env,
   EvmChain,
@@ -368,11 +369,12 @@ export class NftsService {
         SubstrateChainPrefix.ASTAR,
       )
     ) {
-      throw new NftsCodeException({
-        status: 422,
+      const chainName = getChainName(collection.chainType, collection.chain);
+      const chainType = ChainType[collection.chainType];
+      throw new ValidationException({
         code: NftsErrorCode.INVALID_ADDRESS,
-        context,
-        sourceFunction: 'transferCollectionOwnership',
+        property: 'address',
+        message: `Invalid address for ${chainType} chain ${chainName}: ${body.address}.`,
       });
     }
     await NftsService.checkCollection(
@@ -668,11 +670,12 @@ export class NftsService {
         SubstrateChainPrefix.ASTAR,
       )
     ) {
-      throw new NftsCodeException({
-        status: 422,
+      const chainName = getChainName(collection.chainType, collection.chain);
+      const chainType = ChainType[collection.chainType];
+      throw new ValidationException({
         code: NftsErrorCode.INVALID_ADDRESS,
-        context,
-        sourceFunction: 'mintNftTo',
+        property: 'address',
+        message: `Invalid address for ${chainType} chain ${chainName}: ${body.receivingAddress}.`,
       });
     }
 
@@ -840,9 +843,10 @@ export class NftsService {
     }
     // only RMRK NFTs can be used for nesting
     if (parentCollection.collectionType !== NFTCollectionType.NESTABLE) {
-      throw new NftsCodeException({
+      throw new ValidationException({
         code: NftsErrorCode.COLLECTION_TYPE_NOT_VALID,
-        status: 422,
+        property: 'parentCollectionUuid',
+        message: `Parent collection with id ${parentCollection.collection_uuid} is not nestable.`,
       });
     }
 
@@ -852,16 +856,26 @@ export class NftsService {
     ).populateByUUID(body.collection_uuid);
     // only RMRK NFTs can be nest minted
     if (childCollection.collectionType !== NFTCollectionType.NESTABLE) {
-      throw new NftsCodeException({
+      throw new ValidationException({
         code: NftsErrorCode.COLLECTION_TYPE_NOT_VALID,
-        status: 422,
+        property: 'collection_uuid',
+        message: `Child collection with id ${childCollection.collection_uuid} is not nestable.`,
       });
     }
 
     if (parentCollection.chain !== childCollection.chain) {
-      throw new NftsCodeException({
+      const parentChainName = getChainName(
+        parentCollection.chainType,
+        parentCollection.chain,
+      );
+      const childChainName = getChainName(
+        childCollection.chainType,
+        childCollection.chain,
+      );
+      throw new ValidationException({
         code: NftsErrorCode.COLLECTION_PARENT_AND_CHILD_NFT_CHAIN_MISMATCH,
-        status: 500,
+        property: 'collection_uuid',
+        message: `Chains dont match between child (${childChainName}) and parent (${parentChainName}) collection.`,
       });
     }
 
@@ -1174,11 +1188,10 @@ export class NftsService {
       !collection.isAutoIncrement &&
       params.idsToMint?.length !== params.quantity
     ) {
-      throw new NftsCodeException({
-        status: 422,
+      throw new ValidationException({
         code: NftsErrorCode.MINT_IDS_LENGTH_NOT_VALID,
-        context,
-        sourceFunction: 'mintNftTo()',
+        property: 'idsToMint',
+        message: `Ids to mint should be provided for non auto increment collection.`,
       });
     }
   }

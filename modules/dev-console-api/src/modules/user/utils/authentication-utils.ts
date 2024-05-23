@@ -8,7 +8,7 @@ import {
   ReferralMicroservice,
   SerializeFor,
   UnauthorizedErrorCodes,
-  ValidationException,
+  ModelValidationException,
   generateRandomCode,
   isEVMWallet,
   parseJwtToken,
@@ -115,7 +115,7 @@ async function createUser(
     email,
     metadata,
   });
-  await user.validateOrThrow(ValidationException, ValidatorErrorCode);
+  await user.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
   return user;
 }

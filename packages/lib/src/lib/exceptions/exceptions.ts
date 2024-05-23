@@ -81,12 +81,39 @@ export class CodeException extends HttpException {
   }
 }
 
+interface IValidationErrors {
+  code: number;
+  property: string;
+  message: string;
+}
+
+/**
+ * Validation error.
+ */
+export class ValidationException extends HttpException {
+  errors: IValidationErrors[];
+
+  public constructor(...errors: IValidationErrors[]) {
+    super(
+      {
+        code: 422,
+        errors,
+        message: 'Validation error', // workaround for errors in production
+      },
+      422,
+    );
+
+    this.errors = errors;
+
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
 /**
  * Model validation error.
  */
-export class ValidationException extends HttpException {
+export class ModelValidationException extends ValidationException {
   modelName: string;
-  errors: any[];
 
   /**
    * Class constructor.
@@ -94,26 +121,19 @@ export class ValidationException extends HttpException {
    * @param errorCodes Validator error codes from service, which initializes this class
    */
   public constructor(model: Model, errorCodes?: any) {
-    const validationErrors = model.collectErrors().map((x) => ({
-      code: x.code,
-      property: x.path[0],
-      message: errorCodes
-        ? { ...errorCodes, ...ValidatorErrorCode }[x.code]
-        : ValidatorErrorCode[x.code] || '',
-    }));
-
-    super(
-      {
-        code: 422,
-        errors: validationErrors,
-        message: 'Validation error', // workaround for errors in production
-      },
-      422,
+    const validationErrors = model.collectErrors().map(
+      (x) =>
+        ({
+          code: x.code,
+          property: x.path[0],
+          message: errorCodes
+            ? { ...errorCodes, ...ValidatorErrorCode }[x.code]
+            : ValidatorErrorCode[x.code] || '',
+        }) as IValidationErrors,
     );
 
-    this.modelName = model.constructor.name;
-    this.errors = validationErrors;
+    super(...validationErrors);
 
-    Error.captureStackTrace(this, this.constructor);
+    this.modelName = model.constructor.name;
   }
 }

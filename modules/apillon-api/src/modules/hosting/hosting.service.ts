@@ -9,7 +9,7 @@ import {
 import {
   DeployWebsiteDto,
   StorageMicroservice,
-  ValidationException,
+  ModelValidationException,
   ValidatorErrorCode,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
@@ -41,7 +41,7 @@ export class HostingService {
     body: ApillonHostingApiCreateS3UrlsForUploadDto,
   ) {
     body.populate({ website_uuid });
-    await body.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await body.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     return (
       await new StorageMicroservice(
@@ -70,7 +70,7 @@ export class HostingService {
     body: DeployWebsiteDto,
   ) {
     body.populate({ website_uuid, clearBucketForUpload: true });
-    await body.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await body.validateOrThrow(ModelValidationException, ValidatorErrorCode);
     return (await new StorageMicroservice(context).deployWebsite(body)).data;
   }
 

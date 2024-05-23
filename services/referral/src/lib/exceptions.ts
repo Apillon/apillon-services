@@ -3,7 +3,7 @@ import {
   CodeException,
   ErrorOptions,
   ServiceName,
-  ValidationException,
+  ModelValidationException,
 } from '@apillon/lib';
 import { ReferralErrorCode } from '../config/types';
 
@@ -19,7 +19,7 @@ export class ReferralCodeException extends CodeException {
   }
 }
 
-export class ReferralValidationException extends ValidationException {
+export class ReferralValidationException extends ModelValidationException {
   constructor(model: Model) {
     super(model, ReferralErrorCode);
   }

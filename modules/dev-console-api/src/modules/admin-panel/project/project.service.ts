@@ -14,7 +14,7 @@ import {
   Scs,
   SerializeFor,
   StorageMicroservice,
-  ValidationException,
+  ModelValidationException,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { UUID } from 'crypto';
@@ -157,7 +157,7 @@ export class ProjectService {
   async addCreditsToProject(context: DevConsoleApiContext, data: AddCreditDto) {
     data.referenceTable = 'manually_added';
     data.referenceId = uuidV4();
-    await data.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await data.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     return (await new Scs(context).addCredit(data)).data;
   }

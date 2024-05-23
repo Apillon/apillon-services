@@ -20,7 +20,7 @@ import {
   ServiceName,
   SubscriptionsQueryFilter,
   InvoicesQueryFilter,
-  ValidationException,
+  ModelValidationException,
   ReferralMicroservice,
   writeLog,
   BaseQueryFilter,
@@ -207,7 +207,7 @@ export class ProjectService {
 
     project.populate(data, PopulateFrom.PROFILE);
 
-    await project.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await project.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     await project.update();
     await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);

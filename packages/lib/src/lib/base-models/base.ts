@@ -1,6 +1,6 @@
 import { Model, prop } from '@rawmodel/core';
 import { Context } from '../context';
-import { ValidationException } from '../exceptions/exceptions';
+import { ModelValidationException } from '../exceptions/exceptions';
 import { PopulateFrom, SerializeFor } from '../../config/types';
 
 /**
@@ -127,7 +127,7 @@ export abstract class ModelBase extends Model<any> {
     validationException: new (
       model: Model,
       errorCodes?: any,
-    ) => ValidationException,
+    ) => ModelValidationException,
     errorCodes?: object,
   ): Promise<this> {
     try {
