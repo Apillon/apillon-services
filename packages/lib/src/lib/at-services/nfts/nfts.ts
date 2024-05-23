@@ -165,4 +165,11 @@ export class NftsMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+  public async archiveCollection(collection_uuid: string) {
+    const data = {
+      eventName: NftsEventType.ARCHIVE_COLLECTION,
+      collection_uuid,
+    };
+    return await this.callService(data);
+  }
 }

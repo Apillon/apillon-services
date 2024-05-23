@@ -292,7 +292,7 @@ export class Post extends UuidSqlModel {
         WHERE p.project_uuid = @project_uuid
         ${space_uuid ? ' AND s.space_uuid = @space_uuid' : ''}
         AND (@search IS null OR p.title LIKE CONCAT('%', @search, '%') OR p.post_uuid = @search)
-        AND ((@status IS null AND s.status <> ${SqlModelStatus.DELETED}) OR @status = p.status)
+        AND ((@status IS null AND s.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.ARCHIVED})) OR @status = p.status)
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}

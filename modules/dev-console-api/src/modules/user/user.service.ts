@@ -501,7 +501,7 @@ export class UserService {
   ) {
     const { isEvmWallet, wallet, signature, timestamp } = walletAuthDto;
     const { message } = this.getAuthMessage(timestamp);
-    const signatureValidityMinutes = 60;
+    const signatureValidityMinutes = 15;
 
     const getSignatureData = isEvmWallet
       ? new Identity(null).validateEvmWalletSignature

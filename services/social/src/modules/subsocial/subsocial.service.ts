@@ -39,6 +39,16 @@ export class SubsocialService {
     return space.serializeByContext();
   }
 
+  static async archiveSpace(
+    event: { space_uuid: string },
+    context: ServiceContext,
+  ) {
+    const space = await new Space({}, context).populateByUuidAndCheckAccess(
+      event.space_uuid,
+    );
+    return await space.markArchived();
+  }
+
   static async createSpace(
     params: { body: CreateSpaceDto },
     context: ServiceContext,
@@ -80,6 +90,17 @@ export class SubsocialService {
     );
 
     return post.serializeByContext();
+  }
+
+  static async archivePost(
+    event: { post_uuid: string },
+    context: ServiceContext,
+  ) {
+    const post = await new Post({}, context).populateByUuidAndCheckAccess(
+      event.post_uuid,
+    );
+
+    return await post.markArchived();
   }
 
   static async createPost(

@@ -3,6 +3,7 @@ import {
   BaseSQLModel,
   Mongo,
   MongoCollections,
+  PoolConnection,
   PopulateFrom,
   SerializeFor,
   env,
@@ -314,6 +315,20 @@ export class UserAirdropTask extends BaseSQLModel {
     ],
     defaultValue: 0,
   })
+  public galxeTasksCompleted: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+    ],
+    defaultValue: 0,
+  })
   public totalPoints: number;
 
   exists(): boolean {
@@ -338,7 +353,7 @@ export class UserAirdropTask extends BaseSQLModel {
       : this.reset();
   }
 
-  public async insertOrUpdate(): Promise<void> {
+  public async insertOrUpdate(): Promise<this> {
     const serializedData = this.serialize(SerializeFor.INSERT_DB);
 
     const updateFields = Object.keys(serializedData)
@@ -351,9 +366,10 @@ export class UserAirdropTask extends BaseSQLModel {
     `;
 
     await this.getContext().mysql.paramExecute(query, serializedData);
+    return this;
   }
 
-  public async getNewStats(user_uuid: string) {
+  public async getNewStats(user_uuid: string): Promise<this> {
     this.reset();
     this.user_uuid = user_uuid;
     const res = await this.db().paramExecute(
@@ -391,9 +407,7 @@ export class UserAirdropTask extends BaseSQLModel {
     ]);
 
     this.recalculateTotalPoints();
-    await this.insertOrUpdate();
-    console.info('Finished assigning airdrop tasks');
-    return this;
+    return await this.insertOrUpdate();
   }
 
   public recalculateTotalPoints() {
@@ -408,6 +422,8 @@ export class UserAirdropTask extends BaseSQLModel {
         taskPoint = Math.floor(this.creditsSpent / 3000);
       } else if (task === 'usersReferred') {
         taskPoint = this.usersReferred * taskPoints[task];
+      } else if (task === 'galxeTasksCompleted') {
+        taskPoint = this.galxeTasksCompleted * taskPoints[task];
       } else if (isCompleted) {
         taskPoint = taskPoints[task] || 0;
       }
@@ -472,7 +488,7 @@ export class UserAirdropTask extends BaseSQLModel {
 
       const checkApiCalled = ($regex: RegExp) =>
         collection
-          .count({
+          .countDocuments({
             apiKey: { $in: apiKeys },
             status: { $in: [200, 201] },
             url: { $regex, $options: 'i' },
@@ -545,5 +561,36 @@ export class UserAirdropTask extends BaseSQLModel {
         return;
       }
     }
+  }
+
+  async addGalxePoints(wallet: string, conn?: PoolConnection) {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT count
+        FROM ${DbTables.GALXE_WALLET}
+        WHERE UPPER(wallet) = UPPER(@wallet)
+      `,
+      { wallet },
+      conn,
+    );
+
+    const galxeTasksCompleted = data[0]?.count || 0;
+    this.galxeTasksCompleted = galxeTasksCompleted;
+    this.recalculateTotalPoints();
+
+    await this.getContext().mysql.paramExecute(
+      `
+      UPDATE ${DbTables.USER_AIRDROP_TASK}
+      SET galxeTasksCompleted = @galxeTasksCompleted,
+      totalPoints = @totalPoints
+      WHERE user_uuid = @user_uuid
+      `,
+      {
+        galxeTasksCompleted,
+        totalPoints: this.totalPoints,
+        user_uuid: this.user_uuid,
+      },
+      conn,
+    );
   }
 }

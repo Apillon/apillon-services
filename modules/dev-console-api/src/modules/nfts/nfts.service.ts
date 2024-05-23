@@ -192,4 +192,13 @@ export class NftsService {
       await new StorageMicroservice(context).listCollectionMetadata(query)
     ).data;
   }
+
+  async archiveCollection(
+    context: DevConsoleApiContext,
+    collection_uuid: string,
+  ) {
+    return (
+      await new NftsMicroservice(context).archiveCollection(collection_uuid)
+    ).data;
+  }
 }

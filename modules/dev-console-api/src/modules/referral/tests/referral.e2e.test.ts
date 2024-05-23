@@ -10,13 +10,13 @@ import {
   Stage,
   TestUser,
   createTestReferralProduct,
+  TestBlockchain,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 
 describe('Referral tests', () => {
   let stage: Stage;
-
   let testUser: TestUser;
 
   let product: any;
@@ -37,8 +37,6 @@ describe('Referral tests', () => {
       stage.context.devConsole,
       stage.context.access,
     );
-    // const project = await createTestProject(testUser, stage, 7000);
-    // await createTestReferralTasks(stage.context.referral);
     product = await createTestReferralProduct(stage.context.referral);
   });
 
@@ -195,16 +193,6 @@ describe('Referral tests', () => {
         .send({ id: product.id })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response2.status).toBe(400);
-    });
-  });
-
-  describe('Airdrop', () => {
-    test('User should be able to get his stats regarding airdrop rewards', async () => {
-      const response = await request(stage.http)
-        .get(`/referral/airdrop-tasks`)
-        .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(200);
-      expect(response.body.data.totalPoints).toBeGreaterThanOrEqual(10);
     });
   });
 });

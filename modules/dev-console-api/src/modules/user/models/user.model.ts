@@ -91,7 +91,7 @@ export class User extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
-    fakeValue: () => getFaker().name.fullName(),
+    fakeValue: () => getFaker().person.fullName(),
   })
   public name: string;
 

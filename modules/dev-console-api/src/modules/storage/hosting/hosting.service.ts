@@ -87,6 +87,11 @@ export class HostingService {
     ).data;
   }
 
+  async archiveWebsite(context: DevConsoleApiContext, website_uuid: string) {
+    return (await new StorageMicroservice(context).archiveWebsite(website_uuid))
+      .data;
+  }
+
   async isWebsitesQuotaReached(
     context: DevConsoleApiContext,
     query: WebsitesQuotaReachedQueryFilter,

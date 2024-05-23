@@ -75,6 +75,11 @@ export class ComputingService {
     return (await new ComputingMicroservice(context).getContract(uuid)).data;
   }
 
+  async archiveContract(context: DevConsoleApiContext, uuid: string) {
+    return (await new ComputingMicroservice(context).archiveContract(uuid))
+      .data;
+  }
+
   async listTransactions(
     context: DevConsoleApiContext,
     query: ComputingTransactionQueryFilter,

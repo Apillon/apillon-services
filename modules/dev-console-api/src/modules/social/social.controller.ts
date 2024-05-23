@@ -19,6 +19,7 @@ import {
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -60,6 +61,19 @@ export class SocialController {
     return await this.socialService.getSpace(context, space_uuid);
   }
 
+  @Delete('spaces/:space_uuid')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async archiveSpace(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('space_uuid') space_uuid: string,
+  ) {
+    return await this.socialService.archiveSpace(context, space_uuid);
+  }
+
   @Post('spaces')
   @Validation({ dto: CreateSpaceDto })
   @Permissions(
@@ -97,6 +111,19 @@ export class SocialController {
     @Param('post_uuid') post_uuid: string,
   ) {
     return await this.socialService.getPost(context, post_uuid);
+  }
+
+  @Delete('posts/:post_uuid')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async archivePost(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('post_uuid') post_uuid: string,
+  ) {
+    return await this.socialService.archivePost(context, post_uuid);
   }
 
   @Post('posts')

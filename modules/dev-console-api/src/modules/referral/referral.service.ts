@@ -7,11 +7,14 @@ import {
   TwitterOauthDto,
   ProductOrderDto,
   BaseQueryFilter,
+  ReviewTasksDto,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class ReferralService {
+  constructor(private userService: UserService) {}
   /**
    * Creates a new referral player.
    *
@@ -146,5 +149,20 @@ export class ReferralService {
         context.user.user_uuid,
       )
     ).data;
+  }
+
+  /**
+   * Review tasks and total NCTR tokens collected
+   * @param {DevConsoleApiContext} context
+   * @param {ReviewTasksDto} body
+   */
+  async reviewTasks(context: DevConsoleApiContext, body: ReviewTasksDto) {
+    const { address } = await this.userService.validateWalletSignature(
+      body,
+      'ReferralService/reviewTasks',
+      context,
+    );
+    body.wallet = address;
+    return (await new ReferralMicroservice(context).reviewTasks(body)).data;
   }
 }

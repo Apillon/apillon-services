@@ -1,4 +1,4 @@
-import { NftsCodeException } from './../../../lib/exceptions';
+import { NftsCodeException } from '../../../lib/exceptions';
 import {
   AdvancedSQLModel,
   ChainType,
@@ -114,15 +114,13 @@ export class ContractVersion extends AdvancedSQLModel {
         async () => {
           const data = await this.getContext().mysql.paramExecute(
             `
-            SELECT ${this.generateSelectFields()}
-            FROM \`${DbTables.CONTRACT_VERSION}\`
-            WHERE collectionType = @collectionType
-            AND chainType = @chainType
-            ${version_id ? 'AND id = @version_id' : ''}
-            AND status = ${SqlModelStatus.ACTIVE}
-            ${version_id ? '' : 'ORDER BY version DESC LIMIT 1'}
-            ;
-        `,
+              SELECT ${this.generateSelectFields()}
+              FROM \`${DbTables.CONTRACT_VERSION}\`
+              WHERE collectionType = @collectionType
+                AND chainType = @chainType ${version_id ? 'AND id = @version_id' : ''}
+            AND status = ${SqlModelStatus.ACTIVE} ${version_id ? '' : 'ORDER BY version DESC LIMIT 1'}
+              ;
+            `,
             { collectionType, chainType, version_id },
           );
           return data?.length
