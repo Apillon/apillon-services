@@ -5,6 +5,7 @@ import {
   DeploymentQueryFilter,
   DeployWebsiteDto,
   RoleGroup,
+  ShortUrlDto,
   ValidateFor,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
@@ -184,4 +185,20 @@ export class HostingController {
     );
   }
   //#endregion
+
+  @Post('short-url')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  @Validation({ dto: CreateWebsiteDto })
+  @UseGuards(ValidationGuard)
+  async generateShortUrl(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: ShortUrlDto,
+  ) {
+    return await this.hostingService.generateShortUrl(body, context);
+  }
 }
