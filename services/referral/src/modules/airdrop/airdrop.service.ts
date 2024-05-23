@@ -98,8 +98,6 @@ export class AirdropService {
           sendAdminAlert: true,
         });
       }
-    } finally {
-      await invalidateCacheKey(`${CacheKeyPrefix.AIRDROP_TASKS}:${user_uuid}`);
     }
   }
 
