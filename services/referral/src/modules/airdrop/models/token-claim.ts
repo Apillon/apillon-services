@@ -121,7 +121,7 @@ export class TokenClaim extends AdvancedSQLModel {
       `
         SELECT * FROM \`${DbTables.TOKEN_CLAIM}\`
         WHERE (@ip_address IS NULL OR ip_address = @ip_address)
-        AND (@fingerprint IS NULL OR fingerprint = @fingerprint)
+        OR (@fingerprint IS NULL OR fingerprint = @fingerprint)
       `,
       {
         ip_address: this.ip_address,
