@@ -80,7 +80,7 @@ Use case:
         } catch (err) {
         await project.handle(err);
         if (!project.isValid())
-            throw new ValidationException(project, ValidatorErrorCode);
+          throw new ModelValidationException(project, ValidatorErrorCode);
         }
 
         await project.update();

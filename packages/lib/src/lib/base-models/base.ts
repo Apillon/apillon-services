@@ -1,7 +1,7 @@
 import { Model, prop } from '@rawmodel/core';
 import { Context } from '../context';
-import { ValidationException } from '../exceptions/exceptions';
-import { PopulateFrom, SerializeFor } from '../../config/types';
+import { ModelValidationException } from '../exceptions/exceptions';
+import { PopulateFrom } from '../../config/types';
 
 /**
  * Common model related objects.
@@ -15,7 +15,7 @@ export abstract class ModelBase extends Model<any> {
   /**
    * Class constructor.
    * @param data Input data.
-   * @param config Model configuration.
+   * @param context
    */
   public constructor(data?: unknown, context?: Context) {
     super(data, { context });
@@ -119,7 +119,7 @@ export abstract class ModelBase extends Model<any> {
    * @param {new (
    *       model: Model,
    *       errorCodes?: any,
-   *     ) => ValidationException} validationException
+   *     ) => ModelValidationException} validationException
    * @param {?object} [errorCodes]
    * @returns {Promise<this>}
    */
@@ -127,7 +127,7 @@ export abstract class ModelBase extends Model<any> {
     validationException: new (
       model: Model,
       errorCodes?: any,
-    ) => ValidationException,
+    ) => ModelValidationException,
     errorCodes?: object,
   ): Promise<this> {
     try {

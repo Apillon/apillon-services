@@ -81,39 +81,67 @@ export class CodeException extends HttpException {
   }
 }
 
+export interface IValidationError {
+  code: number;
+  property: string;
+  message?: string;
+}
+
+/**
+ * Validation error.
+ */
+export class ValidationException extends HttpException {
+  errors: IValidationError[];
+
+  public constructor(
+    errors: IValidationError | IValidationError[],
+    errorCodes?: { [key: number]: string },
+  ) {
+    const errorsArray = Array.isArray(errors) ? errors : [errors];
+    const errorsWithMessages = errorsArray.map((error) => ({
+      ...error,
+      message:
+        errorCodes && !error.message
+          ? { ...ValidatorErrorCode, ...errorCodes }[error.code]
+          : error.message,
+    }));
+    super(
+      {
+        code: 422,
+        errors: errorsWithMessages,
+        message: 'Validation error', // workaround for errors in production
+      },
+      422,
+    );
+
+    this.errors = errorsWithMessages;
+
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
 /**
  * Model validation error.
  */
-export class ValidationException extends HttpException {
+export class ModelValidationException extends ValidationException {
   modelName: string;
-  errors: any[];
 
   /**
    * Class constructor.
    * @param model Model instance.
    * @param errorCodes Validator error codes from service, which initializes this class
    */
-  public constructor(model: Model, errorCodes?: any) {
-    const validationErrors = model.collectErrors().map((x) => ({
-      code: x.code,
-      property: x.path[0],
-      message: errorCodes
-        ? { ...errorCodes, ...ValidatorErrorCode }[x.code]
-        : ValidatorErrorCode[x.code] || '',
-    }));
-
-    super(
-      {
-        code: 422,
-        errors: validationErrors,
-        message: 'Validation error', // workaround for errors in production
-      },
-      422,
+  public constructor(model: Model, errorCodes?: { [key: number]: string }) {
+    const validationErrors = model.collectErrors().map(
+      (x) =>
+        ({
+          code: x.code,
+          property: x.path[0],
+        }) as IValidationError,
     );
 
-    this.modelName = model.constructor.name;
-    this.errors = validationErrors;
+    super(validationErrors, errorCodes);
 
-    Error.captureStackTrace(this, this.constructor);
+    this.modelName = model.constructor.name;
   }
 }

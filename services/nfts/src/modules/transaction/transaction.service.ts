@@ -5,7 +5,6 @@ import {
   PoolConnection,
   SerializeFor,
   TransactionQueryFilter,
-  TransactionStatus,
   TransactionWebhookDataDto,
 } from '@apillon/lib';
 import { DbTables, NftsErrorCode } from '../../config/types';
@@ -13,7 +12,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import {
   NftsCodeException,
   NftsNotFoundException,
-  NftsValidationException,
+  NftsModelValidationException,
 } from '../../lib/exceptions';
 import { executeTransactionStatusWorker } from '../../scripts/serverless-workers/execute-transaction-status-worker';
 import { Collection } from '../nfts/models/collection.model';
@@ -33,7 +32,7 @@ export class TransactionService {
     transaction: Transaction,
     conn: PoolConnection,
   ) {
-    await transaction.validateOrThrow(NftsValidationException);
+    await transaction.validateOrThrow(NftsModelValidationException);
 
     await transaction.insert(SerializeFor.INSERT_DB, conn);
 
@@ -127,23 +126,5 @@ export class TransactionService {
     await worker.runExecutor({
       data: [event.transactionWebhookData],
     });
-  }
-
-  static async updateTransactionStatusInHashes(
-    context: ServiceContext,
-    hashes: string[],
-    status: TransactionStatus,
-    conn: PoolConnection,
-  ) {
-    await context.mysql.paramExecute(
-      `UPDATE \`${DbTables.TRANSACTION}\`
-      SET transactionStatus = @status
-      WHERE
-        AND transactionHash in ('${hashes.join("','")}')`,
-      {
-        status,
-      },
-      conn,
-    );
   }
 }

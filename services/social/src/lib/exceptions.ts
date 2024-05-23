@@ -3,7 +3,7 @@ import {
   CodeException,
   ErrorOptions,
   ServiceName,
-  ValidationException,
+  ModelValidationException,
 } from '@apillon/lib';
 import { SocialErrorCode } from '../config/types';
 
@@ -18,7 +18,7 @@ export class SocialCodeException extends CodeException {
   }
 }
 
-export class SocialValidationException extends ValidationException {
+export class SocialValidationException extends ModelValidationException {
   constructor(model: Model) {
     super(model, SocialErrorCode);
   }

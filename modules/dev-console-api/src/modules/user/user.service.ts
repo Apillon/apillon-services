@@ -11,7 +11,7 @@ import {
   UnauthorizedErrorCodes,
   UserWalletAuthDto,
   Scs,
-  ValidationException,
+  ModelValidationException,
   env,
   generateJwtToken,
   invalidateCachePrefixes,
@@ -378,7 +378,7 @@ export class UserService {
     }
 
     user.populate(body);
-    await user.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await user.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     const conn = await context.mysql.start();
 
