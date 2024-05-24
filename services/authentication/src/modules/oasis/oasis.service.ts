@@ -2,6 +2,7 @@ import {
   BlockchainMicroservice,
   CreateOasisSignatureDto,
   EvmChain,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AuthenticationValidationException } from '../../lib/exceptions';
@@ -23,6 +24,7 @@ export class OasisService {
     ).data;
 
     const oasisSignature = new OasisSignature({}, context).populate({
+      status: SqlModelStatus.INACTIVE,
       project_uuid: event.body.project_uuid,
       dataHash: signatureRes.dataHash,
     });

@@ -12,6 +12,7 @@ import { TestWorker } from './test-worker';
 import { Scheduler } from './scheduler';
 import { ServiceContext } from '@apillon/service-lib';
 import { UpdateStateWorker } from './update-state/update-state.worker';
+import { OasisContractEventWorker } from './oasis-contract-event.worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -20,6 +21,7 @@ export enum WorkerName {
   TEST_WORKER = 'TestWorker',
   SCHEDULER = 'scheduler',
   UPDATE_STATE_WORKER = 'UpdateStateWorker',
+  OASIS_CONTRACT_EVENT_WORKER = 'OasisContractEventWorker',
 }
 
 export async function handler(event: any) {
@@ -168,6 +170,13 @@ export async function handleSqsMessages(
       switch (message?.messageAttributes?.workerName?.stringValue) {
         case WorkerName.UPDATE_STATE_WORKER: {
           await new UpdateStateWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({ executeArg: message?.body });
+        }
+        case WorkerName.OASIS_CONTRACT_EVENT_WORKER: {
+          await new OasisContractEventWorker(
             workerDefinition,
             context,
             QueueWorkerType.EXECUTOR,

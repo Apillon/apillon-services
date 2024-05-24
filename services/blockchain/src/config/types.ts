@@ -8,6 +8,7 @@ export enum DbTables {
   TRANSACTION_QUEUE = 'transaction_queue',
   TRANSACTION_LOG = 'transaction_log',
   WALLET_DEPOSIT = 'wallet_deposit',
+  CONTRACT = 'contract',
 }
 
 export enum CrustTransferType {
@@ -101,6 +102,9 @@ export enum BlockchainErrorCode {
   WALLET_DEPOSIT_CURRENT_AMOUNT_NOT_PRESENT = 42216023,
   WALLET_DEPOSIT_WALLET_NOT_PRESENT = 42216023,
 
+  CONTRACT_REQUIRED_DATA_NOT_PRESENT = 42216030,
+  CONTRACT_INVALID_CHAIN = 42216031,
+
   // 400 - Bad request
   BAD_REQUEST = 40016001,
   INVALID_CHAIN = 40016002,
@@ -128,6 +132,7 @@ export enum BlockchainErrorCode {
   INVALID_DATA_PASSED_TO_WORKER = 50016005,
   WALLET_DOES_NOT_EXISTS = 50016006,
   ERROR_GENERATING_SIGNATURE = 50016007,
+  CONTRACT_DOES_NOT_EXISTS = 50016008,
 }
 
 export enum TxStatus {
