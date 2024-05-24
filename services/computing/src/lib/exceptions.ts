@@ -3,7 +3,7 @@ import {
   CodeException,
   ErrorOptions,
   ServiceName,
-  ValidationException,
+  ModelValidationException,
 } from '@apillon/lib';
 import { ComputingErrorCode } from '../config/types';
 
@@ -19,7 +19,7 @@ export class ComputingCodeException extends CodeException {
   }
 }
 
-export class ComputingValidationException extends ValidationException {
+export class ComputingValidationException extends ModelValidationException {
   constructor(model: Model) {
     super(model, ComputingErrorCode);
   }

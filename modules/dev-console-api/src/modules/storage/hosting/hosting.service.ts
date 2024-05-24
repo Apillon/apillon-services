@@ -7,7 +7,7 @@ import {
   JwtTokenType,
   parseJwtToken,
   StorageMicroservice,
-  ValidationException,
+  ModelValidationException,
   ValidatorErrorCode,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
@@ -107,7 +107,7 @@ export class HostingService {
     body: DeployWebsiteDto,
   ) {
     body.populate({ website_uuid });
-    await body.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await body.validateOrThrow(ModelValidationException, ValidatorErrorCode);
     return (await new StorageMicroservice(context).deployWebsite(body)).data;
   }
 

@@ -55,6 +55,7 @@ import {
 import {
   NftsCodeException,
   NftsContractException,
+  NftsModelValidationException,
   NftsNotFoundException,
   NftsValidationException,
 } from '../../lib/exceptions';
@@ -145,7 +146,7 @@ export class NftsService {
               }
             }
 
-            await collection.validateOrThrow(NftsValidationException);
+            await collection.validateOrThrow(NftsModelValidationException);
 
             const conn = await context.mysql.start();
 
@@ -368,11 +369,12 @@ export class NftsService {
         SubstrateChainPrefix.ASTAR,
       )
     ) {
-      throw new NftsCodeException({
-        status: 422,
-        code: NftsErrorCode.INVALID_ADDRESS,
-        context,
-        sourceFunction: 'transferCollectionOwnership',
+      throw new NftsValidationException({
+        code:
+          collection.chainType === ChainType.EVM
+            ? NftsErrorCode.INVALID_EVM_ADDRESS
+            : NftsErrorCode.INVALID_SUBSTRATE_ADDRESS,
+        property: 'address',
       });
     }
     await NftsService.checkCollection(
@@ -668,11 +670,12 @@ export class NftsService {
         SubstrateChainPrefix.ASTAR,
       )
     ) {
-      throw new NftsCodeException({
-        status: 422,
-        code: NftsErrorCode.INVALID_ADDRESS,
-        context,
-        sourceFunction: 'mintNftTo',
+      throw new NftsValidationException({
+        code:
+          collection.chainType === ChainType.EVM
+            ? NftsErrorCode.INVALID_EVM_ADDRESS
+            : NftsErrorCode.INVALID_SUBSTRATE_ADDRESS,
+        property: 'address',
       });
     }
 
@@ -840,9 +843,9 @@ export class NftsService {
     }
     // only RMRK NFTs can be used for nesting
     if (parentCollection.collectionType !== NFTCollectionType.NESTABLE) {
-      throw new NftsCodeException({
+      throw new NftsValidationException({
         code: NftsErrorCode.COLLECTION_TYPE_NOT_VALID,
-        status: 422,
+        property: 'parentCollectionUuid',
       });
     }
 
@@ -852,16 +855,16 @@ export class NftsService {
     ).populateByUUID(body.collection_uuid);
     // only RMRK NFTs can be nest minted
     if (childCollection.collectionType !== NFTCollectionType.NESTABLE) {
-      throw new NftsCodeException({
+      throw new NftsValidationException({
         code: NftsErrorCode.COLLECTION_TYPE_NOT_VALID,
-        status: 422,
+        property: 'collection_uuid',
       });
     }
 
     if (parentCollection.chain !== childCollection.chain) {
-      throw new NftsCodeException({
+      throw new NftsValidationException({
         code: NftsErrorCode.COLLECTION_PARENT_AND_CHILD_NFT_CHAIN_MISMATCH,
-        status: 500,
+        property: 'collection_uuid',
       });
     }
 
@@ -1174,11 +1177,9 @@ export class NftsService {
       !collection.isAutoIncrement &&
       params.idsToMint?.length !== params.quantity
     ) {
-      throw new NftsCodeException({
-        status: 422,
+      throw new NftsValidationException({
         code: NftsErrorCode.MINT_IDS_LENGTH_NOT_VALID,
-        context,
-        sourceFunction: 'mintNftTo()',
+        property: 'idsToMint',
       });
     }
   }

@@ -7,7 +7,7 @@ import {
 import {
   CodeException,
   SystemErrorCode,
-  ValidationException,
+  ModelValidationException,
 } from '@apillon/lib';
 import { Request, Response } from 'express';
 
@@ -38,7 +38,7 @@ export class ExceptionsFilter implements ExceptionFilter {
         path: request.url,
         timestamp: new Date().toISOString(),
       });
-    } else if (error instanceof ValidationException) {
+    } else if (error instanceof ModelValidationException) {
       res.status(error.getStatus()).json({
         id: request?.context?.requestId,
         status: error.getStatus(),
@@ -49,10 +49,11 @@ export class ExceptionsFilter implements ExceptionFilter {
       });
     } else {
       if (error.status == 422) {
-        //Validation errors recieved from microservice - handled in @apillon/lib base-service
+        //Validation errors received from microservice - handled in @apillon/lib base-service
         res.status(HttpStatus.UNPROCESSABLE_ENTITY).json({
           id: request?.context?.requestId,
           code: error.code || SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
+          status: error.status,
           message: error.message,
           errors: error.errors,
           path: request.url,

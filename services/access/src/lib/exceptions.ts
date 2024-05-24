@@ -5,7 +5,7 @@ import {
   ErrorOptions,
   LogType,
   ServiceName,
-  ValidationException,
+  ModelValidationException,
 } from '@apillon/lib';
 import { AmsErrorCode } from '../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -40,7 +40,7 @@ export class AmsBadRequestException extends AmsCodeException {
   }
 }
 
-export class AmsValidationException extends ValidationException {
+export class AmsValidationException extends ModelValidationException {
   constructor(model: Model) {
     super(model, AmsErrorCode);
   }

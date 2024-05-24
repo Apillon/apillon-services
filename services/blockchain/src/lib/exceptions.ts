@@ -3,7 +3,7 @@ import {
   CodeException,
   ErrorOptions,
   ServiceName,
-  ValidationException,
+  ModelValidationException,
 } from '@apillon/lib';
 import { BlockchainErrorCode } from '../config/types';
 
@@ -19,7 +19,7 @@ export class BlockchainCodeException extends CodeException {
   }
 }
 
-export class BlockchainValidationException extends ValidationException {
+export class BlockchainValidationException extends ModelValidationException {
   constructor(model: Model) {
     super(model, BlockchainErrorCode);
   }

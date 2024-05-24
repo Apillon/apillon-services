@@ -163,7 +163,11 @@ export class CryptoPaymentsService {
       await Promise.all([
         new Mailing().sendMail(
           new EmailDataDto({
-            mailAddresses: [email, env.CONTACT_EMAIL_TO],
+            mailAddresses: [
+              email,
+              env.CONTACT_EMAIL_TO,
+              ...env.NOWPAYMENTS_INVOICE_EMAILS,
+            ],
             templateName: EmailTemplate.CRYPTO_PAYMENT_SUCCESSFUL,
             templateData: {
               email,
@@ -181,7 +185,7 @@ export class CryptoPaymentsService {
             },
             attachmentTemplate: 'crypto-payment-invoice',
             attachmentFileName: `Invoice-${invoice.invoice_uuid}.pdf`,
-            bccEmail: env.NOWPAYMENTS_INVOICE_EMAIL,
+            bccEmail: env.NOWPAYMENTS_INVOICE_EMAILS[0],
           }),
         ),
         new Lmas().writeLog({

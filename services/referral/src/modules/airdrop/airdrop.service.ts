@@ -98,8 +98,6 @@ export class AirdropService {
           sendAdminAlert: true,
         });
       }
-    } finally {
-      await invalidateCacheKey(`${CacheKeyPrefix.AIRDROP_TASKS}:${user_uuid}`);
     }
   }
 
@@ -131,7 +129,7 @@ export class AirdropService {
     const claimers = await new TokenClaim(
       reviewTasksDto,
       context,
-    ).findAllByIpOrFingerprint();
+    ).findAllByFingerprint();
 
     if (claimers.length) {
       // Insert new claimer and set all to blocked, because IP or fingerprint matches with another user

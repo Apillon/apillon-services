@@ -5,7 +5,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ValidationException } from '@apillon/lib';
+import { ModelValidationException } from '@apillon/lib';
 import {
   IValidationOptions,
   VALIDATION_OPTIONS_KEY,
@@ -31,7 +31,10 @@ export class ValidationGuard implements CanActivate {
     );
 
     if (!options.skipValidation) {
-      await dto.validateOrThrow(ValidationException, AuthenticationErrorCode);
+      await dto.validateOrThrow(
+        ModelValidationException,
+        AuthenticationErrorCode,
+      );
     }
 
     request[options.validateFor] = dto;

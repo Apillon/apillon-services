@@ -107,26 +107,22 @@ export class TokenClaim extends AdvancedSQLModel {
   }
 
   /**
-   * Populates a TokenClaim model instance based on IP address or fingerprint.
+   * Populates a TokenClaim model instance based on fingerprint.
    * @param conn Optional database connection to use for the query.
    * @returns The populated model instance or a reset instance if no match is found.
    */
-  public async findAllByIpOrFingerprint(
+  public async findAllByFingerprint(
     conn?: PoolConnection,
   ): Promise<TokenClaim[]> {
-    if (!this.ip_address && !this.fingerprint) {
-      throw new Error('IP address or fingerprint must be provided.');
+    if (!this.fingerprint) {
+      throw new Error('fingerprint must be provided.');
     }
     const data = await this.db().paramExecute(
       `
-        SELECT * FROM \`${DbTables.TOKEN_CLAIM}\`
-        WHERE (@ip_address IS NULL OR ip_address = @ip_address)
-        AND (@fingerprint IS NULL OR fingerprint = @fingerprint)
+        SELECT user_uuid FROM \`${DbTables.TOKEN_CLAIM}\`
+        WHERE fingerprint = @fingerprint
       `,
-      {
-        ip_address: this.ip_address,
-        fingerprint: this.fingerprint,
-      },
+      { fingerprint: this.fingerprint },
       conn,
     );
 
