@@ -12,7 +12,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   if (!pathParameter) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ message: 'Path parameter is required' }),
+      body: JSON.stringify({ message: 'Invalid request' }),
     };
   }
 
@@ -25,9 +25,9 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   } catch (error) {
     console.error(error);
     return {
-      statusCode: 500,
+      statusCode: error.status || 500,
       body: JSON.stringify({
-        message: 'Internal server error',
+        message: error.message || 'Internal server error',
       }),
     };
   }

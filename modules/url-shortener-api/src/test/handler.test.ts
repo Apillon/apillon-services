@@ -1,7 +1,7 @@
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { handler } from '../handler'; // replace with your actual file path
 import { setupTest } from '../../test/helpers/setup';
-import { Stage } from '@apillon/tests-lib';
+import { Stage, releaseStage } from '@apillon/tests-lib';
 import { DbTables } from '@apillon/storage/src/config/types';
 
 describe('Lambda Handler', () => {
@@ -16,6 +16,10 @@ describe('Lambda Handler', () => {
     INSERT INTO ${DbTables.SHORT_URL} (id, status, targetUrl)
     VALUES ('${validShortUrlId}', 5, '${validTargetUrl}')
    `);
+  });
+
+  afterAll(async () => {
+    await releaseStage(stage);
   });
 
   it('should return a 302 redirect with a valid URL', async () => {
@@ -47,12 +51,10 @@ describe('Lambda Handler', () => {
     )) as APIGatewayProxyResult;
 
     expect(result.statusCode).toBe(400);
-    expect(result.body).toBe(
-      JSON.stringify({ message: 'Path parameter is required' }),
-    );
+    expect(result.body).toBe(JSON.stringify({ message: 'Invalid request' }));
   });
 
-  it('should return a 500 error when Lambda invocation fails', async () => {
+  it('should return a 404 error if short url does not exists', async () => {
     const event: Partial<APIGatewayEvent> = {
       pathParameters: {
         proxy: 'test-path',
@@ -66,7 +68,9 @@ describe('Lambda Handler', () => {
       null,
     )) as APIGatewayProxyResult;
 
-    expect(result.statusCode).toBe(500);
-    expect(result.body).toContain('Internal server error');
+    expect(result.statusCode).toBe(404);
+    expect(result.body).toContain(
+      'Short URL key is not valid or does not exists',
+    );
   });
 });
