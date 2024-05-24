@@ -552,7 +552,7 @@ export class StorageMicroservice extends BaseService {
 
   public async getTargetUrl(shortUrl_id: string) {
     const data = {
-      eventName: StorageEventType.GENERATE_SHORT_URL,
+      eventName: StorageEventType.GET_TARGET_URL,
       shortUrl_id,
     };
     return await this.callService(data);

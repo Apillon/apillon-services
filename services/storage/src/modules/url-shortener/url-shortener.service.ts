@@ -1,4 +1,4 @@
-import { ShortUrlDto } from '@apillon/lib';
+import { SerializeFor, ShortUrlDto } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { ShortUrl } from './models/short-url.model';
 import { StorageCodeException } from '../../lib/exceptions';
@@ -18,7 +18,9 @@ export class UrlShortenerService {
       return existingShortUrl;
     }
 
-    return await new ShortUrl({}, context).generateShortUrl(event);
+    return (await new ShortUrl({}, context).generateShortUrl(event)).serialize(
+      SerializeFor.SERVICE,
+    );
   }
 
   public static async getTargetUrl(

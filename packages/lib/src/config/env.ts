@@ -554,6 +554,11 @@ export interface IEnv {
   IPN_CALLBACK_URL: string;
   IPN_SECRET_KEY: string;
   NOWPAYMENTS_INVOICE_EMAILS: string[];
+
+  /**
+   * URL SHORTENER
+   */
+  SHORTENER_VALID_DOMAINS: string[];
 }
 
 // dotenv.config();
@@ -1001,6 +1006,11 @@ export let env: IEnv = {
   NOWPAYMENTS_INVOICE_EMAILS: process.env['NOWPAYMENTS_INVOICE_EMAILS']?.split(
     ',',
   ) || [process.env['CONTACT_EMAIL_TO']],
+
+  /** URL SHORTENER */
+  SHORTENER_VALID_DOMAINS: process.env['SHORTENER_VALID_DOMAINS']?.split(
+    ',',
+  ) || ['apillon.io', 'nectarnode.io', 'web3approved.com'],
 };
 
 export let isEnvReady = false;

@@ -1,5 +1,4 @@
 import {
-  AdvancedSQLModel,
   BaseSQLModel,
   Context,
   ErrorCode,
@@ -8,9 +7,10 @@ import {
   ShortUrlDto,
   SqlModelStatus,
   ValidatorErrorCode,
+  env,
   presenceValidator,
   prop,
-  urlValidator,
+  urlDomainValidator,
 } from '@apillon/lib';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
@@ -55,6 +55,7 @@ export class ShortUrl extends BaseSQLModel {
     parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.DB, //
+      PopulateFrom.SERVICE,
     ],
     serializable: [
       SerializeFor.INSERT_DB,
@@ -70,7 +71,7 @@ export class ShortUrl extends BaseSQLModel {
         code: StorageErrorCode.MISSING_TARGET_URL,
       },
       {
-        resolver: urlValidator(),
+        resolver: urlDomainValidator(env.SHORTENER_VALID_DOMAINS),
         code: ValidatorErrorCode.TARGET_URL_NOT_VALID,
       },
     ],
@@ -119,6 +120,19 @@ export class ShortUrl extends BaseSQLModel {
     ],
   })
   public createTime?: Date;
+
+  /**
+   * User who created the object
+   */
+  @prop({
+    serializable: [
+      SerializeFor.INSERT_DB, //
+    ],
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+  })
+  public createUser?: number;
 
   /**
    * Updated at property definition.

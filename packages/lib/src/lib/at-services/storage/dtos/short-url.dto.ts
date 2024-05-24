@@ -6,7 +6,8 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
-import { urlValidator } from '../../../validators';
+import { urlDomainValidator } from '../../../validators';
+import { env } from '../../../../config/env';
 
 export enum ShortUrlReferenceType {
   FILE,
@@ -26,7 +27,7 @@ export class ShortUrlDto extends ModelBase {
         code: ValidatorErrorCode.TARGET_URL_NOT_PRESENT,
       },
       {
-        resolver: urlValidator(),
+        resolver: urlDomainValidator(env.SHORTENER_VALID_DOMAINS),
         code: ValidatorErrorCode.TARGET_URL_NOT_VALID,
       },
     ],

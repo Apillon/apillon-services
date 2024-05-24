@@ -193,7 +193,7 @@ export class HostingController {
     { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
-  @Validation({ dto: CreateWebsiteDto })
+  @Validation({ dto: ShortUrlDto })
   @UseGuards(ValidationGuard)
   async generateShortUrl(
     @Ctx() context: DevConsoleApiContext,

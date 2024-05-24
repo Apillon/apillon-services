@@ -44,13 +44,45 @@ describe('URL shortener tests', () => {
   });
 
   test('Generate Short URL', async () => {
-    const data = new ShortUrlDto();
-    data.targetUrl = 'https://google.com';
     const response = await request(stage.http)
       .post(`/storage/hosting/short-url`)
-      .send(data.serialize())
+      .send({ targetUrl: 'https://ipfs.apillon.io/ipfs/abc' })
       .set('Authorization', `Bearer ${testUser.token}`);
     expect(response.status).toBe(201);
-    expect(response.body.data.id).toBeTruthy();
+    expect(response.body.data.data.id).toBeTruthy();
+
+    const response2 = await request(stage.http)
+      .post(`/storage/hosting/short-url`)
+      .send({ targetUrl: 'https://abcd.ipfs.nectarnode.io' })
+      .set('Authorization', `Bearer ${testUser.token}`);
+    expect(response2.status).toBe(201);
+    expect(response2.body.data.data.id).toBeTruthy();
+
+    const response3 = await request(stage.http)
+      .post(`/storage/hosting/short-url`)
+      .send({ targetUrl: 'https://ipfs.web3approved.com/ipns/asdiasdad12' })
+      .set('Authorization', `Bearer ${testUser.token}`);
+    expect(response3.status).toBe(201);
+    expect(response3.body.data.data.id).toBeTruthy();
+  });
+
+  test('Invalid url should return error', async () => {
+    const response = await request(stage.http)
+      .post(`/storage/hosting/short-url`)
+      .send({ targetUrl: 'https://google.com' })
+      .set('Authorization', `Bearer ${testUser.token}`);
+    expect(response.status).toBe(422);
+
+    const response2 = await request(stage.http)
+      .post(`/storage/hosting/short-url`)
+      .send({ targetUrl: 'apillon.io' })
+      .set('Authorization', `Bearer ${testUser.token}`);
+    expect(response2.status).toBe(422);
+
+    const response3 = await request(stage.http)
+      .post(`/storage/hosting/short-url`)
+      .send({ targetUrl: 'apillon' })
+      .set('Authorization', `Bearer ${testUser.token}`);
+    expect(response3.status).toBe(422);
   });
 });

@@ -34,14 +34,14 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 };
 
 async function getTargetUrl(pathParameter: string) {
-  const targetUrl = await new StorageMicroservice(null).getTargetUrl(
+  const serviceResponse = await new StorageMicroservice(null).getTargetUrl(
     pathParameter,
   );
 
   return {
     statusCode: 302,
     headers: {
-      Location: targetUrl,
+      Location: serviceResponse.data,
     },
     body: '',
   };
