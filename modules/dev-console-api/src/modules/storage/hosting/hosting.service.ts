@@ -6,6 +6,7 @@ import {
   DeployWebsiteDto,
   JwtTokenType,
   parseJwtToken,
+  ShortUrlDto,
   StorageMicroservice,
   ModelValidationException,
   ValidatorErrorCode,
@@ -170,5 +171,9 @@ export class HostingService {
     );
 
     return 'Website REJECTED!.';
+  }
+
+  async generateShortUrl(body: ShortUrlDto, context) {
+    return await new StorageMicroservice(context).generateShortUrl(body);
   }
 }

@@ -163,6 +163,8 @@ export enum StorageEventType {
   GET_PROJECT_IPFS_CLUSTER = 'get-project-ipfs-cluster',
   GET_IPFS_CLUSTER_INFO = 'get-ipfs-cluster-info',
   GET_LINK = 'get-link',
+  GENERATE_SHORT_URL = 'generate-short-url',
+  GET_TARGET_URL = 'get-target-url',
 }
 
 export enum AuthenticationEventType {
@@ -681,6 +683,11 @@ export enum ValidatorErrorCode {
   CONFIGURE_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001005,
   CONFIGURE_CREDIT_REQUIRED_DATA_NOT_VALID = 422001006,
   //#endregion
+
+  //#region short url
+  TARGET_URL_NOT_PRESENT = 422001010,
+  TARGET_URL_NOT_VALID = 422001011,
+  //#endregion
 }
 
 /**
@@ -803,6 +810,8 @@ export enum CacheKeyPrefix {
 
   PLATFORM_STATISTICS = 'platform-statistics',
   PROJECT_OVERVIEW = 'project-overview',
+
+  URL_SHORTENER = 'url-shortener',
 }
 
 export enum CacheKeyTTL {
