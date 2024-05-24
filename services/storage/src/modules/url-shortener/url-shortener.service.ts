@@ -9,7 +9,7 @@ export class UrlShortenerService {
     event: ShortUrlDto,
     context: ServiceContext,
   ) {
-    event.targetUrl = event.targetUrl?.trim()?.toLowerCase();
+    event.targetUrl = event.targetUrl?.trim(); //do not convert to lower case! (would break JWT param)
 
     const existingShortUrl = await new ShortUrl({}, context).populateByTarget(
       event.targetUrl,
