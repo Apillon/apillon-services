@@ -169,10 +169,11 @@ export class ShortUrl extends BaseSQLModel {
   }
 
   public async populateByTarget(targetUrl: string) {
+    // this will be case insensitive search!
     const resp = await this.db().paramExecute(
       `
       SELECT * FROM ${DbTables.SHORT_URL}
-      WHERE targetUrl = @targetUrl
+      WHERE LOWER(targetUrl) = LOWER(@targetUrl)
       `,
       { targetUrl },
     );
@@ -186,7 +187,7 @@ export class ShortUrl extends BaseSQLModel {
   public async generateShortUrl(data: ShortUrlDto) {
     this.reset();
     this.populate(data, PopulateFrom.SERVICE);
-    this.targetUrl = this.targetUrl?.toLowerCase().trim();
+    this.targetUrl = this.targetUrl?.trim(); // do not convert to lower case! (would break JWT token param)
     this.id = this.generateShortUrlKey();
     await this.validateOrThrow(StorageValidationException);
     await this.insert();
