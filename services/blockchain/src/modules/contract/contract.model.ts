@@ -3,10 +3,15 @@ import {
   ChainType,
   Context,
   EvmChain,
+  Lmas,
+  LogType,
   PopulateFrom,
   SerializeFor,
+  ServiceName,
   SubstrateChain,
   enumInclusionValidator,
+  formatTokenWithDecimals,
+  formatWalletAddress,
   presenceValidator,
   prop,
 } from '@apillon/lib';
@@ -258,7 +263,7 @@ export class Contract extends AdvancedSQLModel {
   })
   public token: string;
 
-  public calculateTokenBalance() {
+  private calculateTokenBalance() {
     if (!this.decimals) {
       return this;
     }
@@ -292,5 +297,43 @@ export class Contract extends AdvancedSQLModel {
     }
 
     return this;
+  }
+
+  public async checkBalance(provider: ethers.providers.JsonRpcProvider) {
+    if (!this.minBalance) return;
+
+    //Check balance in cluster and perform alerting, if necessary
+    try {
+      const date = new Date();
+      const FIFTEEN_MIN = 15 * 60 * 1000;
+      this.currentBalance = (
+        await provider.getBalance(this.address)
+      ).toString();
+
+      if (
+        ethers.BigNumber.from(this.currentBalance) <
+          ethers.BigNumber.from(this.minBalance) &&
+        (!this.lastBalanceAlertTime ||
+          date.getTime() - new Date(this.lastBalanceAlertTime).getTime() >
+            FIFTEEN_MIN)
+      ) {
+        await new Lmas().sendAdminAlert(
+          `LOW CONTRACT BALANCE! ${formatWalletAddress(
+            this.chainType,
+            this.chain,
+            this.address,
+          )} ==> balance: ${formatTokenWithDecimals(
+            this.currentBalance,
+            this.decimals,
+          )} / ${formatTokenWithDecimals(this.minBalance, this.decimals)}`,
+          ServiceName.BLOCKCHAIN,
+          LogType.WARN,
+        );
+
+        this.lastBalanceAlertTime = new Date();
+      }
+    } catch (err) {
+      console.error('Error checking contract balance!', err);
+    }
   }
 }

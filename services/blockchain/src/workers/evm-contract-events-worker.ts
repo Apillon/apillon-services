@@ -97,44 +97,7 @@ export abstract class EvmContractEventsWorker extends BaseSingleThreadWorker {
       await this.processEvents(events);
 
       //Check balance in cluster and perform alerting, if necessary
-      try {
-        const date = new Date();
-        const FIFTEEN_MIN = 15 * 60 * 1000;
-        contractData.currentBalance = (
-          await provider.getBalance(contractData.address)
-        ).toString();
-        if (
-          ethers.BigNumber.from(contractData.currentBalance) <
-            ethers.BigNumber.from(contractData.minBalance) &&
-          (!contractData.lastBalanceAlertTime ||
-            date.getTime() -
-              new Date(contractData.lastBalanceAlertTime).getTime() >
-              FIFTEEN_MIN)
-        ) {
-          await this.writeEventLog(
-            {
-              logType: LogType.WARN,
-              message: `LOW CONTRACT BALANCE! ${formatWalletAddress(
-                contractData.chainType,
-                contractData.chain,
-                contractData.address,
-              )} ==> balance: ${formatTokenWithDecimals(
-                contractData.currentBalance,
-                contractData.decimals,
-              )} / ${formatTokenWithDecimals(
-                contractData.minBalance,
-                contractData.decimals,
-              )}`,
-              service: ServiceName.BLOCKCHAIN,
-            },
-            LogOutput.NOTIFY_WARN,
-          );
-
-          contractData.lastBalanceAlertTime = new Date();
-        }
-      } catch (err) {
-        console.error('Error checking contract balance!', err);
-      }
+      await contractData.checkBalance(provider);
 
       contractData.lastParsedBlock = toBlock;
       contractData.lastParsedBlockUpdateTime = new Date();

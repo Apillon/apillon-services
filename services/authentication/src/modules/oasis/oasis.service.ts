@@ -2,11 +2,16 @@ import {
   BlockchainMicroservice,
   CreateOasisSignatureDto,
   EvmChain,
+  ProductCode,
+  ServiceName,
+  SpendCreditDto,
   SqlModelStatus,
+  spendCreditAction,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AuthenticationValidationException } from '../../lib/exceptions';
 import { OasisSignature } from './models/oasis-signature.model';
+import { DbTables } from '../../config/types';
 
 export class OasisService {
   static async createOasisSignature(
@@ -31,7 +36,21 @@ export class OasisService {
 
     await oasisSignature.validateOrThrow(AuthenticationValidationException);
 
-    await oasisSignature.insert();
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {
+        project_uuid: event.body.project_uuid,
+        product_id: ProductCode.OASIS_SIGNATURE,
+        referenceTable: DbTables.OASIS_SIGNATURE,
+        referenceId: signatureRes.dataHash,
+        location: 'OasisService/createOasisSignature',
+        service: ServiceName.AUTH,
+      },
+      context,
+    );
+
+    await spendCreditAction(context, spendCredit, () =>
+      oasisSignature.insert(),
+    );
 
     return { signature: signatureRes.signature };
   }

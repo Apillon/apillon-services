@@ -128,5 +128,20 @@ describe('Oasis contract events tests', () => {
       contract.id,
     );
     expect(tmpContract.lastBalanceAlertTime).toBeTruthy();
+
+    //Another execution should not send another alert
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new OasisContractEventsWorker(
+      workerDefinition,
+      stage.context,
+    ).runExecutor({
+      contractId: contract.id,
+    });
+    const tmpContract2 = await new Contract({}, stage.context).populateById(
+      contract.id,
+    );
+    expect(tmpContract2.lastBalanceAlertTime.getTime()).toBe(
+      tmpContract.lastBalanceAlertTime.getTime(),
+    );
   });
 });
