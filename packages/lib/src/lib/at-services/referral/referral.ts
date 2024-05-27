@@ -124,10 +124,9 @@ export class ReferralMicroservice extends BaseService {
     });
   }
 
-  public async getAirdropTasks(user_uuid: string) {
+  public async getAirdropTasks() {
     return await this.callService({
       eventName: ReferralEventType.GET_AIRDROP_TASKS,
-      user_uuid,
     });
   }
 
@@ -135,6 +134,12 @@ export class ReferralMicroservice extends BaseService {
     return await this.callService({
       eventName: ReferralEventType.REVIEW_TASKS,
       body: body.serialize(),
+    });
+  }
+
+  public async getClaimParameters() {
+    return await this.callService({
+      eventName: ReferralEventType.GET_CLAIM_PARAMETERS,
     });
   }
 }

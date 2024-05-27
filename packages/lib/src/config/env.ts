@@ -559,6 +559,14 @@ export interface IEnv {
    * URL SHORTENER
    */
   SHORTENER_VALID_DOMAINS: string[];
+
+  /**
+   * Airdrop claim
+   */
+  AIRDROP_CLAIM_TIMESTAMP: string;
+  AIRDROP_CLAIM_CONTRACT_ADDRESS: string;
+  AIRDROP_CLAIM_SIGNER_KEY: string;
+  AIRDROP_CLAIM_CHAIN_ID: number;
 }
 
 // dotenv.config();
@@ -1011,6 +1019,11 @@ export let env: IEnv = {
   SHORTENER_VALID_DOMAINS: process.env['SHORTENER_VALID_DOMAINS']?.split(
     ',',
   ) || ['apillon.io', 'nectarnode.io', 'web3approved.com'],
+
+  AIRDROP_CLAIM_TIMESTAMP: process.env['AIRDROP_CLAIM_TIMESTAMP'],
+  AIRDROP_CLAIM_CONTRACT_ADDRESS: process.env['AIRDROP_CLAIM_CONTRACT_ADDRESS'],
+  AIRDROP_CLAIM_SIGNER_KEY: process.env['AIRDROP_CLAIM_SIGNER_KEY'],
+  AIRDROP_CLAIM_CHAIN_ID: +process.env['AIRDROP_CLAIM_CHAIN_ID'],
 };
 
 export let isEnvReady = false;

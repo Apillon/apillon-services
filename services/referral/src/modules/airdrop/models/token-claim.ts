@@ -146,4 +146,20 @@ export class TokenClaim extends AdvancedSQLModel {
     );
     return this;
   }
+
+  /**
+   * Marks token claim as completed
+   */
+  public async markCompleted(conn?: PoolConnection): Promise<this> {
+    await this.getContext().mysql.paramExecute(
+      `
+      UPDATE ${DbTables.TOKEN_CLAIM}
+      SET claimCompleted = TRUE
+      WHERE user_uuid = @user_uuid
+      `,
+      { user_uuid: this.user_uuid },
+      conn,
+    );
+    return this;
+  }
 }

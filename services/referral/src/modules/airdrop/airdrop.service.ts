@@ -2,29 +2,30 @@ import {
   SerializeFor,
   ReviewTasksDto,
   SqlModelStatus,
-  PopulateFrom,
-  invalidateCacheKey,
-  CacheKeyPrefix,
+  env,
+  getSecrets,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { ReferralErrorCode } from '../../config/types';
 import { ReferralCodeException } from '../../lib/exceptions';
 import { UserAirdropTask } from './models/user-airdrop-task.model';
 import { TokenClaim } from './models/token-claim';
+import { ethers } from 'ethers';
 
 export class AirdropService {
   /**
    * Get completed airdrop tasks and total points for a user
-   * @param {user_uuid} - UUID of the user requesting the airdrop tasks
    * @returns {Promise<{ tokenClaim: TokenClaim; airdropStats: UserAirdropTask }>}
    */
   static async getAirdropTasks(
-    event: { user_uuid: string },
+    _event: never,
     context: ServiceContext,
   ): Promise<{ tokenClaim: TokenClaim; airdropStats: UserAirdropTask }> {
+    const user_uuid = context.user.user_uuid;
+
     const [stats, tokenClaim] = await Promise.all([
-      new UserAirdropTask({}, context).populateByUserUuid(event.user_uuid),
-      new TokenClaim({}, context).populateByUUID(event.user_uuid, 'user_uuid'),
+      new UserAirdropTask({}, context).populateByUserUuid(user_uuid),
+      new TokenClaim({}, context).populateByUUID(user_uuid, 'user_uuid'),
     ]);
 
     return {
@@ -138,5 +139,60 @@ export class AirdropService {
     }
 
     return true;
+  }
+
+  /**
+   * Get claim parameters for a user for smart contract claim call
+   * @param {ServiceContext} context
+   */
+  static async getClaimParameters(
+    _event: never,
+    context: ServiceContext,
+  ): Promise<{ amount: number; timestamp: number; signature: string }> {
+    const user_uuid = context.user.user_uuid;
+
+    const tokenClaim = await new TokenClaim({}, context).populateByUUID(
+      user_uuid,
+      'user_uuid',
+    );
+
+    if (!tokenClaim.exists() || tokenClaim.status === SqlModelStatus.BLOCKED) {
+      throw new ReferralCodeException({
+        status: 403,
+        code: ReferralErrorCode.CLAIM_FORBIDDEN,
+      });
+    }
+
+    if (tokenClaim.claimCompleted) {
+      throw new ReferralCodeException({
+        status: 400,
+        code: ReferralErrorCode.CLAIM_ALREADY_COMPLETED,
+      });
+    }
+
+    const amount = tokenClaim.totalNctr;
+    const [airdropTimestamp, contractAddress, chainId] = [
+      env.AIRDROP_CLAIM_TIMESTAMP,
+      env.AIRDROP_CLAIM_CONTRACT_ADDRESS,
+      env.AIRDROP_CLAIM_CHAIN_ID,
+    ];
+    const signerKey = await (
+      await getSecrets(env.BLOCKCHAIN_SECRETS)
+    )['AIRDROP_CLAIM'];
+
+    const message = ethers.utils.solidityKeccak256(
+      ['address', 'address', 'uint256', 'uint256', 'uint256'],
+      [contractAddress, tokenClaim.wallet, amount, airdropTimestamp, chainId],
+    );
+
+    const signature = await new ethers.Wallet(signerKey).signMessage(
+      ethers.utils.arrayify(message),
+    );
+
+    return {
+      amount: tokenClaim.totalNctr,
+      timestamp: +airdropTimestamp,
+      signature,
+    };
   }
 }

@@ -268,6 +268,7 @@ export enum ReferralEventType {
 
   GET_AIRDROP_TASKS = 'get-airdrop-tasks',
   REVIEW_TASKS = 'review-tasks',
+  GET_CLAIM_PARAMETERS = 'get-claim-parameters',
 }
 
 export enum SocialEventType {
