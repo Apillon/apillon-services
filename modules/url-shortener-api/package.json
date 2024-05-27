@@ -25,6 +25,7 @@
     "@apillon/lib": "*"
   },
   "devDependencies": {
+    "@apillon/tests-lib": "*",
     "eslint-config-common": "*",
     "tsconfig": "*"
   },
