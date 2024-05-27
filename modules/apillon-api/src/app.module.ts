@@ -41,7 +41,10 @@ export class AppModule {
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
       .apply(AuthenticateApiKeyMiddleware)
-      .exclude({ path: '/', method: RequestMethod.ALL })
+      .exclude(
+        { path: '/', method: RequestMethod.ALL },
+        { path: '/oasis/signature', method: RequestMethod.POST },
+      )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
       .apply(createRequestLogMiddleware(ApiName.APILLON_API))

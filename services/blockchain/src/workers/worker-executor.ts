@@ -26,6 +26,7 @@ import { PhalaTransactionWorker } from './phala-transaction-worker';
 import { SubsocialTransactionWorker } from './subsocial-transaction-worker';
 import { CheckPendingTransactionsWorker } from './check-pending-transactions-worker';
 import { SubstrateContractTransactionWorker } from './substrate-contract-transaction-worker';
+import { OasisContractEventsWorker } from './oasis-contract-events-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -53,6 +54,7 @@ export enum WorkerName {
   TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
   TRANSACTION_LOG = 'TransactionLog',
   CHECK_PENDING_TRANSACTIONS = 'CheckPendingTransactions',
+  OASIS_CONTRACT_EVENTS_WORKER = 'OasisContractEventsWorker',
 }
 
 export async function handler(event: any) {
@@ -210,6 +212,13 @@ export async function handleLambdaEvent(
         context,
       );
       await checkPendingTransactionsWorker.run();
+      break;
+    }
+    case WorkerName.OASIS_CONTRACT_EVENTS_WORKER: {
+      await new OasisContractEventsWorker(workerDefinition, context).run({
+        executeArg: JSON.stringify(workerDefinition.parameters),
+      });
+      break;
       break;
     }
     default:

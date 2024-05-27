@@ -6,6 +6,8 @@ import {
   SerializeFor,
   ServiceName,
   env,
+  formatTokenWithDecimals,
+  formatWalletAddress,
 } from '@apillon/lib';
 import {
   BaseSingleThreadWorker,
@@ -18,6 +20,10 @@ import { BlockchainErrorCode } from '../config/types';
 import { BlockchainCodeException } from '../lib/exceptions';
 import { Contract } from '../modules/contract/contract.model';
 
+/**
+ * General abstract EVM worker for querying events on given contract. ContractData is stored in db and it's id is given as parameter to the worker
+ * Derived workers should declare eventFiler property and implement function processEvents
+ */
 export abstract class EvmContractEventsWorker extends BaseSingleThreadWorker {
   abstract eventFilter;
 
@@ -89,6 +95,46 @@ export abstract class EvmContractEventsWorker extends BaseSingleThreadWorker {
       );
 
       await this.processEvents(events);
+
+      //Check balance in cluster and perform alerting, if necessary
+      try {
+        const date = new Date();
+        const FIFTEEN_MIN = 15 * 60 * 1000;
+        contractData.currentBalance = (
+          await provider.getBalance(contractData.address)
+        ).toString();
+        if (
+          ethers.BigNumber.from(contractData.currentBalance) <
+            ethers.BigNumber.from(contractData.minBalance) &&
+          (!contractData.lastBalanceAlertTime ||
+            date.getTime() -
+              new Date(contractData.lastBalanceAlertTime).getTime() >
+              FIFTEEN_MIN)
+        ) {
+          await this.writeEventLog(
+            {
+              logType: LogType.WARN,
+              message: `LOW CONTRACT BALANCE! ${formatWalletAddress(
+                contractData.chainType,
+                contractData.chain,
+                contractData.address,
+              )} ==> balance: ${formatTokenWithDecimals(
+                contractData.currentBalance,
+                contractData.decimals,
+              )} / ${formatTokenWithDecimals(
+                contractData.minBalance,
+                contractData.decimals,
+              )}`,
+              service: ServiceName.BLOCKCHAIN,
+            },
+            LogOutput.NOTIFY_WARN,
+          );
+
+          contractData.lastBalanceAlertTime = new Date();
+        }
+      } catch (err) {
+        console.error('Error checking contract balance!', err);
+      }
 
       contractData.lastParsedBlock = toBlock;
       contractData.lastParsedBlockUpdateTime = new Date();

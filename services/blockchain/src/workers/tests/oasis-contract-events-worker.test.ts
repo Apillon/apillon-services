@@ -1,16 +1,13 @@
-import { ChainType, env, EvmChain, TransactionStatus } from '@apillon/lib';
-import { releaseStage, setupTest, Stage } from '../../../test/setup';
-import { Wallet } from '../../modules/wallet/wallet.model';
-import { Transaction } from '../../common/models/transaction';
-import { ServiceDefinitionType, WorkerDefinition } from '@apillon/workers-lib';
-import { EvmTransactionWorker } from '../evm-transaction-worker';
+import { ChainType, EvmChain } from '@apillon/lib';
 import { getConfig } from '@apillon/tests-lib';
+import { ServiceDefinitionType, WorkerDefinition } from '@apillon/workers-lib';
+import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { Endpoint } from '../../common/models/endpoint';
-import { EvmContractEventsWorker } from '../evm-contract-events-worker';
 import { Contract } from '../../modules/contract/contract.model';
 import { OasisContractEventsWorker } from '../oasis-contract-events-worker';
+import { Wallet } from '../../modules/wallet/wallet.model';
 
-describe('Evm contract events tests', () => {
+describe('Oasis contract events tests', () => {
   let stage: Stage;
   let config: any;
   let contract: Contract;
@@ -67,6 +64,9 @@ describe('Evm contract events tests', () => {
         lastParsedBlockUpdateTime: new Date().setDate(
           new Date().getDate() - 10,
         ),
+        minBalance: '0',
+        decimals: 10,
+        token: 'TEST',
       })
       .insert();
   });
@@ -75,7 +75,7 @@ describe('Evm contract events tests', () => {
     await releaseStage(stage);
   });
 
-  test('Evm contract events tests', async () => {
+  test('Test oasis contract event worker', async () => {
     const workerDefinition = new WorkerDefinition(
       {
         type: ServiceDefinitionType.LAMBDA,
@@ -101,5 +101,32 @@ describe('Evm contract events tests', () => {
     expect(tmpContract.lastParsedBlockUpdateTime.getDate()).toBeGreaterThan(
       contract.lastParsedBlockUpdateTime.getDate(),
     );
+  });
+
+  test('Test oasis contract event balance alerting', async () => {
+    contract.minBalance = '1000000000';
+    contract.lastBalanceAlertTime = null;
+    await contract.update();
+
+    const workerDefinition = new WorkerDefinition(
+      {
+        type: ServiceDefinitionType.LAMBDA,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      },
+      'evm-contract-events-worker',
+      {},
+    );
+    await new OasisContractEventsWorker(
+      workerDefinition,
+      stage.context,
+    ).runExecutor({
+      contractId: contract.id,
+    });
+
+    const tmpContract = await new Contract({}, stage.context).populateById(
+      contract.id,
+    );
+    expect(tmpContract.lastBalanceAlertTime).toBeTruthy();
   });
 });

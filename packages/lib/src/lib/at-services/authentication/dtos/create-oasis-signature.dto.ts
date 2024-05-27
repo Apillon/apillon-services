@@ -19,7 +19,7 @@ export class CreateOasisSignatureDto extends ModelBase {
       },
     ],
   })
-  public project_uuid: string;
+  public token: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -33,4 +33,12 @@ export class CreateOasisSignatureDto extends ModelBase {
     ],
   })
   public data: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public project_uuid: string;
 }

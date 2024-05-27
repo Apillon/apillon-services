@@ -1,37 +1,10 @@
-import {
-  AppEnvironment,
-  ChainType,
-  Context,
-  env,
-  EvmChain,
-  LogType,
-  PoolConnection,
-  ServiceName,
-  splitArray,
-  TransactionStatus,
-} from '@apillon/lib';
-import {
-  BaseSingleThreadWorker,
-  LogOutput,
-  sendToWorkerQueue,
-  WorkerDefinition,
-} from '@apillon/workers-lib';
-import { Transaction } from '../common/models/transaction';
-import { Wallet } from '../modules/wallet/wallet.model';
-import { BlockchainErrorCode, DbTables } from '../config/types';
-import { BlockchainCodeException } from '../lib/exceptions';
-import { BlockchainStatus } from '../modules/blockchain-indexers/blockchain-status';
-import {
-  EvmTransfer,
-  EvmTransfers,
-} from '../modules/blockchain-indexers/evm/data-models/evm-transfer';
-import { EvmBlockchainIndexer } from '../modules/blockchain-indexers/evm/evm-indexer.service';
-import { WorkerName } from './worker-executor';
-import { ethers } from 'ethers';
-import { Endpoint } from '../common/models/endpoint';
-import { Contract } from '../modules/contract/contract.model';
+import { AppEnvironment, env, splitArray } from '@apillon/lib';
+import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { EvmContractEventsWorker } from './evm-contract-events-worker';
 
+/**
+ * Worker parses received events, extracts data from it and sends the data (dataHash) to AUTH MS sqs
+ */
 export class OasisContractEventsWorker extends EvmContractEventsWorker {
   eventFilter = 'GaslessTransaction';
 

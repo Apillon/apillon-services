@@ -33,6 +33,6 @@ export class OasisService {
 
     await oasisSignature.insert();
 
-    return signatureRes.signature;
+    return { signature: signatureRes.signature };
   }
 }
