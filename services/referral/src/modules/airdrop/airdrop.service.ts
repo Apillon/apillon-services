@@ -18,7 +18,7 @@ export class AirdropService {
    * @returns {Promise<{ tokenClaim: TokenClaim; airdropStats: UserAirdropTask }>}
    */
   static async getAirdropTasks(
-    _event: never,
+    _event: void,
     context: ServiceContext,
   ): Promise<{ tokenClaim: TokenClaim; airdropStats: UserAirdropTask }> {
     const user_uuid = context.user.user_uuid;
@@ -146,7 +146,7 @@ export class AirdropService {
    * @param {ServiceContext} context
    */
   static async getClaimParameters(
-    _event: never,
+    _event: void,
     context: ServiceContext,
   ): Promise<{ amount: number; timestamp: number; signature: string }> {
     const user_uuid = context.user.user_uuid;
@@ -171,14 +171,13 @@ export class AirdropService {
     }
 
     const amount = tokenClaim.totalNctr;
-    const [airdropTimestamp, contractAddress, chainId] = [
+
+    const [airdropTimestamp, contractAddress, chainId, signerKey] = [
       env.AIRDROP_CLAIM_TIMESTAMP,
       env.AIRDROP_CLAIM_CONTRACT_ADDRESS,
       env.AIRDROP_CLAIM_CHAIN_ID,
+      (await getSecrets(env.BLOCKCHAIN_SECRETS))['AIRDROP_CLAIM'],
     ];
-    const signerKey = await (
-      await getSecrets(env.BLOCKCHAIN_SECRETS)
-    )['AIRDROP_CLAIM'];
 
     const message = ethers.utils.solidityKeccak256(
       ['address', 'address', 'uint256', 'uint256', 'uint256'],
