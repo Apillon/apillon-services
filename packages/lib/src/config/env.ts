@@ -559,6 +559,11 @@ export interface IEnv {
    * OASIS
    */
   OASIS_SIGNING_WALLET_PRIVATE_KEY: string;
+
+  /*
+   * URL SHORTENER
+   */
+  SHORTENER_VALID_DOMAINS: string[];
 }
 
 // dotenv.config();
@@ -1010,6 +1015,10 @@ export let env: IEnv = {
   /** OASIS */
   OASIS_SIGNING_WALLET_PRIVATE_KEY:
     process.env['OASIS_SIGNING_WALLET_PRIVATE_KEY'],
+  /** URL SHORTENER */
+  SHORTENER_VALID_DOMAINS: process.env['SHORTENER_VALID_DOMAINS']?.split(
+    ',',
+  ) || ['apillon.io', 'nectarnode.io', 'web3approved.com'],
 };
 
 export let isEnvReady = false;

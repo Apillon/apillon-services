@@ -17,7 +17,7 @@
     "test": "npx turbo run test --concurrency=1 --continue --filter=!@apillon/authentication-api --force",
     "test:logging": "npx turbo run test:logging --concurrency=1 --continue --filter=!@apillon/authentication-api --force",
     "test-server": "npx turbo run test-server",
-    "test-server-min": "npx turbo run test-server --filter=!@apillon/referral --filter=!@apillon/mailing --filter=!@apillon/blockchain  --filter=!@apillon/nfts --filter=!@apillon/authentication",
+    "test-server-min": "npx turbo run test-server --filter=!@apillon/referral --filter=!@apillon/mailing --filter=!@apillon/blockchain  --filter=!@apillon/nfts --filter=!@apillon/authentication --filter=!@apillon/social --filter=!@apillon/computing",
     "test-server-referral": "npx turbo run test-server --filter=@apillon/referral --filter=@apillon/access --filter=@apillon/monitoring",
     "test-server-nfts": "npx turbo run test-server --filter=@apillon/access --filter=@apillon/monitoring --filter=@apillon/storage --filter=@apillon/mailing --filter=@apillon/config  --filter=@apillon/blockchain --filter=@apillon/nfts",
     "test-server-storage": "npx turbo run test-server --filter=@apillon/access --filter=@apillon/monitoring --filter=@apillon/storage --filter=@apillon/mailing --filter=@apillon/config  --filter=@apillon/blockchain",

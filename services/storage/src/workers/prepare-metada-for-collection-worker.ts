@@ -321,7 +321,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           'Metadata',
         );
 
-        if (metadataFURs.length >= env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS) {
+        if (metadataFURs.length > env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS) {
           await sendToWorkerQueue(
             env.STORAGE_AWS_WORKER_SQS_URL,
             WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
