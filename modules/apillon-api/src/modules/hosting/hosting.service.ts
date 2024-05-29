@@ -4,6 +4,7 @@ import {
   DeploymentQueryFilter,
   DomainQueryFilter,
   EndFileUploadSessionDto,
+  ShortUrlDto,
   WebsiteQueryFilter,
 } from '@apillon/lib';
 import {
@@ -87,5 +88,9 @@ export class HostingService {
     return (
       await new StorageMicroservice(context).getDeployment(deployment_uuid)
     ).data;
+  }
+
+  async generateShortUrl(body: ShortUrlDto, context: ApillonApiContext) {
+    return await new StorageMicroservice(context).generateShortUrl(body);
   }
 }

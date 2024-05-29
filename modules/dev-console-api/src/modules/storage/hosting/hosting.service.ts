@@ -173,7 +173,7 @@ export class HostingService {
     return 'Website REJECTED!.';
   }
 
-  async generateShortUrl(body: ShortUrlDto, context) {
+  async generateShortUrl(body: ShortUrlDto, context: DevConsoleApiContext) {
     return await new StorageMicroservice(context).generateShortUrl(body);
   }
 }
