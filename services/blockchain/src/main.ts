@@ -7,6 +7,7 @@ import { WalletService } from './modules/wallet/wallet.service';
 import '@polkadot/api-augment';
 import '@polkadot/rpc-augment';
 import '@polkadot/types-augment';
+import { ContractService } from './modules/contract/contract.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -40,6 +41,8 @@ export async function processEvent(
     [BlockchainEventType.GET_TOTAL_WALLET_TRANSACTIONS]:
       WalletService.getTotalWalletTransactions,
     [BlockchainEventType.CREATE_EVM_SIGNATURE]: EvmService.createSignature,
+    [BlockchainEventType.LIST_CONTRACTS]: ContractService.listContracts,
+    [BlockchainEventType.GET_CONTRACT]: ContractService.getContract,
   };
 
   return await processors[event.eventName](event, context);

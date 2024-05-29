@@ -40,7 +40,5 @@ export class OasisContractEventWorker extends BaseQueueWorker {
     `,
       {},
     );
-
-    //TODO delete signatures older than x, and return credits for them
   }
 }

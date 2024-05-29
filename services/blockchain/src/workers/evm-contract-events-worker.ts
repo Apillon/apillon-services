@@ -32,6 +32,7 @@ export abstract class EvmContractEventsWorker extends BaseSingleThreadWorker {
   }
 
   public async runExecutor(data: any): Promise<any> {
+    this.logFn(`EvmContractEventsWorker - execute BEGIN`);
     if (!data.contractId) {
       throw new BlockchainCodeException({
         code: BlockchainErrorCode.INVALID_DATA_PASSED_TO_WORKER,
@@ -99,6 +100,9 @@ export abstract class EvmContractEventsWorker extends BaseSingleThreadWorker {
       //Check balance in cluster and perform alerting, if necessary
       await contractData.checkBalance(provider);
 
+      const blockData = await provider.getBlock(toBlock);
+
+      contractData.lastParsedBlockTime = new Date(blockData.timestamp * 1000);
       contractData.lastParsedBlock = toBlock;
       contractData.lastParsedBlockUpdateTime = new Date();
       await contractData.update(SerializeFor.UPDATE_DB, conn);

@@ -13,6 +13,7 @@ import { Scheduler } from './scheduler';
 import { ServiceContext } from '@apillon/service-lib';
 import { UpdateStateWorker } from './update-state/update-state.worker';
 import { OasisContractEventWorker } from './oasis-contract-event.worker';
+import { OasisExpiredSignaturesWorker } from './oasis-expired-signatures.worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -22,6 +23,7 @@ export enum WorkerName {
   SCHEDULER = 'scheduler',
   UPDATE_STATE_WORKER = 'UpdateStateWorker',
   OASIS_CONTRACT_EVENT_WORKER = 'OasisContractEventWorker',
+  OASIS_EXPIRED_SIGNATURES_WORKER = 'OasisExpiredSignaturesWorker',
 }
 
 export async function handler(event: any) {
@@ -118,6 +120,11 @@ export async function handleLambdaEvent(
         context,
         QueueWorkerType.EXECUTOR,
       ).run({});
+    }
+    case WorkerName.OASIS_EXPIRED_SIGNATURES_WORKER: {
+      await new OasisExpiredSignaturesWorker(workerDefinition, context).run({
+        executeArg: JSON.stringify(workerDefinition.parameters),
+      });
     }
     default:
       console.log(

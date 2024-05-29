@@ -15,6 +15,7 @@ export async function upgrade(
     \`chainType\` INT NOT NULL,
     \`abi\` TEXT NOT NULL,
     \`lastParsedBlock\` INT NULL DEFAULT 0,
+    \`lastParsedBlockTime\` DATETIME NULL,
     \`lastParsedBlockUpdateTime\` DATETIME NULL,
     \`blockParseSize\` INT NULL DEFAULT 50,
     \`currentBalance\` DECIMAL(40,0) NULL,

@@ -1,5 +1,6 @@
 import {
   AdvancedSQLModel,
+  BaseQueryFilter,
   ChainType,
   Context,
   EvmChain,
@@ -8,12 +9,15 @@ import {
   PopulateFrom,
   SerializeFor,
   ServiceName,
+  SqlModelStatus,
   SubstrateChain,
   enumInclusionValidator,
   formatTokenWithDecimals,
   formatWalletAddress,
+  getQueryParams,
   presenceValidator,
   prop,
+  selectAndCountQuery,
 } from '@apillon/lib';
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { BlockchainErrorCode, Chain, DbTables } from '../../config/types';
@@ -126,6 +130,24 @@ export class Contract extends AdvancedSQLModel {
     ],
   })
   public lastParsedBlock: number;
+
+  /**
+   * Date from block timestamp
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public lastParsedBlockTime: Date;
 
   @prop({
     parser: { resolver: dateParser() },
@@ -335,5 +357,39 @@ export class Contract extends AdvancedSQLModel {
     } catch (err) {
       console.error('Error checking contract balance!', err);
     }
+  }
+
+  public async getList(query: BaseQueryFilter) {
+    const filter = new BaseQueryFilter(query);
+    const fieldMap = { id: 'c.id' };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'c',
+      fieldMap,
+      filter.serialize(),
+    );
+    const sqlQuery = {
+      qSelect: `SELECT
+        ${this.generateSelectFields()},
+        c.minBalance / POW(10, c.decimals) as minTokenBalance,
+        c.currentBalance / POW(10, c.decimals) as currentTokenBalance,
+        c.createTime,
+        c.updateTime
+      `,
+      qFrom: `FROM ${DbTables.CONTRACT} c
+        WHERE (@search IS null OR c.address LIKE CONCAT('%', @search, '%'))
+        AND c.status <> ${SqlModelStatus.DELETED}`,
+      qFilter: `
+          ORDER BY ${filters.orderStr}
+          LIMIT ${filters.limit} OFFSET ${filters.offset};
+        `,
+    };
+
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      params,
+      'c.id',
+    );
   }
 }

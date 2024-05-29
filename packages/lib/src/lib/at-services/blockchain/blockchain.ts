@@ -185,4 +185,21 @@ export class BlockchainMicroservice extends BaseService {
     });
   }
   //#endregion
+
+  //#region contracts
+
+  public async listContracts(filter: BaseQueryFilter) {
+    return await this.callService({
+      eventName: BlockchainEventType.LIST_CONTRACTS,
+      ...filter,
+    });
+  }
+
+  public async getContract(contractId: number) {
+    return await this.callService({
+      eventName: BlockchainEventType.GET_CONTRACT,
+      contractId,
+    });
+  }
+  //#endregion
 }

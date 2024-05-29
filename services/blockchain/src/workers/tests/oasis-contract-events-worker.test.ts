@@ -1,11 +1,10 @@
 import { ChainType, EvmChain } from '@apillon/lib';
 import { getConfig } from '@apillon/tests-lib';
 import { ServiceDefinitionType, WorkerDefinition } from '@apillon/workers-lib';
-import { releaseStage, setupTest, Stage } from '../../../test/setup';
+import { Stage, releaseStage, setupTest } from '../../../test/setup';
 import { Endpoint } from '../../common/models/endpoint';
 import { Contract } from '../../modules/contract/contract.model';
 import { OasisContractEventsWorker } from '../oasis-contract-events-worker';
-import { Wallet } from '../../modules/wallet/wallet.model';
 
 describe('Oasis contract events tests', () => {
   let stage: Stage;
@@ -101,6 +100,7 @@ describe('Oasis contract events tests', () => {
     expect(tmpContract.lastParsedBlockUpdateTime.getDate()).toBeGreaterThan(
       contract.lastParsedBlockUpdateTime.getDate(),
     );
+    expect(tmpContract.lastParsedBlockTime).toBeTruthy();
   });
 
   test('Test oasis contract event balance alerting', async () => {
