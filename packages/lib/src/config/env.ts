@@ -559,6 +559,7 @@ export interface IEnv {
    * URL SHORTENER
    */
   SHORTENER_VALID_DOMAINS: string[];
+  SHORTENER_DOMAIN: string;
 }
 
 // dotenv.config();
@@ -1011,6 +1012,8 @@ export let env: IEnv = {
   SHORTENER_VALID_DOMAINS: process.env['SHORTENER_VALID_DOMAINS']?.split(
     ',',
   ) || ['apillon.io', 'nectarnode.io', 'web3approved.com'],
+  SHORTENER_DOMAIN:
+    process.env['SHORTENER_DOMAIN'] || 'https://go.nectarnode.io',
 };
 
 export let isEnvReady = false;

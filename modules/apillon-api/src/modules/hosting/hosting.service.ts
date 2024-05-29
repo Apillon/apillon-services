@@ -91,6 +91,6 @@ export class HostingService {
   }
 
   async generateShortUrl(body: ShortUrlDto, context: ApillonApiContext) {
-    return await new StorageMicroservice(context).generateShortUrl(body);
+    return (await new StorageMicroservice(context).generateShortUrl(body)).data;
   }
 }
