@@ -554,6 +554,11 @@ export interface IEnv {
   IPN_CALLBACK_URL: string;
   IPN_SECRET_KEY: string;
   NOWPAYMENTS_INVOICE_EMAILS: string[];
+
+  /**
+   * OASIS
+   */
+  OASIS_SIGNING_WALLET_PRIVATE_KEY: string;
 }
 
 // dotenv.config();
@@ -1001,6 +1006,10 @@ export let env: IEnv = {
   NOWPAYMENTS_INVOICE_EMAILS: process.env['NOWPAYMENTS_INVOICE_EMAILS']?.split(
     ',',
   ) || [process.env['CONTACT_EMAIL_TO']],
+
+  /** OASIS */
+  OASIS_SIGNING_WALLET_PRIVATE_KEY:
+    process.env['OASIS_SIGNING_WALLET_PRIVATE_KEY'],
 };
 
 export let isEnvReady = false;

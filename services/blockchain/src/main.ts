@@ -40,7 +40,8 @@ export async function processEvent(
       WalletService.listWalletDeposits,
     [BlockchainEventType.GET_TOTAL_WALLET_TRANSACTIONS]:
       WalletService.getTotalWalletTransactions,
-    [BlockchainEventType.CREATE_EVM_SIGNATURE]: EvmService.createSignature,
+    [BlockchainEventType.CREATE_OASIS_SIGNATURE]:
+      EvmService.createOasisSignature,
     [BlockchainEventType.LIST_CONTRACTS]: ContractService.listContracts,
     [BlockchainEventType.GET_CONTRACT]: ContractService.getContract,
   };

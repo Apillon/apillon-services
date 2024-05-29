@@ -3,7 +3,8 @@ import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { EvmContractEventsWorker } from './evm-contract-events-worker';
 
 /**
- * Worker parses received events, extracts data from it and sends the data (dataHash) to AUTH MS sqs
+ * Oasis smart contract indexer - extends basic worker for querying events in contract.
+ * processEvents function parses received events, extracts data from it and sends the data (dataHash) to AUTH MS sqs
  */
 export class OasisContractEventsWorker extends EvmContractEventsWorker {
   eventFilter = 'GaslessTransaction';

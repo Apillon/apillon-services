@@ -9,12 +9,13 @@ export async function upgrade(
       \`id\` INT NOT NULL AUTO_INCREMENT,
       \`status\` INT NULL,
       \`project_uuid\` VARCHAR(36) NOT NULL,
-      \`dataHash\` TEXT NOT NULL,
+      \`dataHash\` VARCHAR(255) NOT NULL,
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` INT NULL,
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       \`updateUser\` INT NULL,
-      PRIMARY KEY (\`id\`)
+      PRIMARY KEY (\`id\`),
+      UNIQUE (\`dataHash\`)
     );`,
   );
 }

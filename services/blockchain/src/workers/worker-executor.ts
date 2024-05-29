@@ -219,7 +219,6 @@ export async function handleLambdaEvent(
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
       break;
-      break;
     }
     default:
       console.log(

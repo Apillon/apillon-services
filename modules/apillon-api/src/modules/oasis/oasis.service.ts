@@ -17,7 +17,7 @@ export class OasisService {
     const token = generateJwtToken(
       JwtTokenType.OASIS_SDK_TOKEN,
       { project_uuid: context.apiKey.project_uuid },
-      JwtExpireTime.TWENTY_MINUTES,
+      JwtExpireTime.FIVE_MINUTES,
     );
 
     return { token };

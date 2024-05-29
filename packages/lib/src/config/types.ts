@@ -103,7 +103,7 @@ export enum BlockchainEventType {
   UPDATE_TRANSACTION = 'update-transaction',
   LIST_WALLET_DEPOSITS = 'list-wallet-deposits',
   GET_TOTAL_WALLET_TRANSACTIONS = 'get-total-wallet-transactions',
-  CREATE_EVM_SIGNATURE = 'create-evm-signature',
+  CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
   LIST_CONTRACTS = 'list-contracts',
   GET_CONTRACT = 'get-contract',
 }
@@ -933,5 +933,6 @@ export enum JwtExpireTime {
   ONE_DAY = '1d',
   ONE_HOUR = '1h',
   TWENTY_MINUTES = '20m',
+  FIVE_MINUTES = '5m',
   NEVER = 'never',
 }

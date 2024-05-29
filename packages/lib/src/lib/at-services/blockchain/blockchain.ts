@@ -78,13 +78,12 @@ export class BlockchainMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async createEvmSignature(params: {
-    chain: EvmChain;
+  public async createOasisSignature(params: {
     data: string;
     timestamp: number;
   }): Promise<{ data: { dataHash: string; signature: string } }> {
     const data = {
-      eventName: BlockchainEventType.CREATE_EVM_SIGNATURE,
+      eventName: BlockchainEventType.CREATE_OASIS_SIGNATURE,
       ...params,
     };
     return await this.callService(data);

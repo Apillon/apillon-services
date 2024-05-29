@@ -21,8 +21,7 @@ export class OasisService {
     const timestamp = Math.ceil(new Date().getTime() / 1000) + 3600;
 
     const signatureRes = (
-      await new BlockchainMicroservice(context).createEvmSignature({
-        chain: EvmChain.OASIS,
+      await new BlockchainMicroservice(context).createOasisSignature({
         data: event.body.data,
         timestamp,
       })

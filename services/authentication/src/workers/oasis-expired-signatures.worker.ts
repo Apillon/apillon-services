@@ -18,6 +18,9 @@ import {
 import { DbTables } from '../config/types';
 import { OasisSignature } from '../modules/oasis/models/oasis-signature.model';
 
+/**
+ * Worker updates oasis signatures status and refunds credit for signatures, which were not used for Oasis account creation (were not indexed and updated to status ACTIVE in 2 hours)
+ */
 export class OasisExpiredSignaturesWorker extends BaseWorker {
   protected context: Context;
 
@@ -53,7 +56,7 @@ export class OasisExpiredSignaturesWorker extends BaseWorker {
 
     //Substract 2h from last parsed block time so we get date to which signature should be used and indexed
     const expirationDate = new Date(contract.lastParsedBlockTime);
-    expirationDate.setHours(expirationDate.getHours() - 1);
+    expirationDate.setHours(expirationDate.getHours() - 2);
 
     const res = await this.context.mysql.paramExecute(
       `

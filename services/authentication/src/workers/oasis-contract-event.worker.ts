@@ -7,6 +7,9 @@ import {
 } from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
 
+/**
+ * Worker process datahashes which are indexed (contract event) in BCS and sent to SQS
+ */
 export class OasisContractEventWorker extends BaseQueueWorker {
   public constructor(
     workerDefinition: WorkerDefinition,

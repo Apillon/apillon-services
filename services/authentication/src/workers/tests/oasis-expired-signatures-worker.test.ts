@@ -34,7 +34,7 @@ describe('Oasis expired signature worker tests', () => {
     stage = await setupTest();
 
     //Insert test signatures with createTime set to past
-    stage.authApiContext.mysql.paramExecute(`
+    await stage.authApiContext.mysql.paramExecute(`
         INSERT INTO oasis_signature (id, project_uuid, dataHash, status, createTime)
         VALUES (1, 'test_project_uuid', 'some test hash', ${SqlModelStatus.INACTIVE}, '2024-05-01 10:00:00')
     `);

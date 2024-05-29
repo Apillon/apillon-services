@@ -494,30 +494,22 @@ export class EvmService {
   }
 
   /**
-   * Create signature for specific Evm chain
+   * Create signature for Evm Oasis chain
    * @param params timestamp, chain and data to be signed
    * @param context
    * @returns
    */
-  static async createSignature(
-    params: { chain: EvmChain; data: string; timestamp: number },
+  static async createOasisSignature(
+    params: { data: string; timestamp: number },
     context: ServiceContext,
   ) {
-    const wallet = await new Wallet({}, context).populateByChain(params.chain);
-    if (!wallet.exists()) {
-      throw new BlockchainCodeException({
-        code: BlockchainErrorCode.ERROR_GENERATING_SIGNATURE,
-        status: 500,
-      });
-    }
-
     //wallet
-    const seed = await getWalletSeed(wallet.seed);
+    const seed = await getWalletSeed(env.OASIS_SIGNING_WALLET_PRIVATE_KEY);
     const signingWallet = new ethers.Wallet(seed);
 
     //provider
     const endpoint = await new Endpoint({}, context).populateByChain(
-      params.chain,
+      EvmChain.OASIS,
       ChainType.EVM,
     );
 
