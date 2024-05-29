@@ -7,6 +7,7 @@ import { IpnsService } from './modules/ipns/ipns.service';
 import { NftStorageService } from './modules/nfts/nft-storage.service';
 import { StorageService } from './modules/storage/storage.service';
 import { CrustService } from './modules/crust/crust.service';
+import { UrlShortenerService } from './modules/url-shortener/url-shortener.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -93,6 +94,9 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.GET_PROJECT_IPFS_CLUSTER]: StorageService.getIpfsCluster,
     [StorageEventType.GET_IPFS_CLUSTER_INFO]: StorageService.getIpfsClusterInfo,
     [StorageEventType.GET_LINK]: StorageService.getLink,
+
+    [StorageEventType.GENERATE_SHORT_URL]: UrlShortenerService.generateShortUrl,
+    [StorageEventType.GET_TARGET_URL]: UrlShortenerService.getTargetUrl,
   };
 
   return await processors[event.eventName](event, context);
