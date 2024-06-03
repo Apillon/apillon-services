@@ -53,6 +53,7 @@ export * from './lib/at-services/storage/dtos/files-query-filter.dto';
 export * from './lib/at-services/storage/dtos/link-on-ipfs-query-filter.dto';
 export * from './lib/at-services/storage/dtos/file-upload-session-query-filter.dto';
 export * from './lib/at-services/storage/dtos/collection-metadata-query-filter.dto';
+export * from './lib/at-services/storage/dtos/short-url.dto';
 
 //#REGION Authentication API
 export * from './lib/at-services/authentication/authentication';

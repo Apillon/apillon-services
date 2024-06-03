@@ -12,7 +12,7 @@ import {
   Lmas,
   LogType,
   ServiceName,
-  ValidationException,
+  ModelValidationException,
 } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import { DevConsoleApiContext } from '../../context';
@@ -155,7 +155,7 @@ export class ServicesService {
 
     service.populate(data);
 
-    await service.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await service.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     await service.update();
     return service;

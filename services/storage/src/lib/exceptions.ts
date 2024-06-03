@@ -3,7 +3,7 @@ import {
   CodeException,
   ErrorOptions,
   ServiceName,
-  ValidationException,
+  ModelValidationException,
 } from '@apillon/lib';
 import { StorageErrorCode } from '../config/types';
 
@@ -19,7 +19,7 @@ export class StorageCodeException extends CodeException {
   }
 }
 
-export class StorageValidationException extends ValidationException {
+export class StorageValidationException extends ModelValidationException {
   constructor(model: Model) {
     super(model, StorageErrorCode);
   }

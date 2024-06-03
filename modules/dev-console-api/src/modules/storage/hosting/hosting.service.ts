@@ -6,8 +6,9 @@ import {
   DeployWebsiteDto,
   JwtTokenType,
   parseJwtToken,
+  ShortUrlDto,
   StorageMicroservice,
-  ValidationException,
+  ModelValidationException,
   ValidatorErrorCode,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
@@ -107,7 +108,7 @@ export class HostingService {
     body: DeployWebsiteDto,
   ) {
     body.populate({ website_uuid });
-    await body.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await body.validateOrThrow(ModelValidationException, ValidatorErrorCode);
     return (await new StorageMicroservice(context).deployWebsite(body)).data;
   }
 
@@ -170,5 +171,9 @@ export class HostingService {
     );
 
     return 'Website REJECTED!.';
+  }
+
+  async generateShortUrl(body: ShortUrlDto, context: DevConsoleApiContext) {
+    return (await new StorageMicroservice(context).generateShortUrl(body)).data;
   }
 }

@@ -3,7 +3,7 @@ import {
   CodeException,
   ErrorOptions,
   ServiceCode,
-  ValidationException,
+  ModelValidationException,
 } from '@apillon/lib';
 import { ConfigErrorCode } from '../config/types';
 
@@ -19,7 +19,7 @@ export class ScsCodeException extends CodeException {
   }
 }
 
-export class ScsValidationException extends ValidationException {
+export class ScsValidationException extends ModelValidationException {
   constructor(model: Model) {
     super(model, ConfigErrorCode);
   }
