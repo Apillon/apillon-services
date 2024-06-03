@@ -33,7 +33,7 @@ export async function pinFileToCRUST(
   if (pinToCrustRequest.exists()) {
     //Request for pin already exists
     if (refTable == DbTables.FILE) {
-      const file: File = await new File({}, context).populateByUUID(refId);
+      const file: File = await new File({}, context).populateAllByUUID(refId);
       if (file.exists()) {
         file.fileStatus = FileStatus.PINNED_TO_CRUST;
         await file.update();
