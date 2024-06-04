@@ -392,6 +392,12 @@ export interface IEnv {
   REFERRAL_MYSQL_DATABASE_TEST: string;
 
   /**
+   * Referral workers config
+   */
+  REFERRAL_AWS_WORKER_SQS_URL: string;
+  REFERRAL_AWS_WORKER_LAMBDA_NAME: string;
+
+  /**
    * hCAPTCHA
    */
   CAPTCHA_SECRET: string;
@@ -906,6 +912,13 @@ export let env: IEnv = {
   REFERRAL_MYSQL_USER_TEST: process.env['REFERRAL_MYSQL_USER_TEST'],
   REFERRAL_MYSQL_PASSWORD_TEST: process.env['REFERRAL_MYSQL_PASSWORD_TEST'],
   REFERRAL_MYSQL_DATABASE_TEST: process.env['REFERRAL_MYSQL_DATABASE_TEST'],
+
+  /**
+   * AWS SQS url for workers
+   */
+  REFERRAL_AWS_WORKER_SQS_URL: process.env['REFERRAL_AWS_WORKER_SQS_URL'] || '',
+  REFERRAL_AWS_WORKER_LAMBDA_NAME:
+    process.env['REFERRAL_AWS_WORKER_LAMBDA_NAME'] || '',
 
   /** CAPTCHA */
   CAPTCHA_SECRET: process.env['CAPTCHA_SECRET'] || '',

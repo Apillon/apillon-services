@@ -4,15 +4,15 @@ import { EvmContractEventsWorker } from './evm-contract-events-worker';
 import { ethers } from 'ethers';
 
 /**
- * Oasis smart contract indexer - extends basic worker for querying events in contract.
+ * Claim smart contract indexer - extends basic worker for querying events in contract.
  * processEvents function parses received events, extracts data from it and sends the data (dataHash) to AUTH MS sqs
  */
-export class OasisContractEventsWorker extends EvmContractEventsWorker {
-  eventFilter = 'GaslessTransaction';
+export class ClaimContractEventsWorker extends EvmContractEventsWorker {
+  eventFilter = 'Claim';
 
   public async processEvents(events: ethers.Event[]) {
-    console.info('Events recieved in OasisContractEventsWorker', events);
-    //Parse data from events and send webhook to Authentication MS worker
+    console.info('Events recieved in ClaimContractEventsWorker', events);
+    // Parse data from events and send webhook to Authentication MS worker
     const dataHashes: string[] = events.map((x) => x.data);
 
     const chunks = splitArray(dataHashes, 20);
@@ -23,14 +23,9 @@ export class OasisContractEventsWorker extends EvmContractEventsWorker {
         env.APP_ENV != AppEnvironment.TEST
       ) {
         await sendToWorkerQueue(
-          env.AUTH_AWS_WORKER_SQS_URL,
-          'OasisContractEventWorker',
-          [
-            {
-              data: chunk,
-            },
-          ],
-          null,
+          env.REFERRAL_AWS_WORKER_SQS_URL,
+          'ClaimContractEventWorker',
+          [{ data: chunk }],
           null,
         );
       }
