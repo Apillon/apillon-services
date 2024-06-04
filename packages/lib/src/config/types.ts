@@ -27,6 +27,7 @@ export enum EvmChain {
   MOONBASE = 1287,
   ASTAR_SHIBUYA = 81, // testnet
   ASTAR = 592,
+  OASIS = 42262,
 }
 
 export enum NFTCollectionType {
@@ -102,6 +103,9 @@ export enum BlockchainEventType {
   UPDATE_TRANSACTION = 'update-transaction',
   LIST_WALLET_DEPOSITS = 'list-wallet-deposits',
   GET_TOTAL_WALLET_TRANSACTIONS = 'get-total-wallet-transactions',
+  CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
+  LIST_CONTRACTS = 'list-contracts',
+  GET_CONTRACT = 'get-contract',
 }
 
 export enum StorageEventType {
@@ -182,6 +186,7 @@ export enum AuthenticationEventType {
   SPORRAN_REQUEST_CREDENTIAL = 'sporran-request-credential',
   SPORRAN_VERIFY_CREDENTIAL = 'sporran-verify-credential',
   GET_TOTAL_DIDS = 'get-total-dids',
+  CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
 }
 
 export enum MailEventType {
@@ -292,6 +297,7 @@ export enum ServiceName {
   STORAGE = 'STORAGE',
   APILLON_API = 'APILLON_API',
   AUTHENTICATION_API = 'AUTHENTICATION_API',
+  AUTH = 'AUTH',
   NFTS = 'NFTS',
   REFERRAL = 'REFERRAL',
   BLOCKCHAIN = 'BLOCKCHAIN',
@@ -365,6 +371,7 @@ export enum AttachedServiceType {
   HOSTING = 4,
   COMPUTING = 5,
   SOCIAL = 6,
+  WALLET = 7,
   SYSTEM = 999,
 }
 
@@ -451,6 +458,7 @@ export enum DefaultPermission {
   AUTHENTICATION = 4,
   COMPUTING = 5,
   SOCIAL = 6,
+  WALLET = 7,
 }
 
 //#endregion
@@ -617,7 +625,7 @@ export enum ValidatorErrorCode {
   ADD_NFT_REQUIRED_DATA_NOT_PRESENT = 42200162,
   DATA_NOT_VALID = 42200163,
   DATA_NOT_PRESENT = 42200164,
-
+  CREATE_OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT = 42200165,
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
   COMPUTING_CONTRACT_TYPE_NOT_PRESENT = 42200202,
@@ -746,6 +754,7 @@ export enum JwtTokenType {
   // Website review token
   WEBSITE_REVIEW_TOKEN = 'website-review',
   CRYPTO_PAYMENT_DATA = 'crypto-payment-data',
+  OASIS_SDK_TOKEN = 'oasis-sdk-token',
 }
 
 /**
@@ -882,6 +891,8 @@ export enum ProductCode {
   NFT_ASTAR_WASM_BURN = 28,
   NFT_ASTAR_WASM_TRANSFER_COLLECTION = 29,
   NFT_ASTAR_WASM_SET_BASE_URI = 30,
+
+  OASIS_SIGNATURE = 31,
 }
 
 export enum ProductService {
@@ -931,5 +942,6 @@ export enum JwtExpireTime {
   ONE_DAY = '1d',
   ONE_HOUR = '1h',
   TWENTY_MINUTES = '20m',
+  FIVE_MINUTES = '5m',
   NEVER = 'never',
 }

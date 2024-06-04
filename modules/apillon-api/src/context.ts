@@ -34,8 +34,4 @@ export class ApillonApiContext extends Context {
       });
     }
   }
-
-  isApiKeyValid() {
-    return this.apiKey?.id;
-  }
 }

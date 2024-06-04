@@ -556,6 +556,11 @@ export interface IEnv {
   NOWPAYMENTS_INVOICE_EMAILS: string[];
 
   /**
+   * OASIS
+   */
+  OASIS_SIGNING_WALLET_PRIVATE_KEY: string;
+
+  /*
    * URL SHORTENER
    */
   SHORTENER_VALID_DOMAINS: string[];
@@ -1008,6 +1013,9 @@ export let env: IEnv = {
     ',',
   ) || [process.env['CONTACT_EMAIL_TO']],
 
+  /** OASIS */
+  OASIS_SIGNING_WALLET_PRIVATE_KEY:
+    process.env['OASIS_SIGNING_WALLET_PRIVATE_KEY'],
   /** URL SHORTENER */
   SHORTENER_VALID_DOMAINS: process.env['SHORTENER_VALID_DOMAINS']?.split(
     ',',
