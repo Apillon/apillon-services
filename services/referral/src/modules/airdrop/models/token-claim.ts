@@ -9,6 +9,7 @@ import {
   SqlModelStatus,
 } from '@apillon/lib';
 import { DbTables } from '../../../config/types';
+import { v4 as uuidV4 } from 'uuid';
 
 export class TokenClaim extends AdvancedSQLModel {
   public readonly tableName = DbTables.TOKEN_CLAIM;
@@ -23,6 +24,7 @@ export class TokenClaim extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
     ],
+    fakeValue: () => uuidV4(),
   })
   public user_uuid: string;
 
@@ -75,6 +77,7 @@ export class TokenClaim extends AdvancedSQLModel {
       SerializeFor.PROFILE,
     ],
     defaultValue: 0,
+    fakeValue: 50,
   })
   public totalNctr: number;
 
@@ -89,6 +92,7 @@ export class TokenClaim extends AdvancedSQLModel {
       SerializeFor.PROFILE,
     ],
     defaultValue: false,
+    fakeValue: false,
   })
   public claimCompleted: boolean;
 
@@ -139,22 +143,6 @@ export class TokenClaim extends AdvancedSQLModel {
       `
       UPDATE ${DbTables.TOKEN_CLAIM}
       SET status = ${SqlModelStatus.BLOCKED}
-      WHERE user_uuid = @user_uuid
-      `,
-      { user_uuid: this.user_uuid },
-      conn,
-    );
-    return this;
-  }
-
-  /**
-   * Marks token claim as completed
-   */
-  public async markCompleted(conn?: PoolConnection): Promise<this> {
-    await this.getContext().mysql.paramExecute(
-      `
-      UPDATE ${DbTables.TOKEN_CLAIM}
-      SET claimCompleted = TRUE
       WHERE user_uuid = @user_uuid
       `,
       { user_uuid: this.user_uuid },
