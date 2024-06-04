@@ -1,24 +1,21 @@
-import { DefaultUserRole, ShortUrlDto } from '@apillon/lib';
 import {
   Stage,
   TestUser,
-  createTestBucket,
   createTestProject,
   createTestUser,
   releaseStage,
 } from '@apillon/tests-lib';
 import { setupTest } from '../../../../test/helpers/setup';
-import { Project } from '../../project/models/project.model';
 import * as request from 'supertest';
+import { env } from '@apillon/lib';
+import { Project } from '../../project/models/project.model';
 
 describe('URL shortener tests', () => {
   let stage: Stage;
-
   let testUser: TestUser;
-  let testUser2: TestUser;
-  let adminTestUser: TestUser;
-
   let testProject: Project;
+
+  const shortUrlDomain = env.SHORTENER_DOMAIN;
 
   beforeAll(async () => {
     stage = await setupTest();
@@ -26,16 +23,6 @@ describe('URL shortener tests', () => {
       stage.context.devConsole,
       stage.context.access,
     );
-    testUser2 = await createTestUser(
-      stage.context.devConsole,
-      stage.context.access,
-    );
-    adminTestUser = await createTestUser(
-      stage.context.devConsole,
-      stage.context.access,
-      DefaultUserRole.ADMIN,
-    );
-
     testProject = await createTestProject(testUser, stage, 5000, 1);
   });
 
@@ -44,26 +31,42 @@ describe('URL shortener tests', () => {
   });
 
   test('Generate Short URL', async () => {
-    const response = await request(stage.http)
+    const url1 = 'https://ipfs.apillon.io/ipfs/abc';
+    const url2 = 'https://abcd.ipfs.nectarnode.io';
+    const url3 = 'https://ipfs.web3approved.com/ipns/asdiasdad12';
+
+    let response = await request(stage.http)
       .post(`/storage/hosting/short-url`)
-      .send({ targetUrl: 'https://ipfs.apillon.io/ipfs/abc' })
+      .send({ targetUrl: url1 })
       .set('Authorization', `Bearer ${testUser.token}`);
     expect(response.status).toBe(201);
-    expect(response.body.data.data.id).toBeTruthy();
+    expect(response.body.data.id).toBeTruthy();
+    expect(response.body.data.targetUrl).toBe(url1);
+    expect(response.body.data.url).toBe(
+      `${shortUrlDomain}/${response.body.data.id}`,
+    );
 
-    const response2 = await request(stage.http)
+    response = await request(stage.http)
       .post(`/storage/hosting/short-url`)
-      .send({ targetUrl: 'https://abcd.ipfs.nectarnode.io' })
+      .send({ targetUrl: url2 })
       .set('Authorization', `Bearer ${testUser.token}`);
-    expect(response2.status).toBe(201);
-    expect(response2.body.data.data.id).toBeTruthy();
+    expect(response.status).toBe(201);
+    expect(response.body.data.id).toBeTruthy();
+    expect(response.body.data.targetUrl).toBe(url2);
+    expect(response.body.data.url).toBe(
+      `${shortUrlDomain}/${response.body.data.id}`,
+    );
 
-    const response3 = await request(stage.http)
+    response = await request(stage.http)
       .post(`/storage/hosting/short-url`)
-      .send({ targetUrl: 'https://ipfs.web3approved.com/ipns/asdiasdad12' })
+      .send({ targetUrl: url3 })
       .set('Authorization', `Bearer ${testUser.token}`);
-    expect(response3.status).toBe(201);
-    expect(response3.body.data.data.id).toBeTruthy();
+    expect(response.status).toBe(201);
+    expect(response.body.data.id).toBeTruthy();
+    expect(response.body.data.targetUrl).toBe(url3);
+    expect(response.body.data.url).toBe(
+      `${shortUrlDomain}/${response.body.data.id}`,
+    );
   });
 
   test('Invalid url should return error', async () => {

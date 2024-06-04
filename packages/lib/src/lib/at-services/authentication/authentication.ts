@@ -2,6 +2,7 @@ import { env } from '../../../config/env';
 import { AppEnvironment, AuthenticationEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { CreateOasisSignatureDto } from './dtos/create-oasis-signature.dto';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
 import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
@@ -135,4 +136,16 @@ export class AuthenticationMicroservice extends BaseService {
       project_uuid,
     });
   }
+
+  //#region Oasis
+
+  public async createOasisSignature(params: CreateOasisSignatureDto) {
+    const data = {
+      eventName: AuthenticationEventType.CREATE_OASIS_SIGNATURE,
+      body: params,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
 }

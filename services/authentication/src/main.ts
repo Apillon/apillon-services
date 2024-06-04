@@ -2,6 +2,7 @@ import { AuthenticationEventType, Context } from '@apillon/lib';
 import { VerificationService } from './modules/verification/verification.service';
 import { IdentityService } from './modules/identity/identity.service';
 import { SporranService } from './modules/sporran/sporran.service';
+import { OasisService } from './modules/oasis/oasis.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -36,8 +37,12 @@ export async function processEvent(event, context: Context): Promise<any> {
       SporranService.verifySession,
     [AuthenticationEventType.SPORRAN_VERIFY_CREDENTIAL]:
       SporranService.verifyCredential,
+    // GENERAL
     [AuthenticationEventType.GET_TOTAL_DIDS]:
       IdentityService.getTotalDidsCreated,
+    // OASIS
+    [AuthenticationEventType.CREATE_OASIS_SIGNATURE]:
+      OasisService.createOasisSignature,
   };
 
   return await processors[event.eventName](event, context);

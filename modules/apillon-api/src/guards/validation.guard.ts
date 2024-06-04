@@ -24,7 +24,7 @@ export class ValidationGuard implements CanActivate {
     ]) as any as IValidationOptions;
     const request = execCtx.switchToHttp().getRequest<IRequest>();
     const data = request[options.validateFor];
-    data.project_uuid = request.context.apiKey.project_uuid;
+    data.project_uuid = request.context.apiKey?.project_uuid;
 
     const dto = new (options.dto as any)({}, request.context).populate(
       data,

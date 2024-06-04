@@ -14,13 +14,12 @@ export class UrlShortenerService {
     const existingShortUrl = await new ShortUrl({}, context).populateByTarget(
       event.targetUrl,
     );
-    if (existingShortUrl.exists()) {
-      return existingShortUrl;
-    }
 
-    return (await new ShortUrl({}, context).generateShortUrl(event)).serialize(
-      SerializeFor.SERVICE,
-    );
+    const shortUrl = existingShortUrl.exists()
+      ? existingShortUrl
+      : await new ShortUrl({}, context).generateShortUrl(event);
+
+    return shortUrl.serialize(SerializeFor.SERVICE);
   }
 
   public static async getTargetUrl(
@@ -34,7 +33,7 @@ export class UrlShortenerService {
       throw new StorageCodeException({
         code: StorageErrorCode.DEFAULT_RESOURCE_NOT_FOUND_ERROR,
         status: 404,
-        context: context,
+        context,
         errorMessage: 'Short URL key is not valid or does not exists',
       });
     }

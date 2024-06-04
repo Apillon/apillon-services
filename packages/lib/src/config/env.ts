@@ -556,12 +556,18 @@ export interface IEnv {
   NOWPAYMENTS_INVOICE_EMAILS: string[];
 
   /**
+   * OASIS
+   */
+  OASIS_SIGNING_WALLET_PRIVATE_KEY: string;
+
+  /*
    * URL SHORTENER
    */
   SHORTENER_VALID_DOMAINS: string[];
+  SHORTENER_DOMAIN: string;
 
   /**
-   * Airdrop claim
+   * AIRDROP CLAIM
    */
   AIRDROP_CLAIM_TIMESTAMP: string;
   AIRDROP_CLAIM_CONTRACT_ADDRESS: string;
@@ -1015,11 +1021,17 @@ export let env: IEnv = {
     ',',
   ) || [process.env['CONTACT_EMAIL_TO']],
 
+  /** OASIS */
+  OASIS_SIGNING_WALLET_PRIVATE_KEY:
+    process.env['OASIS_SIGNING_WALLET_PRIVATE_KEY'],
   /** URL SHORTENER */
   SHORTENER_VALID_DOMAINS: process.env['SHORTENER_VALID_DOMAINS']?.split(
     ',',
   ) || ['apillon.io', 'nectarnode.io', 'web3approved.com'],
+  SHORTENER_DOMAIN:
+    process.env['SHORTENER_DOMAIN'] || 'https://go.nectarnode.io',
 
+  /** AIRDROP CLAIM */
   AIRDROP_CLAIM_TIMESTAMP: process.env['AIRDROP_CLAIM_TIMESTAMP'],
   AIRDROP_CLAIM_CONTRACT_ADDRESS: process.env['AIRDROP_CLAIM_CONTRACT_ADDRESS'],
   AIRDROP_CLAIM_SIGNER_KEY: process.env['AIRDROP_CLAIM_SIGNER_KEY'],
