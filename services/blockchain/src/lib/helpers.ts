@@ -11,6 +11,16 @@ export function evmChainToWorkerName(
   type: WorkerType,
 ): string {
   switch (chain) {
+    case EvmChain.ETHEREUM: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_ETHEREUM_TRANSACTIONS
+        : WorkerName.VERIFY_ETHEREUM_TRANSACTIONS;
+    }
+    case EvmChain.SEPOLIA: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_SEPOLIA_TRANSACTIONS
+        : WorkerName.VERIFY_SEPOLIA_TRANSACTIONS;
+    }
     case EvmChain.MOONBEAM: {
       return type == WorkerType.TRANSMIT
         ? WorkerName.TRANSMIT_MOONBEAM_TRANSACTIONS

@@ -108,6 +108,8 @@ export class EvmService {
     let data = null;
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (params.chain) {
+      case EvmChain.SEPOLIA:
+      case EvmChain.ETHEREUM:
       case EvmChain.MOONBASE:
       case EvmChain.MOONBEAM: {
         maxPriorityFeePerGas = ethers.utils.parseUnits('3', 'gwei').toNumber();
@@ -343,6 +345,8 @@ export class EvmService {
     const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (_event.chain) {
+      case EvmChain.ETHEREUM:
+      case EvmChain.SEPOLIA:
       case EvmChain.MOONBASE:
       case EvmChain.MOONBEAM:
       case EvmChain.ASTAR: {
