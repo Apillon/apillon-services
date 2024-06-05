@@ -48,8 +48,15 @@ describe('Claim contract event worker tests', () => {
       QueueWorkerType.EXECUTOR,
     ).runExecutor({
       data: [
-        '0xd010621B92A0b7687f7276B4795C96F1B25A9AAB',
-        '0x345960380258653E69eD57C849399a98b51E2A63',
+        {
+          wallet: '0xd010621B92A0b7687f7276B4795C96F1B25A9AAB',
+          transactionHash: '123',
+        },
+        {
+          wallet: '0x345960380258653E69eD57C849399a98b51E2A63',
+          transactionHash: '456',
+        },
+        ,
       ],
     });
 
@@ -61,7 +68,11 @@ describe('Claim contract event worker tests', () => {
       {},
       stage.context,
     ).populateByUUID(tokenClaim2.user_uuid, 'user_uuid');
+
     expect(updatedClaim.claimCompleted).toBeTruthy();
+    expect(updatedClaim.transactionHash).toEqual('123');
+
     expect(updatedClaim2.claimCompleted).toBeTruthy();
+    expect(updatedClaim2.transactionHash).toEqual('456');
   });
 });

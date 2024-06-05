@@ -97,6 +97,18 @@ export class TokenClaim extends AdvancedSQLModel {
   public claimCompleted: boolean;
 
   @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public transactionHash: string;
+
+  @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.PROFILE],
     serializable: [SerializeFor.ADMIN],

@@ -24,7 +24,12 @@ export class ClaimContractEventWorker extends BaseQueueWorker {
     return [];
   }
 
-  public async runExecutor(input: { data: string[] }): Promise<any> {
+  public async runExecutor(input: {
+    data: {
+      wallet: string;
+      transactionHash: string;
+    }[];
+  }): Promise<any> {
     await this.writeEventLog(
       {
         logType: LogType.INFO,
@@ -38,15 +43,39 @@ export class ClaimContractEventWorker extends BaseQueueWorker {
       return;
     }
 
-    const wallets = input.data.map((d) => d.toLowerCase()).join("','");
-    // Update status of token claims, for received wallet addresses
-    await this.context.mysql.paramExecute(
-      `
-        UPDATE \`${DbTables.TOKEN_CLAIM}\`
-        SET claimCompleted = TRUE
-        WHERE LOWER(wallet) IN ('${wallets}')
-      `,
-      {},
-    );
+    try {
+      await Promise.all(
+        input.data.map(({ wallet, transactionHash }) => {
+          // Update status of token claims, for received wallet addresses
+          this.context.mysql.paramExecute(
+            `
+            UPDATE \`${DbTables.TOKEN_CLAIM}\`
+            SET claimCompleted = TRUE, transactionHash = @transactionHash
+            WHERE LOWER(wallet) = LOWER(@wallet)
+          `,
+            { wallet, transactionHash },
+          );
+        }),
+      );
+      await this.writeEventLog(
+        {
+          logType: LogType.INFO,
+          message: `Successfully updated ${input.data.length} token claims`,
+          service: ServiceName.REFERRAL,
+        },
+        LogOutput.DEBUG,
+      );
+    } catch (err) {
+      await this.writeEventLog(
+        {
+          logType: LogType.ERROR,
+          message: `Error updating token claims: ${err}`,
+          service: ServiceName.REFERRAL,
+          data: input.data,
+          err,
+        },
+        LogOutput.EVENT_ERROR,
+      );
+    }
   }
 }

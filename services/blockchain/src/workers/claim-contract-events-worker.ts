@@ -15,7 +15,10 @@ export class ClaimContractEventsWorker extends EvmContractEventsWorker {
 
     // Parse wallets from events and send webhook to Referral MS worker
     const addressChunks = splitArray(
-      events.map((x) => x.args[0] as string),
+      events.map((x) => ({
+        wallet: x.args[0] as string,
+        transactionHash: x.transactionHash,
+      })),
       20,
     );
 
