@@ -148,7 +148,7 @@ export class AirdropService {
   static async getClaimParameters(
     _event: void,
     context: ServiceContext,
-  ): Promise<{ amount: number; timestamp: number; signature: string }> {
+  ): Promise<{ amount: string; timestamp: number; signature: string }> {
     const user_uuid = context.user.user_uuid;
 
     const tokenClaim = await new TokenClaim({}, context).populateByUUID(
@@ -170,28 +170,52 @@ export class AirdropService {
       });
     }
 
-    const amount = tokenClaim.totalNctr;
+    // Convert to ether format with 18 decimals
+    const amount = ethers.utils
+      .parseEther(`${tokenClaim.totalNctr}`)
+      .toString();
 
     const [airdropTimestamp, contractAddress, chainId, signerKey] = [
       env.AIRDROP_CLAIM_TIMESTAMP,
       env.AIRDROP_CLAIM_CONTRACT_ADDRESS,
       env.AIRDROP_CLAIM_CHAIN_ID,
-      (await getSecrets(env.BLOCKCHAIN_SECRETS))['AIRDROP_CLAIM'],
+      env.AIRDROP_CLAIM_SIGNER_KEY,
     ];
 
+    // The message consists of all these parameters packed hashed together
     const message = ethers.utils.solidityKeccak256(
       ['address', 'address', 'uint256', 'uint256', 'uint256'],
       [contractAddress, tokenClaim.wallet, amount, airdropTimestamp, chainId],
     );
 
+    // Sign the message with the private key of the signer wallet
+    // Which is verified on the smart contract
     const signature = await new ethers.Wallet(signerKey).signMessage(
       ethers.utils.arrayify(message),
     );
 
-    return {
-      amount: tokenClaim.totalNctr,
-      timestamp: +airdropTimestamp,
-      signature,
-    };
+    return { amount, timestamp: +airdropTimestamp, signature };
+  }
+
+  /**
+   * Set token claims as completed and fill out transactionHash for each claim
+   * @param event - array of all wallets which claimed and the corresponding tx hash of the claim
+   * @param {ServiceContext} context
+   */
+  static async setClaimsCompleted(
+    event: {
+      data: {
+        wallet: string;
+        transactionHash: string;
+      }[];
+    },
+    context: ServiceContext,
+  ) {
+    await Promise.all(
+      event.data.map(({ wallet, transactionHash }) =>
+        new TokenClaim({ wallet }, context).setCompleted(transactionHash),
+      ),
+    );
+    return true;
   }
 }

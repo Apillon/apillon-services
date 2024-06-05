@@ -96,6 +96,9 @@ export class TokenClaim extends AdvancedSQLModel {
   })
   public claimCompleted: boolean;
 
+  /**
+   * Transaction hash of the smart contract call to claim tokens for this user
+   */
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
@@ -159,6 +162,21 @@ export class TokenClaim extends AdvancedSQLModel {
       `,
       { user_uuid: this.user_uuid },
       conn,
+    );
+    return this;
+  }
+
+  /**
+   * Marks token claim user as completed and adds tx hash
+   */
+  public async setCompleted(transactionHash: string): Promise<this> {
+    await this.getContext().mysql.paramExecute(
+      `
+        UPDATE \`${DbTables.TOKEN_CLAIM}\`
+        SET claimCompleted = TRUE, transactionHash = @transactionHash
+        WHERE LOWER(wallet) = LOWER(@wallet)
+      `,
+      { wallet: this.wallet, transactionHash },
     );
     return this;
   }

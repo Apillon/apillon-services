@@ -1,39 +1,31 @@
-import { AppEnvironment, env, splitArray } from '@apillon/lib';
-import { sendToWorkerQueue } from '@apillon/workers-lib';
+import { LogType, ReferralMicroservice, ServiceName } from '@apillon/lib';
 import { EvmContractEventsWorker } from './evm-contract-events-worker';
 import { ethers } from 'ethers';
+import { LogOutput } from '@apillon/workers-lib';
 
 /**
  * Claim smart contract indexer - extends basic worker for querying events in contract.
- * processEvents function parses received events, extracts args from it and sends the data (wallet array) to Referral MS SQS
+ * processEvents function parses received events, extracts args from it and sends the data (wallet array) to Referral MS
  */
 export class ClaimContractEventsWorker extends EvmContractEventsWorker {
   eventFilter = 'Claim';
 
   public async processEvents(events: ethers.Event[]) {
-    console.info('Events recieved in ClaimContractEventsWorker', events);
+    const data = events.map((event) => ({
+      wallet: event.args[0] as string,
+      transactionHash: event.transactionHash,
+    }));
 
-    // Parse wallets from events and send webhook to Referral MS worker
-    const addressChunks = splitArray(
-      events.map((x) => ({
-        wallet: x.args[0] as string,
-        transactionHash: x.transactionHash,
-      })),
-      20,
+    await this.writeEventLog(
+      {
+        logType: LogType.INFO,
+        message: `RUN EXECUTOR (ClaimContractEventsWorker). data: ${JSON.stringify(data)}`,
+        service: ServiceName.BLOCKCHAIN,
+      },
+      LogOutput.DEBUG,
     );
 
-    for (const chunk of addressChunks) {
-      if (
-        env.APP_ENV != AppEnvironment.LOCAL_DEV &&
-        env.APP_ENV != AppEnvironment.TEST
-      ) {
-        await sendToWorkerQueue(
-          env.REFERRAL_AWS_WORKER_SQS_URL,
-          'ClaimContractEventWorker',
-          [{ data: chunk }],
-          null,
-        );
-      }
-    }
+    // Parse wallets and tx hashes from events and send to Referral MS
+    await new ReferralMicroservice(this.context).setClaimsCompleted(data);
   }
 }

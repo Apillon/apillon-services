@@ -97,8 +97,8 @@ describe('Oasis contract events tests', () => {
     expect(tmpContract.lastParsedBlock).toBeGreaterThan(
       contract.lastParsedBlock,
     );
-    expect(tmpContract.lastParsedBlockUpdateTime.getDate()).toBeGreaterThan(
-      contract.lastParsedBlockUpdateTime.getDate(),
+    expect(tmpContract.lastParsedBlockUpdateTime.getTime()).toBeGreaterThan(
+      contract.lastParsedBlockUpdateTime.getTime(),
     );
     expect(tmpContract.lastParsedBlockTime).toBeTruthy();
   });
