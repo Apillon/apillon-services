@@ -1,5 +1,6 @@
 import {
   AppEnvironment,
+  Chain,
   ChainType,
   env,
   EvmChain,
@@ -490,5 +491,56 @@ export class EvmService {
       );
     }
     // TODO: call transaction checker
+  }
+
+  /**
+   * Create signature for Evm Oasis chain
+   * @param params timestamp, chain and data to be signed
+   * @param context
+   * @returns
+   */
+  static async createOasisSignature(
+    params: { data: string; timestamp: number },
+    context: ServiceContext,
+  ) {
+    //wallet
+    const seed = await getWalletSeed(env.OASIS_SIGNING_WALLET_PRIVATE_KEY);
+    const signingWallet = new ethers.Wallet(seed);
+
+    //provider
+    const endpoint = await new Endpoint({}, context).populateByChain(
+      EvmChain.OASIS,
+      ChainType.EVM,
+    );
+
+    if (!endpoint.exists()) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.INVALID_CHAIN,
+        status: 400,
+      });
+    }
+
+    console.log('Endpoint: ', endpoint.url);
+    const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
+
+    const gasPrice = (await provider.getFeeData()).gasPrice;
+
+    const dataHash = ethers.utils.solidityKeccak256(
+      ['uint256', 'uint256', 'bytes32'],
+      [
+        gasPrice,
+        params.timestamp,
+        ethers.utils.solidityKeccak256(['string'], [params.data]),
+      ],
+    );
+
+    const signature = await signingWallet.signMessage(
+      ethers.utils.toUtf8Bytes(dataHash),
+    );
+
+    return {
+      dataHash,
+      signature,
+    };
   }
 }

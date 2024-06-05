@@ -392,6 +392,12 @@ export interface IEnv {
   REFERRAL_MYSQL_DATABASE_TEST: string;
 
   /**
+   * Referral workers config
+   */
+  REFERRAL_AWS_WORKER_SQS_URL: string;
+  REFERRAL_AWS_WORKER_LAMBDA_NAME: string;
+
+  /**
    * hCAPTCHA
    */
   CAPTCHA_SECRET: string;
@@ -556,12 +562,18 @@ export interface IEnv {
   NOWPAYMENTS_INVOICE_EMAILS: string[];
 
   /**
+   * OASIS
+   */
+  OASIS_SIGNING_WALLET_PRIVATE_KEY: string;
+
+  /*
    * URL SHORTENER
    */
   SHORTENER_VALID_DOMAINS: string[];
+  SHORTENER_DOMAIN: string;
 
   /**
-   * Airdrop claim
+   * AIRDROP CLAIM
    */
   AIRDROP_CLAIM_TIMESTAMP: string;
   AIRDROP_CLAIM_CONTRACT_ADDRESS: string;
@@ -901,6 +913,13 @@ export let env: IEnv = {
   REFERRAL_MYSQL_PASSWORD_TEST: process.env['REFERRAL_MYSQL_PASSWORD_TEST'],
   REFERRAL_MYSQL_DATABASE_TEST: process.env['REFERRAL_MYSQL_DATABASE_TEST'],
 
+  /**
+   * AWS SQS url for workers
+   */
+  REFERRAL_AWS_WORKER_SQS_URL: process.env['REFERRAL_AWS_WORKER_SQS_URL'] || '',
+  REFERRAL_AWS_WORKER_LAMBDA_NAME:
+    process.env['REFERRAL_AWS_WORKER_LAMBDA_NAME'] || '',
+
   /** CAPTCHA */
   CAPTCHA_SECRET: process.env['CAPTCHA_SECRET'] || '',
   CAPTCHA_REMEMBER_DAYS: +process.env['CAPTCHA_REMEMBER_DAYS'] || 7,
@@ -1015,11 +1034,17 @@ export let env: IEnv = {
     ',',
   ) || [process.env['CONTACT_EMAIL_TO']],
 
+  /** OASIS */
+  OASIS_SIGNING_WALLET_PRIVATE_KEY:
+    process.env['OASIS_SIGNING_WALLET_PRIVATE_KEY'],
   /** URL SHORTENER */
   SHORTENER_VALID_DOMAINS: process.env['SHORTENER_VALID_DOMAINS']?.split(
     ',',
   ) || ['apillon.io', 'nectarnode.io', 'web3approved.com'],
+  SHORTENER_DOMAIN:
+    process.env['SHORTENER_DOMAIN'] || 'https://go.nectarnode.io',
 
+  /** AIRDROP CLAIM */
   AIRDROP_CLAIM_TIMESTAMP: process.env['AIRDROP_CLAIM_TIMESTAMP'],
   AIRDROP_CLAIM_CONTRACT_ADDRESS: process.env['AIRDROP_CLAIM_CONTRACT_ADDRESS'],
   AIRDROP_CLAIM_SIGNER_KEY: process.env['AIRDROP_CLAIM_SIGNER_KEY'],

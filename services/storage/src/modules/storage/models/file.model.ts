@@ -344,6 +344,32 @@ export class File extends UuidSqlModel {
     return this.populateById(uuid);
   }
 
+  /**
+   * Populate file by file uuid, without checking status
+   * @param uuid
+   * @returns
+   */
+  public async populateAllByUUID(uuid: string): Promise<this> {
+    if (!uuid) {
+      throw new Error('uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT f.*, d.directory_uuid
+      FROM \`${DbTables.FILE}\` f
+      LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
+      WHERE f.file_uuid LIKE @uuid;
+      `,
+      { uuid },
+    );
+
+    data?.length ? this.populate(data[0], PopulateFrom.DB) : this.reset();
+    await this.populateLink();
+
+    return this;
+  }
+
   public async populateLink() {
     if (!this.CID) {
       return;

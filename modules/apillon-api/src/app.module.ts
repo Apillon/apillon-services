@@ -14,6 +14,7 @@ import { IdentityModule } from './modules/wallet-identity/wallet-identity.module
 import { ComputingModule } from './modules/computing/computing.module';
 import { ProjectModule } from './modules/project/project.module';
 import { SocialModule } from './modules/social/social.module';
+import { OasisModule } from './modules/oasis/oasis.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SocialModule } from './modules/social/social.module';
     ComputingModule,
     ProjectModule,
     SocialModule,
+    OasisModule,
   ],
   controllers: [AppController],
   providers: [],
@@ -39,7 +41,10 @@ export class AppModule {
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
       .apply(AuthenticateApiKeyMiddleware)
-      .exclude({ path: '/', method: RequestMethod.ALL })
+      .exclude(
+        { path: '/', method: RequestMethod.ALL },
+        { path: '/oasis/signature', method: RequestMethod.POST },
+      )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
       .apply(createRequestLogMiddleware(ApiName.APILLON_API))

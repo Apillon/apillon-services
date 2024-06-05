@@ -70,6 +70,7 @@ export * from './lib/at-services/authentication/dtos/sporran/message/verify-cred
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-attestation.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-terms.dto';
 export * from './lib/at-services/authentication/dtos/wallet-identity.dto';
+export * from './lib/at-services/authentication/dtos/create-oasis-signature.dto';
 
 //#REGION NTFS
 export * from './lib/at-services/nfts/nfts';
