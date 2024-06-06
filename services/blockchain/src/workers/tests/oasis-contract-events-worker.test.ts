@@ -27,7 +27,7 @@ describe('Oasis contract events tests', () => {
     //Insert test contract
     contract = await new Contract({}, stage.context)
       .populate({
-        address: '0xcec1147b494d47F33B27b2F553c37526a4D3f0bb',
+        address: '0xDc9e8B6894E4754631887486BcF583B6B3158c4E',
         chain: EvmChain.OASIS,
         chainType: ChainType.EVM,
         abi: `[
@@ -40,7 +40,7 @@ describe('Oasis contract events tests', () => {
           "error k256Decompress_Invalid_Length_Error()",
           "error k256DeriveY_Invalid_Prefix_Error()",
           "error recoverV_Error()",
-          "event GaslessTransaction(bytes32 dataHash)",
+          "event GaslessTransaction(bytes32 indexed dataHash, bytes32 indexed hashedUsername, address indexed publicAddress)",
           "function createAccount((bytes32 hashedUsername, bytes credentialId, (uint8 kty, int8 alg, uint8 crv, uint256 x, uint256 y) pubkey, bytes32 optionalPassword) args)",
           "function credentialIdsByUsername(bytes32 in_hashedUsername) view returns (bytes[] out_credentialIds)",
           "function devAddress() view returns (address)",
@@ -59,7 +59,7 @@ describe('Oasis contract events tests', () => {
           "function userExists(bytes32 in_username) view returns (bool)",
           "function validateSignature(uint256 _gasPrice, uint256 _timestamp, bytes32 _dataKeccak, bytes _signature) view returns (bytes32, bool)"
         ]`,
-        lastParsedBlock: 6422380,
+        lastParsedBlock: 6577810,
         lastParsedBlockUpdateTime: new Date().setDate(
           new Date().getDate() - 10,
         ),
@@ -81,7 +81,7 @@ describe('Oasis contract events tests', () => {
         config: { region: 'test' },
         params: { FunctionName: 'test' },
       },
-      'evm-contract-events-worker',
+      'oasis-contract-events-worker',
       {},
     );
     await new OasisContractEventsWorker(

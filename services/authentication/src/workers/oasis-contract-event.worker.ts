@@ -1,4 +1,10 @@
-import { LogType, ServiceName, SqlModelStatus, env } from '@apillon/lib';
+import {
+  LogType,
+  ServiceName,
+  SqlModelStatus,
+  env,
+  runWithWorkers,
+} from '@apillon/lib';
 import {
   BaseQueueWorker,
   LogOutput,
@@ -34,14 +40,28 @@ export class OasisContractEventWorker extends BaseQueueWorker {
       LogOutput.DEBUG,
     );
 
-    //Update status of oasis-signatures, for received dataHashes
-    await this.context.mysql.paramExecute(
-      `
-      UPDATE \`${DbTables.OASIS_SIGNATURE}\`
-      SET status = ${SqlModelStatus.ACTIVE}
-      WHERE dataHash IN ('${input.data.join("','")}')
-    `,
-      {},
+    //Update status of oasis-signatures, for received dataHashes and update other oasis signature properties
+    await runWithWorkers(
+      input.data,
+      20,
+      this.context,
+      async (data: {
+        dataHash: string;
+        hashedUsername: string;
+        publicAddress: string;
+      }) => {
+        await this.context.mysql.paramExecute(
+          `
+          UPDATE \`${DbTables.OASIS_SIGNATURE}\`
+          SET 
+            status = ${SqlModelStatus.ACTIVE},
+            hashedUsername = '${data.hashedUsername}',
+            publicAddress = '${data.publicAddress}'
+          WHERE dataHash LIKE '${data.dataHash}'
+        `,
+          {},
+        );
+      },
     );
   }
 }

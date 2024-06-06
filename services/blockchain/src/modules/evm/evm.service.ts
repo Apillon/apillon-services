@@ -1,6 +1,5 @@
 import {
   AppEnvironment,
-  Chain,
   ChainType,
   env,
   EvmChain,
@@ -16,12 +15,12 @@ import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
 import { ethers } from 'ethers';
 import { Endpoint } from '../../common/models/endpoint';
 import { Transaction } from '../../common/models/transaction';
-import { Wallet } from '../wallet/wallet.model';
 import { BlockchainErrorCode } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { evmChainToWorkerName, WorkerType } from '../../lib/helpers';
 import { getWalletSeed } from '../../lib/seed';
 import { transmitAndProcessEvmTransaction } from '../../lib/transmit-and-process-evm-transaction';
+import { Wallet } from '../wallet/wallet.model';
 
 export async function getNextOnChainNonce(
   provider: ethers.providers.JsonRpcProvider,
@@ -503,6 +502,41 @@ export class EvmService {
     params: { data: string; timestamp: number },
     context: ServiceContext,
   ) {
+    //validate data
+    try {
+      const abiCoder = ethers.utils.defaultAbiCoder;
+      const decodedFuncData = abiCoder.decode(
+        ['tuple(bytes funcData, uint8 txType)'],
+        params.data,
+        true,
+      );
+      const decodedData = abiCoder.decode(
+        [
+          'tuple(bytes32 hashedUsername, bytes credentialId, tuple(uint8 kty, int8 alg, uint8 crv, uint256 x, uint256 y) pubkey, bytes32 optionalPassword)',
+        ],
+        decodedFuncData[0][0],
+      );
+      if (
+        !decodedData[0].hashedUsername ||
+        !decodedData[0].credentialId ||
+        !decodedData[0].pubkey
+      ) {
+        throw new BlockchainCodeException({
+          code: BlockchainErrorCode.INVALID_DATA_FOR_OASIS_SIGNATURE,
+          status: 400,
+        });
+      }
+    } catch (err) {
+      if (err instanceof BlockchainCodeException) throw err;
+
+      console.error(err);
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.ERROR_DECODING_DATA_FOR_OASIS_SIGNATURE,
+        status: 500,
+        errorMessage: 'Error decoding and validating data to sign',
+      });
+    }
+
     //wallet
     const seed = await getWalletSeed(env.OASIS_SIGNING_WALLET_PRIVATE_KEY);
     const signingWallet = new ethers.Wallet(seed);

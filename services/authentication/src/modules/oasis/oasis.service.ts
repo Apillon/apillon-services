@@ -1,7 +1,6 @@
 import {
   BlockchainMicroservice,
   CreateOasisSignatureDto,
-  EvmChain,
   ProductCode,
   ServiceName,
   SpendCreditDto,
