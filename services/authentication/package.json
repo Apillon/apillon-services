@@ -38,6 +38,7 @@
     "valid-url": "^1.0.9"
   },
   "devDependencies": {
+    "@apillon/tests-lib": "*",
     "eslint-config-common": "*",
     "tsconfig": "*"
   },
