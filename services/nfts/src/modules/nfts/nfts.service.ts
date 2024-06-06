@@ -96,6 +96,8 @@ export class NftsService {
     });
 
     const product_id = {
+      [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_COLLECTION,
+      [EvmChain.SEPOLIA]: ProductCode.NFT_SEPOLIA_COLLECTION,
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_COLLECTION,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_COLLECTION,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_COLLECTION,
@@ -386,6 +388,8 @@ export class NftsService {
     await NftsService.checkTransferConditions(body, context, collection);
 
     const product_id = {
+      [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_TRANSFER_COLLECTION,
+      [EvmChain.SEPOLIA]: ProductCode.NFT_SEPOLIA_TRANSFER_COLLECTION,
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_TRANSFER_COLLECTION,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_TRANSFER_COLLECTION,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_TRANSFER_COLLECTION,
@@ -507,6 +511,8 @@ export class NftsService {
     );
 
     const product_id = {
+      [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_SET_BASE_URI,
+      [EvmChain.SEPOLIA]: ProductCode.NFT_SEPOLIA_SET_BASE_URI,
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_SET_BASE_URI,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_SET_BASE_URI,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_SET_BASE_URI,
@@ -682,6 +688,8 @@ export class NftsService {
     await NftsService.checkCollection(collection, 'mintNftTo()', context);
 
     const product_id = {
+      [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_MINT,
+      [EvmChain.SEPOLIA]: ProductCode.NFT_SEPOLIA_MINT,
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_MINT,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_MINT,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_MINT,
@@ -919,6 +927,8 @@ export class NftsService {
     );
 
     const product_id = {
+      [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_MINT,
+      [EvmChain.SEPOLIA]: ProductCode.NFT_SEPOLIA_MINT,
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_MINT,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_MINT,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_MINT,
@@ -991,6 +1001,8 @@ export class NftsService {
     await NftsService.checkCollection(collection, 'burnNftToken()', context);
 
     const product_id = {
+      [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_BURN,
+      [EvmChain.SEPOLIA]: ProductCode.NFT_SEPOLIA_BURN,
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_BURN,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_BURN,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_BURN,

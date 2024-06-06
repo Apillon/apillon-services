@@ -43,6 +43,8 @@ export enum WorkerName {
   TRANSMIT_SUBSOCIAL_TRANSACTION = 'TransmitSubsocialTransactions',
   TRANSMIT_ASTAR_TRANSACTIONS = 'TransmitAstarTransactions',
   TRANSMIT_ASTAR_SUBSTRATE_TRANSACTIONS = 'TransmitAstarSubstrateTransactions',
+  TRANSMIT_ETHEREUM_TRANSACTIONS = 'TransmitEthereumTransactions',
+  TRANSMIT_SEPOLIA_TRANSACTIONS = 'TransmitSepoliaTransactions',
   VERIFY_CRUST_TRANSACTIONS = 'VerifyCrustTransactions',
   VERIFY_KILT_TRANSACTIONS = 'VerifyKiltTransactions',
   VERIFY_PHALA_TRANSACTIONS = 'VerifyPhalaTransactions',
@@ -52,6 +54,8 @@ export enum WorkerName {
   VERIFY_MOONBEAM_TRANSACTIONS = 'VerifyMoonbeamTransactions',
   VERIFY_MOONBASE_TRANSACTIONS = 'VerifyMoonbaseTransactions',
   VERIFY_ASTAR_TRANSACTIONS = 'VerifyAstarTransactions',
+  VERIFY_ETHEREUM_TRANSACTIONS = 'VerifyEthereumTransactions',
+  VERIFY_SEPOLIA_TRANSACTIONS = 'VerifySepoliaTransactions',
   TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
   TRANSACTION_LOG = 'TransactionLog',
   CHECK_PENDING_TRANSACTIONS = 'CheckPendingTransactions',
@@ -146,6 +150,8 @@ export async function handleLambdaEvent(
       await scheduler.run();
       break;
     // --- TRANSMIT TRANSACTION WORKERS ---
+    case WorkerName.TRANSMIT_ETHEREUM_TRANSACTIONS:
+    case WorkerName.TRANSMIT_SEPOLIA_TRANSACTIONS:
     case WorkerName.TRANSMIT_MOONBEAM_TRANSACTIONS:
     case WorkerName.TRANSMIT_MOONBASE_TRANSACTIONS:
     case WorkerName.TRANSMIT_ASTAR_TRANSACTIONS:
@@ -186,7 +192,8 @@ export async function handleLambdaEvent(
       ).run();
       break;
     // --- EVM ---
-    case WorkerName.VERIFY_MOONBEAM_TRANSACTIONS:
+    case WorkerName.VERIFY_ETHEREUM_TRANSACTIONS:
+    case WorkerName.VERIFY_SEPOLIA_TRANSACTIONS:
     case WorkerName.VERIFY_MOONBASE_TRANSACTIONS:
     case WorkerName.VERIFY_ASTAR_TRANSACTIONS:
       await new EvmTransactionWorker(workerDefinition, context).run({
