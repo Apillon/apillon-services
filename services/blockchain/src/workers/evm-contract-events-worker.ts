@@ -25,13 +25,13 @@ import { Contract } from '../modules/contract/contract.model';
  * Derived workers should declare eventFiler property and implement function processEvents
  */
 export abstract class EvmContractEventsWorker extends BaseSingleThreadWorker {
-  abstract eventFilter;
+  abstract eventFilter: string | ethers.EventFilter;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
   }
 
-  public async runExecutor(data: any): Promise<any> {
+  public async runExecutor(data: { contractId: number }): Promise<any> {
     this.logFn(`EvmContractEventsWorker - execute BEGIN`);
     if (!data.contractId) {
       throw new BlockchainCodeException({
@@ -133,5 +133,5 @@ export abstract class EvmContractEventsWorker extends BaseSingleThreadWorker {
     }
   }
 
-  public abstract processEvents(events: any): Promise<any>;
+  public abstract processEvents(events: ethers.Event[]): Promise<any>;
 }

@@ -1,12 +1,16 @@
 import { env } from '@apillon/lib';
-import { Did, DidUri, connect } from '@kiltprotocol/sdk-js';
+import { Did, DidUri } from '@kiltprotocol/sdk-js';
 import { AuthenticationErrorCode, HttpStatus } from '../config/types';
 import { AuthenticationCodeException } from './exceptions';
-import { generateKeypairs } from './kilt';
+import { connectToKilt, generateKeypairs } from './kilt';
 import { randomChallenge } from './utils/crypto-utils';
+import { ServiceContext } from '@apillon/service-lib';
 
-export async function prepareSignResources(encryptionKeyUri: string) {
-  await connect(env.KILT_NETWORK);
+export async function prepareSignResources(
+  encryptionKeyUri: string,
+  context: ServiceContext,
+) {
+  await connectToKilt(context);
 
   const requestChallenge = randomChallenge(24);
   // This is just the light did generated for the sporran session - not the actual claimer did uri

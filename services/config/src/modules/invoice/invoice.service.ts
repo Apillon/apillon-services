@@ -227,6 +227,7 @@ export class InvoiceService {
         subtotalAmount:
           updateSubscriptionDto.amount || existingInvoice.subtotalAmount,
         referenceId: subscription.id,
+        invoice_uuid: uuidV4(),
       });
       await existingInvoice.insert(SerializeFor.INSERT_DB, conn);
     } else {

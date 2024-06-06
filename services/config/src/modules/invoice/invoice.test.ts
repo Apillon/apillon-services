@@ -1,12 +1,17 @@
 import { v4 as uuid } from 'uuid';
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { InvoiceService } from './invoice.service';
-import { getFaker, InvoicesQueryFilter } from '@apillon/lib';
+import {
+  getFaker,
+  InvoicesQueryFilter,
+  UpdateSubscriptionDto,
+} from '@apillon/lib';
 import { SubscriptionPackage } from '../subscription/models/subscription-package.model';
 import { CreditPackage } from '../credit/models/credit-package.model';
 import { Credit } from '../credit/models/credit.model';
 import { Subscription } from '../subscription/models/subscription.model';
 import { DbTables } from '../../config/types';
+import { SubscriptionService } from '../subscription/subscription.service';
 
 describe('Invoice unit tests', () => {
   let stage: Stage;
@@ -14,7 +19,7 @@ describe('Invoice unit tests', () => {
   const project_uuid = uuid();
   let subscriptionPackage: SubscriptionPackage;
   let creditPackage: CreditPackage;
-  let subscriptionId: number;
+  let subscriptionStripeId: string;
   const clientEmail = getFaker().internet.email();
 
   beforeAll(async () => {
@@ -72,7 +77,7 @@ describe('Invoice unit tests', () => {
       );
     });
 
-    test('should handle subscription data', async () => {
+    test('should handle subscription create', async () => {
       const expiresOn = new Date();
       expiresOn.setDate(expiresOn.getDate() + 30); // Extend by 30 days
       const event = {
@@ -107,7 +112,33 @@ describe('Invoice unit tests', () => {
       expect(activeSubscription.exists()).toBeTruthy();
       expect(activeSubscription.project_uuid).toEqual(project_uuid);
       expect(activeSubscription.package_id).toEqual(subscriptionPackage.id);
-      subscriptionId = activeSubscription.id;
+      subscriptionStripeId = activeSubscription.stripeId;
+    });
+
+    test('should create new invoice on subscription update', async () => {
+      const expiresOn = new Date();
+      expiresOn.setDate(expiresOn.getDate() + 60); // Extend by another 30 days
+      await SubscriptionService.updateSubscription(
+        {
+          updateSubscriptionDto: new UpdateSubscriptionDto({
+            subscriptionStripeId,
+            stripePackageId: subscriptionPackage.stripeId,
+            expiresOn,
+          }),
+        },
+        stage.context,
+      );
+
+      const invoices = await stage.db.paramExecute(
+        `SELECT * FROM ${DbTables.INVOICE}`,
+      );
+
+      // One from credit purchase, one for sub. creation, one for sub. renewal
+      expect(invoices.length).toEqual(3);
+      expect(invoices[1].referenceTable).toEqual(invoices[2].referenceTable);
+      expect(invoices[1].referenceId).toEqual(invoices[2].referenceId);
+      expect(invoices[1].clientEmail).toEqual(invoices[2].clientEmail);
+      expect(invoices[1].totalAmount).toEqual(invoices[2].totalAmount);
     });
 
     describe('Invoice listing', () => {
@@ -120,7 +151,7 @@ describe('Invoice unit tests', () => {
           event,
           stage.context,
         );
-        expect(invoices?.items).toHaveLength(2);
+        expect(invoices?.items).toHaveLength(3);
         expect(invoices.items[0].referenceTable).toBe(DbTables.CREDIT_PACKAGE);
         // expect(+invoices.items[0].referenceId).toBe(creditPackage.id);
         expect(invoices.items[0].clientEmail).toBe(clientEmail);

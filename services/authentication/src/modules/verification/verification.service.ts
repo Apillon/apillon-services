@@ -10,20 +10,19 @@ import {
 } from '@apillon/lib';
 import {
   Attestation,
-  ConfigService,
-  connect,
   Credential,
   IAttestation,
   ICredentialPresentation,
 } from '@kiltprotocol/sdk-js';
+import { connectToKilt } from '../../lib/kilt';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class VerificationService {
   static async verifyIdentity(
     event: { body: VerificationIdentityDto },
-    context,
+    context: ServiceContext,
   ): Promise<any> {
-    await connect(env.KILT_NETWORK);
-    const api = ConfigService.get('api');
+    const api = await connectToKilt(context);
 
     const presentation = JSON.parse(
       event.body.presentation,
