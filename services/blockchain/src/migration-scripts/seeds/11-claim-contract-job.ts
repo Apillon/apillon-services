@@ -15,7 +15,7 @@ export async function upgrade(
     VALUES ('ClaimContractEventsWorker', 0, '*/1 * * * *',
             NOW(),
             '{"contractId": 2}',
-            '{"contractId": 2, "channel": 0}', 5, 900)
+            '{"contractId": 2, "channel": 0}', 9, 900)
   `);
 }
 

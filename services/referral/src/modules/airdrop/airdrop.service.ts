@@ -4,6 +4,11 @@ import {
   SqlModelStatus,
   env,
   getSecrets,
+  Context,
+  runWithWorkers,
+  Lmas,
+  LogType,
+  ServiceName,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { ReferralErrorCode } from '../../config/types';
@@ -211,11 +216,26 @@ export class AirdropService {
     },
     context: ServiceContext,
   ) {
-    await Promise.all(
-      event.data.map(({ wallet, transactionHash }) =>
-        new TokenClaim({ wallet }, context).setCompleted(transactionHash),
-      ),
+    await runWithWorkers(
+      event.data,
+      20,
+      context,
+      async ({ wallet, transactionHash }, context: ServiceContext) => {
+        new TokenClaim({ wallet }, context)
+          .setCompleted(transactionHash)
+          .catch((e) =>
+            new Lmas().writeLog({
+              logType: LogType.ERROR,
+              message: `Error marking token claim as complete`,
+              location: 'AirdropService.setClaimsCompleted',
+              service: ServiceName.REFERRAL,
+              data: { error: e, events: event.data },
+              sendAdminAlert: true,
+            }),
+          );
+      },
     );
+
     return true;
   }
 }

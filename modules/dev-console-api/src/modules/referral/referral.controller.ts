@@ -151,7 +151,7 @@ export class ReferralController {
   }
 
   @Get('claim-parameters')
-  @Permissions({ role: DefaultUserRole.USER })
+  @Permissions({ role: DefaultUserRole.PROJECT_OWNER })
   @UseGuards(AuthGuard)
   async getClaimParameters(@Ctx() context: DevConsoleApiContext) {
     return await this.referralService.getClaimParameters(context);
