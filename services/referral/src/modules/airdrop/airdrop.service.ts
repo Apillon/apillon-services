@@ -179,7 +179,7 @@ export class AirdropService {
       env.AIRDROP_CLAIM_TIMESTAMP,
       env.AIRDROP_CLAIM_CONTRACT_ADDRESS,
       env.AIRDROP_CLAIM_CHAIN_ID,
-      env.AIRDROP_CLAIM_SIGNER_KEY,
+      (await getSecrets(env.BLOCKCHAIN_SECRETS))['AIRDROP_CLAIM'],
     ];
 
     // The message consists of all these parameters packed hashed together
