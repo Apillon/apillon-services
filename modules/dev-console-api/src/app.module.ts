@@ -20,6 +20,7 @@ import { IpnsModule } from './modules/storage/ipns/ipns.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { UserModule } from './modules/user/user.module';
 import { SocialModule } from './modules/social/social.module';
+import { WalletModule } from './modules/wallet/wallet.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { SocialModule } from './modules/social/social.module';
     PaymentsModule,
     PublicModule,
     SocialModule,
+    WalletModule,
   ],
   controllers: [],
   providers: [],

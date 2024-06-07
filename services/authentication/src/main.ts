@@ -43,6 +43,10 @@ export async function processEvent(event, context: Context): Promise<any> {
     // OASIS
     [AuthenticationEventType.CREATE_OASIS_SIGNATURE]:
       OasisService.createOasisSignature,
+    [AuthenticationEventType.GET_OASIS_SIGNATURES_COUNT_BY_API_KEY]:
+      OasisService.getOasisSignaturesCountByApiKey,
+    [AuthenticationEventType.LIST_OASIS_SIGNATURES]:
+      OasisService.listOasisSignatures,
   };
 
   return await processors[event.eventName](event, context);
