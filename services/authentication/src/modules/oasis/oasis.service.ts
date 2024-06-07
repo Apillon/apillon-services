@@ -8,6 +8,7 @@ import {
   ServiceName,
   SpendCreditDto,
   SqlModelStatus,
+  invalidateCacheMatch,
   spendCreditAction,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
@@ -93,11 +94,9 @@ export class OasisService {
 
     apiKeys.map(
       (x) =>
-        (x.oasisSignatures = signaturesByApiKey.find(
-          (y) => y.apiKey == x.apiKey,
-        )
-          ? signaturesByApiKey.find((y) => y.apiKey == x.apiKey).numOfSignatures
-          : 0),
+        (x.oasisSignatures =
+          signaturesByApiKey.find((y) => y.apiKey == x.apiKey)
+            ?.numOfSignatures || 0),
     );
 
     return apiKeys;

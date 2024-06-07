@@ -43,8 +43,6 @@ export class OasisService {
       });
     }
 
-    console.info(context);
-
     return (
       await new AuthenticationMicroservice(context).createOasisSignature(body)
     ).data;

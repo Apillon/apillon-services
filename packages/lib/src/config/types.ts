@@ -825,9 +825,6 @@ export enum CacheKeyPrefix {
   PROJECT_OVERVIEW = 'project-overview',
 
   URL_SHORTENER = 'url-shortener',
-
-  OASIS_SIGNATURE_STATISTIC = 'oasis-signature-statistic',
-  OASIS_SIGNATURE_LIST = 'oasis-signature-list',
 }
 
 export enum CacheKeyTTL {
