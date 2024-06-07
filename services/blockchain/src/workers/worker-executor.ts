@@ -300,6 +300,8 @@ export async function handleSqsMessages(
             executeArg: message?.body,
           });
           break;
+        case WorkerName.TRANSMIT_ETHEREUM_TRANSACTIONS:
+        case WorkerName.TRANSMIT_SEPOLIA_TRANSACTIONS:
         case WorkerName.TRANSMIT_MOONBEAM_TRANSACTIONS:
         case WorkerName.TRANSMIT_MOONBASE_TRANSACTIONS:
         case WorkerName.TRANSMIT_ASTAR_TRANSACTIONS:
@@ -312,6 +314,8 @@ export async function handleSqsMessages(
         // case WorkerName.CRUST_TRANSACTIONS:
         //   await new CrustTransactionWorker(workerDefinition, context).run();
         //   break;
+        case WorkerName.VERIFY_ETHEREUM_TRANSACTIONS:
+        case WorkerName.VERIFY_SEPOLIA_TRANSACTIONS:
         case WorkerName.VERIFY_MOONBEAM_TRANSACTIONS:
         case WorkerName.VERIFY_MOONBASE_TRANSACTIONS:
         case WorkerName.VERIFY_ASTAR_TRANSACTIONS:
