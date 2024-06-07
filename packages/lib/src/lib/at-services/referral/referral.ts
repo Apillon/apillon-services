@@ -149,7 +149,7 @@ export class ReferralMicroservice extends BaseService {
       transactionHash: string;
     }[],
   ) {
-    this.isDefaultAsync = true; // This does not need to return a response
+    // this.isDefaultAsync = true; // This does not need to return a response
     return await this.callService({
       eventName: ReferralEventType.SET_CLAIMS_COMPLETED,
       data,
