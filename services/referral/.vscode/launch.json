@@ -18,9 +18,7 @@
       "request": "launch",
       "name": "Run current file",
       "runtimeExecutable": "nodemon",
-      "runtimeArgs": [
-        "${relativeFile}"
-      ],
+      "runtimeArgs": ["${relativeFile}"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "env": {

@@ -1,6 +1,7 @@
 import { AppEnvironment, env, splitArray } from '@apillon/lib';
 import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { EvmContractEventsWorker } from './evm-contract-events-worker';
+import { ethers } from 'ethers';
 
 /**
  * Oasis smart contract indexer - extends basic worker for querying events in contract.
@@ -9,12 +10,16 @@ import { EvmContractEventsWorker } from './evm-contract-events-worker';
 export class OasisContractEventsWorker extends EvmContractEventsWorker {
   eventFilter = 'GaslessTransaction';
 
-  public async processEvents(events: any) {
+  public async processEvents(events: ethers.Event[]) {
     console.info('Events recieved in OasisContractEventsWorker', events);
     //Parse data from events and send webhook to Authentication MS worker
-    const dataHashes: string[] = events.map((x) => x.data);
+    const txTopics: any = events.map((x) => ({
+      dataHash: x.args[0],
+      hashedUsername: x.args[1],
+      publicAddress: x.args[3],
+    }));
 
-    const chunks = splitArray(dataHashes, 20);
+    const chunks = splitArray(txTopics, 20);
 
     for (const chunk of chunks) {
       if (

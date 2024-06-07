@@ -60,7 +60,14 @@ describe('Oasis contract event worker webhook tests', () => {
       QueueWorkerType.EXECUTOR,
     ).runExecutor({
       data: [
-        '0xd63ffa37fb2bf11e51d88fb3ffea8ee22788d21538247da8e1a98f6d134e63b8',
+        {
+          dataHash:
+            '0xd63ffa37fb2bf11e51d88fb3ffea8ee22788d21538247da8e1a98f6d134e63b8',
+          hashedUsername:
+            '0xb39ba6e72d147585ea48aeaa042841b781289c1daf1b9edef9bfc8f3eb63f350',
+          publicAddress:
+            '0x0000000000000000000000008036c0f2e8f93c5e95168be3fd05e2d2743bbe07',
+        },
       ],
     });
 
@@ -69,6 +76,12 @@ describe('Oasis contract event worker webhook tests', () => {
       stage.authApiContext,
     ).populateById(testSignature.id);
     expect(tmpSignature.status).toBe(SqlModelStatus.ACTIVE);
+    expect(tmpSignature.hashedUsername).toBe(
+      '0xb39ba6e72d147585ea48aeaa042841b781289c1daf1b9edef9bfc8f3eb63f350',
+    );
+    expect(tmpSignature.publicAddress).toBe(
+      '0x0000000000000000000000008036c0f2e8f93c5e95168be3fd05e2d2743bbe07',
+    );
 
     tmpSignature = await new OasisSignature(
       {},

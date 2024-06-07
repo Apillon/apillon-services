@@ -149,4 +149,11 @@ export class ReferralController {
     body.ip_address = ip;
     return await this.referralService.reviewTasks(context, body);
   }
+
+  @Get('claim-parameters')
+  @Permissions({ role: DefaultUserRole.PROJECT_OWNER })
+  @UseGuards(AuthGuard)
+  async getClaimParameters(@Ctx() context: DevConsoleApiContext) {
+    return await this.referralService.getClaimParameters(context);
+  }
 }
