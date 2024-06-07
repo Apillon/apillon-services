@@ -3,7 +3,6 @@ import { WorkerDefinition } from '.';
 import { DbTables, WorkerLogStatus, QueueWorkerType } from '../../config/types';
 import { Job } from '../../modules/job/job.model';
 import { sendToWorkerQueue } from '../aws-sqs';
-import { writeWorkerLog } from '../logger';
 import { BaseWorker } from './base-worker';
 
 export abstract class BaseQueueWorker extends BaseWorker {
@@ -106,41 +105,5 @@ export abstract class BaseQueueWorker extends BaseWorker {
       `DELETE FROM ${DbTables.JOB} WHERE id = @id`,
       { id: this.workerDefinition.id },
     );
-  }
-
-  /**
-   * Write log to database
-   * @param status worker status
-   * @param message message
-   * @param data any data in JSON
-   * @param err Error object
-   */
-  protected async writeLogToDb(
-    status: WorkerLogStatus,
-    message: string,
-    data?: any,
-    err?: Error,
-  ) {
-    try {
-      if (err) {
-        message += ` (${err.message})`;
-        status = WorkerLogStatus.ERROR;
-      }
-      await writeWorkerLog(
-        this.context,
-        status,
-        this.workerName,
-        this.workerType,
-        message,
-        data,
-      );
-      this.logFn(`${this.workerName} ${this.workerType} ${message}`, err);
-    } catch (error) {
-      console.log('ERROR writing worker log to database!');
-      this.logFn(
-        `${this.workerName} ${this.workerType} ${error.message}`,
-        error,
-      );
-    }
   }
 }
