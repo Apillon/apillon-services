@@ -113,7 +113,7 @@ describe('Subscriptions unit test', () => {
   });
 
   test('should update a subscription', async () => {
-    let activeSubscription = await new Subscription(
+    const activeSubscription = await new Subscription(
       {},
       stage.context,
     ).getActiveSubscription(project_uuid);

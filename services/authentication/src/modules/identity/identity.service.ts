@@ -29,15 +29,8 @@ import {
   DbTables,
   IdentityConfigKey,
 } from '../../config/types';
-
 import { KiltKeyringPair } from '@kiltprotocol/types';
-import {
-  ConfigService,
-  connect,
-  Did,
-  DidUri,
-  ICredential,
-} from '@kiltprotocol/sdk-js';
+import { Did, DidUri, ICredential } from '@kiltprotocol/sdk-js';
 import { BN, hexToU8a, u8aToHex } from '@polkadot/util';
 // Dtos
 import { IdentityCreateDto } from '@apillon/lib';
@@ -45,6 +38,7 @@ import { IdentityDidRevokeDto } from '@apillon/lib';
 import { VerificationEmailDto } from '@apillon/lib';
 import { IdentityLinkAccountDidDto } from '@apillon/lib';
 import {
+  connectToKilt,
   createAttestationRequest,
   generateAccount,
   generateKeypairs,
@@ -232,8 +226,7 @@ export class IdentityService {
     const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
 
     // Init Kilt essentials
-    await connect(env.KILT_NETWORK);
-    const api = ConfigService.get('api');
+    const api = await connectToKilt(context);
 
     writeLog(LogType.INFO, 'Decrypting payload..');
     const decrypted = await decryptAssymetric(
@@ -299,7 +292,10 @@ export class IdentityService {
     return { success: true };
   }
 
-  static async attestClaim(event: { body: AttestationDto }, context) {
+  static async attestClaim(
+    event: { body: AttestationDto },
+    context: ServiceContext,
+  ) {
     const claimerEmail = event.body.email;
     const claimerDidUri: DidUri = event.body.didUri as DidUri;
     // This parameter is optional, since we can only perform attestaion
@@ -311,12 +307,12 @@ export class IdentityService {
     const attesterKeypairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
     // TODO: Account could be just saved in
     // ENV, no need to generate it every time actually
-    const attesterAcc = (await generateAccount(
+    const attesterAcc = generateAccount(
       env.KILT_ATTESTER_MNEMONIC,
-    )) as KiltKeyringPair;
+    ) as KiltKeyringPair;
 
     // DID
-    const attesterDidDoc = await getFullDidDocument(attesterKeypairs);
+    const attesterDidDoc = await getFullDidDocument(attesterKeypairs, context);
     const attesterDidUri = attesterDidDoc.uri;
 
     const identity = await new Identity({}, context).populateByUserEmail(
@@ -332,8 +328,7 @@ export class IdentityService {
     }
 
     // Init Kilt essentials
-    await connect(env.KILT_NETWORK);
-    const api = ConfigService.get('api');
+    const api = await connectToKilt(context);
 
     // Prepare identity instance and credential structure
     writeLog(LogType.INFO, 'Preparing attestation request..');
@@ -556,8 +551,7 @@ export class IdentityService {
       });
     }
 
-    await connect(env.KILT_NETWORK);
-    const api = ConfigService.get('api');
+    const api = await connectToKilt(context);
 
     const identifier = Did.toChain(identity.didUri as DidUri);
     const endpointsCountForDid =

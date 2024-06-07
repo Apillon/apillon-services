@@ -8,6 +8,7 @@ import {
   SqlModelStatus,
   ValidatorErrorCode,
   env,
+  generateRandomCode,
   presenceValidator,
   prop,
   urlDomainValidator,
@@ -78,19 +79,34 @@ export class ShortUrl extends BaseSQLModel {
   })
   public targetUrl: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    getter() {
+      return `${env.SHORTENER_DOMAIN}/${this.id}`;
+    },
+  })
+  public url: string;
+
   /**
    * status
    */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    populatable: [
+      PopulateFrom.DB, //
+      PopulateFrom.ADMIN,
+    ],
     serializable: [
-      SerializeFor.PROFILE,
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
-      SerializeFor.SERVICE,
     ],
     validators: [
       {
@@ -110,13 +126,12 @@ export class ShortUrl extends BaseSQLModel {
    */
   @prop({
     parser: { resolver: dateParser() },
-    serializable: [
-      SerializeFor.APILLON_API,
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
-    ],
     populatable: [
       PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.ADMIN, //
+      SerializeFor.SELECT_DB,
     ],
   })
   public createTime?: Date;
@@ -125,11 +140,11 @@ export class ShortUrl extends BaseSQLModel {
    * User who created the object
    */
   @prop({
-    serializable: [
-      SerializeFor.INSERT_DB, //
-    ],
     populatable: [
       PopulateFrom.DB, //
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB, //
     ],
   })
   public createUser?: number;
@@ -139,12 +154,12 @@ export class ShortUrl extends BaseSQLModel {
    */
   @prop({
     parser: { resolver: dateParser() },
+    populatable: [
+      PopulateFrom.DB, //
+    ],
     serializable: [
       SerializeFor.APILLON_API, //
       SerializeFor.ADMIN,
-    ],
-    populatable: [
-      PopulateFrom.DB, //
     ],
   })
   public updateTime?: Date;
@@ -188,22 +203,11 @@ export class ShortUrl extends BaseSQLModel {
     this.reset();
     this.populate(data, PopulateFrom.SERVICE);
     this.targetUrl = this.targetUrl?.trim(); // do not convert to lower case! (would break JWT token param)
-    this.id = this.generateShortUrlKey();
+    this.id = generateRandomCode(
+      5,
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+    );
     await this.validateOrThrow(StorageValidationException);
-    await this.insert();
-    return this;
-  }
-
-  private generateShortUrlKey(length = 5) {
-    const characters =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    const charactersLength = characters.length;
-
-    for (let i = 0; i < length; i++) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-
-    return result;
+    return await this.insert();
   }
 }

@@ -37,8 +37,18 @@ import {
 } from '../config/types';
 import { EncryptResponseData } from '@kiltprotocol/types';
 import { Keypair } from '@polkadot/util-crypto/types';
-import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
+import {
+  BlockchainMicroservice,
+  ChainType,
+  env,
+  Lmas,
+  LogType,
+  ServiceName,
+  SubstrateChain,
+  writeLog,
+} from '@apillon/lib';
 import { AuthenticationCodeException } from './exceptions';
+import { ServiceContext } from '@apillon/service-lib';
 
 export function generateMnemonic() {
   return mnemonicGenerate();
@@ -89,16 +99,18 @@ export async function generateKeypairs(mnemonic: string) {
   })();
 
   return {
-    authentication: authentication,
-    keyAgreement: keyAgreement,
-    assertionMethod: assertionMethod,
-    capabilityDelegation: capabilityDelegation,
+    authentication,
+    keyAgreement,
+    assertionMethod,
+    capabilityDelegation,
   };
 }
 
-export async function getFullDidDocument(keypairs: any) {
-  await connect(env.KILT_NETWORK);
-  const api = ConfigService.get('api');
+export async function getFullDidDocument(
+  keypairs: any,
+  context: ServiceContext,
+) {
+  const api = await connectToKilt(context);
 
   const didUri = Did.getFullDidUriFromKey(keypairs.authentication);
   const encodedFullDid = await api.call.did.query(Did.toChain(didUri));
@@ -145,7 +157,7 @@ export function createAttestationRequest(
       credential,
       attesterDidUri,
     ),
-    credential: credential,
+    credential,
   };
 }
 
@@ -268,19 +280,21 @@ export async function assertionSigner({
   });
 }
 
-export async function encryptionSigner({
-  data,
-  peerPublicKey,
-  // Did URI
-  // NOTE: I think encyption signer (EncryptRequestData) needs this did,
-  // but we don't use it in the function body actually
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  did,
-}): Promise<EncryptResponseData> {
+export async function encryptionSigner(
+  {
+    data,
+    peerPublicKey,
+    // Did URI
+    // NOTE: I think encyption signer (EncryptRequestData) needs this did,
+    // but we don't use it in the function body actually
+    did,
+  },
+  context: ServiceContext,
+): Promise<EncryptResponseData> {
   // Apillon credentials
   const keyPairs = await generateKeypairs(env.KILT_ATTESTER_MNEMONIC);
 
-  const verifierDidDoc = await getFullDidDocument(keyPairs);
+  const verifierDidDoc = await getFullDidDocument(keyPairs, context);
   const verifierEncryptionKey = verifierDidDoc.keyAgreement?.[0];
   if (!verifierEncryptionKey) {
     throw new AuthenticationCodeException({
@@ -324,4 +338,18 @@ export function toCredentialIRI(rootHash: string): string {
     throw new Error('Root hash is not a base16 / hex encoded string)');
   }
   return KILT_CREDENTIAL_IRI_PREFIX + rootHash;
+}
+
+export async function connectToKilt(context: ServiceContext) {
+  const rpcEndpoint = (
+    await new BlockchainMicroservice(context).getChainEndpoint(
+      SubstrateChain.KILT,
+      ChainType.SUBSTRATE,
+    )
+  ).data.url;
+
+  writeLog(LogType.INFO, `Connecting to Kilt RPC endpoint: ${rpcEndpoint}`);
+  await connect(rpcEndpoint);
+
+  return ConfigService.get('api');
 }
