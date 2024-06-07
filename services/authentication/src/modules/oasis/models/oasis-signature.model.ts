@@ -1,21 +1,19 @@
 import {
-  AdvancedSQLModel,
   Context,
+  OasisSignaturesQueryFilter,
   PopulateFrom,
+  ProjectAccessModel,
   SerializeFor,
   SqlModelStatus,
+  getQueryParams,
   presenceValidator,
   prop,
-  OasisSignaturesQueryFilter,
-  ProjectAccessModel,
-  getQueryParams,
-  ApiName,
   selectAndCountQuery,
 } from '@apillon/lib';
-import { stringParser } from '@rawmodel/parsers';
+import { ServiceContext } from '@apillon/service-lib';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
 import { AuthenticationErrorCode, DbTables } from '../../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
 
 export class OasisSignature extends ProjectAccessModel {
   public readonly tableName = DbTables.OASIS_SIGNATURE;
@@ -23,6 +21,18 @@ export class OasisSignature extends ProjectAccessModel {
   public constructor(data: any, context: Context) {
     super(data, context);
   }
+
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -121,7 +131,8 @@ export class OasisSignature extends ProjectAccessModel {
         SELECT apiKey, COUNT(*) as numOfSignatures
         FROM \`${DbTables.OASIS_SIGNATURE}\`
         WHERE project_uuid = @project_uuid
-        AND status IN (${SqlModelStatus.ACTIVE}, ${SqlModelStatus.INACTIVE});
+        AND status IN (${SqlModelStatus.ACTIVE}, ${SqlModelStatus.INACTIVE})
+        GROUP BY apiKey;
       `,
       { project_uuid: this.project_uuid },
     );
