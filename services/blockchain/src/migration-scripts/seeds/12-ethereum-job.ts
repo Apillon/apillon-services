@@ -1,4 +1,4 @@
-import { EvmChain, SubstrateChain } from '@apillon/lib';
+import { EvmChain } from '@apillon/lib';
 import { DbTables } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 
@@ -24,12 +24,12 @@ export async function upgrade(
             '{"chain": ${EvmChain.SEPOLIA}, "channel": 0}', 5, 900),
            ('${WorkerName.VERIFY_ETHEREUM_TRANSACTIONS}', 0, '*/1 * * * *',
             '2023-05-25 10:00:00',
-            '{"chainId": ${EvmChain.ETHEREUM}}',
-            '{"chainId": ${EvmChain.ETHEREUM}, "channel": 0}', 5, 900),
+            '{"chain": ${EvmChain.ETHEREUM}}',
+            '{"chain": ${EvmChain.ETHEREUM}, "channel": 0}', 5, 900),
            ('${WorkerName.VERIFY_SEPOLIA_TRANSACTIONS}', 0, '*/1 * * * *',
             '2023-05-25 10:00:00',
-            '{"chainId": ${EvmChain.SEPOLIA}}',
-            '{"chainId": ${EvmChain.SEPOLIA}, "channel": 0}', 5, 900);
+            '{"chain": ${EvmChain.SEPOLIA}}',
+            '{"chain": ${EvmChain.SEPOLIA}, "channel": 0}', 5, 900);
   `);
 }
 
