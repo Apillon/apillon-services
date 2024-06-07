@@ -27,10 +27,6 @@ export class WalletController {
   @Get('oasis-signatures-count-by-api-key')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
-  @CacheByProject({
-    keyPrefix: CacheKeyPrefix.OASIS_SIGNATURE_STATISTIC,
-    ttl: CacheKeyTTL.EXTRA_LONG,
-  })
   async oasisSignatureStatistic(
     @Ctx() context: DevConsoleApiContext,
     @Query('project_uuid') project_uuid: string,
@@ -48,10 +44,6 @@ export class WalletController {
   })
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(ValidationGuard, AuthGuard)
-  @CacheByProject({
-    keyPrefix: CacheKeyPrefix.OASIS_SIGNATURE_LIST,
-    ttl: CacheKeyTTL.EXTRA_LONG,
-  })
   async listOasisSignatures(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: OasisSignaturesQueryFilter,

@@ -560,7 +560,7 @@ export interface IEnv {
   /**
    * OASIS
    */
-  OASIS_SIGNING_WALLET_PRIVATE_KEY: string;
+  OASIS_SIGNING_WALLET: string;
 
   /*
    * URL SHORTENER
@@ -1027,8 +1027,7 @@ export let env: IEnv = {
   ) || [process.env['CONTACT_EMAIL_TO']],
 
   /** OASIS */
-  OASIS_SIGNING_WALLET_PRIVATE_KEY:
-    process.env['OASIS_SIGNING_WALLET_PRIVATE_KEY'],
+  OASIS_SIGNING_WALLET: process.env['OASIS_SIGNING_WALLET'],
   /** URL SHORTENER */
   SHORTENER_VALID_DOMAINS: process.env['SHORTENER_VALID_DOMAINS']?.split(
     ',',
