@@ -1,6 +1,9 @@
 import {
+  Ams,
+  ApiKeyQueryFilterDto,
   BlockchainMicroservice,
   CreateOasisSignatureDto,
+  OasisSignaturesQueryFilter,
   ProductCode,
   ServiceName,
   SpendCreditDto,
@@ -30,6 +33,7 @@ export class OasisService {
       status: SqlModelStatus.INACTIVE,
       project_uuid: event.body.project_uuid,
       dataHash: signatureRes.dataHash,
+      apiKey: event.body.apiKey,
     });
 
     await oasisSignature.validateOrThrow(AuthenticationValidationException);
@@ -51,5 +55,51 @@ export class OasisService {
     );
 
     return { signature: signatureRes.signature };
+  }
+
+  static async listOasisSignatures(
+    event: {
+      query: OasisSignaturesQueryFilter;
+    },
+    context: ServiceContext,
+  ) {
+    return await new OasisSignature(
+      { project_uuid: event.query.project_uuid },
+      context,
+    ).getList(context, new OasisSignaturesQueryFilter(event.query));
+  }
+
+  static async getOasisSignaturesCountByApiKey(
+    event: { project_uuid: string },
+    context: ServiceContext,
+  ) {
+    //Get Api keys from AMS
+    const apiKeys = (
+      await new Ams(context).listApiKeys(
+        new ApiKeyQueryFilterDto(
+          { project_uuid: event.project_uuid },
+          context,
+        ).populate({ limit: 1000 }),
+      )
+    ).data.items;
+
+    //Get oasis signatures by api keys
+    const signaturesByApiKey = await new OasisSignature(
+      {
+        project_uuid: event.project_uuid,
+      },
+      context,
+    ).signaturesByApiKey();
+
+    apiKeys.map(
+      (x) =>
+        (x.oasisSignatures = signaturesByApiKey.find(
+          (y) => y.apiKey == x.apiKey,
+        )
+          ? signaturesByApiKey.find((y) => y.apiKey == x.apiKey).numOfSignatures
+          : 0),
+    );
+
+    return apiKeys;
   }
 }
