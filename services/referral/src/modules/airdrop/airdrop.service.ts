@@ -4,7 +4,6 @@ import {
   SqlModelStatus,
   env,
   getSecrets,
-  Context,
   runWithWorkers,
   Lmas,
   LogType,
@@ -221,7 +220,7 @@ export class AirdropService {
       20,
       context,
       async ({ wallet, transactionHash }, context: ServiceContext) => {
-        new TokenClaim({ wallet }, context)
+        await new TokenClaim({ wallet }, context)
           .setCompleted(transactionHash)
           .catch((e) =>
             new Lmas().writeLog({
