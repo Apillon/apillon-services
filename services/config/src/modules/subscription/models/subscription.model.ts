@@ -10,6 +10,7 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  SubscriptionPackage,
   SubscriptionsQueryFilter,
 } from '@apillon/lib';
 import {
@@ -40,7 +41,7 @@ export class Subscription extends ProjectAccessModel {
       SerializeFor.PROFILE,
     ],
   })
-  public package_id: number;
+  public package_id: SubscriptionPackage;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -217,6 +218,7 @@ export class Subscription extends ProjectAccessModel {
    * Check if project has ever had a subscription for a package
    * @param {number} package_id
    * @param {string} [project_uuid=this.project_uuid]
+   * @param conn
    * @returns {Promise<this>}
    */
   public async getProjectSubscription(

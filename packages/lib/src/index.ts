@@ -85,6 +85,7 @@ export * from './lib/at-services/nfts/dtos/burn-nft.dto';
 export * from './lib/at-services/nfts/dtos/collections-quota-reached-query-filter.dto';
 export * from './lib/at-services/nfts/dtos/add-nfts-metadata.dto';
 export * from './lib/at-services/nfts/constants';
+export * from './lib/at-services/nfts/validators/permissions';
 
 //#REGION COMPUTING
 export * from './lib/at-services/computing/computing';

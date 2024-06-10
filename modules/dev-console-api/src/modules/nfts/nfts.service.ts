@@ -2,12 +2,14 @@ import {
   AddNftsMetadataDto,
   AttachedServiceType,
   BurnNftDto,
+  ChainType,
   CodeException,
   CollectionMetadataQueryFilter,
   CollectionsQuotaReachedQueryFilter,
   CreateCollectionDTO,
   CreateSubstrateCollectionDTO,
   DeployCollectionDTO,
+  isAllowedToCreateNftCollection,
   MintNftDTO,
   NestMintNftDTO,
   NFTCollectionQueryFilter,
@@ -17,7 +19,7 @@ import {
   TransactionQueryFilter,
   TransferCollectionDTO,
 } from '@apillon/lib';
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
@@ -32,6 +34,7 @@ export class NftsService {
 
   async createCollection(
     context: DevConsoleApiContext,
+    chainType: ChainType,
     body: CreateCollectionDTO | CreateSubstrateCollectionDTO,
   ) {
     //check project
@@ -47,6 +50,18 @@ export class NftsService {
     }
 
     project.canModify(context);
+
+    const isAllowed = await isAllowedToCreateNftCollection(
+      context,
+      chainType,
+      body.chain,
+      project.project_uuid,
+    );
+    if (!isAllowed) {
+      throw new UnauthorizedException(
+        `This operation requires a Butterfly plan.`,
+      );
+    }
 
     // Check if NFT service for this project already exists
     const { total } = await new Service({}).getServices(

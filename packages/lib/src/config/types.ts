@@ -963,3 +963,10 @@ export enum JwtExpireTime {
   FIVE_MINUTES = '5m',
   NEVER = 'never',
 }
+
+export enum SubscriptionPackage {
+  FREEMIUM = 1,
+  CATERPILLAR,
+  COCOON,
+  BUTTERFLY,
+}
