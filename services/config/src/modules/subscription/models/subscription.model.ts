@@ -10,7 +10,7 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
-  SubscriptionPackage,
+  SubscriptionPackageId,
   SubscriptionsQueryFilter,
 } from '@apillon/lib';
 import {
@@ -41,7 +41,7 @@ export class Subscription extends ProjectAccessModel {
       SerializeFor.PROFILE,
     ],
   })
-  public package_id: SubscriptionPackage;
+  public package_id: SubscriptionPackageId;
 
   @prop({
     parser: { resolver: stringParser() },

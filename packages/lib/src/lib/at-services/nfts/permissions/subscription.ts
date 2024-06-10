@@ -1,7 +1,7 @@
 import {
   ChainType,
   EvmChain,
-  SubscriptionPackage,
+  SubscriptionPackageId,
 } from '../../../../config/types';
 import { Context } from '../../../context';
 import { Scs } from '../../config/scs';
@@ -32,5 +32,5 @@ export async function isAllowedToCreateNftCollection(
     project_uuid,
   );
 
-  return data.package_id && data.package_id === SubscriptionPackage.BUTTERFLY;
+  return data.package_id && data.package_id === SubscriptionPackageId.BUTTERFLY;
 }

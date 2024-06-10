@@ -966,7 +966,7 @@ export enum JwtExpireTime {
   NEVER = 'never',
 }
 
-export enum SubscriptionPackage {
+export enum SubscriptionPackageId {
   FREEMIUM = 1,
   CATERPILLAR,
   COCOON,
