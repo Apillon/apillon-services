@@ -16,6 +16,7 @@ import {
   AddNftsMetadataDto,
   CreateSubstrateCollectionDTO,
   CollectionMetadataQueryFilter,
+  ChainType,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
@@ -51,7 +52,11 @@ export class NftsController {
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateCollectionDTO,
   ) {
-    return await this.nftsService.createCollection(context, body);
+    return await this.nftsService.createCollection(
+      context,
+      ChainType.EVM,
+      body,
+    );
   }
 
   @Post('collections/substrate')
@@ -66,7 +71,11 @@ export class NftsController {
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateSubstrateCollectionDTO,
   ) {
-    return await this.nftsService.createCollection(context, body);
+    return await this.nftsService.createCollection(
+      context,
+      ChainType.SUBSTRATE,
+      body,
+    );
   }
 
   @Get('collections')
