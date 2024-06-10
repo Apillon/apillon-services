@@ -6,6 +6,7 @@ import { CreateOasisSignatureDto } from './dtos/create-oasis-signature.dto';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
 import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
+import { OasisSignaturesQueryFilter } from './dtos/oasis-signatures-query-filter.dto';
 import { RequestCredentialDto } from './dtos/sporran/message/request-credential.dto';
 import { SubmitAttestationDto } from './dtos/sporran/message/submit-attestation.dto';
 import { SubmitTermsDto } from './dtos/sporran/message/submit-terms.dto';
@@ -145,6 +146,20 @@ export class AuthenticationMicroservice extends BaseService {
       body: params,
     };
     return await this.callService(data);
+  }
+
+  public async getOasisSignaturesCountByApiKey(project_uuid: string) {
+    return await this.callService({
+      eventName: AuthenticationEventType.GET_OASIS_SIGNATURES_COUNT_BY_API_KEY,
+      project_uuid,
+    });
+  }
+
+  public async listOasisSignatures(query: OasisSignaturesQueryFilter) {
+    return await this.callService({
+      eventName: AuthenticationEventType.LIST_OASIS_SIGNATURES,
+      query: query.serialize(),
+    });
   }
 
   //#endregion

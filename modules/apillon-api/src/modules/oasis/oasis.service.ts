@@ -16,7 +16,10 @@ export class OasisService {
   async generateSessionToken(context: ApillonApiContext) {
     const token = generateJwtToken(
       JwtTokenType.OASIS_SDK_TOKEN,
-      { project_uuid: context.apiKey.project_uuid },
+      {
+        project_uuid: context.apiKey.project_uuid,
+        apiKey: context.apiKey.apiKey,
+      },
       JwtExpireTime.FIVE_MINUTES,
     );
 
@@ -31,6 +34,7 @@ export class OasisService {
     try {
       const tokenData = parseJwtToken(JwtTokenType.OASIS_SDK_TOKEN, body.token);
       body.project_uuid = tokenData.project_uuid;
+      body.apiKey = tokenData.apiKey;
     } catch (err) {
       throw new CodeException({
         code: BadRequestErrorCode.INVALID_AUTHORIZATION_HEADER,

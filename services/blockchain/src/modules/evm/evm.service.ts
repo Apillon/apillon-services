@@ -532,7 +532,7 @@ export class EvmService {
     }
 
     //wallet
-    const seed = await getWalletSeed(env.OASIS_SIGNING_WALLET_PRIVATE_KEY);
+    const seed = await getWalletSeed(env.OASIS_SIGNING_WALLET);
     const signingWallet = new ethers.Wallet(seed);
 
     //provider

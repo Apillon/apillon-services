@@ -189,6 +189,8 @@ export enum AuthenticationEventType {
   SPORRAN_VERIFY_CREDENTIAL = 'sporran-verify-credential',
   GET_TOTAL_DIDS = 'get-total-dids',
   CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
+  LIST_OASIS_SIGNATURES = 'list-oasis-signatures',
+  GET_OASIS_SIGNATURES_COUNT_BY_API_KEY = 'get-oasis-signatures-count-by-api-key',
 }
 
 export enum MailEventType {

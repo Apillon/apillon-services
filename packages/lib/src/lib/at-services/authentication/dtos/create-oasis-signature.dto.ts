@@ -41,4 +41,12 @@ export class CreateOasisSignatureDto extends ModelBase {
     validators: [],
   })
   public project_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public apiKey: string;
 }
