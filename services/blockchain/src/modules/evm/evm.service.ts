@@ -12,7 +12,7 @@ import {
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { Endpoint } from '../../common/models/endpoint';
 import { Transaction } from '../../common/models/transaction';
 import { BlockchainErrorCode } from '../../config/types';
@@ -100,37 +100,22 @@ export class EvmService {
     console.log('Endpoint: ', endpoint.url);
     const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
 
-    let maxPriorityFeePerGas;
-    let maxFeePerGas;
-    let type;
-    let gasPrice;
+    let maxPriorityFeePerGas: BigNumber;
+    let estimatedBaseFee: BigNumber;
     let data = null;
-    // eslint-disable-next-line sonarjs/no-small-switch
     switch (params.chain) {
-      case EvmChain.SEPOLIA:
-      case EvmChain.ETHEREUM:
       case EvmChain.MOONBASE:
       case EvmChain.MOONBEAM: {
-        maxPriorityFeePerGas = ethers.utils.parseUnits('3', 'gwei').toNumber();
-
-        const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
-        console.log(estimatedBaseFee);
-        // Ensuring that transaction is desirable for at least 6 blocks.
-        maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
-        type = 2;
-        gasPrice = null;
+        maxPriorityFeePerGas = ethers.utils.parseUnits('3', 'gwei');
+        estimatedBaseFee = await provider.getGasPrice();
         break;
       }
+      case EvmChain.SEPOLIA:
+      case EvmChain.ETHEREUM:
       case EvmChain.ASTAR:
       case EvmChain.ASTAR_SHIBUYA: {
-        maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei').toNumber();
-
-        const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
-        console.log(estimatedBaseFee);
-        // Ensuring that transaction is desirable for at least 6 blocks.
-        maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
-        type = 2;
-        gasPrice = null;
+        maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei');
+        estimatedBaseFee = await provider.getGasPrice();
         break;
       }
       default: {
@@ -140,9 +125,15 @@ export class EvmService {
         });
       }
     }
+    // Ensuring that transaction is desirable for at least 6 blocks.
+    const maxFeePerGas = estimatedBaseFee.mul(2).add(maxPriorityFeePerGas);
+    console.log(
+      `maxPriorityFeePerGas=${maxPriorityFeePerGas.toNumber()}`,
+      `estimatedBaseFee=${estimatedBaseFee.toNumber()}`,
+      `maxFeePerGas=${maxFeePerGas.toNumber()}`,
+    );
 
     const conn = await context.mysql.start();
-
     try {
       let wallet = new Wallet({}, context);
 
@@ -177,11 +168,10 @@ export class EvmService {
       // TODO: add transaction checker to detect anomalies.
       // Reject transaction sending value etc.
       unsignedTx.from = wallet.address;
-      unsignedTx.maxPriorityFeePerGas =
-        ethers.BigNumber.from(maxPriorityFeePerGas);
-      unsignedTx.maxFeePerGas = ethers.BigNumber.from(maxFeePerGas);
-      unsignedTx.gasPrice = gasPrice;
-      unsignedTx.type = type;
+      unsignedTx.maxPriorityFeePerGas = maxPriorityFeePerGas;
+      unsignedTx.maxFeePerGas = maxFeePerGas;
+      unsignedTx.gasPrice = null;
+      unsignedTx.type = 2;
       unsignedTx.gasLimit = null;
       unsignedTx.chainId = wallet.chain;
       unsignedTx.nonce = wallet.nextNonce;
