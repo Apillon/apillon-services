@@ -4,6 +4,8 @@ export enum DbTables {
   CONTRACT_ABI = 'contract_abi',
   CLUSTER_WALLET = 'cluster_wallet',
   CLUSTER_TRANSACTION_LOG = 'cluster_transaction_log',
+
+  ACURAST_JOB = 'acurast_job',
 }
 
 export enum ComputingErrorCode {

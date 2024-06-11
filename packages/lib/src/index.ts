@@ -99,6 +99,7 @@ export * from './lib/at-services/computing/dtos/assign-cid-to-nft.dto';
 export * from './lib/at-services/computing/dtos/phala-cluster-deposit-transaction.dto';
 export * from './lib/at-services/computing/dtos/cluster-wallet-query-filter.dto';
 export * from './lib/at-services/computing/dtos/computing-transaction-query-filter.dto';
+export * from './lib/at-services/computing/dtos/create-job.dto';
 
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';

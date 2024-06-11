@@ -258,6 +258,8 @@ export enum ComputingEventType {
   LIST_CLUSTER_WALLETS = 'list-cluster-wallets',
   PROJECT_COMPUTING_DETAILS = 'project-computing-details',
   ARCHIVE_CONTRACT = 'archive-contract',
+
+  CREATE_JOB = 'create-job',
 }
 
 export enum ReferralEventType {

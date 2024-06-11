@@ -10,6 +10,7 @@ import { EncryptContentDto } from './dtos/encrypt-content.dto';
 import { AssignCidToNft } from './dtos/assign-cid-to-nft.dto';
 import { ClusterWalletQueryFilter } from './dtos/cluster-wallet-query-filter.dto';
 import { ComputingTransactionQueryFilter } from './dtos/computing-transaction-query-filter.dto';
+import { CreateJobDto } from './dtos/create-job.dto';
 
 export class ComputingMicroservice extends BaseService {
   lambdaFunctionName =
@@ -114,5 +115,13 @@ export class ComputingMicroservice extends BaseService {
       eventName: ComputingEventType.PROJECT_COMPUTING_DETAILS,
       project_uuid,
     });
+  }
+
+  public async createJob(params: CreateJobDto) {
+    const data = {
+      eventName: ComputingEventType.CREATE_JOB,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
   }
 }
