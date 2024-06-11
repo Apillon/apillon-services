@@ -25,7 +25,9 @@ export class ClaimContractEventsWorker extends EvmContractEventsWorker {
       LogOutput.DEBUG,
     );
 
-    // Send wallets and tx hashes from events to Referral MS
-    await new ReferralMicroservice(this.context).setClaimsCompleted(data);
+    if (data.length) {
+      // Send wallets and tx hashes from events to Referral MS
+      await new ReferralMicroservice(this.context).setClaimsCompleted(data);
+    }
   }
 }
