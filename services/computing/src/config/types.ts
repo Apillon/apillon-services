@@ -57,6 +57,7 @@ export enum TransactionType {
   TRANSFER_CONTRACT_OWNERSHIP = 2,
   DEPOSIT_TO_CONTRACT_CLUSTER = 3,
   ASSIGN_CID_TO_NFT = 4,
+  DEPLOY_JOB = 5,
 }
 
 export enum ContractStatus {

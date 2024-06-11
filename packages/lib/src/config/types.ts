@@ -20,6 +20,7 @@ export enum SubstrateChain {
   SUBSOCIAL = 6,
   XSOCIAL = 7,
   ASTAR = 8,
+  ACURAST = 9,
 }
 
 export enum EvmChain {

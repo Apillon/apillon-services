@@ -1,8 +1,9 @@
-import { CreateJobDto } from '@apillon/lib';
+import { CreateJobDto, Lmas, LogType, ServiceName } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
 import { v4 as uuidV4 } from 'uuid';
 import { ComputingValidationException } from '../../lib/exceptions';
+import { deployAcurastJob } from '../../lib/utils/acurast-utils';
 
 export class AcurastService {
   /**
@@ -23,6 +24,18 @@ export class AcurastService {
 
     await job.validateOrThrow(ComputingValidationException);
 
-    return await job.insert();
+    await deployAcurastJob(context, await job.insert());
+
+    await new Lmas().writeLog({
+      context,
+      project_uuid: job.project_uuid,
+      logType: LogType.INFO,
+      message: 'New Acurast job created and submitted for deployment',
+      location: 'AcurastService/createJob',
+      service: ServiceName.COMPUTING,
+      data: { job_uuid: job.job_uuid },
+    });
+
+    return job.serializeByContext() as AcurastJob;
   }
 }

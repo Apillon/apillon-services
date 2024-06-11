@@ -27,7 +27,7 @@ import {
 import { expect } from '@jest/globals';
 import { ClusterTransactionLog } from '../../modules/accounting/cluster-transaction-log.model';
 import { ServiceContext } from '@apillon/service-lib';
-import { PhalaClient } from '../../modules/services/phala.client';
+import { PhalaClient } from '../../modules/clients/phala.client';
 
 const mockAxios = new MockAdapter(axios);
 
