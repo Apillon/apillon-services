@@ -14,25 +14,29 @@ import {
   DbTables,
 } from '../../../config/types';
 
+const populatable = [
+  PopulateFrom.DB,
+  PopulateFrom.SERVICE,
+  PopulateFrom.ADMIN,
+  PopulateFrom.PROFILE,
+];
+const serializable = [
+  SerializeFor.INSERT_DB,
+  SerializeFor.ADMIN,
+  SerializeFor.SERVICE,
+  SerializeFor.APILLON_API,
+  SerializeFor.PROFILE,
+  SerializeFor.SELECT_DB,
+];
+const serializableUpdate = [...serializable, SerializeFor.UPDATE_DB];
+
 export class AcurastJob extends UuidSqlModel {
   public readonly tableName = DbTables.ACURAST_JOB;
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
+    populatable,
+    serializable,
     validators: [
       {
         resolver: presenceValidator(),
@@ -44,19 +48,8 @@ export class AcurastJob extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
+    populatable,
+    serializable,
     validators: [
       {
         resolver: presenceValidator(),
@@ -68,21 +61,8 @@ export class AcurastJob extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
+    populatable,
+    serializable: serializableUpdate,
     validators: [
       {
         resolver: presenceValidator(),
@@ -95,21 +75,8 @@ export class AcurastJob extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
+    populatable,
+    serializable: serializableUpdate,
   })
   public description: string;
 
@@ -118,21 +85,9 @@ export class AcurastJob extends UuidSqlModel {
    * @example ipfs://QmSwtWgE6nQgVq1MQ9S4JnZRky95CuEbsGtdKnkD6CMsYR
    */
   @prop({
-    parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
+    parser: { resolver: stringParser() },
+    populatable,
+    serializable,
     validators: [
       {
         resolver: presenceValidator(),
@@ -147,18 +102,8 @@ export class AcurastJob extends UuidSqlModel {
    */
   @prop({
     parser: { resolver: dateParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.SELECT_DB,
-    ],
+    populatable,
+    serializable,
   })
   public startTime: Date;
 
@@ -167,18 +112,8 @@ export class AcurastJob extends UuidSqlModel {
    */
   @prop({
     parser: { resolver: dateParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.SELECT_DB,
-    ],
+    populatable,
+    serializable,
   })
   public endTime: Date;
 
@@ -187,20 +122,8 @@ export class AcurastJob extends UuidSqlModel {
    */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
+    populatable,
+    serializable,
     validators: [
       {
         resolver: presenceValidator(),
@@ -217,41 +140,15 @@ export class AcurastJob extends UuidSqlModel {
    */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
+    populatable,
+    serializable,
   })
   public jobId: number;
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
+    populatable,
+    serializable: serializableUpdate,
     validators: [
       {
         resolver: enumInclusionValidator(ContractStatus, true),
@@ -267,20 +164,8 @@ export class AcurastJob extends UuidSqlModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-    ],
+    populatable,
+    serializable,
   })
   public transactionHash: string;
 
