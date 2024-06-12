@@ -12,7 +12,7 @@ export async function upgrade(
       \`status\` INT NULL,
       \`name\` VARCHAR(255) NOT NULL,
       \`description\` VARCHAR(255) NULL,
-      \`scriptIpfsUrl\` VARCHAR(255) NOT NULL,
+      \`scriptCid\` VARCHAR(255) NOT NULL,
       \`slots\` TINYINT NOT NULL,
       \`jobStatus\` INT NOT NULL,
       \`jobId\` INT NULL,

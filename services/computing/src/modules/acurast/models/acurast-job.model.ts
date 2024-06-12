@@ -81,8 +81,8 @@ export class AcurastJob extends UuidSqlModel {
   public description: string;
 
   /**
-   * IPFS URL of the script's code
-   * @example ipfs://QmSwtWgE6nQgVq1MQ9S4JnZRky95CuEbsGtdKnkD6CMsYR
+   * IPFS CID of the script's code
+   * @example QmUq4iFLKZUpEsHCAqfsBermXHRnPuE5CNcyPv1xaNkyGp
    */
   @prop({
     parser: { resolver: stringParser() },
@@ -95,7 +95,7 @@ export class AcurastJob extends UuidSqlModel {
       },
     ],
   })
-  public scriptIpfsUrl: string;
+  public scriptCid: string;
 
   /**
    * The timestamp where the job will become available

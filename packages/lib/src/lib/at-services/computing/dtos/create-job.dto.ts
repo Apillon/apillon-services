@@ -36,7 +36,7 @@ export class CreateJobDto extends ModelBase {
       },
     ],
   })
-  public scriptIpfsUrl: string;
+  public scriptCid: string;
 
   @prop({
     parser: { resolver: stringParser() },

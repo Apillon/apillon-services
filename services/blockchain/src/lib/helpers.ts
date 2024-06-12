@@ -59,6 +59,9 @@ export function substrateChainToWorkerName(chain: SubstrateChain): string {
     case SubstrateChain.ASTAR: {
       return WorkerName.TRANSMIT_ASTAR_SUBSTRATE_TRANSACTIONS;
     }
+    case SubstrateChain.ACURAST: {
+      return WorkerName.TRANSMIT_ASTAR_SUBSTRATE_TRANSACTIONS;
+    }
     default: {
       throw new Error('Unsupported');
     }

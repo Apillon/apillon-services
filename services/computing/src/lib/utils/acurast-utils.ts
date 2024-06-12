@@ -17,7 +17,6 @@ import {
 } from '../../config/types';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { TransactionService } from '../../modules/transaction/transaction.service';
-import { getPhalaEndpoint } from './contract-utils';
 import { AcurastClient } from '../../modules/clients/acurast.client';
 import { v4 as uuidV4 } from 'uuid';
 
@@ -35,8 +34,7 @@ export async function deployAcurastJob(
   job: AcurastJob,
   conn?: PoolConnection,
 ) {
-  const rpcUrl = await getPhalaEndpoint(context);
-  const acurastClient = new AcurastClient(rpcUrl);
+  const acurastClient = new AcurastClient(await getAcurastEndpoint(context));
   const transaction = await acurastClient.createDeployJobTransaction(job);
 
   const response = await new BlockchainMicroservice(

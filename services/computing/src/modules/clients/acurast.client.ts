@@ -26,21 +26,30 @@ export class AcurastClient {
     console.log(`Acurast client initialization: ${this.rpcEndpoint}`);
   }
 
+  addMinutes(date: string | number | Date, seconds: number) {
+    const t = new Date(date);
+    t.setMinutes(t.getMinutes() + seconds);
+    return t;
+  }
+
   async createDeployJobTransaction(
     job: AcurastJob,
   ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
+    const startTime = this.addMinutes(new Date(), 10).getTime();
+    const endTime = this.addMinutes(startTime, 60).getTime();
 
-    let { startTime, endTime } = job;
-    const interval = endTime.getTime() - startTime.getTime();
+    // let { startTime, endTime } = job;
+    const interval = endTime - startTime;
     return this.api.tx.acurast.register({
-      script: 'ipfs://QmSwiWgE6nQgVq1MQ9S4JnZRky95CuEbsGtdKnkD6CMsYR',
+      script: `ipfs://${job.scriptCid}`,
       schedule: {
-        startTime: startTime.getTime(),
-        endTime: endTime.getTime(),
+        startTime,
+        endTime,
         interval,
         duration: interval - 1,
       },
+      requiredModules: ['DataEncryption'],
       extra: {
         requirements: {
           slots: job.slots,
