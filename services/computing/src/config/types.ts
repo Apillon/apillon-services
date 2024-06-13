@@ -52,6 +52,9 @@ export enum ComputingErrorCode {
   FAILED_TO_ENCRYPT_CONTENT = 50018011,
   FAILED_TO_ASSIGN_CID_TO_NFT = 50018012,
   DEPLOY_JOB_ERROR = 50018013,
+  JOB_NOT_DEPLOYED = 50018014,
+  JOB_ID_IS_MISSING = 50018015,
+  DELETE_JOB_ERROR = 50018016,
 }
 
 export enum TransactionType {
@@ -62,6 +65,7 @@ export enum TransactionType {
 
   DEPLOY_JOB = 5,
   SET_JOB_ENVIRONMENT = 6,
+  DELETE_JOB = 7,
 }
 
 export enum ContractStatus {
@@ -72,6 +76,15 @@ export enum ContractStatus {
   TRANSFERRING = 4,
   TRANSFERRED = 5,
   FAILED = 6,
+}
+
+export enum JobStatus {
+  CREATED = 0,
+  DEPLOYING = 1,
+  DEPLOYED = 2,
+  MATCHED = 3,
+  DELETING = 4,
+  DELETED = 9,
 }
 
 export enum TxDirection {

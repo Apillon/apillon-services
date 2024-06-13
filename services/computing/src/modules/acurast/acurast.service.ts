@@ -1,5 +1,6 @@
 import {
   CreateJobDto,
+  JobQueryFilter,
   Lmas,
   LogType,
   ServiceName,
@@ -14,6 +15,7 @@ import {
   ComputingValidationException,
 } from '../../lib/exceptions';
 import {
+  deleteAcurastJob,
   deployAcurastJob,
   setAcurastJobEnvironment,
 } from '../../lib/utils/acurast-utils';
@@ -30,7 +32,7 @@ export class AcurastService {
     event: { body: CreateJobDto },
     context: ServiceContext,
   ): Promise<AcurastJob> {
-    console.log(`Creating acurast contract: ${JSON.stringify(event.body)}`);
+    console.log(`Creating acurast job: ${JSON.stringify(event.body)}`);
     event.body = new CreateJobDto(event.body);
 
     const job = new AcurastJob(event.body, context).populate({
@@ -62,14 +64,51 @@ export class AcurastService {
         code: ComputingErrorCode.DEPLOY_JOB_ERROR,
         context,
         sourceFunction: 'AcruastService/createJob',
-        errorMessage: `Error creating job: ${err}`,
+        errorMessage: `Error creating acurast job: ${err}`,
         details: err,
       }).writeToMonitor({
         logType: LogType.ERROR,
         service: ServiceName.COMPUTING,
         data: { dto: event.body.serialize(), err },
+        sendAdminAlert: true,
       });
     }
+
+    return job.serializeByContext() as AcurastJob;
+  }
+
+  /**
+   * Returns a list of all jobs for a project
+   * @param {{ query: JobQueryFilter }} event
+   * @param {ServiceContext} context
+   * @returns {AcurastJob[]}
+   */
+  static async listJobs(
+    event: { query: JobQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new AcurastJob(
+      { project_uuid: event.query.project_uuid },
+      context,
+    ).getList(context, new JobQueryFilter(event.query));
+  }
+
+  /**
+   * Gets a job by UUID
+   * @param {{ job_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<AcurastJob>}
+   */
+  static async getJobByUuid(
+    { job_uuid }: { job_uuid: string },
+    context: ServiceContext,
+  ): Promise<AcurastJob> {
+    const job = await new AcurastJob({}, context).populateByUUID(job_uuid);
+
+    if (!job.exists()) {
+      throw new ComputingNotFoundException(ComputingErrorCode.JOB_NOT_FOUND);
+    }
+    job.canAccess(context);
 
     return job.serializeByContext() as AcurastJob;
   }
@@ -88,13 +127,60 @@ export class AcurastService {
       event.body.job_uuid,
     );
 
-    if (!job.exists()) {
-      throw new ComputingNotFoundException(ComputingErrorCode.JOB_NOT_FOUND);
-    }
-
-    job.canModify(context);
+    job.verifyStatusAndAccess('setJobEnvironment', context);
 
     await setAcurastJobEnvironment(context, job, event.body.variables);
+
+    return job.serializeByContext() as AcurastJob;
+  }
+
+  /**
+   * Unregister an acurast job and mark as deleted
+   * @param {{ job_uuid: string }} event - environment variable pairs
+   * @param {ServiceContext} context
+   * @returns {Promise<AcurastJob>}
+   */
+  static async deleteJob(
+    { job_uuid }: { job_uuid: string },
+    context: ServiceContext,
+  ): Promise<AcurastJob> {
+    const job = await new AcurastJob({}, context).populateByUUID(job_uuid);
+
+    job.verifyStatusAndAccess('deleteJob', context);
+
+    const conn = await context.mysql.start();
+    try {
+      await job.validateOrThrow(ComputingValidationException);
+
+      await deleteAcurastJob(context, job, conn);
+
+      await context.mysql.commit(conn);
+
+      await new Lmas().writeLog({
+        context,
+        project_uuid: job.project_uuid,
+        logType: LogType.INFO,
+        message: `Acurast job ${job.job_uuid} deleted`,
+        location: 'AcurastService/deleteJob',
+        service: ServiceName.COMPUTING,
+        data: { job_uuid: job.job_uuid },
+      });
+    } catch (err) {
+      await context.mysql.rollback(conn);
+
+      throw await new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.DELETE_JOB_ERROR,
+        context,
+        sourceFunction: 'AcruastService/deleteJob',
+        errorMessage: `Error deleting acurast job: ${err}`,
+        details: err,
+      }).writeToMonitor({
+        logType: LogType.ERROR,
+        service: ServiceName.COMPUTING,
+        data: { job_uuid, err },
+      });
+    }
 
     return job.serializeByContext() as AcurastJob;
   }

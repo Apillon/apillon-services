@@ -3,6 +3,7 @@ import {
   CodeException,
   ComputingMicroservice,
   CreateJobDto,
+  JobQueryFilter,
   SetJobEnvironmentDto,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -60,11 +61,23 @@ export class AcurastService {
     return (await new ComputingMicroservice(context).createJob(body)).data;
   }
 
+  async listJobs(context: DevConsoleApiContext, query: JobQueryFilter) {
+    return (await new ComputingMicroservice(context).listJobs(query)).data;
+  }
+
+  async getJob(context: DevConsoleApiContext, job_uuid: string) {
+    return (await new ComputingMicroservice(context).getJob(job_uuid)).data;
+  }
+
   async setJobEnvironment(
     context: DevConsoleApiContext,
     body: SetJobEnvironmentDto,
   ) {
     return (await new ComputingMicroservice(context).setJobEnvironment(body))
       .data;
+  }
+
+  async deleteJob(context: DevConsoleApiContext, job_uuid: string) {
+    return (await new ComputingMicroservice(context).deleteJob(job_uuid)).data;
   }
 }

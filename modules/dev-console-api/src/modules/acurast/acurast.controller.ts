@@ -2,10 +2,22 @@ import {
   CreateJobDto,
   DefaultPermission,
   DefaultUserRole,
+  JobQueryFilter,
+  RoleGroup,
   SetJobEnvironmentDto,
+  ValidateFor,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
-import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -30,6 +42,27 @@ export class AcurastController {
     return await this.acurastService.createJob(context, body);
   }
 
+  @Get('jobs')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({ dto: JobQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async listJobs(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: JobQueryFilter,
+  ) {
+    return await this.acurastService.listJobs(context, query);
+  }
+
+  @Get('jobs/:job_uuid')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async getJob(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('job_uuid') uuid: string,
+  ) {
+    return await this.acurastService.getJob(context, uuid);
+  }
+
   @Post('jobs/:job_uuid/environment')
   @Validation({ dto: SetJobEnvironmentDto })
   @Permissions(
@@ -45,24 +78,17 @@ export class AcurastController {
     body.job_uuid = job_uuid;
     return await this.acurastService.setJobEnvironment(context, body);
   }
-  // @Get('jobs')
-  // @Permissions({ role: RoleGroup.ProjectAccess })
-  // @Validation({ dto: ContractQueryFilter, validateFor: ValidateFor.QUERY })
-  // @UseGuards(AuthGuard, ValidationGuard)
-  // async listAcurastContracts(
-  //   @Ctx() context: DevConsoleApiContext,
-  //   @Query() query: ContractQueryFilter,
-  // ) {
-  //   return await this.acurastService.listContracts(context, query);
-  // }
 
-  // @Get('jobs/:uuid')
-  // @Permissions({ role: RoleGroup.ProjectAccess })
-  // @UseGuards(AuthGuard)
-  // async getContract(
-  //   @Ctx() context: DevConsoleApiContext,
-  //   @Param('uuid') uuid: string,
-  // ) {
-  //   return await this.acurastService.getContract(context, uuid);
-  // }
+  @Delete('jobs/:job_uuid')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async deleteJob(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('job_uuid') job_uuid: string,
+  ) {
+    return await this.acurastService.deleteJob(context, job_uuid);
+  }
 }

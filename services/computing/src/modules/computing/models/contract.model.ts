@@ -372,7 +372,7 @@ export class Contract extends UuidSqlModel {
             (
                 (@status IS null AND c.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.ARCHIVED}))
                 OR
-                (@status = c.status)
+                (c.status = @status)
             )
       `,
       qFilter: `

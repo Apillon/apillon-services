@@ -70,6 +70,13 @@ export class AcurastClient {
     });
   }
 
+  async createDeregisterJobTransaction(
+    localJobId: number,
+  ): Promise<SubmittableExtrinsic<'promise'>> {
+    await this.initializeProvider();
+    return this.api.tx.acurast.deregister({ localJobId });
+  }
+
   async destroy() {
     if (this.api.isConnected) {
       await this.api.disconnect();

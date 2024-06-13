@@ -29,7 +29,10 @@ export async function processEvent(event: any, context: Context): Promise<any> {
     [ComputingEventType.ARCHIVE_CONTRACT]: ComputingService.archiveContract,
 
     [ComputingEventType.CREATE_JOB]: AcurastService.createJob,
+    [ComputingEventType.LIST_JOBS]: AcurastService.listJobs,
+    [ComputingEventType.GET_JOB]: AcurastService.getJobByUuid,
     [ComputingEventType.SET_JOB_ENVIRONMENT]: AcurastService.setJobEnvironment,
+    [ComputingEventType.DELETE_JOB]: AcurastService.deleteJob,
   };
 
   return await processors[event.eventName](event, context);

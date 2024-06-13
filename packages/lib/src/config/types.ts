@@ -261,7 +261,10 @@ export enum ComputingEventType {
   ARCHIVE_CONTRACT = 'archive-contract',
 
   CREATE_JOB = 'create-job',
+  LIST_JOBS = 'list-jobs',
+  GET_JOB = 'get-job',
   SET_JOB_ENVIRONMENT = 'set-job-environment',
+  DELETE_JOB = 'delete-job',
 }
 
 export enum ReferralEventType {
