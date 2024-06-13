@@ -3,6 +3,7 @@ import {
   CodeException,
   ComputingMicroservice,
   CreateJobDto,
+  SetJobEnvironmentDto,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
@@ -57,5 +58,13 @@ export class AcurastService {
     }
 
     return (await new ComputingMicroservice(context).createJob(body)).data;
+  }
+
+  async setJobEnvironment(
+    context: DevConsoleApiContext,
+    body: SetJobEnvironmentDto,
+  ) {
+    return (await new ComputingMicroservice(context).setJobEnvironment(body))
+      .data;
   }
 }

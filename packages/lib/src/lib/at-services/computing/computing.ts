@@ -11,6 +11,7 @@ import { AssignCidToNft } from './dtos/assign-cid-to-nft.dto';
 import { ClusterWalletQueryFilter } from './dtos/cluster-wallet-query-filter.dto';
 import { ComputingTransactionQueryFilter } from './dtos/computing-transaction-query-filter.dto';
 import { CreateJobDto } from './dtos/create-job.dto';
+import { SetJobEnvironmentDto } from './dtos/set-job-environment.dto';
 
 export class ComputingMicroservice extends BaseService {
   lambdaFunctionName =
@@ -117,10 +118,18 @@ export class ComputingMicroservice extends BaseService {
     });
   }
 
-  public async createJob(params: CreateJobDto) {
+  public async createJob(body: CreateJobDto) {
     const data = {
       eventName: ComputingEventType.CREATE_JOB,
-      body: params.serialize(),
+      body: body.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async setJobEnvironment(body: SetJobEnvironmentDto) {
+    const data = {
+      eventName: ComputingEventType.SET_JOB_ENVIRONMENT,
+      body: body.serialize(),
     };
     return await this.callService(data);
   }

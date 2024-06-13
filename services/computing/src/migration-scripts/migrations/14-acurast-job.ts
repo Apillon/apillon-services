@@ -16,6 +16,8 @@ export async function upgrade(
       \`slots\` TINYINT NOT NULL,
       \`jobStatus\` INT NOT NULL,
       \`jobId\` INT NULL,
+      \`account\` VARCHAR(60) NULL,
+      \`publicKey\` VARCHAR(60) NULL,
       \`startTime\` DATETIME NOT NULL,
       \`endTime\` DATETIME NOT NULL,
       \`transactionHash\` CHAR(66) NULL,

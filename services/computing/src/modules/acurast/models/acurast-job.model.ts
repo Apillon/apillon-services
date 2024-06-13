@@ -145,6 +145,26 @@ export class AcurastJob extends UuidSqlModel {
   })
   public jobId: number;
 
+  /**
+   * The account public key of the job's processor
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable,
+    serializable,
+  })
+  public account: string;
+
+  /**
+   * The public key of the job
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable,
+    serializable,
+  })
+  public publicKey: string;
+
   @prop({
     parser: { resolver: integerParser() },
     populatable,

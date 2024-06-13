@@ -1,12 +1,22 @@
-import { CreateJobDto, Lmas, LogType, ServiceName } from '@apillon/lib';
+import {
+  CreateJobDto,
+  Lmas,
+  LogType,
+  ServiceName,
+  SetJobEnvironmentDto,
+} from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
 import { v4 as uuidV4 } from 'uuid';
 import {
   ComputingCodeException,
+  ComputingNotFoundException,
   ComputingValidationException,
 } from '../../lib/exceptions';
-import { deployAcurastJob } from '../../lib/utils/acurast-utils';
+import {
+  deployAcurastJob,
+  setAcurastJobEnvironment,
+} from '../../lib/utils/acurast-utils';
 import { ComputingErrorCode } from '../../config/types';
 
 export class AcurastService {
@@ -60,6 +70,31 @@ export class AcurastService {
         data: { dto: event.body.serialize(), err },
       });
     }
+
+    return job.serializeByContext() as AcurastJob;
+  }
+
+  /**
+   * Sets environment variables for an existing job
+   * @param {{ body: SetJobEnvironmentDto }} event - environment variable pairs
+   * @param {ServiceContext} context
+   * @returns {Promise<AcurastJob>}
+   */
+  static async setJobEnvironment(
+    event: { body: SetJobEnvironmentDto },
+    context: ServiceContext,
+  ): Promise<AcurastJob> {
+    const job = await new AcurastJob({}, context).populateByUUID(
+      event.body.job_uuid,
+    );
+
+    if (!job.exists()) {
+      throw new ComputingNotFoundException(ComputingErrorCode.JOB_NOT_FOUND);
+    }
+
+    job.canModify(context);
+
+    await setAcurastJobEnvironment(context, job, event.body.variables);
 
     return job.serializeByContext() as AcurastJob;
   }

@@ -26,7 +26,9 @@ export class ComputingValidationException extends ModelValidationException {
 }
 
 export class ComputingNotFoundException extends ComputingCodeException {
-  constructor(code: ComputingErrorCode = ComputingErrorCode.BUCKET_NOT_FOUND) {
+  constructor(
+    code: ComputingErrorCode = ComputingErrorCode.CONTRACT_NOT_FOUND,
+  ) {
     super({ code, status: 404 });
   }
 }

@@ -59,6 +59,17 @@ export class AcurastClient {
     });
   }
 
+  async createSetEnvironmentTransaction(
+    job: AcurastJob,
+    variables: [string, string][],
+  ): Promise<SubmittableExtrinsic<'promise'>> {
+    await this.initializeProvider();
+    return this.api.tx.acurast.setEnvironment(job.jobId, job.account, {
+      publicKey: job.publicKey,
+      variables,
+    });
+  }
+
   async destroy() {
     if (this.api.isConnected) {
       await this.api.disconnect();

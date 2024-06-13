@@ -68,3 +68,42 @@ export async function deployAcurastJob(
   job.jobStatus = ContractStatus.DEPLOY_INITIATED;
   await job.update(SerializeFor.UPDATE_DB, conn);
 }
+
+export async function setAcurastJobEnvironment(
+  context: ServiceContext,
+  job: AcurastJob,
+  variables: [string, string][],
+) {
+  const acurastClient = new AcurastClient(await getAcurastEndpoint(context));
+  const transaction = await acurastClient.createSetEnvironmentTransaction(
+    job,
+    variables,
+  );
+
+  const response = await new BlockchainMicroservice(
+    context,
+  ).createSubstrateTransaction(
+    new CreateSubstrateTransactionDto({
+      chain: SubstrateChain.ACURAST,
+      transaction: transaction.toHex(),
+      referenceTable: DbTables.ACURAST_JOB,
+      referenceId: job.id,
+      project_uuid: job.project_uuid,
+    }),
+  );
+
+  // Insert tx record to DB
+  await TransactionService.saveTransaction(
+    new Transaction(
+      {
+        transaction_uuid: uuidV4,
+        walletAddress: response.data.address,
+        transactionType: TransactionType.SET_JOB_ENVIRONMENT,
+        contract_id: job.id,
+        transactionHash: response.data.transactionHash,
+        transactionStatus: ComputingTransactionStatus.PENDING,
+      },
+      context,
+    ),
+  );
+}

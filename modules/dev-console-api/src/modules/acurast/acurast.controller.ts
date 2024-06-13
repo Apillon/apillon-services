@@ -1,6 +1,11 @@
-import { CreateJobDto, DefaultPermission, DefaultUserRole } from '@apillon/lib';
+import {
+  CreateJobDto,
+  DefaultPermission,
+  DefaultUserRole,
+  SetJobEnvironmentDto,
+} from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -25,6 +30,21 @@ export class AcurastController {
     return await this.acurastService.createJob(context, body);
   }
 
+  @Post('jobs/:job_uuid/environment')
+  @Validation({ dto: SetJobEnvironmentDto })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard, ValidationGuard)
+  async setJobEnvironment(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: SetJobEnvironmentDto,
+    @Param('job_uuid') job_uuid: string,
+  ) {
+    body.job_uuid = job_uuid;
+    return await this.acurastService.setJobEnvironment(context, body);
+  }
   // @Get('jobs')
   // @Permissions({ role: RoleGroup.ProjectAccess })
   // @Validation({ dto: ContractQueryFilter, validateFor: ValidateFor.QUERY })
