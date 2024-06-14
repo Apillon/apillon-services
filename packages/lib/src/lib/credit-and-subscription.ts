@@ -3,7 +3,10 @@ import { SpendCreditDto } from './at-services/config/dtos/spend-credit.dto';
 import { Scs } from './at-services/config/scs';
 import { Lmas } from './at-services/lmas/lmas';
 import { Context } from './context';
-import { CodeException, ValidationException } from './exceptions/exceptions';
+import {
+  CodeException,
+  ModelValidationException,
+} from './exceptions/exceptions';
 
 /**
  * General function for refunding credit, with additional error handling.
@@ -55,7 +58,7 @@ export async function spendCreditAction<T>(
   action: () => Promise<T>,
 ): Promise<T> {
   // Validate input
-  await spendCreditDto.validateOrThrow(ValidationException);
+  await spendCreditDto.validateOrThrow(ModelValidationException);
   // Spend credit
   await new Scs(context).spendCredit(spendCreditDto).catch((err) => {
     throw new CodeException({

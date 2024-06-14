@@ -3,7 +3,7 @@ import {
   IpnsQueryFilter,
   PublishIpnsDto,
   StorageMicroservice,
-  ValidationException,
+  ModelValidationException,
   ValidatorErrorCode,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
@@ -57,7 +57,7 @@ export class IpnsService {
     body: PublishIpnsDto,
   ) {
     body.populate({ ipns_uuid });
-    await body.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await body.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     return (await new StorageMicroservice(context).publishIpns(body)).data;
   }

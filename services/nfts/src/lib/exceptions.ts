@@ -3,6 +3,8 @@ import {
   CodeException,
   ErrorOptions,
   ServiceName,
+  ModelValidationException,
+  IValidationError,
   ValidationException,
 } from '@apillon/lib';
 import { NftsErrorCode } from '../config/types';
@@ -19,9 +21,15 @@ export class NftsCodeException extends CodeException {
   }
 }
 
-export class NftsValidationException extends ValidationException {
+export class NftsModelValidationException extends ModelValidationException {
   constructor(model: Model) {
     super(model, NftsErrorCode);
+  }
+}
+
+export class NftsValidationException extends ValidationException {
+  constructor(errors: IValidationError | IValidationError[]) {
+    super(errors, NftsErrorCode);
   }
 }
 

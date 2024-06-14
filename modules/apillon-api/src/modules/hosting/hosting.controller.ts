@@ -6,6 +6,7 @@ import {
   DeploymentQueryFilter,
   DomainQueryFilter,
   EndFileUploadSessionDto,
+  ShortUrlDto,
   ValidateFor,
   WebsiteQueryFilter,
 } from '@apillon/lib';
@@ -181,5 +182,19 @@ export class HostingController {
     @Param('deployment_uuid') deployment_uuid: string,
   ) {
     return await this.hostingService.getDeployment(context, deployment_uuid);
+  }
+
+  @Post('short-url')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.HOSTING,
+  })
+  @Validation({ dto: ShortUrlDto })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async generateShortUrl(
+    @Ctx() context: ApillonApiContext,
+    @Body() body: ShortUrlDto,
+  ) {
+    return await this.hostingService.generateShortUrl(body, context);
   }
 }

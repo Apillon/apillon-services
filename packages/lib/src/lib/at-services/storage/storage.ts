@@ -27,6 +27,7 @@ import { DomainQueryFilter } from './dtos/domain-query-filter.dto';
 import { FilesQueryFilter } from './dtos/files-query-filter.dto';
 import { FileUploadSessionQueryFilter } from './dtos/file-upload-session-query-filter.dto';
 import { CollectionMetadataQueryFilter } from './dtos/collection-metadata-query-filter.dto';
+import { ShortUrlDto } from './dtos/short-url.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -537,6 +538,22 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.BLACKLIST_PROJECT,
       project_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async generateShortUrl(payload: ShortUrlDto) {
+    const data = {
+      eventName: StorageEventType.GENERATE_SHORT_URL,
+      ...payload,
+    };
+    return await this.callService(data);
+  }
+
+  public async getTargetUrl(shortUrl_id: string) {
+    const data = {
+      eventName: StorageEventType.GET_TARGET_URL,
+      shortUrl_id,
     };
     return await this.callService(data);
   }

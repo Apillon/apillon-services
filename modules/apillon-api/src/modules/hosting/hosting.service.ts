@@ -4,12 +4,13 @@ import {
   DeploymentQueryFilter,
   DomainQueryFilter,
   EndFileUploadSessionDto,
+  ShortUrlDto,
   WebsiteQueryFilter,
 } from '@apillon/lib';
 import {
   DeployWebsiteDto,
   StorageMicroservice,
-  ValidationException,
+  ModelValidationException,
   ValidatorErrorCode,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
@@ -41,7 +42,7 @@ export class HostingService {
     body: ApillonHostingApiCreateS3UrlsForUploadDto,
   ) {
     body.populate({ website_uuid });
-    await body.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await body.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     return (
       await new StorageMicroservice(
@@ -70,7 +71,7 @@ export class HostingService {
     body: DeployWebsiteDto,
   ) {
     body.populate({ website_uuid, clearBucketForUpload: true });
-    await body.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await body.validateOrThrow(ModelValidationException, ValidatorErrorCode);
     return (await new StorageMicroservice(context).deployWebsite(body)).data;
   }
 
@@ -87,5 +88,9 @@ export class HostingService {
     return (
       await new StorageMicroservice(context).getDeployment(deployment_uuid)
     ).data;
+  }
+
+  async generateShortUrl(body: ShortUrlDto, context: ApillonApiContext) {
+    return (await new StorageMicroservice(context).generateShortUrl(body)).data;
   }
 }
