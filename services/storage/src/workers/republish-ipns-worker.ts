@@ -33,6 +33,7 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
       ) as ipfsApi
       FROM ipns
       WHERE ipnsName IS NOT NULL
+      AND DATE_ADD(republishDate,INTERVAL 24 HOUR) < NOW() 
         ORDER BY republishDate ASC
         LIMIT 20
     `);

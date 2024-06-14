@@ -130,12 +130,11 @@ export async function handleLambdaEvent(
       await pinToCrustWorker.run();
       break;
     case WorkerName.REPUBLISH_IPNS_WORKER:
-      // await new RepublishIpnsWorker(
-      //   workerDefinition,
-      //   context,
-      //   QueueWorkerType.PLANNER,
-      // ).run();
-      console.log('Republish job disabled!');
+      await new RepublishIpnsWorker(
+        workerDefinition,
+        context,
+        QueueWorkerType.PLANNER,
+      ).run();
       break;
     case WorkerName.IPFS_BANDWIDTH_WORKER:
       const ipfsBandwidthWorker = new IpfsBandwidthWorker(
@@ -253,14 +252,13 @@ export async function handleSqsMessages(
           break;
         }
         case WorkerName.REPUBLISH_IPNS_WORKER:
-          // await new RepublishIpnsWorker(
-          //   workerDefinition,
-          //   context,
-          //   QueueWorkerType.EXECUTOR,
-          // ).run({
-          //   executeArg: message?.body,
-          // });
-          console.log('Republish job disabled!');
+          await new RepublishIpnsWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
           break;
         case WorkerName.FREE_PROJECT_RESOURCES_WORKER:
           await new FreeProjectResourcesWorker(
