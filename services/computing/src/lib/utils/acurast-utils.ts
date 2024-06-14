@@ -18,7 +18,6 @@ import {
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { TransactionService } from '../../modules/transaction/transaction.service';
 import { AcurastClient } from '../../modules/clients/acurast.client';
-import { v4 as uuidV4 } from 'uuid';
 
 export async function getAcurastEndpoint(context: Context) {
   return (
@@ -32,6 +31,7 @@ export async function getAcurastEndpoint(context: Context) {
 export async function deployAcurastJob(
   context: ServiceContext,
   job: AcurastJob,
+  transaction_uuid: string,
   conn?: PoolConnection,
 ) {
   const acurastClient = new AcurastClient(await getAcurastEndpoint(context));
@@ -53,7 +53,7 @@ export async function deployAcurastJob(
   await TransactionService.saveTransaction(
     new Transaction(
       {
-        transaction_uuid: uuidV4,
+        transaction_uuid,
         walletAddress: response.data.address,
         transactionType: TransactionType.DEPLOY_JOB,
         contract_id: job.id,
@@ -75,6 +75,7 @@ export async function deployAcurastJob(
 export async function setAcurastJobEnvironment(
   context: ServiceContext,
   job: AcurastJob,
+  transaction_uuid: string,
   variables: [string, string][],
 ) {
   const acurastClient = new AcurastClient(await getAcurastEndpoint(context));
@@ -99,7 +100,7 @@ export async function setAcurastJobEnvironment(
   await TransactionService.saveTransaction(
     new Transaction(
       {
-        transaction_uuid: uuidV4,
+        transaction_uuid,
         walletAddress: response.data.address,
         transactionType: TransactionType.SET_JOB_ENVIRONMENT,
         contract_id: job.id,
@@ -114,6 +115,7 @@ export async function setAcurastJobEnvironment(
 export async function deleteAcurastJob(
   context: ServiceContext,
   job: AcurastJob,
+  transaction_uuid: string,
   conn: PoolConnection,
 ) {
   const acurastClient = new AcurastClient(await getAcurastEndpoint(context));
@@ -137,7 +139,7 @@ export async function deleteAcurastJob(
   await TransactionService.saveTransaction(
     new Transaction(
       {
-        transaction_uuid: uuidV4,
+        transaction_uuid,
         walletAddress: response.data.address,
         transactionType: TransactionType.DELETE_JOB,
         contract_id: job.id,

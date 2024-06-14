@@ -3,8 +3,11 @@ import {
   JobQueryFilter,
   Lmas,
   LogType,
+  ProductCode,
   ServiceName,
   SetJobEnvironmentDto,
+  SpendCreditDto,
+  spendCreditAction,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -19,7 +22,7 @@ import {
   deployAcurastJob,
   setAcurastJobEnvironment,
 } from '../../lib/utils/acurast-utils';
-import { ComputingErrorCode } from '../../config/types';
+import { ComputingErrorCode, DbTables } from '../../config/types';
 
 export class AcurastService {
   /**
@@ -43,8 +46,28 @@ export class AcurastService {
     try {
       await job.validateOrThrow(ComputingValidationException);
 
-      await deployAcurastJob(context, await job.insert(), conn);
-
+      const referenceId = uuidV4();
+      await spendCreditAction(
+        context,
+        new SpendCreditDto(
+          {
+            project_uuid: job.project_uuid,
+            product_id: ProductCode.COMPUTING_JOB_CREATE,
+            referenceTable: DbTables.TRANSACTION,
+            referenceId,
+            location: 'AcurastService.createJob',
+            service: ServiceName.COMPUTING,
+          },
+          context,
+        ),
+        async () =>
+          await deployAcurastJob(
+            context,
+            await job.insert(),
+            referenceId,
+            conn,
+          ),
+      );
       await context.mysql.commit(conn);
 
       await new Lmas().writeLog({
@@ -129,7 +152,28 @@ export class AcurastService {
 
     job.verifyStatusAndAccess('setJobEnvironment', context);
 
-    await setAcurastJobEnvironment(context, job, event.body.variables);
+    const referenceId = uuidV4();
+    await spendCreditAction(
+      context,
+      new SpendCreditDto(
+        {
+          project_uuid: job.project_uuid,
+          product_id: ProductCode.COMPUTING_JOB_SET_ENVIRONMENT,
+          referenceTable: DbTables.TRANSACTION,
+          referenceId,
+          location: 'AcurastService.setJobEnvironment',
+          service: ServiceName.COMPUTING,
+        },
+        context,
+      ),
+      async () =>
+        await setAcurastJobEnvironment(
+          context,
+          job,
+          referenceId,
+          event.body.variables,
+        ),
+    );
 
     return job.serializeByContext() as AcurastJob;
   }
@@ -152,7 +196,22 @@ export class AcurastService {
     try {
       await job.validateOrThrow(ComputingValidationException);
 
-      await deleteAcurastJob(context, job, conn);
+      const referenceId = uuidV4();
+      await spendCreditAction(
+        context,
+        new SpendCreditDto(
+          {
+            project_uuid: job.project_uuid,
+            product_id: ProductCode.COMPUTING_JOB_DELETE,
+            referenceTable: DbTables.TRANSACTION,
+            referenceId,
+            location: 'AcurastService.deleteJob',
+            service: ServiceName.COMPUTING,
+          },
+          context,
+        ),
+        async () => await deleteAcurastJob(context, job, referenceId, conn),
+      );
 
       await context.mysql.commit(conn);
 

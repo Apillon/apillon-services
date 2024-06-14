@@ -918,6 +918,10 @@ export enum ProductCode {
   NFT_SEPOLIA_BURN = 39,
   NFT_SEPOLIA_TRANSFER_COLLECTION = 40,
   NFT_SEPOLIA_SET_BASE_URI = 41,
+
+  COMPUTING_JOB_CREATE = 52,
+  COMPUTING_JOB_SET_ENVIRONMENT = 53,
+  COMPUTING_JOB_DELETE = 54,
 }
 
 export enum ProductService {
@@ -939,6 +943,7 @@ export enum ProductCategory {
   SCHRODINGER = 'SCHRODINGER',
   ETHEREUM_NFT = 'ETHEREUM_NFT',
   SEPOLIA_NFT = 'SEPOLIA_NFT',
+  ACURAST = 'ACURAST',
 }
 
 export enum EmailTemplate {

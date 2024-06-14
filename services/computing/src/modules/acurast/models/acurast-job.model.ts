@@ -190,7 +190,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable,
-    serializable,
+    serializable: serializableUpdate,
   })
   public transactionHash: string;
 
