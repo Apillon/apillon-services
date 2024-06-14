@@ -19,7 +19,7 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
   }
   async runPlanner(data?: any): Promise<any[]> {
     const ipnsRes = await this.context.mysql.paramExecute(`
-      SELECT \`ipnsName\` as ipns, replace(ipnsValue, '/ipfs/', '') as cid, \`key\` as keyName, \`project_uuid\`,
+      SELECT id, \`ipnsName\` as ipns, replace(ipnsValue, '/ipfs/', '') as cid, \`key\` as keyName, \`project_uuid\`,
       (
         SELECT c.ipfsApi
         FROM \`${DbTables.IPFS_CLUSTER}\` c
@@ -33,7 +33,8 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
       ) as ipfsApi
       FROM ipns
       WHERE ipnsName IS NOT NULL
-      ORDER BY project_uuid
+        ORDER BY republishDate ASC
+        LIMIT 20
     `);
 
     await this.writeLogToDb(
@@ -87,5 +88,17 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
         }
       }
     }
+
+    // update republish date
+    await this.context.mysql.paramExecute(
+      `
+     UPDATE ipns 
+     SET republishDate = NOW()
+     WHERE id IN (@ids)
+    `,
+      {
+        ids: data.map((x) => x.id),
+      },
+    );
   }
 }
