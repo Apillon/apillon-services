@@ -10,16 +10,23 @@ import { DbTables } from '../config/types';
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 
 export class RepublishIpnsWorker extends BaseQueueWorker {
+  private recordLimit = 20;
+
   public constructor(
     workerDefinition: WorkerDefinition,
     context: Context,
     type: QueueWorkerType,
   ) {
     super(workerDefinition, context, type, env.STORAGE_AWS_WORKER_SQS_URL);
+    this.recordLimit = workerDefinition.parameters?.recordLimit ?? 20;
   }
   async runPlanner(data?: any): Promise<any[]> {
-    const ipnsRes = await this.context.mysql.paramExecute(`
-      SELECT \`ipnsName\` as ipns, replace(ipnsValue, '/ipfs/', '') as cid, \`key\` as keyName, \`project_uuid\`,
+    const batchedData = [];
+    const conn = await this.context.mysql.start();
+    try {
+      const ipnsRes = await this.context.mysql.paramExecute(
+        `
+      SELECT id, \`ipnsName\` as ipns, replace(ipnsValue, '/ipfs/', '') as cid, \`key\` as keyName, \`project_uuid\`,
       (
         SELECT c.ipfsApi
         FROM \`${DbTables.IPFS_CLUSTER}\` c
@@ -33,29 +40,57 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
       ) as ipfsApi
       FROM ipns
       WHERE ipnsName IS NOT NULL
-      ORDER BY project_uuid
-    `);
+      AND republishStatus = 5
+      AND DATE_ADD(republishDate,INTERVAL 24 HOUR) < NOW() 
+        ORDER BY republishDate ASC
+        LIMIT ${this.recordLimit}
+    `,
+        {},
+        conn,
+      );
 
-    await this.writeLogToDb(
-      WorkerLogStatus.INFO,
-      `Republishing ${ipnsRes.length} IPNS records!`,
-    );
+      await this.writeLogToDb(
+        WorkerLogStatus.INFO,
+        `Republishing ${ipnsRes.length} IPNS records!`,
+      );
 
-    // batch data
-    const batchedData = [];
-    let batch = [];
-    for (let i = 0; i < ipnsRes.length; i++) {
-      batch.push(ipnsRes[i]);
-      if (batch.length === 10) {
-        batchedData.push(batch);
-        batch = [];
+      // lock the records for following jobs
+      await this.context.mysql.paramExecute(
+        `
+        UPDATE ipns 
+        SET republishStatus = 1
+        WHERE id IN (${ipnsRes.map((x) => x.id).join(',')})
+        `,
+        conn,
+      );
+
+      await this.context.mysql.commit(conn);
+
+      // batch data
+      let batch = [];
+      for (let i = 0; i < ipnsRes.length; i++) {
+        batch.push(ipnsRes[i]);
+        if (batch.length === 10) {
+          batchedData.push(batch);
+          batch = [];
+        }
       }
+      if (batch.length) {
+        batchedData.push(batch);
+      }
+      console.log(JSON.stringify(batchedData));
+      return batchedData;
+    } catch (err) {
+      await this.context.mysql.rollback(conn);
+      await this.writeLogToDb(
+        WorkerLogStatus.ERROR,
+        `Error republishing IPNS`,
+        null,
+        err,
+      );
     }
-    if (batch.length) {
-      batchedData.push(batch);
-    }
-    console.log(JSON.stringify(batchedData));
-    return batchedData;
+
+    return [];
   }
   async runExecutor(data: any): Promise<any> {
     console.log('RepublishIpnsWorker data: ', data);
@@ -87,5 +122,15 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
         }
       }
     }
+
+    // update republish date
+    await this.context.mysql.paramExecute(
+      `
+     UPDATE ipns 
+     SET  republishDate = NOW(),
+          republishStatus = 5
+     WHERE id IN (${data.map((x) => x.id).join(',')})
+    `,
+    );
   }
 }
