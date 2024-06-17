@@ -325,7 +325,8 @@ export class MySql {
             if (values[key].length && isPlainObject(values[key][0])) {
               values[key] = JSON.stringify(values[key]);
             } else {
-              values[key] = values[key].join(',') || null;
+              values[key] =
+                values[key].map((x) => x.toString()).join(',') || null;
             }
           }
 
