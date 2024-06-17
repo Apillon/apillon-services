@@ -57,13 +57,10 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
       // lock the records for following jobs
       await this.context.mysql.paramExecute(
         `
-     UPDATE ipns 
-     SET republishStatus = 1
-     WHERE id IN (@ids)
-    `,
-        {
-          ids: ipnsRes.map((x) => x.id),
-        },
+        UPDATE ipns 
+        SET republishStatus = 1
+        WHERE id IN (${ipnsRes.map((x) => x.id).join(',')})
+        `,
         conn,
       );
 
@@ -132,11 +129,8 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
      UPDATE ipns 
      SET  republishDate = NOW(),
           republishStatus = 5
-     WHERE id IN (@ids)
+     WHERE id IN (${data.map((x) => x.id).join(',')})
     `,
-      {
-        ids: data.map((x) => x.id),
-      },
     );
   }
 }
