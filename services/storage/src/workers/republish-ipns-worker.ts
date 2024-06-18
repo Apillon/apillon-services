@@ -54,15 +54,17 @@ export class RepublishIpnsWorker extends BaseQueueWorker {
         `Republishing ${ipnsRes.length} IPNS records!`,
       );
 
-      // lock the records for following jobs
-      await this.context.mysql.paramExecute(
-        `
+      if (ipnsRes.length) {
+        // lock the records for following jobs
+        await this.context.mysql.paramExecute(
+          `
         UPDATE ipns 
         SET republishStatus = 1
         WHERE id IN (${ipnsRes.map((x) => x.id).join(',')})
         `,
-        conn,
-      );
+          conn,
+        );
+      }
 
       await this.context.mysql.commit(conn);
 
