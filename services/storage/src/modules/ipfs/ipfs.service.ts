@@ -613,7 +613,10 @@ export class IPFSService {
     //Add to IPFS
     const fileOnIPFS = await this.kuboRpcApiClient.add({
       content: params.content,
+      pin: this.ipfsCluster?.pinOnAdd || false,
     });
+
+    await this.pinCidToCluster(fileOnIPFS.Hash);
 
     return {
       cidV0: fileOnIPFS.Hash,
