@@ -42,6 +42,7 @@ async function getTargetUrl(pathParameter: string) {
     statusCode: 302,
     headers: {
       Location: serviceResponse.data,
+      'Access-Control-Allow-Origin': '*',
     },
     body: '',
   };
