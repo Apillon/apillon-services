@@ -12,7 +12,11 @@ import {
   UuidSqlModel,
 } from '@apillon/lib';
 import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
-import { ComputingErrorCode, DbTables, JobStatus } from '../../../config/types';
+import {
+  ComputingErrorCode,
+  DbTables,
+  AcurastJobStatus,
+} from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import {
   ComputingCodeException,
@@ -176,13 +180,13 @@ export class AcurastJob extends UuidSqlModel {
     serializable: serializableUpdate,
     validators: [
       {
-        resolver: enumInclusionValidator(JobStatus, true),
+        resolver: enumInclusionValidator(AcurastJobStatus, true),
         code: ComputingErrorCode.DATA_TYPE_INVALID,
       },
     ],
-    defaultValue: JobStatus.CREATED,
+    defaultValue: AcurastJobStatus.DEPLOYING,
   })
-  public jobStatus: JobStatus;
+  public jobStatus: AcurastJobStatus;
 
   /**
    * The job creation transaction hash
@@ -193,6 +197,16 @@ export class AcurastJob extends UuidSqlModel {
     serializable: serializableUpdate,
   })
   public transactionHash: string;
+
+  /**
+   * The job's deployer wallet address
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable,
+    serializable: serializableUpdate,
+  })
+  public deployerAddress: string;
 
   public constructor(data: any, context: Context) {
     super(data, context);
@@ -207,7 +221,11 @@ export class AcurastJob extends UuidSqlModel {
       throw new ComputingNotFoundException(ComputingErrorCode.JOB_NOT_FOUND);
     }
 
-    if (![JobStatus.DEPLOYED, JobStatus.MATCHED].includes(this.jobStatus)) {
+    if (
+      ![AcurastJobStatus.DEPLOYED, AcurastJobStatus.MATCHED].includes(
+        this.jobStatus,
+      )
+    ) {
       throw new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.JOB_NOT_DEPLOYED,
@@ -267,5 +285,27 @@ export class AcurastJob extends UuidSqlModel {
     };
 
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'j.id');
+  }
+
+  /**
+   * Get deployed jobs that need to be matched nad assigned to a processor (pending)
+   * @returns {Promise<AcurastJob[]>}
+   */
+  public async getPendingJobs(): Promise<AcurastJob[]> {
+    const context = this.getContext();
+    const jobs = await context.mysql.paramExecute(
+      `
+      SELECT *
+      FROM ${DbTables.ACURAST_JOB}\`
+      WHERE DATE(endTime) > NOW()
+      AND jobStatus = ${AcurastJobStatus.DEPLOYED}
+      AND jobId IS NOT NULL
+      AND status = ${SqlModelStatus.ACTIVE}
+      `,
+    );
+
+    return jobs.map((j) =>
+      new AcurastJob({}, context).populate(j, PopulateFrom.DB),
+    );
   }
 }

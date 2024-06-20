@@ -78,12 +78,10 @@ export enum ContractStatus {
   FAILED = 6,
 }
 
-export enum JobStatus {
-  CREATED = 0,
+export enum AcurastJobStatus {
   DEPLOYING = 1,
   DEPLOYED = 2,
   MATCHED = 3,
-  DELETING = 4,
   DELETED = 9,
 }
 

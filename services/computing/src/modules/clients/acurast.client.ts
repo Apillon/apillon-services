@@ -1,6 +1,7 @@
 import { SubmittableExtrinsic } from '@polkadot/api-base/types';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { AcurastJob } from '../acurast/models/acurast-job.model';
+import { LogType, safeJsonParse, writeLog } from '@apillon/lib';
 
 export class AcurastClient {
   private api: ApiPromise;
@@ -75,6 +76,78 @@ export class AcurastClient {
   ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
     return this.api.tx.acurast.deregister({ localJobId });
+  }
+
+  /**
+   * Get a job's on-chain state
+   * @param {string} deployerAddress - Deployer wallet address
+   * @param {number} jobId - on-chain ID of the job
+   */
+  async getJobStatus(deployerAddress: string, jobId: number) {
+    await this.initializeProvider();
+
+    const jobStatus = await this.api.query.acurastMarketplace.storedJobStatus(
+      { Acurast: deployerAddress },
+      jobId,
+    );
+
+    writeLog(
+      LogType.INFO,
+      `[Acurast] storedJobStatus response: ${jobStatus.toString()}`,
+    );
+
+    return safeJsonParse(jobStatus.toString());
+  }
+
+  /**
+   * Get a job's assigned processor address
+   * @param {string} deployerAddress - Deployer wallet address
+   * @param {number} jobId - on-chain ID of the job
+   */
+  async getAssignedProcessors(
+    deployerAddress: string,
+    jobId: number,
+  ): Promise<string> {
+    await this.initializeProvider();
+
+    const { 0: processors } =
+      await this.api.query.acurastMarketplace.assignedProcessors.entries([
+        { Acurast: deployerAddress },
+        jobId,
+      ]);
+
+    writeLog(
+      LogType.INFO,
+      `[Acurast] getAssignedProcessors response: ${processors.toString()}`,
+    );
+
+    return processors?.[0].args[1].toString();
+  }
+
+  /**
+   * Get a job's matches
+   * @param {string} deployerAddress - Deployer wallet address
+   * @param {string} jobAccount - Acurast wallet address of the processor
+   * @param {number} jobId - on-chain ID of the job
+   */
+  async getJobPublicKey(
+    deployerAddress: string,
+    jobAccount: string,
+    jobId: number,
+  ): Promise<string> {
+    await this.initializeProvider();
+
+    const storedMatches = await this.api.query.acurastMarketplace.storedMatches(
+      jobAccount,
+      [{ Acurast: deployerAddress }, jobId],
+    );
+
+    writeLog(
+      LogType.INFO,
+      `[Acurast] storedMatches response: ${storedMatches.toString()}`,
+    );
+
+    return JSON.parse(storedMatches.toString())?.pubKeys[0]?.secp256r1;
   }
 
   async destroy() {

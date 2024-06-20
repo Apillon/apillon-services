@@ -7,13 +7,14 @@ import {
   CreateSubstrateTransactionDto,
   PoolConnection,
   SerializeFor,
+  SqlModelStatus,
   SubstrateChain,
 } from '@apillon/lib';
 import {
   TransactionType,
   ComputingTransactionStatus,
   DbTables,
-  JobStatus,
+  AcurastJobStatus,
 } from '../../config/types';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { TransactionService } from '../../modules/transaction/transaction.service';
@@ -67,7 +68,7 @@ export async function deployAcurastJob(
 
   job.populate({
     transactionHash: response.data.transactionHash,
-    jobStatus: JobStatus.DEPLOYING,
+    jobStatus: AcurastJobStatus.DEPLOYING,
   });
   await job.update(SerializeFor.UPDATE_DB, conn);
 }
@@ -151,6 +152,7 @@ export async function deleteAcurastJob(
     conn,
   );
 
-  job.jobStatus = JobStatus.DELETING;
+  job.jobStatus = AcurastJobStatus.DELETED;
+  job.status = SqlModelStatus.DELETED;
   await job.update(SerializeFor.UPDATE_DB, conn);
 }
