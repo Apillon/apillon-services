@@ -547,16 +547,15 @@ export class EvmService {
         status: 400,
       });
     }
-
-    console.log('Endpoint: ', endpoint.url);
     const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
 
     const gasPrice = (await provider.getFeeData()).gasPrice;
 
     const dataHash = ethers.utils.solidityKeccak256(
-      ['uint256', 'uint256', 'bytes32'],
+      ['uint256', 'uint64', 'uint256', 'bytes32'],
       [
         gasPrice,
+        env.OASIS_MESSAGE_GAS_LIMIT,
         params.timestamp,
         ethers.utils.solidityKeccak256(['string'], [params.data]),
       ],
