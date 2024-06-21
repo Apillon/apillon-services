@@ -17,7 +17,7 @@ export async function upgrade(
       \`jobStatus\` INT NOT NULL,
       \`jobId\` INT NULL,
       \`account\` VARCHAR(60) NULL,
-      \`publicKey\` VARCHAR(60) NULL,
+      \`publicKey\` VARCHAR(70) NULL,
       \`startTime\` DATETIME NOT NULL,
       \`endTime\` DATETIME NOT NULL,
       \`transactionHash\` VARCHAR(70) NULL,

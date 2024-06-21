@@ -296,8 +296,8 @@ export class AcurastJob extends UuidSqlModel {
     const jobs = await context.mysql.paramExecute(
       `
       SELECT *
-      FROM ${DbTables.ACURAST_JOB}\`
-      WHERE DATE(endTime) > NOW()
+      FROM ${DbTables.ACURAST_JOB}
+      WHERE endTime > NOW()
       AND jobStatus = ${AcurastJobStatus.DEPLOYED}
       AND jobId IS NOT NULL
       AND status = ${SqlModelStatus.ACTIVE}

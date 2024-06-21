@@ -1,10 +1,4 @@
-import {
-  BlockchainMicroservice,
-  Context,
-  LogType,
-  ServiceName,
-  SubstrateChain,
-} from '@apillon/lib';
+import { Context, LogType, ServiceName } from '@apillon/lib';
 import {
   BaseSingleThreadWorker,
   WorkerDefinition,
@@ -18,7 +12,7 @@ import { AcurastJobStatus } from '../config/types';
 /**
  * Processes all deployed acurast jobs and assigns their corresponding processor job addresses based on on-chain data
  */
-export abstract class AcurastJobStatusWorker extends BaseSingleThreadWorker {
+export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
   }
