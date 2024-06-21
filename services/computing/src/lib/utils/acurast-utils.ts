@@ -69,6 +69,7 @@ export async function deployAcurastJob(
   job.populate({
     transactionHash: response.data.transactionHash,
     jobStatus: AcurastJobStatus.DEPLOYING,
+    deployerAddress: response.data.address,
   });
   await job.update(SerializeFor.UPDATE_DB, conn);
 }
