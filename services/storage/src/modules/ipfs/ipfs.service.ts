@@ -206,7 +206,7 @@ export class IPFSService {
     return {
       cidV0: filesOnIPFS.Hash,
       cidV1: filesOnIPFS.Hash,
-      size: filesOnIPFS.Size,
+      size: filesOnIPFS.Size || 0,
     };
   }
 
@@ -599,7 +599,7 @@ export class IPFSService {
   }
 
   /**
-   * Function, used for testing purposes. To upload fake file to IPFS
+   * Function, used for testing purposes AND in NFT flow. Uploads file to IPFS an pins it to cluster.
    * @param params file path and file content
    * @returns cidv0 & cidV1
    */
