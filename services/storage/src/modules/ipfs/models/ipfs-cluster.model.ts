@@ -338,7 +338,7 @@ export class IpfsCluster extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    defaultValue: true,
+    defaultValue: false,
   })
   public pinOnAdd: boolean;
 
