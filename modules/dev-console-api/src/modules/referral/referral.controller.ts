@@ -8,12 +8,11 @@ import {
   TwitterOauthDto,
   ValidateFor,
   BaseQueryFilter,
-  ReviewTasksDto,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { ReferralService } from './referral.service';
-import { Ctx, Permissions, Validation, IpAddress } from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('referral')
@@ -135,18 +134,5 @@ export class ReferralController {
   @UseGuards(AuthGuard)
   async getAirdropTasks(@Ctx() context: DevConsoleApiContext) {
     return await this.referralService.getAirdropTasks(context);
-  }
-
-  @Post('review-tasks')
-  @Permissions({ role: DefaultUserRole.USER })
-  @UseGuards(AuthGuard, ValidationGuard)
-  @Validation({ dto: ReviewTasksDto })
-  async reviewTasks(
-    @Ctx() context: DevConsoleApiContext,
-    @IpAddress() ip: string,
-    @Body() body: ReviewTasksDto,
-  ) {
-    body.ip_address = ip;
-    return await this.referralService.reviewTasks(context, body);
   }
 }
