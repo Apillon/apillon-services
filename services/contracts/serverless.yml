@@ -1,7 +1,7 @@
 # console: true
 # org: apillonadmin
 # app: apillon-v2
-service: apillon-blockchain-service-${opt:stage, 'dev'}
+service: apillon-contracts-service-${opt:stage, 'dev'}
 frameworkVersion: '3'
 
 custom:
@@ -12,17 +12,9 @@ custom:
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
-    keepOutputDirectory: True
-  localstack:
-    stages:
-      - local
-    lambda:
-      mountCode: True
 
 plugins:
   - serverless-webpack
-  - serverless-localstack
-  # - serverless-plugin-typescript
 
 provider:
   name: aws
@@ -41,6 +33,7 @@ provider:
 
   environment:
     ${file(../../bin/deploy/env/env.yml)}
+
 package:
   individually: true
   patterns:
@@ -48,25 +41,25 @@ package:
   excludeDevDependencies: true
 
 functions:
-  blockchain-service:
+  contracts-service:
     handler: ./src/handler.handler
-    name: 'apillon-blockchain-service-${self:provider.stage}'
-    description: Apillon Blockchain Service
+    name: 'apillon-contracts-service-${self:provider.stage}'
+    description: Apillon contracts Service
     memorySize: 512
     timeout: 30
-  blockchain-service-worker:
+  contracts-service-worker:
     handler: ./src/workers/worker-executor.handler
-    name: apillon-blockchain-service-worker-${self:provider.stage}
-    description: Serverless workers for Apillon blockchain microservice
+    name: apillon-contracts-service-worker-${self:provider.stage}
+    description: Serverless workers for Apillon contracts microservice
     memorySize: 512
     timeout: 900
     reservedConcurrency: 30
     environment:
-      AWS_WORKER_LAMBDA_NAME: ${self:functions.blockchain-service-worker.name}
+      AWS_WORKER_LAMBDA_NAME: ${self:functions.contracts-service-worker.name}
     events:
-      #      - schedule: cron(${env:CRON_SCHEDULE, '0/1 * * * ? *'})
+      - schedule: cron(${env:CRON_SCHEDULE, '0/1 * * * ? *'})
       - sqs:
           arn: ${env:WORKER_SQS_ARN}
           batchSize: 4
-          maximumBatchingWindow: 0
+          maximumBatchingWindow: 5
           functionResponseType: ReportBatchItemFailures

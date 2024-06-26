@@ -37,6 +37,18 @@ export enum NFTCollectionType {
   NESTABLE = 2,
 }
 
+export enum SmartContractType {
+  OTHER = 1,
+  ERC_20 = 2,
+  ERC_721 = 3,
+  ERC_1155 = 4,
+}
+
+export enum SmartContractVariant {
+  GENERIC_ERC_721_ = 1,
+  NESTABLE_ERC_721 = 2,
+}
+
 export enum ComputingContractType {
   SCHRODINGER = 1,
 }
@@ -159,6 +171,7 @@ export enum StorageEventType {
   DEPLOYMENT_APPROVE = 'deployment-approve',
   DEPLOYMENT_REJECT = 'deployment-reject',
   PREPARE_COLLECTION_BASE_URI = 'prepare-collection-base-uri',
+  PREPARE_COLLECTION_BASE_URI_GENERIC = 'prepare-collection-base-uri-generic',
   COLLECTION_METADATA_LIST = 'list-collection-metadata',
   TEST_CRUST_PROVIDER = 'test-crust-provider',
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
@@ -294,6 +307,19 @@ export enum SocialEventType {
   PROJECT_SOCIAL_DETAILS = 'project-social-details',
 }
 
+export enum ContractEventType {
+  CONTRACTS_LIST = 'contracts-list',
+  GET_CONTRACT_ABI = 'get-contract-abi',
+  DEPLOY_CONTRACT = 'deploy-contract',
+  CALL_DEPLOYED_CONTRACT = 'call-deployed-contract',
+  DEPLOYED_CONTRACTS_LIST = 'deployed-contracts-list',
+  GET_DEPLOYED_CONTRACT = 'get-deployed-contract',
+  PROJECT_DEPLOYED_CONTRACT_DETAILS = 'project-contracts-details',
+  GET_DEPLOYED_CONTRACT_ABI = 'get-deployed-contract-abi',
+  LIST_DEPLOYED_CONTRACT_TRANSACTIONS = 'list-deployed-contract-transactions',
+  ARCHIVE_DEPLOYED_CONTRACT = 'archive-deployed-contract',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
@@ -310,6 +336,7 @@ export enum ServiceName {
   CONFIG = 'CONFIG',
   COMPUTING = 'COMPUTING',
   SOCIAL = 'SOCIAL',
+  CONTRACTS = 'CONTRACTS',
 }
 
 export enum ServiceCode {
@@ -378,6 +405,7 @@ export enum AttachedServiceType {
   COMPUTING = 5,
   SOCIAL = 6,
   WALLET = 7,
+  CONTRACTS = 8,
   SYSTEM = 999,
 }
 
@@ -465,6 +493,7 @@ export enum DefaultPermission {
   COMPUTING = 5,
   SOCIAL = 6,
   WALLET = 7,
+  CONTRACTS,
 }
 
 //#endregion
@@ -814,6 +843,8 @@ export enum CacheKeyPrefix {
   SOCIAL_POST_LIST = 'social-post-list',
   SOCIAL_SPACE_POST_LIST = 'social-space-post-list',
 
+  CONTRACT_ID = 'contract-id',
+  CONTRACT_VERSION_BY_CONTRACT_UUID = 'contract-version-by-contract-uuid',
   CONTRACT_VERSION = 'contract-version',
   CONTRACT_ABI = 'contract-abi',
   BLOCKCHAIN_ENDPOINT = 'blockchain-endpoint',
@@ -911,6 +942,18 @@ export enum ProductCode {
   NFT_SEPOLIA_BURN = 39,
   NFT_SEPOLIA_TRANSFER_COLLECTION = 40,
   NFT_SEPOLIA_SET_BASE_URI = 41,
+
+  CONTRACT_MOONBEAM_CREATE = 42,
+  CONTRACT_MOONBASE_CREATE = 43,
+  CONTRACT_ASTAR_CREATE = 44,
+  CONTRACT_ETHEREUM_CREATE = 45,
+  CONTRACT_SEPOLIA_CREATE = 46,
+
+  CONTRACT_MOONBEAM_CALL = 47,
+  CONTRACT_MOONBASE_CALL = 48,
+  CONTRACT_ASTAR_CALL = 49,
+  CONTRACT_ETHEREUM_CALL = 50,
+  CONTRACT_SEPOLIA_CALL = 51,
 }
 
 export enum ProductService {
@@ -919,6 +962,7 @@ export enum ProductService {
   IDENTITY = 'IDENTITY',
   SOCIAL = 'SOCIAL',
   COMPUTING = 'COMPUTING',
+  CONTRACTS = 'CONTRACTS',
 }
 
 export enum ProductCategory {
@@ -932,6 +976,11 @@ export enum ProductCategory {
   SCHRODINGER = 'SCHRODINGER',
   ETHEREUM_NFT = 'ETHEREUM_NFT',
   SEPOLIA_NFT = 'SEPOLIA_NFT',
+  ETHEREUM_CONTRACT = 'ETHEREUM_CONTRACT',
+  SEPOLIA_CONTRACT = 'SEPOLIA_CONTRACT',
+  MOONBASE_CONTRACT = 'MOONBASE_CONTRACT',
+  MOONBEAM_CONTRACT = 'MOONBEAM_CONTRACT',
+  ASTAR_CONTRACT = 'ASTAR_CONTRACT',
 }
 
 export enum EmailTemplate {

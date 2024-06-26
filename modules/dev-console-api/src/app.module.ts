@@ -21,6 +21,7 @@ import { StorageModule } from './modules/storage/storage.module';
 import { UserModule } from './modules/user/user.module';
 import { SocialModule } from './modules/social/social.module';
 import { WalletModule } from './modules/wallet/wallet.module';
+import { ContractsModule } from './modules/contracts/contracts.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
     PublicModule,
     SocialModule,
     WalletModule,
+    ContractsModule,
   ],
   controllers: [],
   providers: [],

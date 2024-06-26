@@ -99,6 +99,7 @@ export class ServicesService {
       [AttachedServiceType.HOSTING]: DefaultPermission.HOSTING,
       [AttachedServiceType.NFT]: DefaultPermission.NFTS,
       [AttachedServiceType.COMPUTING]: DefaultPermission.COMPUTING,
+      [AttachedServiceType.CONTRACTS]: DefaultPermission.CONTRACTS,
     }[body.serviceType_id];
 
     if (requiredPermission && !context.hasPermission(requiredPermission)) {

@@ -450,6 +450,45 @@ export interface IEnv {
   NFTS_AWS_WORKER_LAMBDA_NAME: string;
 
   /************************************************************
+   * Contracts - Apillon Contracts Service
+   ************************************************************/
+  /**
+   *  function name
+   */
+  CONTRACTS_FUNCTION_NAME: string;
+  CONTRACTS_FUNCTION_NAME_TEST: string;
+
+  /**
+   * dev server port
+   */
+  CONTRACTS_SOCKET_PORT: number;
+  CONTRACTS_SOCKET_PORT_TEST: number;
+
+  /**
+   * Database config
+   */
+  CONTRACTS_MYSQL_HOST: string;
+  CONTRACTS_MYSQL_PORT: number;
+  CONTRACTS_MYSQL_USER: string;
+  CONTRACTS_MYSQL_PASSWORD: string;
+  CONTRACTS_MYSQL_DEPLOY_USER: string;
+  CONTRACTS_MYSQL_DEPLOY_PASSWORD: string;
+  CONTRACTS_MYSQL_DATABASE: string;
+
+  // TEST
+  CONTRACTS_MYSQL_HOST_TEST: string;
+  CONTRACTS_MYSQL_PORT_TEST: number;
+  CONTRACTS_MYSQL_USER_TEST: string;
+  CONTRACTS_MYSQL_PASSWORD_TEST: string;
+  CONTRACTS_MYSQL_DATABASE_TEST: string;
+
+  /**
+   * Contracts workers config
+   */
+  CONTRACTS_AWS_WORKER_SQS_URL: string;
+  CONTRACTS_AWS_WORKER_LAMBDA_NAME: string;
+
+  /************************************************************
    * COMPUTING - Apillon Computing Service
    ************************************************************/
   /**
@@ -996,6 +1035,33 @@ export let env: IEnv = {
   SOCIAL_AWS_WORKER_LAMBDA_NAME: process.env['SOCIAL_AWS_WORKER_LAMBDA_NAME'],
 
   SOCIAL_DEFAULT_SPACE: process.env['SOCIAL_DEFAULT_SPACE'],
+
+  /** CONTRACTS */
+  // TODO: fix default ports?
+  CONTRACTS_FUNCTION_NAME: process.env['CONTRACTS_FUNCTION_NAME'],
+  CONTRACTS_FUNCTION_NAME_TEST: process.env['CONTRACTS_FUNCTION_NAME_TEST'],
+  CONTRACTS_SOCKET_PORT: parseInt(process.env['CONTRACTS_SOCKET_PORT']) || 7302,
+  CONTRACTS_MYSQL_HOST: process.env['CONTRACTS_MYSQL_HOST'],
+  CONTRACTS_MYSQL_PORT: parseInt(process.env['CONTRACTS_MYSQL_PORT']) || 3306,
+  CONTRACTS_MYSQL_DATABASE: process.env['CONTRACTS_MYSQL_DATABASE'],
+  CONTRACTS_MYSQL_USER: process.env['CONTRACTS_MYSQL_USER'],
+  CONTRACTS_MYSQL_PASSWORD: process.env['CONTRACTS_MYSQL_PASSWORD'],
+  CONTRACTS_MYSQL_DEPLOY_USER: process.env['CONTRACTS_MYSQL_DEPLOY_USER'],
+  CONTRACTS_MYSQL_DEPLOY_PASSWORD:
+    process.env['CONTRACTS_MYSQL_DEPLOY_PASSWORD'],
+
+  CONTRACTS_SOCKET_PORT_TEST:
+    parseInt(process.env['CONTRACTS_SOCKET_PORT_TEST']) || 7701,
+  CONTRACTS_MYSQL_HOST_TEST: process.env['CONTRACTS_MYSQL_HOST_TEST'],
+  CONTRACTS_MYSQL_PORT_TEST:
+    parseInt(process.env['CONTRACTS_MYSQL_PORT_TEST']) || 3306,
+  CONTRACTS_MYSQL_DATABASE_TEST: process.env['CONTRACTS_MYSQL_DATABASE_TEST'],
+  CONTRACTS_MYSQL_USER_TEST: process.env['CONTRACTS_MYSQL_USER_TEST'],
+  CONTRACTS_MYSQL_PASSWORD_TEST: process.env['CONTRACTS_MYSQL_PASSWORD_TEST'],
+
+  CONTRACTS_AWS_WORKER_SQS_URL: process.env['CONTRACTS_AWS_WORKER_SQS_URL'],
+  CONTRACTS_AWS_WORKER_LAMBDA_NAME:
+    process.env['CONTRACTS_AWS_WORKER_LAMBDA_NAME'],
 
   /** DISCORD */
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
