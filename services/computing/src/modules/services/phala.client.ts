@@ -224,7 +224,7 @@ export class PhalaClient {
       const gasPrice = phatRegistry.gasPrice.toNumber();
       console.log(`Retrieved gas price=${gasPrice}.`);
       const { records } = await phatRegistry.loggerContract.tail(
-        100,
+        10000,
         this.removeObjectKeysWithNullValue(phalaLogFilter),
       );
       console.log(`Retrieved ${records.length} log records.`);
