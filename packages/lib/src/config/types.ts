@@ -289,7 +289,6 @@ export enum ReferralEventType {
   ADD_PROMO_CODE_CREDITS = 'add-promo-code-credits',
 
   GET_AIRDROP_TASKS = 'get-airdrop-tasks',
-  REVIEW_TASKS = 'review-tasks',
   GET_CLAIM_PARAMETERS = 'get-claim-parameters',
   SET_CLAIMS_COMPLETED = 'set-claims-completed',
 }

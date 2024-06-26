@@ -176,6 +176,7 @@ export class IPFSService {
     console.info('Add file to IPFS, ...');
     const filesOnIPFS = await this.kuboRpcApiClient.add({
       content: file.Body as ReadableStream,
+      pin: this.ipfsCluster.pinOnAdd,
     });
 
     await this.pinCidToCluster(filesOnIPFS.Hash);
@@ -205,7 +206,7 @@ export class IPFSService {
     return {
       cidV0: filesOnIPFS.Hash,
       cidV1: filesOnIPFS.Hash,
-      size: filesOnIPFS.Size,
+      size: filesOnIPFS.Size || 0,
     };
   }
 
@@ -509,11 +510,13 @@ export class IPFSService {
     await this.initializeIPFSClient();
 
     try {
-      await axios.post(
-        this.ipfsCluster.clusterServer + `pins/ipfs/${cid}`,
-        {},
-        {},
-      );
+      if (this.ipfsCluster.clusterServer) {
+        await axios.post(
+          this.ipfsCluster.clusterServer + `pins/ipfs/${cid}`,
+          {},
+          {},
+        );
+      }
     } catch (err) {
       writeLog(
         LogType.ERROR,
@@ -596,7 +599,7 @@ export class IPFSService {
   }
 
   /**
-   * Function, used for testing purposes. To upload fake file to IPFS
+   * Function, used for testing purposes AND in NFT flow. Uploads file to IPFS an pins it to cluster.
    * @param params file path and file content
    * @returns cidv0 & cidV1
    */
@@ -610,7 +613,10 @@ export class IPFSService {
     //Add to IPFS
     const fileOnIPFS = await this.kuboRpcApiClient.add({
       content: params.content,
+      pin: this.ipfsCluster?.pinOnAdd || false,
     });
+
+    await this.pinCidToCluster(fileOnIPFS.Hash);
 
     return {
       cidV0: fileOnIPFS.Hash,

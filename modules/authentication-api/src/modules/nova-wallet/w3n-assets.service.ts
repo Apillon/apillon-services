@@ -90,4 +90,16 @@ export class W3nAssetsService {
       )
     ).data;
   }
+
+  async generateShortUrl(context: AuthenticationApiContext, targetUrl: string) {
+    return (
+      await callApillonApi(
+        env.NOVA_WALLET_API_KEY,
+        env.NOVA_WALLET_API_KEY_SECRET,
+        'POST',
+        '/hosting/short-url',
+        { targetUrl },
+      )
+    ).data;
+  }
 }

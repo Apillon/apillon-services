@@ -323,6 +323,26 @@ export class IpfsCluster extends AdvancedSQLModel {
   public loadBalancerIp: string;
 
   @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    defaultValue: false,
+  })
+  public pinOnAdd: boolean;
+
+  @prop({
     parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.DB,
