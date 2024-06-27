@@ -381,7 +381,7 @@ export class File extends UuidSqlModel {
       this.getContext(),
     ).getIpfsCluster();
 
-    this.link = ipfsCluster.generateLink(this.project_uuid, this.CIDv1);
+    this.link = await ipfsCluster.generateLink(this.project_uuid, this.CIDv1);
   }
 
   /**
@@ -444,7 +444,7 @@ export class File extends UuidSqlModel {
     //Populate link
     for (const item of data.items) {
       if (item.CID) {
-        item.link = ipfsCluster.generateLink(b.project_uuid, item.CIDv1);
+        item.link = await ipfsCluster.generateLink(b.project_uuid, item.CIDv1);
       }
     }
 
@@ -511,7 +511,7 @@ export class File extends UuidSqlModel {
     //Populate link
     for (const item of data.items) {
       if (item.CID) {
-        item.link = ipfsCluster.generateLink(
+        item.link = await ipfsCluster.generateLink(
           env.DEV_CONSOLE_API_DEFAULT_PROJECT_UUID,
           item.CIDv1,
         );
