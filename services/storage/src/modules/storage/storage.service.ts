@@ -824,10 +824,12 @@ export class StorageService {
     ).getIpfsCluster();
 
     return {
-      link: ipfsCluster.generateLink(
+      link: await ipfsCluster.generateLink(
         event.project_uuid,
         event.cid,
         event.type.toLowerCase() == 'ipns',
+        undefined,
+        true,
       ),
     };
   }
