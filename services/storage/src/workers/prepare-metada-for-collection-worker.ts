@@ -241,7 +241,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
               );
 
               if (collectionMetadata.useApillonIpfsGateway) {
-                fileContent.image = ipfsCluster.generateLink(
+                fileContent.image = await ipfsCluster.generateLink(
                   bucket.project_uuid,
                   imageFile.CIDv1,
                 );

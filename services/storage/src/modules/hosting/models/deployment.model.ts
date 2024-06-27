@@ -588,7 +588,7 @@ export class Deployment extends AdvancedSQLModel {
       this.getContext(),
     ).getUrlScreenshot(
       website.project_uuid,
-      ipfsCluster.generateLink(website.project_uuid, this.cidv1),
+      await ipfsCluster.generateLink(website.project_uuid, this.cidv1),
       website.website_uuid,
     );
 
@@ -632,7 +632,7 @@ export class Deployment extends AdvancedSQLModel {
     const msgParams = {
       message: `
       New website deployment for review.\n
-      URL: ${ipfsCluster.generateLink(website.project_uuid, this.cidv1)} \n
+      URL: ${await ipfsCluster.generateLink(website.project_uuid, this.cidv1)} \n
       Project: ${website.project_uuid} \n
       User: ${user_uuid}
       `,
