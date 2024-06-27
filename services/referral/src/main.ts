@@ -31,7 +31,6 @@ export async function processEvent(
     [ReferralEventType.ADD_PROMO_CODE_CREDITS]:
       PromoCodeService.addPromoCodeCredits,
     [ReferralEventType.GET_AIRDROP_TASKS]: AirdropService.getAirdropTasks,
-    [ReferralEventType.REVIEW_TASKS]: AirdropService.reviewTasks,
     [ReferralEventType.GET_CLAIM_PARAMETERS]: AirdropService.getClaimParameters,
     [ReferralEventType.SET_CLAIMS_COMPLETED]: AirdropService.setClaimsCompleted,
   };

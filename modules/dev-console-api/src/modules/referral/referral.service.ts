@@ -7,7 +7,6 @@ import {
   TwitterOauthDto,
   ProductOrderDto,
   BaseQueryFilter,
-  ReviewTasksDto,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { UserService } from '../user/user.service';
@@ -145,21 +144,6 @@ export class ReferralService {
    */
   async getAirdropTasks(context: DevConsoleApiContext): Promise<any> {
     return (await new ReferralMicroservice(context).getAirdropTasks()).data;
-  }
-
-  /**
-   * Review tasks and total NCTR tokens collected
-   * @param {DevConsoleApiContext} context
-   * @param {ReviewTasksDto} body
-   */
-  async reviewTasks(context: DevConsoleApiContext, body: ReviewTasksDto) {
-    const { address } = await this.userService.validateWalletSignature(
-      body,
-      'ReferralService/reviewTasks',
-      context,
-    );
-    body.wallet = address;
-    return (await new ReferralMicroservice(context).reviewTasks(body)).data;
   }
 
   /**
