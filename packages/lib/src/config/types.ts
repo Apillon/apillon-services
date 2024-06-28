@@ -910,6 +910,8 @@ export enum ProductCode {
   NFT_SEPOLIA_BURN = 39,
   NFT_SEPOLIA_TRANSFER_COLLECTION = 40,
   NFT_SEPOLIA_SET_BASE_URI = 41,
+
+  IPNS = 55,
 }
 
 export enum ProductService {
@@ -918,6 +920,7 @@ export enum ProductService {
   IDENTITY = 'IDENTITY',
   SOCIAL = 'SOCIAL',
   COMPUTING = 'COMPUTING',
+  STORAGE = 'STORAGE',
 }
 
 export enum ProductCategory {
