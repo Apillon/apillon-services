@@ -172,6 +172,10 @@ export class PhalaClient {
       },
       content,
     );
+    if (response.output.isEmpty || response.output.isErr) {
+      throw new Error('Failed to encrypt content, contract returned no data.');
+    }
+
     return response.output.toJSON()['ok'].ok;
   }
 
@@ -224,7 +228,7 @@ export class PhalaClient {
       const gasPrice = phatRegistry.gasPrice.toNumber();
       console.log(`Retrieved gas price=${gasPrice}.`);
       const { records } = await phatRegistry.loggerContract.tail(
-        100,
+        10000,
         this.removeObjectKeysWithNullValue(phalaLogFilter),
       );
       console.log(`Retrieved ${records.length} log records.`);
