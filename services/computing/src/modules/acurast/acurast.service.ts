@@ -3,6 +3,7 @@ import {
   JobQueryFilter,
   Lmas,
   LogType,
+  ModelValidationException,
   ProductCode,
   ServiceName,
   SetJobEnvironmentDto,
@@ -15,14 +16,22 @@ import { v4 as uuidV4 } from 'uuid';
 import {
   ComputingCodeException,
   ComputingNotFoundException,
+  ComputingModelValidationException,
   ComputingValidationException,
 } from '../../lib/exceptions';
 import {
   deleteAcurastJob,
   deployAcurastJob,
+  getAcurastEndpoint,
+  getAcurastWebsocketUrl,
   setAcurastJobEnvironment,
 } from '../../lib/utils/acurast-utils';
-import { ComputingErrorCode, DbTables } from '../../config/types';
+import {
+  AcurastJobStatus,
+  ComputingErrorCode,
+  DbTables,
+} from '../../config/types';
+import { AcurastWebsocketClient } from '../clients/acurast-websocket.client';
 
 export class AcurastService {
   /**
@@ -44,7 +53,7 @@ export class AcurastService {
 
     const conn = await context.mysql.start();
     try {
-      await job.validateOrThrow(ComputingValidationException);
+      await job.validateOrThrow(ComputingModelValidationException);
 
       const referenceId = uuidV4();
       await spendCreditAction(
@@ -179,6 +188,43 @@ export class AcurastService {
   }
 
   /**
+   * Send a message to a job and return response
+   * @param {{ payload: string, job_uuid: string }} event - job message payload
+   * @param {ServiceContext} context
+   * @returns {Promise<AcurastJob>}
+   */
+  static async sendJobMessage(
+    event: { payload: string; job_uuid: string },
+    context: ServiceContext,
+  ): Promise<AcurastJob> {
+    const job = await new AcurastJob({}, context).populateByUUID(
+      event.job_uuid,
+    );
+
+    job.verifyStatusAndAccess('sendJobMessage', context);
+
+    if (!event.payload) {
+      throw new ComputingValidationException({
+        code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
+        property: 'payload',
+      });
+    }
+    return await new AcurastWebsocketClient(await getAcurastWebsocketUrl())
+      .send(job.publicKey, event.payload)
+      .catch(async (err) => {
+        throw await new ComputingCodeException({
+          status: 500,
+          code: ComputingErrorCode.ERROR_SENDING_JOB_PAYLOAD,
+          errorMessage: err.message,
+        }).writeToMonitor({
+          logType: LogType.ERROR,
+          service: ServiceName.COMPUTING,
+          data: { ...event },
+        });
+      });
+  }
+
+  /**
    * Unregister an acurast job and mark as deleted
    * @param {{ job_uuid: string }} event - environment variable pairs
    * @param {ServiceContext} context
@@ -190,11 +236,11 @@ export class AcurastService {
   ): Promise<AcurastJob> {
     const job = await new AcurastJob({}, context).populateByUUID(job_uuid);
 
-    job.verifyStatusAndAccess('deleteJob', context);
+    job.verifyStatusAndAccess('deleteJob', context, AcurastJobStatus.DEPLOYED);
 
     const conn = await context.mysql.start();
     try {
-      await job.validateOrThrow(ComputingValidationException);
+      await job.validateOrThrow(ComputingModelValidationException);
 
       const referenceId = uuidV4();
       await spendCreditAction(

@@ -31,7 +31,7 @@ import {
 import {
   ComputingCodeException,
   ComputingNotFoundException,
-  ComputingValidationException,
+  ComputingModelValidationException,
 } from '../../lib/exceptions';
 import {
   assignCidToNft,
@@ -133,7 +133,7 @@ export class ComputingService {
       contract.data.restrictToOwner = true;
     }
 
-    await contract.validateOrThrow(ComputingValidationException);
+    await contract.validateOrThrow(ComputingModelValidationException);
 
     const spendCredit = new SpendCreditDto(
       {

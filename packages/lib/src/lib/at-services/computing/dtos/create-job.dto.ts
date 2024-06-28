@@ -10,6 +10,7 @@ import {
   SerializeFor,
   ValidatorErrorCode,
 } from '../../../../config/types';
+import { minutesInFutureValidator } from '../../../validators';
 
 export class CreateJobDto extends ModelBase {
   @prop({
@@ -91,6 +92,10 @@ export class CreateJobDto extends ModelBase {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.COMPUTING_FIELD_NOT_PRESENT,
       },
+      {
+        resolver: minutesInFutureValidator(5),
+        code: ValidatorErrorCode.JOB_DATE_NOT_VALID,
+      },
     ],
   })
   startTime: Date;
@@ -103,6 +108,10 @@ export class CreateJobDto extends ModelBase {
       {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.COMPUTING_FIELD_NOT_PRESENT,
+      },
+      {
+        resolver: minutesInFutureValidator(15),
+        code: ValidatorErrorCode.JOB_DATE_NOT_VALID,
       },
     ],
   })

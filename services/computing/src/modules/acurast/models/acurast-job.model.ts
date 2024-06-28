@@ -216,16 +216,16 @@ export class AcurastJob extends UuidSqlModel {
     return super.populateByUUID(job_uuid, 'job_uuid');
   }
 
-  verifyStatusAndAccess(sourceFunction: string, context: ServiceContext) {
+  verifyStatusAndAccess(
+    sourceFunction: string,
+    context: ServiceContext,
+    requiredStatus = AcurastJobStatus.MATCHED,
+  ) {
     if (!this.exists()) {
       throw new ComputingNotFoundException(ComputingErrorCode.JOB_NOT_FOUND);
     }
 
-    if (
-      ![AcurastJobStatus.DEPLOYED, AcurastJobStatus.MATCHED].includes(
-        this.jobStatus,
-      )
-    ) {
+    if (this.jobStatus !== requiredStatus) {
       throw new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.JOB_NOT_DEPLOYED,

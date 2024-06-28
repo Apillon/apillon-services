@@ -151,6 +151,15 @@ export class ComputingMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async sendJobMessage(payload: string, job_uuid: string) {
+    const data = {
+      eventName: ComputingEventType.SEND_JOB_MESSAGE,
+      payload,
+      job_uuid,
+    };
+    return await this.callService(data);
+  }
+
   public async deleteJob(job_uuid: string) {
     const data = {
       eventName: ComputingEventType.DELETE_JOB,

@@ -264,6 +264,7 @@ export enum ComputingEventType {
   LIST_JOBS = 'list-jobs',
   GET_JOB = 'get-job',
   SET_JOB_ENVIRONMENT = 'set-job-environment',
+  SEND_JOB_MESSAGE = 'send-job-message',
   DELETE_JOB = 'delete-job',
 }
 
@@ -651,6 +652,7 @@ export enum ValidatorErrorCode {
   COMPUTING_CONTRACT_DATA_NOT_VALID = 42200210,
   COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID = 42200211,
   COMPUTING_FIELD_NOT_PRESENT = 42200212,
+  JOB_DATE_NOT_VALID = 42200213,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,

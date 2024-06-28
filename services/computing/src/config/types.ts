@@ -55,6 +55,7 @@ export enum ComputingErrorCode {
   JOB_NOT_DEPLOYED = 50018014,
   JOB_ID_IS_MISSING = 50018015,
   DELETE_JOB_ERROR = 50018016,
+  ERROR_SENDING_JOB_PAYLOAD = 50018017,
 }
 
 export enum TransactionType {

@@ -1,17 +1,22 @@
 import { AcurastClient, Message } from '@acurast/dapp';
 
 export class AcurastWebsocketClient {
-  private readonly rpcEndpoint: string;
+  private readonly websocketEndpoint: string;
 
-  constructor(rpcEndpoint: string) {
-    this.rpcEndpoint = rpcEndpoint;
+  constructor(websocketEndpoint: string) {
+    this.websocketEndpoint = websocketEndpoint;
   }
 
+  /**
+   * Send a payload to a processor by public key and return back the response
+   * @param {string} jobPublicKey
+   * @param {(string | Uint8Array)} payload
+   */
   async send(jobPublicKey: string, payload: string | Uint8Array): Promise<any> {
-    const client = new AcurastClient(this.rpcEndpoint);
+    const client = new AcurastClient(this.websocketEndpoint);
     await client.start(await this.generateKeypair());
 
-    return new Promise((resolve, reject) => {
+    const websocketPromise = new Promise((resolve, reject) => {
       client.onMessage((message: Message) => {
         resolve({
           sender: Buffer.from(message.sender).toString('hex'),
@@ -27,6 +32,15 @@ export class AcurastWebsocketClient {
         reject(error);
       }
     });
+
+    const timeoutPromise = new Promise((_, reject): void => {
+      setTimeout(
+        () => reject(new Error('The Acurast websocket request timed out.')),
+        15_000,
+      );
+    });
+
+    return await Promise.race([websocketPromise, timeoutPromise]);
   }
 
   private async generateKeypair() {

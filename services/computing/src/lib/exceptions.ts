@@ -4,6 +4,8 @@ import {
   ErrorOptions,
   ServiceName,
   ModelValidationException,
+  ValidationException,
+  IValidationError,
 } from '@apillon/lib';
 import { ComputingErrorCode } from '../config/types';
 
@@ -19,9 +21,15 @@ export class ComputingCodeException extends CodeException {
   }
 }
 
-export class ComputingValidationException extends ModelValidationException {
+export class ComputingModelValidationException extends ModelValidationException {
   constructor(model: Model) {
     super(model, ComputingErrorCode);
+  }
+}
+
+export class ComputingValidationException extends ValidationException {
+  constructor(errors: IValidationError | IValidationError[]) {
+    super(errors, ComputingErrorCode);
   }
 }
 

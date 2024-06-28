@@ -77,6 +77,16 @@ export class AcurastService {
       .data;
   }
 
+  async sendJobMessage(
+    context: DevConsoleApiContext,
+    payload: string,
+    job_uuid: string,
+  ) {
+    return (
+      await new ComputingMicroservice(context).sendJobMessage(payload, job_uuid)
+    ).data;
+  }
+
   async deleteJob(context: DevConsoleApiContext, job_uuid: string) {
     return (await new ComputingMicroservice(context).deleteJob(job_uuid)).data;
   }
