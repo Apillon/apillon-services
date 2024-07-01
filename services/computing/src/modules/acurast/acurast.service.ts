@@ -3,12 +3,12 @@ import {
   JobQueryFilter,
   Lmas,
   LogType,
-  ModelValidationException,
   ProductCode,
   ServiceName,
   SetJobEnvironmentDto,
   SpendCreditDto,
   spendCreditAction,
+  writeLog,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -22,7 +22,6 @@ import {
 import {
   deleteAcurastJob,
   deployAcurastJob,
-  getAcurastEndpoint,
   getAcurastWebsocketUrl,
   setAcurastJobEnvironment,
 } from '../../lib/utils/acurast-utils';
@@ -44,17 +43,20 @@ export class AcurastService {
     event: { body: CreateJobDto },
     context: ServiceContext,
   ): Promise<AcurastJob> {
-    console.log(`Creating acurast job: ${JSON.stringify(event.body)}`);
+    writeLog(
+      LogType.INFO,
+      `Creating acurast job: ${JSON.stringify(event.body)}`,
+    );
     event.body = new CreateJobDto(event.body);
 
     const job = new AcurastJob(event.body, context).populate({
       job_uuid: uuidV4(),
     });
 
+    await job.validateOrThrow(ComputingModelValidationException);
+
     const conn = await context.mysql.start();
     try {
-      await job.validateOrThrow(ComputingModelValidationException);
-
       const referenceId = uuidV4();
       await spendCreditAction(
         context,
@@ -69,13 +71,7 @@ export class AcurastService {
           },
           context,
         ),
-        async () =>
-          await deployAcurastJob(
-            context,
-            await job.insert(),
-            referenceId,
-            conn,
-          ),
+        async () => await deployAcurastJob(context, job, referenceId, conn),
       );
       await context.mysql.commit(conn);
 
@@ -209,6 +205,7 @@ export class AcurastService {
         property: 'payload',
       });
     }
+
     return await new AcurastWebsocketClient(await getAcurastWebsocketUrl())
       .send(job.publicKey, event.payload)
       .catch(async (err) => {

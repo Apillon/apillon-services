@@ -1,4 +1,6 @@
-import { AcurastClient, Message } from '@acurast/dapp';
+import { AcurastClient, Message, KeyPair } from '@acurast/dapp';
+import { env, getSecrets } from '@apillon/lib';
+import { createECDH } from 'crypto';
 
 export class AcurastWebsocketClient {
   private readonly websocketEndpoint: string;
@@ -14,7 +16,9 @@ export class AcurastWebsocketClient {
    */
   async send(jobPublicKey: string, payload: string | Uint8Array): Promise<any> {
     const client = new AcurastClient(this.websocketEndpoint);
-    await client.start(await this.generateKeypair());
+    await client.start(await this.getWebsocketKeypair());
+
+    console.info(`Sending message to acurast processor ${jobPublicKey}`);
 
     const websocketPromise = new Promise((resolve, reject) => {
       client.onMessage((message: Message) => {
@@ -40,24 +44,22 @@ export class AcurastWebsocketClient {
       );
     });
 
+    // Return the promise that fulfills first
     return await Promise.race([websocketPromise, timeoutPromise]);
   }
 
-  private async generateKeypair() {
-    const keyPair = await crypto.subtle.generateKey(
-      { name: 'ECDSA', namedCurve: 'P-256' },
-      true,
-      ['sign'],
-    );
+  /**
+   * Acurast websockets require a private-public keypair for source identification
+   * Get secret key from secrets, obtain public key from it and return
+   * @returns {Promise<KeyPair>}
+   */
+  private async getWebsocketKeypair(): Promise<KeyPair> {
+    const secretKey = (await getSecrets(env.BLOCKCHAIN_SECRETS))
+      .ACURAST_WEBSOCKET_SECRET;
 
-    const [secretKey, publicKey] = await Promise.all([
-      crypto.subtle
-        .exportKey('jwk', keyPair.privateKey)
-        .then((jwk) => Buffer.from(jwk.d, 'base64').toString('hex')),
-      crypto.subtle
-        .exportKey('raw', keyPair.publicKey)
-        .then((arrayBuffer) => Buffer.from(arrayBuffer).toString('hex')),
-    ]);
+    const ecdh = createECDH('prime256v1');
+    ecdh.setPrivateKey(Buffer.from(secretKey, 'hex'));
+    const publicKey = ecdh.getPublicKey().toString('hex');
 
     return { secretKey, publicKey };
   }

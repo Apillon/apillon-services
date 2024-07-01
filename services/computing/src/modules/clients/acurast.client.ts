@@ -24,7 +24,7 @@ export class AcurastClient {
       throwOnConnect: true,
     });
 
-    console.log(`Acurast client initialization: ${this.rpcEndpoint}`);
+    console.info(`Acurast client initialization: ${this.rpcEndpoint}`);
   }
 
   async createDeployJobTransaction(
