@@ -15,7 +15,7 @@ export async function upgrade(
       \`scriptCid\` VARCHAR(255) NOT NULL,
       \`slots\` TINYINT NOT NULL,
       \`jobStatus\` INT NOT NULL,
-      \`jobId\` INT NULL,
+      \`jobId\` BIGINT NULL,
       \`account\` VARCHAR(60) NULL,
       \`publicKey\` VARCHAR(70) NULL,
       \`startTime\` DATETIME NOT NULL,

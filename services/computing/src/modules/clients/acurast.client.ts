@@ -24,23 +24,24 @@ export class AcurastClient {
       throwOnConnect: true,
     });
 
-    console.log(`Acurast client initialization: ${this.rpcEndpoint}`);
-  }
-
-  addMinutes(date: string | number | Date, seconds: number) {
-    const t = new Date(date);
-    t.setMinutes(t.getMinutes() + seconds);
-    return t;
+    console.info(`Acurast client initialization: ${this.rpcEndpoint}`);
   }
 
   async createDeployJobTransaction(
     job: AcurastJob,
   ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
-    const startTime = this.addMinutes(new Date(), 10).getTime();
-    const endTime = this.addMinutes(startTime, 60).getTime();
+    // Uncomment below for local testing
+    // const addMinutes = (date: Date, seconds: number) => {
+    //   const t = new Date(date);
+    //   t.setMinutes(t.getMinutes() + seconds);
+    //   return t;
+    // };
+    // const startTime = this.addMinutes(new Date(), 10).getTime();
+    // const endTime = this.addMinutes(startTime, 60).getTime();
+    const startTime = job.startTime.getTime();
+    const endTime = job.endTime.getTime();
 
-    // let { startTime, endTime } = job;
     const interval = endTime - startTime;
     return this.api.tx.acurast.register({
       script: `ipfs://${job.scriptCid}`,

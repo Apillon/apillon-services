@@ -1,14 +1,13 @@
 import {
+  AttachedServiceType,
   CreateJobDto,
-  DefaultPermission,
-  DefaultUserRole,
+  DefaultApiKeyRole,
   JobQueryFilter,
-  RoleGroup,
   SetJobEnvironmentDto,
   UpdateJobDto,
   ValidateFor,
 } from '@apillon/lib';
-import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
+import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -20,43 +19,51 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { DevConsoleApiContext } from '../../context';
+import { ApillonApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { AcurastService } from './acurast.service';
 
 @Controller('acurast')
-@Permissions({ permission: DefaultPermission.COMPUTING })
 export class AcurastController {
   constructor(private readonly acurastService: AcurastService) {}
 
   @Post('jobs')
   @Validation({ dto: CreateJobDto })
-  @Permissions({ role: RoleGroup.ProjectAccess })
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
   @UseGuards(AuthGuard, ValidationGuard)
   async createJob(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Body() body: CreateJobDto,
   ) {
     return await this.acurastService.createJob(context, body);
   }
 
   @Get('jobs')
-  @Permissions({ role: RoleGroup.ProjectAccess })
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
   @Validation({ dto: JobQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
   async listJobs(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Query() query: JobQueryFilter,
   ) {
     return await this.acurastService.listJobs(context, query);
   }
 
   @Get('jobs/:job_uuid')
-  @Permissions({ role: RoleGroup.ProjectAccess })
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
   @UseGuards(AuthGuard)
   async getJob(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Param('job_uuid') uuid: string,
   ) {
     return await this.acurastService.getJob(context, uuid);
@@ -64,13 +71,13 @@ export class AcurastController {
 
   @Post('jobs/:job_uuid/environment')
   @Validation({ dto: SetJobEnvironmentDto })
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
   @UseGuards(AuthGuard, ValidationGuard)
   async setJobEnvironment(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Body() body: SetJobEnvironmentDto,
     @Param('job_uuid') job_uuid: string,
   ) {
@@ -79,13 +86,13 @@ export class AcurastController {
   }
 
   @Post('jobs/:job_uuid/message')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_EXECUTE,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
   @UseGuards(AuthGuard)
   async sendJobMessage(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Body() payload: any,
     @Param('job_uuid') job_uuid: string,
   ) {
@@ -94,11 +101,14 @@ export class AcurastController {
   }
 
   @Patch('jobs/:job_uuid')
-  @Permissions({ role: RoleGroup.ProjectAccess })
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
   @Validation({ dto: UpdateJobDto })
   @UseGuards(AuthGuard, ValidationGuard)
   async updateJob(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Param('job_uuid') job_uuid: string,
     @Body() body: UpdateJobDto,
   ) {
@@ -107,13 +117,13 @@ export class AcurastController {
   }
 
   @Delete('jobs/:job_uuid')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
   @UseGuards(AuthGuard)
   async deleteJob(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Param('job_uuid') job_uuid: string,
   ) {
     return await this.acurastService.deleteJob(context, job_uuid);

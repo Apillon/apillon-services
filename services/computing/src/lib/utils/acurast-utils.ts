@@ -29,6 +29,11 @@ export async function getAcurastEndpoint(context: Context) {
   ).data.url;
 }
 
+export async function getAcurastWebsocketUrl() {
+  // TODO: replace with env variable?
+  return 'wss://websocket-proxy-1.prod.gke.acurast.com/';
+}
+
 export async function deployAcurastJob(
   context: ServiceContext,
   job: AcurastJob,
@@ -72,7 +77,7 @@ export async function deployAcurastJob(
     jobStatus: AcurastJobStatus.DEPLOYING,
     deployerAddress: response.data.address,
   });
-  await job.update(SerializeFor.UPDATE_DB, conn);
+  await job.insert(SerializeFor.INSERT_DB, conn);
 }
 
 export async function setAcurastJobEnvironment(

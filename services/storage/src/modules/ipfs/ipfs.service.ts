@@ -734,4 +734,10 @@ export class IPFSService {
     }
     return ipfsBandwidth;
   }
+
+  public async cidToCidV1(cidV0: string) {
+    //Initialize IPFS client
+    await this.initializeIPFSClient();
+    return await this.kuboRpcApiClient.cidToCidV1(cidV0);
+  }
 }

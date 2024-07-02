@@ -34,10 +34,16 @@ const serializable = [
   SerializeFor.ADMIN,
   SerializeFor.SERVICE,
   SerializeFor.APILLON_API,
-  SerializeFor.PROFILE,
   SerializeFor.SELECT_DB,
 ];
+
+const serializableProfile = [...serializable, SerializeFor.PROFILE];
 const serializableUpdate = [...serializable, SerializeFor.UPDATE_DB];
+const serializableUpdateProfile = [
+  ...serializable,
+  SerializeFor.PROFILE,
+  SerializeFor.UPDATE_DB,
+];
 
 export class AcurastJob extends UuidSqlModel {
   public readonly tableName = DbTables.ACURAST_JOB;
@@ -45,7 +51,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable,
-    serializable,
+    serializable: serializableProfile,
     validators: [
       {
         resolver: presenceValidator(),
@@ -58,7 +64,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable,
-    serializable,
+    serializable: serializableProfile,
     validators: [
       {
         resolver: presenceValidator(),
@@ -71,7 +77,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable,
-    serializable: serializableUpdate,
+    serializable: serializableUpdateProfile,
     validators: [
       {
         resolver: presenceValidator(),
@@ -85,7 +91,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable,
-    serializable: serializableUpdate,
+    serializable: serializableUpdateProfile,
   })
   public description: string;
 
@@ -96,7 +102,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable,
-    serializable,
+    serializable: serializableProfile,
     validators: [
       {
         resolver: presenceValidator(),
@@ -112,7 +118,13 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: dateParser() },
     populatable,
-    serializable,
+    serializable: serializableProfile,
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
   })
   public startTime: Date;
 
@@ -122,7 +134,13 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: dateParser() },
     populatable,
-    serializable,
+    serializable: serializableProfile,
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
   })
   public endTime: Date;
 
@@ -132,7 +150,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable,
-    serializable,
+    serializable: serializableProfile,
     validators: [
       {
         resolver: presenceValidator(),
@@ -177,7 +195,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable,
-    serializable: serializableUpdate,
+    serializable: serializableProfile,
     validators: [
       {
         resolver: enumInclusionValidator(AcurastJobStatus, true),
@@ -204,7 +222,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable,
-    serializable: serializableUpdate,
+    serializable,
   })
   public deployerAddress: string;
 
@@ -216,15 +234,17 @@ export class AcurastJob extends UuidSqlModel {
     return super.populateByUUID(job_uuid, 'job_uuid');
   }
 
-  verifyStatusAndAccess(sourceFunction: string, context: ServiceContext) {
+  verifyStatusAndAccess(
+    sourceFunction: string,
+    context: ServiceContext,
+    additionalStatus?: AcurastJobStatus,
+  ) {
     if (!this.exists()) {
       throw new ComputingNotFoundException(ComputingErrorCode.JOB_NOT_FOUND);
     }
 
     if (
-      ![AcurastJobStatus.DEPLOYED, AcurastJobStatus.MATCHED].includes(
-        this.jobStatus,
-      )
+      ![AcurastJobStatus.MATCHED, additionalStatus].includes(this.jobStatus)
     ) {
       throw new ComputingCodeException({
         status: 500,
@@ -297,7 +317,7 @@ export class AcurastJob extends UuidSqlModel {
       `
       SELECT *
       FROM ${DbTables.ACURAST_JOB}
-      WHERE endTime > NOW()
+      WHERE startTime > NOW() AND endTime > NOW()
       AND jobStatus = ${AcurastJobStatus.DEPLOYED}
       AND jobId IS NOT NULL
       AND status = ${SqlModelStatus.ACTIVE}

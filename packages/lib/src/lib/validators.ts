@@ -128,3 +128,20 @@ export function urlDomainValidator(validDomains: string[]) {
     return !!urlPattern.test(value);
   };
 }
+
+export function minutesInFutureValidator(minutesInFuture: number) {
+  return (value?: any) => {
+    if (!(value instanceof Date)) {
+      return false;
+    }
+
+    const now = new Date();
+    const minDate = new Date(now.getTime() + minutesInFuture * 60_000);
+
+    if (minDate instanceof Date && value < minDate) {
+      return false;
+    }
+
+    return true;
+  };
+}

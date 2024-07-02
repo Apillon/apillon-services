@@ -5,6 +5,7 @@ import {
   CreateJobDto,
   JobQueryFilter,
   SetJobEnvironmentDto,
+  UpdateJobDto,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
@@ -75,6 +76,20 @@ export class AcurastService {
   ) {
     return (await new ComputingMicroservice(context).setJobEnvironment(body))
       .data;
+  }
+
+  async sendJobMessage(
+    context: DevConsoleApiContext,
+    payload: string,
+    job_uuid: string,
+  ) {
+    return (
+      await new ComputingMicroservice(context).sendJobMessage(payload, job_uuid)
+    ).data;
+  }
+
+  async updateJob(context: DevConsoleApiContext, body: UpdateJobDto) {
+    return (await new ComputingMicroservice(context).updateJob(body)).data;
   }
 
   async deleteJob(context: DevConsoleApiContext, job_uuid: string) {
