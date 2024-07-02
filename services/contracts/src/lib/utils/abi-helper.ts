@@ -1,6 +1,12 @@
 import { utils } from 'ethers';
-import { Abi } from 'abitype/zod';
-import { ZodError } from 'zod';
+// import { Abi } from 'abitype/zod';
+// import { ZodError } from 'zod';
+
+export class AbiHelperError extends Error {}
+
+export class AbiHelperMissingMethodError extends AbiHelperError {}
+
+export class AbiHelperNotAllowedError extends AbiHelperError {}
 
 export class AbiHelper {
   private abi: unknown[];
@@ -77,16 +83,14 @@ export class AbiHelper {
       !('type' in method) ||
       method.type !== 'function'
     ) {
-      return 'Missing method in ABI';
+      throw new AbiHelperMissingMethodError('Missing method in ABI');
     }
 
     if (
       !('stateMutability' in method) ||
       method.stateMutability !== 'nonpayable'
     ) {
-      return 'cannot call method';
+      throw new AbiHelperNotAllowedError('cannot call method');
     }
-
-    return null;
   }
 }

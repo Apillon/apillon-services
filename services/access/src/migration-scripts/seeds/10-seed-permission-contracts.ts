@@ -6,7 +6,7 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
     INSERT INTO ${DbTables.PERMISSION} (id, status, name)
-    VALUES (${DefaultPermission.CONTRACTS}, 5, 'Wallet permission');
+    VALUES (${DefaultPermission.CONTRACTS}, 5, 'Contract permission');
   `);
 }
 

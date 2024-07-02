@@ -20,7 +20,7 @@ import {
 } from '../../lib/exceptions';
 import { parseError } from '../../lib/utils/contract-utils';
 import { ContractService } from '../../lib/services/contract-service';
-import { AbiHelper } from '../../lib/utils/abi-helper';
+import { AbiHelper, AbiHelperError } from '../../lib/utils/abi-helper';
 import { ContractVersion } from './models/contractVersion.model';
 import { ContractDeploy } from './models/contractDeploy.model';
 
@@ -161,7 +161,7 @@ export class ContractsController {
   //#region on-chain
   async deployContract(params: { body: CreateContractDTO }) {
     console.log(`Creating contract: ${JSON.stringify(params.body)}`);
-    const { contractId, constructorArguments } = params.body;
+    const { contract_uuid, constructorArguments } = params.body;
     let contractDeployData: {
       contract_version_id: number;
       abi: unknown[];
@@ -170,16 +170,16 @@ export class ContractsController {
     };
     try {
       contractDeployData =
-        await this.contractService.getDeployContractData(contractId);
+        await this.contractService.getDeployContractData(contract_uuid);
     } catch (err) {
       throw await new ContractsCodeException({
         status: 500,
-        errorMessage: `Error getting contract version for id ${contractId}`,
+        errorMessage: `Error getting contract version for contract with uuid ${contract_uuid}.`,
         code: ContractsErrorCode.GENERAL_SERVER_ERROR,
       }).writeToMonitor({
         context: this.context,
         logType: LogType.ERROR,
-        data: { err, contractId, chainType: ChainType.EVM },
+        data: { err, contract_uuid, chainType: ChainType.EVM },
         sendAdminAlert: true,
       });
     }
@@ -239,35 +239,19 @@ export class ContractsController {
     const contractData = await this.contractService.getContractData(
       params.body.contract_uuid,
     );
-    const error = AbiHelper.validateCallMethod(
-      contractData.abi,
-      params.body.methodName,
-    );
-    if (error) {
-      // TODO: better error
-      throw new ContractsValidationException({
-        code: '',
-        property: 'method',
-        message: error,
-      });
-    }
 
     // CALL
-    let txData: string;
     try {
-      txData = await this.contractService.createCallTransaction(
+      AbiHelper.validateCallMethod(contractData.abi, params.body.methodName);
+
+      const txData = await this.contractService.createCallTransaction(
         contractData.chain,
         contractData.contractAddress,
         contractData.abi,
         params.body.methodName,
         params.body.methodArguments,
       );
-    } catch (e: unknown) {
-      throw parseError(e, contractData.abi, 'constructorArguments');
-    }
-    let transactionData: any;
-    try {
-      transactionData = await this.contractService.sendCallTransaction(
+      const transactionData = await this.contractService.sendCallTransaction(
         contractData.project_uuid,
         contractData.contract_id,
         contractData.contract_uuid,
@@ -275,18 +259,22 @@ export class ContractsController {
         contractData.chain,
         txData,
       );
+      await this.contractService.onContractCalled(
+        contractData.project_uuid,
+        contractData.contract_uuid,
+      );
+
+      return transactionData;
     } catch (e: unknown) {
-      // TODO: better exception
-      throw e;
+      if (e instanceof AbiHelperError) {
+        throw new ContractsValidationException({
+          code: 'ABI_ERROR',
+          property: 'method',
+          message: e.message,
+        });
+      }
+      throw parseError(e, contractData.abi, 'constructorArguments');
     }
-
-    await this.contractService.onContractCalled(
-      contractData.project_uuid,
-      contractData.contract_uuid,
-    );
-
-    return transactionData;
   }
-
   //#endregion
 }

@@ -211,16 +211,16 @@ export class Contract extends ProjectAccessModel {
   /**
    * Returns contract version
    *
-   * @param contract_id - id of contract to get.
+   * @param contract_uuid - id of contract to get.
    * @returns Promise<ContractVersion>
    * @throws Error - if contract version has not been found for given params
    */
   public async getLatestContractVersion(
-    contract_id: number,
+    contract_uuid: string,
   ): Promise<Contract> {
     const contractVersion = new ContractVersion({}, this.getContext());
     const data = await runCachedFunction(
-      `${CacheKeyPrefix.CONTRACT_ID}:${[contract_id].join(':')}`,
+      `${CacheKeyPrefix.CONTRACT_UUID}:${[contract_uuid].join(':')}`,
       async () => {
         return await this.getContext().mysql.paramExecute(
           `
@@ -228,13 +228,13 @@ export class Contract extends ProjectAccessModel {
                    ${this.generateSelectFields('c', 'c')}
             FROM \`${DbTables.CONTRACT_VERSION}\` AS cv
                    LEFT JOIN \`${DbTables.CONTRACT}\` AS c ON (cv.contract_id = c.id)
-            WHERE cv.contract_id = @contract_id
+            WHERE c.contract_uuid = @contract_uuid
               AND cv.status = ${SqlModelStatus.ACTIVE}
             ORDER BY cv.version DESC
             LIMIT 1
             ;
           `,
-          { contract_id },
+          { contract_uuid },
         );
       },
       CacheKeyTTL.EXTRA_LONG,

@@ -145,10 +145,11 @@ export class ContractService {
   async onContractDeployed(
     project_uuid: string,
     contract_uuid: string,
-    contractType: SmartContractType,
+    _contractType: SmartContractType,
   ) {
-    const mailerLiteField = `has_${SmartContractType[contractType].toLowerCase()}_contract`;
     try {
+      //TODO: add this back if NFT service is replaced by this service
+      // const mailerLiteField = `has_${SmartContractType[contractType].toLowerCase()}_contract`;
       await Promise.all([
         this.logging.writeLog({
           context: this.context,
@@ -160,7 +161,7 @@ export class ContractService {
           data: { contract_uuid },
         }),
         // Set mailerlite field indicating the user has a contract
-        this.mailingClient.setMailerliteField(mailerLiteField, true),
+        // this.mailingClient.setMailerliteField(mailerLiteField, true),
       ]);
     } catch (e: unknown) {
       // just log and proceed in case MailerLite call fails
@@ -377,7 +378,7 @@ export class ContractService {
   }
 
   async getDeployContractData(
-    contract_id: number,
+    contract_uuid: string,
     // artifact: string,
   ) {
     // TODO: code meant for custom contracts
@@ -399,7 +400,7 @@ export class ContractService {
 
     // load from DB
     const { contractVersion, ...contract } =
-      await this.contractRepository.getLatestContractVersion(contract_id);
+      await this.contractRepository.getLatestContractVersion(contract_uuid);
 
     return {
       contract_version_id: contractVersion.id,

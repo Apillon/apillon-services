@@ -98,9 +98,9 @@ export class ContractRepository {
     return data[0].contractsCount;
   }
 
-  async getLatestContractVersion(contract_id: number) {
+  async getLatestContractVersion(contract_uuid: string) {
     return await new Contract({}, this.context).getLatestContractVersion(
-      contract_id,
+      contract_uuid,
     );
   }
 

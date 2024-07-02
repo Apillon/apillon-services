@@ -843,6 +843,7 @@ export enum CacheKeyPrefix {
   SOCIAL_SPACE_POST_LIST = 'social-space-post-list',
 
   CONTRACT_ID = 'contract-id',
+  CONTRACT_UUID = 'contract-uuid',
   CONTRACT_VERSION_BY_CONTRACT_UUID = 'contract-version-by-contract-uuid',
   CONTRACT_VERSION = 'contract-version',
   CONTRACT_ABI = 'contract-abi',

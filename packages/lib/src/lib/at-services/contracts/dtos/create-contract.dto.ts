@@ -81,7 +81,7 @@ export class CreateContractDTO extends ModelBase {
       },
     ],
   })
-  public contractId: number;
+  public contract_uuid: string;
 
   // @prop({
   //   parser: { resolver: stringParser() },
