@@ -144,7 +144,8 @@ describe('Log worker tests', () => {
       transaction = await new Transaction(
         {
           walletAddress: WALLET_ADDRESS,
-          contract_id: contract.id,
+          refTable: DbTables.CONTRACT,
+          refId: contract.id,
           transactionType: TransactionType.DEPLOY_CONTRACT,
           transactionHash,
           transactionStatus: ComputingTransactionStatus.CONFIRMED,
@@ -208,7 +209,8 @@ describe('Log worker tests', () => {
       transaction = await new Transaction(
         {
           walletAddress: WALLET_ADDRESS,
-          contract_id: contract.id,
+          refTable: DbTables.CONTRACT,
+          refId: contract.id,
           transactionType: TransactionType.DEPLOY_CONTRACT,
           transactionHash,
           transactionStatus: ComputingTransactionStatus.CONFIRMED,
@@ -274,7 +276,8 @@ describe('Log worker tests', () => {
       transaction = await new Transaction(
         {
           walletAddress: WALLET_ADDRESS,
-          contract_id: contract.id,
+          refTable: DbTables.CONTRACT,
+          refId: contract.id,
           transactionType: TransactionType.ASSIGN_CID_TO_NFT,
           transactionHash,
           transactionStatus: ComputingTransactionStatus.CONFIRMED,
@@ -340,7 +343,8 @@ describe('Log worker tests', () => {
       transaction = await new Transaction(
         {
           walletAddress: WALLET_ADDRESS,
-          contract_id: contract.id,
+          refTable: DbTables.CONTRACT,
+          refId: contract.id,
           transactionType: TransactionType.ASSIGN_CID_TO_NFT,
           transactionHash,
           transactionStatus: ComputingTransactionStatus.CONFIRMED,
