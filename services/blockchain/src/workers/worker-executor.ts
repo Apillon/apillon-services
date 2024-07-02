@@ -43,6 +43,7 @@ export enum WorkerName {
   TRANSMIT_SUBSOCIAL_TRANSACTION = 'TransmitSubsocialTransactions',
   TRANSMIT_ASTAR_TRANSACTIONS = 'TransmitAstarTransactions',
   TRANSMIT_ASTAR_SUBSTRATE_TRANSACTIONS = 'TransmitAstarSubstrateTransactions',
+  TRANSMIT_ACURAST_SUBSTRATE_TRANSACTIONS = 'TransmitAcurastSubstrateTransactions',
   TRANSMIT_ETHEREUM_TRANSACTIONS = 'TransmitEthereumTransactions',
   TRANSMIT_SEPOLIA_TRANSACTIONS = 'TransmitSepoliaTransactions',
   VERIFY_CRUST_TRANSACTIONS = 'VerifyCrustTransactions',
@@ -165,6 +166,7 @@ export async function handleLambdaEvent(
     case WorkerName.TRANSMIT_SUBSOCIAL_TRANSACTION:
     case WorkerName.TRANSMIT_XSOCIAL_TRANSACTION:
     case WorkerName.TRANSMIT_ASTAR_SUBSTRATE_TRANSACTIONS:
+    case WorkerName.TRANSMIT_ACURAST_SUBSTRATE_TRANSACTIONS:
       await new TransmitSubstrateTransactionWorker(
         workerDefinition,
         context,

@@ -4,6 +4,8 @@ export enum DbTables {
   CONTRACT_ABI = 'contract_abi',
   CLUSTER_WALLET = 'cluster_wallet',
   CLUSTER_TRANSACTION_LOG = 'cluster_transaction_log',
+
+  ACURAST_JOB = 'acurast_job',
 }
 
 export enum ComputingErrorCode {
@@ -13,9 +15,10 @@ export enum ComputingErrorCode {
   INVALID_ADDRESS_FOR_TRANSFER_TO = 40018003,
   TRANSACTION_FOR_TRANSFER_ALREADY_EXISTS = 40018004,
   //404
-  COLLECTION_NOT_FOUND = 40418001,
+  CONTRACT_NOT_FOUND = 40418001,
   TRANSACTION_NOT_FOUND = 40418002,
   BUCKET_NOT_FOUND = 40418003,
+  JOB_NOT_FOUND = 40418004,
   //405
   METHOD_NOT_ALLOWED = 40518001,
 
@@ -48,6 +51,11 @@ export enum ComputingErrorCode {
   CONTRACT_TRANSFERING_OR_ALREADY_TRANSFERED = 50018010,
   FAILED_TO_ENCRYPT_CONTENT = 50018011,
   FAILED_TO_ASSIGN_CID_TO_NFT = 50018012,
+  DEPLOY_JOB_ERROR = 50018013,
+  JOB_NOT_DEPLOYED = 50018014,
+  JOB_ID_IS_MISSING = 50018015,
+  DELETE_JOB_ERROR = 50018016,
+  ERROR_SENDING_JOB_PAYLOAD = 50018017,
 }
 
 export enum TransactionType {
@@ -55,6 +63,10 @@ export enum TransactionType {
   TRANSFER_CONTRACT_OWNERSHIP = 2,
   DEPOSIT_TO_CONTRACT_CLUSTER = 3,
   ASSIGN_CID_TO_NFT = 4,
+
+  DEPLOY_JOB = 5,
+  SET_JOB_ENVIRONMENT = 6,
+  DELETE_JOB = 7,
 }
 
 export enum ContractStatus {
@@ -65,6 +77,13 @@ export enum ContractStatus {
   TRANSFERRING = 4,
   TRANSFERRED = 5,
   FAILED = 6,
+}
+
+export enum AcurastJobStatus {
+  DEPLOYING = 1,
+  DEPLOYED = 2,
+  MATCHED = 3,
+  DELETED = 9,
 }
 
 export enum TxDirection {
