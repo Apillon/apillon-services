@@ -5,6 +5,7 @@ import {
   JobQueryFilter,
   RoleGroup,
   SetJobEnvironmentDto,
+  UpdateJobDto,
   ValidateFor,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
@@ -14,6 +15,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -92,6 +94,19 @@ export class AcurastController {
   ) {
     payload = JSON.stringify(payload); // safety
     return await this.acurastService.sendJobMessage(context, payload, job_uuid);
+  }
+
+  @Patch('jobs/:job_uuid')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({ dto: UpdateJobDto })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async updateJob(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('job_uuid') job_uuid: string,
+    @Body() body: UpdateJobDto,
+  ) {
+    body.job_uuid = job_uuid;
+    return await this.acurastService.updateJob(context, body);
   }
 
   @Delete('jobs/:job_uuid')

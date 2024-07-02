@@ -7,6 +7,7 @@ import {
   ServiceName,
   SetJobEnvironmentDto,
   SpendCreditDto,
+  UpdateJobDto,
   spendCreditAction,
   writeLog,
 } from '@apillon/lib';
@@ -219,6 +220,30 @@ export class AcurastService {
           data: { ...event },
         });
       });
+  }
+
+  /**
+   * Updates a job by UUID
+   * @param {{ body: UpdateJobDto }} event - contains job update params
+   * @param {ServiceContext} context
+   * @returns {Promise<AcurastJob>}
+   */
+  static async updateJob(
+    event: { body: UpdateJobDto },
+    context: ServiceContext,
+  ): Promise<AcurastJob> {
+    const job = await new AcurastJob({}, context).populateByUUID(
+      event.body.job_uuid,
+    );
+
+    if (!job.exists()) {
+      throw new ComputingNotFoundException(ComputingErrorCode.JOB_NOT_FOUND);
+    }
+    job.canAccess(context);
+
+    await job.populate(event.body).update();
+
+    return job.serializeByContext() as AcurastJob;
   }
 
   /**

@@ -265,6 +265,7 @@ export enum ComputingEventType {
   GET_JOB = 'get-job',
   SET_JOB_ENVIRONMENT = 'set-job-environment',
   SEND_JOB_MESSAGE = 'send-job-message',
+  UPDATE_JOB = 'update-job',
   DELETE_JOB = 'delete-job',
 }
 

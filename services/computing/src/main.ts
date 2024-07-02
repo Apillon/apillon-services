@@ -33,6 +33,7 @@ export async function processEvent(event: any, context: Context): Promise<any> {
     [ComputingEventType.GET_JOB]: AcurastService.getJobByUuid,
     [ComputingEventType.SET_JOB_ENVIRONMENT]: AcurastService.setJobEnvironment,
     [ComputingEventType.SEND_JOB_MESSAGE]: AcurastService.sendJobMessage,
+    [ComputingEventType.UPDATE_JOB]: AcurastService.updateJob,
     [ComputingEventType.DELETE_JOB]: AcurastService.deleteJob,
   };
 
