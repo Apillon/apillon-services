@@ -1,7 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
 const slsw = require('serverless-webpack');
-const Dotenv = require('dotenv-webpack');
 
 module.exports = {
   context: __dirname,
@@ -62,14 +61,6 @@ module.exports = {
       WebSocket: 'ws',
       fetch: ['node-fetch', 'default'],
     }),
-    new Dotenv({ path: '../../.env' }),
-    // new CopyPlugin({
-    //   patterns: [
-    //     { from: './src/templates/mail/*.html' },
-    //     { from: './src/templates/pdf/*.html' },
-    //     { from: './src/locales/*.json' },
-    //   ],
-    // }),
   ],
   optimization: {
     usedExports: true,
