@@ -12,17 +12,9 @@ custom:
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
-    keepOutputDirectory: True
-  localstack:
-    stages:
-      - local
-    lambda:
-      mountCode: True
 
 plugins:
   - serverless-webpack
-  - serverless-localstack
-  # - serverless-plugin-typescript
 
 provider:
   name: aws
