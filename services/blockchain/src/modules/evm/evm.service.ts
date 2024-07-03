@@ -568,6 +568,7 @@ export class EvmService {
     return {
       dataHash,
       signature,
+      gasPrice: gasPrice.toString(),
     };
   }
 }
