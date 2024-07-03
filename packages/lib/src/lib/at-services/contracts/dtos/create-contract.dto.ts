@@ -71,7 +71,7 @@ export class CreateContractDTO extends ModelBase {
   public chain: EvmChain;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
