@@ -82,7 +82,7 @@ export class CodeException extends HttpException {
 }
 
 export interface IValidationError {
-  code: number;
+  code: number | string;
   property: string;
   message?: string;
 }
@@ -102,7 +102,7 @@ export class ValidationException extends HttpException {
       ...error,
       message:
         errorCodes && !error.message
-          ? { ...ValidatorErrorCode, ...errorCodes }[error.code]
+          ? { ...ValidatorErrorCode, ...errorCodes }[error.code].toString()
           : error.message,
     }));
     super(
