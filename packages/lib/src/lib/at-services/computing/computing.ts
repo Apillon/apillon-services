@@ -10,6 +10,10 @@ import { EncryptContentDto } from './dtos/encrypt-content.dto';
 import { AssignCidToNft } from './dtos/assign-cid-to-nft.dto';
 import { ClusterWalletQueryFilter } from './dtos/cluster-wallet-query-filter.dto';
 import { ComputingTransactionQueryFilter } from './dtos/computing-transaction-query-filter.dto';
+import { CreateJobDto } from './dtos/create-job.dto';
+import { SetJobEnvironmentDto } from './dtos/set-job-environment.dto';
+import { JobQueryFilter } from './dtos/job-query-filter.dto';
+import { UpdateJobDto } from './dtos/update-job.dto';
 
 export class ComputingMicroservice extends BaseService {
   lambdaFunctionName =
@@ -114,5 +118,62 @@ export class ComputingMicroservice extends BaseService {
       eventName: ComputingEventType.PROJECT_COMPUTING_DETAILS,
       project_uuid,
     });
+  }
+
+  public async createJob(body: CreateJobDto) {
+    const data = {
+      eventName: ComputingEventType.CREATE_JOB,
+      body: body.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async listJobs(query: JobQueryFilter) {
+    const data = {
+      eventName: ComputingEventType.LIST_JOBS,
+      query: query.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getJob(job_uuid: string) {
+    const data = {
+      eventName: ComputingEventType.GET_JOB,
+      job_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async setJobEnvironment(body: SetJobEnvironmentDto) {
+    const data = {
+      eventName: ComputingEventType.SET_JOB_ENVIRONMENT,
+      body: body.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async sendJobMessage(payload: string, job_uuid: string) {
+    const data = {
+      eventName: ComputingEventType.SEND_JOB_MESSAGE,
+      payload,
+      job_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async updateJob(body: UpdateJobDto) {
+    const data = {
+      eventName: ComputingEventType.UPDATE_JOB,
+      body,
+    };
+    return await this.callService(data);
+  }
+
+  public async deleteJob(job_uuid: string) {
+    const data = {
+      eventName: ComputingEventType.DELETE_JOB,
+      job_uuid,
+    };
+    return await this.callService(data);
   }
 }

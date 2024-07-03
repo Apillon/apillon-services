@@ -12,7 +12,7 @@ import {
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { ReferralService } from './referral.service';
-import { Ctx, Permissions, Validation, IpAddress } from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('referral')

@@ -4,6 +4,8 @@ import {
   ErrorOptions,
   ServiceName,
   ModelValidationException,
+  ValidationException,
+  IValidationError,
 } from '@apillon/lib';
 import { ComputingErrorCode } from '../config/types';
 
@@ -19,14 +21,22 @@ export class ComputingCodeException extends CodeException {
   }
 }
 
-export class ComputingValidationException extends ModelValidationException {
+export class ComputingModelValidationException extends ModelValidationException {
   constructor(model: Model) {
     super(model, ComputingErrorCode);
   }
 }
 
+export class ComputingValidationException extends ValidationException {
+  constructor(errors: IValidationError | IValidationError[]) {
+    super(errors, ComputingErrorCode);
+  }
+}
+
 export class ComputingNotFoundException extends ComputingCodeException {
-  constructor(code: ComputingErrorCode = ComputingErrorCode.BUCKET_NOT_FOUND) {
+  constructor(
+    code: ComputingErrorCode = ComputingErrorCode.CONTRACT_NOT_FOUND,
+  ) {
     super({ code, status: 404 });
   }
 }

@@ -9,8 +9,6 @@ import {
   ServiceName,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
-import { ReferralErrorCode } from '../../config/types';
-import { ReferralCodeException } from '../../lib/exceptions';
 import { UserAirdropTask } from './models/user-airdrop-task.model';
 import { TokenClaim } from './models/token-claim';
 import { ethers } from 'ethers';

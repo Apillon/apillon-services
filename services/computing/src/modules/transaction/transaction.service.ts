@@ -1,5 +1,5 @@
 import { PoolConnection, SerializeFor } from '@apillon/lib';
-import { ComputingValidationException } from '../../lib/exceptions';
+import { ComputingModelValidationException } from '../../lib/exceptions';
 import { Transaction } from './models/transaction.model';
 
 export class TransactionService {
@@ -7,7 +7,7 @@ export class TransactionService {
     transaction: Transaction,
     conn?: PoolConnection,
   ) {
-    await transaction.validateOrThrow(ComputingValidationException);
+    await transaction.validateOrThrow(ComputingModelValidationException);
     await transaction.insert(SerializeFor.INSERT_DB, conn);
 
     return transaction;

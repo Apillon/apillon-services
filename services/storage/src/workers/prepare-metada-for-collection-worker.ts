@@ -207,18 +207,24 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           metadataFURs,
           20,
           this.context,
-          async (metadataFUR) => {
+          async (metadataFUR: FileUploadRequest) => {
+            metadataFUR = new FileUploadRequest(metadataFUR, this.context);
+
             if (
               !(await s3Client.exists(
                 env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
                 metadataFUR.s3FileKey,
               ))
             ) {
-              //NOTE: Define flow, what happen in this case. My guess - we should probably throw error
               console.error(
-                'JSON file does not exists on s3 for File upload request. ',
+                `JSON file does not exists on s3 for File upload request. Updating FUR status to ${FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3}`,
                 metadataFUR,
               );
+
+              metadataFUR.fileStatus =
+                FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
+              await metadataFUR.update();
+
               return;
             }
             const file = await s3Client.get(
@@ -235,7 +241,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
               );
 
               if (collectionMetadata.useApillonIpfsGateway) {
-                fileContent.image = ipfsCluster.generateLink(
+                fileContent.image = await ipfsCluster.generateLink(
                   bucket.project_uuid,
                   imageFile.CIDv1,
                 );

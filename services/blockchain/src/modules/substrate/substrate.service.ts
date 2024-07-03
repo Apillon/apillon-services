@@ -86,7 +86,8 @@ export class SubstrateService {
         typesBundle = SubsocialTypesBundle;
         break;
       }
-      case SubstrateChain.ASTAR: {
+      case SubstrateChain.ASTAR:
+      case SubstrateChain.ACURAST: {
         keyring = new Keyring({ type: 'sr25519' });
         break;
       }
@@ -466,7 +467,7 @@ export class SubstrateService {
         }
       }
 
-      if (latestSuccess) {
+      if (latestSuccess !== null) {
         const dbWallet = new Wallet(wallet, context);
         await dbWallet.updateLastProcessedNonce(latestSuccess);
       }

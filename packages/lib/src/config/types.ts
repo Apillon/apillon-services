@@ -20,6 +20,7 @@ export enum SubstrateChain {
   SUBSOCIAL = 6,
   XSOCIAL = 7,
   ASTAR = 8,
+  ACURAST = 9,
 }
 
 export enum EvmChain {
@@ -271,6 +272,14 @@ export enum ComputingEventType {
   LIST_CLUSTER_WALLETS = 'list-cluster-wallets',
   PROJECT_COMPUTING_DETAILS = 'project-computing-details',
   ARCHIVE_CONTRACT = 'archive-contract',
+
+  CREATE_JOB = 'create-job',
+  LIST_JOBS = 'list-jobs',
+  GET_JOB = 'get-job',
+  SET_JOB_ENVIRONMENT = 'set-job-environment',
+  SEND_JOB_MESSAGE = 'send-job-message',
+  UPDATE_JOB = 'update-job',
+  DELETE_JOB = 'delete-job',
 }
 
 export enum ReferralEventType {
@@ -673,6 +682,7 @@ export enum ValidatorErrorCode {
   COMPUTING_CONTRACT_DATA_NOT_VALID = 42200210,
   COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID = 42200211,
   COMPUTING_FIELD_NOT_PRESENT = 42200212,
+  JOB_DATE_NOT_VALID = 42200213,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
@@ -954,6 +964,10 @@ export enum ProductCode {
   CONTRACT_ASTAR_CALL = 49,
   CONTRACT_ETHEREUM_CALL = 50,
   CONTRACT_SEPOLIA_CALL = 51,
+
+  COMPUTING_JOB_CREATE = 52,
+  COMPUTING_JOB_SET_ENVIRONMENT = 53,
+  COMPUTING_JOB_DELETE = 54,
 }
 
 export enum ProductService {
@@ -981,6 +995,7 @@ export enum ProductCategory {
   MOONBASE_CONTRACT = 'MOONBASE_CONTRACT',
   MOONBEAM_CONTRACT = 'MOONBEAM_CONTRACT',
   ASTAR_CONTRACT = 'ASTAR_CONTRACT',
+  ACURAST = 'ACURAST',
 }
 
 export enum EmailTemplate {

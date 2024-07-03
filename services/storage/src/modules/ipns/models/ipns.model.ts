@@ -354,7 +354,7 @@ export class Ipns extends UuidSqlModel {
 
     for (const item of data.items) {
       if (item.ipnsName) {
-        item.link = ipfsCluster.generateLink(
+        item.link = await ipfsCluster.generateLink(
           b.project_uuid,
           item.ipnsName,
           true,
@@ -375,7 +375,7 @@ export class Ipns extends UuidSqlModel {
       this.getContext(),
     ).getIpfsCluster();
 
-    this.link = ipfsCluster.generateLink(
+    this.link = await ipfsCluster.generateLink(
       this.project_uuid,
       this.ipnsName,
       true,

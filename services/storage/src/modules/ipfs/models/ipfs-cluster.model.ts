@@ -10,6 +10,7 @@ import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
 import { DbTables, StorageErrorCode } from '../../../config/types';
 import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
+import { IPFSService } from '../ipfs.service';
 
 export class IpfsCluster extends AdvancedSQLModel {
   public readonly tableName = DbTables.IPFS_CLUSTER;
@@ -387,13 +388,23 @@ export class IpfsCluster extends AdvancedSQLModel {
    * @param isIpns
    * @returns url
    */
-  public generateLink(
+  public async generateLink(
     project_uuid: string,
     cid: string,
     isIpns = false,
     path?: string,
+    convertToCidV1 = false,
   ) {
     let link = '';
+
+    if (!isIpns && convertToCidV1) {
+      const ipfsService = new IPFSService(
+        this.getContext(),
+        project_uuid,
+        true,
+      );
+      cid = await ipfsService.cidToCidV1(cid);
+    }
 
     if (this.subdomainGateway) {
       link =

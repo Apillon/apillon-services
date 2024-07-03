@@ -17,7 +17,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { Contract } from '../../modules/computing/models/contract.model';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { TransactionService } from '../../modules/transaction/transaction.service';
-import { PhalaClient } from '../../modules/services/phala.client';
+import { PhalaClient } from '../../modules/clients/phala.client';
 import { ContractAbi } from '../../modules/computing/models/contractAbi.model';
 
 export async function getPhalaEndpoint(context: Context) {

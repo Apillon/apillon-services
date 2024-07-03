@@ -1,3 +1,4 @@
+import { AcurastModule } from './modules/acurast/acurast.module';
 import { createRequestLogMiddleware } from '@apillon/modules-lib';
 import { ApiName } from '@apillon/lib';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
@@ -30,6 +31,7 @@ import { OasisModule } from './modules/oasis/oasis.module';
     ProjectModule,
     SocialModule,
     OasisModule,
+    AcurastModule,
   ],
   controllers: [AppController],
   providers: [],
