@@ -12,6 +12,8 @@ import { ServiceContext } from '@apillon/service-lib';
 import { UserAirdropTask } from './models/user-airdrop-task.model';
 import { TokenClaim } from './models/token-claim';
 import { ethers } from 'ethers';
+import { ReferralErrorCode } from '../../config/types';
+import { ReferralCodeException } from '../../lib/exceptions';
 
 export class AirdropService {
   /**
