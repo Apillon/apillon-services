@@ -6,7 +6,7 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
         INSERT INTO ${DbTables.ENDPOINT} (status, url, chain, chainType)
-        VALUES (5, 'wss://websocket-proxy-1.prod.gke.acurast.com', ${SubstrateChain.ACURAST},
+        VALUES (5, 'wss://canarynet-ws-1.acurast-h-server-2.papers.tech', ${SubstrateChain.ACURAST},
                 ${ChainType.SUBSTRATE})
         ;
     `);
