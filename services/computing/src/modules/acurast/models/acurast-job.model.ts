@@ -195,7 +195,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable,
-    serializable: serializableProfile,
+    serializable: serializableUpdateProfile,
     validators: [
       {
         resolver: enumInclusionValidator(AcurastJobStatus, true),

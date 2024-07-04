@@ -48,6 +48,42 @@ export class Transaction extends AdvancedSQLModel {
   public walletAddress: string;
 
   @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public refTable: string;
+
+  // TODO: we should use refId instead of contract_id
+  // @prop({
+  //   parser: { resolver: integerParser() },
+  //   populatable: [
+  //     PopulateFrom.DB,
+  //     PopulateFrom.SERVICE,
+  //     PopulateFrom.ADMIN,
+  //     PopulateFrom.PROFILE,
+  //   ],
+  //   serializable: [
+  //     SerializeFor.INSERT_DB,
+  //     SerializeFor.ADMIN,
+  //     SerializeFor.SERVICE,
+  //     SerializeFor.PROFILE,
+  //   ],
+  // })
+  // public refId?: number;
+
+  @prop({
     parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
