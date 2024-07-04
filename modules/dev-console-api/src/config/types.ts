@@ -2,6 +2,7 @@ export enum DbTables {
   USER = 'user',
   PROJECT = 'project',
   SERVICE_TYPE = 'service_type',
+  SERVICE_STATUS = 'service_status',
   SERVICE = 'service',
   PROJECT_USER = 'project_user',
   PROJECT_USER_PENDING_INVITATION = 'project_user_pending_invitation',
@@ -76,6 +77,7 @@ export enum ResourceNotFoundErrorCode {
   USER_EMAIL_NOT_EXISTS = 40404008,
   STRIPE_CUSTOMER_DOES_NOT_EXIST = 40404009,
   CREDIT_PACKAGE_DOES_NOT_EXIST = 40404010,
+  SERVICE_STATUS_DOES_NOT_EXISTS = 40404011,
 }
 
 /**
@@ -116,4 +118,20 @@ export enum InstructionType {
   W3_WARN = 3,
   VIDEO = 4,
   WIKI = 5,
+}
+
+/**
+ * Service Status Type Enum { Info, Error, Warning }
+ */
+export enum ServiceStatusType {
+  INFO = 1,
+  ERROR = 2,
+  WARNING = 3,
+}
+
+/**
+ * Service status error codes - 4005000.
+ */
+export enum ServiceStatusErrorCode {
+  INVALID_TYPE = 4005000,
 }

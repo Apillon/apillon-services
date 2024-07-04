@@ -169,48 +169,53 @@ export async function rebuildTestDatabases(): Promise<void> {
   console.info('initMigrations start....');
   await initMigrations();
   console.info('initMigrations success');
-  try {
-    const migrationResults = await Promise.allSettled(
-      Object.values(StageName)
-        .filter(
-          (stageName) =>
-            ![StageName.REFERRAL, StageName.DEV_CONSOLE].includes(stageName),
-        )
-        .map((stageName) => migrations[stageName].reset()),
-    );
 
-    // migrations using DB tables that depend on migrations above
-    migrationResults.push(
-      ...(await Promise.allSettled([
-        migrations[StageName.DEV_CONSOLE].reset(),
-        migrations[StageName.REFERRAL].reset(),
-      ])),
-    );
+  const stageNames = Object.values(StageName).filter(
+    (stageName) =>
+      ![StageName.REFERRAL, StageName.DEV_CONSOLE].includes(stageName),
+  );
 
-    for (const res of migrationResults) {
-      if (res.status === 'rejected') {
-        throw new Error(`Migration reset rejected with: ${res.reason}`);
-      }
+  for (const stageName of stageNames) {
+    try {
+      await migrations[stageName].reset();
+      console.log(`Migration ${stageName} reset successfully.`);
+    } catch (error) {
+      console.error(`Failed to reset migration ${stageName}:`, error);
+      throw error;
     }
-  } catch (err) {
-    console.error('error at migrations.reset()', err);
-    throw err;
   }
+
+  // migrations using DB tables that depend on migrations above
+  try {
+    await migrations[StageName.DEV_CONSOLE].reset();
+    console.log(`Migration ${StageName.DEV_CONSOLE} reset successfully.`);
+  } catch (error) {
+    console.error(`Failed to reset migration ${StageName.DEV_CONSOLE}:`, error);
+    throw error;
+  }
+
+  try {
+    await migrations[StageName.REFERRAL].reset();
+    console.log(`Migration ${StageName.REFERRAL} reset successfully.`);
+  } catch (error) {
+    console.error(`Failed to reset migration ${StageName.REFERRAL}:`, error);
+    throw error;
+  }
+
   await destroyTestMigrations();
   await initSeeds();
-  try {
-    const migrationResults = await Promise.allSettled(
-      Object.values(StageName).map((stageName) => seeds[stageName]?.reset()),
-    );
-    for (const res of migrationResults) {
-      if (res.status === 'rejected') {
-        throw new Error(`Migration reset rejected with: ${res.reason}`);
+  for (const stageName of Object.values(StageName)) {
+    if (seeds[stageName]?.reset) {
+      try {
+        await seeds[stageName].reset();
+        console.log(`Seed ${stageName} reset successfully.`);
+      } catch (error) {
+        console.error(`Failed to reset seed ${stageName}:`, error);
+        throw error;
       }
     }
-  } catch (err) {
-    console.error('error at seed.reset()', err);
-    throw err;
   }
+
   await destroyTestSeeds();
 }
 
