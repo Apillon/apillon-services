@@ -308,7 +308,8 @@ export class AcurastJob extends UuidSqlModel {
   }
 
   /**
-   * Get deployed jobs that need to be matched nad assigned to a processor (pending)
+   * Get deployed jobs that need to be matched and assigned to a processor (pending)
+   * Only queries jobs where the current date is between job.startTime and job.endTime
    * @returns {Promise<AcurastJob[]>}
    */
   public async getPendingJobs(): Promise<AcurastJob[]> {
@@ -317,7 +318,7 @@ export class AcurastJob extends UuidSqlModel {
       `
       SELECT *
       FROM ${DbTables.ACURAST_JOB}
-      WHERE startTime > NOW() AND endTime > NOW()
+      WHERE startTime < NOW() AND endTime > NOW()
       AND jobStatus = ${AcurastJobStatus.DEPLOYED}
       AND jobId IS NOT NULL
       AND status = ${SqlModelStatus.ACTIVE}
