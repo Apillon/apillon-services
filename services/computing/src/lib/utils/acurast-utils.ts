@@ -77,7 +77,7 @@ export async function deployAcurastJob(
     jobStatus: AcurastJobStatus.DEPLOYING,
     deployerAddress: response.data.address,
   });
-  await job.insert(SerializeFor.INSERT_DB, conn);
+  await job.update(SerializeFor.INSERT_DB, conn);
 }
 
 export async function setAcurastJobEnvironment(

@@ -94,9 +94,6 @@ export class TransactionStatusWorker extends BaseQueueWorker {
         transaction.transactionStatus = mapComputingTransactionStatus(
           res.transactionStatus,
         );
-        if (res.data) {
-          transaction.contract_id = parseInt(res.data);
-        }
         await transaction.update();
 
         // update contract if transaction was made on contract
