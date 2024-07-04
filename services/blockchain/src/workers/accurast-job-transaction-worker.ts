@@ -31,7 +31,7 @@ export class AcurastJobTransactionWorker extends SubstrateTransactionWorker {
       );
     // Update CONTRACT transactions
     console.log(
-      `Updating ${jobRegistrationTxs.length} contract instantiated transactions`,
+      `Updating ${jobRegistrationTxs.length} job registration transactions`,
     );
     for (const jobRegistrationTx of jobRegistrationTxs) {
       await this.updateJobRegistrationStoredTransaction(

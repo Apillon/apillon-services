@@ -31,7 +31,7 @@ import { Contract } from '../modules/computing/models/contract.model';
 import { ClusterTransactionLog } from '../modules/accounting/cluster-transaction-log.model';
 import { AcurastJob } from '../modules/acurast/models/acurast-job.model';
 
-function mapPhalaTransactionStatus(transactionStatus: TransactionStatus) {
+function mapComputingTransactionStatus(transactionStatus: TransactionStatus) {
   switch (transactionStatus) {
     case TransactionStatus.PENDING:
       return ComputingTransactionStatus.PENDING;
@@ -91,9 +91,12 @@ export class TransactionStatusWorker extends BaseQueueWorker {
           service: ServiceName.COMPUTING,
           data: res,
         });
-        transaction.transactionStatus = mapPhalaTransactionStatus(
+        transaction.transactionStatus = mapComputingTransactionStatus(
           res.transactionStatus,
         );
+        if (res.data) {
+          transaction.contract_id = parseInt(res.data);
+        }
         await transaction.update();
 
         // update contract if transaction was made on contract
