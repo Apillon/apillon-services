@@ -41,20 +41,40 @@ export class TransactionStatusWorker extends BaseQueueWorker {
       50,
       this.context,
       async (res: TransactionWebhookDataDto, ctx) => {
-        // console.info('processing webhook transaction: ', res);
+        console.info('processing webhook transaction: ', res);
         const transaction = await new TransactionRepository(
           ctx,
         ).populateByTransactionHash(res.transactionHash);
-        if (transaction.exists()) {
-          transaction.transactionStatus = res.transactionStatus;
-          await transaction.update();
+        if (!transaction.exists()) {
+          await this.writeEventLog({
+            logType: LogType.WARN,
+            message: `Transaction with hash ${res.transactionHash} not found.`,
+            service: ServiceName.CONTRACTS,
+            data: {
+              transactionHash: res.transactionHash,
+            },
+          });
+          return;
+        }
+        transaction.transactionStatus = res.transactionStatus;
+        await transaction.update();
 
-          // perform custom logic, depend of transactionType
-          const contractDeploy = await new ContractDeploy(
-            {},
-            this.context,
-          ).populateById(transaction.refId);
-          if (transaction.transactionStatus === TransactionStatus.CONFIRMED) {
+        const contractDeploy = await new ContractDeploy(
+          {},
+          this.context,
+        ).populateByUUID(transaction.refId);
+        if (!contractDeploy.exists()) {
+          await this.writeEventLog({
+            logType: LogType.WARN,
+            message: `Deployed contract with uuid ${transaction.refId} not found.`,
+            service: ServiceName.CONTRACTS,
+            data: {
+              contract_uuid: transaction.refId,
+            },
+          });
+        }
+        switch (transaction.transactionStatus) {
+          case TransactionStatus.CONFIRMED: {
             switch (transaction.transactionType) {
               case TransactionType.DEPLOY_CONTRACT: {
                 contractDeploy.contractStatus = ContractStatus.DEPLOYED;
@@ -68,16 +88,15 @@ export class TransactionStatusWorker extends BaseQueueWorker {
                 contractDeploy.contractStatus = ContractStatus.TRANSFERRED;
                 break;
               }
+              default:
+                return;
             }
-            await contractDeploy.update();
-          } else if (
-            [TransactionStatus.FAILED, TransactionStatus.ERROR].includes(
-              res.transactionStatus,
-            )
-          ) {
+            break;
+          }
+          case TransactionStatus.FAILED:
+          case TransactionStatus.ERROR: {
             //Refund credit if transaction failed
             contractDeploy.contractStatus = ContractStatus.FAILED;
-            await contractDeploy.update();
             //For ContractDeploy, reference for credit is contract. For other transaction_uuid se set as reference.
             const referenceTable =
               transaction.transactionType == TransactionType.DEPLOY_CONTRACT
@@ -95,20 +114,24 @@ export class TransactionStatusWorker extends BaseQueueWorker {
               'TransactionStatusWorker.runExecutor',
               ServiceName.CONTRACTS,
             );
+            break;
           }
-
-          await this.writeEventLog({
-            logType: LogType.INFO,
-            project_uuid: contractDeploy?.project_uuid,
-            message: `Contract ${contractDeploy.name} status updated`,
-            service: ServiceName.CONTRACTS,
-            data: {
-              contract_uuid: contractDeploy.contract_uuid,
-              contractStatus: contractDeploy.contractStatus,
-              updateTime: contractDeploy.updateTime,
-            },
-          });
+          default:
+            return;
         }
+
+        await contractDeploy.update();
+        await this.writeEventLog({
+          logType: LogType.INFO,
+          project_uuid: contractDeploy?.project_uuid,
+          message: `Status updated for deployed contract with UUID  ${contractDeploy.contract_uuid}.`,
+          service: ServiceName.CONTRACTS,
+          data: {
+            contract_uuid: contractDeploy.contract_uuid,
+            contractStatus: contractDeploy.contractStatus,
+            updateTime: contractDeploy.updateTime,
+          },
+        });
       },
     );
   }

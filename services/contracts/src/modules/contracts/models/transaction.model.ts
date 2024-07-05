@@ -80,11 +80,11 @@ export class Transaction extends AdvancedSQLModel {
   public refTable: string;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [SerializeFor.INSERT_DB],
   })
-  public refId: number;
+  public refId: string;
 
   @prop({
     parser: { resolver: integerParser() },

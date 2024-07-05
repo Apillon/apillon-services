@@ -11,7 +11,7 @@ export async function upgrade(
       \`chainId\`           INT          NOT NULL,
       \`transactionType\`   INT          NOT NULL,
       \`refTable\`          VARCHAR(100) NULL,
-      \`refId\`             INT          NULL,
+      \`refId\` VARCHAR(36) NULL,
       \`transactionStatus\` INT          NULL,
       \`transactionHash\`   VARCHAR(255) NULL,
       \`errorMessage\`      TEXT         NULL,
