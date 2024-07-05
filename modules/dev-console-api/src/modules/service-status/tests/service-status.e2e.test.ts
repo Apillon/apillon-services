@@ -32,37 +32,6 @@ describe('Service status tests', () => {
     await releaseStage(stage);
   });
 
-  describe('Get service statuses', () => {
-    test('Authorized user should be able to get service statuses', async () => {
-      const createdServiceStatus = {
-        message: 'Service unavailable',
-        type: ServiceStatusType.ERROR,
-        status: SqlModelStatus.ACTIVE,
-      };
-      const data = await stage.db.devConsole.paramExecute(`
-      INSERT INTO service_status (message, type, status)
-      VALUES ('${createdServiceStatus.message}', '${createdServiceStatus.type}', '${createdServiceStatus.status}')`);
-
-      const response = await request(stage.http)
-        .get('/service-status')
-        .set('Authorization', `Bearer ${testUser.token}`);
-
-      expect(response.status).toBe(200);
-      expect(response.body.data.items).toHaveLength(1);
-      const responseServiceStatus = response.body.data.items[0];
-      expect(responseServiceStatus.id).toBeDefined();
-      expect(responseServiceStatus.message).toBe(createdServiceStatus.message);
-      expect(responseServiceStatus.type).toBe(createdServiceStatus.type);
-      expect(responseServiceStatus.status).toBe(createdServiceStatus.status);
-      expect(responseServiceStatus.url).toBeNull();
-    });
-
-    test('Unauthorized user should not be able to get service statuses', async () => {
-      const response = await request(stage.http).get('/service-status');
-      expect(response.status).toBe(401);
-    });
-  });
-
   describe('Create service status', () => {
     test('Admin can create new service status', async () => {
       const requestBody = {

@@ -866,6 +866,7 @@ export enum CacheKeyPrefix {
 
   PLATFORM_STATISTICS = 'platform-statistics',
   PROJECT_OVERVIEW = 'project-overview',
+  SERVICE_STATUS = 'service-status',
 
   URL_SHORTENER = 'url-shortener',
 }

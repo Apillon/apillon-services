@@ -2,26 +2,30 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { ServiceStatus } from './models/service_status.model';
 import {
+  CacheKeyPrefix,
   CodeException,
   ModelValidationException,
   ValidatorErrorCode,
+  invalidateCachePrefixes,
 } from '@apillon/lib';
 import { ResourceNotFoundErrorCode } from '../../config/types';
-import { CreateServiceStatusDto } from './dtos/create-service-status.dto';
-import { UpdateServiceStatusDto } from './dtos/update-service-status.dto';
+import { CreateOrUpdateServiceStatusDto } from './dtos/create-or-update-service-status.dto';
 
 @Injectable()
 export class ServiceStatusService {
-  async getServiceStatusList(context: DevConsoleApiContext) {
-    return await new ServiceStatus({}, context).listServiceStatuses(context);
-  }
-
   async createServiceStatus(
     context: DevConsoleApiContext,
-    data: CreateServiceStatusDto,
+    data: CreateOrUpdateServiceStatusDto,
   ) {
     const serviceStatus = new ServiceStatus(data, context);
-    return await serviceStatus.insert();
+    await serviceStatus.validateOrThrow(
+      ModelValidationException,
+      ValidatorErrorCode,
+    );
+    const createdServiceStatus = await serviceStatus.insert();
+    await invalidateCachePrefixes([CacheKeyPrefix.SERVICE_STATUS]);
+
+    return createdServiceStatus;
   }
 
   async updateServiceStatus(
@@ -30,7 +34,7 @@ export class ServiceStatusService {
       data,
     }: {
       serviceStatusId: number;
-      data: UpdateServiceStatusDto;
+      data: CreateOrUpdateServiceStatusDto;
     },
     context: DevConsoleApiContext,
   ) {
@@ -53,6 +57,8 @@ export class ServiceStatusService {
     );
 
     await serviceStatus.update();
+
+    await invalidateCachePrefixes([CacheKeyPrefix.SERVICE_STATUS]);
 
     return serviceStatus;
   }

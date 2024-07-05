@@ -4,19 +4,21 @@ import {
   PopulateFrom,
   SerializeFor,
   enumInclusionValidator,
+  getQueryParams,
   prop,
   selectAndCountQuery,
 } from '@apillon/lib';
 import {
+  BadRequestErrorCode,
   DbTables,
-  ServiceStatusErrorCode,
   ServiceStatusType,
 } from '../../../config/types';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DevConsoleApiContext } from '../../../context';
+import { ServiceStatusQueryFilter } from '../dtos/service-status-query-filter.dto';
 
 /**
- * Service Status model.
+ * Used to store alerts on the application. Modifiable from the admin panel.
  */
 export class ServiceStatus extends AdvancedSQLModel {
   public readonly tableName = DbTables.SERVICE_STATUS;
@@ -32,6 +34,7 @@ export class ServiceStatus extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.ADMIN,
+      SerializeFor.UPDATE_DB,
     ],
     populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE, PopulateFrom.DB],
     parser: { resolver: stringParser() },
@@ -46,6 +49,7 @@ export class ServiceStatus extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.ADMIN,
+      SerializeFor.UPDATE_DB,
     ],
     populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE, PopulateFrom.DB],
   })
@@ -59,29 +63,41 @@ export class ServiceStatus extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.ADMIN,
+      SerializeFor.UPDATE_DB,
     ],
     populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE, PopulateFrom.DB],
     validators: [
       {
         resolver: enumInclusionValidator(ServiceStatusType, false),
-        code: ServiceStatusErrorCode.INVALID_TYPE,
+        code: BadRequestErrorCode.INVALID_SERVICE_STATUS_TYPE,
       },
     ],
   })
   public type: ServiceStatusType;
 
-  public async listServiceStatuses(context: DevConsoleApiContext) {
-    const sqlQuery = {
-      qSelect: `SELECT ${this.generateSelectFields()}`,
-      qFrom: `FROM ${DbTables.SERVICE_STATUS}`,
+  public async listServiceStatuses(
+    context: DevConsoleApiContext,
+    filter: ServiceStatusQueryFilter,
+  ) {
+    const fieldMap = {
+      id: 's.id',
     };
-    const serviceStatuses = await selectAndCountQuery(
-      context.mysql,
-      sqlQuery,
-      {},
-      'id',
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      's',
+      fieldMap,
+      filter.serialize(),
     );
 
-    return serviceStatuses;
+    const sqlQuery = {
+      qSelect: `SELECT ${this.generateSelectFields('s', '', SerializeFor.SELECT_DB)}`,
+      qFrom: `FROM \`${DbTables.SERVICE_STATUS}\` s
+        WHERE (@type IS NULL OR s.type = @type) AND (@status IS NULL OR s.status = @status)`,
+      qFilter: `
+        ORDER BY ${filters.orderStr}
+        LIMIT ${filters.limit} OFFSET ${filters.offset};`,
+    };
+
+    return selectAndCountQuery(context.mysql, sqlQuery, params, 's.id');
   }
 }

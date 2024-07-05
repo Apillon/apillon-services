@@ -9,14 +9,12 @@ import {
   prop,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import {
-  ServiceStatusErrorCode,
-  ServiceStatusType,
-} from '../../../config/types';
+import { BadRequestErrorCode, ServiceStatusType } from '../../../config/types';
 
-export class UpdateServiceStatusDto extends ModelBase {
+export class CreateOrUpdateServiceStatusDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
+    serializable: [SerializeFor.ADMIN, SerializeFor.PROFILE],
     populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
     validators: [
       {
@@ -30,12 +28,14 @@ export class UpdateServiceStatusDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
+    serializable: [SerializeFor.ADMIN, SerializeFor.PROFILE],
   })
   public url?: string;
 
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
+    serializable: [SerializeFor.ADMIN, SerializeFor.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),
@@ -43,7 +43,7 @@ export class UpdateServiceStatusDto extends ModelBase {
       },
       {
         resolver: enumInclusionValidator(ServiceStatusType, false),
-        code: ServiceStatusErrorCode.INVALID_TYPE,
+        code: BadRequestErrorCode.INVALID_SERVICE_STATUS_TYPE,
       },
     ],
   })
@@ -54,13 +54,9 @@ export class UpdateServiceStatusDto extends ModelBase {
    */
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
+    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    defaultValue: SqlModelStatus.ACTIVE,
   })
   public status: SqlModelStatus;
 }

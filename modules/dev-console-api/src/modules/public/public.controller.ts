@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Post,
+  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -12,13 +13,16 @@ import {
   Cache,
   CaptchaGuard,
   Ctx,
+  Permissions,
   Validation,
 } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { ContactFormDto } from './dtos/contact-form.dto';
 import { AuthGuard } from '../../guards/auth.guard';
 import { DevConsoleApiContext } from '../../context';
-import { CacheKeyPrefix, CacheKeyTTL } from '@apillon/lib';
+import { CacheKeyPrefix, CacheKeyTTL, DefaultUserRole } from '@apillon/lib';
+import { ServiceStatusQueryFilter } from '../service-status/dtos/service-status-query-filter.dto';
+import { ValidateFor } from '@apillon/lib';
 
 @Controller('public')
 @UseInterceptors(CacheInterceptor)
@@ -39,5 +43,20 @@ export class PublicController {
   })
   async getPlatformStatistics(@Ctx() context: DevConsoleApiContext) {
     return await this.publicService.getPlatformStatistics(context);
+  }
+
+  @Get('service-status')
+  @Permissions({ role: DefaultUserRole.USER })
+  @Validation({ dto: ServiceStatusQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  @Cache({
+    keyPrefix: CacheKeyPrefix.SERVICE_STATUS,
+    ttl: CacheKeyTTL.LONG * 24,
+  })
+  async getServiceStatuses(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: ServiceStatusQueryFilter,
+  ) {
+    return await this.publicService.getServiceStatusList(context, query);
   }
 }
