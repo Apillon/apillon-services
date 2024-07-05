@@ -136,7 +136,7 @@ export abstract class BaseService {
   protected async callDevService(payload, isAsync) {
     console.log(`Connecting to DEV server...`);
     const devSocket = Net.connect(
-      { port: this.devPort, timeout: 300000 },
+      { port: this.devPort, timeout: 300000, host: '127.0.0.1' },
       () => {
         console.log(`Connected to ${this.serviceName} dev socket`);
       },

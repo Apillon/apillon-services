@@ -11,6 +11,8 @@ import {
 import { User } from '../user/models/user.model';
 import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
+import { ServiceStatusQueryFilter } from '../service-status/dtos/service-status-query-filter.dto';
+import { ServiceStatus } from '../service-status/models/service_status.model';
 
 @Injectable()
 export class PublicService {
@@ -46,5 +48,12 @@ export class PublicService {
       // totalDevConsoleRequests,
       totalWalletTransactions,
     };
+  }
+
+  async getServiceStatusList(
+    context: DevConsoleApiContext,
+    query: ServiceStatusQueryFilter,
+  ) {
+    return await new ServiceStatus({}, context).getList(context, query);
   }
 }
