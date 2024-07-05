@@ -75,7 +75,7 @@ export class ServiceStatus extends AdvancedSQLModel {
   })
   public type: ServiceStatusType;
 
-  public async listServiceStatuses(
+  public async getList(
     context: DevConsoleApiContext,
     filter: ServiceStatusQueryFilter,
   ) {

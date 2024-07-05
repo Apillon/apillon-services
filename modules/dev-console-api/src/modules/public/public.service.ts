@@ -54,9 +54,6 @@ export class PublicService {
     context: DevConsoleApiContext,
     query: ServiceStatusQueryFilter,
   ) {
-    return await new ServiceStatus({}, context).listServiceStatuses(
-      context,
-      query,
-    );
+    return await new ServiceStatus({}, context).getList(context, query);
   }
 }

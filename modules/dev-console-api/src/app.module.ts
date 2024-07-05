@@ -23,13 +23,11 @@ import { SocialModule } from './modules/social/social.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { AcurastModule } from './modules/acurast/acurast.module';
 import { ContractsModule } from './modules/contracts/contracts.module';
-import { ServiceStatusModule } from './modules/service-status/service-status.module';
 
 @Module({
   imports: [
     UserModule,
     MySQLModule,
-    ServiceStatusModule,
     ProjectModule,
     ServicesModule,
     BucketModule,

@@ -7,9 +7,10 @@ import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ContextMiddleware } from './middlewares/context.middleware';
 import { AdminPanelModule } from './modules/admin-panel/admin-panel.module';
 import { MySQLModule } from './modules/database/mysql.module';
+import { ServiceStatusModule } from './modules/service-status/service-status.module';
 
 @Module({
-  imports: [MySQLModule, AdminPanelModule],
+  imports: [MySQLModule, AdminPanelModule, ServiceStatusModule],
   controllers: [],
   providers: [],
 })
