@@ -4,7 +4,6 @@ import {
   BlockchainMicroservice,
   EmailDataDto,
   EmailTemplate,
-  Lmas,
   Mailing,
   env,
 } from '@apillon/lib';

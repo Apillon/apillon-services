@@ -1,13 +1,11 @@
-import { DefaultUserRole, ValidateFor } from '@apillon/lib';
+import { DefaultUserRole } from '@apillon/lib';
 import {
   Body,
   Controller,
-  Get,
   Param,
   ParseIntPipe,
   Patch,
   Post,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
@@ -19,13 +17,12 @@ import { CreateOrUpdateServiceStatusDto } from './dtos/create-or-update-service-
 
 @Controller('service-status')
 @Permissions({ role: DefaultUserRole.ADMIN })
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, ValidationGuard)
 export class ServiceStatusController {
   constructor(private readonly serviceStatusService: ServiceStatusService) {}
 
   @Post()
   @Validation({ dto: CreateOrUpdateServiceStatusDto })
-  @UseGuards(ValidationGuard)
   async createServiceStatus(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateOrUpdateServiceStatusDto,
@@ -35,17 +32,13 @@ export class ServiceStatusController {
 
   @Patch(':service_status_id')
   @Validation({ dto: CreateOrUpdateServiceStatusDto })
-  @UseGuards(ValidationGuard)
   async updateServiceStatus(
     @Ctx() context: DevConsoleApiContext,
     @Body() data: CreateOrUpdateServiceStatusDto,
     @Param('service_status_id', ParseIntPipe) serviceStatusId: number,
   ) {
     return await this.serviceStatusService.updateServiceStatus(
-      {
-        data,
-        serviceStatusId: serviceStatusId,
-      },
+      { data, serviceStatusId },
       context,
     );
   }

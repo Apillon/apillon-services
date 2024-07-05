@@ -51,7 +51,7 @@ export class PublicController {
   @UseGuards(ValidationGuard, AuthGuard)
   @Cache({
     keyPrefix: CacheKeyPrefix.SERVICE_STATUS,
-    ttl: CacheKeyTTL.EXTRA_LONG,
+    ttl: CacheKeyTTL.EXTRA_LONG * 24, // 1 day,
   })
   async getServiceStatuses(
     @Ctx() context: DevConsoleApiContext,
