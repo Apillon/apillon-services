@@ -44,7 +44,8 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         conn,
       );
 
-      const nftWebhooks: TransactionWebhookDataDto[] = [];
+      const nftWebhookItemss: TransactionWebhookDataDto[] = [];
+      const contractWebhookItems: TransactionWebhookDataDto[] = [];
 
       if (transactions && transactions.length > 0) {
         for (let i = 0; i < transactions.length; i++) {
@@ -56,16 +57,20 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
               transaction.chain == EvmChain.ASTAR_SHIBUYA ||
               EvmChain.ASTAR)
           ) {
-            nftWebhooks.push(
-              new TransactionWebhookDataDto().populate({
-                id: transaction.id,
-                transactionHash: transaction.transactionHash,
-                referenceTable: transaction.referenceTable,
-                referenceId: transaction.referenceId,
-                transactionStatus: transaction.transactionStatus,
-                data: transaction.data,
-              }),
-            );
+            const dto = new TransactionWebhookDataDto().populate({
+              id: transaction.id,
+              transactionHash: transaction.transactionHash,
+              referenceTable: transaction.referenceTable,
+              referenceId: transaction.referenceId,
+              transactionStatus: transaction.transactionStatus,
+              data: transaction.data,
+            });
+            // TODO: temporary fix, read TODO bellow
+            if (transaction.referenceTable === 'contract') {
+              contractWebhookItems.push(dto);
+            } else {
+              nftWebhookItemss.push(dto);
+            }
           }
         }
       }
@@ -77,23 +82,29 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
        * sqsUrl and workerName. If those two are present in DB then we trigger the webhook for the
        * transactions otherwise we do nothing.
        */
-      const updates = [
+      const nftUpdates = [
         // Evm
         ...(await this.processWebhook(
-          nftWebhooks,
+          nftWebhookItemss,
           env.NFTS_AWS_WORKER_SQS_URL,
           'TransactionStatusWorker',
         )),
       ];
-
-      // console.log('updates: ', updates);
-      if (updates.length > 0) {
+      const contractUpdates = [
+        // Evm
+        ...(await this.processWebhook(
+          contractWebhookItems,
+          env.CONTRACTS_AWS_WORKER_SQS_URL,
+          'TransactionStatusWorker',
+        )),
+      ];
+      const updatedIds = [...nftUpdates, ...contractUpdates];
+      if (updatedIds.length > 0) {
         await this.context.mysql.paramExecute(
           `
             UPDATE \`${DbTables.TRANSACTION_QUEUE}\`
             SET webhookTriggered = NOW()
-            WHERE
-              id in (${updates.join(',')})`,
+            WHERE id in (${updatedIds.join(',')})`,
           null,
           conn,
         );
@@ -101,9 +112,9 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
         await this.writeEventLog(
           {
             logType: LogType.INFO,
-            message: `Triggered webhooks for ${updates.length} transactions!`,
+            message: `Triggered webhooks for ${nftUpdates.length} transactions!`,
             service: ServiceName.BLOCKCHAIN,
-            data: { updates },
+            data: { updates: nftUpdates },
           },
           LogOutput.EVENT_INFO,
         );
