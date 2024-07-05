@@ -12,7 +12,7 @@ import {
   TransactionQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
-import { ContractsErrorCode } from '../../config/types';
+import { ContractsErrorCode, ContractStatus } from '../../config/types';
 import {
   ContractsCodeException,
   ContractsException,
@@ -244,11 +244,10 @@ export class ContractsController {
   async callDeployedContract(params: { body: CallContractDTO }) {
     console.log(`Call contract: ${JSON.stringify(params.body)}`);
     const { contractDeploy, abi, transferOwnershipMethod } =
-      await this.contractService.getContracDeployWithMeta(
+      await this.contractService.getDeployedContractForCall(
         params.body.contract_uuid,
       );
 
-    // CALL
     try {
       AbiHelper.validateCallMethod(abi, params.body.methodName);
 

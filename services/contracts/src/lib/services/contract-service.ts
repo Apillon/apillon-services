@@ -20,13 +20,19 @@ import {
   TransactionStatus,
 } from '@apillon/lib';
 import { EVMContractClient } from '../../modules/clients/evm-contract.client';
-import { ContractStatus, DbTables, TransactionType } from '../../config/types';
+import {
+  ContractsErrorCode,
+  ContractStatus,
+  DbTables,
+  TransactionType,
+} from '../../config/types';
 import { Transaction } from '../../modules/contracts/models/transaction.model';
 import { v4 as uuidV4 } from 'uuid';
 import { ContractRepository } from '../repositores/contract-repository';
 import { TransactionRepository } from '../repositores/transaction-repository';
 import { ContractVersion } from '../../modules/contracts/models/contractVersion.model';
 import { ContractDeploy } from '../../modules/contracts/models/contractDeploy.model';
+import { ContractsCodeException } from '../exceptions';
 
 export class ContractService {
   private readonly context: ServiceContext;
@@ -174,12 +180,32 @@ export class ContractService {
     }
   }
 
-  async getContracDeployWithMeta(contract_uuid: string) {
+  async getDeployedContractForCall(contract_uuid: string) {
     const contractDeploy =
       await this.contractRepository.getDeployedContractByUUID(contract_uuid);
     const contractVersion = await new ContractVersion({}, this.context).getById(
       contractDeploy.version_id,
     );
+
+    switch (contractDeploy.contractStatus) {
+      case ContractStatus.DEPLOYED:
+        break;
+      case ContractStatus.TRANSFERRING:
+      case ContractStatus.TRANSFERRED:
+        throw new ContractsCodeException({
+          status: 500,
+          code: ContractsErrorCode.CONTRACT_OWNER_ERROR,
+          context: this.context,
+          sourceFunction: 'callDeployedContract',
+        });
+      default:
+        throw new ContractsCodeException({
+          status: 500,
+          code: ContractsErrorCode.CONTRACT_NOT_DEPLOYED,
+          context: this.context,
+          sourceFunction: 'callDeployedContract',
+        });
+    }
 
     return {
       contractDeploy,
@@ -253,10 +279,10 @@ export class ContractService {
       data: { contract_uuid: contractDeploy.contract_uuid },
     });
 
-    let transactionType = TransactionType.CALL_CONTRACT;
-    if (methodName === transferOwnershipMethod) {
-      transactionType = TransactionType.TRANSFER_CONTRACT_OWNERSHIP;
-    }
+    const transactionType =
+      methodName === transferOwnershipMethod
+        ? TransactionType.TRANSFER_CONTRACT_OWNERSHIP
+        : TransactionType.CALL_CONTRACT;
     await this.transactionRepository.createTransaction(
       new Transaction(
         {

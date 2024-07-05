@@ -184,6 +184,7 @@ export class ContractDeploy extends ProjectAccessModel {
   })
   public version_id: number;
 
+  // TODO: not inserted
   @prop({
     parser: { array: true },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -266,7 +267,7 @@ export class ContractDeploy extends ProjectAccessModel {
     ],
     defaultValue: ContractStatus.CREATED,
   })
-  public contractStatus: number;
+  public contractStatus: ContractStatus;
 
   @prop({
     parser: { resolver: stringParser() },

@@ -74,6 +74,8 @@ export class ContractRepository {
       throw new ContractsNotFoundException();
     }
 
+    contractDeploy.canAccess(this.context);
+
     return contractDeploy;
   }
 
