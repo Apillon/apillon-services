@@ -47,6 +47,7 @@ export enum ContractsErrorCode {
 export enum TransactionType {
   DEPLOY_CONTRACT = 1,
   CALL_CONTRACT = 2,
+  TRANSFER_CONTRACT_OWNERSHIP = 2,
 }
 
 export enum ContractStatus {
@@ -55,4 +56,6 @@ export enum ContractStatus {
   DEPLOYING = 2,
   DEPLOYED = 3,
   FAILED = 4,
+  TRANSFERRING = 5,
+  TRANSFERRED = 6,
 }

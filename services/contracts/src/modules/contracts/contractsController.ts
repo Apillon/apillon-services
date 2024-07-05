@@ -5,6 +5,7 @@ import {
   ContractsQueryFilter,
   CreateContractDTO,
   DeployedContractsQueryFilter,
+  Lmas,
   LogType,
   ServiceName,
   SmartContractType,
@@ -27,10 +28,16 @@ import { ContractDeploy } from './models/contractDeploy.model';
 export class ContractsController {
   private readonly context: ServiceContext;
   private readonly contractService: ContractService;
+  private logging: Lmas;
 
-  constructor(context: ServiceContext, contractService: ContractService) {
+  constructor(
+    context: ServiceContext,
+    contractService: ContractService,
+    logging: Lmas,
+  ) {
     this.context = context;
     this.contractService = contractService;
+    this.logging = logging;
   }
 
   //#region contract functions
@@ -236,35 +243,22 @@ export class ContractsController {
 
   async callDeployedContract(params: { body: CallContractDTO }) {
     console.log(`Call contract: ${JSON.stringify(params.body)}`);
-    const contractData = await this.contractService.getContractData(
-      params.body.contract_uuid,
-    );
+    const { contractDeploy, abi, transferOwnershipMethod } =
+      await this.contractService.getContracDeployWithMeta(
+        params.body.contract_uuid,
+      );
 
     // CALL
     try {
-      AbiHelper.validateCallMethod(contractData.abi, params.body.methodName);
+      AbiHelper.validateCallMethod(abi, params.body.methodName);
 
-      const txData = await this.contractService.createCallTransaction(
-        contractData.chain,
-        contractData.contractAddress,
-        contractData.abi,
+      return await this.contractService.callContract(
+        contractDeploy,
+        abi,
+        transferOwnershipMethod,
         params.body.methodName,
         params.body.methodArguments,
       );
-      const transactionData = await this.contractService.sendCallTransaction(
-        contractData.project_uuid,
-        contractData.contract_id,
-        contractData.contract_uuid,
-        contractData.deployerAddress,
-        contractData.chain,
-        txData,
-      );
-      await this.contractService.onContractCalled(
-        contractData.project_uuid,
-        contractData.contract_uuid,
-      );
-
-      return transactionData;
     } catch (e: unknown) {
       if (e instanceof AbiHelperError) {
         throw new ContractsValidationException({
@@ -273,7 +267,7 @@ export class ContractsController {
           message: e.message,
         });
       }
-      throw parseError(e, contractData.abi, 'constructorArguments');
+      throw parseError(e, abi, 'constructorArguments');
     }
   }
   //#endregion

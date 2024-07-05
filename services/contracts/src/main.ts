@@ -28,7 +28,11 @@ export async function processEvent(
     new Mailing(context),
     new Lmas(),
   );
-  const controller = new ContractsController(context, contractsService);
+  const controller = new ContractsController(
+    context,
+    contractsService,
+    new Lmas(),
+  );
 
   switch (event.eventName) {
     case ContractEventType.CONTRACTS_LIST:

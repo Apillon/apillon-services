@@ -2,8 +2,9 @@ import { ServiceContext } from '@apillon/service-lib';
 import {
   BlockchainMicroservice,
   ChainType,
-  DeployedContractsQueryFilter,
+  ContractsQueryFilter,
   CreateEvmTransactionDto,
+  DeployedContractsQueryFilter,
   EvmChain,
   Lmas,
   LogType,
@@ -17,16 +18,15 @@ import {
   SqlModelStatus,
   TransactionQueryFilter,
   TransactionStatus,
-  ContractsQueryFilter,
 } from '@apillon/lib';
 import { EVMContractClient } from '../../modules/clients/evm-contract.client';
-import { DbTables, TransactionType } from '../../config/types';
+import { ContractStatus, DbTables, TransactionType } from '../../config/types';
 import { Transaction } from '../../modules/contracts/models/transaction.model';
 import { v4 as uuidV4 } from 'uuid';
 import { ContractRepository } from '../repositores/contract-repository';
 import { TransactionRepository } from '../repositores/transaction-repository';
-import { ContractsNotFoundException } from '../exceptions';
 import { ContractVersion } from '../../modules/contracts/models/contractVersion.model';
+import { ContractDeploy } from '../../modules/contracts/models/contractDeploy.model';
 
 export class ContractService {
   private readonly context: ServiceContext;
@@ -75,7 +75,7 @@ export class ContractService {
     constructorArguments: unknown[],
     txData: string,
   ) {
-    const contractDeploy = this.contractRepository.newContractDeploy(
+    const contractDeploy = await this.contractRepository.newContractDeploy(
       project_uuid,
       name,
       description,
@@ -89,57 +89,51 @@ export class ContractService {
       contractDeploy.project_uuid,
       contractDeploy.contract_uuid,
     );
-    const conn = await this.mysql.start();
-    try {
-      const { data: transactionData } = await spendCreditAction(
-        this.context,
-        spendCredit,
-        () =>
-          this.blockchainService.createEvmTransaction(
-            new CreateEvmTransactionDto(
-              {
-                chain: chain,
-                transaction: txData,
-                referenceTable: DbTables.CONTRACT,
-                referenceId: contractDeploy.contract_uuid,
-                project_uuid: project_uuid,
-              },
-              this.context,
-            ),
+    const { data: transactionData } = await spendCreditAction(
+      this.context,
+      spendCredit,
+      () =>
+        this.blockchainService.createEvmTransaction(
+          new CreateEvmTransactionDto(
+            {
+              chain: chain,
+              transaction: txData,
+              referenceTable: DbTables.CONTRACT,
+              referenceId: contractDeploy.contract_uuid,
+              project_uuid: project_uuid,
+            },
+            this.context,
           ),
-      );
+        ),
+    );
+
+    await this.contractRepository.saveContractDeploy(
       contractDeploy.populate({
         contractAddress: transactionData.data,
         deployerAddress: transactionData.address,
         transactionHash: transactionData.transactionHash,
         status: SqlModelStatus.ACTIVE,
-      });
-      await this.contractRepository.saveContractDeploy(contractDeploy, conn);
-      await this.transactionRepository.saveTransaction(
-        new Transaction(
-          {
-            chainId: chain,
-            transactionType: TransactionType.DEPLOY_CONTRACT,
-            refTable: DbTables.CONTRACT,
-            refId: contractDeploy.id,
-            transactionHash: transactionData.transactionHash,
-            transactionStatus: TransactionStatus.PENDING,
-          },
-          this.context,
-        ),
-        conn,
-      );
-      await this.mysql.commit(conn);
+      }),
+    );
+    await this.transactionRepository.createTransaction(
+      new Transaction(
+        {
+          chainId: chain,
+          transactionType: TransactionType.DEPLOY_CONTRACT,
+          refTable: DbTables.CONTRACT,
+          refId: contractDeploy.id,
+          transactionHash: transactionData.transactionHash,
+          transactionStatus: TransactionStatus.PENDING,
+        },
+        this.context,
+      ),
+    );
 
-      return {
-        ...contractDeploy.serialize(),
-        project_uuid: contractDeploy.project_uuid,
-        contract_uuid: contractDeploy.contract_uuid,
-      };
-    } catch (e: unknown) {
-      await this.mysql.rollback(conn);
-      throw e;
-    }
+    return {
+      ...contractDeploy.serialize(),
+      project_uuid: contractDeploy.project_uuid,
+      contract_uuid: contractDeploy.contract_uuid,
+    };
   }
 
   async onContractDeployed(
@@ -180,26 +174,17 @@ export class ContractService {
     }
   }
 
-  async getContractData(contract_uuid: string) {
-    const contract =
-      await this.contractRepository.getContractByUUID(contract_uuid);
-    if (!contract) {
-      // TODO: this exception should be in controller
-      throw new ContractsNotFoundException();
-    }
-
+  async getContracDeployWithMeta(contract_uuid: string) {
+    const contractDeploy =
+      await this.contractRepository.getDeployedContractByUUID(contract_uuid);
     const contractVersion = await new ContractVersion({}, this.context).getById(
-      contract.version_id,
+      contractDeploy.version_id,
     );
 
     return {
-      project_uuid: contract.project_uuid,
-      contract_id: contract.id,
-      contract_uuid: contract.contract_uuid,
-      deployerAddress: contract.deployerAddress,
-      chain: contract.chain,
-      contractAddress: contract.contractAddress,
+      contractDeploy,
       abi: contractVersion.abi,
+      transferOwnershipMethod: contractVersion.transferOwnershipMethod,
     };
   }
 
@@ -223,68 +208,77 @@ export class ContractService {
     return await evmContractClient.createTransaction(method, callArguments);
   }
 
-  async sendCallTransaction(
-    project_uuid: string,
-    contract_id: number,
-    contract_uuid: string,
-    deployerAddress: string,
-    chain: EvmChain,
-    txData: string,
+  async callContract(
+    contractDeploy: ContractDeploy,
+    abi: unknown[],
+    transferOwnershipMethod: string,
+    methodName: string,
+    methodArguments: unknown[],
   ) {
-    const spendCredit = this.getCallContractSpendDto(chain, project_uuid);
-    const conn = await this.mysql.start();
-    try {
-      const { data: transactionData } = await spendCreditAction(
-        this.context,
-        spendCredit,
-        () =>
-          this.blockchainService.createEvmTransaction(
-            new CreateEvmTransactionDto({
-              chain,
-              transaction: txData,
-              fromAddress: deployerAddress,
-              referenceTable: DbTables.CONTRACT,
-              referenceId: contract_uuid,
-              project_uuid,
-              //minimumGas: 46000,
-              minimumGas: 96000,
-            }),
-          ),
-      );
-      await this.transactionRepository.saveTransaction(
-        new Transaction(
-          {
-            chainId: chain,
-            transactionType: TransactionType.CALL_CONTRACT,
-            refTable: DbTables.CONTRACT,
-            refId: contract_id,
-            transactionHash: transactionData.transactionHash,
-            transactionStatus: TransactionStatus.PENDING,
-            transaction_uuid: spendCredit.referenceId,
-          },
-          this.context,
+    const txData = await this.createCallTransaction(
+      contractDeploy.chain,
+      contractDeploy.contractAddress,
+      abi,
+      methodName,
+      methodArguments,
+    );
+    const spendCredit = this.getCallContractSpendDto(
+      contractDeploy.chain,
+      contractDeploy.project_uuid,
+    );
+    const { data: transactionData } = await spendCreditAction(
+      this.context,
+      spendCredit,
+      () =>
+        this.blockchainService.createEvmTransaction(
+          new CreateEvmTransactionDto({
+            chain: contractDeploy.chain,
+            transaction: txData,
+            fromAddress: contractDeploy.deployerAddress,
+            referenceTable: DbTables.CONTRACT,
+            referenceId: contractDeploy.contract_uuid,
+            project_uuid: contractDeploy.project_uuid,
+            //minimumGas: 46000,
+            minimumGas: 96000,
+          }),
         ),
-        conn,
-      );
-      await this.mysql.commit(conn);
-      return transactionData;
-    } catch (e: unknown) {
-      await this.mysql.rollback(conn);
-      // TODO: proper error
-      throw e;
-    }
-  }
-
-  async onContractCalled(project_uuid: string, contract_uuid: string) {
+    );
     await this.logging.writeLog({
       context: this.context,
-      project_uuid: project_uuid,
+      project_uuid: contractDeploy.project_uuid,
       logType: LogType.INFO,
       message: 'contract called',
       location: 'ContractsService/callContract',
       service: ServiceName.CONTRACTS,
-      data: { contract_uuid: contract_uuid },
+      data: { contract_uuid: contractDeploy.contract_uuid },
     });
+
+    let transactionType = TransactionType.CALL_CONTRACT;
+    if (methodName === transferOwnershipMethod) {
+      transactionType = TransactionType.TRANSFER_CONTRACT_OWNERSHIP;
+    }
+    await this.transactionRepository.createTransaction(
+      new Transaction(
+        {
+          chainId: contractDeploy.chain,
+          transactionType,
+          refTable: DbTables.CONTRACT,
+          refId: contractDeploy.id,
+          transactionHash: transactionData.transactionHash,
+          transactionStatus: TransactionStatus.PENDING,
+          transaction_uuid: spendCredit.referenceId,
+        },
+        this.context,
+      ),
+    );
+    if (transactionType === TransactionType.TRANSFER_CONTRACT_OWNERSHIP) {
+      await this.contractRepository.updateContractDeployStatus(
+        contractDeploy.id,
+        ContractStatus.TRANSFERRING,
+      );
+    }
+
+    return transactionData;
   }
 
   // PRIVATE METHODS
@@ -365,7 +359,7 @@ export class ContractService {
     query: TransactionQueryFilter,
   ) {
     const contract =
-      await this.contractRepository.getContractByUUID(contract_uuid);
+      await this.contractRepository.getDeployedContractByUUID(contract_uuid);
 
     contract.canAccess(this.context);
 

@@ -64,7 +64,7 @@ export class TransactionRepository {
     return data?.length ? data[0].txCount : 0;
   }
 
-  async saveTransaction(transaction: Transaction, conn?: PoolConnection) {
+  async createTransaction(transaction: Transaction, conn?: PoolConnection) {
     await transaction.validateOrThrow(ContractsModelValidationException);
 
     await transaction.insert(SerializeFor.INSERT_DB, conn);

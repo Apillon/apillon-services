@@ -57,6 +57,23 @@ export class ContractVersion extends AdvancedSQLModel {
   })
   public bytecode: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public transferOwnershipMethod: string;
+
   public constructor(data: any, context: Context) {
     super(data, context);
   }

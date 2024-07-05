@@ -25,7 +25,7 @@ export class ContractRepository {
     this.context = context;
   }
 
-  newContractDeploy(
+  async newContractDeploy(
     project_uuid: string,
     name: string,
     description: string,
@@ -33,7 +33,7 @@ export class ContractRepository {
     contract_version_id: number,
     constructorArguments: unknown[],
   ) {
-    return new ContractDeploy(
+    const contractDeploy = new ContractDeploy(
       {
         contract_uuid: uuidV4(),
         project_uuid,
@@ -48,6 +48,9 @@ export class ContractRepository {
       },
       this.context,
     );
+    await contractDeploy.validateOrThrow(ContractsModelValidationException);
+
+    return contractDeploy;
   }
 
   async getList(filter: ContractsQueryFilter) {
@@ -61,7 +64,7 @@ export class ContractRepository {
     ).getDeployedList(filter);
   }
 
-  async getContractByUUID(contract_uuid: string) {
+  async getDeployedContractByUUID(contract_uuid: string) {
     const contractDeploy = await new ContractDeploy(
       {},
       this.context,
@@ -112,5 +115,24 @@ export class ContractRepository {
     await contractDeploy.insert(SerializeFor.INSERT_DB, conn);
 
     return contractDeploy;
+  }
+
+  async updateContractDeployStatus(
+    contract_deploy_id: number,
+    contractStatus: ContractStatus,
+    conn?: PoolConnection,
+  ) {
+    await this.context.mysql.paramExecute(
+      `
+        UPDATE \`${DbTables.CONTRACT_DEPLOY}\`
+        SET contractStatus=@contractStatus
+        WHERE id = @contract_deploy_id;
+      `,
+      {
+        contract_deploy_id,
+        contractStatus,
+      },
+      conn,
+    );
   }
 }

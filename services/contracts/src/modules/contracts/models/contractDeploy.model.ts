@@ -18,7 +18,6 @@ import {
   ContractStatus,
   DbTables,
 } from '../../../config/types';
-import { Abi } from 'abitype/zod';
 
 export class ContractDeploy extends ProjectAccessModel {
   public readonly tableName = DbTables.CONTRACT_DEPLOY;
@@ -75,6 +74,52 @@ export class ContractDeploy extends ProjectAccessModel {
     ],
   })
   public project_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ContractsErrorCode.DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public name: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public description: string;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -140,56 +185,6 @@ export class ContractDeploy extends ProjectAccessModel {
   public version_id: number;
 
   @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-    ],
-    validators: [
-      // {
-      //   resolver: presenceValidator(),
-      //   code: ValidatorErrorCode.DATA_NOT_PRESENT,
-      // },
-    ],
-  })
-  public custom_bytecode: string;
-
-  @prop({
-    parser: { resolver: Abi.parse },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-    ],
-    validators: [
-      // {
-      //   resolver: presenceValidator(),
-      //   code: ValidatorErrorCode.DATA_NOT_PRESENT,
-      // },
-    ],
-  })
-  public custom_abi: unknown[];
-
-  @prop({
     parser: { array: true },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
@@ -202,51 +197,55 @@ export class ContractDeploy extends ProjectAccessModel {
   })
   public constructorArguments: any[];
 
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ContractsErrorCode.DATA_NOT_PRESENT,
-      },
-    ],
-  })
-  public name: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
-  })
-  public description: string;
+  // @prop({
+  //   parser: { resolver: stringParser() },
+  //   populatable: [
+  //     PopulateFrom.DB,
+  //     PopulateFrom.SERVICE,
+  //     PopulateFrom.ADMIN,
+  //     PopulateFrom.PROFILE,
+  //   ],
+  //   serializable: [
+  //     SerializeFor.INSERT_DB,
+  //     SerializeFor.UPDATE_DB,
+  //     SerializeFor.ADMIN,
+  //     SerializeFor.SERVICE,
+  //     SerializeFor.APILLON_API,
+  //     SerializeFor.PROFILE,
+  //   ],
+  //   validators: [
+  //     // {
+  //     //   resolver: presenceValidator(),
+  //     //   code: ValidatorErrorCode.DATA_NOT_PRESENT,
+  //     // },
+  //   ],
+  // })
+  // public custom_bytecode: string;
+  //
+  // @prop({
+  //   parser: { resolver: Abi.parse },
+  //   populatable: [
+  //     PopulateFrom.DB,
+  //     PopulateFrom.SERVICE,
+  //     PopulateFrom.ADMIN,
+  //     PopulateFrom.PROFILE,
+  //   ],
+  //   serializable: [
+  //     SerializeFor.INSERT_DB,
+  //     SerializeFor.UPDATE_DB,
+  //     SerializeFor.ADMIN,
+  //     SerializeFor.SERVICE,
+  //     SerializeFor.APILLON_API,
+  //     SerializeFor.PROFILE,
+  //   ],
+  //   validators: [
+  //     // {
+  //     //   resolver: presenceValidator(),
+  //     //   code: ValidatorErrorCode.DATA_NOT_PRESENT,
+  //     // },
+  //   ],
+  // })
+  // public custom_abi: unknown[];
 
   @prop({
     parser: { resolver: integerParser() },

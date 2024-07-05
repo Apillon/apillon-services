@@ -6,18 +6,19 @@ export async function upgrade(
   await queryFn(
     `CREATE TABLE IF NOT EXISTS \`${DbTables.CONTRACT_VERSION}\`
      (
-       \`id\`          INT      NOT NULL AUTO_INCREMENT,
-       \`status\`      INT      NULL,
+       \`id\`                      INT          NOT NULL AUTO_INCREMENT,
+       \`status\`                  INT          NULL,
 
-       \`contract_id\` INT      NOT NULL,
-       \`version\`     INT      NOT NULL,
-       \`abi\`         JSON     NOT NULL,
-       \`bytecode\`    TEXT     NOT NULL,
+       \`contract_id\`             INT          NOT NULL,
+       \`version\`                 INT          NOT NULL,
+       \`abi\`                     JSON         NOT NULL,
+       \`bytecode\`                TEXT         NOT NULL,
+       \`transferOwnershipMethod\` VARCHAR(255) NULL,
 
-       \`createTime\`  DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
-       \`createUser\`  INT      NULL,
-       \`updateTime\`  DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-       \`updateUser\`  INT      NULL,
+       \`createTime\`              DATETIME     NULL DEFAULT CURRENT_TIMESTAMP,
+       \`createUser\`              INT          NULL,
+       \`updateTime\`              DATETIME     NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+       \`updateUser\`              INT          NULL,
 
        PRIMARY KEY (\`id\`),
        UNIQUE KEY \`contract_id_version_unique_key\` (\`contract_id\`, \`version\`),
