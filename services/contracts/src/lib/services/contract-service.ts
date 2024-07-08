@@ -104,7 +104,7 @@ export class ContractService {
             {
               chain: chain,
               transaction: txData,
-              referenceTable: DbTables.CONTRACT,
+              referenceTable: DbTables.CONTRACT_DEPLOY,
               referenceId: spendCredit.referenceId,
               project_uuid: project_uuid,
             },
@@ -126,7 +126,7 @@ export class ContractService {
         {
           chainId: chain,
           transactionType: TransactionType.DEPLOY_CONTRACT,
-          refTable: DbTables.CONTRACT,
+          refTable: DbTables.CONTRACT_DEPLOY,
           refId: spendCredit.referenceId,
           transactionHash: transactionData.transactionHash,
           transactionStatus: TransactionStatus.PENDING,
@@ -261,7 +261,7 @@ export class ContractService {
             chain: contractDeploy.chain,
             transaction: txData,
             fromAddress: contractDeploy.deployerAddress,
-            referenceTable: DbTables.CONTRACT,
+            referenceTable: DbTables.CONTRACT_DEPLOY,
             referenceId: contractDeploy.contract_uuid,
             project_uuid: contractDeploy.project_uuid,
             //minimumGas: 46000,
@@ -288,7 +288,7 @@ export class ContractService {
         {
           chainId: contractDeploy.chain,
           transactionType,
-          refTable: DbTables.CONTRACT,
+          refTable: DbTables.CONTRACT_DEPLOY,
           refId: contractDeploy.contract_uuid,
           transactionHash: transactionData.transactionHash,
           transactionStatus: TransactionStatus.PENDING,
@@ -326,7 +326,7 @@ export class ContractService {
       {
         project_uuid: project_uuid,
         product_id,
-        referenceTable: DbTables.CONTRACT,
+        referenceTable: DbTables.CONTRACT_DEPLOY,
         referenceId: contract_uuid,
         location: 'ContractsService.createContract',
         service: ServiceName.CONTRACTS,
@@ -390,7 +390,7 @@ export class ContractService {
     contract.canAccess(this.context);
 
     const transactionQuery = new TransactionQueryFilter(query).populate({
-      refTable: DbTables.CONTRACT,
+      refTable: DbTables.CONTRACT_DEPLOY,
       refId: contract.id,
     });
 

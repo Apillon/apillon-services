@@ -54,7 +54,7 @@ export class TransactionRepository {
       `
         SELECT COUNT(*) as txCount
         FROM \`${DbTables.TRANSACTION}\` t
-               INNER JOIN \`${DbTables.CONTRACT}\` c ON t.refId = c.id
+               INNER JOIN \`${DbTables.CONTRACT_DEPLOY}\` c ON t.refId = c.contract_uuid
         WHERE c.project_uuid = @project_uuid
           AND t.status <> ${SqlModelStatus.DELETED};
       `,

@@ -105,7 +105,7 @@ export class Transaction extends AdvancedSQLModel {
     ],
     defaultValue: TransactionStatus.PENDING,
   })
-  public transactionStatus: number;
+  public transactionStatus: TransactionStatus;
 
   @prop({
     parser: { resolver: stringParser() },
