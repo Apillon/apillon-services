@@ -53,6 +53,17 @@ export class Contract extends ProjectAccessModel {
 
   @prop({
     parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.WORKER,
+      SerializeFor.LOGGER,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public id: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,

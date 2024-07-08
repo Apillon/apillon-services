@@ -60,6 +60,17 @@ export class Invoice extends AdvancedSQLModel {
   public invoice_uuid: string;
 
   @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.WORKER,
+      SerializeFor.LOGGER,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public id: number;
+
+  @prop({
     parser: { resolver: floatParser() },
     populatable: [PopulateFrom.DB],
     serializable: [

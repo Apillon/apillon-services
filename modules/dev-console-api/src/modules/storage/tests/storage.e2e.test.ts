@@ -608,7 +608,7 @@ describe('Storage tests', () => {
       test('User should be able to delete file', async () => {
         const response = await request(stage.http)
           .delete(
-            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
+            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.file_uuid}`,
           )
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
@@ -616,7 +616,7 @@ describe('Storage tests', () => {
         let f: File = await new File(
           {},
           stage.context.storage,
-        ).populateDeletedById(deleteBucketTestFile1.id);
+        ).populateDeletedByUUID(deleteBucketTestFile1.file_uuid);
         expect(f.status).toBe(SqlModelStatus.DELETED);
 
         //Check if bucket size was decreased
@@ -628,8 +628,8 @@ describe('Storage tests', () => {
         expect(tmpB.size).toBeLessThan(bucketForDeleteTests.size);
 
         //Check that other files were not affected / deleted
-        f = await new File({}, stage.context.storage).populateById(
-          testFile2.id,
+        f = await new File({}, stage.context.storage).populateByUUID(
+          testFile2.file_uuid,
         );
         expect(f.exists()).toBeTruthy();
         expect(
@@ -654,14 +654,15 @@ describe('Storage tests', () => {
       test('User should be able to restore file', async () => {
         const response = await request(stage.http)
           .patch(
-            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.id}/restore`,
+            `/storage/${bucketForDeleteTests.bucket_uuid}/file/${deleteBucketTestFile1.file_uuid}/restore`,
           )
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
-        const f: File = await new File({}, stage.context.storage).populateById(
-          deleteBucketTestFile1.id,
-        );
+        const f: File = await new File(
+          {},
+          stage.context.storage,
+        ).populateByUUID(deleteBucketTestFile1.file_uuid);
         expect(f.exists()).toBeTruthy();
 
         //Check if bucket size was increased
@@ -745,14 +746,15 @@ describe('Storage tests', () => {
       test('User should NOT be able to delete ANOTHER USER file', async () => {
         const response = await request(stage.http)
           .delete(
-            `/storage/${bucketForAccessTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
+            `/storage/${bucketForAccessTests.bucket_uuid}/file/${deleteBucketTestFile1.file_uuid}`,
           )
           .set('Authorization', `Bearer ${testUser2.token}`);
         expect(response.status).toBe(403);
 
-        const f: File = await new File({}, stage.context.storage).populateById(
-          deleteBucketTestFile1.id,
-        );
+        const f: File = await new File(
+          {},
+          stage.context.storage,
+        ).populateByUUID(deleteBucketTestFile1.file_uuid);
         expect(f.exists()).toBeTruthy();
       });
 
@@ -767,13 +769,13 @@ describe('Storage tests', () => {
       test('Admin User should NOT be able to delete a file', async () => {
         const response = await request(stage.http)
           .delete(
-            `/storage/${bucketForAccessTests.bucket_uuid}/file/${deleteBucketTestFile1.id}`,
+            `/storage/${bucketForAccessTests.bucket_uuid}/file/${deleteBucketTestFile1.file_uuid}`,
           )
           .set('Authorization', `Bearer ${adminTestUser.token}`);
         expect(response.status).toBe(403);
 
         const f: File = await new File({}, stage.context.storage).populateById(
-          deleteBucketTestFile1.id,
+          deleteBucketTestFile1.file_uuid,
         );
         expect(f.exists()).toBeTruthy();
       });

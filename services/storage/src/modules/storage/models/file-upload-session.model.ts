@@ -44,6 +44,17 @@ export class FileUploadSession extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.LOGGER,
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+    ],
+  })
+  public id: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,

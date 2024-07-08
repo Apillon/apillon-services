@@ -92,6 +92,17 @@ export class Collection extends ProjectAccessModel {
   public collection_uuid: string;
 
   @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+      SerializeFor.LOGGER,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
+
+  @prop({
     parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.DB,
