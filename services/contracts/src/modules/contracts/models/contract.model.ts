@@ -14,12 +14,13 @@ import {
   SerializeFor,
   SmartContractType,
   SqlModelStatus,
+  UuidSqlModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { ContractsErrorCode, DbTables } from '../../../config/types';
 import { ContractVersion } from './contractVersion.model';
 
-export class Contract extends ProjectAccessModel {
+export class Contract extends UuidSqlModel {
   public readonly tableName = DbTables.CONTRACT;
 
   public constructor(data: any, context: Context) {
@@ -50,17 +51,6 @@ export class Contract extends ProjectAccessModel {
     ],
   })
   public contract_uuid: string;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [
-      SerializeFor.WORKER,
-      SerializeFor.LOGGER,
-      SerializeFor.SERVICE,
-    ],
-  })
-  public id: number;
 
   @prop({
     parser: { resolver: integerParser() },

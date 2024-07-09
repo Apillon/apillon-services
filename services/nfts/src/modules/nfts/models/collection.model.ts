@@ -15,6 +15,7 @@ import {
   SqlModelStatus,
   ChainType,
   SubstrateChain,
+  UuidSqlModel,
 } from '@apillon/lib';
 import {
   booleanParser,
@@ -29,7 +30,7 @@ import {
 } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 
-export class Collection extends ProjectAccessModel {
+export class Collection extends UuidSqlModel {
   public readonly tableName = DbTables.COLLECTION;
 
   public constructor(data: any, context: Context) {
@@ -90,17 +91,6 @@ export class Collection extends ProjectAccessModel {
     ],
   })
   public collection_uuid: string;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    serializable: [
-      SerializeFor.SERVICE,
-      SerializeFor.WORKER,
-      SerializeFor.LOGGER,
-    ],
-    populatable: [PopulateFrom.DB],
-  })
-  public id: number;
 
   @prop({
     parser: { resolver: stringParser() },

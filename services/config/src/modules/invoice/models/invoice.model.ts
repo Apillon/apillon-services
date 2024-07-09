@@ -10,12 +10,13 @@ import {
   InvoicesQueryFilter,
   presenceValidator,
   PoolConnection,
+  UuidSqlModel,
 } from '@apillon/lib';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 
-export class Invoice extends AdvancedSQLModel {
+export class Invoice extends UuidSqlModel {
   public readonly tableName = DbTables.INVOICE;
 
   @prop({
@@ -58,17 +59,6 @@ export class Invoice extends AdvancedSQLModel {
     fakeValue: () => uuidV4(),
   })
   public invoice_uuid: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [
-      SerializeFor.WORKER,
-      SerializeFor.LOGGER,
-      SerializeFor.SERVICE,
-    ],
-  })
-  public id: number;
 
   @prop({
     parser: { resolver: floatParser() },
