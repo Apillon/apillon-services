@@ -55,12 +55,7 @@ export class Transaction extends AdvancedSQLModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
     ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.SERVICE],
     validators: [],
   })
   public refTable: string;
