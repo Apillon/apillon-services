@@ -31,6 +31,8 @@ import { FileUploadSession } from '../modules/storage/models/file-upload-session
 import { WorkerName } from './worker-executor';
 import { Readable } from 'stream';
 
+// Maximum file size for which we will check if it is HTML. Currently approx. 1MB
+const MAX_HTML_SIZE_IN_B = 1000000;
 export class SyncToIPFSWorker extends BaseQueueWorker {
   public constructor(
     workerDefinition: WorkerDefinition,
@@ -116,11 +118,16 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         );
         if (needsHtmlValidation) {
           for (const file of filesToProcess) {
+            const filex = file;
             let fileStream = await s3Client.get(
               env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
               file.s3FileKey,
             );
-            let isHtml = await isStreamHtmlFile(fileStream.Body as Readable);
+            let isHtml =
+              !fileStream.ContentLength ||
+              fileStream.ContentLength < MAX_HTML_SIZE_IN_B
+                ? await isStreamHtmlFile(fileStream.Body as Readable)
+                : false;
             if (isHtml) {
               throw new StorageCodeException({
                 code: StorageErrorCode.HTML_FILES_NOT_ALLOWED,
