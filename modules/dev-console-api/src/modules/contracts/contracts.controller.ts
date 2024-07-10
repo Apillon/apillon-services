@@ -31,66 +31,7 @@ import { ContractsService } from './contracts.service';
 export class ContractsController {
   constructor(private readonly contractsService: ContractsService) {}
 
-  @Get('')
-  @Permissions({ role: RoleGroup.ProjectAccess })
-  @Validation({
-    dto: ContractsQueryFilter,
-    validateFor: ValidateFor.QUERY,
-  })
-  @UseGuards(ValidationGuard, AuthGuard)
-  async listContracts(
-    @Ctx() context: DevConsoleApiContext,
-    @Query() query: ContractsQueryFilter,
-  ) {
-    return await this.contractsService.listContracts(context, query);
-  }
-
-  @Get(':uuid/abi')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
-  @Validation({ dto: ContractAbiQuery, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
-  async getContractAbi(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') uuid: string,
-    @Query() query: ContractAbiQuery,
-  ) {
-    return await this.contractsService.getContractAbi(context, uuid, query);
-  }
-
-  @Post('/deploy')
-  @Validation({ dto: CreateContractDTO })
-  @UseGuards(ValidationGuard)
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
-  @UseGuards(AuthGuard)
-  async createContract(
-    @Ctx() context: DevConsoleApiContext,
-    @Body() body: CreateContractDTO,
-  ) {
-    return await this.contractsService.deployContract(context, body);
-  }
-
-  @Post('deployed/:uuid/call')
-  @Validation({ dto: CallContractDTO })
-  @UseGuards(ValidationGuard)
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
-  @UseGuards(AuthGuard)
-  async callDeployedContract(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') contract_uuid: string,
-    @Body() body: CallContractDTO,
-  ) {
-    body.contract_uuid = contract_uuid;
-    return await this.contractsService.callDeployedContract(context, body);
-  }
+  //#region ------------- CONTRACT DEPLOY ------------
 
   @Get('deployed')
   @Permissions({ role: RoleGroup.ProjectAccess })
@@ -114,6 +55,23 @@ export class ContractsController {
     @Param('uuid') uuid: string,
   ) {
     return await this.contractsService.getDeployedContract(context, uuid);
+  }
+
+  @Post('deployed/:uuid/call')
+  @Validation({ dto: CallContractDTO })
+  @UseGuards(ValidationGuard)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async callDeployedContract(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') contract_uuid: string,
+    @Body() body: CallContractDTO,
+  ) {
+    body.contract_uuid = contract_uuid;
+    return await this.contractsService.callDeployedContract(context, body);
   }
 
   @Get('deployed/:uuid/abi')
@@ -163,4 +121,66 @@ export class ContractsController {
       query,
     );
   }
+
+  //#endregion
+  //#region ------------- CONTRACTS -------------
+
+  @Post('deploy')
+  @Validation({ dto: CreateContractDTO })
+  @UseGuards(ValidationGuard)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async createContract(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: CreateContractDTO,
+  ) {
+    return await this.contractsService.deployContract(context, body);
+  }
+
+  @Get('')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({
+    dto: ContractsQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async listContracts(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: ContractsQueryFilter,
+  ) {
+    return await this.contractsService.listContracts(context, query);
+  }
+
+  @Get(':uuid')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async getContract(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+  ) {
+    return await this.contractsService.getContract(context, uuid);
+  }
+
+  @Get(':uuid/abi')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @Validation({ dto: ContractAbiQuery, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async getContractAbi(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+    @Query() query: ContractAbiQuery,
+  ) {
+    return await this.contractsService.getContractAbi(context, uuid, query);
+  }
+
+  //#endregion
 }

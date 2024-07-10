@@ -317,6 +317,7 @@ export enum SocialEventType {
 
 export enum ContractEventType {
   CONTRACTS_LIST = 'contracts-list',
+  GET_CONTRACT = 'get-contract',
   GET_CONTRACT_ABI = 'get-contract-abi',
   DEPLOY_CONTRACT = 'deploy-contract',
   CALL_DEPLOYED_CONTRACT = 'call-deployed-contract',
@@ -856,6 +857,9 @@ export enum CacheKeyPrefix {
   CONTRACT_UUID = 'contract-uuid',
   CONTRACT_VERSION_BY_CONTRACT_UUID = 'contract-version-by-contract-uuid',
   CONTRACT_VERSION = 'contract-version',
+  CONTRACT_VERSION_METHODS_BY_VERSION_ID = 'contract-version-methods-by-version-id',
+  CONTRACT_VERSION_METHODS_BY_VERSION_CONTRACT_UUID = 'contract-version-methods-by-version-contract-uuid',
+  GET_CONTRACT_BY_UUID_DEPLOY_WITH_VERSION_AND_METHODS = 'get-contract-by-uuid-deploy-with-version-and-methods',
   CONTRACT_ABI = 'contract-abi',
   BLOCKCHAIN_ENDPOINT = 'blockchain-endpoint',
 

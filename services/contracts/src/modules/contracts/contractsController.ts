@@ -12,18 +12,15 @@ import {
   TransactionQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
-import { ContractsErrorCode, ContractStatus } from '../../config/types';
+import { ContractsErrorCode } from '../../config/types';
 import {
   ContractsCodeException,
   ContractsException,
-  ContractsNotFoundException,
   ContractsValidationException,
 } from '../../lib/exceptions';
 import { parseError } from '../../lib/utils/contract-utils';
 import { ContractService } from '../../lib/services/contract-service';
 import { AbiHelper, AbiHelperError } from '../../lib/utils/abi-helper';
-import { ContractVersion } from './models/contractVersion.model';
-import { ContractDeploy } from './models/contractDeploy.model';
 
 export class ContractsController {
   private readonly context: ServiceContext;
@@ -46,20 +43,20 @@ export class ContractsController {
     return await this.contractService.listContracts(event.query);
   }
 
+  async getContract(event: { contract_uuid: string }) {
+    const contract =
+      await this.contractService.getContractWithVersionAndMethods(
+        event.contract_uuid,
+      );
+
+    return contract.serializeByContext(this.context);
+  }
+
   async getContractAbi(event: { uuid: string; query: ContractAbiQuery }) {
-    const contractVersion = await new ContractVersion(
-      {},
-      this.context,
-    ).populateByContractUuid(event.uuid);
-
-    //contractVersionDeploy.canAccess(this.context);
-    if (!contractVersion.exists()) {
-      throw new ContractsNotFoundException();
-    }
-
-    return event.query.solidityJson
-      ? contractVersion.abi
-      : new AbiHelper(contractVersion.abi).toHumanReadable();
+    return this.contractService.getContractAbi(
+      event.uuid,
+      event.query.solidityJson,
+    );
   }
 
   //#endregion
@@ -67,15 +64,9 @@ export class ContractsController {
   //#region deployed contract functions
 
   async getDeployedContract(event: { uuid: any }) {
-    const contractDeploy = await new ContractDeploy(
-      {},
-      this.context,
-    ).populateByUUID(event.uuid);
-
-    if (!contractDeploy.exists()) {
-      throw new ContractsNotFoundException();
-    }
-    contractDeploy.canAccess(this.context);
+    const contractDeploy = await this.contractService.getDeployedContract(
+      event.uuid,
+    );
 
     return contractDeploy.serializeByContext();
   }
@@ -84,26 +75,10 @@ export class ContractsController {
     uuid: string;
     query: ContractAbiQuery;
   }) {
-    const contractDeploy = await new ContractDeploy(
-      {},
-      this.context,
-    ).populateByUUID(event.uuid);
-
-    if (!contractDeploy.exists()) {
-      throw new ContractsNotFoundException();
-    }
-    contractDeploy.canAccess(this.context);
-
-    const contractVersion = await new ContractVersion({}, this.context).getById(
-      contractDeploy.version_id,
+    return await this.contractService.getDeployedContractAbi(
+      event.uuid,
+      event.query.solidityJson,
     );
-    if (!contractVersion.exists()) {
-      throw new ContractsNotFoundException();
-    }
-
-    return event.query.solidityJson
-      ? contractVersion.abi
-      : new AbiHelper(contractVersion.abi).toHumanReadable();
   }
 
   /**
@@ -120,33 +95,12 @@ export class ContractsController {
     );
   }
 
-  async archiveDeployedContract(event: {
-    contract_uuid: string;
-  }): Promise<ContractDeploy> {
-    const contractDeploy = await new ContractDeploy(
-      {},
-      this.context,
-    ).populateByUUID(event.contract_uuid);
+  async archiveDeployedContract(event: { contract_uuid: string }) {
+    const contractDeploy = await this.contractService.archiveDeployedContract(
+      event.contract_uuid,
+    );
 
-    await this.checkDeployedContract(contractDeploy, 'archiveContract()');
-
-    return await contractDeploy.markArchived();
-  }
-
-  private async checkDeployedContract(
-    contractDeploy: ContractDeploy,
-    sourceFunction: string,
-  ) {
-    // Contract must exist and be confirmed on blockchain
-    if (!contractDeploy.exists() || contractDeploy.contractAddress == null) {
-      throw new ContractsCodeException({
-        status: 500,
-        code: ContractsErrorCode.CONTRACT_OWNER_ERROR,
-        context: this.context,
-        sourceFunction,
-      });
-    }
-    contractDeploy.canAccess(this.context);
+    return contractDeploy.serializeByContext(this.context);
   }
 
   async listContractDeploys(event: { query: DeployedContractsQueryFilter }) {
@@ -243,10 +197,19 @@ export class ContractsController {
 
   async callDeployedContract(params: { body: CallContractDTO }) {
     console.log(`Call contract: ${JSON.stringify(params.body)}`);
-    const { contractDeploy, abi, transferOwnershipMethod } =
+    const contractDeploy =
       await this.contractService.getDeployedContractForCall(
         params.body.contract_uuid,
       );
+
+    if (!contractDeploy.canCallMethod(params.body.methodName)) {
+      throw new ContractsValidationException({
+        code: 'ABI_ERROR',
+        property: 'method',
+        message: `Not allowed to call method ${params.body.methodName}`,
+      });
+    }
+    const abi = contractDeploy.contractVersion.abi;
 
     try {
       AbiHelper.validateCallMethod(abi, params.body.methodName);
@@ -254,7 +217,7 @@ export class ContractsController {
       return await this.contractService.callContract(
         contractDeploy,
         abi,
-        transferOwnershipMethod,
+        contractDeploy.contractVersion.transferOwnershipMethod,
         params.body.methodName,
         params.body.methodArguments,
       );

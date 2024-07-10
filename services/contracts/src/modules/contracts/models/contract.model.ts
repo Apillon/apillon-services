@@ -1,25 +1,23 @@
 import {
-  CacheKeyPrefix,
-  CacheKeyTTL,
   ChainType,
   Context,
   ContractsQueryFilter,
   getQueryParams,
   PopulateFrom,
   presenceValidator,
-  ProjectAccessModel,
   prop,
-  runCachedFunction,
   selectAndCountQuery,
   SerializeFor,
   SmartContractType,
   SqlModelStatus,
+  UuidSqlModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { ContractsErrorCode, DbTables } from '../../../config/types';
 import { ContractVersion } from './contractVersion.model';
+import { ContractVersionMethod } from './contractVersionMethod.model';
 
-export class Contract extends ProjectAccessModel {
+export class Contract extends UuidSqlModel {
   public readonly tableName = DbTables.CONTRACT;
 
   public constructor(data: any, context: Context) {
@@ -142,7 +140,11 @@ export class Contract extends ProjectAccessModel {
   @prop({
     parser: { resolver: ContractVersion },
     populatable: [PopulateFrom.SERVICE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
   })
   public contractVersion: ContractVersion;
 
@@ -150,9 +152,11 @@ export class Contract extends ProjectAccessModel {
    * Info properties
    *****************************************************/
 
-  public async getList(filter: ContractsQueryFilter) {
+  public async getList(
+    filter: ContractsQueryFilter,
+    serializationStrategy = SerializeFor.SELECT_DB,
+  ) {
     const context = this.getContext();
-    const serializationStrategy = context.getSerializationStrategy();
     const fieldMap = {
       id: 'c.id',
     };
@@ -215,15 +219,12 @@ export class Contract extends ProjectAccessModel {
    * @returns Promise<ContractVersion>
    * @throws Error - if contract version has not been found for given params
    */
-  public async getLatestContractVersion(
+  public async getContractWithLatestVersion(
     contract_uuid: string,
   ): Promise<Contract> {
     const contractVersion = new ContractVersion({}, this.getContext());
-    const data = await runCachedFunction(
-      `${CacheKeyPrefix.CONTRACT_UUID}:${[contract_uuid].join(':')}`,
-      async () => {
-        return await this.getContext().mysql.paramExecute(
-          `
+    return await this.getContext().mysql.paramExecute(
+      `
             SELECT ${contractVersion.generateSelectFields('cv', 'cv')},
                    ${this.generateSelectFields('c', 'c')}
             FROM \`${DbTables.CONTRACT_VERSION}\` AS cv
@@ -234,30 +235,35 @@ export class Contract extends ProjectAccessModel {
             LIMIT 1
             ;
           `,
-          { contract_uuid },
-        );
-      },
-      CacheKeyTTL.EXTRA_LONG,
+      { contract_uuid },
     );
-    let contractVersionData = {};
-    let contractData = {};
-    for (const key in data[0]) {
-      if (key.startsWith('cv__')) {
-        contractVersionData[key.replace('cv__', '')] = data[0][key];
-      } else {
-        contractData[key.replace('c__', '')] = data[0][key];
-      }
-    }
-    contractVersion.populate(contractVersionData);
-    if (!contractVersion.exists()) {
-      throw new Error(`Contract version not found`);
-    }
-    const contract = new Contract(contractData, this.getContext());
-    if (!contract.exists()) {
-      throw new Error(`Contract not found`);
-    }
-    contract.contractVersion = contractVersion;
+  }
 
-    return contract;
+  public async getContractWithLatestVersionAndMethods(
+    contract_uuid: string,
+  ): Promise<{ [key: string]: unknown }[]> {
+    const contractVersion = new ContractVersion({}, this.getContext());
+    const contractVersionMethod = new ContractVersionMethod(
+      {},
+      this.getContext(),
+    );
+    return await this.getContext().mysql.paramExecute(
+      `
+        SELECT ${contractVersion.generateSelectFields('cv', 'cv')},
+               ${this.generateSelectFields('c', 'c')},
+               ${contractVersionMethod.generateSelectFields('cvm', 'cvm')}
+        FROM \`${DbTables.CONTRACT_VERSION}\` AS cv
+               LEFT JOIN \`${DbTables.CONTRACT}\` AS c ON (cv.contract_id = c.id)
+               LEFT JOIN \`${DbTables.CONTRACT_VERSION_METHOD}\` AS cvm
+                         ON (cvm.contract_version_id = cv.id)
+        WHERE c.contract_uuid = @contract_uuid
+          AND c.status = ${SqlModelStatus.ACTIVE}
+          AND cv.version = (SELECT MAX(cvtmp.version)
+                            FROM \`${DbTables.CONTRACT_VERSION}\` cvtmp
+                            WHERE cvtmp.contract_id = c.id)
+        ORDER BY cv.version DESC;
+      `,
+      { contract_uuid },
+    );
   }
 }

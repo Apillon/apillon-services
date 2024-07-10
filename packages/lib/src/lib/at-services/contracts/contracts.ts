@@ -33,6 +33,14 @@ export class ContractsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  async getContract(contract_uuid: string) {
+    const data = {
+      eventName: ContractEventType.GET_CONTRACT,
+      contract_uuid,
+    };
+    return await this.callService(data);
+  }
+
   async getContractAbi(uuid: string, query: ContractAbiQuery) {
     const data = {
       eventName: ContractEventType.GET_CONTRACT_ABI,
@@ -58,7 +66,7 @@ export class ContractsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getContract(uuid: string) {
+  public async getDeployedContract(uuid: string) {
     const data = {
       eventName: ContractEventType.GET_DEPLOYED_CONTRACT,
       uuid,
@@ -107,10 +115,10 @@ export class ContractsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async archiveDeployedContract(collection_uuid: string) {
+  public async archiveDeployedContract(contract_uuid: string) {
     const data = {
       eventName: ContractEventType.ARCHIVE_DEPLOYED_CONTRACT,
-      collection_uuid,
+      contract_uuid,
     };
     return await this.callService(data);
   }

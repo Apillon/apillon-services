@@ -29,6 +29,11 @@ export class ContractsService {
     return (await new ContractsMicroservice(context).listContracts(query)).data;
   }
 
+  async getContract(context: DevConsoleApiContext, contract_uuid: string) {
+    return (await new ContractsMicroservice(context).getContract(contract_uuid))
+      .data;
+  }
+
   async getContractAbi(
     context: DevConsoleApiContext,
     uuid: string,
@@ -116,7 +121,8 @@ export class ContractsService {
   }
 
   async getDeployedContract(context: DevConsoleApiContext, uuid: string) {
-    return (await new ContractsMicroservice(context).getContract(uuid)).data;
+    return (await new ContractsMicroservice(context).getDeployedContract(uuid))
+      .data;
   }
 
   async listDeployedContractTransactions(
@@ -134,11 +140,11 @@ export class ContractsService {
 
   async archiveDeployedContract(
     context: DevConsoleApiContext,
-    collection_uuid: string,
+    contract_uuid: string,
   ) {
     return (
       await new ContractsMicroservice(context).archiveDeployedContract(
-        collection_uuid,
+        contract_uuid,
       )
     ).data;
   }

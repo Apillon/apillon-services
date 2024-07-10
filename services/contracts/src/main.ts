@@ -37,6 +37,8 @@ export async function processEvent(
   switch (event.eventName) {
     case ContractEventType.CONTRACTS_LIST:
       return controller.listContracts(event);
+    case ContractEventType.GET_CONTRACT:
+      return controller.getContract(event);
     case ContractEventType.GET_CONTRACT_ABI:
       return controller.getContractAbi(event);
     case ContractEventType.DEPLOY_CONTRACT:

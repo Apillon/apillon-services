@@ -1,5 +1,4 @@
 import {
-  AdvancedSQLModel,
   CacheKeyPrefix,
   CacheKeyTTL,
   Context,
@@ -9,18 +8,25 @@ import {
   runCachedFunction,
   SerializeFor,
   SqlModelStatus,
+  UuidSqlModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { ContractsErrorCode, DbTables } from '../../../config/types';
 import { Abi } from 'abitype/zod';
+import { ContractVersionMethod } from './contractVersionMethod.model';
 
-export class ContractVersion extends AdvancedSQLModel {
+export class ContractVersion extends UuidSqlModel {
   public readonly tableName = DbTables.CONTRACT_VERSION;
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.SELECT_DB],
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [],
     validators: [
       {
         resolver: presenceValidator(),
@@ -33,7 +39,7 @@ export class ContractVersion extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.SELECT_DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.SELECT_DB],
     validators: [
       {
         resolver: presenceValidator(),
@@ -46,33 +52,34 @@ export class ContractVersion extends AdvancedSQLModel {
   @prop({
     parser: { resolver: Abi.parse },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.SELECT_DB],
+    serializable: [SerializeFor.PROFILE, SerializeFor.SELECT_DB],
   })
   public abi: unknown[];
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB, SerializeFor.SELECT_DB],
+    serializable: [SerializeFor.SELECT_DB],
   })
   public bytecode: string;
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB],
+    serializable: [SerializeFor.SELECT_DB],
+  })
+  public transferOwnershipMethod: string;
+
+  @prop({
+    parser: { array: true, resolver: ContractVersionMethod },
+    populatable: [PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
     ],
   })
-  public transferOwnershipMethod: string;
+  public methods: ContractVersionMethod[];
 
   public constructor(data: any, context: Context) {
     super(data, context);
@@ -98,11 +105,7 @@ export class ContractVersion extends AdvancedSQLModel {
       CacheKeyTTL.EXTRA_LONG,
     );
 
-    const contractVersion = new ContractVersion(data, this.getContext());
-    if (!contractVersion.exists()) {
-      throw new Error(`Contract version not found`);
-    }
-    return contractVersion;
+    return new ContractVersion(data, this.getContext());
   }
 
   async populateByContractUuid(uuid: string) {
@@ -126,10 +129,6 @@ export class ContractVersion extends AdvancedSQLModel {
       CacheKeyTTL.EXTRA_LONG,
     );
 
-    const contractVersion = new ContractVersion(data, this.getContext());
-    if (!contractVersion.exists()) {
-      throw new Error(`Contract version not found`);
-    }
-    return contractVersion;
+    return new ContractVersion(data, this.getContext());
   }
 }

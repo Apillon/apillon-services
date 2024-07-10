@@ -27,6 +27,7 @@ export abstract class UuidSqlModel extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.WORKER,
       SerializeFor.LOGGER,
+      SerializeFor.SELECT_DB,
     ],
     populatable: [PopulateFrom.DB],
   })

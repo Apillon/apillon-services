@@ -18,6 +18,8 @@ import {
   ContractStatus,
   DbTables,
 } from '../../../config/types';
+import { ContractVersion } from './contractVersion.model';
+import { ContractVersionMethod } from './contractVersionMethod.model';
 
 export class ContractDeploy extends ProjectAccessModel {
   public readonly tableName = DbTables.CONTRACT_DEPLOY;
@@ -329,13 +331,26 @@ export class ContractDeploy extends ProjectAccessModel {
   })
   public transactionHash: string;
 
+  @prop({
+    parser: { resolver: ContractVersion },
+    populatable: [PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public contractVersion: ContractVersion;
+
   /***************************************************
    * Info properties
    *****************************************************/
 
-  public async getDeployedList(filter: DeployedContractsQueryFilter) {
+  public async getDeployedList(
+    filter: DeployedContractsQueryFilter,
+    serializationStrategy = SerializeFor.SELECT_DB,
+  ) {
     const context = this.getContext();
-    const serializationStrategy = context.getSerializationStrategy();
     this.canAccess(context);
     // Map url query with sql fields.
     const fieldMap = {
@@ -395,5 +410,38 @@ export class ContractDeploy extends ProjectAccessModel {
 
   public override async populateByUUID(contract_uuid: string): Promise<this> {
     return super.populateByUUID(contract_uuid, 'contract_uuid');
+  }
+
+  canCallMethod(methodName: string): boolean {
+    if (!this.contractVersion.methods || !this.contractVersion.methods) {
+      throw new Error('contractVersion.methods not loaded');
+    }
+    return !!this.contractVersion.methods.find(
+      (method) => method.name === methodName && !!method.onlyOwner,
+    );
+  }
+
+  public async getContractDeployWithVersionAndMethods(
+    contract_deploy_uuid: string,
+  ): Promise<{ [key: string]: unknown }[]> {
+    const contractVersion = new ContractVersion({}, this.getContext());
+    const contractVersionMethod = new ContractVersionMethod(
+      {},
+      this.getContext(),
+    );
+    const query = `
+      SELECT ${contractVersion.generateSelectFields('cv', 'cv')},
+             ${this.generateSelectFields('c', 'c')},
+             ${contractVersionMethod.generateSelectFields('cvm', 'cvm')}
+      FROM \`${DbTables.CONTRACT_DEPLOY}\` AS c
+             LEFT JOIN \`${DbTables.CONTRACT_VERSION}\` AS cv ON (cv.id = c.version_id)
+             LEFT JOIN \`${DbTables.CONTRACT_VERSION_METHOD}\` AS cvm
+                       ON (cvm.contract_version_id = cv.id)
+      WHERE c.contract_uuid = @contract_deploy_uuid
+        AND c.status = ${SqlModelStatus.ACTIVE};
+    `;
+    return await this.getContext().mysql.paramExecute(query, {
+      contract_deploy_uuid,
+    });
   }
 }

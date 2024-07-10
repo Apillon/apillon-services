@@ -9,7 +9,6 @@ import {
   Lmas,
   LogType,
   Mailing,
-  MySql,
   ProductCode,
   ServiceName,
   SmartContractType,
@@ -30,13 +29,12 @@ import { Transaction } from '../../modules/contracts/models/transaction.model';
 import { v4 as uuidV4 } from 'uuid';
 import { ContractRepository } from '../repositores/contract-repository';
 import { TransactionRepository } from '../repositores/transaction-repository';
-import { ContractVersion } from '../../modules/contracts/models/contractVersion.model';
 import { ContractDeploy } from '../../modules/contracts/models/contractDeploy.model';
 import { ContractsCodeException } from '../exceptions';
+import { AbiHelper } from '../utils/abi-helper';
 
 export class ContractService {
   private readonly context: ServiceContext;
-  private mysql: MySql;
   private contractRepository: ContractRepository;
   private transactionRepository: TransactionRepository;
   private readonly blockchainService: BlockchainMicroservice;
@@ -57,7 +55,6 @@ export class ContractService {
     this.mailingClient = mailingClient;
     this.logging = logging;
     this.context = context;
-    this.mysql = context.mysql;
   }
 
   createDeployTransaction(
@@ -182,10 +179,9 @@ export class ContractService {
 
   async getDeployedContractForCall(contract_uuid: string) {
     const contractDeploy =
-      await this.contractRepository.getDeployedContractByUUID(contract_uuid);
-    const contractVersion = await new ContractVersion({}, this.context).getById(
-      contractDeploy.version_id,
-    );
+      await this.contractRepository.getContractDeployWithVersionAndMethods(
+        contract_uuid,
+      );
 
     switch (contractDeploy.contractStatus) {
       case ContractStatus.DEPLOYED:
@@ -207,11 +203,7 @@ export class ContractService {
         });
     }
 
-    return {
-      contractDeploy,
-      abi: contractVersion.abi,
-      transferOwnershipMethod: contractVersion.transferOwnershipMethod,
-    };
+    return contractDeploy;
   }
 
   async createCallTransaction(
@@ -362,6 +354,12 @@ export class ContractService {
     );
   }
 
+  async getContractWithVersionAndMethods(contract_uuid: string) {
+    return await this.contractRepository.getContractWithVersionAndMethods(
+      contract_uuid,
+    );
+  }
+
   async listContractDeploys(query: DeployedContractsQueryFilter) {
     return await this.contractRepository.getDeployedList(
       new DeployedContractsQueryFilter(query),
@@ -385,13 +383,13 @@ export class ContractService {
     query: TransactionQueryFilter,
   ) {
     const contract =
-      await this.contractRepository.getDeployedContractByUUID(contract_uuid);
+      await this.contractRepository.getContractDeployByUUID(contract_uuid);
 
     contract.canAccess(this.context);
 
     const transactionQuery = new TransactionQueryFilter(query).populate({
       refTable: DbTables.CONTRACT_DEPLOY,
-      refId: contract.id,
+      refId: contract.contract_uuid,
     });
 
     return this.transactionRepository.getList(transactionQuery);
@@ -420,7 +418,7 @@ export class ContractService {
 
     // load from DB
     const { contractVersion, ...contract } =
-      await this.contractRepository.getLatestContractVersion(contract_uuid);
+      await this.contractRepository.getContractWithLatestVersion(contract_uuid);
 
     return {
       contract_version_id: contractVersion.id,
@@ -428,5 +426,47 @@ export class ContractService {
       bytecode: contractVersion.bytecode,
       contractType: contract.contractType,
     };
+  }
+
+  async archiveDeployedContract(contract_uuid: string) {
+    const contractDeploy =
+      await this.contractRepository.getContractDeployByUUID(contract_uuid);
+
+    return await contractDeploy.markArchived();
+  }
+
+  async getContractAbi(contract_uuid: string, solidityJson: boolean) {
+    const contractVersion =
+      await this.contractRepository.getContractVersionByContractUuid(
+        contract_uuid,
+      );
+
+    return solidityJson
+      ? contractVersion.abi
+      : new AbiHelper(contractVersion.abi).toHumanReadable();
+  }
+
+  async getDeployedContract(contract_deploy_uuid: string) {
+    return await this.contractRepository.getContractDeployWithVersionAndMethods(
+      contract_deploy_uuid,
+    );
+  }
+
+  async getDeployedContractAbi(
+    contract_deploy_uuid: string,
+    solidityJson: boolean,
+  ) {
+    const contractDeploy =
+      await this.contractRepository.getContractDeployByUUID(
+        contract_deploy_uuid,
+      );
+    const contractVersion =
+      await this.contractRepository.getContractVersionById(
+        contractDeploy.version_id,
+      );
+
+    return solidityJson
+      ? contractVersion.abi
+      : new AbiHelper(contractVersion.abi).toHumanReadable();
   }
 }
