@@ -205,20 +205,18 @@ export function generateRandomCode(
   return code;
 }
 
+const htmlCheckRegex = new RegExp(/<[^>]+>|<[^>]+\/>/g);
+
 export async function isStreamHtmlFile(fileStream: Readable) {
   return new Promise<boolean>((resolve, reject) => {
     let data = '';
     fileStream.setEncoding('utf8');
     fileStream.on('data', (chunk: string) => {
-      data += chunk.trim();
-      if (data.startsWith('<!DOCTYPE html') || data.startsWith('<html')) {
+      data = chunk.trim();
+      // Regex that checks if data is has <something> or <something/>
+      if (htmlCheckRegex.test(data)) {
         fileStream.destroy();
         resolve(true);
-        return;
-      }
-      if (data) {
-        fileStream.destroy();
-        resolve(false);
         return;
       }
     });
