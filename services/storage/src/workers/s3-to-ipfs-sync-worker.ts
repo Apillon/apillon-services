@@ -110,8 +110,12 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         bucket.bucketType == BucketType.STORAGE ||
         bucket.bucketType == BucketType.NFT_METADATA
       ) {
+        const filesToProcess = files.slice(
+          0,
+          env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS,
+        );
         if (needsHtmlValidation) {
-          for (const file of files) {
+          for (const file of filesToProcess) {
             let fileStream = await s3Client.get(
               env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
               file.s3FileKey,
@@ -166,7 +170,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
             this.context,
             `${this.constructor.name}/runExecutor`,
             bucket,
-            files.slice(0, env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS),
+            filesToProcess,
             data?.wrapWithDirectory,
             data?.wrappingDirectoryPath,
           )
