@@ -130,6 +130,9 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
             }
           }
 
+          session.sessionStatus = FileUploadSessionStatus.VALIDATION_PASSED;
+          await session.update();
+
           // If all files are not HTML we call the same worker again with needsHtmlValidation set to false
           if (
             ![AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(

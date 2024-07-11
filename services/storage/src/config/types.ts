@@ -178,6 +178,10 @@ export enum FileUploadSessionStatus {
    * Validation failed before uploading to IPFS
    */
   VALIDATION_FAILED = 4,
+  /**
+   * Validation before uploading to IPFS passed
+   */
+  VALIDATION_PASSED = 5,
 }
 
 export enum BucketWebhookAuthMethod {
