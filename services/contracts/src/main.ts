@@ -1,6 +1,7 @@
 import {
   BlockchainMicroservice,
   ContractEventType,
+  ContractMSEventType,
   Lmas,
   Mailing,
 } from '@apillon/lib';
@@ -17,7 +18,7 @@ import { TransactionRepository } from './lib/repositores/transaction-repository'
  * @returns service response
  */
 export async function processEvent(
-  event,
+  event: ContractMSEventType,
   context: ServiceContext,
 ): Promise<any> {
   const contractsService = new ContractService(
@@ -36,27 +37,29 @@ export async function processEvent(
 
   switch (event.eventName) {
     case ContractEventType.CONTRACTS_LIST:
-      return controller.listContracts(event);
+      return controller.listContracts(event.body.query);
     case ContractEventType.GET_CONTRACT:
-      return controller.getContract(event);
+      return controller.getContract(event.body.contract_uuid);
     case ContractEventType.GET_CONTRACT_ABI:
-      return controller.getContractAbi(event);
+      return controller.getContractAbi(event.body.query);
     case ContractEventType.DEPLOY_CONTRACT:
-      return controller.deployContract(event);
+      return controller.deployContract(event.body);
     case ContractEventType.CALL_DEPLOYED_CONTRACT:
-      return controller.callDeployedContract(event);
+      return controller.callDeployedContract(event.body);
     case ContractEventType.DEPLOYED_CONTRACTS_LIST:
-      return controller.listContractDeploys(event);
+      return controller.listContractDeploys(event.body.query);
     case ContractEventType.GET_DEPLOYED_CONTRACT:
-      return controller.getDeployedContract(event);
+      return controller.getDeployedContract(event.body.contract_uuid);
     case ContractEventType.GET_DEPLOYED_CONTRACT_ABI:
-      return controller.getDeployedContractAbi(event);
+      return controller.getDeployedContractAbi(event.body.query);
     case ContractEventType.PROJECT_DEPLOYED_CONTRACT_DETAILS:
-      return controller.getProjectDeployedContractDetails(event);
+      return controller.getProjectDeployedContractDetails(
+        event.body.project_uuid,
+      );
     case ContractEventType.ARCHIVE_DEPLOYED_CONTRACT:
-      return controller.archiveDeployedContract(event);
+      return controller.archiveDeployedContract(event.body.contract_uuid);
     case ContractEventType.LIST_DEPLOYED_CONTRACT_TRANSACTIONS:
-      return controller.listDeployedContractTransactions(event);
+      return controller.listDeployedContractTransactions(event.body.query);
     default:
       throw new Error('Invalid Contract Event Type');
   }

@@ -8,6 +8,7 @@ import { ContractTransactionQueryFilter } from './dtos/transaction-query-filter.
 import { CallContractDTO } from './dtos/call-contract.dto';
 import { ContractAbiQueryDTO } from './dtos/contract-abi-query.dto';
 import { ContractsQueryFilter } from './dtos/contract-query-filter.dto';
+import { ContractMSEventType } from './eventTypes';
 
 export class ContractsMicroservice extends BaseService {
   lambdaFunctionName =
@@ -25,78 +26,81 @@ export class ContractsMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
-  async listContracts(params: ContractsQueryFilter) {
-    const data = {
+  async emitEvent(event: ContractMSEventType) {
+    return await this.callService(event);
+  }
+
+  async listContracts(query: ContractsQueryFilter) {
+    return await this.emitEvent({
       eventName: ContractEventType.CONTRACTS_LIST,
-      query: params.serialize(),
-    };
-    return await this.callService(data);
+      body: {
+        query,
+      },
+    });
   }
 
   async getContract(contract_uuid: string) {
-    const data = {
+    return await this.emitEvent({
       eventName: ContractEventType.GET_CONTRACT,
-      contract_uuid,
-    };
-    return await this.callService(data);
+      body: {
+        contract_uuid,
+      },
+    });
   }
 
   async getContractAbi(query: ContractAbiQueryDTO) {
-    const data = {
+    return await this.emitEvent({
       eventName: ContractEventType.GET_CONTRACT_ABI,
-      query,
-    };
-    return await this.callService(data);
+      body: {
+        query,
+      },
+    });
   }
 
-  public async deployContract(params: CreateContractDTO) {
-    const data = {
+  public async deployContract(body: CreateContractDTO) {
+    return await this.emitEvent({
       eventName: ContractEventType.DEPLOY_CONTRACT,
-      body: params.serialize(),
-    };
-    return await this.callService(data);
+      body,
+    });
   }
 
-  public async callDeployedContract(params: CallContractDTO) {
-    const data = {
+  public async callDeployedContract(body: CallContractDTO) {
+    return await this.emitEvent({
       eventName: ContractEventType.CALL_DEPLOYED_CONTRACT,
-      body: params.serialize(),
-    };
-    return await this.callService(data);
+      body,
+    });
   }
 
-  public async getDeployedContract(uuid: string) {
-    const data = {
+  public async getDeployedContract(contract_uuid: string) {
+    return await this.emitEvent({
       eventName: ContractEventType.GET_DEPLOYED_CONTRACT,
-      uuid,
-    };
-    return await this.callService(data);
+      body: { contract_uuid },
+    });
   }
 
   public async getDeployedContractAbi(query: ContractAbiQueryDTO) {
-    const data = {
+    return await this.emitEvent({
       eventName: ContractEventType.GET_DEPLOYED_CONTRACT_ABI,
-      query,
-    };
-    return await this.callService(data);
+      body: { query },
+    });
   }
 
-  public async listDeployedContracts(params: DeployedContractsQueryFilter) {
-    const data = {
+  public async listDeployedContracts(query: DeployedContractsQueryFilter) {
+    return await this.emitEvent({
       eventName: ContractEventType.DEPLOYED_CONTRACTS_LIST,
-      query: params.serialize(),
-    };
-    return await this.callService(data);
+      body: { query },
+    });
   }
 
   public async listDeployedContractTransactions(
-    params: ContractTransactionQueryFilter,
+    query: ContractTransactionQueryFilter,
   ) {
-    const data = {
+    return await this.emitEvent({
       eventName: ContractEventType.LIST_DEPLOYED_CONTRACT_TRANSACTIONS,
-      query: params.serialize(),
-    };
-    return await this.callService(data);
+      body: {
+        query,
+      },
+    });
   }
 
   public async getProjectDeployedContractsDetails(
@@ -104,18 +108,16 @@ export class ContractsMicroservice extends BaseService {
   ): Promise<{
     data: { numOfContracts: number; transactionCount: number };
   }> {
-    const data = {
+    return await this.emitEvent({
       eventName: ContractEventType.PROJECT_DEPLOYED_CONTRACT_DETAILS,
-      project_uuid,
-    };
-    return await this.callService(data);
+      body: { project_uuid },
+    });
   }
 
   public async archiveDeployedContract(contract_uuid: string) {
-    const data = {
+    return await this.emitEvent({
       eventName: ContractEventType.ARCHIVE_DEPLOYED_CONTRACT,
-      contract_uuid,
-    };
-    return await this.callService(data);
+      body: { contract_uuid },
+    });
   }
 }

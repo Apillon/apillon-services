@@ -16,7 +16,6 @@ import {
   spendCreditAction,
   SpendCreditDto,
   SqlModelStatus,
-  TransactionQueryFilter,
   TransactionStatus,
 } from '@apillon/lib';
 import { EVMContractClient } from '../../modules/clients/evm-contract.client';
@@ -456,9 +455,9 @@ export class ContractService {
       : new AbiHelper(contractVersion.abi).toHumanReadable();
   }
 
-  async getDeployedContract(contract_deploy_uuid: string) {
+  async getDeployedContract(contract_uuid: string) {
     return await this.contractRepository.getContractDeployWithVersionAndMethods(
-      contract_deploy_uuid,
+      contract_uuid,
     );
   }
 

@@ -33,25 +33,25 @@ export class ContractsController {
 
   //#region contract functions
 
-  async listContracts(event: { query: ContractsQueryFilter }) {
+  async listContracts(query: ContractsQueryFilter) {
     return await this.contractService.listContracts(
-      new ContractsQueryFilter(event.query),
+      new ContractsQueryFilter(query),
     );
   }
 
-  async getContract(event: { contract_uuid: string }) {
+  async getContract(contract_uuid: string) {
     const contract =
       await this.contractService.getContractWithVersionAndMethods(
-        event.contract_uuid,
+        contract_uuid,
       );
 
     return contract.serializeByContext(this.context);
   }
 
-  async getContractAbi(event: { query: ContractAbiQueryDTO }) {
+  async getContractAbi(query: ContractAbiQueryDTO) {
     return this.contractService.getContractAbi(
-      event.query.contract_uuid,
-      event.query.solidityJson,
+      query.contract_uuid,
+      query.solidityJson,
     );
   }
 
@@ -59,62 +59,57 @@ export class ContractsController {
 
   //#region deployed contract functions
 
-  async getDeployedContract(event: { uuid: any }) {
-    const contractDeploy = await this.contractService.getDeployedContract(
-      event.uuid,
-    );
+  async getDeployedContract(contract_uuid: string) {
+    const contractDeploy =
+      await this.contractService.getDeployedContract(contract_uuid);
 
     return contractDeploy.serializeByContext();
   }
 
-  async getDeployedContractAbi(event: { query: ContractAbiQueryDTO }) {
+  async getDeployedContractAbi(query: ContractAbiQueryDTO) {
     return await this.contractService.getDeployedContractAbi(
-      event.query.contract_uuid,
-      event.query.solidityJson,
+      query.contract_uuid,
+      query.solidityJson,
     );
   }
 
   /**
    * Get contracts details for a project by project_uuid.
-   * @param {{ project_uuid: string }} - uuid of the project
+   * @param project_uuid
    */
-  async getProjectDeployedContractDetails({
-    project_uuid,
-  }: {
-    project_uuid: string;
-  }): Promise<{ numOfContracts: number; contractTransactionCount: number }> {
+  async getProjectDeployedContractDetails(
+    project_uuid: string,
+  ): Promise<{ numOfContracts: number; contractTransactionCount: number }> {
     return await this.contractService.getProjectDeployedContractDetails(
       project_uuid,
     );
   }
 
-  async archiveDeployedContract(event: { contract_uuid: string }) {
-    const contractDeploy = await this.contractService.archiveDeployedContract(
-      event.contract_uuid,
-    );
+  async archiveDeployedContract(contract_uuid: string) {
+    const contractDeploy =
+      await this.contractService.archiveDeployedContract(contract_uuid);
 
     return contractDeploy.serializeByContext(this.context);
   }
 
-  async listContractDeploys(event: { query: DeployedContractsQueryFilter }) {
+  async listContractDeploys(query: DeployedContractsQueryFilter) {
     return await this.contractService.listContractDeploys(
-      new DeployedContractsQueryFilter(event.query),
+      new DeployedContractsQueryFilter(query),
     );
   }
 
-  async listDeployedContractTransactions(event: {
-    query: ContractTransactionQueryFilter;
-  }) {
+  async listDeployedContractTransactions(
+    query: ContractTransactionQueryFilter,
+  ) {
     return await this.contractService.listDeployedContractTransactions(
-      new ContractTransactionQueryFilter(event.query),
+      new ContractTransactionQueryFilter(query),
     );
   }
 
   //#endregion
 
   //#region on-chain
-  async deployContract(params: { body: CreateContractDTO }) {
-    const { body } = params;
+  async deployContract(body: CreateContractDTO) {
     console.log(
       `Deploying contract with uuid ${body.contract_uuid}:`,
       ` ${JSON.stringify(body)}`,
@@ -130,10 +125,10 @@ export class ContractsController {
         body.constructorArguments,
       );
       const contractDeploy = await this.contractService.createAndDeployContract(
-        params.body.project_uuid,
-        params.body.name,
-        params.body.description,
-        params.body.chain,
+        body.project_uuid,
+        body.name,
+        body.description,
+        body.chain,
         contractDeployData.contract_version_id,
         body.constructorArguments,
         txData,
@@ -153,36 +148,34 @@ export class ContractsController {
         e,
         contractDeployData.abi,
         'constructorArguments',
-        params.body.project_uuid,
+        body.project_uuid,
         this.context.user?.user_uuid,
       );
     }
   }
 
-  async callDeployedContract(params: { body: CallContractDTO }) {
-    console.log(`Call contract: ${JSON.stringify(params.body)}`);
+  async callDeployedContract(body: CallContractDTO) {
+    console.log(`Call contract: ${JSON.stringify(body)}`);
     const contractDeploy =
-      await this.contractService.getDeployedContractForCall(
-        params.body.contract_uuid,
-      );
-    if (!contractDeploy.canCallMethod(params.body.methodName)) {
+      await this.contractService.getDeployedContractForCall(body.contract_uuid);
+    if (!contractDeploy.canCallMethod(body.methodName)) {
       throw new ContractsValidationException({
         code: 'ABI_ERROR',
         property: 'method',
-        message: `Not allowed to call method ${params.body.methodName}`,
+        message: `Not allowed to call method ${body.methodName}`,
       });
     }
     const abi = contractDeploy.contractVersion.abi;
 
     try {
-      AbiHelper.validateCallMethod(abi, params.body.methodName);
+      AbiHelper.validateCallMethod(abi, body.methodName);
 
       return await this.contractService.callContract(
         contractDeploy,
         abi,
         contractDeploy.contractVersion.transferOwnershipMethod,
-        params.body.methodName,
-        params.body.methodArguments,
+        body.methodName,
+        body.methodArguments,
       );
     } catch (e: unknown) {
       if (e instanceof AbiHelperError) {
