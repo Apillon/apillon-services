@@ -112,13 +112,8 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         bucket.bucketType == BucketType.STORAGE ||
         bucket.bucketType == BucketType.NFT_METADATA
       ) {
-        const filesToProcess = files.slice(
-          0,
-          env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS,
-        );
         if (needsHtmlValidation) {
-          for (const file of filesToProcess) {
-            const filex = file;
+          for (const file of files) {
             let fileStream = await s3Client.get(
               env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
               file.s3FileKey,
@@ -129,10 +124,9 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
                 ? await isStreamHtmlFile(fileStream.Body as Readable)
                 : false;
             if (isHtml) {
-              throw new StorageCodeException({
-                code: StorageErrorCode.HTML_FILES_NOT_ALLOWED,
-                status: 400,
-              });
+              session.sessionStatus = FileUploadSessionStatus.VALIDATION_FAILED;
+              await session.update();
+              return;
             }
           }
           const workerData = {
@@ -177,7 +171,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
             this.context,
             `${this.constructor.name}/runExecutor`,
             bucket,
-            filesToProcess,
+            files.slice(0, env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS),
             data?.wrapWithDirectory,
             data?.wrappingDirectoryPath,
           )
@@ -221,6 +215,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         [
           {
             ...data,
+            needsHtmlValidation: false, //Files were validated in the first iteration
             processFilesInSyncWorker: false, //Files were processed in first iteration
           },
         ],
