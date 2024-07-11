@@ -129,31 +129,18 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
               return;
             }
           }
-          const workerData = {
-            ...data,
-            needsHtmlValidation: false,
-          };
+
           // If all files are not HTML we call the same worker again with needsHtmlValidation set to false
           if (
-            [AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
+            ![AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
               env.APP_ENV as AppEnvironment,
             )
           ) {
-            const wd = new WorkerDefinition(
-              {
-                type: ServiceDefinitionType.SQS,
-                config: { region: 'test' },
-                params: { FunctionName: 'test' },
-              },
-              WorkerName.SYNC_TO_IPFS_WORKER,
-              workerData,
-            );
-            await new SyncToIPFSWorker(
-              wd,
-              this.context,
-              QueueWorkerType.EXECUTOR,
-            ).runExecutor(workerData);
-          } else {
+            const workerData = {
+              ...data,
+              needsHtmlValidation: false,
+            };
+
             await sendToWorkerQueue(
               env.STORAGE_AWS_WORKER_SQS_URL,
               WorkerName.SYNC_TO_IPFS_WORKER,
@@ -161,9 +148,8 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
               null,
               null,
             );
+            return true;
           }
-
-          return true;
         }
 
         transferredFiles = (
