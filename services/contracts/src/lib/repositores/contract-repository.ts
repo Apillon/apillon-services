@@ -217,7 +217,7 @@ export class ContractRepository extends BaseRepository {
     if (!contractDeploy.exists()) {
       throw new ContractsCodeException({
         status: 500,
-        code: ContractsErrorCode.CONTRACT_OWNER_ERROR,
+        code: ContractsErrorCode.CONTRACT_DOES_NOT_EXIST,
         context: this.context,
         sourceFunction: 'ContractRepository.getContractDeployByUUID',
       });
@@ -255,7 +255,7 @@ export class ContractRepository extends BaseRepository {
     if (!contractDeploy.exists()) {
       throw new ContractsCodeException({
         status: 500,
-        code: ContractsErrorCode.CONTRACT_OWNER_ERROR,
+        code: ContractsErrorCode.CONTRACT_DOES_NOT_EXIST,
         context: this.context,
         sourceFunction: 'ContractRepository.getContractDeployByUUID',
       });
