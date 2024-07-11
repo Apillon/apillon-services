@@ -87,7 +87,9 @@ describe('Apillon Console Contracts', () => {
         `/${contract.contract_uuid}/abi`,
       );
 
-      expect(body.data[0]).toBe('constructor()');
+      expect(body.data[0]).toBe(
+        'constructor(address initialOwner, string name, string symbol)',
+      );
     });
   });
 
