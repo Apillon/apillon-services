@@ -3,6 +3,7 @@ import {
   BlockchainMicroservice,
   ChainType,
   ContractsQueryFilter,
+  ContractTransactionQueryFilter,
   CreateEvmTransactionDto,
   DeployedContractsQueryFilter,
   EvmChain,
@@ -57,7 +58,7 @@ export class ContractService {
     this.context = context;
   }
 
-  createDeployTransaction(
+  prepareDeployTransaction(
     abi: unknown[],
     bytecode: string,
     constructorArguments: unknown[],
@@ -121,7 +122,8 @@ export class ContractService {
     await this.transactionRepository.createTransaction(
       new Transaction(
         {
-          chainId: chain,
+          //chainType: ChainType.EVM,
+          chain,
           transactionType: TransactionType.DEPLOY_CONTRACT,
           refTable: DbTables.CONTRACT_DEPLOY,
           refId: spendCredit.referenceId,
@@ -132,11 +134,7 @@ export class ContractService {
       ),
     );
 
-    return {
-      ...contractDeploy.serialize(),
-      project_uuid: contractDeploy.project_uuid,
-      contract_uuid: contractDeploy.contract_uuid,
-    };
+    return contractDeploy;
   }
 
   async onContractDeployed(
@@ -206,7 +204,7 @@ export class ContractService {
     return contractDeploy;
   }
 
-  async createCallTransaction(
+  private async createCallTransaction(
     chain: EvmChain,
     contractAddress: string,
     abi: unknown[],
@@ -278,7 +276,8 @@ export class ContractService {
     await this.transactionRepository.createTransaction(
       new Transaction(
         {
-          chainId: contractDeploy.chain,
+          //chainType: ChainType.EVM,
+          chain: contractDeploy.chain,
           transactionType,
           refTable: DbTables.CONTRACT_DEPLOY,
           refId: contractDeploy.contract_uuid,
@@ -349,9 +348,7 @@ export class ContractService {
   }
 
   async listContracts(query: ContractsQueryFilter) {
-    return await this.contractRepository.getList(
-      new ContractsQueryFilter(query),
-    );
+    return await this.contractRepository.getList(query);
   }
 
   async getContractWithVersionAndMethods(contract_uuid: string) {
@@ -361,9 +358,7 @@ export class ContractService {
   }
 
   async listContractDeploys(query: DeployedContractsQueryFilter) {
-    return await this.contractRepository.getDeployedList(
-      new DeployedContractsQueryFilter(query),
-    );
+    return await this.contractRepository.getDeployedList(query);
   }
 
   async getProjectDeployedContractDetails(project_uuid: string) {
@@ -379,15 +374,15 @@ export class ContractService {
   }
 
   async listDeployedContractTransactions(
-    contract_uuid: string,
-    query: TransactionQueryFilter,
+    query: ContractTransactionQueryFilter,
   ) {
-    const contract =
-      await this.contractRepository.getContractDeployByUUID(contract_uuid);
+    const contract = await this.contractRepository.getContractDeployByUUID(
+      query.contract_deploy_uuid,
+    );
 
     contract.canAccess(this.context);
 
-    const transactionQuery = new TransactionQueryFilter(query).populate({
+    const transactionQuery = query.populate({
       refTable: DbTables.CONTRACT_DEPLOY,
       refId: contract.contract_uuid,
     });
@@ -417,15 +412,30 @@ export class ContractService {
     // }
 
     // load from DB
-    const { contractVersion, ...contract } =
-      await this.contractRepository.getContractWithLatestVersion(contract_uuid);
+    try {
+      const { contractVersion, ...contract } =
+        await this.contractRepository.getContractWithLatestVersion(
+          contract_uuid,
+        );
 
-    return {
-      contract_version_id: contractVersion.id,
-      abi: contractVersion.abi,
-      bytecode: contractVersion.bytecode,
-      contractType: contract.contractType,
-    };
+      return {
+        contract_version_id: contractVersion.id,
+        abi: contractVersion.abi,
+        bytecode: contractVersion.bytecode,
+        contractType: contract.contractType,
+      };
+    } catch (err: unknown) {
+      throw await new ContractsCodeException({
+        status: 500,
+        errorMessage: `Error getting contract version for contract with uuid ${contract_uuid}.`,
+        code: ContractsErrorCode.GENERAL_SERVER_ERROR,
+      }).writeToMonitor({
+        context: this.context,
+        logType: LogType.ERROR,
+        data: { err, contract_uuid, chainType: ChainType.EVM },
+        sendAdminAlert: true,
+      });
+    }
   }
 
   async archiveDeployedContract(contract_uuid: string) {
@@ -456,6 +466,7 @@ export class ContractService {
     contract_deploy_uuid: string,
     solidityJson: boolean,
   ) {
+    // TODO: simplify query and serve whitlieste?
     const contractDeploy =
       await this.contractRepository.getContractDeployByUUID(
         contract_deploy_uuid,

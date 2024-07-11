@@ -1,11 +1,11 @@
 import { ServiceContext } from '@apillon/service-lib';
 import { Transaction } from '../../modules/contracts/models/transaction.model';
 import {
+  ContractTransactionQueryFilter,
   PoolConnection,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
-  TransactionQueryFilter,
 } from '@apillon/lib';
 import { ContractsModelValidationException } from '../exceptions';
 import { DbTables } from '../../config/types';
@@ -72,7 +72,7 @@ export class TransactionRepository {
     return transaction;
   }
 
-  async getList(query: TransactionQueryFilter) {
+  async getList(query: ContractTransactionQueryFilter) {
     return await new Transaction({}, this.context).getList(query);
   }
 }

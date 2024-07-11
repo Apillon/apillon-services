@@ -2,15 +2,16 @@ import {
   ChainType,
   Context,
   DeployedContractsQueryFilter,
+  ErrorCode,
   EvmChain,
   getQueryParams,
   PopulateFrom,
   presenceValidator,
-  ProjectAccessModel,
   prop,
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  UuidSqlModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
@@ -21,12 +22,35 @@ import {
 import { ContractVersion } from './contractVersion.model';
 import { ContractVersionMethod } from './contractVersionMethod.model';
 
-export class ContractDeploy extends ProjectAccessModel {
+export class ContractDeploy extends UuidSqlModel {
   public readonly tableName = DbTables.CONTRACT_DEPLOY;
 
   public constructor(data: any, context: Context) {
     super(data, context);
   }
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.LOGGER,
+      SerializeFor.PROFILE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ErrorCode.STATUS_NOT_PRESENT,
+      },
+    ],
+    defaultValue: SqlModelStatus.ACTIVE,
+    fakeValue() {
+      return SqlModelStatus.ACTIVE;
+    },
+  })
+  public status?: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -65,6 +89,7 @@ export class ContractDeploy extends ProjectAccessModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.LOGGER,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -91,6 +116,7 @@ export class ContractDeploy extends ProjectAccessModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.APILLON_API,
+      SerializeFor.LOGGER,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
@@ -186,69 +212,20 @@ export class ContractDeploy extends ProjectAccessModel {
   })
   public version_id: number;
 
-  // TODO: not inserted
   @prop({
-    parser: { array: true },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      // {
-      //   resolver: presenceValidator(),
-      //   code: ValidatorErrorCode.DATA_NOT_PRESENT,
-      // },
+    setter(value) {
+      return typeof value === 'object' ? JSON.stringify(value) : value;
+    },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
     ],
+    validators: [],
   })
-  public constructorArguments: any[];
-
-  // @prop({
-  //   parser: { resolver: stringParser() },
-  //   populatable: [
-  //     PopulateFrom.DB,
-  //     PopulateFrom.SERVICE,
-  //     PopulateFrom.ADMIN,
-  //     PopulateFrom.PROFILE,
-  //   ],
-  //   serializable: [
-  //     SerializeFor.INSERT_DB,
-  //     SerializeFor.UPDATE_DB,
-  //     SerializeFor.ADMIN,
-  //     SerializeFor.SERVICE,
-  //     SerializeFor.APILLON_API,
-  //     SerializeFor.PROFILE,
-  //   ],
-  //   validators: [
-  //     // {
-  //     //   resolver: presenceValidator(),
-  //     //   code: ValidatorErrorCode.DATA_NOT_PRESENT,
-  //     // },
-  //   ],
-  // })
-  // public custom_bytecode: string;
-  //
-  // @prop({
-  //   parser: { resolver: Abi.parse },
-  //   populatable: [
-  //     PopulateFrom.DB,
-  //     PopulateFrom.SERVICE,
-  //     PopulateFrom.ADMIN,
-  //     PopulateFrom.PROFILE,
-  //   ],
-  //   serializable: [
-  //     SerializeFor.INSERT_DB,
-  //     SerializeFor.UPDATE_DB,
-  //     SerializeFor.ADMIN,
-  //     SerializeFor.SERVICE,
-  //     SerializeFor.APILLON_API,
-  //     SerializeFor.PROFILE,
-  //   ],
-  //   validators: [
-  //     // {
-  //     //   resolver: presenceValidator(),
-  //     //   code: ValidatorErrorCode.DATA_NOT_PRESENT,
-  //     // },
-  //   ],
-  // })
-  // public custom_abi: unknown[];
+  public constructorArguments: unknown[];
 
   @prop({
     parser: { resolver: integerParser() },
@@ -342,8 +319,39 @@ export class ContractDeploy extends ProjectAccessModel {
   })
   public contractVersion: ContractVersion;
 
+  canCallMethod(methodName: string): boolean {
+    if (!this.contractVersion || !this.contractVersion.methods) {
+      throw new Error('contractVersion.methods not loaded');
+    }
+    return !!this.contractVersion.methods.find(
+      (method) => method.name === methodName && !!method.onlyOwner,
+    );
+  }
+
+  markAsDeployed(contractAddress: string = null) {
+    this.status = SqlModelStatus.ACTIVE;
+    this.contractStatus = ContractStatus.DEPLOYED;
+    if (contractAddress) {
+      this.contractAddress = contractAddress;
+    }
+
+    return this;
+  }
+
+  markAsFailedDeploying() {
+    this.contractStatus = ContractStatus.FAILED;
+
+    return this;
+  }
+
+  markAsTransferred() {
+    this.contractStatus = ContractStatus.TRANSFERRED;
+
+    return this;
+  }
+
   /***************************************************
-   * Info properties
+   * Queries
    *****************************************************/
 
   public async getDeployedList(
@@ -410,15 +418,6 @@ export class ContractDeploy extends ProjectAccessModel {
 
   public override async populateByUUID(contract_uuid: string): Promise<this> {
     return super.populateByUUID(contract_uuid, 'contract_uuid');
-  }
-
-  canCallMethod(methodName: string): boolean {
-    if (!this.contractVersion.methods || !this.contractVersion.methods) {
-      throw new Error('contractVersion.methods not loaded');
-    }
-    return !!this.contractVersion.methods.find(
-      (method) => method.name === methodName && !!method.onlyOwner,
-    );
   }
 
   public async getContractDeployWithVersionAndMethods(

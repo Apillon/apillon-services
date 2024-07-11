@@ -1,24 +1,18 @@
 import {
   CallContractDTO,
-  ChainType,
-  ContractAbiQuery,
+  ContractAbiQueryDTO,
   ContractsQueryFilter,
+  ContractTransactionQueryFilter,
   CreateContractDTO,
   DeployedContractsQueryFilter,
   Lmas,
-  LogType,
-  ServiceName,
-  SmartContractType,
-  TransactionQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
-import { ContractsErrorCode } from '../../config/types';
 import {
   ContractsCodeException,
-  ContractsException,
   ContractsValidationException,
 } from '../../lib/exceptions';
-import { parseError } from '../../lib/utils/contract-utils';
+import { handleEthersException } from '../../lib/utils/contract-utils';
 import { ContractService } from '../../lib/services/contract-service';
 import { AbiHelper, AbiHelperError } from '../../lib/utils/abi-helper';
 
@@ -40,7 +34,9 @@ export class ContractsController {
   //#region contract functions
 
   async listContracts(event: { query: ContractsQueryFilter }) {
-    return await this.contractService.listContracts(event.query);
+    return await this.contractService.listContracts(
+      new ContractsQueryFilter(event.query),
+    );
   }
 
   async getContract(event: { contract_uuid: string }) {
@@ -52,9 +48,9 @@ export class ContractsController {
     return contract.serializeByContext(this.context);
   }
 
-  async getContractAbi(event: { uuid: string; query: ContractAbiQuery }) {
+  async getContractAbi(event: { query: ContractAbiQueryDTO }) {
     return this.contractService.getContractAbi(
-      event.uuid,
+      event.query.contract_uuid,
       event.query.solidityJson,
     );
   }
@@ -71,12 +67,9 @@ export class ContractsController {
     return contractDeploy.serializeByContext();
   }
 
-  async getDeployedContractAbi(event: {
-    uuid: string;
-    query: ContractAbiQuery;
-  }) {
+  async getDeployedContractAbi(event: { query: ContractAbiQueryDTO }) {
     return await this.contractService.getDeployedContractAbi(
-      event.uuid,
+      event.query.contract_uuid,
       event.query.solidityJson,
     );
   }
@@ -104,16 +97,16 @@ export class ContractsController {
   }
 
   async listContractDeploys(event: { query: DeployedContractsQueryFilter }) {
-    return await this.contractService.listContractDeploys(event.query);
+    return await this.contractService.listContractDeploys(
+      new DeployedContractsQueryFilter(event.query),
+    );
   }
 
   async listDeployedContractTransactions(event: {
-    contract_uuid: string;
-    query: TransactionQueryFilter;
+    query: ContractTransactionQueryFilter;
   }) {
     return await this.contractService.listDeployedContractTransactions(
-      event.contract_uuid,
-      event.query,
+      new ContractTransactionQueryFilter(event.query),
     );
   }
 
@@ -121,77 +114,48 @@ export class ContractsController {
 
   //#region on-chain
   async deployContract(params: { body: CreateContractDTO }) {
-    console.log(`Creating contract: ${JSON.stringify(params.body)}`);
-    const { contract_uuid, constructorArguments } = params.body;
-    let contractDeployData: {
-      contract_version_id: number;
-      abi: unknown[];
-      bytecode: string;
-      contractType: SmartContractType;
-    };
-    try {
-      contractDeployData =
-        await this.contractService.getDeployContractData(contract_uuid);
-    } catch (err) {
-      throw await new ContractsCodeException({
-        status: 500,
-        errorMessage: `Error getting contract version for contract with uuid ${contract_uuid}.`,
-        code: ContractsErrorCode.GENERAL_SERVER_ERROR,
-      }).writeToMonitor({
-        context: this.context,
-        logType: LogType.ERROR,
-        data: { err, contract_uuid, chainType: ChainType.EVM },
-        sendAdminAlert: true,
-      });
-    }
-    let txData: string;
-    try {
-      txData = this.contractService.createDeployTransaction(
-        contractDeployData.abi,
-        contractDeployData.bytecode,
-        constructorArguments,
-      );
-    } catch (e: unknown) {
-      throw parseError(e, contractDeployData.abi, 'constructorArguments');
-    }
+    const { body } = params;
+    console.log(
+      `Deploying contract with uuid ${body.contract_uuid}:`,
+      ` ${JSON.stringify(body)}`,
+    );
+    const contractDeployData = await this.contractService.getDeployContractData(
+      body.contract_uuid,
+    );
 
     try {
-      const contractData = await this.contractService.createAndDeployContract(
+      const txData = this.contractService.prepareDeployTransaction(
+        contractDeployData.abi,
+        contractDeployData.bytecode,
+        body.constructorArguments,
+      );
+      const contractDeploy = await this.contractService.createAndDeployContract(
         params.body.project_uuid,
         params.body.name,
         params.body.description,
         params.body.chain,
         contractDeployData.contract_version_id,
-        constructorArguments,
+        body.constructorArguments,
         txData,
       );
       await this.contractService.onContractDeployed(
-        contractData.project_uuid,
-        contractData.contract_uuid,
+        contractDeploy.project_uuid,
+        contractDeploy.contract_uuid,
         contractDeployData.contractType,
       );
 
-      return contractData;
+      return contractDeploy.serializeByContext(this.context);
     } catch (e: unknown) {
-      if (!(e instanceof Error)) {
+      if (e instanceof ContractsCodeException) {
         throw e;
       }
-      const error = new ContractsException(
-        ContractsErrorCode.DEPLOY_CONTRACT_ERROR,
-        this.context,
+      await handleEthersException(
         e,
+        contractDeployData.abi,
+        'constructorArguments',
+        params.body.project_uuid,
+        this.context.user?.user_uuid,
       );
-      await error.writeToMonitor({
-        logType: LogType.ERROR,
-        service: ServiceName.CONTRACTS,
-        project_uuid: params.body.project_uuid,
-        user_uuid: this.context.user?.user_uuid,
-        data: {
-          body: params.body,
-          e,
-        },
-        sendAdminAlert: true,
-      });
     }
   }
 
@@ -201,7 +165,6 @@ export class ContractsController {
       await this.contractService.getDeployedContractForCall(
         params.body.contract_uuid,
       );
-
     if (!contractDeploy.canCallMethod(params.body.methodName)) {
       throw new ContractsValidationException({
         code: 'ABI_ERROR',
@@ -229,7 +192,13 @@ export class ContractsController {
           message: e.message,
         });
       }
-      throw parseError(e, abi, 'constructorArguments');
+      await handleEthersException(
+        e,
+        abi,
+        'constructorArguments',
+        contractDeploy.project_uuid,
+        this.context.user?.user_uuid,
+      );
     }
   }
   //#endregion

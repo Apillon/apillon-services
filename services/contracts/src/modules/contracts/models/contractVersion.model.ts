@@ -26,7 +26,7 @@ export class ContractVersion extends UuidSqlModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
     ],
-    serializable: [],
+    serializable: [SerializeFor.SELECT_DB, SerializeFor.INSERT_DB],
     validators: [
       {
         resolver: presenceValidator(),
@@ -39,7 +39,11 @@ export class ContractVersion extends UuidSqlModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.PROFILE, SerializeFor.SELECT_DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+    ],
     validators: [
       {
         resolver: presenceValidator(),
@@ -52,21 +56,25 @@ export class ContractVersion extends UuidSqlModel {
   @prop({
     parser: { resolver: Abi.parse },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.PROFILE, SerializeFor.SELECT_DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+    ],
   })
   public abi: unknown[];
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.SELECT_DB],
+    serializable: [SerializeFor.SELECT_DB, SerializeFor.INSERT_DB],
   })
   public bytecode: string;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.SELECT_DB],
+    serializable: [SerializeFor.SELECT_DB, SerializeFor.INSERT_DB],
   })
   public transferOwnershipMethod: string;
 

@@ -162,7 +162,8 @@ export class ContractRepository extends BaseRepository {
         version_id: contract_version_id,
         contractStatus: ContractStatus.DEPLOYING,
         status: SqlModelStatus.INCOMPLETE,
-        constructorArguments,
+        // TODO: JSON doesnt seem to work for array so we have to stringify here and use setter on ContractDeploy
+        constructorArguments: JSON.stringify(constructorArguments),
       },
       this.context,
     );
@@ -267,11 +268,10 @@ export class ContractRepository extends BaseRepository {
         sourceFunction: 'ContractRepository.getContractDeployByUUID',
       });
     }
-    contractDeploy.canAccess(this.context);
-
     if (!contractVersion.exists()) {
       throw new Error(`Contract version not found`);
     }
+    contractDeploy.canAccess(this.context);
 
     // assemble nested contractDeploy->contractVersion->methods
     contractVersion.methods = this.extractArrayOfModelFromRows(

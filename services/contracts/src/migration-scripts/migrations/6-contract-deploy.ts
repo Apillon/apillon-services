@@ -14,9 +14,7 @@ export async function upgrade(
       \`chainType\`            INT           NOT NULL,
       \`chain\`                INT           NOT NULL,
       \`version_id\`           INT           NULL,
-      \`custom_bytecode\`      VARCHAR(255)  NULL,
-      \`custom_abi\`           JSON          NULL,
-      \`constructorArguments\` JSON          NOT NULL,
+      \`constructorArguments\` JSON NULL,
 
       \`name\`                 VARCHAR(255)  NOT NULL,
       \`description\`          VARCHAR(1000) NULL,
@@ -30,6 +28,7 @@ export async function upgrade(
       \`updateTime\`           DATETIME      NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       \`updateUser\`           INT           NULL,
       PRIMARY KEY (\`id\`),
+      CONSTRAINT unique_contract_uuid UNIQUE (contract_uuid),
       CONSTRAINT \`fk_contract_deploy_contract_version\`
         FOREIGN KEY (\`version_id\`)
           REFERENCES \`${DbTables.CONTRACT_VERSION}\` (\`id\`)

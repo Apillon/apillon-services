@@ -2,12 +2,12 @@ import {
   AttachedServiceType,
   CallContractDTO,
   CodeException,
-  ContractAbiQuery,
+  ContractAbiQueryDTO,
   ContractsMicroservice,
-  DeployedContractsQueryFilter,
-  CreateContractDTO,
-  TransactionQueryFilter,
   ContractsQueryFilter,
+  ContractTransactionQueryFilter,
+  CreateContractDTO,
+  DeployedContractsQueryFilter,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
@@ -36,16 +36,15 @@ export class ContractsService {
 
   async getContractAbi(
     context: DevConsoleApiContext,
-    uuid: string,
-    query: ContractAbiQuery,
+    query: ContractAbiQueryDTO,
   ) {
-    return (
-      await new ContractsMicroservice(context).getContractAbi(uuid, query)
-    ).data;
+    return (await new ContractsMicroservice(context).getContractAbi(query))
+      .data;
   }
 
   // DEPLOYED CONTRACTS
   async deployContract(context: DevConsoleApiContext, body: CreateContractDTO) {
+    // TODO: we read DB twice, once here and once inside ServicesService.createService
     const project: Project = await new Project({}, context).populateByUUID(
       body.project_uuid,
     );
@@ -56,7 +55,6 @@ export class ContractsService {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
-
     project.canModify(context);
 
     // Check if contracts service for this project already exists
@@ -83,11 +81,7 @@ export class ContractsService {
       await this.serviceService.createService(context, contractsService);
     }
 
-    return (
-      await new ContractsMicroservice(context).deployContract(
-        new CreateContractDTO(body.serialize()),
-      )
-    ).data;
+    return (await new ContractsMicroservice(context).deployContract(body)).data;
   }
 
   async callDeployedContract(
@@ -100,14 +94,10 @@ export class ContractsService {
 
   async getDeployedContractAbi(
     context: DevConsoleApiContext,
-    uuid: string,
-    query: ContractAbiQuery,
+    query: ContractAbiQueryDTO,
   ) {
     return (
-      await new ContractsMicroservice(context).getDeployedContractAbi(
-        uuid,
-        query,
-      )
+      await new ContractsMicroservice(context).getDeployedContractAbi(query)
     ).data;
   }
 
@@ -127,12 +117,10 @@ export class ContractsService {
 
   async listDeployedContractTransactions(
     context: DevConsoleApiContext,
-    contract_uuid: string,
-    query: TransactionQueryFilter,
+    query: ContractTransactionQueryFilter,
   ) {
     return (
       await new ContractsMicroservice(context).listDeployedContractTransactions(
-        contract_uuid,
         query,
       )
     ).data;

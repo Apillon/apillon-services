@@ -8,7 +8,7 @@ export async function upgrade(
     (
       \`id\`                INT          NOT NULL AUTO_INCREMENT,
       \`transaction_uuid\`  VARCHAR(36)  NULL,
-      \`chainId\`           INT          NOT NULL,
+      \`chain\`             INT          NOT NULL,
       \`transactionType\`   INT          NOT NULL,
       \`refTable\`          VARCHAR(100) NULL,
       \`refId\` VARCHAR(36) NULL,
@@ -20,7 +20,8 @@ export async function upgrade(
       \`createUser\`        INT          NULL,
       \`updateTime\`        DATETIME     NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       \`updateUser\`        INT          NULL,
-      PRIMARY KEY (\`id\`)
+      PRIMARY KEY (\`id\`),
+      CONSTRAINT unique_transaction_uuid UNIQUE (transaction_uuid)
     );
   `);
 }

@@ -2,12 +2,12 @@ import { env } from '../../../config/env';
 import { AppEnvironment, ContractEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
-import { ContractsQueryFilter } from './dtos/contract-query-filter.dto';
 import { DeployedContractsQueryFilter } from './dtos/deployed-contract-query-filter.dto';
 import { CreateContractDTO } from './dtos/create-contract.dto';
 import { ContractTransactionQueryFilter } from './dtos/transaction-query-filter.dto';
 import { CallContractDTO } from './dtos/call-contract.dto';
-import { ContractAbiQuery } from './dtos/contract-abi-query.dto';
+import { ContractAbiQueryDTO } from './dtos/contract-abi-query.dto';
+import { ContractsQueryFilter } from './dtos/contract-query-filter.dto';
 
 export class ContractsMicroservice extends BaseService {
   lambdaFunctionName =
@@ -41,10 +41,9 @@ export class ContractsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  async getContractAbi(uuid: string, query: ContractAbiQuery) {
+  async getContractAbi(query: ContractAbiQueryDTO) {
     const data = {
       eventName: ContractEventType.GET_CONTRACT_ABI,
-      uuid,
       query,
     };
     return await this.callService(data);
@@ -74,10 +73,9 @@ export class ContractsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getDeployedContractAbi(uuid: string, query: ContractAbiQuery) {
+  public async getDeployedContractAbi(query: ContractAbiQueryDTO) {
     const data = {
       eventName: ContractEventType.GET_DEPLOYED_CONTRACT_ABI,
-      uuid,
       query,
     };
     return await this.callService(data);
@@ -92,12 +90,10 @@ export class ContractsMicroservice extends BaseService {
   }
 
   public async listDeployedContractTransactions(
-    contract_uuid: string,
     params: ContractTransactionQueryFilter,
   ) {
     const data = {
       eventName: ContractEventType.LIST_DEPLOYED_CONTRACT_TRANSACTIONS,
-      contract_uuid,
       query: params.serialize(),
     };
     return await this.callService(data);

@@ -21,6 +21,7 @@ export async function upgrade(
        \`updateUser\`    INT           NULL,
 
        PRIMARY KEY (\`id\`),
+       CONSTRAINT unique_contract_uuid UNIQUE (contract_uuid),
        UNIQUE KEY \`contract_version_unique_key\` (\`contractType\`, \`chainType\`, \`name\`)
      );`,
   );

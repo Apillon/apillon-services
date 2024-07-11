@@ -5,7 +5,6 @@ import {
   refundCredit,
   runWithWorkers,
   ServiceName,
-  SqlModelStatus,
   TransactionStatus,
   TransactionWebhookDataDto,
 } from '@apillon/lib';
@@ -14,7 +13,7 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { ContractStatus, DbTables, TransactionType } from '../config/types';
+import { DbTables, TransactionType } from '../config/types';
 import { ContractDeploy } from '../modules/contracts/models/contractDeploy.model';
 import { TransactionRepository } from '../lib/repositores/transaction-repository';
 
@@ -77,15 +76,14 @@ export class TransactionStatusWorker extends BaseQueueWorker {
           case TransactionStatus.CONFIRMED: {
             switch (transaction.transactionType) {
               case TransactionType.DEPLOY_CONTRACT: {
-                contractDeploy.contractStatus = ContractStatus.DEPLOYED;
                 // if (data && contractDeploy.chainType === ChainType.SUBSTRATE) {
                 //   contract.contractAddress = data;
                 // }
-                contractDeploy.status = SqlModelStatus.ACTIVE;
+                contractDeploy.markAsDeployed();
                 break;
               }
               case TransactionType.TRANSFER_CONTRACT_OWNERSHIP: {
-                contractDeploy.contractStatus = ContractStatus.TRANSFERRED;
+                contractDeploy.markAsTransferred();
                 break;
               }
               default:
@@ -96,7 +94,7 @@ export class TransactionStatusWorker extends BaseQueueWorker {
           case TransactionStatus.FAILED:
           case TransactionStatus.ERROR: {
             //Refund credit if transaction failed
-            contractDeploy.contractStatus = ContractStatus.FAILED;
+            contractDeploy.markAsFailedDeploying();
             //For ContractDeploy, reference for credit is contract. For other transaction_uuid se set as reference.
             const referenceTable =
               transaction.transactionType == TransactionType.DEPLOY_CONTRACT

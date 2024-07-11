@@ -1,14 +1,14 @@
 import {
   CallContractDTO,
-  ContractAbiQuery,
+  ContractAbiQueryDTO,
   DeployedContractsQueryFilter,
   CreateContractDTO,
   DefaultPermission,
   DefaultUserRole,
   RoleGroup,
-  TransactionQueryFilter,
   ValidateFor,
   ContractsQueryFilter,
+  ContractTransactionQueryFilter,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
@@ -79,18 +79,15 @@ export class ContractsController {
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @Validation({ dto: ContractAbiQuery, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: ContractAbiQueryDTO, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async getDeployedContractAbi(
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') uuid: string,
-    @Query() query: ContractAbiQuery,
+    @Query() query: ContractAbiQueryDTO,
   ) {
-    return await this.contractsService.getDeployedContractAbi(
-      context,
-      uuid,
-      query,
-    );
+    query.contract_uuid = uuid;
+    return await this.contractsService.getDeployedContractAbi(context, query);
   }
 
   @Delete('deployed/:uuid')
@@ -108,16 +105,19 @@ export class ContractsController {
 
   @Get('deployed/:uuid/transactions')
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @Validation({ dto: TransactionQueryFilter, validateFor: ValidateFor.QUERY })
+  @Validation({
+    dto: ContractTransactionQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
   @UseGuards(ValidationGuard, AuthGuard)
   async listDeployedContractTransactions(
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') uuid: string,
-    @Query() query: TransactionQueryFilter,
+    @Query() query: ContractTransactionQueryFilter,
   ) {
+    query.contract_deploy_uuid = uuid;
     return await this.contractsService.listDeployedContractTransactions(
       context,
-      uuid,
       query,
     );
   }
@@ -125,7 +125,7 @@ export class ContractsController {
   //#endregion
   //#region ------------- CONTRACTS -------------
 
-  @Post('deploy')
+  @Post(':uuid/deploy')
   @Validation({ dto: CreateContractDTO })
   @UseGuards(ValidationGuard)
   @Permissions(
@@ -135,8 +135,10 @@ export class ContractsController {
   @UseGuards(AuthGuard)
   async createContract(
     @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
     @Body() body: CreateContractDTO,
   ) {
+    body.contract_uuid = uuid;
     return await this.contractsService.deployContract(context, body);
   }
 
@@ -172,14 +174,15 @@ export class ContractsController {
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @Validation({ dto: ContractAbiQuery, validateFor: ValidateFor.QUERY })
+  @Validation({ dto: ContractAbiQueryDTO, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, AuthGuard)
   async getContractAbi(
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') uuid: string,
-    @Query() query: ContractAbiQuery,
+    @Query() query: ContractAbiQueryDTO,
   ) {
-    return await this.contractsService.getContractAbi(context, uuid, query);
+    query.contract_uuid = uuid;
+    return await this.contractsService.getContractAbi(context, query);
   }
 
   //#endregion

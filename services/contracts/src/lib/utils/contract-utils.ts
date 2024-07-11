@@ -4,6 +4,8 @@ import {
   Context,
   EvmChain,
   HttpException,
+  LogType,
+  ServiceName,
 } from '@apillon/lib';
 import { EVMContractClient } from '../../modules/clients/evm-contract.client';
 import { errors, utils } from 'ethers';
@@ -33,11 +35,13 @@ export async function getEvmContractClient(
 }
 
 // TODO: move?
-export function parseError(
+export async function handleEthersException(
   error: unknown,
   abi: unknown[],
   property: string,
-): HttpException {
+  project_uuid: string,
+  user_uuid: string,
+): Promise<void> {
   // if (
   //   typeof e === 'object' &&
   //   'reason' in e &&
@@ -60,7 +64,7 @@ export function parseError(
   // }
   console.error('Error calling contract function:', error);
   if (typeof error !== 'object') {
-    return new ContractsCodeException({
+    throw new ContractsCodeException({
       // TODO: code=0
       code: 0,
       status: 500,
@@ -74,7 +78,7 @@ export function parseError(
       case errors.INVALID_ARGUMENT:
       case errors.MISSING_ARGUMENT:
       case errors.UNEXPECTED_ARGUMENT: {
-        return new ContractsValidationException({
+        throw new ContractsValidationException({
           code: `${error.code}`,
           property:
             'argument' in error ? `${property}.${error.argument}` : property,
@@ -82,7 +86,7 @@ export function parseError(
         });
       }
       default: {
-        return new ContractsCodeException({
+        throw new ContractsCodeException({
           code: error.code,
           status: 500,
           // context?: ,
@@ -102,7 +106,7 @@ export function parseError(
     } catch (decodeError) {
       errorMessage = `${decodeError}`;
     }
-    return new ContractsCodeException({
+    throw new ContractsCodeException({
       // TODO: code=0
       code: 0,
       status: 500,
@@ -110,10 +114,22 @@ export function parseError(
     });
   }
 
-  return new ContractsCodeException({
+  const exception = new ContractsCodeException({
     // TODO: code=0
     code: 0,
     status: 500,
     errorMessage: `${error}`,
   });
+  await exception.writeToMonitor({
+    logType: LogType.ERROR,
+    service: ServiceName.CONTRACTS,
+    project_uuid,
+    user_uuid,
+    data: {
+      exception,
+    },
+    sendAdminAlert: true,
+  });
+
+  throw error;
 }

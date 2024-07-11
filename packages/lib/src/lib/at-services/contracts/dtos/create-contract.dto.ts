@@ -27,6 +27,14 @@ export class CreateContractDTO extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public contract_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
@@ -69,32 +77,6 @@ export class CreateContractDTO extends ModelBase {
     ],
   })
   public chain: EvmChain;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.DATA_NOT_PRESENT,
-      },
-    ],
-  })
-  public contract_uuid: string;
-
-  // @prop({
-  //   parser: { resolver: stringParser() },
-  //   populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-  //   serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-  //   validators: [
-  //     {
-  //       resolver: presenceValidator(),
-  //       code: ValidatorErrorCode.DATA_NOT_PRESENT,
-  //     },
-  //   ],
-  // })
-  // public artifact: string;
 
   @prop({
     parser: { array: true },

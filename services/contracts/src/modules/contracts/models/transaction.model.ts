@@ -1,14 +1,16 @@
 import {
   AdvancedSQLModel,
+  Chain,
   Context,
+  ContractTransactionQueryFilter,
   getQueryParams,
+  PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
-  TransactionQueryFilter,
   TransactionStatus,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
@@ -44,7 +46,7 @@ export class Transaction extends AdvancedSQLModel {
       },
     ],
   })
-  public chainId: number;
+  public chain: Chain;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -135,7 +137,7 @@ export class Transaction extends AdvancedSQLModel {
   })
   public transaction_uuid: string;
 
-  public async getList(filter: TransactionQueryFilter) {
+  public async getList(filter: ContractTransactionQueryFilter) {
     const context = this.getContext();
     const serializationStrategy = context.getSerializationStrategy();
     // Map url query with sql fields.
@@ -188,5 +190,27 @@ export class Transaction extends AdvancedSQLModel {
           .serialize(serializationStrategy),
       ),
     };
+  }
+
+  public async getTransactionByChainAndHash(
+    chain: Chain,
+    transactionHash: string,
+    conn?: PoolConnection,
+  ) {
+    const data = await this.getContext().mysql.paramExecute(
+      `SELECT *
+       FROM \`${DbTables.TRANSACTION}\`
+       WHERE transactionHash = @transactionHash
+         AND chain = @chain`,
+      {
+        chain,
+        transactionHash,
+      },
+      conn,
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 }
