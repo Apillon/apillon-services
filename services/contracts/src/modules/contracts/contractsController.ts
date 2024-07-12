@@ -15,6 +15,7 @@ import {
 import { handleEthersException } from '../../lib/utils/contract-utils';
 import { ContractService } from '../../lib/services/contract-service';
 import { AbiHelper, AbiHelperError } from '../../lib/utils/abi-helper';
+import { ContractsErrorCode } from '../../config/types';
 
 export class ContractsController {
   private readonly context: ServiceContext;
@@ -165,13 +166,7 @@ export class ContractsController {
       await this.contractService.getDeployedContractForCall(
         params.body.contract_uuid,
       );
-    if (!contractDeploy.canCallMethod(params.body.methodName)) {
-      throw new ContractsValidationException({
-        code: 'ABI_ERROR',
-        property: 'method',
-        message: `Not allowed to call method ${params.body.methodName}`,
-      });
-    }
+
     const abi = contractDeploy.contractVersion.abi;
 
     try {
@@ -185,6 +180,9 @@ export class ContractsController {
         params.body.methodArguments,
       );
     } catch (e: unknown) {
+      if (e instanceof ContractsValidationException) {
+        throw e;
+      }
       if (e instanceof AbiHelperError) {
         throw new ContractsValidationException({
           code: 'ABI_ERROR',

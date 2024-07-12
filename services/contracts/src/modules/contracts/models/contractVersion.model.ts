@@ -1,11 +1,8 @@
 import {
-  CacheKeyPrefix,
-  CacheKeyTTL,
   Context,
   PopulateFrom,
   presenceValidator,
   prop,
-  runCachedFunction,
   SerializeFor,
   SqlModelStatus,
   UuidSqlModel,
@@ -93,50 +90,16 @@ export class ContractVersion extends UuidSqlModel {
     super(data, context);
   }
 
-  async getById(id: number): Promise<ContractVersion> {
-    const data = await runCachedFunction(
-      `${CacheKeyPrefix.CONTRACT_ID}:${id}`,
-      async () => {
-        const data = await this.getContext().mysql.paramExecute(
-          `
-            SELECT ${this.generateSelectFields()}
-            FROM \`${DbTables.CONTRACT_VERSION}\`
-            WHERE id = @id
-              AND status = ${SqlModelStatus.ACTIVE};
-          `,
-          { id },
-        );
-        return data?.length
-          ? this.populate(data[0], PopulateFrom.DB)
-          : this.reset();
-      },
-      CacheKeyTTL.EXTRA_LONG,
-    );
-
-    return new ContractVersion(data, this.getContext());
-  }
-
   async populateByContractUuid(uuid: string) {
-    const data = await runCachedFunction(
-      `${CacheKeyPrefix.CONTRACT_VERSION_BY_CONTRACT_UUID}:${uuid}`,
-      async () => {
-        const data = await this.getContext().mysql.paramExecute(
-          `
-            SELECT ${this.generateSelectFields('cv')}
-            FROM \`${DbTables.CONTRACT_VERSION}\` AS cv
-                   LEFT JOIN \`${DbTables.CONTRACT}\` AS c ON (c.id = cv.contract_id)
-            WHERE c.contract_uuid = @uuid
-              AND c.status = ${SqlModelStatus.ACTIVE};
-          `,
-          { uuid },
-        );
-        return data?.length
-          ? this.populate(data[0], PopulateFrom.DB)
-          : this.reset();
-      },
-      CacheKeyTTL.EXTRA_LONG,
+    return await this.getContext().mysql.paramExecute(
+      `
+        SELECT ${this.generateSelectFields('cv')}
+        FROM \`${DbTables.CONTRACT_VERSION}\` AS cv
+               LEFT JOIN \`${DbTables.CONTRACT}\` AS c ON (c.id = cv.contract_id)
+        WHERE c.contract_uuid = @uuid
+          AND c.status = ${SqlModelStatus.ACTIVE};
+      `,
+      { uuid },
     );
-
-    return new ContractVersion(data, this.getContext());
   }
 }

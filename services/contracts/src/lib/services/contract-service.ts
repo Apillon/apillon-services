@@ -16,10 +16,9 @@ import {
   spendCreditAction,
   SpendCreditDto,
   SqlModelStatus,
-  TransactionQueryFilter,
   TransactionStatus,
 } from '@apillon/lib';
-import { EVMContractClient } from '../../modules/clients/evm-contract.client';
+import { EVMContractClient } from '../clients/evm-contract.client';
 import {
   ContractsErrorCode,
   ContractStatus,
@@ -31,7 +30,10 @@ import { v4 as uuidV4 } from 'uuid';
 import { ContractRepository } from '../repositores/contract-repository';
 import { TransactionRepository } from '../repositores/transaction-repository';
 import { ContractDeploy } from '../../modules/contracts/models/contractDeploy.model';
-import { ContractsCodeException } from '../exceptions';
+import {
+  ContractsCodeException,
+  ContractsValidationException,
+} from '../exceptions';
 import { AbiHelper } from '../utils/abi-helper';
 
 export class ContractService {
@@ -201,6 +203,15 @@ export class ContractService {
         });
     }
 
+    if (!contractDeploy.contractAddress) {
+      throw new ContractsCodeException({
+        status: 500,
+        code: ContractsErrorCode.CONTRACT_ADDRESS_MISSING,
+        context: this.context,
+        sourceFunction: 'ContractRepository.getContractDeployByUUID',
+      });
+    }
+
     return contractDeploy;
   }
 
@@ -231,6 +242,14 @@ export class ContractService {
     methodName: string,
     methodArguments: unknown[],
   ) {
+    if (!contractDeploy.canCallMethod(methodName)) {
+      throw new ContractsValidationException({
+        code: 'ABI_ERROR',
+        property: 'method',
+        message: `Not allowed to call method ${methodName}`,
+      });
+    }
+
     const txData = await this.createCallTransaction(
       contractDeploy.chain,
       contractDeploy.contractAddress,
@@ -466,18 +485,13 @@ export class ContractService {
     contract_deploy_uuid: string,
     solidityJson: boolean,
   ) {
-    // TODO: simplify query and serve whitlieste?
     const contractDeploy =
-      await this.contractRepository.getContractDeployByUUID(
+      await this.contractRepository.getContractDeployWithVersion(
         contract_deploy_uuid,
-      );
-    const contractVersion =
-      await this.contractRepository.getContractVersionById(
-        contractDeploy.version_id,
       );
 
     return solidityJson
-      ? contractVersion.abi
-      : new AbiHelper(contractVersion.abi).toHumanReadable();
+      ? contractDeploy.contractVersion.abi
+      : new AbiHelper(contractDeploy.contractVersion.abi).toHumanReadable();
   }
 }

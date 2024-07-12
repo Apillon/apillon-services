@@ -853,13 +853,15 @@ export enum CacheKeyPrefix {
   SOCIAL_POST_LIST = 'social-post-list',
   SOCIAL_SPACE_POST_LIST = 'social-space-post-list',
 
-  CONTRACT_ID = 'contract-id',
-  CONTRACT_UUID = 'contract-uuid',
+  // CONTRACTS
+  CONTRACT_BY_UUID_WITH_LATEST_VERSION = 'contract-by-uuid-with-latest-version',
   CONTRACT_VERSION_BY_CONTRACT_UUID = 'contract-version-by-contract-uuid',
+  CONTRACT_VERSION_BY_UUID_WITH_METHODS = 'contract-version-methods-by-version-contract-uuid',
+  CONTRACT_DEPLOY_BY_UUID_WITH_VERSION = 'get-contract-by-uuid-deploy-with-version',
+  CONTRACT_DEPLOY_BY_UUID_DEPLOY_WITH_VERSION_AND_METHODS = 'get-contract-by-uuid-deploy-with-version-and-methods',
+
+  // NFTS
   CONTRACT_VERSION = 'contract-version',
-  CONTRACT_VERSION_METHODS_BY_VERSION_ID = 'contract-version-methods-by-version-id',
-  CONTRACT_VERSION_METHODS_BY_VERSION_CONTRACT_UUID = 'contract-version-methods-by-version-contract-uuid',
-  GET_CONTRACT_BY_UUID_DEPLOY_WITH_VERSION_AND_METHODS = 'get-contract-by-uuid-deploy-with-version-and-methods',
   CONTRACT_ABI = 'contract-abi',
   BLOCKCHAIN_ENDPOINT = 'blockchain-endpoint',
 

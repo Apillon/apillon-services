@@ -40,31 +40,3 @@ export class ContractsNotFoundException extends ContractsCodeException {
     super({ code, status: 404 });
   }
 }
-
-export class ContractsException extends ContractsCodeException {
-  constructor(
-    code: ContractsErrorCode,
-    context: ServiceContext,
-    details: Error,
-  ) {
-    const codeToErrorMap: Record<
-      number,
-      Pick<ErrorOptions, 'errorMessage' | 'sourceFunction'>
-    > = {
-      [ContractsErrorCode.DEPLOY_CONTRACT_ERROR]: {
-        sourceFunction: 'deployContractContract()',
-        errorMessage: 'Error deploying Contract contract',
-      },
-    };
-
-    super({
-      status: 500,
-      sourceModule: ServiceName.CONTRACTS,
-      errorCodes: ContractsErrorCode,
-      code,
-      context,
-      details,
-      ...codeToErrorMap[code],
-    });
-  }
-}
