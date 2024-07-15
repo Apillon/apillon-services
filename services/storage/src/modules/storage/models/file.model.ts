@@ -320,7 +320,7 @@ export class File extends UuidSqlModel {
    */
   public async populateDeletedById(id: string | number): Promise<this> {
     if (!id) {
-      throw new Error('uuid should not be null');
+      throw new Error('id should not be null');
     }
 
     const data = await this.getContext().mysql.paramExecute(
