@@ -613,9 +613,7 @@ export class StorageService {
     event: { uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const f: File = await new File({}, context).populateDeletedByUUID(
-      event.uuid,
-    );
+    const f: File = await new File({}, context).populateDeletedById(event.uuid);
     if (!f.exists()) {
       throw new StorageCodeException({
         code: StorageErrorCode.FILE_NOT_FOUND,

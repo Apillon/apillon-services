@@ -613,10 +613,9 @@ describe('Storage tests', () => {
           .set('Authorization', `Bearer ${testUser.token}`);
         expect(response.status).toBe(200);
 
-        let f: File = await new File(
-          {},
-          stage.context.storage,
-        ).populateDeletedByUUID(deleteBucketTestFile1.file_uuid);
+        let f: File = await new File({}, stage.context.storage).populateById(
+          deleteBucketTestFile1.file_uuid,
+        );
         expect(f.status).toBe(SqlModelStatus.DELETED);
 
         //Check if bucket size was decreased
