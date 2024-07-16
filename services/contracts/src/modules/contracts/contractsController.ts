@@ -15,7 +15,6 @@ import {
 import { handleEthersException } from '../../lib/utils/contract-utils';
 import { ContractService } from '../../lib/services/contract-service';
 import { AbiHelper, AbiHelperError } from '../../lib/utils/abi-helper';
-import { ContractsErrorCode } from '../../config/types';
 
 export class ContractsController {
   private readonly context: ServiceContext;
@@ -125,6 +124,10 @@ export class ContractsController {
     );
 
     try {
+      new AbiHelper(contractDeployData.abi).validateConstructorCall(
+        params.body.constructorArguments,
+      );
+
       const txData = this.contractService.prepareDeployTransaction(
         contractDeployData.abi,
         contractDeployData.bytecode,
@@ -170,7 +173,10 @@ export class ContractsController {
     const abi = contractDeploy.contractVersion.abi;
 
     try {
-      AbiHelper.validateCallMethod(abi, params.body.methodName);
+      new AbiHelper(abi).validateCallMethod(
+        params.body.methodName,
+        params.body.methodArguments,
+      );
 
       return await this.contractService.callContract(
         contractDeploy,

@@ -213,7 +213,7 @@ export class ContractDeploy extends UuidSqlModel {
   public version_id: number;
 
   @prop({
-    setter(value) {
+    getter(value: unknown[]) {
       return typeof value === 'object' ? JSON.stringify(value) : value;
     },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -346,6 +346,12 @@ export class ContractDeploy extends UuidSqlModel {
 
   markAsTransferred() {
     this.contractStatus = ContractStatus.TRANSFERRED;
+
+    return this;
+  }
+
+  markAsNotTransferred() {
+    this.contractStatus = ContractStatus.DEPLOYED;
 
     return this;
   }
