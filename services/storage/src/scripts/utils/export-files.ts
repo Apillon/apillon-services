@@ -2,7 +2,9 @@ import { MySql, env, runWithWorkers } from '@apillon/lib';
 import * as fs from 'fs';
 import axios from 'axios';
 
-const uploadDestination = env.FILE_EXPORT_DESTINATION;
+const UPLOAD_DESTINATION = env.FILE_EXPORT_DESTINATION;
+const MIN_DATE = '2024-07-01';
+
 const mysql = new MySql({
   host: env.STORAGE_MYSQL_HOST,
   port: env.STORAGE_MYSQL_PORT,
@@ -13,7 +15,7 @@ const mysql = new MySql({
 
 async function exportFiles() {
   const files = await mysql.paramExecute(
-    `SELECT file_uuid, createUser, CID, name FROM file WHERE CID is not null and createTime >= '2024-07-01' order by createTime desc`,
+    `SELECT CID, name FROM file WHERE CID is not null and createTime >= '${MIN_DATE}' order by createTime desc`,
   );
 
   await runWithWorkers(files, 20, {}, async (file) => {
@@ -29,7 +31,7 @@ async function exportFiles() {
       },
     });
     if (link.data.status === 200) {
-      const destinationPath = uploadDestination + '/' + file.name;
+      const destinationPath = UPLOAD_DESTINATION + '/' + file.name;
       const url = link.data.data.link;
       try {
         console.log('fetching', file.name);
