@@ -13,7 +13,7 @@ const mysql = new MySql({
 
 async function exportFiles() {
   const files = await mysql.paramExecute(
-    `SELECT file_uuid, s3FileKey, createUser, CID, name FROM file WHERE CID is not null and createTime >= '2024-07-01' order by createTime desc`,
+    `SELECT file_uuid, createUser, CID, name FROM file WHERE CID is not null and createTime >= '2024-07-01' order by createTime desc`,
   );
 
   await runWithWorkers(files, 20, {}, async (file) => {
