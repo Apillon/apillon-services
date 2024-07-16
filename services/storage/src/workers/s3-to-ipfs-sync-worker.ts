@@ -141,13 +141,16 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
           ) {
             const workerData = {
               ...data,
+              // HTML Validation has been done in the first iteration
               needsHtmlValidation: false,
+              // Files have been processed in the first iteration
+              processFilesInSyncWorker: false,
             };
 
             await sendToWorkerQueue(
               env.STORAGE_AWS_WORKER_SQS_URL,
               WorkerName.SYNC_TO_IPFS_WORKER,
-              [{ workerData }],
+              [workerData],
               null,
               null,
             );

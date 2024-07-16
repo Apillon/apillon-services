@@ -71,7 +71,7 @@ describe('Oasis expired signature worker tests', () => {
     await new OasisExpiredSignaturesWorker(
       workerDefinition,
       stage.authApiContext,
-    ).execute({
+    ).runExecutor({
       contractId: 1,
     });
 
