@@ -123,7 +123,7 @@ export async function handleLambdaEvent(
     }
     case WorkerName.OASIS_EXPIRED_SIGNATURES_WORKER: {
       await new OasisExpiredSignaturesWorker(workerDefinition, context).run({
-        executeArg: JSON.stringify(workerDefinition.parameters),
+        executeArg: JSON.parse(workerDefinition.parameters),
       });
     }
     default:
