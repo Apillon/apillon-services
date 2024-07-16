@@ -271,6 +271,8 @@ export interface IEnv {
   APILLON_API_INTEGRATION_API_KEY: string;
   APILLON_API_INTEGRATION_API_SECRET: string;
 
+  APILLON_API_ACCESS_TOKEN: string;
+
   /************************************************************
    * AUTH - Apillon Authentication Service
    ************************************************************/
@@ -615,6 +617,11 @@ export interface IEnv {
   AIRDROP_CLAIM_TIMESTAMP: string;
   AIRDROP_CLAIM_CONTRACT_ADDRESS: string;
   AIRDROP_CLAIM_CHAIN_ID: number;
+
+  /**
+   * SCRIPTS
+   */
+  FILE_EXPORT_DESTINATION: string;
 }
 
 // dotenv.config();
@@ -844,6 +851,7 @@ export let env: IEnv = {
   APILLON_API_INTEGRATION_API_SECRET:
     process.env['APILLON_API_INTEGRATION_API_SECRET'] || '',
   APILLON_API_URL: process.env['APILLON_API_URL'] || 'http://localhost:6002',
+  APILLON_API_ACCESS_TOKEN: process.env['APILLON_API_ACCESS_TOKEN'] || '',
 
   /** --- SECTION: APILLON AUTHENTICATION API --- */
   AUTH_API_HOST: process.env['AUTH_API_HOST'] || 'localhost',
@@ -1111,6 +1119,9 @@ export let env: IEnv = {
   AIRDROP_CLAIM_TIMESTAMP: process.env['AIRDROP_CLAIM_TIMESTAMP'],
   AIRDROP_CLAIM_CONTRACT_ADDRESS: process.env['AIRDROP_CLAIM_CONTRACT_ADDRESS'],
   AIRDROP_CLAIM_CHAIN_ID: +process.env['AIRDROP_CLAIM_CHAIN_ID'],
+
+  /** Scripts */
+  FILE_EXPORT_DESTINATION: process.env['FILE_EXPORT_DESTINATION'] || '/tmp',
 };
 
 export let isEnvReady = false;
