@@ -10,6 +10,7 @@ import {
   SqlModelStatus,
 } from '@apillon/lib';
 import {
+  BaseSingleThreadWorker,
   BaseWorker,
   Job,
   LogOutput,
@@ -21,18 +22,14 @@ import { OasisSignature } from '../modules/oasis/models/oasis-signature.model';
 /**
  * Worker updates oasis signatures status and refunds credit for signatures, which were not used for Oasis account creation (were not indexed and updated to status ACTIVE in 2 hours)
  */
-export class OasisExpiredSignaturesWorker extends BaseWorker {
+export class OasisExpiredSignaturesWorker extends BaseSingleThreadWorker {
   protected context: Context;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
   }
 
-  public async before(_data?: any): Promise<any> {
-    // No used
-  }
-
-  public async execute(data?: any): Promise<any> {
+  public async runExecutor(data: { contractId: number }): Promise<any> {
     console.info('RUN EXECUTOR (OasisExpiredSignaturesWorker). data: ', data);
 
     if (!data.contractId) {
@@ -92,28 +89,5 @@ export class OasisExpiredSignaturesWorker extends BaseWorker {
     );
 
     return true;
-  }
-
-  public async onSuccess(_data?: any, _successData?: any): Promise<any> {
-    // this.logFn(`ClearLogs - success: ${data} | ${successData} `);
-  }
-
-  public async onError(error: Error): Promise<any> {
-    this.logFn(`OasisExpiredSignaturesWorker - error: ${error}`);
-  }
-
-  public async onUpdateWorkerDefinition(): Promise<void> {
-    if (
-      env.APP_ENV != AppEnvironment.LOCAL_DEV &&
-      env.APP_ENV != AppEnvironment.TEST
-    ) {
-      await new Job({}, this.context).updateWorkerDefinition(
-        this.workerDefinition,
-      );
-    }
-  }
-
-  public onAutoRemove(): Promise<void> {
-    throw new Error('Method not implemented.');
   }
 }
