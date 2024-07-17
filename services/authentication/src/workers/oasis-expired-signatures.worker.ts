@@ -47,13 +47,17 @@ export class OasisExpiredSignaturesWorker extends BaseSingleThreadWorker {
     }
 
     //get contract from BCS. Worker need to know time of last indexed block
-    const contract = await new BlockchainMicroservice(this.context).getContract(
-      data.contractId,
-    );
+    const contract = (
+      await new BlockchainMicroservice(this.context).getContract(
+        data.contractId,
+      )
+    ).data;
 
     //Substract 2h from last parsed block time so we get date to which signature should be used and indexed
     const expirationDate = new Date(contract.lastParsedBlockTime);
     expirationDate.setHours(expirationDate.getHours() - 2);
+
+    console.info('expirationDate', expirationDate);
 
     const res = await this.context.mysql.paramExecute(
       `
