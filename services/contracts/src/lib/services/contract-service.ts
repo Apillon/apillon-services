@@ -480,9 +480,9 @@ export class ContractService {
       : new AbiHelper(contractVersion.abi).toHumanReadable();
   }
 
-  async getDeployedContract(contract_deploy_uuid: string) {
+  async getDeployedContract(contract_uuid: string) {
     return await this.contractRepository.getContractDeployWithVersionAndMethods(
-      contract_deploy_uuid,
+      contract_uuid,
     );
   }
 
