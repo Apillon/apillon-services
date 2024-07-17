@@ -91,3 +91,12 @@ export class CreateContractDTO extends ModelBase {
   })
   public constructorArguments: any[];
 }
+
+export class ApillonApiCreateContractDTO extends CreateContractDTO {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public override project_uuid: string;
+}

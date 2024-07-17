@@ -4,7 +4,6 @@ import {
   presenceValidator,
   prop,
   SerializeFor,
-  SqlModelStatus,
   UuidSqlModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
@@ -88,18 +87,5 @@ export class ContractVersion extends UuidSqlModel {
 
   public constructor(data: any, context: Context) {
     super(data, context);
-  }
-
-  async populateByContractUuid(uuid: string) {
-    return await this.getContext().mysql.paramExecute(
-      `
-        SELECT ${this.generateSelectFields('cv')}
-        FROM \`${DbTables.CONTRACT_VERSION}\` AS cv
-               LEFT JOIN \`${DbTables.CONTRACT}\` AS c ON (c.id = cv.contract_id)
-        WHERE c.contract_uuid = @uuid
-          AND c.status = ${SqlModelStatus.ACTIVE};
-      `,
-      { uuid },
-    );
   }
 }
