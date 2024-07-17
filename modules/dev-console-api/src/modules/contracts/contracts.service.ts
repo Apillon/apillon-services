@@ -110,9 +110,15 @@ export class ContractsService {
     ).data;
   }
 
-  async getDeployedContract(context: DevConsoleApiContext, uuid: string) {
-    return (await new ContractsMicroservice(context).getDeployedContract(uuid))
-      .data;
+  async getDeployedContract(
+    context: DevConsoleApiContext,
+    contract_uuid: string,
+  ) {
+    return (
+      await new ContractsMicroservice(context).getDeployedContract(
+        contract_uuid,
+      )
+    ).data;
   }
 
   async listDeployedContractTransactions(
