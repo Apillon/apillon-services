@@ -20,7 +20,7 @@ export class DeployedContractsQueryFilter extends BaseProjectQueryFilter {
   public contractStatus: number;
 }
 
-export class ApillonApiContractsQueryFilter extends DeployedContractsQueryFilter {
+export class ApillonApiDeployedContractsQueryFilterDTO extends DeployedContractsQueryFilter {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],

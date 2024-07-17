@@ -1,11 +1,14 @@
 import { ServiceContext } from '@apillon/service-lib';
 import { ExtractFromRow, ExtractFromRows } from './types';
+import { MySql } from '@apillon/lib';
 
 export class BaseRepository {
   protected context: ServiceContext;
+  protected mysql: MySql;
 
   constructor(context: ServiceContext) {
     this.context = context;
+    this.mysql = context.mysql;
   }
 
   /**

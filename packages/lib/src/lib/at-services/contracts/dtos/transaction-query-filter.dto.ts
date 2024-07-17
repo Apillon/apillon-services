@@ -26,3 +26,12 @@ export class ContractTransactionQueryFilter extends BaseQueryFilter {
   })
   public transactionType: number;
 }
+
+export class ApillonApiContractTransactionQueryFilterDTO extends ContractTransactionQueryFilter {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public project_uuid: string;
+}

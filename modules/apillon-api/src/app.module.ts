@@ -16,6 +16,7 @@ import { ComputingModule } from './modules/computing/computing.module';
 import { ProjectModule } from './modules/project/project.module';
 import { SocialModule } from './modules/social/social.module';
 import { OasisModule } from './modules/oasis/oasis.module';
+import { ContractsModule } from './modules/contracts/contracts.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { OasisModule } from './modules/oasis/oasis.module';
     SocialModule,
     OasisModule,
     AcurastModule,
+    ContractsModule,
   ],
   controllers: [AppController],
   providers: [],

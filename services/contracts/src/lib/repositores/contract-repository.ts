@@ -112,16 +112,27 @@ export class ContractRepository extends BaseRepository {
   //#endregion
   //#region ------------- CONTRACT VERSION -------------
   async getContractVersionByContractUuid(contract_uuid: string) {
+    const selectFields = new ContractVersion(
+      {},
+      this.context,
+    ).generateSelectFields('cv');
+    const query = `
+      SELECT ${selectFields}
+      FROM \`${DbTables.CONTRACT_VERSION}\` AS cv
+             LEFT JOIN \`${DbTables.CONTRACT}\` AS c ON (c.id = cv.contract_id)
+      WHERE c.contract_uuid = @contract_uuid
+        AND c.status = ${SqlModelStatus.ACTIVE}
+      LIMIT 1;
+    `;
     const data = await runCachedFunction(
       `${CacheKeyPrefix.CONTRACT_VERSION_BY_CONTRACT_UUID}:${contract_uuid}`,
-      async () =>
-        await new ContractVersion({}, this.context).populateByContractUuid(
-          contract_uuid,
-        ),
+      async () => await this.mysql.paramExecute(query, { contract_uuid }),
       CacheKeyTTL.EXTRA_LONG,
     );
-    const contractVersion = new ContractVersion(data, this.context);
-
+    const contractVersion = new ContractVersion(
+      data.length ? data[0] : {},
+      this.context,
+    );
     if (!contractVersion.exists()) {
       throw new ContractsNotFoundException();
     }
@@ -252,9 +263,8 @@ export class ContractRepository extends BaseRepository {
   }
 
   async getContractDeployWithVersionAndMethods(contract_uuid: string) {
-    const cacheKey = `${CacheKeyPrefix.CONTRACT_DEPLOY_BY_UUID_DEPLOY_WITH_VERSION_AND_METHODS}:${contract_uuid}`;
     const data = await runCachedFunction(
-      cacheKey as any,
+      `${CacheKeyPrefix.CONTRACT_DEPLOY_BY_UUID_DEPLOY_WITH_VERSION_AND_METHODS}:${contract_uuid}`,
       async () =>
         await new ContractDeploy(
           {},
@@ -315,9 +325,6 @@ export class ContractRepository extends BaseRepository {
 
     return data[0].contractsCount;
   }
-
-  //#endregion
-  //#region ------------- HELPERS -------------
 
   //#endregion
 }

@@ -23,3 +23,12 @@ export class ContractAbiQueryDTO extends BaseQueryFilter {
   })
   public solidityJson: boolean;
 }
+
+export class ApillonApiContractAbiQueryDTO extends ContractAbiQueryDTO {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public project_uuid: string;
+}
