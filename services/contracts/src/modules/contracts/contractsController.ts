@@ -119,6 +119,10 @@ export class ContractsController {
     );
 
     try {
+      new AbiHelper(contractDeployData.abi).validateConstructorCall(
+        params.body.constructorArguments,
+      );
+
       const txData = this.contractService.prepareDeployTransaction(
         contractDeployData.abi,
         contractDeployData.bytecode,
@@ -178,6 +182,9 @@ export class ContractsController {
         body.methodArguments,
       );
     } catch (e: unknown) {
+      if (e instanceof ContractsValidationException) {
+        throw e;
+      }
       if (e instanceof AbiHelperError) {
         throw new ContractsValidationException({
           code: 'ABI_ERROR',

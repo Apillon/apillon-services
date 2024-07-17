@@ -107,10 +107,10 @@ export class StorageService {
   async getFileDetails(
     context: ApillonApiContext,
     bucket_uuid: string,
-    id: string,
+    uuid: string,
   ) {
     const filter: FileDetailsQueryFilter = new FileDetailsQueryFilter(
-      { bucket_uuid: bucket_uuid, id: id },
+      { bucket_uuid: bucket_uuid, uuid },
       context,
     );
     return (await new StorageMicroservice(context).getFileDetails(filter)).data;
@@ -118,7 +118,7 @@ export class StorageService {
 
   async deleteFile(context: ApillonApiContext, file_uuid: string) {
     return (
-      await new StorageMicroservice(context).deleteFile({ id: file_uuid })
+      await new StorageMicroservice(context).deleteFile({ uuid: file_uuid })
     ).data;
   }
 

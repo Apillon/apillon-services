@@ -213,7 +213,7 @@ export class ContractDeploy extends UuidSqlModel {
   public version_id: number;
 
   @prop({
-    setter(value) {
+    getter(value: unknown[]) {
       return typeof value === 'object' ? JSON.stringify(value) : value;
     },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -350,6 +350,12 @@ export class ContractDeploy extends UuidSqlModel {
     return this;
   }
 
+  markAsNotTransferred() {
+    this.contractStatus = ContractStatus.DEPLOYED;
+
+    return this;
+  }
+
   /***************************************************
    * Queries
    *****************************************************/
@@ -418,6 +424,23 @@ export class ContractDeploy extends UuidSqlModel {
 
   public override async populateByUUID(contract_uuid: string): Promise<this> {
     return super.populateByUUID(contract_uuid, 'contract_uuid');
+  }
+
+  public async getContractDeployWithVersion(
+    contract_deploy_uuid: string,
+  ): Promise<{ [key: string]: unknown }[]> {
+    const contractVersion = new ContractVersion({}, this.getContext());
+    const query = `
+      SELECT ${contractVersion.generateSelectFields('cv', 'cv')},
+             ${this.generateSelectFields('c', 'c')}
+      FROM \`${DbTables.CONTRACT_DEPLOY}\` AS c
+             LEFT JOIN \`${DbTables.CONTRACT_VERSION}\` AS cv ON (cv.id = c.version_id)
+      WHERE c.contract_uuid = @contract_deploy_uuid
+        AND c.status = ${SqlModelStatus.ACTIVE};
+    `;
+    return await this.getContext().mysql.paramExecute(query, {
+      contract_deploy_uuid,
+    });
   }
 
   public async getContractDeployWithVersionAndMethods(

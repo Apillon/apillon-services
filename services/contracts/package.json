@@ -14,7 +14,7 @@
     "deploy:prod": "serverless deploy --stage production",
     "deploy:staging": "serverless deploy --stage staging",
     "deploy:dev": "serverless deploy --stage dev",
-    "deploy:test": "serverless deploy --stage test",
+    "deploy:test": "serverless deploy --stage src/test",
     "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
     "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
     "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
@@ -40,5 +40,30 @@
   },
   "overrides": {
     "ipfs-utils": "9.0.6"
+  },
+  "jest": {
+    "testTimeout": 1800000,
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "rootDir": "src",
+    "testPathIgnorePatterns": [
+      "dist/*"
+    ],
+    "testRegex": ".*\\.test\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "preset": "ts-jest",
+    "verbose": true
   }
 }

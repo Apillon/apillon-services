@@ -7,7 +7,7 @@ import {
   LogType,
   ServiceName,
 } from '@apillon/lib';
-import { EVMContractClient } from '../../modules/clients/evm-contract.client';
+import { EVMContractClient } from '../clients/evm-contract.client';
 import { errors, utils } from 'ethers';
 import {
   ContractsCodeException,

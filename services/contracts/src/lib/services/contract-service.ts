@@ -18,7 +18,7 @@ import {
   SqlModelStatus,
   TransactionStatus,
 } from '@apillon/lib';
-import { EVMContractClient } from '../../modules/clients/evm-contract.client';
+import { EVMContractClient } from '../clients/evm-contract.client';
 import {
   ContractsErrorCode,
   ContractStatus,
@@ -30,7 +30,10 @@ import { v4 as uuidV4 } from 'uuid';
 import { ContractRepository } from '../repositores/contract-repository';
 import { TransactionRepository } from '../repositores/transaction-repository';
 import { ContractDeploy } from '../../modules/contracts/models/contractDeploy.model';
-import { ContractsCodeException } from '../exceptions';
+import {
+  ContractsCodeException,
+  ContractsValidationException,
+} from '../exceptions';
 import { AbiHelper } from '../utils/abi-helper';
 
 export class ContractService {
@@ -102,7 +105,7 @@ export class ContractService {
               chain: chain,
               transaction: txData,
               referenceTable: DbTables.CONTRACT_DEPLOY,
-              referenceId: spendCredit.referenceId,
+              referenceId: contractDeploy.contract_uuid,
               project_uuid: project_uuid,
             },
             this.context,
@@ -121,13 +124,16 @@ export class ContractService {
     await this.transactionRepository.createTransaction(
       new Transaction(
         {
+          transactionType: TransactionType.DEPLOY_CONTRACT,
+          transactionStatus: TransactionStatus.PENDING,
+          transaction_uuid: spendCredit.referenceId,
+          transactionHash: transactionData.transactionHash,
           //chainType: ChainType.EVM,
           chain,
-          transactionType: TransactionType.DEPLOY_CONTRACT,
           refTable: DbTables.CONTRACT_DEPLOY,
-          refId: spendCredit.referenceId,
-          transactionHash: transactionData.transactionHash,
-          transactionStatus: TransactionStatus.PENDING,
+          refId: contractDeploy.contract_uuid,
+          callMethod: 'constructor',
+          callArguments: constructorArguments,
         },
         this.context,
       ),
@@ -200,6 +206,15 @@ export class ContractService {
         });
     }
 
+    if (!contractDeploy.contractAddress) {
+      throw new ContractsCodeException({
+        status: 500,
+        code: ContractsErrorCode.CONTRACT_ADDRESS_MISSING,
+        context: this.context,
+        sourceFunction: 'ContractRepository.getContractDeployByUUID',
+      });
+    }
+
     return contractDeploy;
   }
 
@@ -230,6 +245,14 @@ export class ContractService {
     methodName: string,
     methodArguments: unknown[],
   ) {
+    if (!contractDeploy.canCallMethod(methodName)) {
+      throw new ContractsValidationException({
+        code: 'ABI_ERROR',
+        property: 'method',
+        message: `Not allowed to call method ${methodName}`,
+      });
+    }
+
     const txData = await this.createCallTransaction(
       contractDeploy.chain,
       contractDeploy.contractAddress,
@@ -275,14 +298,16 @@ export class ContractService {
     await this.transactionRepository.createTransaction(
       new Transaction(
         {
-          //chainType: ChainType.EVM,
-          chain: contractDeploy.chain,
           transactionType,
-          refTable: DbTables.CONTRACT_DEPLOY,
-          refId: contractDeploy.contract_uuid,
-          transactionHash: transactionData.transactionHash,
           transactionStatus: TransactionStatus.PENDING,
           transaction_uuid: spendCredit.referenceId,
+          transactionHash: transactionData.transactionHash,
+          //chainType: ChainType.EVM,
+          chain: contractDeploy.chain,
+          refTable: DbTables.CONTRACT_DEPLOY,
+          refId: contractDeploy.contract_uuid,
+          callMethod: methodName,
+          callArguments: methodArguments,
         },
         this.context,
       ),
@@ -314,11 +339,11 @@ export class ContractService {
     //Spend credit
     return new SpendCreditDto(
       {
-        project_uuid: project_uuid,
+        project_uuid,
         product_id,
         referenceTable: DbTables.CONTRACT_DEPLOY,
         referenceId: contract_uuid,
-        location: 'ContractsService.createContract',
+        location: 'ContractsService.getCreateContractSpendDto',
         service: ServiceName.CONTRACTS,
       },
       this.context,
@@ -335,11 +360,11 @@ export class ContractService {
     }[chain];
     return new SpendCreditDto(
       {
-        project_uuid: project_uuid,
+        project_uuid,
         product_id,
-        referenceTable: DbTables.TRANSACTION,
+        referenceTable: DbTables.CONTRACT_DEPLOY,
         referenceId: uuidV4(),
-        location: 'ContractsService.callContract',
+        location: 'ContractsService.getCallContractSpendDto',
         service: ServiceName.CONTRACTS,
       },
       this.context,
@@ -465,18 +490,13 @@ export class ContractService {
     contract_deploy_uuid: string,
     solidityJson: boolean,
   ) {
-    // TODO: simplify query and serve whitlieste?
     const contractDeploy =
-      await this.contractRepository.getContractDeployByUUID(
+      await this.contractRepository.getContractDeployWithVersion(
         contract_deploy_uuid,
-      );
-    const contractVersion =
-      await this.contractRepository.getContractVersionById(
-        contractDeploy.version_id,
       );
 
     return solidityJson
-      ? contractVersion.abi
-      : new AbiHelper(contractVersion.abi).toHumanReadable();
+      ? contractDeploy.contractVersion.abi
+      : new AbiHelper(contractDeploy.contractVersion.abi).toHumanReadable();
   }
 }
