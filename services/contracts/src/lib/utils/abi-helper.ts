@@ -52,45 +52,90 @@ export class AbiHelper {
   //   }
   // }
 
-  /**
-   * Returns ABI with mandatory items
-   */
-  // getCleanAbi() {
-  //   return this.abi.filter(
-  //     (item: unknown) =>
-  //       typeof item === 'object' &&
-  //       'type' in item &&
-  //       typeof item.type === 'string' &&
-  //       ['constructor', 'function'].includes(item.type),
-  //   );
-  // }
-
   toHumanReadable() {
     return new utils.Interface(this.abi).format(utils.FormatTypes.full);
   }
 
-  static validateCallMethod(abi: unknown[], methodName: string) {
-    const method = abi.find(
+  validateCallMethod(methodName: string, methodArguments: unknown[]) {
+    const methods = this.findFunctionMethod(methodName);
+    if (methods.length <= 0) {
+      throw new AbiHelperMissingMethodError('method not found');
+    }
+    const atLeastOneValidMethod = methods.reduce(
+      (accumulator: boolean, method: object & Record<'inputs', unknown>) => {
+        return (
+          accumulator ||
+          (this.areArgumentsValid(method, methodArguments) &&
+            this.isMethodCallNonPayable(method))
+        );
+      },
+      false,
+    );
+    if (!atLeastOneValidMethod) {
+      throw new AbiHelperNotAllowedError('cannot call method');
+    }
+  }
+
+  validateConstructorCall(methodArguments: unknown[]) {
+    const methods = this.findConstructorMethods();
+    if (methods.length <= 0) {
+      throw new AbiHelperMissingMethodError('constructor not found');
+    }
+    const atLeastOneValidConstructor = methods.reduce(
+      (accumulator: boolean, method: object & Record<'inputs', unknown>) => {
+        return (
+          accumulator ||
+          (this.areArgumentsValid(method, methodArguments) &&
+            this.isMethodCallNonPayable(method))
+        );
+      },
+      false,
+    );
+    if (!atLeastOneValidConstructor) {
+      throw new AbiHelperNotAllowedError('cannot call constructor');
+    }
+  }
+
+  /*****************
+   * PRIVATE HELPERS
+   ******************/
+
+  private findFunctionMethod(methodName: string) {
+    return this.abi.filter(
       (method: unknown) =>
         typeof method === 'object' &&
         'name' in method &&
         typeof method.name === 'string' &&
-        method.name == methodName,
+        method.name == methodName &&
+        'type' in method &&
+        method.type === 'function',
     );
-    if (
-      !method ||
-      typeof method !== 'object' ||
-      !('type' in method) ||
-      method.type !== 'function'
-    ) {
-      throw new AbiHelperMissingMethodError('Missing method in ABI');
-    }
+  }
 
-    if (
-      !('stateMutability' in method) ||
-      method.stateMutability !== 'nonpayable'
-    ) {
-      throw new AbiHelperNotAllowedError('cannot call method');
-    }
+  private findConstructorMethods() {
+    return this.abi.filter(
+      (method: unknown) =>
+        typeof method === 'object' &&
+        'type' in method &&
+        typeof method.type === 'string' &&
+        method.type == 'constructor',
+    );
+  }
+
+  private areArgumentsValid(
+    method: object & Record<'inputs', unknown>,
+    methodArguments: unknown[],
+  ) {
+    return (
+      'inputs' in method &&
+      Array.isArray(method.inputs) &&
+      method.inputs.length === methodArguments.length
+    );
+  }
+
+  private isMethodCallNonPayable(method: object & Record<'inputs', unknown>) {
+    return (
+      'stateMutability' in method && method.stateMutability === 'nonpayable'
+    );
   }
 }

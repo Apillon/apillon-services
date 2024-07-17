@@ -151,8 +151,7 @@ export class ContractRepository extends BaseRepository {
         version_id: contract_version_id,
         contractStatus: ContractStatus.DEPLOYING,
         status: SqlModelStatus.INCOMPLETE,
-        // TODO: JSON doesnt seem to work for array so we have to stringify here and use setter on ContractDeploy
-        constructorArguments: JSON.stringify(constructorArguments),
+        constructorArguments,
       },
       this.context,
     );

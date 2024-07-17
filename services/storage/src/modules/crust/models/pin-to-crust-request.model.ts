@@ -125,13 +125,7 @@ export class PinToCrustRequest extends AdvancedSQLModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
     ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.SERVICE],
     validators: [],
   })
   public refId: string;
@@ -144,13 +138,7 @@ export class PinToCrustRequest extends AdvancedSQLModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
     ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.SERVICE],
     validators: [],
   })
   public refTable: string;

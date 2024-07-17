@@ -43,5 +43,5 @@ export class CallContractDTO extends ModelBase {
       },
     ],
   })
-  public methodArguments: any[];
+  public methodArguments: unknown[];
 }

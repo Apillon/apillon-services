@@ -85,7 +85,7 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
     describe('Api key tests', () => {
       test('Apillon API should return bad request if auth header is not present', async () => {
         const response = await request(stage.http).get(
-          `/storage/${testBucket.bucket_uuid}/file/${testFile.id}/detail`,
+          `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}/detail`,
         );
         expect(response.status).toBe(400);
         expect(response.body.message).toBe('Missing Authorization header');
@@ -93,7 +93,9 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
 
       test('Apillon API should return bad request response code if malformed authorization header is provided', async () => {
         const response = await request(stage.http)
-          .get(`/storage/${testBucket.bucket_uuid}/file/${testFile.id}/detail`)
+          .get(
+            `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}/detail`,
+          )
           .set('Authorization', `Basic i will hack you`);
         expect(response.status).toBe(400);
         expect(response.body.message).toBe('Malformed Authorization header');
@@ -101,7 +103,9 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
 
       test('Apillon API should return unauthorized response code if invalid api key / api key secret is provided in auth header', async () => {
         const response = await request(stage.http)
-          .get(`/storage/${testBucket.bucket_uuid}/file/${testFile.id}/detail`)
+          .get(
+            `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}/detail`,
+          )
           .set(
             'Authorization',
             `Basic ${Buffer.from(apiKey.apiKey + ':' + '123test').toString(
@@ -115,7 +119,9 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
     describe('Api key permissions tests', () => {
       test('Apillon API should return 403 forbidden, if api key is missing required permissions', async () => {
         const response = await request(stage.http)
-          .get(`/storage/${testBucket.bucket_uuid}/file/${testFile.id}/detail`)
+          .get(
+            `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}/detail`,
+          )
           .set(
             'Authorization',
             `Basic ${Buffer.from(
@@ -140,7 +146,9 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
           }),
         );
         const response = await request(stage.http)
-          .get(`/storage/${testBucket.bucket_uuid}/file/${testFile.id}/detail`)
+          .get(
+            `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}/detail`,
+          )
           .set(
             'Authorization',
             `Basic ${Buffer.from(
@@ -165,7 +173,9 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
           }),
         );
         const response = await request(stage.http)
-          .get(`/storage/${testBucket.bucket_uuid}/file/${testFile.id}/detail`)
+          .get(
+            `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}/detail`,
+          )
           .set(
             'Authorization',
             `Basic ${Buffer.from(
@@ -190,7 +200,9 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
         );
 
         const response = await request(stage.http)
-          .get(`/storage/${testBucket.bucket_uuid}/file/${testFile.id}/detail`)
+          .get(
+            `/storage/${testBucket.bucket_uuid}/file/${testFile.file_uuid}/detail`,
+          )
           .set(
             'Authorization',
             `Basic ${Buffer.from(
@@ -201,7 +213,9 @@ describe('Storage access (api keys, api keys permissions, ...) tests', () => {
       });
       test('Apillon API should return 403 forbidden, if API addresses resource from another project', async () => {
         const response = await request(stage.http)
-          .get(`/storage/${testBucket.bucket_uuid}/file/${testFile2.id}/detail`)
+          .get(
+            `/storage/${testBucket.bucket_uuid}/file/${testFile2.file_uuid}/detail`,
+          )
           .set(
             'Authorization',
             `Basic ${Buffer.from(

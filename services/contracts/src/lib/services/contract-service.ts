@@ -105,7 +105,7 @@ export class ContractService {
               chain: chain,
               transaction: txData,
               referenceTable: DbTables.CONTRACT_DEPLOY,
-              referenceId: spendCredit.referenceId,
+              referenceId: contractDeploy.contract_uuid,
               project_uuid: project_uuid,
             },
             this.context,
@@ -124,13 +124,16 @@ export class ContractService {
     await this.transactionRepository.createTransaction(
       new Transaction(
         {
+          transactionType: TransactionType.DEPLOY_CONTRACT,
+          transactionStatus: TransactionStatus.PENDING,
+          transaction_uuid: spendCredit.referenceId,
+          transactionHash: transactionData.transactionHash,
           //chainType: ChainType.EVM,
           chain,
-          transactionType: TransactionType.DEPLOY_CONTRACT,
           refTable: DbTables.CONTRACT_DEPLOY,
-          refId: spendCredit.referenceId,
-          transactionHash: transactionData.transactionHash,
-          transactionStatus: TransactionStatus.PENDING,
+          refId: contractDeploy.contract_uuid,
+          callMethod: 'constructor',
+          callArguments: constructorArguments,
         },
         this.context,
       ),
@@ -295,14 +298,16 @@ export class ContractService {
     await this.transactionRepository.createTransaction(
       new Transaction(
         {
-          //chainType: ChainType.EVM,
-          chain: contractDeploy.chain,
           transactionType,
-          refTable: DbTables.CONTRACT_DEPLOY,
-          refId: contractDeploy.contract_uuid,
-          transactionHash: transactionData.transactionHash,
           transactionStatus: TransactionStatus.PENDING,
           transaction_uuid: spendCredit.referenceId,
+          transactionHash: transactionData.transactionHash,
+          //chainType: ChainType.EVM,
+          chain: contractDeploy.chain,
+          refTable: DbTables.CONTRACT_DEPLOY,
+          refId: contractDeploy.contract_uuid,
+          callMethod: methodName,
+          callArguments: methodArguments,
         },
         this.context,
       ),
@@ -334,11 +339,11 @@ export class ContractService {
     //Spend credit
     return new SpendCreditDto(
       {
-        project_uuid: project_uuid,
+        project_uuid,
         product_id,
         referenceTable: DbTables.CONTRACT_DEPLOY,
         referenceId: contract_uuid,
-        location: 'ContractsService.createContract',
+        location: 'ContractsService.getCreateContractSpendDto',
         service: ServiceName.CONTRACTS,
       },
       this.context,
@@ -355,11 +360,11 @@ export class ContractService {
     }[chain];
     return new SpendCreditDto(
       {
-        project_uuid: project_uuid,
+        project_uuid,
         product_id,
-        referenceTable: DbTables.TRANSACTION,
+        referenceTable: DbTables.CONTRACT_DEPLOY,
         referenceId: uuidV4(),
-        location: 'ContractsService.callContract',
+        location: 'ContractsService.getCallContractSpendDto',
         service: ServiceName.CONTRACTS,
       },
       this.context,
