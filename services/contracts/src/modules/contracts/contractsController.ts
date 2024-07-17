@@ -120,7 +120,7 @@ export class ContractsController {
 
     try {
       new AbiHelper(contractDeployData.abi).validateConstructorCall(
-        params.body.constructorArguments,
+        body.constructorArguments,
       );
 
       const txData = this.contractService.prepareDeployTransaction(
@@ -172,7 +172,10 @@ export class ContractsController {
     const abi = contractDeploy.contractVersion.abi;
 
     try {
-      AbiHelper.validateCallMethod(abi, body.methodName);
+      new AbiHelper(abi).validateCallMethod(
+        body.methodName,
+        body.methodArguments,
+      );
 
       return await this.contractService.callContract(
         contractDeploy,
