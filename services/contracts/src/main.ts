@@ -10,6 +10,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { ContractService } from './modules/contracts/services/contract-service';
 import { ContractRepository } from './modules/contracts/repositores/contract-repository';
 import { TransactionRepository } from './modules/contracts/repositores/transaction-repository';
+import { ContractsSpendService } from './modules/contracts/services/contracts-spend-service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -26,6 +27,7 @@ export async function processEvent(
     new ContractRepository(context),
     new TransactionRepository(context),
     new BlockchainMicroservice(context),
+    new ContractsSpendService(context),
     new Mailing(context),
     new Lmas(),
   );
