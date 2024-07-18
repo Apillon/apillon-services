@@ -13,7 +13,7 @@ import {
   ContractsValidationException,
 } from '../../lib/exceptions';
 import { handleEthersException } from '../../lib/utils/contract-utils';
-import { ContractService } from '../../lib/services/contract-service';
+import { ContractService } from './services/contract-service';
 import { AbiHelper, AbiHelperError } from '../../lib/utils/abi-helper';
 
 export class ContractsController {

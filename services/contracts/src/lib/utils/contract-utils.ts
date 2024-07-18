@@ -1,40 +1,11 @@
-import {
-  BlockchainMicroservice,
-  ChainType,
-  Context,
-  EvmChain,
-  HttpException,
-  LogType,
-  ServiceName,
-} from '@apillon/lib';
-import { EVMContractClient } from '../clients/evm-contract.client';
+import { LogType, ServiceName } from '@apillon/lib';
 import { errors, utils } from 'ethers';
 import {
   ContractsCodeException,
   ContractsValidationException,
 } from '../exceptions';
 
-export async function getEvmContractClient(
-  context: Context,
-  chain: EvmChain,
-  contractAbi: unknown[],
-  contractAddress?: string,
-) {
-  const rpcEndpoint = (
-    await new BlockchainMicroservice(context).getChainEndpoint(
-      chain,
-      ChainType.EVM,
-    )
-  ).data?.url;
-
-  return EVMContractClient.getInstance(
-    rpcEndpoint,
-    contractAbi,
-    contractAddress,
-  );
-}
-
-// TODO: move?
+// TODO: move to evm lib
 export async function handleEthersException(
   error: unknown,
   abi: unknown[],

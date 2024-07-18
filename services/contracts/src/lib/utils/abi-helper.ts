@@ -2,6 +2,7 @@ import { utils } from 'ethers';
 // import { Abi } from 'abitype/zod';
 // import { ZodError } from 'zod';
 
+// TODO: move to evm lib
 export class AbiHelperError extends Error {}
 
 export class AbiHelperMissingMethodError extends AbiHelperError {}

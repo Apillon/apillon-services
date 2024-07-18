@@ -24,17 +24,17 @@ import {
   ContractStatus,
   DbTables,
   TransactionType,
-} from '../../config/types';
-import { Transaction } from '../../modules/contracts/models/transaction.model';
+} from '../../../config/types';
+import { Transaction } from '../models/transaction.model';
 import { v4 as uuidV4 } from 'uuid';
 import { ContractRepository } from '../repositores/contract-repository';
 import { TransactionRepository } from '../repositores/transaction-repository';
-import { ContractDeploy } from '../../modules/contracts/models/contractDeploy.model';
+import { ContractDeploy } from '../models/contractDeploy.model';
 import {
   ContractsCodeException,
   ContractsValidationException,
-} from '../exceptions';
-import { AbiHelper } from '../utils/abi-helper';
+} from '../../../lib/exceptions';
+import { AbiHelper } from '../../../lib/utils/abi-helper';
 
 export class ContractService {
   private readonly context: ServiceContext;
@@ -452,7 +452,7 @@ export class ContractService {
       throw await new ContractsCodeException({
         status: 500,
         errorMessage: `Error getting contract version for contract with uuid ${contract_uuid}.`,
-        code: ContractsErrorCode.GENERAL_SERVER_ERROR,
+        code: ContractsErrorCode.GET_CONTRACT_VERSION_ERROR,
       }).writeToMonitor({
         context: this.context,
         logType: LogType.ERROR,

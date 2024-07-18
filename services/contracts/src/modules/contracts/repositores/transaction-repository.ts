@@ -1,5 +1,5 @@
 import { ServiceContext } from '@apillon/service-lib';
-import { Transaction } from '../../modules/contracts/models/transaction.model';
+import { Transaction } from '../models/transaction.model';
 import {
   ContractTransactionQueryFilter,
   PoolConnection,
@@ -7,8 +7,8 @@ import {
   SerializeFor,
   SqlModelStatus,
 } from '@apillon/lib';
-import { ContractsModelValidationException } from '../exceptions';
-import { DbTables } from '../../config/types';
+import { ContractsModelValidationException } from '../../../lib/exceptions';
+import { DbTables } from '../../../config/types';
 
 export class TransactionRepository {
   private readonly context: ServiceContext;
