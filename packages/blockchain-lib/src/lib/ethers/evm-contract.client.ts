@@ -1,6 +1,5 @@
 import { Contract, ContractFactory, providers, utils } from 'ethers';
 
-// TODO: this was copied from NFT service and can be reused
 export class EVMContractClient {
   private static instance: EVMContractClient;
   private readonly contract: Contract;

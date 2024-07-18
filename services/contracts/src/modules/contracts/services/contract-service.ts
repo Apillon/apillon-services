@@ -18,7 +18,6 @@ import {
   SqlModelStatus,
   TransactionStatus,
 } from '@apillon/lib';
-import { EVMContractClient } from '../clients/evm-contract.client';
 import {
   ContractsErrorCode,
   ContractStatus,
@@ -34,7 +33,7 @@ import {
   ContractsCodeException,
   ContractsValidationException,
 } from '../../../lib/exceptions';
-import { AbiHelper } from '../../../lib/utils/abi-helper';
+import { AbiHelper, EVMContractClient } from '@apillon/blockchain-lib';
 
 export class ContractService {
   private readonly context: ServiceContext;
