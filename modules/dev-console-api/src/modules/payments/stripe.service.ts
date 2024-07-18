@@ -66,6 +66,7 @@ export class StripeService {
         isCreditPurchase: `${mode === 'payment'}`,
         environment: env.APP_ENV,
       },
+      billing_address_collection: 'required',
       success_url: paymentSessionDto.returnUrl,
       cancel_url: paymentSessionDto.returnUrl,
       automatic_tax: { enabled: true },

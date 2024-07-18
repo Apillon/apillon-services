@@ -10,6 +10,7 @@ import {
   UpdateJobDto,
   spendCreditAction,
   writeLog,
+  SerializeFor,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -58,6 +59,7 @@ export class AcurastService {
 
     const conn = await context.mysql.start();
     try {
+      await job.insert(SerializeFor.INSERT_DB, conn);
       const referenceId = uuidV4();
       await spendCreditAction(
         context,

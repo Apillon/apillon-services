@@ -48,6 +48,19 @@ export class Transaction extends AdvancedSQLModel {
   public walletAddress: string;
 
   @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.SERVICE],
+    validators: [],
+  })
+  public refTable: string;
+
+  @prop({
     parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
@@ -62,7 +75,7 @@ export class Transaction extends AdvancedSQLModel {
       SerializeFor.PROFILE,
     ],
   })
-  public contract_id?: number;
+  public refId?: number;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -231,7 +244,7 @@ export class Transaction extends AdvancedSQLModel {
       `
         SELECT t.*
         FROM \`${this.tableName}\` as t
-               JOIN ${DbTables.CONTRACT} as c ON (c.id = t.contract_id)
+               JOIN ${DbTables.CONTRACT} as c ON (c.id = t.refId)
         WHERE t.status <> ${SqlModelStatus.DELETED}
           AND (@transactionStatus IS NULL OR
                t.transactionStatus = @transactionStatus)
@@ -266,7 +279,7 @@ export class Transaction extends AdvancedSQLModel {
                c.data     AS contractData,
                t.metadata AS metadata
         FROM \`${this.tableName}\` as t
-               JOIN ${DbTables.CONTRACT} as c ON (c.id = t.contract_id)
+               JOIN ${DbTables.CONTRACT} as c ON (c.id = t.refId)
         WHERE t.status <> ${SqlModelStatus.DELETED}
           AND t.transactionStatus = @transactionStatus
           AND JSON_EXTRACT(c.data, "$.clusterId") = @clusterId
@@ -325,7 +338,7 @@ export class Transaction extends AdvancedSQLModel {
         `,
       qFrom: `
         FROM \`${this.tableName}\` t
-        JOIN ${DbTables.CONTRACT} AS c ON (c.id = t.contract_id)
+        JOIN ${DbTables.CONTRACT} AS c ON (c.id = t.refId)
         WHERE t.status <> ${SqlModelStatus.DELETED}
         AND (@contract_uuid IS null OR c.contract_uuid = @contract_uuid)
         AND (@transactionStatus IS null OR t.transactionStatus = @transactionStatus)
@@ -371,7 +384,7 @@ export class Transaction extends AdvancedSQLModel {
       `
       SELECT COUNT(*) as txCount
       FROM \`${DbTables.TRANSACTION}\` t
-      INNER JOIN \`${DbTables.CONTRACT}\` c ON t.contract_id = c.id
+             INNER JOIN \`${DbTables.CONTRACT}\` c ON t.refId = c.id
       WHERE c.project_uuid = @project_uuid
       AND t.status <> ${SqlModelStatus.DELETED};
       `,

@@ -33,6 +33,7 @@ export async function getTokenPriceUsd(token: string): Promise<number> {
     GLMR: 'moonbeam',
     DEV: 'moonbase',
     SUB: 'subsocial',
+    ACU: 'acurast',
   };
   const networkName = networkTokenMap[token];
   try {

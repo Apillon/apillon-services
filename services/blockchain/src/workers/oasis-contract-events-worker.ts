@@ -16,7 +16,7 @@ export class OasisContractEventsWorker extends EvmContractEventsWorker {
     const txTopics: any = events.map((x) => ({
       dataHash: x.args[0],
       hashedUsername: x.args[1],
-      publicAddress: x.args[3],
+      publicAddress: x.args[2],
     }));
 
     const chunks = splitArray(txTopics, 20);

@@ -172,6 +172,10 @@ export class PhalaClient {
       },
       content,
     );
+    if (response.output.isEmpty || response.output.isErr) {
+      throw new Error('Failed to encrypt content, contract returned no data.');
+    }
+
     return response.output.toJSON()['ok'].ok;
   }
 

@@ -22,6 +22,7 @@ import { UserModule } from './modules/user/user.module';
 import { SocialModule } from './modules/social/social.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { AcurastModule } from './modules/acurast/acurast.module';
+import { ContractsModule } from './modules/contracts/contracts.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { AcurastModule } from './modules/acurast/acurast.module';
     SocialModule,
     WalletModule,
     AcurastModule,
+    ContractsModule,
   ],
   controllers: [],
   providers: [],

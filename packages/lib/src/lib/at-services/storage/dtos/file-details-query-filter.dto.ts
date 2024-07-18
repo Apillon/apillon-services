@@ -23,5 +23,5 @@ export class FileDetailsQueryFilter extends ModelBase {
       },
     ],
   })
-  public id: string;
+  public uuid: string;
 }

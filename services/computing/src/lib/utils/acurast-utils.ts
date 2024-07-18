@@ -62,7 +62,8 @@ export async function deployAcurastJob(
         transaction_uuid,
         walletAddress: response.data.address,
         transactionType: TransactionType.DEPLOY_JOB,
-        contract_id: job.id,
+        refTable: DbTables.ACURAST_JOB,
+        refId: job.id,
         transactionHash: response.data.transactionHash,
         transactionStatus: ComputingTransactionStatus.PENDING,
       },
@@ -76,7 +77,7 @@ export async function deployAcurastJob(
     jobStatus: AcurastJobStatus.DEPLOYING,
     deployerAddress: response.data.address,
   });
-  await job.insert(SerializeFor.INSERT_DB, conn);
+  await job.update(SerializeFor.INSERT_DB, conn);
 }
 
 export async function setAcurastJobEnvironment(
@@ -110,7 +111,8 @@ export async function setAcurastJobEnvironment(
         transaction_uuid,
         walletAddress: response.data.address,
         transactionType: TransactionType.SET_JOB_ENVIRONMENT,
-        contract_id: job.id,
+        refTable: DbTables.ACURAST_JOB,
+        refId: job.id,
         transactionHash: response.data.transactionHash,
         transactionStatus: ComputingTransactionStatus.PENDING,
       },
@@ -149,7 +151,8 @@ export async function deleteAcurastJob(
         transaction_uuid,
         walletAddress: response.data.address,
         transactionType: TransactionType.DELETE_JOB,
-        contract_id: job.id,
+        refTable: DbTables.ACURAST_JOB,
+        refId: job.id,
         transactionHash: response.data.transactionHash,
         transactionStatus: ComputingTransactionStatus.PENDING,
       },

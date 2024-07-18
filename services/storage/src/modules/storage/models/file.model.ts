@@ -286,6 +286,11 @@ export class File extends UuidSqlModel {
       : this.reset();
   }
 
+  private getWhereQuery(showOnlyDeleted: boolean): string {
+    return `WHERE (f.id LIKE @id OR f.CID LIKE @id OR f.CIDv1 LIKE @id OR f.file_uuid LIKE @id)
+      AND f.status ${showOnlyDeleted ? '=' : '<>'} ${SqlModelStatus.DELETED};`;
+  }
+
   /**
    *
    * @param id internal id, cid or file_uuid
@@ -301,9 +306,7 @@ export class File extends UuidSqlModel {
       SELECT f.*, d.directory_uuid
       FROM \`${DbTables.FILE}\` f
       LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
-      WHERE (f.id LIKE @id OR f.CID LIKE @id OR f.CIDv1 LIKE @id OR f.file_uuid LIKE @id)
-      AND f.status <> ${SqlModelStatus.DELETED};
-      `,
+      ${this.getWhereQuery(false)}`,
       { id },
     );
 
@@ -328,8 +331,7 @@ export class File extends UuidSqlModel {
       SELECT f.*, d.directory_uuid
       FROM \`${DbTables.FILE}\` f
       LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
-      WHERE (f.id LIKE @id OR f.CID LIKE @id OR f.file_uuid LIKE @id)
-      AND f.status = ${SqlModelStatus.DELETED};
+      ${this.getWhereQuery(true)}
       `,
       { id },
     );
@@ -381,7 +383,7 @@ export class File extends UuidSqlModel {
       this.getContext(),
     ).getIpfsCluster();
 
-    this.link = ipfsCluster.generateLink(this.project_uuid, this.CIDv1);
+    this.link = await ipfsCluster.generateLink(this.project_uuid, this.CIDv1);
   }
 
   /**
@@ -444,7 +446,7 @@ export class File extends UuidSqlModel {
     //Populate link
     for (const item of data.items) {
       if (item.CID) {
-        item.link = ipfsCluster.generateLink(b.project_uuid, item.CIDv1);
+        item.link = await ipfsCluster.generateLink(b.project_uuid, item.CIDv1);
       }
     }
 
@@ -511,7 +513,7 @@ export class File extends UuidSqlModel {
     //Populate link
     for (const item of data.items) {
       if (item.CID) {
-        item.link = ipfsCluster.generateLink(
+        item.link = await ipfsCluster.generateLink(
           env.DEV_CONSOLE_API_DEFAULT_PROJECT_UUID,
           item.CIDv1,
         );

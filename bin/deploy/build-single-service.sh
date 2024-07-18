@@ -29,6 +29,14 @@ npm run build
 npm link
 cd ../../
 
+# TODO: should this be done conditionally
+cd packages/blockchain-lib/
+echo "Building @apillon/blockchain-lib"
+npm install --omit=dev
+npm run build
+npm link
+cd ../../
+
 if [ "$MODULES_LIB" == "true" ]
 then
   echo "Building @apillon/modules-lib"

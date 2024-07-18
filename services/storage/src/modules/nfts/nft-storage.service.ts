@@ -106,7 +106,7 @@ export class NftStorageService {
         context,
       ).getIpfsCluster();
 
-      baseUri = ipfsCluster.generateLink(
+      baseUri = await ipfsCluster.generateLink(
         bucket.project_uuid,
         publishedIpns.name,
         true,
