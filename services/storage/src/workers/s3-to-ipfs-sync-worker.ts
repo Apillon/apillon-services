@@ -1,7 +1,10 @@
 import {
+  AppEnvironment,
+  AWS_S3,
   Context,
   EndFileUploadSessionDto,
   env,
+  isStreamHtmlFile,
   LogType,
   ServiceName,
 } from '@apillon/lib';
@@ -9,6 +12,7 @@ import {
   BaseQueueWorker,
   QueueWorkerType,
   sendToWorkerQueue,
+  ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import {
@@ -25,7 +29,10 @@ import { Bucket } from '../modules/bucket/models/bucket.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { WorkerName } from './worker-executor';
+import { Readable } from 'stream';
 
+// Maximum file size for which we will check if it is HTML. Currently approx. 1MB
+const MAX_HTML_SIZE_IN_B = 1000000;
 export class SyncToIPFSWorker extends BaseQueueWorker {
   public constructor(
     workerDefinition: WorkerDefinition,
@@ -43,9 +50,10 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
 
     const processFilesInSyncWorker = data?.processFilesInSyncWorker;
     const session_uuid = data?.session_uuid;
+    const needsHtmlValidation = data?.needsHtmlValidation ?? true;
     data.wrappingDirectoryPath = data?.wrappingDirectoryPath?.trim();
 
-    let files = [];
+    let files: FileUploadRequest[] = [];
     let bucket: Bucket = undefined;
     let session: FileUploadSession = undefined;
 
@@ -94,6 +102,8 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED &&
         x.fileStatus != FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3,
     );
+    //S3 client
+    const s3Client: AWS_S3 = new AWS_S3();
 
     if (files.length > 0) {
       let transferredFiles = [];
@@ -102,6 +112,52 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         bucket.bucketType == BucketType.STORAGE ||
         bucket.bucketType == BucketType.NFT_METADATA
       ) {
+        if (needsHtmlValidation) {
+          for (const file of files) {
+            let fileStream = await s3Client.get(
+              env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+              file.s3FileKey,
+            );
+            let isHtml =
+              !fileStream.ContentLength ||
+              fileStream.ContentLength < MAX_HTML_SIZE_IN_B
+                ? await isStreamHtmlFile(fileStream.Body as Readable)
+                : false;
+            if (isHtml) {
+              session.sessionStatus = FileUploadSessionStatus.VALIDATION_FAILED;
+              await session.update();
+              return;
+            }
+          }
+
+          session.sessionStatus = FileUploadSessionStatus.VALIDATION_PASSED;
+          await session.update();
+
+          // If all files are not HTML we call the same worker again with needsHtmlValidation set to false
+          if (
+            ![AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
+              env.APP_ENV as AppEnvironment,
+            )
+          ) {
+            const workerData = {
+              ...data,
+              // HTML Validation has been done in the first iteration
+              needsHtmlValidation: false,
+              // Files have been processed in the first iteration
+              processFilesInSyncWorker: false,
+            };
+
+            await sendToWorkerQueue(
+              env.STORAGE_AWS_WORKER_SQS_URL,
+              WorkerName.SYNC_TO_IPFS_WORKER,
+              [workerData],
+              null,
+              null,
+            );
+            return true;
+          }
+        }
+
         transferredFiles = (
           await storageBucketSyncFilesToIPFS(
             this.context,
@@ -151,6 +207,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         [
           {
             ...data,
+            needsHtmlValidation: false, //Files were validated in the first iteration
             processFilesInSyncWorker: false, //Files were processed in first iteration
           },
         ],
