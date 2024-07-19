@@ -27,9 +27,9 @@ import { constants } from 'ethers';
 import { ContractVersion } from '../../modules/nfts/models/contractVersion.model';
 import { BN_MAX_INTEGER } from '@polkadot/util/bn/consts';
 import { SubstrateContractClient } from '../../modules/clients/substrate-contract.client';
-import { EVMContractClient } from '../../modules/clients/evm-contract.client';
 import { TransactionUtils } from './transaction-utils';
 import { NftsCodeException } from '../exceptions';
+import { EVMContractClient } from '@apillon/blockchain-lib';
 
 export async function getEvmContractClient(
   context: Context,
@@ -44,7 +44,7 @@ export async function getEvmContractClient(
     )
   ).data?.url;
 
-  return await EVMContractClient.getInstance(
+  return EVMContractClient.getInstance(
     rpcEndpoint,
     contractAbi,
     contractAddress,
@@ -138,7 +138,7 @@ export async function deployNFTCollectionContract(
             code: NftsErrorCode.GENERAL_SERVER_ERROR,
           });
       }
-      const txData = EVMContractClient.createDeployTransaction(
+      const serializedTransaction = EVMContractClient.createDeployTransaction(
         abi,
         bytecode,
         contractArguments,
@@ -147,7 +147,7 @@ export async function deployNFTCollectionContract(
         new CreateEvmTransactionDto(
           {
             chain: collection.chain,
-            transaction: EVMContractClient.serializeTransaction(txData),
+            transaction: serializedTransaction,
             referenceTable: DbTables.COLLECTION,
             referenceId: collection.id,
             project_uuid: collection.project_uuid,

@@ -1,4 +1,10 @@
-import { Contract, ContractFactory, providers, utils } from 'ethers';
+import {
+  Contract,
+  ContractFactory,
+  ContractInterface,
+  providers,
+  utils,
+} from 'ethers';
 
 export class EVMContractClient {
   private static instance: EVMContractClient;
@@ -10,7 +16,7 @@ export class EVMContractClient {
 
   static getInstance(
     rpcEndpoint: string,
-    contractAbi: unknown[],
+    contractAbi: ContractInterface,
     contractAddress: string,
   ) {
     if (!rpcEndpoint) {
@@ -27,7 +33,7 @@ export class EVMContractClient {
   }
 
   static createDeployTransaction(
-    contractAbi: unknown[],
+    contractAbi: ContractInterface,
     byteCode: string,
     constructorArguments: any[] = [],
   ): string {
