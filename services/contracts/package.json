@@ -35,6 +35,9 @@
     "node-fetch": "^2.6.7",
     "zod": "^3.23.8"
   },
+  "peerDependencies": {
+    "ethers": "^5.7.2"
+  },
   "devDependencies": {
     "eslint-config-common": "*",
     "tsconfig": "*"
