@@ -557,4 +557,12 @@ export class StorageMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async getIpnsByName(ipnsName: string) {
+    const data = {
+      eventName: StorageEventType.IPNS_GET_BY_NAME,
+      ipnsName,
+    };
+    return await this.callService(data);
+  }
 }

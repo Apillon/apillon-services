@@ -283,6 +283,25 @@ export class Ipns extends UuidSqlModel {
       : this.reset();
   }
 
+  public async populateByIpnsName(ipnsName: string): Promise<this> {
+    if (!ipnsName) {
+      throw new Error('ipnsName should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${DbTables.IPNS}\`
+      WHERE \`ipnsName\` = @ipnsName AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { ipnsName },
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
+
   public override async insert(
     strategy?: SerializeFor,
     conn?: PoolConnection,
