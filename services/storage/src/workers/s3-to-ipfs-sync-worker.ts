@@ -129,19 +129,8 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
               session.sessionStatus = FileUploadSessionStatus.VALIDATION_FAILED;
               await session.update();
 
-              await Promise.all(
-                files.map(async (fileRequest) => {
-                  const existingFile = await new File(
-                    {},
-                    this.context,
-                  ).populateAllByUUID(fileRequest.file_uuid);
-
-                  if (existingFile.exists()) {
-                    existingFile.status = SqlModelStatus.BLOCKED;
-                    await existingFile.update();
-                  }
-                }),
-              );
+              const filesToBlock = files.map((file) => file.file_uuid);
+              await new File({}, this.context).blockFiles(filesToBlock);
 
               return;
             }
