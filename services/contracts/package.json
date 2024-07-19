@@ -24,6 +24,7 @@
     "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
   },
   "dependencies": {
+    "@apillon/blockchain-lib": "*",
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",

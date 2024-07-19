@@ -10,37 +10,34 @@ import {
   Lmas,
   LogType,
   Mailing,
-  ProductCode,
   ServiceName,
   SmartContractType,
-  spendCreditAction,
-  SpendCreditDto,
   SqlModelStatus,
   TransactionStatus,
 } from '@apillon/lib';
-import { EVMContractClient } from '../clients/evm-contract.client';
 import {
   ContractsErrorCode,
   ContractStatus,
   DbTables,
   TransactionType,
-} from '../../config/types';
-import { Transaction } from '../../modules/contracts/models/transaction.model';
-import { v4 as uuidV4 } from 'uuid';
+} from '../../../config/types';
+import { Transaction } from '../models/transaction.model';
 import { ContractRepository } from '../repositores/contract-repository';
 import { TransactionRepository } from '../repositores/transaction-repository';
-import { ContractDeploy } from '../../modules/contracts/models/contractDeploy.model';
+import { ContractDeploy } from '../models/contractDeploy.model';
 import {
   ContractsCodeException,
   ContractsValidationException,
-} from '../exceptions';
-import { AbiHelper } from '../utils/abi-helper';
+} from '../../../lib/exceptions';
+import { AbiHelper, EVMContractClient } from '@apillon/blockchain-lib';
+import { ContractsSpendService } from './contracts-spend-service';
 
 export class ContractService {
   private readonly context: ServiceContext;
   private contractRepository: ContractRepository;
   private transactionRepository: TransactionRepository;
   private readonly blockchainService: BlockchainMicroservice;
+  private spendService: ContractsSpendService;
   private mailingClient: Mailing;
   private logging: Lmas;
 
@@ -49,17 +46,20 @@ export class ContractService {
     contractRepository: ContractRepository,
     transactionRepository: TransactionRepository,
     blockchainService: BlockchainMicroservice,
+    spendService: ContractsSpendService,
     mailingClient: Mailing,
     logging: Lmas,
   ) {
     this.contractRepository = contractRepository;
     this.transactionRepository = transactionRepository;
     this.blockchainService = blockchainService;
+    this.spendService = spendService;
     this.mailingClient = mailingClient;
     this.logging = logging;
     this.context = context;
   }
 
+  //#region ------------- CONTRACT DEPLOYS -------------
   prepareDeployTransaction(
     abi: unknown[],
     bytecode: string,
@@ -90,14 +90,13 @@ export class ContractService {
       constructorArguments,
     );
 
-    const spendCredit = this.getCreateContractSpendDto(
+    const {
+      spendUuid,
+      result: { data: transactionData },
+    } = await this.spendService.chargeContractDeploy(
       contractDeploy.chain,
       contractDeploy.project_uuid,
       contractDeploy.contract_uuid,
-    );
-    const { data: transactionData } = await spendCreditAction(
-      this.context,
-      spendCredit,
       () =>
         this.blockchainService.createEvmTransaction(
           new CreateEvmTransactionDto(
@@ -126,7 +125,7 @@ export class ContractService {
         {
           transactionType: TransactionType.DEPLOY_CONTRACT,
           transactionStatus: TransactionStatus.PENDING,
-          transaction_uuid: spendCredit.referenceId,
+          transaction_uuid: spendUuid,
           transactionHash: transactionData.transactionHash,
           //chainType: ChainType.EVM,
           chain,
@@ -260,13 +259,12 @@ export class ContractService {
       methodName,
       methodArguments,
     );
-    const spendCredit = this.getCallContractSpendDto(
+    const {
+      spendUuid,
+      result: { data: transactionData },
+    } = await this.spendService.chargeContractCall(
       contractDeploy.chain,
       contractDeploy.project_uuid,
-    );
-    const { data: transactionData } = await spendCreditAction(
-      this.context,
-      spendCredit,
       () =>
         this.blockchainService.createEvmTransaction(
           new CreateEvmTransactionDto({
@@ -300,7 +298,7 @@ export class ContractService {
         {
           transactionType,
           transactionStatus: TransactionStatus.PENDING,
-          transaction_uuid: spendCredit.referenceId,
+          transaction_uuid: spendUuid,
           transactionHash: transactionData.transactionHash,
           //chainType: ChainType.EVM,
           chain: contractDeploy.chain,
@@ -322,54 +320,8 @@ export class ContractService {
     return transactionData;
   }
 
-  // PRIVATE METHODS
-  private getCreateContractSpendDto(
-    chain: EvmChain,
-    project_uuid: string,
-    contract_uuid: string,
-  ) {
-    const product_id = {
-      [EvmChain.ETHEREUM]: ProductCode.CONTRACT_ETHEREUM_CREATE,
-      [EvmChain.SEPOLIA]: ProductCode.CONTRACT_SEPOLIA_CREATE,
-      [EvmChain.MOONBASE]: ProductCode.CONTRACT_MOONBASE_CREATE,
-      [EvmChain.MOONBEAM]: ProductCode.CONTRACT_MOONBEAM_CREATE,
-      [EvmChain.ASTAR]: ProductCode.CONTRACT_ASTAR_CREATE,
-    }[chain];
-
-    //Spend credit
-    return new SpendCreditDto(
-      {
-        project_uuid,
-        product_id,
-        referenceTable: DbTables.CONTRACT_DEPLOY,
-        referenceId: contract_uuid,
-        location: 'ContractsService.getCreateContractSpendDto',
-        service: ServiceName.CONTRACTS,
-      },
-      this.context,
-    );
-  }
-
-  private getCallContractSpendDto(chain: EvmChain, project_uuid: string) {
-    const product_id = {
-      [EvmChain.ETHEREUM]: ProductCode.CONTRACT_ETHEREUM_CALL,
-      [EvmChain.SEPOLIA]: ProductCode.CONTRACT_SEPOLIA_CALL,
-      [EvmChain.MOONBASE]: ProductCode.CONTRACT_MOONBASE_CALL,
-      [EvmChain.MOONBEAM]: ProductCode.CONTRACT_MOONBEAM_CALL,
-      [EvmChain.ASTAR]: ProductCode.CONTRACT_ASTAR_CALL,
-    }[chain];
-    return new SpendCreditDto(
-      {
-        project_uuid,
-        product_id,
-        referenceTable: DbTables.CONTRACT_DEPLOY,
-        referenceId: uuidV4(),
-        location: 'ContractsService.getCallContractSpendDto',
-        service: ServiceName.CONTRACTS,
-      },
-      this.context,
-    );
-  }
+  //#endregion
+  //#region ------------- CONTRACTS -------------
 
   async listContracts(query: ContractsQueryFilter) {
     return await this.contractRepository.getList(query);
@@ -452,7 +404,7 @@ export class ContractService {
       throw await new ContractsCodeException({
         status: 500,
         errorMessage: `Error getting contract version for contract with uuid ${contract_uuid}.`,
-        code: ContractsErrorCode.GENERAL_SERVER_ERROR,
+        code: ContractsErrorCode.GET_CONTRACT_VERSION_ERROR,
       }).writeToMonitor({
         context: this.context,
         logType: LogType.ERROR,
@@ -499,4 +451,6 @@ export class ContractService {
       ? contractDeploy.contractVersion.abi
       : new AbiHelper(contractDeploy.contractVersion.abi).toHumanReadable();
   }
+
+  //#endregion
 }

@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "npx turbo run build",
-    "build-libs": "npx turbo run build --filter=@apillon/lib --filter=@apillon/modules-lib --filter=@apillon/service-lib --filter=@apillon/workers-lib --filter=@apillon/tests-lib",
+    "build-libs": "npx turbo run build --filter=@apillon/lib --filter=@apillon/modules-lib --filter=@apillon/service-lib --filter=@apillon/workers-lib --filter=@apillon/tests-lib --filter=@apillon/blockchain-lib",
     "build-no-cache": "npx turbo run build --no-cache",
     "dev": "npx turbo run dev --parallel",
     "dev-min": "npx turbo run dev --parallel --filter=!@apillon/authentication-api --filter=!@apillon/authentication --filter=!@apillon/api --filter=!@apillon/referral --filter=!@apillon/monitoring --filter=!@apillon/mailing --filter=!@apillon/workers-lib",
@@ -25,7 +25,7 @@
     "lint": "npx turbo run lint --force",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "deploy:dev": "npx turbo run deploy:dev -vvv --force --continue=false --filter=!@apillon/api --filter=!@apillon/authentication-api",
-    "watch-libs": "npx turbo run dev --filter=@apillon/lib --filter=@apillon/modules-lib --filter=@apillon/service-lib",
+    "watch-libs": "npx turbo run dev --filter=@apillon/lib --filter=@apillon/modules-lib --filter=@apillon/service-lib --filter=@apillon/blockchain-lib",
     "db-upgrade:ci": "npx turbo run db-upgrade:ci",
     "db-rebuild-test": "npx turbo run db-rebuild-test"
   },

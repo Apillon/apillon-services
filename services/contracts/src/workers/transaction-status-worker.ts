@@ -15,7 +15,7 @@ import {
 } from '@apillon/workers-lib';
 import { TransactionType } from '../config/types';
 import { ContractDeploy } from '../modules/contracts/models/contractDeploy.model';
-import { TransactionRepository } from '../lib/repositores/transaction-repository';
+import { TransactionRepository } from '../modules/contracts/repositores/transaction-repository';
 
 export class TransactionStatusWorker extends BaseQueueWorker {
   public constructor(

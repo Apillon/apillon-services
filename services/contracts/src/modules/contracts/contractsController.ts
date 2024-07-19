@@ -6,15 +6,24 @@ import {
   CreateContractDTO,
   DeployedContractsQueryFilter,
   Lmas,
+  LogType,
+  ServiceName,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
   ContractsCodeException,
   ContractsValidationException,
 } from '../../lib/exceptions';
-import { handleEthersException } from '../../lib/utils/contract-utils';
-import { ContractService } from '../../lib/services/contract-service';
-import { AbiHelper, AbiHelperError } from '../../lib/utils/abi-helper';
+import { ContractService } from './services/contract-service';
+import {
+  AbiHelper,
+  AbiHelperError,
+  EthersGenericError,
+  EthersUnhandledError,
+  EthersValidationError,
+  parseEthersException,
+} from '@apillon/blockchain-lib';
+import { ContractsErrorCode } from '../../config/types';
 
 export class ContractsController {
   private readonly context: ServiceContext;
@@ -148,7 +157,7 @@ export class ContractsController {
       if (e instanceof ContractsCodeException) {
         throw e;
       }
-      await handleEthersException(
+      await this.handleEthersException(
         e,
         contractDeployData.abi,
         'constructorArguments',
@@ -195,14 +204,61 @@ export class ContractsController {
           message: e.message,
         });
       }
-      await handleEthersException(
+      await this.handleEthersException(
         e,
         abi,
-        'constructorArguments',
+        body.methodName,
         contractDeploy.project_uuid,
         this.context.user?.user_uuid,
       );
     }
   }
+
+  private async handleEthersException(
+    e: unknown,
+    abi: unknown[],
+    property: string,
+    project_uuid: string,
+    user_uuid: string,
+  ) {
+    try {
+      await parseEthersException(e, abi, property);
+    } catch (e: unknown) {
+      const code =
+        property === 'constructorArguments'
+          ? ContractsErrorCode.DEPLOY_CONTRACT_ERROR
+          : ContractsErrorCode.CALL_CONTRACT_ERROR;
+      if (e instanceof EthersGenericError) {
+        throw new ContractsCodeException({
+          code,
+          status: 500,
+          errorMessage: `${e.message}`,
+        });
+      }
+      if (e instanceof EthersValidationError) {
+        throw new ContractsValidationException(e.errors);
+      }
+      if (e instanceof EthersUnhandledError) {
+        const error = new ContractsCodeException({
+          code,
+          status: 500,
+          errorMessage: `${e}`,
+        });
+        await error.writeToMonitor({
+          logType: LogType.ERROR,
+          service: ServiceName.CONTRACTS,
+          project_uuid,
+          user_uuid,
+          data: {
+            exception: error,
+          },
+          sendAdminAlert: true,
+        });
+
+        throw error;
+      }
+    }
+  }
+
   //#endregion
 }
