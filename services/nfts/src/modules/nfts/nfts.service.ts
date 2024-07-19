@@ -44,7 +44,7 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { BigNumber, constants } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { v4 as uuidV4 } from 'uuid';
 import {
   CollectionStatus,
@@ -70,6 +70,7 @@ import {
   getSubstrateContractClient,
 } from '../../lib/utils/collection-utils';
 import { ContractVersion } from './models/contractVersion.model';
+import { EVM_MAX_INT } from '@apillon/blockchain-lib';
 
 export class NftsService {
   //#region collection functions
@@ -1026,7 +1027,7 @@ export class NftsService {
             );
             const burnArguments: any[] = [body.tokenId];
             if (collection.collectionType === NFTCollectionType.NESTABLE) {
-              burnArguments.push(constants.MaxUint256);
+              burnArguments.push(EVM_MAX_INT);
             }
             txHash = await evmContractClient.createTransaction(
               'burn',
