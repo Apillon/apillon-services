@@ -482,6 +482,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
       SubstrateChain.PHALA,
       walletAddress,
     );
+    // TODO: this uses ethers and it probably shouldn't
     const balanceDecimal = formatTokenWithDecimals(
       clusterWallet.currentBalance,
       clusterWallet.decimals,

@@ -47,6 +47,12 @@
     "graphql-request": "^5.2.0",
     "node-fetch": "^2.6.7"
   },
+  "peerDependencies": {
+    "@polkadot/api": "10.12.4",
+    "@polkadot/api-contract": "10.12.4",
+    "@polkadot/util-crypto": "^12.3.2",
+    "ethers": "^5.7.2"
+  },
   "devDependencies": {
     "@apillon/tests-lib": "*",
     "eslint-config-common": "*",
