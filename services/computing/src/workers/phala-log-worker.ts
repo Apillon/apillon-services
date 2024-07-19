@@ -2,7 +2,6 @@ import {
   ChainType,
   Context,
   env,
-  formatTokenWithDecimals,
   formatWalletAddress,
   getTokenPriceUsd,
   LogType,
@@ -10,6 +9,7 @@ import {
   ServiceName,
   SubstrateChain,
 } from '@apillon/lib';
+import { formatTokenWithDecimals } from '@apillon/blockchain-lib';
 import {
   BaseQueueWorker,
   LogOutput,

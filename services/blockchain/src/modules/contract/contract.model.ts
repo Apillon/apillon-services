@@ -12,13 +12,13 @@ import {
   SqlModelStatus,
   SubstrateChain,
   enumInclusionValidator,
-  formatTokenWithDecimals,
   formatWalletAddress,
   getQueryParams,
   presenceValidator,
   prop,
   selectAndCountQuery,
 } from '@apillon/lib';
+import { formatTokenWithDecimals } from '@apillon/blockchain-lib';
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { BlockchainErrorCode, Chain, DbTables } from '../../config/types';
 import { ethers } from 'ethers';

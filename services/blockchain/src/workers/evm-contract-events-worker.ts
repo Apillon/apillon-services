@@ -6,8 +6,6 @@ import {
   SerializeFor,
   ServiceName,
   env,
-  formatTokenWithDecimals,
-  formatWalletAddress,
 } from '@apillon/lib';
 import {
   BaseSingleThreadWorker,

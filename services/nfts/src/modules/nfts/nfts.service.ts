@@ -31,7 +31,6 @@ import {
   SqlModelStatus,
   StorageMicroservice,
   SubstrateChain,
-  SubstrateChainPrefix,
   TransactionDto,
   TransactionStatus,
   TransferCollectionDTO,
@@ -70,7 +69,7 @@ import {
   getSubstrateContractClient,
 } from '../../lib/utils/collection-utils';
 import { ContractVersion } from './models/contractVersion.model';
-import { EVM_MAX_INT } from '@apillon/blockchain-lib';
+import { EVM_MAX_INT, SubstrateChainPrefix } from '@apillon/blockchain-lib';
 
 export class NftsService {
   //#region collection functions
