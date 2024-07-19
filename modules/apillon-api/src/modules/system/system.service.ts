@@ -62,4 +62,9 @@ export class SystemService {
         .map((x) => x.domain),
     };
   }
+
+  async getIpnsByName(context: ApillonApiContext, ipnsName: string) {
+    return (await new StorageMicroservice(context).getIpnsByName(ipnsName))
+      .data;
+  }
 }
