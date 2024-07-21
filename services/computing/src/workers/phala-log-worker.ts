@@ -30,7 +30,7 @@ import { ClusterTransactionLog } from '../modules/accounting/cluster-transaction
 import { Keyring } from '@polkadot/api';
 import { ClusterWallet } from '../modules/computing/models/cluster-wallet.model';
 import { Contract } from '../modules/computing/models/contract.model';
-import { PhalaClient } from '../modules/services/phala.client';
+import { PhalaClient } from '../modules/clients/phala.client';
 import { getPhalaEndpoint } from '../lib/utils/contract-utils';
 
 /**

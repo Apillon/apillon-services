@@ -174,7 +174,7 @@ export class StorageController {
     );
   }
 
-  @Get([':bucketUuid/file/:id/detail', 'buckets/:bucketUuid/files/:id'])
+  @Get([':bucketUuid/file/:uuid/detail', 'buckets/:bucketUuid/files/:uuid'])
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.STORAGE,
@@ -183,9 +183,9 @@ export class StorageController {
   async getFileDetails(
     @Ctx() context: ApillonApiContext,
     @Param('bucketUuid') bucket_uuid: string,
-    @Param('id') id: string,
+    @Param('uuid') uuid: string,
   ) {
-    return await this.storageService.getFileDetails(context, bucket_uuid, id);
+    return await this.storageService.getFileDetails(context, bucket_uuid, uuid);
   }
 
   @Delete([

@@ -1,6 +1,7 @@
 import { ComputingEventType } from '@apillon/lib';
 import type { Context } from 'aws-lambda/handler';
 import { ComputingService } from './modules/computing/computing.service';
+import { AcurastService } from './modules/acurast/acurast.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -26,6 +27,14 @@ export async function processEvent(event: any, context: Context): Promise<any> {
     [ComputingEventType.PROJECT_COMPUTING_DETAILS]:
       ComputingService.getProjectComputingDetails,
     [ComputingEventType.ARCHIVE_CONTRACT]: ComputingService.archiveContract,
+
+    [ComputingEventType.CREATE_JOB]: AcurastService.createJob,
+    [ComputingEventType.LIST_JOBS]: AcurastService.listJobs,
+    [ComputingEventType.GET_JOB]: AcurastService.getJobByUuid,
+    [ComputingEventType.SET_JOB_ENVIRONMENT]: AcurastService.setJobEnvironment,
+    [ComputingEventType.SEND_JOB_MESSAGE]: AcurastService.sendJobMessage,
+    [ComputingEventType.UPDATE_JOB]: AcurastService.updateJob,
+    [ComputingEventType.DELETE_JOB]: AcurastService.deleteJob,
   };
 
   return await processors[event.eventName](event, context);

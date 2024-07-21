@@ -51,6 +51,28 @@ export class IpnsService {
     return ipns.serializeByContext();
   }
 
+  /**
+   * This is a system function, used for IPNS resolving - canAccess and populate link are skipped here
+   * @param event
+   * @param context
+   * @returns
+   */
+  static async getIpnsByName(
+    event: { ipnsName: string },
+    context: ServiceContext,
+  ) {
+    const ipns: Ipns = await new Ipns({}, context).populateByIpnsName(
+      event.ipnsName,
+    );
+    if (!ipns.exists()) {
+      throw new StorageCodeException({
+        code: StorageErrorCode.IPNS_NOT_FOUND,
+        status: 404,
+      });
+    }
+    return ipns.serialize(SerializeFor.SERVICE);
+  }
+
   static async createIpns(
     event: { body: CreateIpnsDto },
     context: ServiceContext,

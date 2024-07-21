@@ -81,7 +81,9 @@ export class BlockchainMicroservice extends BaseService {
   public async createOasisSignature(params: {
     data: string;
     timestamp: number;
-  }): Promise<{ data: { dataHash: string; signature: string } }> {
+  }): Promise<{
+    data: { dataHash: string; signature: string; gasPrice: string };
+  }> {
     const data = {
       eventName: BlockchainEventType.CREATE_OASIS_SIGNATURE,
       ...params,

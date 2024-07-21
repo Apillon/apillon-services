@@ -557,17 +557,18 @@ export class EvmService {
         gasPrice,
         env.OASIS_MESSAGE_GAS_LIMIT,
         params.timestamp,
-        ethers.utils.solidityKeccak256(['string'], [params.data]),
+        ethers.utils.keccak256(params.data),
       ],
     );
 
     const signature = await signingWallet.signMessage(
-      ethers.utils.toUtf8Bytes(dataHash),
+      ethers.utils.arrayify(dataHash),
     );
 
     return {
       dataHash,
       signature,
+      gasPrice: gasPrice.toString(),
     };
   }
 }

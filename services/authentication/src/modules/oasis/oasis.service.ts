@@ -55,7 +55,11 @@ export class OasisService {
       oasisSignature.insert(),
     );
 
-    return { signature: signatureRes.signature };
+    return {
+      signature: signatureRes.signature,
+      gasPrice: signatureRes.gasPrice,
+      timestamp,
+    };
   }
 
   static async listOasisSignatures(

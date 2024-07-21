@@ -263,7 +263,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async deleteFile(params: { id: string }) {
+  public async deleteFile(params: { uuid: string }) {
     const data = {
       eventName: StorageEventType.FILE_DELETE,
       ...params,
@@ -271,7 +271,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async restoreFile(params: { id: string }) {
+  public async restoreFile(params: { uuid: string }) {
     const data = {
       eventName: StorageEventType.RESTORE_FILE,
       ...params,
@@ -554,6 +554,14 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.GET_TARGET_URL,
       shortUrl_id,
+    };
+    return await this.callService(data);
+  }
+
+  public async getIpnsByName(ipnsName: string) {
+    const data = {
+      eventName: StorageEventType.IPNS_GET_BY_NAME,
+      ipnsName,
     };
     return await this.callService(data);
   }

@@ -98,6 +98,20 @@ export * from './lib/at-services/computing/dtos/assign-cid-to-nft.dto';
 export * from './lib/at-services/computing/dtos/phala-cluster-deposit-transaction.dto';
 export * from './lib/at-services/computing/dtos/cluster-wallet-query-filter.dto';
 export * from './lib/at-services/computing/dtos/computing-transaction-query-filter.dto';
+export * from './lib/at-services/computing/dtos/create-job.dto';
+export * from './lib/at-services/computing/dtos/update-job.dto';
+export * from './lib/at-services/computing/dtos/set-job-environment.dto';
+export * from './lib/at-services/computing/dtos/job-query-filter.dto';
+
+//#REGION CONTRACTS
+export * from './lib/at-services/contracts/eventTypes';
+export * from './lib/at-services/contracts/contracts';
+export * from './lib/at-services/contracts/dtos/create-contract.dto';
+export * from './lib/at-services/contracts/dtos/contract-query-filter.dto';
+export * from './lib/at-services/contracts/dtos/deployed-contract-query-filter.dto';
+export * from './lib/at-services/contracts/dtos/transaction-query-filter.dto';
+export * from './lib/at-services/contracts/dtos/call-contract.dto';
+export * from './lib/at-services/contracts/dtos/contract-abi-query.dto';
 
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';

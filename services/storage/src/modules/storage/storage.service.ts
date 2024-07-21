@@ -518,11 +518,14 @@ export class StorageService {
     );
   }
 
-  static async getFileDetails(event: { id: string }, context: ServiceContext) {
+  static async getFileDetails(
+    event: { uuid: string },
+    context: ServiceContext,
+  ) {
     let file: File = undefined;
     let fileStatus: FileStatus = undefined;
-    if (event.id) {
-      file = await new File({}, context).populateById(event.id);
+    if (event.uuid) {
+      file = await new File({}, context).populateByUUID(event.uuid);
     } else {
       throw new StorageCodeException({
         code: StorageErrorCode.DEFAULT_RESOURCE_NOT_FOUND_ERROR,
@@ -535,7 +538,7 @@ export class StorageService {
       const fur: FileUploadRequest = await new FileUploadRequest(
         {},
         context,
-      ).populateByUUID(event.id);
+      ).populateByUUID(event.uuid);
 
       if (fur.exists()) {
         await fur.canAccess(context);
@@ -572,10 +575,10 @@ export class StorageService {
   }
 
   static async deleteFile(
-    event: { id: string },
+    event: { uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const f: File = await new File({}, context).populateById(event.id);
+    const f: File = await new File({}, context).populateByUUID(event.uuid);
     if (!f.exists()) {
       throw new StorageCodeException({
         code: StorageErrorCode.FILE_NOT_FOUND,
@@ -607,10 +610,10 @@ export class StorageService {
   }
 
   static async restoreFile(
-    event: { id: string },
+    event: { uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const f: File = await new File({}, context).populateDeletedById(event.id);
+    const f: File = await new File({}, context).populateDeletedById(event.uuid);
     if (!f.exists()) {
       throw new StorageCodeException({
         code: StorageErrorCode.FILE_NOT_FOUND,

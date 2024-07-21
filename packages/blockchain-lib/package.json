@@ -1,0 +1,28 @@
+{
+  "name": "@apillon/blockchain-lib",
+  "version": "1.5.0",
+  "description": "Apillon blockchain library",
+  "main": "./dist/index.js",
+  "source": "./src/index.ts",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**"
+  ],
+  "author": "Apillon",
+  "license": "GNU GPL V3",
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "tsc --declarationMap",
+    "dev": "tsc -w --declarationMap --preserveWatchOutput",
+    "test:unit": "jest --passWithNoTests",
+    "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
+  },
+  "devDependencies": {
+    "eslint-config-common": "*",
+    "tsconfig": "*"
+  },
+  "dependencies": {
+    "ethers": "^5.7.2",
+    "zod": "^3.23.8"
+  }
+}

@@ -20,6 +20,7 @@ export enum SubstrateChain {
   SUBSOCIAL = 6,
   XSOCIAL = 7,
   ASTAR = 8,
+  ACURAST = 9,
 }
 
 export enum EvmChain {
@@ -35,6 +36,18 @@ export enum EvmChain {
 export enum NFTCollectionType {
   GENERIC = 1,
   NESTABLE = 2,
+}
+
+export enum SmartContractType {
+  OTHER = 1,
+  ERC_20 = 2,
+  ERC_721 = 3,
+  ERC_1155 = 4,
+}
+
+export enum SmartContractVariant {
+  GENERIC_ERC_721_ = 1,
+  NESTABLE_ERC_721 = 2,
 }
 
 export enum ComputingContractType {
@@ -144,6 +157,7 @@ export enum StorageEventType {
   IPNS_DELETE = 'delete-ipns',
   IPNS_PUBLISH = 'publish-ipns',
   IPNS_GET = 'get-ipns',
+  IPNS_GET_BY_NAME = 'get-ipns-by-name',
   WEBSITE_LIST = 'list-websites',
   WEBSITE_CREATE = 'create-website',
   WEBSITE_UPDATE = 'update-website',
@@ -159,6 +173,7 @@ export enum StorageEventType {
   DEPLOYMENT_APPROVE = 'deployment-approve',
   DEPLOYMENT_REJECT = 'deployment-reject',
   PREPARE_COLLECTION_BASE_URI = 'prepare-collection-base-uri',
+  PREPARE_COLLECTION_BASE_URI_GENERIC = 'prepare-collection-base-uri-generic',
   COLLECTION_METADATA_LIST = 'list-collection-metadata',
   TEST_CRUST_PROVIDER = 'test-crust-provider',
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
@@ -258,6 +273,14 @@ export enum ComputingEventType {
   LIST_CLUSTER_WALLETS = 'list-cluster-wallets',
   PROJECT_COMPUTING_DETAILS = 'project-computing-details',
   ARCHIVE_CONTRACT = 'archive-contract',
+
+  CREATE_JOB = 'create-job',
+  LIST_JOBS = 'list-jobs',
+  GET_JOB = 'get-job',
+  SET_JOB_ENVIRONMENT = 'set-job-environment',
+  SEND_JOB_MESSAGE = 'send-job-message',
+  UPDATE_JOB = 'update-job',
+  DELETE_JOB = 'delete-job',
 }
 
 export enum ReferralEventType {
@@ -293,6 +316,20 @@ export enum SocialEventType {
   PROJECT_SOCIAL_DETAILS = 'project-social-details',
 }
 
+export enum ContractEventType {
+  CONTRACTS_LIST = 'contracts-list',
+  GET_CONTRACT = 'get-contract',
+  GET_CONTRACT_ABI = 'get-contract-abi',
+  DEPLOY_CONTRACT = 'deploy-contract',
+  CALL_DEPLOYED_CONTRACT = 'call-deployed-contract',
+  DEPLOYED_CONTRACTS_LIST = 'deployed-contracts-list',
+  GET_DEPLOYED_CONTRACT = 'get-deployed-contract',
+  PROJECT_DEPLOYED_CONTRACT_DETAILS = 'project-contracts-details',
+  GET_DEPLOYED_CONTRACT_ABI = 'get-deployed-contract-abi',
+  LIST_DEPLOYED_CONTRACT_TRANSACTIONS = 'list-deployed-contract-transactions',
+  ARCHIVE_DEPLOYED_CONTRACT = 'archive-deployed-contract',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
@@ -309,6 +346,7 @@ export enum ServiceName {
   CONFIG = 'CONFIG',
   COMPUTING = 'COMPUTING',
   SOCIAL = 'SOCIAL',
+  CONTRACTS = 'CONTRACTS',
 }
 
 export enum ServiceCode {
@@ -377,6 +415,7 @@ export enum AttachedServiceType {
   COMPUTING = 5,
   SOCIAL = 6,
   WALLET = 7,
+  CONTRACTS = 8,
   SYSTEM = 999,
 }
 
@@ -464,6 +503,7 @@ export enum DefaultPermission {
   COMPUTING = 5,
   SOCIAL = 6,
   WALLET = 7,
+  CONTRACTS,
 }
 
 //#endregion
@@ -644,6 +684,7 @@ export enum ValidatorErrorCode {
   COMPUTING_CONTRACT_DATA_NOT_VALID = 42200210,
   COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID = 42200211,
   COMPUTING_FIELD_NOT_PRESENT = 42200212,
+  JOB_DATE_NOT_VALID = 42200213,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
@@ -813,6 +854,14 @@ export enum CacheKeyPrefix {
   SOCIAL_POST_LIST = 'social-post-list',
   SOCIAL_SPACE_POST_LIST = 'social-space-post-list',
 
+  // CONTRACTS
+  CONTRACT_BY_UUID_WITH_LATEST_VERSION = 'contract-by-uuid-with-latest-version',
+  CONTRACT_VERSION_BY_CONTRACT_UUID = 'contract-version-by-contract-uuid',
+  CONTRACT_VERSION_BY_UUID_WITH_METHODS = 'contract-version-methods-by-version-contract-uuid',
+  CONTRACT_DEPLOY_BY_UUID_WITH_VERSION = 'get-contract-by-uuid-deploy-with-version',
+  CONTRACT_DEPLOY_BY_UUID_DEPLOY_WITH_VERSION_AND_METHODS = 'get-contract-by-uuid-deploy-with-version-and-methods',
+
+  // NFTS
   CONTRACT_VERSION = 'contract-version',
   CONTRACT_ABI = 'contract-abi',
   BLOCKCHAIN_ENDPOINT = 'blockchain-endpoint',
@@ -824,6 +873,7 @@ export enum CacheKeyPrefix {
 
   PLATFORM_STATISTICS = 'platform-statistics',
   PROJECT_OVERVIEW = 'project-overview',
+  SERVICE_STATUS = 'service-status',
 
   URL_SHORTENER = 'url-shortener',
 }
@@ -911,6 +961,22 @@ export enum ProductCode {
   NFT_SEPOLIA_TRANSFER_COLLECTION = 40,
   NFT_SEPOLIA_SET_BASE_URI = 41,
 
+  CONTRACT_MOONBEAM_CREATE = 42,
+  CONTRACT_MOONBASE_CREATE = 43,
+  CONTRACT_ASTAR_CREATE = 44,
+  CONTRACT_ETHEREUM_CREATE = 45,
+  CONTRACT_SEPOLIA_CREATE = 46,
+
+  CONTRACT_MOONBEAM_CALL = 47,
+  CONTRACT_MOONBASE_CALL = 48,
+  CONTRACT_ASTAR_CALL = 49,
+  CONTRACT_ETHEREUM_CALL = 50,
+  CONTRACT_SEPOLIA_CALL = 51,
+
+  COMPUTING_JOB_CREATE = 52,
+  COMPUTING_JOB_SET_ENVIRONMENT = 53,
+  COMPUTING_JOB_DELETE = 54,
+
   IPNS = 55,
 }
 
@@ -921,6 +987,7 @@ export enum ProductService {
   SOCIAL = 'SOCIAL',
   COMPUTING = 'COMPUTING',
   STORAGE = 'STORAGE',
+  CONTRACTS = 'CONTRACTS',
 }
 
 export enum ProductCategory {
@@ -934,6 +1001,12 @@ export enum ProductCategory {
   SCHRODINGER = 'SCHRODINGER',
   ETHEREUM_NFT = 'ETHEREUM_NFT',
   SEPOLIA_NFT = 'SEPOLIA_NFT',
+  ETHEREUM_CONTRACT = 'ETHEREUM_CONTRACT',
+  SEPOLIA_CONTRACT = 'SEPOLIA_CONTRACT',
+  MOONBASE_CONTRACT = 'MOONBASE_CONTRACT',
+  MOONBEAM_CONTRACT = 'MOONBEAM_CONTRACT',
+  ASTAR_CONTRACT = 'ASTAR_CONTRACT',
+  ACURAST = 'ACURAST',
 }
 
 export enum EmailTemplate {
