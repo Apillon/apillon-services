@@ -3,6 +3,7 @@ import { sign, verify, decode, Jwt } from 'jsonwebtoken';
 import { env } from '../config/env';
 import * as crypto from 'crypto';
 import { JwtExpireTime } from '../config/types';
+import { Readable } from 'stream';
 
 export function isPlainObject(testVar: any): boolean {
   if (
@@ -202,4 +203,30 @@ export function generateRandomCode(
     code += characters.charAt(crypto.randomInt(0, characters.length));
   }
   return code;
+}
+
+const htmlCheckRegex =
+  /<(html|head|body|div|span|p|a|table|tr|td|img|ul|li|ol|form|input|button|script|style|link|meta)(\s|\/>|>)/i;
+
+export async function isStreamHtmlFile(fileStream: Readable) {
+  return new Promise<boolean>((resolve, reject) => {
+    let data = '';
+    fileStream.setEncoding('utf8');
+    fileStream.on('data', (chunk: string) => {
+      data = chunk.trim();
+      // Regex that checks if data is has <something> or <something/>
+      if (htmlCheckRegex.test(data)) {
+        fileStream.destroy();
+        resolve(true);
+        return;
+      }
+    });
+    fileStream.on('end', () => {
+      resolve(false);
+    });
+
+    fileStream.on('error', (err) => {
+      reject(err);
+    });
+  });
 }
