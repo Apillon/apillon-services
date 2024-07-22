@@ -7,6 +7,7 @@ import {
   isStreamHtmlFile,
   LogType,
   ServiceName,
+  SqlModelStatus,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -27,6 +28,7 @@ import { processSessionFiles } from '../lib/process-session-files';
 import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
+import { File } from '../modules/storage/models/file.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { WorkerName } from './worker-executor';
 import { Readable } from 'stream';
@@ -126,6 +128,16 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
             if (isHtml) {
               session.sessionStatus = FileUploadSessionStatus.VALIDATION_FAILED;
               await session.update();
+
+              const fileRequestsToBlock = files.map((file) => file.id);
+              await new FileUploadRequest(
+                {},
+                this.context,
+              ).blockFileUploadRequests(fileRequestsToBlock);
+
+              const filesToBlock = files.map((file) => file.file_uuid);
+              await new File({}, this.context).blockFiles(filesToBlock);
+
               return;
             }
           }
