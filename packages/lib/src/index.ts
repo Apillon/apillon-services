@@ -58,6 +58,8 @@ export * from './lib/at-services/storage/dtos/short-url.dto';
 export * from './lib/at-services/authentication/authentication';
 export * from './lib/at-services/authentication/dtos/base-identity.dto';
 export * from './lib/at-services/authentication/dtos/identity-create.dto';
+export * from './lib/at-services/authentication/dtos/generate-otp.dto';
+export * from './lib/at-services/authentication/dtos/validate-otp.dto';
 export * from './lib/at-services/authentication/dtos/attestation.dto';
 export * from './lib/at-services/authentication/dtos/identity-did-revoke.dto';
 export * from './lib/at-services/authentication/dtos/identity-verification-email.dto';

@@ -7,6 +7,7 @@ export enum DbTables {
   TRANSACTION = 'transaction',
   IDENTITY_CONFIG = 'identity_config',
   OASIS_SIGNATURE = 'oasis_signature',
+  OTP = 'otp',
 }
 
 /**
@@ -54,6 +55,8 @@ export enum AuthenticationErrorCode {
   TRANSACTION_RAW_TRANSACTION_NOT_PRESENT = 422130503,
   // Oasis
   OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT = 422130600,
+  // Otp
+  INVALID_OTP = 422130700,
 }
 
 /**

@@ -3,6 +3,7 @@ import { VerificationService } from './modules/verification/verification.service
 import { IdentityService } from './modules/identity/identity.service';
 import { SporranService } from './modules/sporran/sporran.service';
 import { OasisService } from './modules/oasis/oasis.service';
+import { OtpService } from './modules/otp/otp.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -47,6 +48,9 @@ export async function processEvent(event, context: Context): Promise<any> {
       OasisService.getOasisSignaturesCountByApiKey,
     [AuthenticationEventType.LIST_OASIS_SIGNATURES]:
       OasisService.listOasisSignatures,
+    // OTP
+    [AuthenticationEventType.GENERATE_OTP]: OtpService.generateOtp,
+    [AuthenticationEventType.VALIDATE_OTP]: OtpService.validateOtp,
   };
 
   return await processors[event.eventName](event, context);

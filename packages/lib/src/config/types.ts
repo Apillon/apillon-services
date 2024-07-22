@@ -205,6 +205,8 @@ export enum AuthenticationEventType {
   CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
   LIST_OASIS_SIGNATURES = 'list-oasis-signatures',
   GET_OASIS_SIGNATURES_COUNT_BY_API_KEY = 'get-oasis-signatures-count-by-api-key',
+  GENERATE_OTP = 'generate-otp',
+  VALIDATE_OTP = 'validate-otp',
 }
 
 export enum MailEventType {
@@ -706,6 +708,7 @@ export enum ValidatorErrorCode {
   AUTH_SESSION_TOKEN_NOT_PRESENT = 42200718,
   CAPTCHA_NOT_CONFIGURED = 42200719,
   CAPTCHA_INVALID = 42200720,
+  OTP_CODE_NOT_PRESENT = 42200721,
   //#endregion
 
   //#region Blockchain
