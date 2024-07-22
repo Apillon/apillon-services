@@ -205,7 +205,8 @@ export function generateRandomCode(
   return code;
 }
 
-const htmlCheckRegex = new RegExp(/<[^>]+>|<[^>]+\/>/g);
+const htmlCheckRegex =
+  /<(html|head|body|div|span|p|a|table|tr|td|img|ul|li|ol|form|input|button|script|style|link|meta)(\s|\/>|>)/i;
 
 export async function isStreamHtmlFile(fileStream: Readable) {
   return new Promise<boolean>((resolve, reject) => {

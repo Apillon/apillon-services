@@ -56,6 +56,7 @@ export class ContractVersion extends UuidSqlModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
       SerializeFor.INSERT_DB,
+      SerializeFor.APILLON_API,
     ],
   })
   public abi: unknown[];
@@ -81,6 +82,7 @@ export class ContractVersion extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
   })
   public methods: ContractVersionMethod[];

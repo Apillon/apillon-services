@@ -413,4 +413,10 @@ export class FileUploadRequest extends AdvancedSQLModel {
 
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'fr.id');
   }
+
+  public async blockFileUploadRequests(ids: number[]): Promise<void> {
+    await this.getContext().mysql.paramExecute(
+      `UPDATE \`${DbTables.FILE_UPLOAD_REQUEST}\` SET status = ${SqlModelStatus.BLOCKED} WHERE id IN (${ids.map((uuid) => `"${uuid}"`).join(',')})`,
+    );
+  }
 }
