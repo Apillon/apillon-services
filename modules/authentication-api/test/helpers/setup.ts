@@ -45,13 +45,7 @@ export async function setupTest(): Promise<Stage> {
 
     await app.init();
 
-    await app.listen(
-      env.AUTH_API_PORT_TEST,
-      // For some reason, this causes to bind only a ipv6 address
-      env.AUTH_API_HOST_TEST,
-    );
-
-    http = app.getHttpServer();
+    http = app.getHttpServer().listen(0);
     const stage: Stage = await setupTestContextAndSql();
 
     stage.app = app;

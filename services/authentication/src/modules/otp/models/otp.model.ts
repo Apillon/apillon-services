@@ -1,4 +1,10 @@
-import { BaseSQLModel, PopulateFrom, SerializeFor, prop } from '@apillon/lib';
+import {
+  BaseSQLModel,
+  PoolConnection,
+  PopulateFrom,
+  SerializeFor,
+  prop,
+} from '@apillon/lib';
 import { DbTables } from '../../../config/types';
 import {
   integerParser,
@@ -70,6 +76,7 @@ export class Otp extends BaseSQLModel {
    */
   @prop({
     parser: { resolver: dateParser() },
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.ADMIN,
@@ -85,6 +92,7 @@ export class Otp extends BaseSQLModel {
    */
   @prop({
     parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.DB],
     serializable: [
       SerializeFor.PROFILE,
       SerializeFor.ADMIN,
@@ -92,6 +100,7 @@ export class Otp extends BaseSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
+    defaultValue: false,
   })
   public used: boolean;
 
@@ -130,6 +139,115 @@ export class Otp extends BaseSQLModel {
    */
   public exists(): boolean {
     return !!this.id;
+  }
+
+  /**
+   * Saves model data in the database as a new document.
+   */
+  public async insert(
+    strategy: SerializeFor = SerializeFor.INSERT_DB,
+    conn?: PoolConnection,
+    insertIgnore?: boolean,
+  ): Promise<this> {
+    const serializedModel = this.serialize(strategy);
+    let isSingleTrans = false;
+    if (!conn) {
+      isSingleTrans = true;
+      conn = await this.getContext().mysql.start();
+    }
+    try {
+      const createQuery = `
+        INSERT ${insertIgnore ? 'IGNORE' : ''} INTO \`${this.tableName}\`
+        ( ${Object.keys(serializedModel)
+          .map((x) => `\`${x}\``)
+          .join(', ')} )
+        VALUES (
+          ${Object.keys(serializedModel)
+            .map((key) => `@${key}`)
+            .join(', ')}
+        )`;
+
+      const response = await this.getContext().mysql.paramExecute(
+        createQuery,
+        serializedModel,
+        conn,
+      );
+      if (!this.id) {
+        this.id = (response as any).insertId;
+        if (!this.id) {
+          const req = await this.getContext().mysql.paramExecute(
+            'SELECT last_insert_id() AS id;',
+            null,
+            conn,
+          );
+          this.id = req[0].id;
+        }
+      }
+
+      if (isSingleTrans) {
+        await this.getContext().mysql.commit(conn);
+      }
+    } catch (err) {
+      if (isSingleTrans) {
+        await this.getContext().mysql.rollback(conn);
+      }
+      throw new Error(err);
+    }
+
+    return this;
+  }
+
+  /**
+   * Updates model data in the database.
+   */
+  public async update(
+    strategy: SerializeFor = SerializeFor.UPDATE_DB,
+    conn?: PoolConnection,
+  ): Promise<this> {
+    const serializedModel = this.serialize(strategy);
+    console.log(serializedModel);
+
+    // remove non-updatable parameters
+    delete serializedModel.id;
+    delete serializedModel.createTime;
+    delete serializedModel.updateTime;
+
+    let isSingleTrans = false;
+    if (!conn) {
+      isSingleTrans = true;
+      conn = await this.getContext().mysql.start();
+    }
+
+    try {
+      const createQuery = `
+        UPDATE \`${this.tableName}\`
+        SET
+          ${Object.keys(serializedModel)
+            .map((x) => `\`${x}\` = @${x}`)
+            .join(',\n')}
+        WHERE id = @id
+        `;
+
+      // re-set id parameter for where clause.
+      serializedModel.id = this.id;
+
+      await this.getContext().mysql.paramExecute(
+        createQuery,
+        serializedModel,
+        conn,
+      );
+
+      if (isSingleTrans) {
+        await this.getContext().mysql.commit(conn);
+      }
+    } catch (err) {
+      if (isSingleTrans) {
+        await this.getContext().mysql.rollback(conn);
+      }
+      throw new Error(err);
+    }
+
+    return this;
   }
 
   public async populateActiveByEmailAndCode(

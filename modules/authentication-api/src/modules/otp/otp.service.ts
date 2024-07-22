@@ -16,10 +16,7 @@ export class OtpService {
       .data;
   }
 
-  async validateOtp(
-    context: AuthenticationApiContext,
-    body: ValidateOtpDto,
-  ): Promise<void> {
+  async validateOtp(context: AuthenticationApiContext, body: ValidateOtpDto) {
     return (await new AuthenticationMicroservice(context).validateOtp(body))
       .data;
   }

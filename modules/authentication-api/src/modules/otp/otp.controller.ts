@@ -16,7 +16,7 @@ export class OtpController {
     @Ctx() context: AuthenticationApiContext,
     @Body() body: GenerateOtpDto,
   ) {
-    return await this.generateOtp(context, body);
+    return await this.otpService.generateOtp(context, body);
   }
 
   @Post('validate')

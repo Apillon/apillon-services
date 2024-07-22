@@ -9,9 +9,6 @@ import {
 } from '@apillon/lib';
 import { Otp } from './models/otp.model';
 import { ServiceContext } from '@apillon/service-lib';
-import { AuthenticationCodeException } from '../../lib/exceptions';
-import { AuthenticationErrorCode, HttpStatus } from '../../config/types';
-
 export class OtpService {
   static async generateOtp(
     event: { body: GenerateOtpDto },
@@ -30,7 +27,8 @@ export class OtpService {
     await otp.validateOrThrow(ModelValidationException, ValidatorErrorCode);
     const createdOtp = await otp.insert();
 
-    await new Mailing(context).sendMail(
+    // To-DO Add template once it is ready
+    /*await new Mailing(context).sendMail(
       new EmailDataDto({
         mailAddresses: [event.body.email],
         templateName: 'TO-DO',
@@ -38,7 +36,7 @@ export class OtpService {
           code,
         },
       }),
-    );
+    );*/
 
     return createdOtp;
   }
@@ -48,19 +46,16 @@ export class OtpService {
     context: ServiceContext,
   ) {
     const otp = await new Otp({}, context).populateActiveByEmailAndCode(
-      event.body.code,
       event.body.email,
+      event.body.code,
     );
 
     if (!otp.exists()) {
-      throw new AuthenticationCodeException({
-        code: AuthenticationErrorCode.INVALID_OTP,
-        status: HttpStatus.BAD_REQUEST,
-      });
+      return false;
     }
 
     otp.used = true;
-    otp.update();
-    return;
+    await otp.update();
+    return true;
   }
 }
