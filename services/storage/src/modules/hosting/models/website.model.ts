@@ -580,23 +580,12 @@ export class Website extends UuidSqlModel {
       this.stagingBucket = await new Bucket({}, this.getContext()).populateById(
         this.stagingBucket_id,
       );
-      if (this.stagingBucket.IPNS) {
-        if (ipfsCluster.subdomainGateway) {
-          this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.${ipfsCluster.subdomainGateway}`;
-        } else {
-          this.w3StagingLink = `${ipfsCluster.ipnsGateway}${this.stagingBucket.IPNS}`;
-        }
-
-        if (ipfsCluster.private) {
-          this.w3StagingLink = addJwtToIPFSUrl(
-            this.w3StagingLink,
-            this.project_uuid,
-            this.stagingBucket.IPNS,
-            ipfsCluster,
-          );
-        }
-
-        this.ipnsStaging = this.stagingBucket.IPNS;
+      if (this.stagingBucket.CIDv1) {
+        this.w3StagingLink = await ipfsCluster.generateLink(
+          this.project_uuid,
+          this.stagingBucket.CIDv1,
+          false,
+        );
       }
     }
     if (this.productionBucket_id) {
@@ -605,22 +594,20 @@ export class Website extends UuidSqlModel {
         this.getContext(),
       ).populateById(this.productionBucket_id);
       if (this.productionBucket.IPNS) {
-        if (ipfsCluster.subdomainGateway) {
-          this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.${ipfsCluster.subdomainGateway}`;
-        } else {
-          this.w3ProductionLink = `${ipfsCluster.ipnsGateway}${this.productionBucket.IPNS}`;
-        }
-
-        if (ipfsCluster.private) {
-          this.w3ProductionLink = addJwtToIPFSUrl(
-            this.w3ProductionLink,
-            this.project_uuid,
-            this.productionBucket.IPNS,
-            ipfsCluster,
-          );
-        }
-
+        //Website has no IPNS record - link points to CID
+        this.w3ProductionLink = await ipfsCluster.generateLink(
+          this.project_uuid,
+          this.productionBucket.IPNS,
+          true,
+        );
         this.ipnsProduction = this.productionBucket.IPNS;
+      } else if (this.productionBucket.CIDv1) {
+        //Website has no IPNS record - link points to CID
+        this.w3ProductionLink = await ipfsCluster.generateLink(
+          this.project_uuid,
+          this.productionBucket.CIDv1,
+          false,
+        );
       }
     }
   }

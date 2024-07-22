@@ -108,7 +108,9 @@ export class IpnsService {
       context,
     );
 
-    await spendCreditAction(context, spendCredit, () => ipns.createNewIpns());
+    await spendCreditAction(context, spendCredit, () =>
+      ipns.createNewIpns(bucket),
+    );
 
     await ipns.populateLink();
     return ipns.serializeByContext();

@@ -17,7 +17,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { v4 as uuidV4 } from 'uuid';
-import { DbTables, StorageErrorCode } from '../../../config/types';
+import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import {
   StorageCodeException,
   StorageValidationException,
@@ -317,7 +317,7 @@ export class Ipns extends UuidSqlModel {
     return super.insert(strategy, conn, insertIgnore);
   }
 
-  public async createNewIpns() {
+  public async createNewIpns(bucket: Bucket) {
     const context = this.getContext();
     const conn = await context.mysql.start();
     try {
@@ -326,7 +326,7 @@ export class Ipns extends UuidSqlModel {
 
       //If cid is specified, publish ipns to point to cid - other nodes will be able to resolve it
       if (this.cid) {
-        await IpnsService.publishIpns(
+        const ipnsRes = await IpnsService.publishIpns(
           {
             ipns_uuid: this.ipns_uuid,
             cid: this.cid,
@@ -335,6 +335,12 @@ export class Ipns extends UuidSqlModel {
           },
           context,
         );
+
+        //For hosting - if bucket has IPNS property then new deployments are published to IPNS
+        if (bucket.bucketType == BucketType.HOSTING) {
+          bucket.IPNS = ipnsRes.ipnsName;
+          await bucket.update(SerializeFor.UPDATE_DB, conn);
+        }
       }
 
       await context.mysql.commit(conn);
