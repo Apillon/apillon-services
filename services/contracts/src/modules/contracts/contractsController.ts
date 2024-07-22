@@ -22,7 +22,7 @@ import {
   EthersUnhandledError,
   EthersValidationError,
   parseEthersException,
-} from '@apillon/blockchain-lib';
+} from '@apillon/blockchain-lib/evm';
 import { ContractsErrorCode } from '../../config/types';
 
 export class ContractsController {

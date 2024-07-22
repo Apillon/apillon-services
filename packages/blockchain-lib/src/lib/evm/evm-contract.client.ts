@@ -10,7 +10,7 @@ export class EVMContractClient {
 
   static getInstance(
     rpcEndpoint: string,
-    contractAbi: unknown[],
+    contractAbi: unknown[] | string,
     contractAddress: string,
   ) {
     if (!rpcEndpoint) {
@@ -27,7 +27,7 @@ export class EVMContractClient {
   }
 
   static createDeployTransaction(
-    contractAbi: unknown[],
+    contractAbi: unknown[] | string,
     byteCode: string,
     constructorArguments: any[] = [],
   ): string {

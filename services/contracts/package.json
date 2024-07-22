@@ -29,11 +29,11 @@
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
     "@middy/core": "^3.3.1",
-    "@polkadot/api": "10.12.4",
-    "@polkadot/api-contract": "10.12.4",
-    "ethers": "^5.7.2",
     "node-fetch": "^2.6.7",
     "zod": "^3.23.8"
+  },
+  "peerDependencies": {
+    "ethers": "^5.7.2"
   },
   "devDependencies": {
     "eslint-config-common": "*",

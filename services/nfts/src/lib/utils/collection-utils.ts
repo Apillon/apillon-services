@@ -26,10 +26,12 @@ import { TransactionService } from '../../modules/transaction/transaction.servic
 import { constants } from 'ethers';
 import { ContractVersion } from '../../modules/nfts/models/contractVersion.model';
 import { BN_MAX_INTEGER } from '@polkadot/util/bn/consts';
-import { SubstrateContractClient } from '../../modules/clients/substrate-contract.client';
-import { EVMContractClient } from '../../modules/clients/evm-contract.client';
-import { TransactionUtils } from './transaction-utils';
 import { NftsCodeException } from '../exceptions';
+import {
+  EVMContractClient,
+  TransactionUtils,
+} from '@apillon/blockchain-lib/evm';
+import { SubstrateContractClient } from '@apillon/blockchain-lib/substrate';
 
 export async function getEvmContractClient(
   context: Context,
@@ -44,7 +46,7 @@ export async function getEvmContractClient(
     )
   ).data?.url;
 
-  return await EVMContractClient.getInstance(
+  return EVMContractClient.getInstance(
     rpcEndpoint,
     contractAbi,
     contractAddress,

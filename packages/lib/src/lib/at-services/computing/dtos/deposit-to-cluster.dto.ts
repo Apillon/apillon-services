@@ -7,8 +7,10 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { numberSizeValidator } from '../../../validators';
-import { SubstrateChainPrefix } from '../../substrate/types';
-import { substrateAddressValidator } from '../../substrate/validators/address-validator';
+import {
+  substrateAddressValidator,
+  SubstrateChainPrefix,
+} from '@apillon/blockchain-lib/substrate';
 
 export class DepositToClusterDto extends ModelBase {
   @prop({

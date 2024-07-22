@@ -20,8 +20,10 @@ import {
 } from '../../../validators';
 import { dropReserveLowerOrEqualToMaxSupplyValidator } from '../validators/create-collection-drop-reserve-validator';
 import { validateDropPriceIfDrop } from '../validators/create-collection-drop-price-validator';
-import { SubstrateChainPrefix } from '../../substrate/types';
-import { substrateAddressValidator } from '../../substrate/validators/address-validator';
+import {
+  substrateAddressValidator,
+  SubstrateChainPrefix,
+} from '@apillon/blockchain-lib/substrate';
 import { SUBSTRATE_NFTS_MAX_SUPPLY } from '../constants';
 
 // Contains properties which are present for all collections

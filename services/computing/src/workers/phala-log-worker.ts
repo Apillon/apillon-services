@@ -2,7 +2,6 @@ import {
   ChainType,
   Context,
   env,
-  formatTokenWithDecimals,
   formatWalletAddress,
   getTokenPriceUsd,
   LogType,
@@ -10,6 +9,7 @@ import {
   ServiceName,
   SubstrateChain,
 } from '@apillon/lib';
+import { formatTokenWithDecimals } from '@apillon/blockchain-lib/evm';
 import {
   BaseQueueWorker,
   LogOutput,
@@ -482,6 +482,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
       SubstrateChain.PHALA,
       walletAddress,
     );
+    // TODO: this is using ethers lib which is probably not the best
     const balanceDecimal = formatTokenWithDecimals(
       clusterWallet.currentBalance,
       clusterWallet.decimals,
