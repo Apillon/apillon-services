@@ -56,30 +56,33 @@ export class ApillonConsoleServerClient extends HttpServerClientBase {
   }
 }
 
-// TODO: for API tests
-// export class ApillonApiServerClient extends HttpServerClientBase {
-//   private readonly apiKey: string;
-//   private readonly apiKeySecret: string;
-//   constructor(
-//     http: HttpServer,
-//     apiKey: string,
-//     apiKeySecret: string,
-//     urlPrefix: UrlPath = null,
-//   ) {
-//     super(http, urlPrefix);
-//     this.apiKey = apiKey;
-//     this.apiKeySecret = apiKeySecret;
-//   }
-//   getAuthorizationToken() {
-//     return Buffer.from(this.apiKey + ':' + this.apiKeySecret).toString(
-//       'base64',
-//     );
-//   }
-//   getAuthorizationHeader() {
-//     return `Basic ${this.getAuthorizationToken()}`;
-//   }
-// }
+export class ApillonApiServerClient extends HttpServerClientBase {
+  private readonly apiKey: string;
+  private readonly apiKeySecret: string;
 
+  constructor(
+    http: HttpServer,
+    apiKey: string,
+    apiKeySecret: string,
+    urlPrefix: UrlPath = null,
+  ) {
+    super(http, urlPrefix);
+    this.apiKey = apiKey;
+    this.apiKeySecret = apiKeySecret;
+  }
+
+  getAuthorizationToken() {
+    return Buffer.from(this.apiKey + ':' + this.apiKeySecret).toString(
+      'base64',
+    );
+  }
+
+  getAuthorizationHeader() {
+    return `Basic ${this.getAuthorizationToken()}`;
+  }
+}
+
+// TODO: replace methods bellow with ApillonApiServerClient helper above
 export function getRequestFactory(server: HttpServer, apiKey: ApiKey) {
   return async function (url: string, apiKeyOverride: ApiKey = undefined) {
     const apiKeyUsed = apiKeyOverride ? apiKeyOverride : apiKey;

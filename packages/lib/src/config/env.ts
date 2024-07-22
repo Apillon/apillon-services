@@ -1055,7 +1055,7 @@ export let env: IEnv = {
     process.env['CONTRACTS_MYSQL_DEPLOY_PASSWORD'],
 
   CONTRACTS_SOCKET_PORT_TEST:
-    parseInt(process.env['CONTRACTS_SOCKET_PORT_TEST']) || 7701,
+    parseInt(process.env['CONTRACTS_SOCKET_PORT_TEST']) || 7702,
   CONTRACTS_MYSQL_HOST_TEST: process.env['CONTRACTS_MYSQL_HOST_TEST'],
   CONTRACTS_MYSQL_PORT_TEST:
     parseInt(process.env['CONTRACTS_MYSQL_PORT_TEST']) || 3306,

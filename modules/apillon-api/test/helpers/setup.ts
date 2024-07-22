@@ -54,6 +54,6 @@ export async function setupTest(
     return stage;
   } catch (e) {
     console.error(e);
-    throw new Error('Unable to set up env');
+    throw new Error(`Unable to set up env: ${e}`);
   }
 }

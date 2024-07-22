@@ -611,6 +611,12 @@ export class File extends UuidSqlModel {
     return true;
   }
 
+  public async blockFiles(uuids: string[]): Promise<void> {
+    await this.getContext().mysql.paramExecute(
+      `UPDATE \`${DbTables.FILE}\` SET STATUS = ${SqlModelStatus.BLOCKED} WHERE file_uuid IN (${uuids.map((uuid) => `"${uuid}"`).join(',')})`,
+    );
+  }
+
   /**
    * Get total file count for project
    * @param project_uuid
