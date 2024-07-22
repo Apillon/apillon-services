@@ -5,7 +5,7 @@ import {
   ValidateFor,
 } from '@apillon/lib';
 import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { SystemService } from './system.service';
@@ -27,5 +27,18 @@ export class SystemController {
     @Query() query: DomainQueryFilter,
   ) {
     return await this.systemService.getProjectsBlockedOnIpfs(context, query);
+  }
+
+  @Get('ipns/:ipnsName')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.SYSTEM,
+  })
+  @UseGuards(AuthGuard)
+  async getIpnsByName(
+    @Ctx() context: ApillonApiContext,
+    @Param('ipnsName') ipnsName: string,
+  ) {
+    return await this.systemService.getIpnsByName(context, ipnsName);
   }
 }
