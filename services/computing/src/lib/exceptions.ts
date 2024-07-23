@@ -5,9 +5,9 @@ import {
   ServiceName,
   ModelValidationException,
   ValidationException,
-  IValidationError,
 } from '@apillon/lib';
 import { ComputingErrorCode } from '../config/types';
+import { IValidationError } from '@apillon/blockchain-lib/common';
 
 export class ComputingCodeException extends CodeException {
   constructor(options: ErrorOptions) {

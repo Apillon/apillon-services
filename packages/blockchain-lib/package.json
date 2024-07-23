@@ -12,7 +12,8 @@
   "license": "GNU GPL V3",
   "exports": {
     "./evm": "./src/lib/evm/index.ts",
-    "./substrate": "./src/lib/substrate/index.ts"
+    "./substrate": "./src/lib/substrate/index.ts",
+    "./common": "./src/lib/common/index.ts"
   },
   "typesVersions": {
     "*": {
@@ -21,6 +22,9 @@
       ],
       "substrate": [
         "dist/lib/substrate/index.d.ts"
+      ],
+      "common": [
+        "dist/lib/common/index.d.ts"
       ]
     }
   },
@@ -36,7 +40,6 @@
     "tsconfig": "*"
   },
   "dependencies": {
-    "@apillon/lib": "*",
     "@polkadot/api": "10.12.4",
     "@polkadot/api-contract": "10.12.4",
     "@polkadot/util-crypto": "^12.3.2",
