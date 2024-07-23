@@ -1,5 +1,5 @@
-import { IValidationError } from '@apillon/lib';
 import { errors, utils } from 'ethers';
+import { IValidationError } from '../common';
 
 export class EthersGenericError extends Error {}
 
