@@ -156,4 +156,56 @@ export class Otp extends BaseSQLModel {
 
     return this;
   }
+
+  /**
+   * Updates model data in the database.
+   */
+  public async update(
+    strategy: SerializeFor = SerializeFor.UPDATE_DB,
+    conn?: PoolConnection,
+  ): Promise<this> {
+    const serializedModel = this.serialize(strategy);
+
+    // remove non-updatable parameters
+    delete serializedModel.id;
+    delete serializedModel.createTime;
+    delete serializedModel.updateTime;
+
+    let isSingleTrans = false;
+    if (!conn) {
+      isSingleTrans = true;
+      conn = await this.getContext().mysql.start();
+    }
+
+    try {
+      const createQuery = `
+        UPDATE \`${this.tableName}\`
+        SET
+          ${Object.keys(serializedModel)
+            .map((x) => `\`${x}\` = @${x}`)
+            .join(',\n')}
+        WHERE id = @id
+        `;
+
+      // re-set id parameter for where clause.
+      serializedModel.id = this.id;
+
+      await this.getContext().mysql.paramExecute(
+        createQuery,
+        serializedModel,
+        conn,
+      );
+
+      if (isSingleTrans) {
+        await this.getContext().mysql.commit(conn);
+      }
+    } catch (err) {
+      if (isSingleTrans) {
+        await this.getContext().mysql.rollback(conn);
+      }
+      throw new Error(err);
+    }
+
+    return this;
+  }
 }

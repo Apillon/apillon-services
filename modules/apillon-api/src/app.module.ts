@@ -46,6 +46,7 @@ export class AppModule {
       .exclude(
         { path: '/', method: RequestMethod.ALL },
         { path: '/oasis/signature', method: RequestMethod.POST },
+        { path: '/oasis/otp(.*)', method: RequestMethod.POST },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer

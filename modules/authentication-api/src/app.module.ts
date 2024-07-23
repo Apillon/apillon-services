@@ -7,7 +7,6 @@ import { NovaWalletModule } from './modules/nova-wallet/w3n-assets.module';
 import { SporranModule } from './modules/sporran/sporran.module';
 import { VerificationModule } from './modules/verification/verification.module';
 import { AppController } from './app.controller';
-import { OtpModule } from './modules/otp/otp.module';
 
 @Module({
   imports: [
@@ -15,7 +14,6 @@ import { OtpModule } from './modules/otp/otp.module';
     VerificationModule,
     IdentityModule,
     SporranModule,
-    OtpModule,
   ],
   controllers: [AppController],
   providers: [],

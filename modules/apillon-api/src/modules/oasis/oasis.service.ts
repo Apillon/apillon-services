@@ -3,8 +3,10 @@ import {
   BadRequestErrorCode,
   CodeException,
   CreateOasisSignatureDto,
+  GenerateOtpDto,
   JwtExpireTime,
   JwtTokenType,
+  ValidateOtpDto,
   generateJwtToken,
   parseJwtToken,
 } from '@apillon/lib';
@@ -46,5 +48,18 @@ export class OasisService {
     return (
       await new AuthenticationMicroservice(context).createOasisSignature(body)
     ).data;
+  }
+
+  async generateOtp(
+    context: ApillonApiContext,
+    body: GenerateOtpDto,
+  ): Promise<void> {
+    return (await new AuthenticationMicroservice(context).generateOtp(body))
+      .data;
+  }
+
+  async validateOtp(context: ApillonApiContext, body: ValidateOtpDto) {
+    return (await new AuthenticationMicroservice(context).validateOtp(body))
+      .data;
   }
 }
