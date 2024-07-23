@@ -236,9 +236,9 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
               await streamToString(file.Body, 'utf-8'),
             );
             if (fileContent.image) {
-              const imageFile = imagesInBucket.find(
-                (x) => x.name == fileContent.image,
-              );
+              const imageFile = imagesInBucket
+                .filter((x) => x.name == fileContent.image)
+                .pop();
 
               if (collectionMetadata.useApillonIpfsGateway) {
                 fileContent.image = await ipfsCluster.generateLink(

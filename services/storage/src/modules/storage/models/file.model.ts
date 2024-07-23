@@ -286,6 +286,11 @@ export class File extends UuidSqlModel {
       : this.reset();
   }
 
+  private getWhereQuery(showOnlyDeleted: boolean): string {
+    return `WHERE (f.id LIKE @id OR f.CID LIKE @id OR f.CIDv1 LIKE @id OR f.file_uuid LIKE @id)
+      AND f.status ${showOnlyDeleted ? '=' : '<>'} ${SqlModelStatus.DELETED};`;
+  }
+
   /**
    *
    * @param id internal id, cid or file_uuid
@@ -301,9 +306,7 @@ export class File extends UuidSqlModel {
       SELECT f.*, d.directory_uuid
       FROM \`${DbTables.FILE}\` f
       LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
-      WHERE (f.id LIKE @id OR f.CID LIKE @id OR f.CIDv1 LIKE @id OR f.file_uuid LIKE @id)
-      AND f.status <> ${SqlModelStatus.DELETED};
-      `,
+      ${this.getWhereQuery(false)}`,
       { id },
     );
 
@@ -328,8 +331,7 @@ export class File extends UuidSqlModel {
       SELECT f.*, d.directory_uuid
       FROM \`${DbTables.FILE}\` f
       LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
-      WHERE (f.id LIKE @id OR f.CID LIKE @id OR f.file_uuid LIKE @id)
-      AND f.status = ${SqlModelStatus.DELETED};
+      ${this.getWhereQuery(true)}
       `,
       { id },
     );
@@ -607,6 +609,12 @@ export class File extends UuidSqlModel {
       { project_uuid },
     );
     return true;
+  }
+
+  public async blockFiles(uuids: string[]): Promise<void> {
+    await this.getContext().mysql.paramExecute(
+      `UPDATE \`${DbTables.FILE}\` SET STATUS = ${SqlModelStatus.BLOCKED} WHERE file_uuid IN (${uuids.map((uuid) => `"${uuid}"`).join(',')})`,
+    );
   }
 
   /**

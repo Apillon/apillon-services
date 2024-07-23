@@ -72,7 +72,7 @@ export async function upgrade(
     ) as contractCount,
     (
       SELECT COUNT(*) from ${databases.computeDb}.transaction transaction
-        JOIN ${databases.computeDb}.contract contract ON contract.id = transaction.contract_id
+        JOIN ${databases.computeDb}.contract contract ON contract.id = transaction.refId
         WHERE contract.project_uuid = p.project_uuid
         AND transaction.transactionStatus = 5 # worker-success
     ) as computingTransactionCount,

@@ -56,6 +56,16 @@ then
   cd ../../
 fi
 
+if [ "$BLOCKCHAIN_LIB" == "true" ]
+then
+  cd packages/blockchain-lib/
+  echo "Building @apillon/blockchain-lib"
+  npm install --omit=dev
+  npm run build
+  npm link
+  cd ../../
+fi
+
 echo "Building service:"
 echo $SERVICE_PATH
 cd ${SERVICE_PATH}

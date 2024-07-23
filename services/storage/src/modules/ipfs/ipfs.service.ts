@@ -173,7 +173,7 @@ export class IPFSService {
       event.fileUploadRequest.s3FileKey,
     );
 
-    console.info('Add file to IPFS, ...');
+    console.info(`Add file to IPFS. Pin: ${this.ipfsCluster.pinOnAdd}`);
     const filesOnIPFS = await this.kuboRpcApiClient.add({
       content: file.Body as ReadableStream,
       pin: this.ipfsCluster.pinOnAdd,

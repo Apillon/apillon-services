@@ -43,5 +43,14 @@ export class CallContractDTO extends ModelBase {
       },
     ],
   })
-  public methodArguments: any[];
+  public methodArguments: unknown[];
+}
+
+export class ApillonApiCallContractDTO extends CallContractDTO {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public project_uuid: string;
 }

@@ -31,13 +31,19 @@ export class ContractDeploy extends UuidSqlModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
     serializable: [
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.LOGGER,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -213,7 +219,7 @@ export class ContractDeploy extends UuidSqlModel {
   public version_id: number;
 
   @prop({
-    setter(value) {
+    getter(value: unknown[]) {
       return typeof value === 'object' ? JSON.stringify(value) : value;
     },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -350,6 +356,12 @@ export class ContractDeploy extends UuidSqlModel {
     return this;
   }
 
+  markAsNotTransferred() {
+    this.contractStatus = ContractStatus.DEPLOYED;
+
+    return this;
+  }
+
   /***************************************************
    * Queries
    *****************************************************/
@@ -430,7 +442,7 @@ export class ContractDeploy extends UuidSqlModel {
       FROM \`${DbTables.CONTRACT_DEPLOY}\` AS c
              LEFT JOIN \`${DbTables.CONTRACT_VERSION}\` AS cv ON (cv.id = c.version_id)
       WHERE c.contract_uuid = @contract_deploy_uuid
-        AND c.status = ${SqlModelStatus.ACTIVE};
+        AND c.status <> ${SqlModelStatus.DELETED};
     `;
     return await this.getContext().mysql.paramExecute(query, {
       contract_deploy_uuid,
@@ -454,7 +466,7 @@ export class ContractDeploy extends UuidSqlModel {
              LEFT JOIN \`${DbTables.CONTRACT_VERSION_METHOD}\` AS cvm
                        ON (cvm.contract_version_id = cv.id)
       WHERE c.contract_uuid = @contract_deploy_uuid
-        AND c.status = ${SqlModelStatus.ACTIVE};
+        AND c.status <> ${SqlModelStatus.DELETED};
     `;
     return await this.getContext().mysql.paramExecute(query, {
       contract_deploy_uuid,

@@ -148,10 +148,10 @@ export class StorageService {
   async getFileDetails(
     context: DevConsoleApiContext,
     bucket_uuid: string,
-    id: string,
+    uuid: string,
   ) {
     const filter: FileDetailsQueryFilter = new FileDetailsQueryFilter(
-      { bucket_uuid: bucket_uuid, id: id },
+      { bucket_uuid: bucket_uuid, uuid },
       context,
     );
     return (await new StorageMicroservice(context).getFileDetails(filter)).data;
@@ -176,21 +176,21 @@ export class StorageService {
   /**
    * Marks a file for deletion from the storage.
    * @param {DevConsoleApiContext} context - An object containing information about user session.
-   * @param {string} id - The ID of the file
+   * @param {string} uuid - The UUID of the file
    * @returns - Service response
    */
-  async deleteFile(context: DevConsoleApiContext, id: string) {
-    return (await new StorageMicroservice(context).deleteFile({ id })).data;
+  async deleteFile(context: DevConsoleApiContext, uuid: string) {
+    return (await new StorageMicroservice(context).deleteFile({ uuid })).data;
   }
 
   /**
    * Set file back to active
    * @param {DevConsoleApiContext} context - An object containing information about user session.
-   * @param {string} id - The ID of the file
+   * @param {string} uuid - The UUID of the file
    * @returns - Service response
    */
-  async restoreFile(context: DevConsoleApiContext, id: string) {
-    return (await new StorageMicroservice(context).restoreFile({ id })).data;
+  async restoreFile(context: DevConsoleApiContext, uuid: string) {
+    return (await new StorageMicroservice(context).restoreFile({ uuid })).data;
   }
 
   async testCrustProvider(

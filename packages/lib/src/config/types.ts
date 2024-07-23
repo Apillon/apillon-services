@@ -157,6 +157,7 @@ export enum StorageEventType {
   IPNS_DELETE = 'delete-ipns',
   IPNS_PUBLISH = 'publish-ipns',
   IPNS_GET = 'get-ipns',
+  IPNS_GET_BY_NAME = 'get-ipns-by-name',
   WEBSITE_LIST = 'list-websites',
   WEBSITE_CREATE = 'create-website',
   WEBSITE_UPDATE = 'update-website',
@@ -804,7 +805,7 @@ export enum JwtTokenType {
   // Website review token
   WEBSITE_REVIEW_TOKEN = 'website-review',
   CRYPTO_PAYMENT_DATA = 'crypto-payment-data',
-  OASIS_SDK_TOKEN = 'oasis-sdk-token',
+  EMBEDDED_WALLET_SDK_TOKEN = 'embedded-wallet-sdk-token',
 }
 
 /**
