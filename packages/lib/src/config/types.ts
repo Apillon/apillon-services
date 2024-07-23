@@ -206,6 +206,8 @@ export enum AuthenticationEventType {
   CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
   LIST_OASIS_SIGNATURES = 'list-oasis-signatures',
   GET_OASIS_SIGNATURES_COUNT_BY_API_KEY = 'get-oasis-signatures-count-by-api-key',
+  GENERATE_OTP = 'generate-otp',
+  VALIDATE_OTP = 'validate-otp',
 }
 
 export enum MailEventType {
@@ -671,6 +673,8 @@ export enum ValidatorErrorCode {
   DATA_NOT_VALID = 42200163,
   DATA_NOT_PRESENT = 42200164,
   CREATE_OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT = 42200165,
+  GENERATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200166,
+  VALIDATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200167,
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
   COMPUTING_CONTRACT_TYPE_NOT_PRESENT = 42200202,
@@ -707,6 +711,7 @@ export enum ValidatorErrorCode {
   AUTH_SESSION_TOKEN_NOT_PRESENT = 42200718,
   CAPTCHA_NOT_CONFIGURED = 42200719,
   CAPTCHA_INVALID = 42200720,
+  OTP_CODE_NOT_PRESENT = 42200721,
   //#endregion
 
   //#region Blockchain
@@ -1028,6 +1033,8 @@ export enum EmailTemplate {
 
   IPFS_BANDWIDTH_NEAR_QUOTA = 'ipfs-bandwidth-near-quota',
   IPFS_BANDWIDTH_EXCEEDED_QUOTA = 'ipfs-bandwidth-exceeded-quota',
+
+  OTP_VERIFICATION = 'otp-verification',
 }
 
 export enum JwtExpireTime {

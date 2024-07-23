@@ -8,6 +8,7 @@ import {
   CanActivate,
   ExecutionContext,
   HttpStatus,
+  Inject,
   Injectable,
   mixin,
 } from '@nestjs/common';
@@ -17,7 +18,7 @@ import { AuthenticationErrorCode } from '../config/types';
 export const AuthGuard = (tokenType: string, verifyEmail = true) => {
   @Injectable()
   class AuthGuardMixin implements CanActivate {
-    constructor(public reflector: Reflector) {}
+    constructor(@Inject(Reflector.name) public readonly reflector: Reflector) {}
 
     public async canActivate(execCtx: ExecutionContext): Promise<boolean> {
       const options = this.reflector.getAllAndMerge(VALIDATION_OPTIONS_KEY, [
