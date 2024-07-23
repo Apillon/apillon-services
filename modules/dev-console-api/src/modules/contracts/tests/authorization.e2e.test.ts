@@ -8,6 +8,8 @@ import {
   ApillonConsoleServerClient,
   createTestProject,
   createTestUser,
+  erc20Abi,
+  erc20Bytecode,
   releaseStage,
   Stage,
 } from '@apillon/tests-lib';
@@ -15,7 +17,6 @@ import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '@apillon/dev-console-api/src/modules/project/models/project.model';
 import { Contract } from '@apillon/contracts/src/modules/contracts/models/contract.model';
 import { ContractVersion } from '@apillon/contracts/src/modules/contracts/models/contractVersion.model';
-import { erc20Abi, erc20Bytecode } from './contracts/erc20';
 import * as request from 'supertest';
 import { ContractDeploy } from '@apillon/contracts/dist/modules/contracts/models/contractDeploy.model';
 import { ContractStatus } from '@apillon/contracts/dist/config/types';

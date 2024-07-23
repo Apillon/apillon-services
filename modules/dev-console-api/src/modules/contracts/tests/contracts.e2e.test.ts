@@ -3,6 +3,8 @@ import {
   ApillonConsoleServerClient,
   createTestProject,
   createTestUser,
+  erc20Abi,
+  erc20Bytecode,
   releaseStage,
   Stage,
   TestBlockchain,
@@ -11,7 +13,6 @@ import { setupTest } from '../../../../test/helpers/setup';
 
 import { Contract } from '@apillon/contracts/src/modules/contracts/models/contract.model';
 import { ContractVersion } from '@apillon/contracts/src/modules/contracts/models/contractVersion.model';
-import { erc20Abi, erc20Bytecode } from './contracts/erc20';
 import { ContractVersionMethod } from '@apillon/contracts/src/modules/contracts/models/contractVersionMethod.model';
 
 describe('Apillon Console Contracts', () => {
