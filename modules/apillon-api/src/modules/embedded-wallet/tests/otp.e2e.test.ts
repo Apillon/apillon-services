@@ -70,17 +70,19 @@ describe('OTP tests', () => {
 
     test('User cannot create OTP without valid token', async () => {
       let response = await request(stage.http)
-        .post('/embedded-wallet/otp')
+        .post('/embedded-wallet/otp/generate')
         .send({
           email: 'test@apillon.io',
         });
 
       expect(response.status).toBe(400);
 
-      response = await request(stage.http).post('/embedded-wallet/otp').send({
-        email: 'test@apillon.io',
-        token: 'invalid token',
-      });
+      response = await request(stage.http)
+        .post('/embedded-wallet/otp/generate')
+        .send({
+          email: 'test@apillon.io',
+          token: 'invalid token',
+        });
 
       expect(response.status).toBe(400);
     });
@@ -88,13 +90,13 @@ describe('OTP tests', () => {
     test('Successfully create OTP', async () => {
       const email = 'test@apillon.io';
       const response = await request(stage.http)
-        .post('/embedded-wallet/otp')
+        .post('/embedded-wallet/otp/generate')
         .send({
           email,
           token,
         });
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(200);
 
       const dbData = await stage.db.authentication.paramExecute(
         `SELECT * FROM otp WHERE email = '${email}'`,
@@ -159,7 +161,7 @@ describe('OTP tests', () => {
           token,
         });
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(200);
       expect(response.body.data).toBe(true);
 
       const dbData = await stage.db.authentication.paramExecute(
@@ -180,7 +182,7 @@ describe('OTP tests', () => {
           token,
         });
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(200);
       expect(response.body.data).toBe(false);
     });
 
@@ -193,7 +195,7 @@ describe('OTP tests', () => {
           token,
         });
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(200);
       expect(response.body.data).toBe(false);
     });
 
@@ -210,7 +212,7 @@ describe('OTP tests', () => {
           token,
         });
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(200);
       expect(response.body.data).toBe(false);
     });
 
@@ -226,7 +228,7 @@ describe('OTP tests', () => {
           code: correctCode,
           token,
         });
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(200);
       expect(response.body.data).toBe(false);
     });
   });

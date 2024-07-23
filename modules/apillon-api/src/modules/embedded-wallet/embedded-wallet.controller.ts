@@ -49,6 +49,7 @@ export class EmbeddedWalletController {
   @Post('otp/generate')
   @Validation({ dto: GenerateOtpDto })
   @UseGuards(JwtGuard(JwtTokenType.EMBEDDED_WALLET_SDK_TOKEN), ValidationGuard)
+  @HttpCode(200)
   async generateOtp(
     @Ctx() context: ApillonApiContext,
     @Body() body: GenerateOtpDto,
