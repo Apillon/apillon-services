@@ -33,8 +33,8 @@ import { FileUploadSession } from '../modules/storage/models/file-upload-session
 import { WorkerName } from './worker-executor';
 import { Readable } from 'stream';
 
-// Maximum file size for which we will check if it is HTML. Currently approx. 1MB
-const MAX_HTML_SIZE_IN_B = 1000000;
+// Maximum file size for which we will check if it is HTML. Currently approx. 100KB
+const MAX_HTML_SIZE_IN_B = 100000;
 export class SyncToIPFSWorker extends BaseQueueWorker {
   public constructor(
     workerDefinition: WorkerDefinition,
