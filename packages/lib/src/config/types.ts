@@ -800,7 +800,7 @@ export enum JwtTokenType {
   // Website review token
   WEBSITE_REVIEW_TOKEN = 'website-review',
   CRYPTO_PAYMENT_DATA = 'crypto-payment-data',
-  OASIS_SDK_TOKEN = 'oasis-sdk-token',
+  EMBEDDED_WALLET_SDK_TOKEN = 'embedded-wallet-sdk-token',
 }
 
 /**

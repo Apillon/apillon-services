@@ -14,12 +14,12 @@ import {
 } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
-import { OasisService } from './oasis.service';
+import { EmbeddedWalletService } from './embedded-wallet.service';
 import { ValidationGuard } from '../../guards/validation.guard';
 
-@Controller('oasis')
-export class OasisController {
-  constructor(private oasisService: OasisService) {}
+@Controller('embedded-wallet')
+export class EmbeddedWalletController {
+  constructor(private service: EmbeddedWalletService) {}
 
   @Get('session-token')
   @ApiKeyPermissions({
@@ -28,7 +28,7 @@ export class OasisController {
   })
   @UseGuards(AuthGuard)
   async generateSessionToken(@Ctx() context: ApillonApiContext) {
-    return await this.oasisService.generateSessionToken(context);
+    return await this.service.generateSessionToken(context);
   }
 
   @Post('signature')
@@ -39,6 +39,6 @@ export class OasisController {
     @Ctx() context: ApillonApiContext,
     @Body() body: CreateOasisSignatureDto,
   ) {
-    return await this.oasisService.createOasisSignature(context, body);
+    return await this.service.createOasisSignature(context, body);
   }
 }

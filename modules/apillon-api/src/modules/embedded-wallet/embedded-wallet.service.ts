@@ -12,10 +12,10 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 
 @Injectable()
-export class OasisService {
+export class EmbeddedWalletService {
   async generateSessionToken(context: ApillonApiContext) {
     const token = generateJwtToken(
-      JwtTokenType.OASIS_SDK_TOKEN,
+      JwtTokenType.EMBEDDED_WALLET_SDK_TOKEN,
       {
         project_uuid: context.apiKey.project_uuid,
         apiKey: context.apiKey.apiKey,
@@ -32,7 +32,10 @@ export class OasisService {
   ) {
     //Validate and parse token
     try {
-      const tokenData = parseJwtToken(JwtTokenType.OASIS_SDK_TOKEN, body.token);
+      const tokenData = parseJwtToken(
+        JwtTokenType.EMBEDDED_WALLET_SDK_TOKEN,
+        body.token,
+      );
       body.project_uuid = tokenData.project_uuid;
       body.apiKey = tokenData.apiKey;
     } catch (err) {
