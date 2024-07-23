@@ -6,6 +6,8 @@ import {
   env,
   Mailing,
   EmailDataDto,
+  generateRandomCode,
+  EmailTemplate,
 } from '@apillon/lib';
 import { Otp } from './models/otp.model';
 import { ServiceContext } from '@apillon/service-lib';
@@ -19,24 +21,20 @@ export class OtpService {
       expireTime.getMinutes() + env.AUTH_OTP_EXPIRATION_IN_MIN,
     );
     // Random 6 character code of uppercase letters & digits
-    const code = Array(6)
-      .fill(null)
-      .map(() => Math.random().toString(36).substring(2, 3).toUpperCase())
-      .join('');
+    const code = generateRandomCode(6, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
     const otp = new Otp({ ...event.body, expireTime, code }, context);
     await otp.validateOrThrow(ModelValidationException, ValidatorErrorCode);
     const createdOtp = await otp.insert();
 
-    // To-DO Add template once it is ready
-    /*await new Mailing(context).sendMail(
+    await new Mailing(context).sendMail(
       new EmailDataDto({
         mailAddresses: [event.body.email],
-        templateName: 'TO-DO',
+        templateName: EmailTemplate.OTP_VERIFICATION,
         templateData: {
           code,
         },
       }),
-    );*/
+    );
 
     return createdOtp;
   }

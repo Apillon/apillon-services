@@ -25,7 +25,7 @@ describe('OTP tests', () => {
     test('Successfully create OTP', async () => {
       const email = 'test@apillon.io';
       const response = await request(stage.http).post('/otp').send({
-        email: 'test@apillon.io',
+        email,
       });
 
       expect(response.status).toBe(201);

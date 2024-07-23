@@ -1030,6 +1030,8 @@ export enum EmailTemplate {
 
   IPFS_BANDWIDTH_NEAR_QUOTA = 'ipfs-bandwidth-near-quota',
   IPFS_BANDWIDTH_EXCEEDED_QUOTA = 'ipfs-bandwidth-exceeded-quota',
+
+  OTP_VERIFICATION = 'otp-verification',
 }
 
 export enum JwtExpireTime {
