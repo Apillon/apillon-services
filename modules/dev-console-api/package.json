@@ -54,6 +54,8 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@apillon/lib": "*",
+    "@apillon/blockchain-lib": "*",
     "@apillon/tests-lib": "*",
     "eslint-config-common": "*",
     "tsconfig": "*"

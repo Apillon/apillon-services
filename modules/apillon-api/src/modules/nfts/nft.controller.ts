@@ -3,8 +3,6 @@ import {
   AttachedServiceType,
   BurnNftDto,
   ChainType,
-  CreateCollectionDTO,
-  CreateSubstrateCollectionDTO,
   DefaultApiKeyRole,
   MintNftDTO,
   NestMintNftDTO,
@@ -12,6 +10,10 @@ import {
   TransferCollectionDTO,
   ValidateFor,
 } from '@apillon/lib';
+import {
+  CreateCollectionDTO,
+  CreateSubstrateCollectionDTO,
+} from '@apillon/blockchain-lib/common';
 import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
 import {
   Body,

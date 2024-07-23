@@ -1,5 +1,4 @@
 import {
-  CreateCollectionDTO,
   DefaultUserRole,
   MintNftDTO,
   NestMintNftDTO,
@@ -14,10 +13,13 @@ import {
   DefaultPermission,
   RoleGroup,
   AddNftsMetadataDto,
-  CreateSubstrateCollectionDTO,
   CollectionMetadataQueryFilter,
   ChainType,
 } from '@apillon/lib';
+import {
+  CreateCollectionDTO,
+  CreateSubstrateCollectionDTO,
+} from '@apillon/blockchain-lib/common';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,

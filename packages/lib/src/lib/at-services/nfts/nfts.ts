@@ -3,7 +3,6 @@ import { AppEnvironment, NftsEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { NFTCollectionQueryFilter } from './dtos/collection-query-filter.dto';
-import { CreateCollectionDTO } from './dtos/create-collection.dto';
 import { MintNftDTO, NestMintNftDTO } from './dtos/mint-nft.dto';
 import { DeployCollectionDTO } from './dtos/deploy-collection.dto';
 import { SetCollectionBaseUriDTO } from './dtos/set-collection-base-uri.dto';
@@ -36,7 +35,8 @@ export class NftsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async createCollection(params: CreateCollectionDTO) {
+  // TODO: CreateCollectionDTO was removed here and replaced with any so that we don't import blockchain-lib into lib
+  public async createCollection(params: any) {
     const data = {
       eventName: NftsEventType.CREATE_COLLECTION,
       body: params.serialize(),

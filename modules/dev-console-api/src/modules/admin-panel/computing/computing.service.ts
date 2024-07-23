@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../../context';
-import {
-  ClusterWalletQueryFilter,
-  ComputingMicroservice,
-  DepositToClusterDto,
-} from '@apillon/lib';
+import { ClusterWalletQueryFilter, ComputingMicroservice } from '@apillon/lib';
+import { DepositToClusterDto } from '@apillon/blockchain-lib/common';
 
 @Injectable()
 export class ComputingService {

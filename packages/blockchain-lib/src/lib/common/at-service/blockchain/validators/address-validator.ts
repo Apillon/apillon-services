@@ -1,8 +1,8 @@
-import { ChainType } from '../../../../config/types';
+import { ChainType } from '@apillon/lib';
 import {
   substrateAddressValidator,
   SubstrateChainPrefix,
-} from '@apillon/blockchain-lib/substrate';
+} from '../../../../substrate';
 import { ethAddressValidator } from '@rawmodel/validators';
 
 export function isEvmOrSubstrateWalletAddress(
