@@ -7,6 +7,7 @@ import {
   CreateBucketDto,
   CreateCollectionDTO,
   CreateEvmTransactionDto,
+  CreateIpnsDto,
   CreateSubstrateTransactionDto,
   DeployCollectionDTO,
   env,
@@ -654,6 +655,59 @@ export class NftsService {
     );
 
     return true;
+  }
+
+  static async addIpnsToCollection(
+    { collection_uuid }: { collection_uuid: string },
+    context: ServiceContext,
+  ) {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(collection_uuid);
+    await NftsService.checkCollection(
+      collection,
+      'addIpnsToCollection()',
+      context,
+    );
+
+    if (collection.ipns_uuid) {
+      throw new NftsCodeException({
+        status: 400,
+        code: NftsErrorCode.COLLECTION_ALREADY_HAVE_IPNS,
+        context,
+        sourceFunction: 'addIpnsToCollection()',
+      });
+    }
+
+    //Call storageMS to generate IPNS
+    const createIpnsDto = new CreateIpnsDto({}, context).populate({
+      bucket_uuid: collection.bucket_uuid,
+      name: `${collection.name} IPNS record`,
+      cid: collection.cid,
+    });
+    const ipnsRes = await new StorageMicroservice(context).createIpns(
+      createIpnsDto,
+    );
+
+    const baseUri = collection.useApillonIpfsGateway
+      ? ipnsRes.link.split('?token')[0]
+      : `ipns://${ipnsRes.ipnsName}`;
+
+    //Submit change base uri transaction
+    const setBaseUriBody = new SetCollectionBaseUriDTO(
+      {
+        uri: baseUri,
+      },
+      context,
+    );
+    await this.setNftCollectionBaseUri({ body: setBaseUriBody }, context);
+
+    collection.baseUri = baseUri;
+    collection.ipns_uuid = ipnsRes.ipns_uuid;
+    await collection.update();
+
+    return collection.serializeByContext(context);
   }
 
   static async mintNftTo(

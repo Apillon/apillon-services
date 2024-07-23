@@ -101,39 +101,6 @@ export class CollectionMetadata extends UuidSqlModel {
   public metadataSession: string;
 
   @prop({
-    parser: { resolver: booleanParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.SELECT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: StorageErrorCode.COLLECTION_METADATA_REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-    defaultValue: true,
-    fakeValue: true,
-  })
-  public useApillonIpfsGateway: boolean;
-
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-  })
-  public ipnsId: number;
-
-  @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB],
     serializable: [

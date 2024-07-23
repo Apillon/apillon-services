@@ -140,6 +140,7 @@ export class NftsMicroservice extends BaseService {
   public async executeDeployCollectionWorker(params: {
     collection_uuid: string;
     baseUri: string;
+    ipns_uuid?: string;
   }) {
     const data = {
       eventName: NftsEventType.EXECUTE_DEPLOY_COLLECTION_WORKER,
