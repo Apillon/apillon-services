@@ -58,36 +58,6 @@
     },
     "db-rebuild-test": {
       "cache": false
-    },
-    "@apillon/lib#build": {
-      "dependsOn": [
-        "@apillon/blockchain-lib#build"
-      ]
-    },
-    "@apillon/blockchain#build": {
-      "dependsOn": [
-        "@apillon/lib#build",
-        "@apillon/service-lib#build",
-        "@apillon/tests-lib#build"
-      ]
-    },
-    "@apillon/contracts#build": {
-      "dependsOn": [
-        "@apillon/lib#build",
-        "@apillon/service-lib#build",
-        "@apillon/tests-lib#build"
-      ]
-    },
-    "@apillon/nfts#build": {
-      "dependsOn": [
-        "@apillon/lib#build",
-        "@apillon/service-lib#build"
-      ]
-    },
-    "@apillon/mailing#build": {
-      "dependsOn": [
-        "@apillon/lib#build"
-      ]
     }
   }
 }
