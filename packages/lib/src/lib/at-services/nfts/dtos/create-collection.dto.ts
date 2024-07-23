@@ -23,7 +23,7 @@ import { validateDropPriceIfDrop } from '../validators/create-collection-drop-pr
 import {
   substrateAddressValidator,
   SubstrateChainPrefix,
-} from '@apillon/blockchain-lib';
+} from '@apillon/blockchain-lib/substrate';
 import { SUBSTRATE_NFTS_MAX_SUPPLY } from '../constants';
 
 // Contains properties which are present for all collections

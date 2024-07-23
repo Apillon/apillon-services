@@ -10,6 +10,20 @@
   ],
   "author": "Apillon",
   "license": "GNU GPL V3",
+  "exports": {
+    "./evm": "./src/lib/evm/index.ts",
+    "./substrate": "./src/lib/substrate/index.ts"
+  },
+  "typesVersions": {
+    "*": {
+      "evm": [
+        "dist/lib/evm/index.d.ts"
+      ],
+      "substrate": [
+        "dist/lib/substrate/index.d.ts"
+      ]
+    }
+  },
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "tsc --declarationMap",

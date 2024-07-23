@@ -29,7 +29,7 @@ import {
   ContractsCodeException,
   ContractsValidationException,
 } from '../../../lib/exceptions';
-import { AbiHelper, EVMContractClient } from '@apillon/blockchain-lib';
+import { AbiHelper, EVMContractClient } from '@apillon/blockchain-lib/evm';
 import { ContractsSpendService } from './contracts-spend-service';
 
 export class ContractService {

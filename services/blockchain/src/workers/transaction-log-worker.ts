@@ -18,7 +18,7 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { formatTokenWithDecimals } from '@apillon/blockchain-lib';
+import { formatTokenWithDecimals } from '@apillon/blockchain-lib/evm';
 import { Wallet } from '../modules/wallet/wallet.model';
 import { DbTables, TxDirection } from '../config/types';
 import { TransactionLog } from '../modules/accounting/transaction-log.model';

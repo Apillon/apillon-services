@@ -28,10 +28,12 @@ import { NftsCodeException } from '../exceptions';
 import {
   EVM_MAX_INT,
   EVMContractClient,
+  TransactionUtils,
+} from '@apillon/blockchain-lib/evm';
+import {
   SUBSTRATE_MAX_INT,
   SubstrateContractClient,
-  TransactionUtils,
-} from '@apillon/blockchain-lib';
+} from '@apillon/blockchain-lib/substrate';
 
 export async function getEvmContractClient(
   context: Context,

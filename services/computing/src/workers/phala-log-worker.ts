@@ -9,7 +9,7 @@ import {
   ServiceName,
   SubstrateChain,
 } from '@apillon/lib';
-import { formatTokenWithDecimals } from '@apillon/blockchain-lib';
+import { formatTokenWithDecimals } from '@apillon/blockchain-lib/evm';
 import {
   BaseQueueWorker,
   LogOutput,

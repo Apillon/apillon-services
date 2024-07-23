@@ -10,7 +10,7 @@ import { numberSizeValidator } from '../../../validators';
 import {
   substrateAddressValidator,
   SubstrateChainPrefix,
-} from '@apillon/blockchain-lib';
+} from '@apillon/blockchain-lib/substrate';
 
 export class DepositToClusterDto extends ModelBase {
   @prop({

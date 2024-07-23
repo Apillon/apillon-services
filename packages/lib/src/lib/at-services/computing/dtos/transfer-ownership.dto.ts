@@ -6,7 +6,7 @@ import { ModelBase } from '../../../base-models/base';
 import {
   substrateAddressValidator,
   SubstrateChainPrefix,
-} from '@apillon/blockchain-lib';
+} from '@apillon/blockchain-lib/substrate';
 
 export class TransferOwnershipDto extends ModelBase {
   @prop({
