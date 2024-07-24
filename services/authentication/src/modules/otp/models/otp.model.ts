@@ -106,7 +106,7 @@ export class Otp extends BaseSQLModel {
    */
   @prop({
     parser: { resolver: dateParser() },
-    serializable: [SerializeFor.APILLON_API],
+    serializable: [SerializeFor.SELECT_DB],
     populatable: [PopulateFrom.DB],
   })
   public createTime?: Date;
@@ -116,7 +116,7 @@ export class Otp extends BaseSQLModel {
    */
   @prop({
     parser: { resolver: dateParser() },
-    serializable: [SerializeFor.APILLON_API],
+    serializable: [SerializeFor.SELECT_DB],
     populatable: [PopulateFrom.DB],
   })
   public updateTime?: Date;
