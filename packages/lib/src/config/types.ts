@@ -993,6 +993,7 @@ export enum ProductService {
   COMPUTING = 'COMPUTING',
   STORAGE = 'STORAGE',
   CONTRACTS = 'CONTRACTS',
+  WALLET = 'WALLET',
 }
 
 export enum ProductCategory {
@@ -1012,6 +1013,8 @@ export enum ProductCategory {
   MOONBEAM_CONTRACT = 'MOONBEAM_CONTRACT',
   ASTAR_CONTRACT = 'ASTAR_CONTRACT',
   ACURAST = 'ACURAST',
+  IPNS = 'IPNS',
+  SIGNATURE = 'SIGNATURE',
 }
 
 export enum EmailTemplate {

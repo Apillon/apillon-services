@@ -7,7 +7,7 @@ export async function upgrade(
     ALTER TABLE \`${DbTables.COLLECTION}\`
       ADD COLUMN useApillonIpfsGateway BOOLEAN DEFAULT 0,
       ADD COLUMN ipns_uuid VARCHAR(36) NULL,
-      ADD COLUMN cid VARCHAR(255) NULL,;
+      ADD COLUMN cid VARCHAR(255) NULL;
       ;
   `);
 }

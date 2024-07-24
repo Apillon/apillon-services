@@ -1,15 +1,15 @@
 import { DbTables } from '../../config/types';
-import { ProductCode, SqlModelStatus } from '@apillon/lib';
+import { ProductCode, ProductService, SqlModelStatus } from '@apillon/lib';
 
 export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    INSERT INTO ${DbTables.PRODUCT} (id, name, description, status)
+    INSERT INTO ${DbTables.PRODUCT} (id, name, description, status, service, category)
     VALUES
     (${ProductCode.IPNS}, '${
       ProductCode[ProductCode.IPNS]
-    }', '', ${SqlModelStatus.ACTIVE})
+    }', '', ${SqlModelStatus.ACTIVE}, `${ProductService.STORAGE}`, 'IPNS')
 ;`);
 
   await queryFn(`
