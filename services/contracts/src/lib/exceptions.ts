@@ -5,9 +5,9 @@ import {
   ServiceName,
   ModelValidationException,
   ValidationException,
+  IValidationError,
 } from '@apillon/lib';
 import { ContractsErrorCode } from '../config/types';
-import { IValidationError } from '@apillon/blockchain-lib/common';
 
 export class ContractsCodeException extends CodeException {
   constructor(options: ErrorOptions) {

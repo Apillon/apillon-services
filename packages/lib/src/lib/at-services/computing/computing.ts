@@ -4,8 +4,6 @@ import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreateContractDto } from './dtos/create-contract.dto';
 import { ContractQueryFilter } from './dtos/contract-query-filter.dto';
-import { DepositToClusterDto } from './dtos/deposit-to-cluster.dto';
-import { TransferOwnershipDto } from './dtos/transfer-ownership.dto';
 import { EncryptContentDto } from './dtos/encrypt-content.dto';
 import { AssignCidToNft } from './dtos/assign-cid-to-nft.dto';
 import { ClusterWalletQueryFilter } from './dtos/cluster-wallet-query-filter.dto';
@@ -71,7 +69,8 @@ export class ComputingMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async depositToPhalaCluster(body: DepositToClusterDto) {
+  // TODO: DepositToClusterDto was removed here and replaced with any so that we don't import blockchain-lib into lib
+  public async depositToPhalaCluster(body: any) {
     const data = {
       eventName: ComputingEventType.DEPOSIT_TO_PHALA_CLUSTER,
       body: body.serialize(),
@@ -79,7 +78,8 @@ export class ComputingMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async transferContractOwnership(body: TransferOwnershipDto) {
+  // TODO: TransferOwnershipDto was removed here and replaced with any so that we don't import blockchain-lib into lib
+  public async transferContractOwnership(body: any) {
     const data = {
       eventName: ComputingEventType.TRANSFER_CONTRACT_OWNERSHIP,
       body: body.serialize(),

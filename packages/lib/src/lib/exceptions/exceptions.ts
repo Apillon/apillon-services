@@ -10,7 +10,12 @@ import { Lmas } from '../at-services/lmas/lmas';
 import { Context } from '../context';
 import { writeLog } from '../logger';
 import { HttpException } from './http-exception';
-import { IValidationError } from '@apillon/blockchain-lib/common';
+
+export interface IValidationError {
+  code: number | string;
+  property: string;
+  message?: string;
+}
 
 export interface ErrorOptions {
   code: any;

@@ -7,7 +7,7 @@ import {
   ValidationException,
 } from '@apillon/lib';
 import { ComputingErrorCode } from '../config/types';
-import { IValidationError } from '@apillon/blockchain-lib/common';
+import { IValidationError } from '@apillon/lib';
 
 export class ComputingCodeException extends CodeException {
   constructor(options: ErrorOptions) {

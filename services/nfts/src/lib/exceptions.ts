@@ -5,10 +5,10 @@ import {
   ServiceName,
   ModelValidationException,
   ValidationException,
+  IValidationError,
 } from '@apillon/lib';
 import { NftsErrorCode } from '../config/types';
 import { ServiceContext } from '@apillon/service-lib';
-import { IValidationError } from '@apillon/blockchain-lib/dist/lib/common';
 
 export class NftsCodeException extends CodeException {
   constructor(options: ErrorOptions) {

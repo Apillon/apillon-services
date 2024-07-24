@@ -6,8 +6,6 @@ import {
   CodeException,
   CollectionMetadataQueryFilter,
   CollectionsQuotaReachedQueryFilter,
-  CreateCollectionDTO,
-  CreateSubstrateCollectionDTO,
   DeployCollectionDTO,
   isAllowedToCreateNftCollection,
   MintNftDTO,
@@ -19,6 +17,10 @@ import {
   TransactionQueryFilter,
   TransferCollectionDTO,
 } from '@apillon/lib';
+import {
+  CreateCollectionDTO,
+  CreateSubstrateCollectionDTO,
+} from '@apillon/blockchain-lib/common';
 import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';

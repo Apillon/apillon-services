@@ -1,4 +1,4 @@
-import { ModelBase, prop } from '../../../base-models/base';
+import { ModelBase, prop } from '@apillon/lib';
 import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   ethAddressValidator,
@@ -13,18 +13,18 @@ import {
   SerializeFor,
   SubstrateChain,
   ValidatorErrorCode,
-} from '../../../../config/types';
+} from '@apillon/lib';
 import {
   conditionalPresenceValidator,
   enumInclusionValidator,
-} from '../../../validators';
-import { dropReserveLowerOrEqualToMaxSupplyValidator } from '../validators/create-collection-drop-reserve-validator';
-import { validateDropPriceIfDrop } from '../validators/create-collection-drop-price-validator';
+} from '@apillon/lib';
+import { dropReserveLowerOrEqualToMaxSupplyValidator } from '@apillon/lib';
+import { validateDropPriceIfDrop } from '@apillon/lib';
 import {
   substrateAddressValidator,
   SubstrateChainPrefix,
-} from '@apillon/blockchain-lib/substrate';
-import { SUBSTRATE_NFTS_MAX_SUPPLY } from '../constants';
+} from '../../../../substrate';
+import { SUBSTRATE_NFTS_MAX_SUPPLY } from '@apillon/lib';
 
 // Contains properties which are present for all collections
 class CreateCollectionDTOBase extends ModelBase {
