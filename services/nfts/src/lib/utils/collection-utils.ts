@@ -25,15 +25,7 @@ import { Transaction } from '../../modules/transaction/models/transaction.model'
 import { TransactionService } from '../../modules/transaction/transaction.service';
 import { ContractVersion } from '../../modules/nfts/models/contractVersion.model';
 import { NftsCodeException } from '../exceptions';
-import {
-  EVM_MAX_INT,
-  EVMContractClient,
-  TransactionUtils,
-} from '@apillon/blockchain-lib/evm';
-import {
-  SUBSTRATE_MAX_INT,
-  SubstrateContractClient,
-} from '@apillon/blockchain-lib/substrate';
+import { evm, substrate } from '@apillon/blockchain-lib';
 
 export async function getEvmContractClient(
   context: Context,
@@ -48,7 +40,7 @@ export async function getEvmContractClient(
     )
   ).data?.url;
 
-  return EVMContractClient.getInstance(
+  return evm.EVMContractClient.getInstance(
     rpcEndpoint,
     contractAbi,
     contractAddress,
@@ -68,7 +60,7 @@ export async function getSubstrateContractClient(
     )
   ).data?.url;
 
-  return await SubstrateContractClient.getInstance(
+  return await substrate.SubstrateContractClient.getInstance(
     rpcEndpoint,
     contractAbi,
     contractAddress,
@@ -94,7 +86,7 @@ export async function deployNFTCollectionContract(
     case ChainType.EVM: {
       const royaltiesFees = Math.round(collection.royaltiesFees * 100);
       const maxSupply =
-        collection.maxSupply === 0 ? EVM_MAX_INT : collection.maxSupply;
+        collection.maxSupply === 0 ? evm.EVM_MAX_INT : collection.maxSupply;
       const royaltiesAddress =
         collection.royaltiesAddress ??
         '0x0000000000000000000000000000000000000000';
@@ -114,7 +106,7 @@ export async function deployNFTCollectionContract(
       switch (collection.collectionType) {
         case NFTCollectionType.GENERIC: {
           contractArguments.push(
-            TransactionUtils.convertBaseToGwei(collection.dropPrice),
+            evm.TransactionUtils.convertBaseToGwei(collection.dropPrice),
             collection.dropStart,
             maxSupply,
             collection.dropReserve,
@@ -128,7 +120,7 @@ export async function deployNFTCollectionContract(
             royaltyRecipient: royaltiesAddress,
             royaltyPercentageBps: royaltiesFees,
             maxSupply,
-            pricePerMint: TransactionUtils.convertBaseToGwei(
+            pricePerMint: evm.TransactionUtils.convertBaseToGwei(
               collection.dropPrice,
             ),
           });
@@ -140,11 +132,12 @@ export async function deployNFTCollectionContract(
             code: NftsErrorCode.GENERAL_SERVER_ERROR,
           });
       }
-      const serializedTransaction = EVMContractClient.createDeployTransaction(
-        abi,
-        bytecode,
-        contractArguments,
-      );
+      const serializedTransaction =
+        evm.EVMContractClient.createDeployTransaction(
+          abi,
+          bytecode,
+          contractArguments,
+        );
       response = await new BlockchainMicroservice(context).createEvmTransaction(
         new CreateEvmTransactionDto(
           {
@@ -179,7 +172,7 @@ export async function deployNFTCollectionContract(
           : collection.maxSupply;
       const dropPrice = collection.drop
         ? `${substrateContractClient.toChainInt(collection.dropPrice)}`
-        : SUBSTRATE_MAX_INT.toString();
+        : substrate.SUBSTRATE_MAX_INT.toString();
       // address is hardcoded since at this point/time we don't have deployer address
       const royaltiesAddress =
         collection.royaltiesAddress ??
@@ -196,7 +189,7 @@ export async function deployNFTCollectionContract(
         0, //prepresale_start_at
         0, //presale_start_at
         collection.drop ? collection.dropStart : 0, //public_sale_start_at
-        collection.drop ? SUBSTRATE_MAX_INT.toNumber() : 0, //public_sale_end_at
+        collection.drop ? substrate.SUBSTRATE_MAX_INT.toNumber() : 0, //public_sale_end_at
         0, //launchpad_fee
         royaltiesAddress, //project_treasury
         royaltiesAddress, //launchpad_treasury
