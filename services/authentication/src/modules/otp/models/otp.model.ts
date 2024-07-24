@@ -29,7 +29,6 @@ export class Otp extends BaseSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     serializable: [
-      SerializeFor.PROFILE,
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
@@ -62,7 +61,6 @@ export class Otp extends BaseSQLModel {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
-      SerializeFor.PROFILE,
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
@@ -94,7 +92,6 @@ export class Otp extends BaseSQLModel {
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.DB],
     serializable: [
-      SerializeFor.PROFILE,
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
@@ -109,12 +106,7 @@ export class Otp extends BaseSQLModel {
    */
   @prop({
     parser: { resolver: dateParser() },
-    serializable: [
-      // SerializeFor.PROFILE,
-      SerializeFor.APILLON_API,
-      // SerializeFor.ADMIN,
-      // SerializeFor.SELECT_DB,
-    ],
+    serializable: [SerializeFor.APILLON_API],
     populatable: [PopulateFrom.DB],
   })
   public createTime?: Date;
@@ -124,12 +116,7 @@ export class Otp extends BaseSQLModel {
    */
   @prop({
     parser: { resolver: dateParser() },
-    serializable: [
-      // SerializeFor.PROFILE,
-      SerializeFor.APILLON_API,
-      // SerializeFor.ADMIN,
-      // SerializeFor.SELECT_DB,
-    ],
+    serializable: [SerializeFor.APILLON_API],
     populatable: [PopulateFrom.DB],
   })
   public updateTime?: Date;

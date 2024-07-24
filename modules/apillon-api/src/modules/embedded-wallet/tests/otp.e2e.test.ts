@@ -97,6 +97,12 @@ describe('OTP tests', () => {
         });
 
       expect(response.status).toBe(200);
+      const data = response.body.data;
+
+      expect(data).toBeDefined();
+      expect(data.email).toBe(email);
+      expect(data.code).toBeFalsy();
+      expect(data.expireTime).toBeDefined();
 
       const dbData = await stage.db.authentication.paramExecute(
         `SELECT * FROM otp WHERE email = '${email}'`,
