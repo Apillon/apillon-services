@@ -3,6 +3,7 @@ import { AppEnvironment, AuthenticationEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreateOasisSignatureDto } from './dtos/create-oasis-signature.dto';
+import { GenerateOtpDto } from './dtos/generate-otp.dto';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
 import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
@@ -12,6 +13,7 @@ import { SubmitAttestationDto } from './dtos/sporran/message/submit-attestation.
 import { SubmitTermsDto } from './dtos/sporran/message/submit-terms.dto';
 import { VerifyCredentialDto } from './dtos/sporran/message/verify-credential.dto';
 import { SporranSessionVerifyDto } from './dtos/sporran/sporran-session.dto';
+import { ValidateOtpDto } from './dtos/validate-otp.dto';
 import { VerificationIdentityDto } from './dtos/verify-identity.dto';
 
 export class AuthenticationMicroservice extends BaseService {
@@ -160,6 +162,25 @@ export class AuthenticationMicroservice extends BaseService {
       eventName: AuthenticationEventType.LIST_OASIS_SIGNATURES,
       query: query.serialize(),
     });
+  }
+
+  //#endregion
+
+  //#region OTP
+  public async generateOtp(params: GenerateOtpDto) {
+    const data = {
+      eventName: AuthenticationEventType.GENERATE_OTP,
+      body: params,
+    };
+    return await this.callService(data);
+  }
+
+  public async validateOtp(params: ValidateOtpDto) {
+    const data = {
+      eventName: AuthenticationEventType.VALIDATE_OTP,
+      body: params,
+    };
+    return await this.callService(data);
   }
 
   //#endregion

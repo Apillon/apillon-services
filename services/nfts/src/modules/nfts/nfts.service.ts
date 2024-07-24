@@ -32,7 +32,6 @@ import {
   SqlModelStatus,
   StorageMicroservice,
   SubstrateChain,
-  SubstrateChainPrefix,
   TransactionDto,
   TransactionStatus,
   TransferCollectionDTO,
@@ -45,7 +44,7 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { BigNumber, constants } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { v4 as uuidV4 } from 'uuid';
 import {
   CollectionStatus,
@@ -71,7 +70,8 @@ import {
   getSubstrateContractClient,
 } from '../../lib/utils/collection-utils';
 import { ContractVersion } from './models/contractVersion.model';
-import { EVMContractClient } from '../clients/evm-contract.client';
+import { EVM_MAX_INT } from '@apillon/blockchain-lib/evm';
+import { SubstrateChainPrefix } from '@apillon/blockchain-lib/substrate';
 
 export class NftsService {
   //#region collection functions
@@ -430,13 +430,9 @@ export class NftsService {
             abi,
             collection.contractAddress,
           );
-          const txData = await evmContractClient.createTransaction(
+          txHash = await evmContractClient.createTransaction(
             'transferOwnership',
             [body.address],
-          );
-          txHash = EVMContractClient.serializeTransaction(
-            txData,
-            collection.contractAddress,
           );
           break;
         }
@@ -553,15 +549,9 @@ export class NftsService {
             abi,
             collection.contractAddress,
           );
-
-          const txData = await evmContractClient.createTransaction(
-            'setBaseURI',
-            [body.uri],
-          );
-          txHash = EVMContractClient.serializeTransaction(
-            txData,
-            collection.contractAddress,
-          );
+          txHash = await evmContractClient.createTransaction('setBaseURI', [
+            body.uri,
+          ]);
           break;
         }
         case ChainType.SUBSTRATE: {
@@ -798,7 +788,7 @@ export class NftsService {
             minted,
           );
 
-          const txData = collection.isAutoIncrement
+          serializedTransaction = collection.isAutoIncrement
             ? await evmContractClient.createTransaction('ownerMint', [
                 body.receivingAddress,
                 body.quantity,
@@ -808,10 +798,6 @@ export class NftsService {
                 body.quantity,
                 body.idsToMint,
               ]);
-          serializedTransaction = EVMContractClient.serializeTransaction(
-            txData,
-            collection.contractAddress,
-          );
           minimumGas =
             260000 *
             (collection.isAutoIncrement
@@ -1008,10 +994,7 @@ export class NftsService {
           context,
           childCollection,
           TransactionType.NEST_MINT_NFT,
-          EVMContractClient.serializeTransaction(
-            txData,
-            childCollection.contractAddress,
-          ),
+          txData,
           spendCredit.referenceId,
         ),
     );
@@ -1098,15 +1081,11 @@ export class NftsService {
             );
             const burnArguments: any[] = [body.tokenId];
             if (collection.collectionType === NFTCollectionType.NESTABLE) {
-              burnArguments.push(constants.MaxUint256);
+              burnArguments.push(EVM_MAX_INT);
             }
-            const txData = await evmContractClient.createTransaction(
+            txHash = await evmContractClient.createTransaction(
               'burn',
               burnArguments,
-            );
-            txHash = EVMContractClient.serializeTransaction(
-              txData,
-              collection.contractAddress,
             );
             break;
           }

@@ -12,13 +12,13 @@ import {
   SqlModelStatus,
   SubstrateChain,
   enumInclusionValidator,
-  formatTokenWithDecimals,
   formatWalletAddress,
   getQueryParams,
   presenceValidator,
   prop,
   selectAndCountQuery,
 } from '@apillon/lib';
+import { formatTokenWithDecimals } from '@apillon/blockchain-lib/evm';
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { BlockchainErrorCode, Chain, DbTables } from '../../config/types';
 import { ethers } from 'ethers';
@@ -285,41 +285,41 @@ export class Contract extends AdvancedSQLModel {
   })
   public token: string;
 
-  private calculateTokenBalance() {
-    if (!this.decimals) {
-      return this;
-    }
-    try {
-      this.minTokenBalance = ethers.BigNumber.from(this.minBalance)
-        .div(ethers.BigNumber.from(10).pow(this.decimals))
-        .toNumber()
-        .toFixed(4);
-    } catch (err) {
-      try {
-        this.minTokenBalance = ethers.BigNumber.from(this.minBalance)
-          .div(ethers.BigNumber.from(10).pow(this.decimals))
-          .toString();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    try {
-      this.currentTokenBalance = ethers.BigNumber.from(this.currentBalance)
-        .div(ethers.BigNumber.from(10).pow(this.decimals))
-        .toNumber()
-        .toFixed(4);
-    } catch (err) {
-      try {
-        this.currentTokenBalance = ethers.BigNumber.from(this.currentBalance)
-          .div(ethers.BigNumber.from(10).pow(this.decimals))
-          .toString();
-      } catch (err) {
-        console.log(err);
-      }
-    }
-
-    return this;
-  }
+  // private calculateTokenBalance() {
+  //   if (!this.decimals) {
+  //     return this;
+  //   }
+  //   try {
+  //     this.minTokenBalance = ethers.BigNumber.from(this.minBalance)
+  //       .div(ethers.BigNumber.from(10).pow(this.decimals))
+  //       .toNumber()
+  //       .toFixed(4);
+  //   } catch (err) {
+  //     try {
+  //       this.minTokenBalance = ethers.BigNumber.from(this.minBalance)
+  //         .div(ethers.BigNumber.from(10).pow(this.decimals))
+  //         .toString();
+  //     } catch (err) {
+  //       console.error(err);
+  //     }
+  //   }
+  //   try {
+  //     this.currentTokenBalance = ethers.BigNumber.from(this.currentBalance)
+  //       .div(ethers.BigNumber.from(10).pow(this.decimals))
+  //       .toNumber()
+  //       .toFixed(4);
+  //   } catch (err) {
+  //     try {
+  //       this.currentTokenBalance = ethers.BigNumber.from(this.currentBalance)
+  //         .div(ethers.BigNumber.from(10).pow(this.decimals))
+  //         .toString();
+  //     } catch (err) {
+  //       console.log(err);
+  //     }
+  //   }
+  //
+  //   return this;
+  // }
 
   public async checkBalance(provider: ethers.providers.JsonRpcProvider) {
     if (!this.minBalance) return;

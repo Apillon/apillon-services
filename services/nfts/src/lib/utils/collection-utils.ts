@@ -23,13 +23,17 @@ import { ServiceContext } from '@apillon/service-lib';
 import { Collection } from '../../modules/nfts/models/collection.model';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { TransactionService } from '../../modules/transaction/transaction.service';
-import { constants } from 'ethers';
 import { ContractVersion } from '../../modules/nfts/models/contractVersion.model';
-import { BN_MAX_INTEGER } from '@polkadot/util/bn/consts';
-import { SubstrateContractClient } from '../../modules/clients/substrate-contract.client';
-import { EVMContractClient } from '../../modules/clients/evm-contract.client';
-import { TransactionUtils } from './transaction-utils';
 import { NftsCodeException } from '../exceptions';
+import {
+  EVM_MAX_INT,
+  EVMContractClient,
+  TransactionUtils,
+} from '@apillon/blockchain-lib/evm';
+import {
+  SUBSTRATE_MAX_INT,
+  SubstrateContractClient,
+} from '@apillon/blockchain-lib/substrate';
 
 export async function getEvmContractClient(
   context: Context,
@@ -44,7 +48,7 @@ export async function getEvmContractClient(
     )
   ).data?.url;
 
-  return await EVMContractClient.getInstance(
+  return EVMContractClient.getInstance(
     rpcEndpoint,
     contractAbi,
     contractAddress,
@@ -90,9 +94,7 @@ export async function deployNFTCollectionContract(
     case ChainType.EVM: {
       const royaltiesFees = Math.round(collection.royaltiesFees * 100);
       const maxSupply =
-        collection.maxSupply === 0
-          ? constants.MaxUint256
-          : collection.maxSupply;
+        collection.maxSupply === 0 ? EVM_MAX_INT : collection.maxSupply;
       const royaltiesAddress =
         collection.royaltiesAddress ??
         '0x0000000000000000000000000000000000000000';
@@ -138,7 +140,7 @@ export async function deployNFTCollectionContract(
             code: NftsErrorCode.GENERAL_SERVER_ERROR,
           });
       }
-      const txData = EVMContractClient.createDeployTransaction(
+      const serializedTransaction = EVMContractClient.createDeployTransaction(
         abi,
         bytecode,
         contractArguments,
@@ -147,7 +149,7 @@ export async function deployNFTCollectionContract(
         new CreateEvmTransactionDto(
           {
             chain: collection.chain,
-            transaction: EVMContractClient.serializeTransaction(txData),
+            transaction: serializedTransaction,
             referenceTable: DbTables.COLLECTION,
             referenceId: collection.id,
             project_uuid: collection.project_uuid,
@@ -177,7 +179,7 @@ export async function deployNFTCollectionContract(
           : collection.maxSupply;
       const dropPrice = collection.drop
         ? `${substrateContractClient.toChainInt(collection.dropPrice)}`
-        : BN_MAX_INTEGER.toString();
+        : SUBSTRATE_MAX_INT.toString();
       // address is hardcoded since at this point/time we don't have deployer address
       const royaltiesAddress =
         collection.royaltiesAddress ??
@@ -194,7 +196,7 @@ export async function deployNFTCollectionContract(
         0, //prepresale_start_at
         0, //presale_start_at
         collection.drop ? collection.dropStart : 0, //public_sale_start_at
-        collection.drop ? BN_MAX_INTEGER.toNumber() : 0, //public_sale_end_at
+        collection.drop ? SUBSTRATE_MAX_INT.toNumber() : 0, //public_sale_end_at
         0, //launchpad_fee
         royaltiesAddress, //project_treasury
         royaltiesAddress, //launchpad_treasury

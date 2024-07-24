@@ -3,8 +3,10 @@ import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
-import { SubstrateChainPrefix } from '../../substrate/types';
-import { substrateAddressValidator } from '../../substrate/validators/address-validator';
+import {
+  substrateAddressValidator,
+  SubstrateChainPrefix,
+} from '@apillon/blockchain-lib/substrate';
 
 export class TransferOwnershipDto extends ModelBase {
   @prop({

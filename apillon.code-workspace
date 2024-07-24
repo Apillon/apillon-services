@@ -77,6 +77,10 @@
       "path": "packages/service-lib",
     },
     {
+      "name": "📦@packages_blockchain-lib",
+      "path": "packages/blockchain-lib",
+    },
+    {
       "name": "📦@packages_workers-lib",
       "path": "packages/workers-lib",
     },

@@ -304,6 +304,8 @@ export interface IEnv {
   AUTH_SOCKET_PORT: number;
   AUTH_SOCKET_PORT_TEST: number;
 
+  AUTH_OTP_EXPIRATION_IN_MIN: number;
+
   //Nova wallet
   NOVA_WALLET_BUCKET_UUID: string;
   NOVA_WALLET_API_KEY: string;
@@ -869,6 +871,8 @@ export let env: IEnv = {
   AUTH_API_MYSQL_USER_TEST: process.env['AUTH_API_MYSQL_USER_TEST'],
   AUTH_API_MYSQL_PASSWORD_TEST: process.env['AUTH_API_MYSQL_PASSWORD_TEST'],
   AUTH_API_MYSQL_DATABASE_TEST: process.env['AUTH_API_MYSQL_DATABASE_TEST'],
+  AUTH_OTP_EXPIRATION_IN_MIN:
+    parseInt(process.env['AUTH_OTP_EXPIRATION_IN_MIN']) || 10,
 
   /** KILT */
   KILT_NETWORK:
@@ -1055,7 +1059,7 @@ export let env: IEnv = {
     process.env['CONTRACTS_MYSQL_DEPLOY_PASSWORD'],
 
   CONTRACTS_SOCKET_PORT_TEST:
-    parseInt(process.env['CONTRACTS_SOCKET_PORT_TEST']) || 7701,
+    parseInt(process.env['CONTRACTS_SOCKET_PORT_TEST']) || 7702,
   CONTRACTS_MYSQL_HOST_TEST: process.env['CONTRACTS_MYSQL_HOST_TEST'],
   CONTRACTS_MYSQL_PORT_TEST:
     parseInt(process.env['CONTRACTS_MYSQL_PORT_TEST']) || 3306,

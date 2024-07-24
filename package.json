@@ -7,6 +7,7 @@
     "modules/*"
   ],
   "scripts": {
+    "prebuild": "npx turbo run prebuild",
     "build": "npx turbo run build",
     "build-libs": "npx turbo run build --filter=@apillon/lib --filter=@apillon/modules-lib --filter=@apillon/service-lib --filter=@apillon/workers-lib --filter=@apillon/tests-lib --filter=@apillon/blockchain-lib",
     "build-no-cache": "npx turbo run build --no-cache",
