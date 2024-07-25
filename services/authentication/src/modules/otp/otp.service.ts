@@ -8,6 +8,7 @@ import {
   EmailDataDto,
   generateRandomCode,
   EmailTemplate,
+  SerializeFor,
 } from '@apillon/lib';
 import { Otp } from './models/otp.model';
 import { ServiceContext } from '@apillon/service-lib';
@@ -36,7 +37,7 @@ export class OtpService {
       }),
     );
 
-    return createdOtp;
+    return createdOtp.serialize(SerializeFor.PROFILE);
   }
 
   static async validateOtp(
