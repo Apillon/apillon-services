@@ -22,7 +22,6 @@
     "tsconfig": "*"
   },
   "dependencies": {
-    "@apillon/blockchain-lib": "*",
     "@aws-sdk/client-lambda": "^3.518.0",
     "@aws-sdk/client-s3": "^3.515.0",
     "@aws-sdk/client-secrets-manager": "^3.515.0",

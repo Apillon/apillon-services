@@ -7,8 +7,8 @@ import {
   ContractQueryFilter,
   CreateContractDto,
   EncryptContentDto,
-  TransferOwnershipDto,
 } from '@apillon/lib';
+import { TransferOwnershipDto } from '@apillon/blockchain-lib/common';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';

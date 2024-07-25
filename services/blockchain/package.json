@@ -28,13 +28,14 @@
     "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F"
   },
   "dependencies": {
+    "@apillon/blockchain-lib": "*",
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
     "@golevelup/nestjs-graphql-request": "^0.1.14",
     "@kiltprotocol/type-definitions": "^0.34.0",
     "@middy/core": "^3.3.1",
-    "@polkadot/api": "10.12.2",
+    "@polkadot/api": "10.12.4",
     "@polkadot/keyring": "^12.3.2",
     "@polkadot/util": "^12.3.2",
     "@polkadot/util-crypto": "^12.3.2",

@@ -6,9 +6,9 @@ import {
   CreateContractDto,
   DefaultApiKeyRole,
   EncryptContentDto,
-  TransferOwnershipDto,
   ValidateFor,
 } from '@apillon/lib';
+import { TransferOwnershipDto } from '@apillon/blockchain-lib/common';
 import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
 import {
   Body,

@@ -1,12 +1,12 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
-import { ModelBase } from '../../../base-models/base';
+import { PopulateFrom, ValidatorErrorCode } from '@apillon/lib';
+import { ModelBase } from '@apillon/lib';
 import {
   substrateAddressValidator,
   SubstrateChainPrefix,
-} from '@apillon/blockchain-lib/substrate';
+} from '../../../../substrate';
 
 export class TransferOwnershipDto extends ModelBase {
   @prop({

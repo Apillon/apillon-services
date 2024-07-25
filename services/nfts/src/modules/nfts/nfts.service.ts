@@ -5,7 +5,6 @@ import {
   ChainType,
   CollectionsQuotaReachedQueryFilter,
   CreateBucketDto,
-  CreateCollectionDTO,
   CreateEvmTransactionDto,
   CreateIpnsDto,
   CreateSubstrateTransactionDto,
@@ -13,7 +12,6 @@ import {
   env,
   EvmChain,
   getChainName,
-  isEvmOrSubstrateWalletAddress,
   Lmas,
   LogType,
   Mailing,
@@ -36,6 +34,10 @@ import {
   TransactionStatus,
   TransferCollectionDTO,
 } from '@apillon/lib';
+import {
+  CreateCollectionDTO,
+  isEvmOrSubstrateWalletAddress,
+} from '@apillon/blockchain-lib/common';
 import { ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,

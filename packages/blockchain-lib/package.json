@@ -11,9 +11,10 @@
   "author": "Apillon",
   "license": "GNU GPL V3",
   "exports": {
-    "./evm": "./src/lib/evm/index.ts",
-    "./substrate": "./src/lib/substrate/index.ts",
-    "./common": "./src/lib/common/index.ts"
+    "./evm": "./dist/lib/evm/index.js",
+    "./substrate": "./dist/lib/substrate/index.js",
+    "./common": "./dist/lib/common/index.js",
+    ".": "./dist/index.js"
   },
   "typesVersions": {
     "*": {
@@ -25,6 +26,9 @@
       ],
       "common": [
         "dist/lib/common/index.d.ts"
+      ],
+      "*": [
+        "dist/index.d.ts"
       ]
     }
   },
@@ -40,6 +44,7 @@
     "tsconfig": "*"
   },
   "dependencies": {
+    "@apillon/lib": "*",
     "@polkadot/api": "10.12.4",
     "@polkadot/api-contract": "10.12.4",
     "@polkadot/util-crypto": "^12.3.2",
