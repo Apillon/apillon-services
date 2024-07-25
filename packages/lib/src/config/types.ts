@@ -864,7 +864,6 @@ export enum CacheKeyPrefix {
   CONTRACT_VERSION_BY_CONTRACT_UUID = 'contract-version-by-contract-uuid',
   CONTRACT_VERSION_BY_UUID_WITH_METHODS = 'contract-version-methods-by-version-contract-uuid',
   CONTRACT_DEPLOY_BY_UUID_WITH_VERSION = 'get-contract-by-uuid-deploy-with-version',
-  CONTRACT_DEPLOY_BY_UUID_DEPLOY_WITH_VERSION_AND_METHODS = 'get-contract-by-uuid-deploy-with-version-and-methods',
 
   // NFTS
   CONTRACT_VERSION = 'contract-version',
