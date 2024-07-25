@@ -83,6 +83,11 @@ then
   echo "Linking workers-lib"
   npm link @apillon/workers-lib --omit=dev
 fi
+if [ "$BLOCKCHAIN_LIB" == "true" ]
+then
+  echo "Linking blockchain-lib"
+  npm link @apillon/blockchain-lib --omit=dev
+fi
 
 # install libs that doesn't work form global
 npm i ts-node serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
