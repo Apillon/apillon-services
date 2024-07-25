@@ -11,10 +11,10 @@
   "author": "Apillon",
   "license": "GNU GPL V3",
   "exports": {
-    "./evm": "./src/lib/evm/index.ts",
-    "./substrate": "./src/lib/substrate/index.ts",
-    "./common": "./src/lib/common/index.ts",
-    ".": "./src/index.ts"
+    "./evm": "./dist/lib/evm/index.js",
+    "./substrate": "./dist/lib/substrate/index.js",
+    "./common": "./dist/lib/common/index.js",
+    ".": "./dist/index.js"
   },
   "typesVersions": {
     "*": {
