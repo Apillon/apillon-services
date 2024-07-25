@@ -22,7 +22,7 @@ export class EmbeddedWalletService {
         project_uuid: context.apiKey.project_uuid,
         apiKey: context.apiKey.apiKey,
       },
-      JwtExpireTime.FIVE_MINUTES,
+      JwtExpireTime.TWENTY_MINUTES,
     );
 
     return { token };
