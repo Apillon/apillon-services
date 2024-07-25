@@ -258,7 +258,19 @@ export class Website extends UuidSqlModel {
     ],
     validators: [],
   })
-  public ipnsStaging: string;
+  public cidStaging: string;
+
+  @prop({
+    populatable: [PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [],
+  })
+  public cidProduction: string;
 
   @prop({
     populatable: [PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -540,7 +552,7 @@ export class Website extends UuidSqlModel {
             ? SerializeFor.ADMIN_SELECT_DB
             : SerializeFor.SELECT_DB,
         )},
-        uploadBucket.bucket_uuid, stgBucket.ipns as ipnsStaging, prodBucket.ipns as ipnsProduction
+        uploadBucket.bucket_uuid, stgBucket.CIDv1 as cidStaging, prodBucket.CIDv1 as cidProduction, prodBucket.IPNS as ipnsProduction
         `,
       qFrom: `
         FROM \`${DbTables.WEBSITE}\` w
@@ -586,6 +598,8 @@ export class Website extends UuidSqlModel {
           this.stagingBucket.CIDv1,
           false,
         );
+
+        this.cidStaging = this.stagingBucket.CIDv1;
       }
     }
     if (this.productionBucket_id) {
@@ -600,6 +614,7 @@ export class Website extends UuidSqlModel {
           this.productionBucket.IPNS,
           true,
         );
+        this.cidProduction = this.productionBucket.CIDv1;
         this.ipnsProduction = this.productionBucket.IPNS;
       } else if (this.productionBucket.CIDv1) {
         //Website has no IPNS record - link points to CID

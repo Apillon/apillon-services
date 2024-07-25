@@ -14,7 +14,7 @@ export async function upgrade(
     VALUES
     (${ProductCode.OASIS_SIGNATURE}, '${
       ProductCode[ProductCode.OASIS_SIGNATURE]
-    }', 'Creation of new oasis signature', ${SqlModelStatus.ACTIVE}, ${ProductService.WALLET}, ${ProductCategory.SIGNATURE})
+    }', 'Creation of new oasis signature', ${SqlModelStatus.ACTIVE}, '${ProductService.WALLET}', '${ProductCategory.SIGNATURE}')
 ;`);
 
   await queryFn(`

@@ -36,7 +36,7 @@ export class NftStorageService {
         imagesSession: string;
         metadataSession: string;
         useApillonIpfsGateway: boolean;
-        isDynamic: boolean;
+        useIpns: boolean;
       };
     },
     context: ServiceContext,
@@ -67,7 +67,7 @@ export class NftStorageService {
     let collectionMetadata: CollectionMetadata = null;
     let ipns: Ipns = null;
 
-    if (event.body.isDynamic) {
+    if (event.body.useIpns) {
       //Create initial CID for this collection - IPNS Publish does not work otherwise
       const ipfsRes = await ipfsService.addFileToIPFS({
         path: '',
@@ -128,15 +128,6 @@ export class NftStorageService {
         ipns_uuid: ipns?.ipns_uuid,
         runDeployCollectionWorker: true,
       });
-
-      if (event.body.useApillonIpfsGateway) {
-        //Call NFTs MS function, which will trigger deploy collection worker.
-        //If not using apillon ipfs gateway, this will be triggered when metadata is prepared
-        await new NftsMicroservice(context).executeDeployCollectionWorker({
-          collection_uuid: event.body.collection_uuid,
-          baseUri,
-        });
-      }
     } else {
       //send messages to sqs
       await sendToWorkerQueue(
@@ -153,22 +144,6 @@ export class NftStorageService {
         null,
         null,
       );
-
-      //If not using apillon ipfs gateway, this will be triggered when metadata is prepared
-      /*if (event.body.useApillonIpfsGateway) {
-        await sendToWorkerQueue(
-          env.NFTS_AWS_WORKER_SQS_URL,
-          'DeployCollectionWorker',
-          [
-            {
-              collection_uuid: event.body.collection_uuid,
-              baseUri,
-            },
-          ],
-          null,
-          null,
-        );
-      }*/
     }
 
     return { baseUri };
