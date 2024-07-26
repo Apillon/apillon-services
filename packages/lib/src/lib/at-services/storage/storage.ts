@@ -497,6 +497,7 @@ export class StorageMicroservice extends BaseService {
     imagesSession: string;
     metadataSession: string;
     useApillonIpfsGateway: boolean;
+    useIpns: boolean;
   }): Promise<{ data: { baseUri: string } }> {
     const data = {
       eventName: StorageEventType.PREPARE_COLLECTION_BASE_URI,

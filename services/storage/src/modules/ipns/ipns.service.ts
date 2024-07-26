@@ -5,12 +5,15 @@ import {
   LogType,
   PoolConnection,
   PopulateFrom,
+  ProductCode,
   SerializeFor,
   ServiceName,
+  SpendCreditDto,
   SqlModelStatus,
+  spendCreditAction,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
-import { StorageErrorCode } from '../../config/types';
+import { DbTables, StorageErrorCode } from '../../config/types';
 import {
   StorageCodeException,
   StorageValidationException,
@@ -18,6 +21,7 @@ import {
 import { Bucket } from '../bucket/models/bucket.model';
 import { IPFSService } from '../ipfs/ipfs.service';
 import { Ipns } from './models/ipns.model';
+import { v4 as uuidV4 } from 'uuid';
 
 export class IpnsService {
   static async listIpns(
@@ -73,63 +77,40 @@ export class IpnsService {
     event: { body: CreateIpnsDto },
     context: ServiceContext,
   ): Promise<any> {
-    const b: Bucket = await new Bucket({}, context).populateByUUID(
+    const bucket: Bucket = await new Bucket({}, context).populateByUUID(
       event.body.bucket_uuid,
     );
-    if (!b.exists()) {
+    if (!bucket.exists()) {
       throw new StorageCodeException({
         code: StorageErrorCode.BUCKET_NOT_FOUND,
         status: 404,
       });
     }
-    b.canModify(context);
+    bucket.canModify(context);
 
     const ipns: Ipns = new Ipns(event.body, context);
     ipns.populate({
-      project_uuid: b.project_uuid,
-      bucket_id: b.id,
+      ipns_uuid: uuidV4(),
+      project_uuid: bucket.project_uuid,
+      bucket_id: bucket.id,
       status: SqlModelStatus.INCOMPLETE,
     });
-    const conn = await context.mysql.start();
-    try {
-      //Insert
-      await ipns.insert(SerializeFor.INSERT_DB, conn);
 
-      //If cid is specified, publish ipns to point to cid - other nodes will be able to resolve it
-      if (event.body.cid) {
-        await IpnsService.publishIpns(
-          {
-            ipns_uuid: ipns.ipns_uuid,
-            cid: event.body.cid,
-            ipns: ipns,
-            conn: conn,
-          },
-          context,
-        );
-      }
-
-      await context.mysql.commit(conn);
-    } catch (err) {
-      await context.mysql.rollback(conn);
-      throw new StorageCodeException({
-        context,
-        code: StorageErrorCode.ERROR_CREATING_IPNS_RECORD,
-        details: err,
-        status: 500,
-      }).writeToMonitor({
-        project_uuid: b.project_uuid,
-      });
-    }
-
-    await new Lmas().writeLog({
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {
+        project_uuid: ipns.project_uuid,
+        product_id: ProductCode.IPNS,
+        referenceTable: DbTables.IPNS,
+        referenceId: ipns.ipns_uuid,
+        location: 'IpnsService/createIpns',
+        service: ServiceName.STORAGE,
+      },
       context,
-      project_uuid: b.project_uuid,
-      logType: LogType.INFO,
-      message: 'New ipns record created',
-      location: 'BucketService/createBucket',
-      service: ServiceName.STORAGE,
-      data: ipns.serialize(),
-    });
+    );
+
+    await spendCreditAction(context, spendCredit, () =>
+      ipns.createNewIpns(bucket),
+    );
 
     await ipns.populateLink();
     return ipns.serializeByContext();

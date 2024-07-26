@@ -377,24 +377,17 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       }
 
       //Publish to IPNS, Pin to IPFS, Remove from S3, ...
-
       if (
         collectionMetadata.currentStep ==
         PrepareCollectionMetadataStep.PUBLISH_TO_IPNS
       ) {
-        console.info(`pinning metadata CID (${data.metadataCid}) to IPNS`);
-
-        if (collectionMetadata.useApillonIpfsGateway) {
-          //If ipnsId is not specified in data, get first ipns record in bucket
-          if (!collectionMetadata.ipnsId) {
-            const ipnses = await bucket.getBucketIpnsRecords();
-            collectionMetadata.ipnsId = ipnses[0].id;
-          }
-          //Pin to IPNS
-          const ipnsDbRecord: Ipns = await new Ipns(
-            {},
-            this.context,
-          ).populateById(collectionMetadata.ipnsId);
+        let ipnsDbRecord: Ipns = null;
+        if (data.ipns_uuid) {
+          console.info(`pinning metadata CID (${data.metadataCid}) to IPNS`);
+          //publish to IPNS
+          ipnsDbRecord = await new Ipns({}, this.context).populateByUUID(
+            data.ipns_uuid,
+          );
           const ipnsRecord = await new IPFSService(
             this.context,
             ipnsDbRecord.project_uuid,
@@ -406,8 +399,30 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           ipnsDbRecord.key = `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`;
           ipnsDbRecord.cid = data.metadataCid;
           await ipnsDbRecord.update(SerializeFor.UPDATE_DB);
-        } else {
-          //Metadata is prepared. It won't use apillon gateway ipns as base uri, so run nft deploy with wrapping cid as base URI
+        }
+
+        if (data.runDeployCollectionWorker) {
+          //Metadata is prepared. Run nft deploy with cid or ipns as base URI
+
+          //Initialize baseUri
+          let baseUri = null;
+          if (data.useApillonIpfsGateway) {
+            //Get IPFS cluster
+            const ipfsCluster = await new ProjectConfig(
+              { project_uuid: bucket.project_uuid },
+              this.context,
+            ).getIpfsCluster();
+            baseUri = ipfsCluster.generateLink(
+              bucket.project_uuid,
+              ipnsDbRecord?.ipnsName || data.metadataCid,
+            );
+          } else {
+            baseUri = ipnsDbRecord?.ipnsName
+              ? `ipns://${ipnsDbRecord.ipnsName}`
+              : `ipfs://${data.metadataCid}`;
+          }
+
+          //Execute deploy collection worker
           if (
             env.APP_ENV == AppEnvironment.LOCAL_DEV ||
             env.APP_ENV == AppEnvironment.TEST
@@ -416,7 +431,8 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
               this.context,
             ).executeDeployCollectionWorker({
               collection_uuid: collectionMetadata.collection_uuid,
-              baseUri: 'ipfs://' + data.metadataCid,
+              baseUri,
+              ipns_uuid: ipnsDbRecord?.ipns_uuid,
             });
           } else {
             await sendToWorkerQueue(
@@ -425,7 +441,9 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
               [
                 {
                   collection_uuid: collectionMetadata.collection_uuid,
-                  baseUri: 'ipfs://' + data.metadataCid,
+                  baseUri,
+                  ipns_uuid: ipnsDbRecord?.ipns_uuid,
+                  cid: data.metadataCid,
                 },
               ],
               null,

@@ -980,6 +980,8 @@ export enum ProductCode {
   COMPUTING_JOB_CREATE = 52,
   COMPUTING_JOB_SET_ENVIRONMENT = 53,
   COMPUTING_JOB_DELETE = 54,
+
+  IPNS = 55,
 }
 
 export enum ProductService {
@@ -988,7 +990,9 @@ export enum ProductService {
   IDENTITY = 'IDENTITY',
   SOCIAL = 'SOCIAL',
   COMPUTING = 'COMPUTING',
+  STORAGE = 'STORAGE',
   CONTRACTS = 'CONTRACTS',
+  WALLET = 'WALLET',
 }
 
 export enum ProductCategory {
@@ -1008,6 +1012,8 @@ export enum ProductCategory {
   MOONBEAM_CONTRACT = 'MOONBEAM_CONTRACT',
   ASTAR_CONTRACT = 'ASTAR_CONTRACT',
   ACURAST = 'ACURAST',
+  IPNS = 'IPNS',
+  SIGNATURE = 'SIGNATURE',
 }
 
 export enum EmailTemplate {
