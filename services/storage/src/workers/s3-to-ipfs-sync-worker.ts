@@ -6,6 +6,7 @@ import {
   env,
   isStreamHtmlFile,
   LogType,
+  runWithWorkers,
   ServiceName,
   SqlModelStatus,
 } from '@apillon/lib';
@@ -55,7 +56,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
     const needsHtmlValidation = data?.needsHtmlValidation ?? true;
     data.wrappingDirectoryPath = data?.wrappingDirectoryPath?.trim();
 
-    let files: FileUploadRequest[] = [];
+    let files: (FileUploadRequest & { fileSize: number | null })[] = [];
     let bucket: Bucket = undefined;
     let session: FileUploadSession = undefined;
 
@@ -98,7 +99,10 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       await new FileUploadRequest(
         {},
         this.context,
-      ).populateFileUploadRequestsInSession(session.id, this.context)
+      ).populateFileUploadRequestsInSessionWithFileSize(
+        session.id,
+        this.context,
+      )
     ).filter(
       (x) =>
         x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED &&
@@ -115,20 +119,27 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         bucket.bucketType == BucketType.NFT_METADATA
       ) {
         if (needsHtmlValidation) {
-          for (const file of files) {
-            let fileStream = await s3Client.get(
-              env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
-              file.s3FileKey,
-            );
-            let isHtml =
-              !fileStream.ContentLength ||
-              fileStream.ContentLength < MAX_HTML_SIZE_IN_B
-                ? await isStreamHtmlFile(fileStream.Body as Readable)
-                : false;
-            if (isHtml) {
+          try {
+            await runWithWorkers(files, 20, this.context, async (file) => {
+              if (file.fileSize > MAX_HTML_SIZE_IN_B) {
+                return;
+              }
+              let fileStream = await s3Client.get(
+                env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+                file.s3FileKey,
+              );
+
+              const isHtml = await isStreamHtmlFile(
+                fileStream.Body as Readable,
+              );
+              if (isHtml) {
+                throw new Error('HTML file detected');
+              }
+            });
+          } catch (e) {
+            if (e.message === 'HTML file detected') {
               session.sessionStatus = FileUploadSessionStatus.VALIDATION_FAILED;
               await session.update();
-
               const fileRequestsToBlock = files.map((file) => file.id);
               await new FileUploadRequest(
                 {},
@@ -140,6 +151,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
 
               return;
             }
+            throw e;
           }
 
           session.sessionStatus = FileUploadSessionStatus.VALIDATION_PASSED;
