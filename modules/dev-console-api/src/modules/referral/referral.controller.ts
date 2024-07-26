@@ -135,4 +135,11 @@ export class ReferralController {
   async getAirdropTasks(@Ctx() context: DevConsoleApiContext) {
     return await this.referralService.getAirdropTasks(context);
   }
+
+  @Get('claim-parameters')
+  @Permissions({ role: DefaultUserRole.PROJECT_OWNER })
+  @UseGuards(AuthGuard)
+  async getClaimParameters(@Ctx() context: DevConsoleApiContext) {
+    return await this.referralService.getClaimParameters(context);
+  }
 }

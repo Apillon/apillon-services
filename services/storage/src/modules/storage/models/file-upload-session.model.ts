@@ -9,6 +9,7 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
+  UuidSqlModel,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, FileStatus, StorageErrorCode } from '../../../config/types';
@@ -16,7 +17,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { StorageCodeException } from '../../../lib/exceptions';
 
-export class FileUploadSession extends AdvancedSQLModel {
+export class FileUploadSession extends UuidSqlModel {
   public readonly tableName = DbTables.FILE_UPLOAD_SESSION;
 
   public constructor(data: any, context: Context) {

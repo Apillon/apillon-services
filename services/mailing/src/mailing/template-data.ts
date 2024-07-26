@@ -328,6 +328,17 @@ export function generateTemplateData(key: string, data: any) {
       </p>
       `,
     },
+    [EmailTemplate.OTP_VERIFICATION]: {
+      subject: 'OTP Verification',
+      title: 'Here is your verification code',
+      text: `
+        <p>Hello,</p><br>
+        
+        <p>Here is your verification code:</p><br>
+        <p><b>${data.code}</b></p><br>
+        <p>Please use this code to verify you are the account owner.</p><br>
+        <p>If you didn't request a Verification code, please contact our Customer Service team as soon as possible to secure your account.`,
+    },
   };
 
   return templateData[key];

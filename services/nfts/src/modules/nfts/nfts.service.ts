@@ -5,14 +5,12 @@ import {
   ChainType,
   CollectionsQuotaReachedQueryFilter,
   CreateBucketDto,
-  CreateCollectionDTO,
   CreateEvmTransactionDto,
   CreateSubstrateTransactionDto,
   DeployCollectionDTO,
   env,
   EvmChain,
   getChainName,
-  isEvmOrSubstrateWalletAddress,
   Lmas,
   LogType,
   Mailing,
@@ -31,11 +29,14 @@ import {
   SqlModelStatus,
   StorageMicroservice,
   SubstrateChain,
-  SubstrateChainPrefix,
   TransactionDto,
   TransactionStatus,
   TransferCollectionDTO,
 } from '@apillon/lib';
+import {
+  CreateCollectionDTO,
+  isEvmOrSubstrateWalletAddress,
+} from '@apillon/blockchain-lib/common';
 import { ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
@@ -44,7 +45,7 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { BigNumber, constants } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { v4 as uuidV4 } from 'uuid';
 import {
   CollectionStatus,
@@ -70,7 +71,8 @@ import {
   getSubstrateContractClient,
 } from '../../lib/utils/collection-utils';
 import { ContractVersion } from './models/contractVersion.model';
-import { EVMContractClient } from '../clients/evm-contract.client';
+import { EVM_MAX_INT } from '@apillon/blockchain-lib/evm';
+import { SubstrateChainPrefix } from '@apillon/blockchain-lib/substrate';
 
 export class NftsService {
   //#region collection functions
@@ -96,6 +98,8 @@ export class NftsService {
     });
 
     const product_id = {
+      [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_COLLECTION,
+      [EvmChain.SEPOLIA]: ProductCode.NFT_SEPOLIA_COLLECTION,
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_COLLECTION,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_COLLECTION,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_COLLECTION,
@@ -386,6 +390,8 @@ export class NftsService {
     await NftsService.checkTransferConditions(body, context, collection);
 
     const product_id = {
+      [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_TRANSFER_COLLECTION,
+      [EvmChain.SEPOLIA]: ProductCode.NFT_SEPOLIA_TRANSFER_COLLECTION,
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_TRANSFER_COLLECTION,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_TRANSFER_COLLECTION,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_TRANSFER_COLLECTION,
@@ -425,13 +431,9 @@ export class NftsService {
             abi,
             collection.contractAddress,
           );
-          const txData = await evmContractClient.createTransaction(
+          txHash = await evmContractClient.createTransaction(
             'transferOwnership',
             [body.address],
-          );
-          txHash = EVMContractClient.serializeTransaction(
-            txData,
-            collection.contractAddress,
           );
           break;
         }
@@ -507,6 +509,8 @@ export class NftsService {
     );
 
     const product_id = {
+      [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_SET_BASE_URI,
+      [EvmChain.SEPOLIA]: ProductCode.NFT_SEPOLIA_SET_BASE_URI,
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_SET_BASE_URI,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_SET_BASE_URI,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_SET_BASE_URI,
@@ -546,15 +550,9 @@ export class NftsService {
             abi,
             collection.contractAddress,
           );
-
-          const txData = await evmContractClient.createTransaction(
-            'setBaseURI',
-            [body.uri],
-          );
-          txHash = EVMContractClient.serializeTransaction(
-            txData,
-            collection.contractAddress,
-          );
+          txHash = await evmContractClient.createTransaction('setBaseURI', [
+            body.uri,
+          ]);
           break;
         }
         case ChainType.SUBSTRATE: {
@@ -682,6 +680,8 @@ export class NftsService {
     await NftsService.checkCollection(collection, 'mintNftTo()', context);
 
     const product_id = {
+      [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_MINT,
+      [EvmChain.SEPOLIA]: ProductCode.NFT_SEPOLIA_MINT,
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_MINT,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_MINT,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_MINT,
@@ -736,7 +736,7 @@ export class NftsService {
             minted,
           );
 
-          const txData = collection.isAutoIncrement
+          serializedTransaction = collection.isAutoIncrement
             ? await evmContractClient.createTransaction('ownerMint', [
                 body.receivingAddress,
                 body.quantity,
@@ -746,10 +746,6 @@ export class NftsService {
                 body.quantity,
                 body.idsToMint,
               ]);
-          serializedTransaction = EVMContractClient.serializeTransaction(
-            txData,
-            collection.contractAddress,
-          );
           minimumGas =
             260000 *
             (collection.isAutoIncrement
@@ -919,6 +915,8 @@ export class NftsService {
     );
 
     const product_id = {
+      [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_MINT,
+      [EvmChain.SEPOLIA]: ProductCode.NFT_SEPOLIA_MINT,
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_MINT,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_MINT,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_MINT,
@@ -944,10 +942,7 @@ export class NftsService {
           context,
           childCollection,
           TransactionType.NEST_MINT_NFT,
-          EVMContractClient.serializeTransaction(
-            txData,
-            childCollection.contractAddress,
-          ),
+          txData,
           spendCredit.referenceId,
         ),
     );
@@ -991,6 +986,8 @@ export class NftsService {
     await NftsService.checkCollection(collection, 'burnNftToken()', context);
 
     const product_id = {
+      [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_BURN,
+      [EvmChain.SEPOLIA]: ProductCode.NFT_SEPOLIA_BURN,
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_BURN,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_BURN,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_BURN,
@@ -1032,15 +1029,11 @@ export class NftsService {
             );
             const burnArguments: any[] = [body.tokenId];
             if (collection.collectionType === NFTCollectionType.NESTABLE) {
-              burnArguments.push(constants.MaxUint256);
+              burnArguments.push(EVM_MAX_INT);
             }
-            const txData = await evmContractClient.createTransaction(
+            txHash = await evmContractClient.createTransaction(
               'burn',
               burnArguments,
-            );
-            txHash = EVMContractClient.serializeTransaction(
-              txData,
-              collection.contractAddress,
             );
             break;
           }

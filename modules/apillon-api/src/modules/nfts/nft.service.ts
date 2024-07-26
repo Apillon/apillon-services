@@ -1,27 +1,44 @@
 import {
-  CreateCollectionDTO,
   ApillonApiNFTCollectionQueryFilter,
   BurnNftDto,
+  ChainType,
+  isAllowedToCreateNftCollection,
   MintNftDTO,
   NestMintNftDTO,
   NftsMicroservice,
   TransactionQueryFilter,
   TransferCollectionDTO,
-  CreateSubstrateCollectionDTO,
 } from '@apillon/lib';
-import { Injectable } from '@nestjs/common';
+import {
+  CreateCollectionDTO,
+  CreateSubstrateCollectionDTO,
+} from '@apillon/blockchain-lib/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 
 @Injectable()
 export class NftService {
   async createCollection(
     context: ApillonApiContext,
+    chainType: ChainType,
     body: CreateCollectionDTO | CreateSubstrateCollectionDTO,
   ) {
     const dto = new CreateCollectionDTO().populate({
       ...body.serialize(),
       project_uuid: context.apiKey.project_uuid,
     });
+
+    const isAllowed = await isAllowedToCreateNftCollection(
+      context,
+      chainType,
+      body.chain,
+      dto.project_uuid,
+    );
+    if (!isAllowed) {
+      throw new UnauthorizedException(
+        `This operation requires a Butterfly plan.`,
+      );
+    }
 
     return (await new NftsMicroservice(context).createCollection(dto)).data;
   }

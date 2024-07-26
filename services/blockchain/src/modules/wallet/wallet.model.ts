@@ -471,6 +471,29 @@ export class Wallet extends AdvancedSQLModel {
     return this.reset();
   }
 
+  public async populateByChain(chain: Chain): Promise<this> {
+    if (!chain) {
+      throw new Error('chain should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT *
+      FROM \`${DbTables.WALLET}\`
+      WHERE
+        chain = @chain
+        AND status = ${SqlModelStatus.ACTIVE}
+      LIMIT 1;
+      `,
+      { chain },
+    );
+
+    if (data?.length) {
+      return this.populate(data[0], PopulateFrom.DB).calculateTokenBalance();
+    }
+    return this.reset();
+  }
+
   public calculateTokenBalance() {
     if (!this.decimals) {
       return this;
@@ -736,7 +759,7 @@ export class Wallet extends AdvancedSQLModel {
   public get isBelowThreshold(): boolean {
     return (
       !!this.minBalance &&
-      ethers.BigNumber.from(this.minBalance).gte(
+      ethers.BigNumber.from(this.minBalance).gt(
         ethers.BigNumber.from(this.currentBalance),
       )
     );
@@ -745,7 +768,7 @@ export class Wallet extends AdvancedSQLModel {
   public get isBelowTransactionThreshold(): boolean {
     return (
       !!this.minTxBalance &&
-      ethers.BigNumber.from(this.minTxBalance).gte(
+      ethers.BigNumber.from(this.minTxBalance).gt(
         ethers.BigNumber.from(this.currentBalance),
       )
     );

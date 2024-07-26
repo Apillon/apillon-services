@@ -1,16 +1,19 @@
 import {
-  CreateCollectionDTO,
   ApillonApiNFTCollectionQueryFilter,
   AttachedServiceType,
   BurnNftDto,
+  ChainType,
   DefaultApiKeyRole,
   MintNftDTO,
   NestMintNftDTO,
   TransactionQueryFilter,
   TransferCollectionDTO,
   ValidateFor,
-  CreateSubstrateCollectionDTO,
 } from '@apillon/lib';
+import {
+  CreateCollectionDTO,
+  CreateSubstrateCollectionDTO,
+} from '@apillon/blockchain-lib/common';
 import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
 import {
   Body,
@@ -43,7 +46,7 @@ export class NftController {
     @Ctx() context: ApillonApiContext,
     @Body() body: CreateCollectionDTO,
   ) {
-    return await this.nftService.createCollection(context, body);
+    return await this.nftService.createCollection(context, ChainType.EVM, body);
   }
 
   @Post('collections/substrate')
@@ -57,7 +60,11 @@ export class NftController {
     @Ctx() context: ApillonApiContext,
     @Body() body: CreateSubstrateCollectionDTO,
   ) {
-    return await this.nftService.createCollection(context, body);
+    return await this.nftService.createCollection(
+      context,
+      ChainType.SUBSTRATE,
+      body,
+    );
   }
 
   @Get('collections')

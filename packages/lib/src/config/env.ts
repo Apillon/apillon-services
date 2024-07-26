@@ -243,6 +243,9 @@ export interface IEnv {
   BLOCKCHAIN_PHALA_GRAPHQL_SERVER: string;
   BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER: string;
   BLOCKCHAIN_ASTAR_SUBSTRATE_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_ETHEREUM_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_SEPOLIA_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_ACURAST_GRAPHQL_SERVER: string;
   BLOCKCHAIN_SECRETS: string;
 
   /**
@@ -300,6 +303,8 @@ export interface IEnv {
   AUTH_FUNCTION_NAME_TEST: string;
   AUTH_SOCKET_PORT: number;
   AUTH_SOCKET_PORT_TEST: number;
+
+  AUTH_OTP_EXPIRATION_IN_MIN: number;
 
   //Nova wallet
   NOVA_WALLET_BUCKET_UUID: string;
@@ -448,6 +453,45 @@ export interface IEnv {
   NFTS_AWS_WORKER_LAMBDA_NAME: string;
 
   /************************************************************
+   * Contracts - Apillon Contracts Service
+   ************************************************************/
+  /**
+   *  function name
+   */
+  CONTRACTS_FUNCTION_NAME: string;
+  CONTRACTS_FUNCTION_NAME_TEST: string;
+
+  /**
+   * dev server port
+   */
+  CONTRACTS_SOCKET_PORT: number;
+  CONTRACTS_SOCKET_PORT_TEST: number;
+
+  /**
+   * Database config
+   */
+  CONTRACTS_MYSQL_HOST: string;
+  CONTRACTS_MYSQL_PORT: number;
+  CONTRACTS_MYSQL_USER: string;
+  CONTRACTS_MYSQL_PASSWORD: string;
+  CONTRACTS_MYSQL_DEPLOY_USER: string;
+  CONTRACTS_MYSQL_DEPLOY_PASSWORD: string;
+  CONTRACTS_MYSQL_DATABASE: string;
+
+  // TEST
+  CONTRACTS_MYSQL_HOST_TEST: string;
+  CONTRACTS_MYSQL_PORT_TEST: number;
+  CONTRACTS_MYSQL_USER_TEST: string;
+  CONTRACTS_MYSQL_PASSWORD_TEST: string;
+  CONTRACTS_MYSQL_DATABASE_TEST: string;
+
+  /**
+   * Contracts workers config
+   */
+  CONTRACTS_AWS_WORKER_SQS_URL: string;
+  CONTRACTS_AWS_WORKER_LAMBDA_NAME: string;
+
+  /************************************************************
    * COMPUTING - Apillon Computing Service
    ************************************************************/
   /**
@@ -556,10 +600,23 @@ export interface IEnv {
   NOWPAYMENTS_INVOICE_EMAILS: string[];
 
   /**
+   * OASIS
+   */
+  OASIS_SIGNING_WALLET: string;
+  OASIS_MESSAGE_GAS_LIMIT: number;
+
+  /*
    * URL SHORTENER
    */
   SHORTENER_VALID_DOMAINS: string[];
   SHORTENER_DOMAIN: string;
+
+  /**
+   * AIRDROP CLAIM
+   */
+  AIRDROP_CLAIM_TIMESTAMP: string;
+  AIRDROP_CLAIM_CONTRACT_ADDRESS: string;
+  AIRDROP_CLAIM_CHAIN_ID: number;
 }
 
 // dotenv.config();
@@ -740,6 +797,12 @@ export let env: IEnv = {
     process.env['BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER'],
   BLOCKCHAIN_ASTAR_SUBSTRATE_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_ASTAR_SUBSTRATE_GRAPHQL_SERVER'],
+  BLOCKCHAIN_ETHEREUM_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_ETHEREUM_GRAPHQL_SERVER'],
+  BLOCKCHAIN_SEPOLIA_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_SEPOLIA_GRAPHQL_SERVER'],
+  BLOCKCHAIN_ACURAST_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_ACURAST_GRAPHQL_SERVER'],
 
   BLOCKCHAIN_SECRETS: process.env['BLOCKCHAIN_SECRETS'],
 
@@ -808,6 +871,8 @@ export let env: IEnv = {
   AUTH_API_MYSQL_USER_TEST: process.env['AUTH_API_MYSQL_USER_TEST'],
   AUTH_API_MYSQL_PASSWORD_TEST: process.env['AUTH_API_MYSQL_PASSWORD_TEST'],
   AUTH_API_MYSQL_DATABASE_TEST: process.env['AUTH_API_MYSQL_DATABASE_TEST'],
+  AUTH_OTP_EXPIRATION_IN_MIN:
+    parseInt(process.env['AUTH_OTP_EXPIRATION_IN_MIN']) || 10,
 
   /** KILT */
   KILT_NETWORK:
@@ -979,6 +1044,33 @@ export let env: IEnv = {
 
   SOCIAL_DEFAULT_SPACE: process.env['SOCIAL_DEFAULT_SPACE'],
 
+  /** CONTRACTS */
+  // TODO: fix default ports?
+  CONTRACTS_FUNCTION_NAME: process.env['CONTRACTS_FUNCTION_NAME'],
+  CONTRACTS_FUNCTION_NAME_TEST: process.env['CONTRACTS_FUNCTION_NAME_TEST'],
+  CONTRACTS_SOCKET_PORT: parseInt(process.env['CONTRACTS_SOCKET_PORT']) || 7302,
+  CONTRACTS_MYSQL_HOST: process.env['CONTRACTS_MYSQL_HOST'],
+  CONTRACTS_MYSQL_PORT: parseInt(process.env['CONTRACTS_MYSQL_PORT']) || 3306,
+  CONTRACTS_MYSQL_DATABASE: process.env['CONTRACTS_MYSQL_DATABASE'],
+  CONTRACTS_MYSQL_USER: process.env['CONTRACTS_MYSQL_USER'],
+  CONTRACTS_MYSQL_PASSWORD: process.env['CONTRACTS_MYSQL_PASSWORD'],
+  CONTRACTS_MYSQL_DEPLOY_USER: process.env['CONTRACTS_MYSQL_DEPLOY_USER'],
+  CONTRACTS_MYSQL_DEPLOY_PASSWORD:
+    process.env['CONTRACTS_MYSQL_DEPLOY_PASSWORD'],
+
+  CONTRACTS_SOCKET_PORT_TEST:
+    parseInt(process.env['CONTRACTS_SOCKET_PORT_TEST']) || 7702,
+  CONTRACTS_MYSQL_HOST_TEST: process.env['CONTRACTS_MYSQL_HOST_TEST'],
+  CONTRACTS_MYSQL_PORT_TEST:
+    parseInt(process.env['CONTRACTS_MYSQL_PORT_TEST']) || 3306,
+  CONTRACTS_MYSQL_DATABASE_TEST: process.env['CONTRACTS_MYSQL_DATABASE_TEST'],
+  CONTRACTS_MYSQL_USER_TEST: process.env['CONTRACTS_MYSQL_USER_TEST'],
+  CONTRACTS_MYSQL_PASSWORD_TEST: process.env['CONTRACTS_MYSQL_PASSWORD_TEST'],
+
+  CONTRACTS_AWS_WORKER_SQS_URL: process.env['CONTRACTS_AWS_WORKER_SQS_URL'],
+  CONTRACTS_AWS_WORKER_LAMBDA_NAME:
+    process.env['CONTRACTS_AWS_WORKER_LAMBDA_NAME'],
+
   /** DISCORD */
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
   DISCORD_CLIENT_SECRET: process.env['DISCORD_CLIENT_SECRET'] || '',
@@ -1008,12 +1100,21 @@ export let env: IEnv = {
     ',',
   ) || [process.env['CONTACT_EMAIL_TO']],
 
+  /** OASIS */
+  OASIS_SIGNING_WALLET: process.env['OASIS_SIGNING_WALLET'],
+  OASIS_MESSAGE_GAS_LIMIT:
+    parseInt(process.env['OASIS_MESSAGE_GAS_LIMIT']) || 1000000,
   /** URL SHORTENER */
   SHORTENER_VALID_DOMAINS: process.env['SHORTENER_VALID_DOMAINS']?.split(
     ',',
   ) || ['apillon.io', 'nectarnode.io', 'web3approved.com'],
   SHORTENER_DOMAIN:
     process.env['SHORTENER_DOMAIN'] || 'https://go.nectarnode.io',
+
+  /** AIRDROP CLAIM */
+  AIRDROP_CLAIM_TIMESTAMP: process.env['AIRDROP_CLAIM_TIMESTAMP'],
+  AIRDROP_CLAIM_CONTRACT_ADDRESS: process.env['AIRDROP_CLAIM_CONTRACT_ADDRESS'],
+  AIRDROP_CLAIM_CHAIN_ID: +process.env['AIRDROP_CLAIM_CHAIN_ID'],
 };
 
 export let isEnvReady = false;

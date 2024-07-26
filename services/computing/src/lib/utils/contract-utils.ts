@@ -17,7 +17,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { Contract } from '../../modules/computing/models/contract.model';
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { TransactionService } from '../../modules/transaction/transaction.service';
-import { PhalaClient } from '../../modules/services/phala.client';
+import { PhalaClient } from '../../modules/clients/phala.client';
 import { ContractAbi } from '../../modules/computing/models/contractAbi.model';
 
 export async function getPhalaEndpoint(context: Context) {
@@ -67,7 +67,8 @@ export async function deployPhalaContract(
     transaction_uuid,
     walletAddress: response.data.address,
     transactionType: TransactionType.DEPLOY_CONTRACT,
-    contract_id: contract.id,
+    refTable: DbTables.CONTRACT,
+    refId: contract.id,
     transactionHash: response.data.transactionHash,
     transactionStatus: ComputingTransactionStatus.PENDING,
     metadata: { pruntimeUrl },
@@ -153,7 +154,8 @@ export async function transferContractOwnership(
       transaction_uuid,
       walletAddress: response.data.address,
       transactionType: TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-      contract_id,
+      refTable: DbTables.CONTRACT,
+      refId: contract_id,
       transactionHash: response.data.transactionHash,
       nonce,
       transactionStatus: ComputingTransactionStatus.PENDING,
@@ -217,7 +219,8 @@ export async function assignCidToNft(
       transaction_uuid,
       walletAddress: response.data.address,
       transactionType: TransactionType.ASSIGN_CID_TO_NFT,
-      contract_id,
+      refTable: DbTables.CONTRACT,
+      refId: contract_id,
       transactionHash: response.data.transactionHash,
       nonce,
       transactionStatus: ComputingTransactionStatus.PENDING,

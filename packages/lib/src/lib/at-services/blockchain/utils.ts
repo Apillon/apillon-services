@@ -1,16 +1,7 @@
-import { formatUnits } from 'ethers/lib/utils';
-import { ethers } from 'ethers';
 import { ChainType, EvmChain, SubstrateChain } from '../../../config/types';
 import axios from 'axios';
 
 export type Chain = SubstrateChain | EvmChain;
-
-export function formatTokenWithDecimals(
-  amount: string, // string rep of big number
-  decimals: number,
-): string {
-  return formatUnits(ethers.BigNumber.from(amount), decimals);
-}
 
 export function formatWalletAddress(
   chainType: ChainType,
@@ -33,6 +24,7 @@ export async function getTokenPriceUsd(token: string): Promise<number> {
     GLMR: 'moonbeam',
     DEV: 'moonbase',
     SUB: 'subsocial',
+    ACU: 'acurast',
   };
   const networkName = networkTokenMap[token];
   try {

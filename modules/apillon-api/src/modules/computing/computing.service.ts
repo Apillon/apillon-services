@@ -5,8 +5,8 @@ import {
   ContractQueryFilter,
   CreateContractDto,
   EncryptContentDto,
-  TransferOwnershipDto,
 } from '@apillon/lib';
+import { TransferOwnershipDto } from '@apillon/blockchain-lib/common';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 

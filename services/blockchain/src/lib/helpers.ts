@@ -11,6 +11,16 @@ export function evmChainToWorkerName(
   type: WorkerType,
 ): string {
   switch (chain) {
+    case EvmChain.ETHEREUM: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_ETHEREUM_TRANSACTIONS
+        : WorkerName.VERIFY_ETHEREUM_TRANSACTIONS;
+    }
+    case EvmChain.SEPOLIA: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_SEPOLIA_TRANSACTIONS
+        : WorkerName.VERIFY_SEPOLIA_TRANSACTIONS;
+    }
     case EvmChain.MOONBEAM: {
       return type == WorkerType.TRANSMIT
         ? WorkerName.TRANSMIT_MOONBEAM_TRANSACTIONS
@@ -48,6 +58,9 @@ export function substrateChainToWorkerName(chain: SubstrateChain): string {
     }
     case SubstrateChain.ASTAR: {
       return WorkerName.TRANSMIT_ASTAR_SUBSTRATE_TRANSACTIONS;
+    }
+    case SubstrateChain.ACURAST: {
+      return WorkerName.TRANSMIT_ACURAST_TRANSACTIONS;
     }
     default: {
       throw new Error('Unsupported');

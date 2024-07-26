@@ -11,6 +11,12 @@ import { Context } from '../context';
 import { writeLog } from '../logger';
 import { HttpException } from './http-exception';
 
+export interface IValidationError {
+  code: number | string;
+  property: string;
+  message?: string;
+}
+
 export interface ErrorOptions {
   code: any;
   status: number;
@@ -81,12 +87,6 @@ export class CodeException extends HttpException {
   }
 }
 
-export interface IValidationError {
-  code: number;
-  property: string;
-  message?: string;
-}
-
 /**
  * Validation error.
  */
@@ -102,7 +102,7 @@ export class ValidationException extends HttpException {
       ...error,
       message:
         errorCodes && !error.message
-          ? { ...ValidatorErrorCode, ...errorCodes }[error.code]
+          ? { ...ValidatorErrorCode, ...errorCodes }[error.code].toString()
           : error.message,
     }));
     super(

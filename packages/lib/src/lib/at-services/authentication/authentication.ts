@@ -2,14 +2,18 @@ import { env } from '../../../config/env';
 import { AppEnvironment, AuthenticationEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { CreateOasisSignatureDto } from './dtos/create-oasis-signature.dto';
+import { GenerateOtpDto } from './dtos/generate-otp.dto';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
 import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
+import { OasisSignaturesQueryFilter } from './dtos/oasis-signatures-query-filter.dto';
 import { RequestCredentialDto } from './dtos/sporran/message/request-credential.dto';
 import { SubmitAttestationDto } from './dtos/sporran/message/submit-attestation.dto';
 import { SubmitTermsDto } from './dtos/sporran/message/submit-terms.dto';
 import { VerifyCredentialDto } from './dtos/sporran/message/verify-credential.dto';
 import { SporranSessionVerifyDto } from './dtos/sporran/sporran-session.dto';
+import { ValidateOtpDto } from './dtos/validate-otp.dto';
 import { VerificationIdentityDto } from './dtos/verify-identity.dto';
 
 export class AuthenticationMicroservice extends BaseService {
@@ -135,4 +139,49 @@ export class AuthenticationMicroservice extends BaseService {
       project_uuid,
     });
   }
+
+  //#region Oasis
+
+  public async createOasisSignature(params: CreateOasisSignatureDto) {
+    const data = {
+      eventName: AuthenticationEventType.CREATE_OASIS_SIGNATURE,
+      body: params,
+    };
+    return await this.callService(data);
+  }
+
+  public async getOasisSignaturesCountByApiKey(project_uuid: string) {
+    return await this.callService({
+      eventName: AuthenticationEventType.GET_OASIS_SIGNATURES_COUNT_BY_API_KEY,
+      project_uuid,
+    });
+  }
+
+  public async listOasisSignatures(query: OasisSignaturesQueryFilter) {
+    return await this.callService({
+      eventName: AuthenticationEventType.LIST_OASIS_SIGNATURES,
+      query: query.serialize(),
+    });
+  }
+
+  //#endregion
+
+  //#region OTP
+  public async generateOtp(params: GenerateOtpDto) {
+    const data = {
+      eventName: AuthenticationEventType.GENERATE_OTP,
+      body: params,
+    };
+    return await this.callService(data);
+  }
+
+  public async validateOtp(params: ValidateOtpDto) {
+    const data = {
+      eventName: AuthenticationEventType.VALIDATE_OTP,
+      body: params,
+    };
+    return await this.callService(data);
+  }
+
+  //#endregion
 }

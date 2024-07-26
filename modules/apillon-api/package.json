@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@apillon/lib": "*",
+    "@apillon/blockchain-lib": "*",
     "@apillon/modules-lib": "*",
     "@aws-sdk/signature-v4-crt": "^3.515.0",
     "@nestjs/common": "^10.3.7",

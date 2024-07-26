@@ -1,4 +1,4 @@
-import { EvmChain } from '@apillon/lib';
+import { EvmChain, SqlModelStatus } from '@apillon/lib';
 import {
   createTestUser,
   releaseStage,
@@ -9,7 +9,6 @@ import {
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 import { UserAirdropTask } from '@apillon/referral/src/modules/airdrop/models/user-airdrop-task.model';
-import { DbTables } from '@apillon/referral/src/config/types';
 import { ethers } from 'ethers';
 
 describe('Airdrop tests', () => {
@@ -46,9 +45,9 @@ describe('Airdrop tests', () => {
     blockchain = TestBlockchain.fromStage(stage, EvmChain.ASTAR);
     await blockchain.start();
 
-    await stage.db.referral.paramExecute(
-      `INSERT INTO ${DbTables.GALXE_WALLET} (wallet) VALUES (${blockchain.getWalletAddress(0)})`,
-    );
+    // await stage.db.referral.paramExecute(
+    //   `INSERT INTO ${DbTables.GALXE_WALLET} (wallet) VALUES (${blockchain.getWalletAddress(0)})`,
+    // );
   });
 
   afterAll(async () => {
@@ -67,13 +66,56 @@ describe('Airdrop tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.data.airdropStats).toBeDefined();
       expect(response.body.data.tokenClaim).toBeDefined();
-      // 10 for registering and 10 for galxe points
-      expect(response.body.data.airdropStats.totalPoints).toEqual(20);
+      // 10 for registering
+      expect(response.body.data.airdropStats.totalPoints).toEqual(10);
     });
 
     test('User should receive 401 if not authenticated', async () => {
       const response = await request(stage.http).get(`/referral/airdrop-tasks`);
       expect(response.status).toBe(401);
+    });
+  });
+
+  describe('Airdrop claim tests', () => {
+    /**
+     * Requires environment variables:
+     * AIRDROP_CLAIM_TIMESTAMP
+     * AIRDROP_CLAIM_CONTRACT_ADDRESS
+     * AIRDROP_CLAIM_SIGNER_KEY
+     * AIRDROP_CLAIM_CHAIN_ID
+     */
+    test('User should successfully get claim parameters if eligible', async () => {
+      const response = await request(stage.http)
+        .get('/referral/claim-parameters')
+        .set('Authorization', `Bearer ${testUser.token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.amount).toBe(10);
+      expect(response.body.data.timestamp).toBeDefined();
+      expect(response.body.data.signature).toBeDefined();
+    });
+
+    test('User should receive 403 if claim is forbidden due to BLOCKED status', async () => {
+      const response = await request(stage.http)
+        .get('/referral/claim-parameters')
+        .set('Authorization', `Bearer ${testUser2.token}`);
+
+      expect(response.status).toBe(403);
+      expect(response.body.message).toBe('CLAIM_FORBIDDEN');
+    });
+
+    test('User should receive 400 if claim is already completed', async () => {
+      // Manually set the user's claim to completed
+      await stage.db.referral.paramExecute(
+        `UPDATE token_claim SET claimCompleted = TRUE WHERE user_uuid = '${testUser.user.user_uuid}'`,
+      );
+
+      const response = await request(stage.http)
+        .get('/referral/claim-parameters')
+        .set('Authorization', `Bearer ${testUser.token}`);
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('CLAIM_ALREADY_COMPLETED');
     });
   });
 });

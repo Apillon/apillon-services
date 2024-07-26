@@ -4,8 +4,8 @@ import {
   ErrorOptions,
   ServiceName,
   ModelValidationException,
-  IValidationError,
   ValidationException,
+  IValidationError,
 } from '@apillon/lib';
 import { NftsErrorCode } from '../config/types';
 import { ServiceContext } from '@apillon/service-lib';
