@@ -71,7 +71,7 @@ export abstract class EvmContractEventsWorker extends BaseSingleThreadWorker {
       const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
 
       const fromBlock = contractData.lastParsedBlock + 1;
-      const currentBlock = (await provider.getBlockNumber()) - 2; // we wait 2 block for confirmation
+      const currentBlock = (await provider.getBlockNumber()) - 4; // we wait 4 blocks for confirmation
       let toBlock = fromBlock + contractData.blockParseSize;
       if (toBlock > currentBlock) {
         toBlock = currentBlock;
@@ -90,15 +90,27 @@ export abstract class EvmContractEventsWorker extends BaseSingleThreadWorker {
       );
 
       console.info(
-        `Recieved ${events.length} events for contract ${contractData.address}`,
+        `Recieved ${events.length} events for contract ${contractData.address}. Fetching block data...`,
       );
 
+      const blockData = await provider.getBlock(toBlock);
+      if (!blockData?.timestamp) {
+        await this.writeEventLog(
+          {
+            logType: LogType.ERROR,
+            message: `Block data is undefined. Block number: ${toBlock}`,
+            service: ServiceName.BLOCKCHAIN,
+          },
+          LogOutput.EVENT_ERROR,
+        );
+        return;
+      }
+
+      console.info(`Block data successfully acquired. Processing events...`);
       await this.processEvents(events);
 
       //Check balance in cluster and perform alerting, if necessary
       await contractData.checkBalance(provider);
-
-      const blockData = await provider.getBlock(toBlock);
 
       contractData.lastParsedBlockTime = new Date(blockData.timestamp * 1000);
       contractData.lastParsedBlock = toBlock;
