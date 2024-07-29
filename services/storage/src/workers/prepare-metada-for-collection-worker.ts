@@ -148,6 +148,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
             [
               {
+                ...data,
                 collectionMetadataId: collectionMetadata.id,
               },
             ],
@@ -276,6 +277,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
             [
               {
+                ...data,
                 collectionMetadataId: collectionMetadata.id,
               },
             ],
@@ -333,6 +335,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
             [
               {
+                ...data,
                 collectionMetadataId: collectionMetadata.id,
               },
             ],
@@ -364,6 +367,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
               WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
               [
                 {
+                  ...data,
                   collectionMetadataId: collectionMetadata.id,
                   metadataCid: metadataFiles.wrappedDirCid,
                 },
