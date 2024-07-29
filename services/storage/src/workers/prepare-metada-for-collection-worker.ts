@@ -409,14 +409,14 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           //Metadata is prepared. Run nft deploy with cid or ipns as base URI
 
           //Initialize baseUri
-          let baseUri = null;
+          let baseUri: string = null;
           if (data.useApillonIpfsGateway) {
             //Get IPFS cluster
             const ipfsCluster = await new ProjectConfig(
               { project_uuid: bucket.project_uuid },
               this.context,
             ).getIpfsCluster();
-            baseUri = ipfsCluster.generateLink(
+            baseUri = await ipfsCluster.generateLink(
               bucket.project_uuid,
               ipnsDbRecord?.ipnsName || data.metadataCid,
             );
