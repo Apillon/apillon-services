@@ -15,8 +15,8 @@ import { IdentityModule } from './modules/wallet-identity/wallet-identity.module
 import { ComputingModule } from './modules/computing/computing.module';
 import { ProjectModule } from './modules/project/project.module';
 import { SocialModule } from './modules/social/social.module';
-import { OasisModule } from './modules/oasis/oasis.module';
 import { ContractsModule } from './modules/contracts/contracts.module';
+import { EmbeddedWalletModule } from './modules/embedded-wallet/embedded-wallet.module';
 
 @Module({
   imports: [
@@ -31,7 +31,7 @@ import { ContractsModule } from './modules/contracts/contracts.module';
     ComputingModule,
     ProjectModule,
     SocialModule,
-    OasisModule,
+    EmbeddedWalletModule,
     AcurastModule,
     ContractsModule,
   ],
@@ -47,7 +47,8 @@ export class AppModule {
       .apply(AuthenticateApiKeyMiddleware)
       .exclude(
         { path: '/', method: RequestMethod.ALL },
-        { path: '/oasis/signature', method: RequestMethod.POST },
+        { path: '/embedded-wallet/signature', method: RequestMethod.POST },
+        { path: '/embedded-wallet/otp(.*)', method: RequestMethod.POST },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer

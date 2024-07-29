@@ -157,6 +157,7 @@ export enum StorageEventType {
   IPNS_DELETE = 'delete-ipns',
   IPNS_PUBLISH = 'publish-ipns',
   IPNS_GET = 'get-ipns',
+  IPNS_GET_BY_NAME = 'get-ipns-by-name',
   WEBSITE_LIST = 'list-websites',
   WEBSITE_CREATE = 'create-website',
   WEBSITE_UPDATE = 'update-website',
@@ -205,6 +206,8 @@ export enum AuthenticationEventType {
   CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
   LIST_OASIS_SIGNATURES = 'list-oasis-signatures',
   GET_OASIS_SIGNATURES_COUNT_BY_API_KEY = 'get-oasis-signatures-count-by-api-key',
+  GENERATE_OTP = 'generate-otp',
+  VALIDATE_OTP = 'validate-otp',
 }
 
 export enum MailEventType {
@@ -670,6 +673,8 @@ export enum ValidatorErrorCode {
   DATA_NOT_VALID = 42200163,
   DATA_NOT_PRESENT = 42200164,
   CREATE_OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT = 42200165,
+  GENERATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200166,
+  VALIDATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200167,
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
   COMPUTING_CONTRACT_TYPE_NOT_PRESENT = 42200202,
@@ -706,6 +711,7 @@ export enum ValidatorErrorCode {
   AUTH_SESSION_TOKEN_NOT_PRESENT = 42200718,
   CAPTCHA_NOT_CONFIGURED = 42200719,
   CAPTCHA_INVALID = 42200720,
+  OTP_CODE_NOT_PRESENT = 42200721,
   //#endregion
 
   //#region Blockchain
@@ -799,7 +805,7 @@ export enum JwtTokenType {
   // Website review token
   WEBSITE_REVIEW_TOKEN = 'website-review',
   CRYPTO_PAYMENT_DATA = 'crypto-payment-data',
-  OASIS_SDK_TOKEN = 'oasis-sdk-token',
+  EMBEDDED_WALLET_SDK_TOKEN = 'embedded-wallet-sdk-token',
 }
 
 /**
@@ -858,7 +864,6 @@ export enum CacheKeyPrefix {
   CONTRACT_VERSION_BY_CONTRACT_UUID = 'contract-version-by-contract-uuid',
   CONTRACT_VERSION_BY_UUID_WITH_METHODS = 'contract-version-methods-by-version-contract-uuid',
   CONTRACT_DEPLOY_BY_UUID_WITH_VERSION = 'get-contract-by-uuid-deploy-with-version',
-  CONTRACT_DEPLOY_BY_UUID_DEPLOY_WITH_VERSION_AND_METHODS = 'get-contract-by-uuid-deploy-with-version-and-methods',
 
   // NFTS
   CONTRACT_VERSION = 'contract-version',
@@ -975,6 +980,8 @@ export enum ProductCode {
   COMPUTING_JOB_CREATE = 52,
   COMPUTING_JOB_SET_ENVIRONMENT = 53,
   COMPUTING_JOB_DELETE = 54,
+
+  IPNS = 55,
 }
 
 export enum ProductService {
@@ -983,7 +990,9 @@ export enum ProductService {
   IDENTITY = 'IDENTITY',
   SOCIAL = 'SOCIAL',
   COMPUTING = 'COMPUTING',
+  STORAGE = 'STORAGE',
   CONTRACTS = 'CONTRACTS',
+  WALLET = 'WALLET',
 }
 
 export enum ProductCategory {
@@ -1003,6 +1012,8 @@ export enum ProductCategory {
   MOONBEAM_CONTRACT = 'MOONBEAM_CONTRACT',
   ASTAR_CONTRACT = 'ASTAR_CONTRACT',
   ACURAST = 'ACURAST',
+  IPNS = 'IPNS',
+  SIGNATURE = 'SIGNATURE',
 }
 
 export enum EmailTemplate {
@@ -1027,6 +1038,8 @@ export enum EmailTemplate {
 
   IPFS_BANDWIDTH_NEAR_QUOTA = 'ipfs-bandwidth-near-quota',
   IPFS_BANDWIDTH_EXCEEDED_QUOTA = 'ipfs-bandwidth-exceeded-quota',
+
+  OTP_VERIFICATION = 'otp-verification',
 }
 
 export enum JwtExpireTime {

@@ -4,8 +4,8 @@ import {
   ErrorOptions,
   ServiceName,
   ModelValidationException,
-  IValidationError,
   ValidationException,
+  IValidationError,
 } from '@apillon/lib';
 import { ContractsErrorCode } from '../config/types';
 

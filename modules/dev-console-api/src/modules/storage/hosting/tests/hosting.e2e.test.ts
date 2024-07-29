@@ -651,7 +651,6 @@ describe('Hosting tests', () => {
         .get(`/storage/hosting/websites/${testWebsite.website_uuid}`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data.ipnsStaging).toBeTruthy();
 
       const stagingBucket = await new Bucket(
         {},
@@ -689,6 +688,15 @@ describe('Hosting tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.data.deployment_uuid).toBeTruthy();
       deployment_uuid = response.body.data.deployment_uuid;
+
+      const tmpDeployment = await new Deployment(
+        {},
+        stage.context.storage,
+      ).populateByUUID(deployment_uuid, 'deployment_uuid');
+
+      //Set status to in review - deployment might be in some other status (deployed, because this content was already deployed in previous tests)
+      tmpDeployment.deploymentStatus = DeploymentStatus.IN_REVIEW;
+      tmpDeployment.update();
 
       //Reject deployment
       const token = generateJwtToken(JwtTokenType.WEBSITE_REVIEW_TOKEN, {

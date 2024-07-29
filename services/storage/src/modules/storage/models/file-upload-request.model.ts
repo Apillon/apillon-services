@@ -341,6 +341,28 @@ export class FileUploadRequest extends AdvancedSQLModel {
     );
   }
 
+  public async populateFileUploadRequestsInSessionWithFileSize(
+    session_id: number,
+    context: ServiceContext,
+  ): Promise<(this & { fileSize: number | null })[]> {
+    if (!session_id) {
+      throw new Error('session_id should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT fur.*, f.size as fileSize
+      FROM \`${DbTables.FILE_UPLOAD_REQUEST}\` fur
+      LEFT JOIN \`${DbTables.FILE}\` f ON f.file_uuid = fur.file_uuid
+      WHERE session_id = @session_id
+      AND fur.status <> ${SqlModelStatus.DELETED};
+      `,
+      { session_id },
+    );
+
+    return data || [];
+  }
+
   public async populateByS3FileKey(s3FileKey: string): Promise<this> {
     if (!s3FileKey) {
       throw new Error('s3FileKey should not be null');
@@ -412,5 +434,11 @@ export class FileUploadRequest extends AdvancedSQLModel {
     };
 
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'fr.id');
+  }
+
+  public async blockFileUploadRequests(ids: number[]): Promise<void> {
+    await this.getContext().mysql.paramExecute(
+      `UPDATE \`${DbTables.FILE_UPLOAD_REQUEST}\` SET status = ${SqlModelStatus.BLOCKED} WHERE id IN (${ids.map((uuid) => `"${uuid}"`).join(',')})`,
+    );
   }
 }

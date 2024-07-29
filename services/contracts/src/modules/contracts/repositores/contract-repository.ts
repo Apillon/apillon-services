@@ -304,15 +304,10 @@ export class ContractRepository extends BaseRepository {
   }
 
   async getContractDeployWithVersionAndMethods(contract_uuid: string) {
-    const data = await runCachedFunction(
-      `${CacheKeyPrefix.CONTRACT_DEPLOY_BY_UUID_DEPLOY_WITH_VERSION_AND_METHODS}:${contract_uuid}`,
-      async () =>
-        await new ContractDeploy(
-          {},
-          this.context,
-        ).getContractDeployWithVersionAndMethods(contract_uuid),
-      CacheKeyTTL.EXTRA_LONG,
-    );
+    const data = await new ContractDeploy(
+      {},
+      this.context,
+    ).getContractDeployWithVersionAndMethods(contract_uuid);
 
     const { c: contractDeploy, cv: contractVersion } =
       this.extractModelDataFromRow(data[0], {

@@ -1,14 +1,12 @@
-import { ModelBase, prop } from '../../../base-models/base';
+import { ModelBase, prop } from '@apillon/lib';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
+import { PopulateFrom, SerializeFor, ValidatorErrorCode } from '@apillon/lib';
+import { numberSizeValidator } from '@apillon/lib/';
 import {
-  PopulateFrom,
-  SerializeFor,
-  ValidatorErrorCode,
-} from '../../../../config/types';
-import { numberSizeValidator } from '../../../validators';
-import { SubstrateChainPrefix } from '../../substrate/types';
-import { substrateAddressValidator } from '../../substrate/validators/address-validator';
+  substrateAddressValidator,
+  SubstrateChainPrefix,
+} from '../../../../substrate';
 
 export class DepositToClusterDto extends ModelBase {
   @prop({

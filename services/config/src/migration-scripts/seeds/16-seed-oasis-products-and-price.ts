@@ -1,15 +1,20 @@
 import { DbTables } from '../../config/types';
-import { ProductCode, SqlModelStatus } from '@apillon/lib';
+import {
+  ProductCategory,
+  ProductCode,
+  ProductService,
+  SqlModelStatus,
+} from '@apillon/lib';
 
 export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    INSERT INTO ${DbTables.PRODUCT} (id, name, description, status)
+    INSERT INTO ${DbTables.PRODUCT} (id, name, description, status, service, category)
     VALUES
     (${ProductCode.OASIS_SIGNATURE}, '${
       ProductCode[ProductCode.OASIS_SIGNATURE]
-    }', 'Creation of new oasis signature', ${SqlModelStatus.ACTIVE})
+    }', 'Creation of new oasis signature', ${SqlModelStatus.ACTIVE}, '${ProductService.WALLET}', '${ProductCategory.SIGNATURE}')
 ;`);
 
   await queryFn(`

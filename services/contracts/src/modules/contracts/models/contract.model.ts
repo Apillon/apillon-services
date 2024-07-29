@@ -39,6 +39,7 @@ export class Contract extends UuidSqlModel {
       SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
@@ -144,6 +145,7 @@ export class Contract extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
   })
   public contractVersion: ContractVersion;

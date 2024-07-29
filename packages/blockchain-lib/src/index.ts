@@ -1,4 +1,3 @@
-//#REGION Ethers
-export * from './lib/evm/abi-helper';
-export * from './lib/evm/exceptions';
-export * from './lib/evm/evm-contract.client';
+export * as evm from './lib/evm';
+export * as substrate from './lib/substrate';
+export * as common from './lib/common';

@@ -258,7 +258,19 @@ export class Website extends UuidSqlModel {
     ],
     validators: [],
   })
-  public ipnsStaging: string;
+  public cidStaging: string;
+
+  @prop({
+    populatable: [PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [],
+  })
+  public cidProduction: string;
 
   @prop({
     populatable: [PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -540,7 +552,7 @@ export class Website extends UuidSqlModel {
             ? SerializeFor.ADMIN_SELECT_DB
             : SerializeFor.SELECT_DB,
         )},
-        uploadBucket.bucket_uuid, stgBucket.ipns as ipnsStaging, prodBucket.ipns as ipnsProduction
+        uploadBucket.bucket_uuid, stgBucket.CIDv1 as cidStaging, prodBucket.CIDv1 as cidProduction, prodBucket.IPNS as ipnsProduction
         `,
       qFrom: `
         FROM \`${DbTables.WEBSITE}\` w
@@ -580,23 +592,14 @@ export class Website extends UuidSqlModel {
       this.stagingBucket = await new Bucket({}, this.getContext()).populateById(
         this.stagingBucket_id,
       );
-      if (this.stagingBucket.IPNS) {
-        if (ipfsCluster.subdomainGateway) {
-          this.w3StagingLink = `https://${this.stagingBucket.IPNS}.ipns.${ipfsCluster.subdomainGateway}`;
-        } else {
-          this.w3StagingLink = `${ipfsCluster.ipnsGateway}${this.stagingBucket.IPNS}`;
-        }
+      if (this.stagingBucket.CIDv1) {
+        this.w3StagingLink = await ipfsCluster.generateLink(
+          this.project_uuid,
+          this.stagingBucket.CIDv1,
+          false,
+        );
 
-        if (ipfsCluster.private) {
-          this.w3StagingLink = addJwtToIPFSUrl(
-            this.w3StagingLink,
-            this.project_uuid,
-            this.stagingBucket.IPNS,
-            ipfsCluster,
-          );
-        }
-
-        this.ipnsStaging = this.stagingBucket.IPNS;
+        this.cidStaging = this.stagingBucket.CIDv1;
       }
     }
     if (this.productionBucket_id) {
@@ -605,22 +608,21 @@ export class Website extends UuidSqlModel {
         this.getContext(),
       ).populateById(this.productionBucket_id);
       if (this.productionBucket.IPNS) {
-        if (ipfsCluster.subdomainGateway) {
-          this.w3ProductionLink = `https://${this.productionBucket.IPNS}.ipns.${ipfsCluster.subdomainGateway}`;
-        } else {
-          this.w3ProductionLink = `${ipfsCluster.ipnsGateway}${this.productionBucket.IPNS}`;
-        }
-
-        if (ipfsCluster.private) {
-          this.w3ProductionLink = addJwtToIPFSUrl(
-            this.w3ProductionLink,
-            this.project_uuid,
-            this.productionBucket.IPNS,
-            ipfsCluster,
-          );
-        }
-
+        //Website has no IPNS record - link points to CID
+        this.w3ProductionLink = await ipfsCluster.generateLink(
+          this.project_uuid,
+          this.productionBucket.IPNS,
+          true,
+        );
+        this.cidProduction = this.productionBucket.CIDv1;
         this.ipnsProduction = this.productionBucket.IPNS;
+      } else if (this.productionBucket.CIDv1) {
+        //Website has no IPNS record - link points to CID
+        this.w3ProductionLink = await ipfsCluster.generateLink(
+          this.project_uuid,
+          this.productionBucket.CIDv1,
+          false,
+        );
       }
     }
   }

@@ -497,6 +497,7 @@ export class StorageMicroservice extends BaseService {
     imagesSession: string;
     metadataSession: string;
     useApillonIpfsGateway: boolean;
+    useIpns: boolean;
   }): Promise<{ data: { baseUri: string } }> {
     const data = {
       eventName: StorageEventType.PREPARE_COLLECTION_BASE_URI,
@@ -554,6 +555,14 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.GET_TARGET_URL,
       shortUrl_id,
+    };
+    return await this.callService(data);
+  }
+
+  public async getIpnsByName(ipnsName: string) {
+    const data = {
+      eventName: StorageEventType.IPNS_GET_BY_NAME,
+      ipnsName,
     };
     return await this.callService(data);
   }

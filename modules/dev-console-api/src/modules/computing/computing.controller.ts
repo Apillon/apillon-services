@@ -7,9 +7,9 @@ import {
   DefaultUserRole,
   EncryptContentDto,
   RoleGroup,
-  TransferOwnershipDto,
   ValidateFor,
 } from '@apillon/lib';
+import { TransferOwnershipDto } from '@apillon/blockchain-lib/common';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,

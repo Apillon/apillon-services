@@ -58,6 +58,8 @@ export * from './lib/at-services/storage/dtos/short-url.dto';
 export * from './lib/at-services/authentication/authentication';
 export * from './lib/at-services/authentication/dtos/base-identity.dto';
 export * from './lib/at-services/authentication/dtos/identity-create.dto';
+export * from './lib/at-services/authentication/dtos/generate-otp.dto';
+export * from './lib/at-services/authentication/dtos/validate-otp.dto';
 export * from './lib/at-services/authentication/dtos/attestation.dto';
 export * from './lib/at-services/authentication/dtos/identity-did-revoke.dto';
 export * from './lib/at-services/authentication/dtos/identity-verification-email.dto';
@@ -80,19 +82,18 @@ export * from './lib/at-services/nfts/dtos/transaction-query-filter.dto';
 export * from './lib/at-services/nfts/dtos/mint-nft.dto';
 export * from './lib/at-services/nfts/dtos/set-collection-base-uri.dto';
 export * from './lib/at-services/nfts/dtos/transfer-collection.dto';
-export * from './lib/at-services/nfts/dtos/create-collection.dto';
 export * from './lib/at-services/nfts/dtos/burn-nft.dto';
 export * from './lib/at-services/nfts/dtos/collections-quota-reached-query-filter.dto';
 export * from './lib/at-services/nfts/dtos/add-nfts-metadata.dto';
 export * from './lib/at-services/nfts/constants';
 export * from './lib/at-services/nfts/permissions/subscription';
+export * from './lib/at-services/nfts/validators/create-collection-drop-reserve-validator';
+export * from './lib/at-services/nfts/validators/create-collection-drop-price-validator';
 
 //#REGION COMPUTING
 export * from './lib/at-services/computing/computing';
 export * from './lib/at-services/computing/dtos/create-contract.dto';
 export * from './lib/at-services/computing/dtos/contract-query-filter.dto';
-export * from './lib/at-services/computing/dtos/deposit-to-cluster.dto';
-export * from './lib/at-services/computing/dtos/transfer-ownership.dto';
 export * from './lib/at-services/computing/dtos/encrypt-content.dto';
 export * from './lib/at-services/computing/dtos/assign-cid-to-nft.dto';
 export * from './lib/at-services/computing/dtos/phala-cluster-deposit-transaction.dto';
@@ -123,10 +124,6 @@ export * from './lib/at-services/blockchain/dtos/transaction-webhook-data.dto';
 export * from './lib/at-services/blockchain/dtos/update-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/wallet-transactions-query-filter';
 export * from './lib/at-services/blockchain/dtos/wallet-deposits-query-filter';
-export * from './lib/at-services/blockchain/validators/address-validator';
-
-//#REGION Substrate
-export * from './lib/at-services/substrate/types';
 
 //#REGION Social
 export * from './lib/at-services/social/social';

@@ -9,16 +9,17 @@ import {
   createTestProject,
   createTestUser,
   createTestApiKey,
+  createTestBucket,
 } from '@apillon/tests-lib';
 
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 import { IpfsBandwidth } from '@apillon/storage/src/modules/ipfs/models/ipfs-bandwidth';
 
-import {
-  getRequestFactory,
-  postRequestFactory,
-} from '@apillon/tests-lib/src/lib/helpers/requests';
+import { getRequestFactory } from '@apillon/tests-lib/src/lib/helpers/requests';
+import { Ipns } from '@apillon/storage/src/modules/ipns/models/ipns.model';
+
+import { v4 as uuidV4 } from 'uuid';
 
 describe('System APIs tests', () => {
   let stage: Stage;
@@ -32,6 +33,8 @@ describe('System APIs tests', () => {
   let testProject: Project;
   let testProject2: Project;
   let testProject3: Project;
+
+  let ipnsRecord: Ipns;
 
   beforeAll(async () => {
     stage = await setupTest();
@@ -118,9 +121,8 @@ describe('System APIs tests', () => {
       const response = await getRequest(`/system/blocked-on-ipfs`);
 
       expect(response.status).toBe(200);
-      expect(response.body.data).toBeTruthy();
       expect(
-        response.body.data.find(
+        response.body.data.blockedProjects.find(
           (x) => x.projectUuid == testProject3.project_uuid,
         ),
       ).toBeTruthy();
@@ -130,9 +132,8 @@ describe('System APIs tests', () => {
       const response = await getRequest(`/system/blocked-on-ipfs`);
 
       expect(response.status).toBe(200);
-      expect(response.body.data).toBeTruthy();
       expect(
-        response.body.data.find(
+        response.body.data.blockedProjects.find(
           (x) => x.projectUuid == testProject2.project_uuid,
         ),
       ).toBeTruthy();
@@ -142,12 +143,52 @@ describe('System APIs tests', () => {
       const response = await getRequest(`/system/blocked-on-ipfs`);
 
       expect(response.status).toBe(200);
-      expect(response.body.data).toBeTruthy();
       expect(
-        response.body.data.find(
+        response.body.data.blockedProjects.find(
           (x) => x.projectUuid == testProject.project_uuid,
         ),
       ).toBeFalsy();
+    });
+  });
+
+  describe('Get ipns by name tests', () => {
+    beforeAll(async () => {
+      //Insert an ipns record
+      const bucket = await createTestBucket(
+        testUser,
+        stage.context.storage,
+        testProject,
+      );
+      ipnsRecord = await new Ipns({}, stage.context.storage)
+        .populate({
+          ipns_uuid: uuidV4(),
+          project_uuid: testProject.project_uuid,
+          bucket_id: bucket.id,
+          name: 'test IPNS record',
+          ipnsName: 'k2k4r8lsoq1eximncx437b3cxtsjuq5d6mup9sop78ibfgptxqe052lk',
+          ipnsValue: '/ipfs/QmckugtsA4ML1hkUQw4ffoMqDjnMraTSU1YVHttHGf1DfE',
+          key: '1f6654ca-f2e7-4378-8f5a-5f04810a0ecc_12_5',
+          cid: 'QmckugtsA4ML1hkUQw4ffoMqDjnMraTSU1YVHttHGf1DfE',
+        })
+        .insert();
+    });
+
+    test('Api should return ipns by name', async () => {
+      const response = await getRequest(`/system/ipns/${ipnsRecord.ipnsName}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toBeTruthy();
+      const ipnsRes = response.body.data;
+      expect(ipnsRes.ipnsUuid).toBe(ipnsRecord.ipns_uuid);
+      expect(ipnsRes.ipnsName).toBe(ipnsRecord.ipnsName);
+      expect(ipnsRes.ipnsValue).toBe(ipnsRecord.ipnsValue);
+      expect(ipnsRes.key).toBe(ipnsRecord.key);
+    });
+
+    test('Api should return 404 error if ipns does not exists', async () => {
+      const response = await getRequest(`/system/ipns/some-not-existing-ipns`);
+
+      expect(response.status).toBe(404);
     });
   });
 });

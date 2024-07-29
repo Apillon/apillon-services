@@ -22,16 +22,22 @@
     "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
     "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
     "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
+    "db-generate-migration": "node -r ts-node/register ../../scripts/db/generate-migration-script",
+    "db-generate-seed": "node -r ts-node/register ../../scripts/db/generate-migration-script --seed",
     "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
   },
   "dependencies": {
     "@acurast/dapp": "^1.0.0",
+    "@apillon/blockchain-lib": "*",
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
     "@middy/core": "^3.3.1",
     "@phala/sdk": "^0.5.10",
     "node-fetch": "^2.6.7"
+  },
+  "peerDependencies": {
+    "ethers": "^5.7.2"
   },
   "devDependencies": {
     "@apillon/tests-lib": "*",

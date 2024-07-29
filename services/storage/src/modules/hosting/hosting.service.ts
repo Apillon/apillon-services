@@ -152,6 +152,8 @@ export class HostingService {
     }
     website.canModify(context);
 
+    let websiteDomainUpdated = false;
+
     //Check if domain was changed
     if (event.data.domain && website.domain != event.data.domain) {
       //Domain can be changed every 15 minutes
@@ -179,13 +181,31 @@ export class HostingService {
       }
 
       website.domainChangeDate = new Date();
+      websiteDomainUpdated = true;
     }
 
     website.populate(event.data, PopulateFrom.PROFILE);
 
     await website.validateOrThrow(StorageValidationException);
 
-    await website.update();
+    if (websiteDomainUpdated) {
+      const spendCredit: SpendCreditDto = new SpendCreditDto(
+        {
+          project_uuid: website.project_uuid,
+          product_id: ProductCode.HOSTING_CHANGE_WEBSITE_DOMAIN,
+          referenceTable: DbTables.WEBSITE,
+          referenceId: website.website_uuid,
+          location: 'HostingService/updateWebsite',
+          service: ServiceName.STORAGE,
+        },
+        context,
+      );
+
+      await spendCreditAction(context, spendCredit, () => website.update());
+    } else {
+      await website.update();
+    }
+
     return website.serialize(SerializeFor.PROFILE);
   }
 

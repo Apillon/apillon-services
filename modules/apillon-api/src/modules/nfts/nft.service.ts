@@ -2,8 +2,6 @@ import {
   ApillonApiNFTCollectionQueryFilter,
   BurnNftDto,
   ChainType,
-  CreateCollectionDTO,
-  CreateSubstrateCollectionDTO,
   isAllowedToCreateNftCollection,
   MintNftDTO,
   NestMintNftDTO,
@@ -11,6 +9,10 @@ import {
   TransactionQueryFilter,
   TransferCollectionDTO,
 } from '@apillon/lib';
+import {
+  CreateCollectionDTO,
+  CreateSubstrateCollectionDTO,
+} from '@apillon/blockchain-lib/common';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 

@@ -5,14 +5,13 @@ import {
   ChainType,
   CollectionsQuotaReachedQueryFilter,
   CreateBucketDto,
-  CreateCollectionDTO,
   CreateEvmTransactionDto,
+  CreateIpnsDto,
   CreateSubstrateTransactionDto,
   DeployCollectionDTO,
   env,
   EvmChain,
   getChainName,
-  isEvmOrSubstrateWalletAddress,
   Lmas,
   LogType,
   Mailing,
@@ -31,11 +30,14 @@ import {
   SqlModelStatus,
   StorageMicroservice,
   SubstrateChain,
-  SubstrateChainPrefix,
   TransactionDto,
   TransactionStatus,
   TransferCollectionDTO,
 } from '@apillon/lib';
+import {
+  CreateCollectionDTO,
+  isEvmOrSubstrateWalletAddress,
+} from '@apillon/blockchain-lib/common';
 import { ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
@@ -44,7 +46,7 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { BigNumber, constants } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { v4 as uuidV4 } from 'uuid';
 import {
   CollectionStatus,
@@ -70,7 +72,8 @@ import {
   getSubstrateContractClient,
 } from '../../lib/utils/collection-utils';
 import { ContractVersion } from './models/contractVersion.model';
-import { EVMContractClient } from '../clients/evm-contract.client';
+import { EVM_MAX_INT } from '@apillon/blockchain-lib/evm';
+import { SubstrateChainPrefix } from '@apillon/blockchain-lib/substrate';
 
 export class NftsService {
   //#region collection functions
@@ -241,6 +244,7 @@ export class NftsService {
     collection.imagesSession = body.imagesSession;
     collection.metadataSession = body.metadataSession;
     collection.collectionStatus = CollectionStatus.DEPLOY_INITIATED;
+    collection.useApillonIpfsGateway = body.useApillonIpfsGateway;
     await collection.update();
 
     //Call Storage MS function, which will prepareBase uri.
@@ -254,6 +258,7 @@ export class NftsService {
         imagesSession: collection.imagesSession,
         metadataSession: collection.metadataSession,
         useApillonIpfsGateway: body.useApillonIpfsGateway,
+        useIpns: body.useIpns,
       });
     } catch (err) {
       //Status should be set back to CREATED, so that it is possible to execute deploy again
@@ -429,13 +434,9 @@ export class NftsService {
             abi,
             collection.contractAddress,
           );
-          const txData = await evmContractClient.createTransaction(
+          txHash = await evmContractClient.createTransaction(
             'transferOwnership',
             [body.address],
-          );
-          txHash = EVMContractClient.serializeTransaction(
-            txData,
-            collection.contractAddress,
           );
           break;
         }
@@ -552,15 +553,9 @@ export class NftsService {
             abi,
             collection.contractAddress,
           );
-
-          const txData = await evmContractClient.createTransaction(
-            'setBaseURI',
-            [body.uri],
-          );
-          txHash = EVMContractClient.serializeTransaction(
-            txData,
-            collection.contractAddress,
-          );
+          txHash = await evmContractClient.createTransaction('setBaseURI', [
+            body.uri,
+          ]);
           break;
         }
         case ChainType.SUBSTRATE: {
@@ -646,7 +641,10 @@ export class NftsService {
           bucket_uuid: collection.bucket_uuid,
           imagesSession: body.imagesSession,
           metadataSession: body.metadataSession,
-          useApillonIpfsGateway: !collection.baseUri.startsWith('ipfs://'),
+          useApillonIpfsGateway:
+            collection.useApillonIpfsGateway ??
+            !collection.baseUri.startsWith('ipfs://'),
+          ipns_uuid: collection.ipns_uuid,
         },
       ],
       null,
@@ -654,6 +652,59 @@ export class NftsService {
     );
 
     return true;
+  }
+
+  static async addIpnsToCollection(
+    { collection_uuid }: { collection_uuid: string },
+    context: ServiceContext,
+  ) {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(collection_uuid);
+    await NftsService.checkCollection(
+      collection,
+      'addIpnsToCollection()',
+      context,
+    );
+
+    if (collection.ipns_uuid) {
+      throw new NftsCodeException({
+        status: 400,
+        code: NftsErrorCode.COLLECTION_ALREADY_HAVE_IPNS,
+        context,
+        sourceFunction: 'addIpnsToCollection()',
+      });
+    }
+
+    //Call storageMS to generate IPNS
+    const createIpnsDto = new CreateIpnsDto({}, context).populate({
+      bucket_uuid: collection.bucket_uuid,
+      name: `${collection.name} IPNS record`,
+      cid: collection.cid,
+    });
+    const ipnsRes = await new StorageMicroservice(context).createIpns(
+      createIpnsDto,
+    );
+
+    const baseUri = collection.useApillonIpfsGateway
+      ? ipnsRes.link.split('?token')[0]
+      : `ipns://${ipnsRes.ipnsName}`;
+
+    //Submit change base uri transaction
+    const setBaseUriBody = new SetCollectionBaseUriDTO(
+      {
+        uri: baseUri,
+      },
+      context,
+    );
+    await this.setNftCollectionBaseUri({ body: setBaseUriBody }, context);
+
+    collection.baseUri = baseUri;
+    collection.ipns_uuid = ipnsRes.ipns_uuid;
+    await collection.update();
+
+    return collection.serializeByContext(context);
   }
 
   static async mintNftTo(
@@ -744,7 +795,7 @@ export class NftsService {
             minted,
           );
 
-          const txData = collection.isAutoIncrement
+          serializedTransaction = collection.isAutoIncrement
             ? await evmContractClient.createTransaction('ownerMint', [
                 body.receivingAddress,
                 body.quantity,
@@ -754,10 +805,6 @@ export class NftsService {
                 body.quantity,
                 body.idsToMint,
               ]);
-          serializedTransaction = EVMContractClient.serializeTransaction(
-            txData,
-            collection.contractAddress,
-          );
           minimumGas =
             260000 *
             (collection.isAutoIncrement
@@ -954,10 +1001,7 @@ export class NftsService {
           context,
           childCollection,
           TransactionType.NEST_MINT_NFT,
-          EVMContractClient.serializeTransaction(
-            txData,
-            childCollection.contractAddress,
-          ),
+          txData,
           spendCredit.referenceId,
         ),
     );
@@ -1044,15 +1088,11 @@ export class NftsService {
             );
             const burnArguments: any[] = [body.tokenId];
             if (collection.collectionType === NFTCollectionType.NESTABLE) {
-              burnArguments.push(constants.MaxUint256);
+              burnArguments.push(EVM_MAX_INT);
             }
-            const txData = await evmContractClient.createTransaction(
+            txHash = await evmContractClient.createTransaction(
               'burn',
               burnArguments,
-            );
-            txHash = EVMContractClient.serializeTransaction(
-              txData,
-              collection.contractAddress,
             );
             break;
           }
