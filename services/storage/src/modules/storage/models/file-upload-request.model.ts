@@ -351,11 +351,11 @@ export class FileUploadRequest extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT \`${this.tableName}\`.*, f.size as fileSize
-      FROM \`${this.tableName}\`
-      LEFT JOIN \`${DbTables.FILE}\` f ON f.file_uuid = \`${this.tableName}\`.file_uuid
+      SELECT fur.*, f.size as fileSize
+      FROM \`${DbTables.FILE_UPLOAD_REQUEST}\` fur
+      LEFT JOIN \`${DbTables.FILE}\` f ON f.file_uuid = fur.file_uuid
       WHERE session_id = @session_id
-      AND \`${this.tableName}\`.status <> ${SqlModelStatus.DELETED};
+      AND fur.status <> ${SqlModelStatus.DELETED};
       `,
       { session_id },
     );
