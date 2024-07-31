@@ -236,7 +236,12 @@ export class FileUploadRequest extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN, PopulateFrom.PROFILE],
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
     serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
     validators: [],
   })
