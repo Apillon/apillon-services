@@ -236,11 +236,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN, PopulateFrom.PROFILE],
     serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
     validators: [],
   })
@@ -362,7 +358,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
 
     return (
       data?.map((d) =>
-        new FileUploadRequest({}, context).populate(d, PopulateFrom.SERVICE),
+        new FileUploadRequest({}, context).populate(d, PopulateFrom.DB),
       ) || []
     );
   }
