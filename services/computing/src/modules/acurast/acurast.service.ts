@@ -11,6 +11,9 @@ import {
   spendCreditAction,
   writeLog,
   SerializeFor,
+  runCachedFunction,
+  CacheKeyPrefix,
+  CacheKeyTTL,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -196,11 +199,14 @@ export class AcurastService {
     event: { payload: string; job_uuid: string },
     context: ServiceContext,
   ): Promise<AcurastJob> {
-    const job = await new AcurastJob({}, context).populateByUUID(
-      event.job_uuid,
+    const job = await runCachedFunction(
+      `${CacheKeyPrefix.ACURAST_JOB}:${event.job_uuid}`,
+      async () => new AcurastJob({}, context).populateByUUID(event.job_uuid),
+      CacheKeyTTL.DEFAULT,
     );
 
-    job.verifyStatusAndAccess('sendJobMessage', context);
+    // access is not checked for sendMessage
+    job.verifyStatusAndAccess('sendJobMessage', context, undefined, true);
 
     if (!event.payload) {
       throw new ComputingValidationException({

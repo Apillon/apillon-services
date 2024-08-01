@@ -65,6 +65,10 @@
       "path": "modules/url-shortener-api",
     },
     {
+      "name": "😎@modules_acurast-gw-api",
+      "path": "modules/acurast-gw-api",
+    },
+    {
       "name": "📦@packages_lib",
       "path": "packages/lib",
     },
@@ -108,6 +112,7 @@
       "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
     "cSpell.words": [
+      "ACURAST",
       "Apillon",
       "ASTAR",
       "Authtrail",
@@ -118,7 +123,7 @@
       "MOONBASE",
       "PHALA",
       "populatable",
-      "rawmodel",
+      "rawmodel"
     ],
     "files.exclude": {
       "**/.git": true,
