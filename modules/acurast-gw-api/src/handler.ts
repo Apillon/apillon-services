@@ -2,13 +2,12 @@ import { ComputingMicroservice } from '@apillon/lib';
 import { APIGatewayProxyHandler } from 'aws-lambda';
 
 export const handler: APIGatewayProxyHandler = async (event) => {
-  const pathParameter = event.pathParameters?.proxy;
   const job_uuid = event.requestContext?.domainPrefix;
-  const payload = JSON.stringify(event.body || {});
+  const payload = event.body;
 
   console.log(event);
 
-  if (!pathParameter) {
+  if (event.httpMethod !== 'POST' || !job_uuid || !payload) {
     return {
       statusCode: 400,
       body: JSON.stringify({ message: 'Invalid request' }),
