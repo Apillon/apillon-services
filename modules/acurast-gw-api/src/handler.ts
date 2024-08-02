@@ -1,5 +1,5 @@
 import { ComputingMicroservice } from '@apillon/lib';
-import { APIGatewayProxyHandler } from 'aws-lambda';
+import type { APIGatewayProxyHandler } from 'aws-lambda';
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   const job_uuid = event.requestContext?.domainPrefix;
