@@ -244,7 +244,6 @@ export class NftsService {
     collection.imagesSession = body.imagesSession;
     collection.metadataSession = body.metadataSession;
     collection.collectionStatus = CollectionStatus.DEPLOY_INITIATED;
-    collection.useApillonIpfsGateway = body.useApillonIpfsGateway;
     await collection.update();
 
     //Call Storage MS function, which will prepareBase uri.
@@ -257,8 +256,8 @@ export class NftsService {
         collectionName: collection.name,
         imagesSession: collection.imagesSession,
         metadataSession: collection.metadataSession,
-        useApillonIpfsGateway: body.useApillonIpfsGateway,
-        useIpns: body.useIpns,
+        useApillonIpfsGateway: collection.useApillonIpfsGateway,
+        useIpns: collection.useIpns,
       });
     } catch (err) {
       //Status should be set back to CREATED, so that it is possible to execute deploy again

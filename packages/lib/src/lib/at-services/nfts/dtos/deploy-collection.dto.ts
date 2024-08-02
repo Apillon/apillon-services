@@ -41,20 +41,4 @@ export class DeployCollectionDTO extends ModelBase {
     ],
   })
   public metadataSession: string;
-
-  @prop({
-    parser: { resolver: booleanParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    defaultValue: false,
-  })
-  public useApillonIpfsGateway: boolean;
-
-  @prop({
-    parser: { resolver: booleanParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    defaultValue: false,
-  })
-  public useIpns: boolean;
 }
