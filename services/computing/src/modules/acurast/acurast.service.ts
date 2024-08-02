@@ -199,14 +199,18 @@ export class AcurastService {
     event: { payload: string; job_uuid: string },
     context: ServiceContext,
   ): Promise<AcurastJob> {
-    const job = await runCachedFunction(
+    const publicKey = await runCachedFunction(
       `${CacheKeyPrefix.ACURAST_JOB}:${event.job_uuid}`,
-      async () => new AcurastJob({}, context).populateByUUID(event.job_uuid),
+      async () => {
+        const job = await new AcurastJob({}, context).populateByUUID(
+          event.job_uuid,
+        );
+        // access is not checked for sendMessage
+        job.verifyStatusAndAccess('sendJobMessage', context, undefined, true);
+        return job.publicKey;
+      },
       CacheKeyTTL.DEFAULT,
     );
-
-    // access is not checked for sendMessage
-    job.verifyStatusAndAccess('sendJobMessage', context, undefined, true);
 
     if (!event.payload) {
       throw new ComputingValidationException({
@@ -216,7 +220,7 @@ export class AcurastService {
     }
 
     return await new AcurastWebsocketClient(await getAcurastWebsocketUrl())
-      .send(job.publicKey, event.payload)
+      .send(publicKey, event.payload)
       .catch(async (err) => {
         throw await new ComputingCodeException({
           status: 500,
