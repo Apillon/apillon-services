@@ -1109,7 +1109,7 @@ export let env: IEnv = {
     ',',
   ) || ['apillon.io', 'nectarnode.io', 'web3approved.com'],
   SHORTENER_DOMAIN:
-    process.env['SHORTENER_DOMAIN'] || 'https://go.nectarnode.io',
+    process.env['SHORTENER_DOMAIN'] || 'https://go.web3approved.com',
 
   /** AIRDROP CLAIM */
   AIRDROP_CLAIM_TIMESTAMP: process.env['AIRDROP_CLAIM_TIMESTAMP'],

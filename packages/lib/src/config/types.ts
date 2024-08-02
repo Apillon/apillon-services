@@ -880,6 +880,8 @@ export enum CacheKeyPrefix {
   SERVICE_STATUS = 'service-status',
 
   URL_SHORTENER = 'url-shortener',
+
+  ACURAST_JOB = 'acurast-job',
 }
 
 export enum CacheKeyTTL {
