@@ -238,6 +238,7 @@ export class AcurastJob extends UuidSqlModel {
     sourceFunction: string,
     context: ServiceContext,
     additionalStatus?: AcurastJobStatus,
+    skipAccessCheck = false,
   ) {
     if (!this.exists()) {
       throw new ComputingNotFoundException(ComputingErrorCode.JOB_NOT_FOUND);
@@ -261,8 +262,9 @@ export class AcurastJob extends UuidSqlModel {
         sourceFunction,
       });
     }
-
-    this.canModify(context);
+    if (!skipAccessCheck) {
+      this.canModify(context);
+    }
   }
 
   public async getList(context: ServiceContext, filter: JobQueryFilter) {
