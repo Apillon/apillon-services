@@ -23,6 +23,7 @@ import { DevConsoleApiContext } from '../../context';
 import { CacheKeyPrefix, CacheKeyTTL, DefaultUserRole } from '@apillon/lib';
 import { ServiceStatusQueryFilter } from '../service-status/dtos/service-status-query-filter.dto';
 import { ValidateFor } from '@apillon/lib';
+import { NotificationQueryFilter } from './dtos/notification-query-filter.dto';
 
 @Controller('public')
 @UseInterceptors(CacheInterceptor)
@@ -58,5 +59,16 @@ export class PublicController {
     @Query() query: ServiceStatusQueryFilter,
   ) {
     return await this.publicService.getServiceStatusList(context, query);
+  }
+
+  @Get('notification')
+  @Permissions({ role: DefaultUserRole.USER })
+  @Validation({ dto: NotificationQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async getNotifications(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: NotificationQueryFilter,
+  ) {
+    return await this.publicService.getNotificationList(context, query);
   }
 }

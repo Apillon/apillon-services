@@ -6,6 +6,7 @@ export enum DbTables {
   SERVICE = 'service',
   PROJECT_USER = 'project_user',
   PROJECT_USER_PENDING_INVITATION = 'project_user_pending_invitation',
+  NOTIFICATION = 'notification',
 }
 
 /**
@@ -78,6 +79,7 @@ export enum ResourceNotFoundErrorCode {
   STRIPE_CUSTOMER_DOES_NOT_EXIST = 40404009,
   CREDIT_PACKAGE_DOES_NOT_EXIST = 40404010,
   SERVICE_STATUS_DOES_NOT_EXISTS = 40404011,
+  NOTIFICATION_DOES_NOT_EXISTS = 40404012,
 }
 
 /**
@@ -100,6 +102,7 @@ export enum BadRequestErrorCode {
   MAX_NUMBER_OF_USERS_ON_PROJECT_REACHED = 40004101,
   INVALID_WEBHOOK_SIGNATURE = 40004200,
   INVALID_TOKEN_PAYLOAD = 40004201,
+  INVALID_NOTIFICATION_TYPE = 40004300,
 }
 
 /**
@@ -128,4 +131,8 @@ export enum ServiceStatusType {
   INFO = 1,
   ERROR = 2,
   WARNING = 3,
+}
+
+export enum NotificationType {
+  UNKNOWN = 0,
 }
