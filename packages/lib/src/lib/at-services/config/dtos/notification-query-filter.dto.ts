@@ -1,11 +1,10 @@
-import {
-  BaseQueryFilter,
-  PopulateFrom,
-  enumInclusionValidator,
-  prop,
-} from '@apillon/lib';
-import { BadRequestErrorCode, NotificationType } from '../../../config/types';
 import { booleanParser, integerParser } from '@rawmodel/parsers';
+import {
+  NotificationType,
+  PopulateFrom,
+  ValidatorErrorCode,
+} from '../../../../config/types';
+import { BaseQueryFilter, enumInclusionValidator, prop } from '../../../..';
 
 export class NotificationQueryFilter extends BaseQueryFilter {
   @prop({
@@ -20,7 +19,7 @@ export class NotificationQueryFilter extends BaseQueryFilter {
     validators: [
       {
         resolver: enumInclusionValidator(NotificationType, true),
-        code: BadRequestErrorCode.INVALID_NOTIFICATION_TYPE,
+        code: ValidatorErrorCode.INVALID_NOTIFICATION_TYPE,
       },
     ],
   })

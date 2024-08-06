@@ -20,10 +20,14 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { ContactFormDto } from './dtos/contact-form.dto';
 import { AuthGuard } from '../../guards/auth.guard';
 import { DevConsoleApiContext } from '../../context';
-import { CacheKeyPrefix, CacheKeyTTL, DefaultUserRole } from '@apillon/lib';
+import {
+  CacheKeyPrefix,
+  CacheKeyTTL,
+  DefaultUserRole,
+  NotificationQueryFilter,
+} from '@apillon/lib';
 import { ServiceStatusQueryFilter } from '../service-status/dtos/service-status-query-filter.dto';
 import { ValidateFor } from '@apillon/lib';
-import { NotificationQueryFilter } from './dtos/notification-query-filter.dto';
 
 @Controller('public')
 @UseInterceptors(CacheInterceptor)

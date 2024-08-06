@@ -5,9 +5,8 @@ import {
   releaseStage,
 } from '@apillon/tests-lib';
 import { setupTest } from '../../../../test/helpers/setup';
-import { NotificationType } from '../../../config/types';
 import * as request from 'supertest';
-import { SqlModelStatus } from '@apillon/lib';
+import { NotificationType, SqlModelStatus } from '@apillon/lib';
 
 describe('Notification controller tests', () => {
   let stage: Stage;
@@ -36,7 +35,7 @@ describe('Notification controller tests', () => {
         userId: testUser.user.id,
       };
 
-      await stage.db.devConsole.paramExecute(
+      await stage.db.config.paramExecute(
         `INSERT INTO notification (type, createUser) VALUES ('${createdNotification.type}', ${createdNotification.userId})`,
       );
 
@@ -70,7 +69,7 @@ describe('Notification controller tests', () => {
       isRead: true,
     };
 
-    await stage.db.devConsole.paramExecute(
+    await stage.db.config.paramExecute(
       `INSERT INTO notification (type, createUser, isRead) VALUES (${createdNotification.type}, ${createdNotification.userId}, 1)`,
     );
 

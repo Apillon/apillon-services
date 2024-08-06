@@ -7,6 +7,7 @@ import {
   naclBoxPairFromSecret,
   sr25519PairFromSeed,
 } from '@polkadot/util-crypto';
+import { HttpStatus } from '@nestjs/common';
 import { isHex } from '@polkadot/util';
 import {
   ConfigService,
@@ -33,7 +34,6 @@ import {
   ApillonSupportedCTypes,
   KILT_CREDENTIAL_IRI_PREFIX,
   AuthenticationErrorCode,
-  HttpStatus,
 } from '../config/types';
 import { EncryptResponseData } from '@kiltprotocol/types';
 import { Keypair } from '@polkadot/util-crypto/types';

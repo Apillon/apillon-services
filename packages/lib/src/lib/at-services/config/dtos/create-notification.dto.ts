@@ -1,12 +1,12 @@
+import { integerParser } from '@rawmodel/parsers';
+import { ModelBase, prop } from '../../../base-models/base';
 import {
-  ModelBase,
+  BadRequestErrorCode,
+  NotificationType,
   PopulateFrom,
   SerializeFor,
-  enumInclusionValidator,
-  prop,
-} from '@apillon/lib';
-import { BadRequestErrorCode, NotificationType } from '../../../config/types';
-import { integerParser } from '@rawmodel/parsers';
+} from '../../../../config/types';
+import { enumInclusionValidator } from '../../../validators';
 
 export class createNotification extends ModelBase {
   @prop({

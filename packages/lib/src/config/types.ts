@@ -255,6 +255,9 @@ export enum ScsEventType {
   GET_PRODUCT_PRICE = 'get-product-price',
   GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION = 'get-projects-with-active-subscription',
   HAS_ACTIVE_RPC_PLAN = 'has-active-rpc-plan',
+  GET_NOTIFICATIONS = 'get-notifications',
+  CREATE_NOTIFICATION = 'create-notification',
+  UPDATE_NOTIFICATION = 'update-notification',
 }
 
 export enum NftsEventType {
@@ -625,6 +628,7 @@ export enum BadRequestErrorCode {
   INVALID_AUTHORIZATION_HEADER = 40000004,
   THIRD_PARTY_SERVICE_CONNECTION_FAILED = 40000005,
   RESOURCE_DOES_NOT_EXISTS = 40000006,
+  INVALID_NOTIFICATION_TYPE = 40000007,
 }
 
 export enum ValidatorErrorCode {
@@ -803,6 +807,7 @@ export enum ValidatorErrorCode {
   PRODUCT_CATEGORY_NOT_VALID = 422001004,
   CONFIGURE_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001005,
   CONFIGURE_CREDIT_REQUIRED_DATA_NOT_VALID = 422001006,
+  INVALID_NOTIFICATION_TYPE = 422001007,
   //#endregion
 
   //#region short url
@@ -1161,4 +1166,8 @@ export enum SubscriptionPackageId {
   COCOON = 3,
   BUTTERFLY = 4,
   RPC_PLAN = 5,
+}
+
+export enum NotificationType {
+  UNKNOWN = 0,
 }

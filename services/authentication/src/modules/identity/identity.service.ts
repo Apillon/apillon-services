@@ -22,7 +22,6 @@ import {
   IdentityState,
   AuthenticationErrorCode,
   ApillonSupportedCTypes,
-  HttpStatus,
   DidCreateOp,
   Attester,
   KiltSignAlgorithm,
@@ -59,6 +58,7 @@ import {
 } from '../../lib/utils/transaction-utils';
 import { ServiceContext } from '@apillon/service-lib';
 import { IdentityConfig } from './models/identity-config.model';
+import { HttpStatus } from '@nestjs/common';
 
 export class IdentityService {
   /**

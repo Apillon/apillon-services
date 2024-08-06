@@ -7,6 +7,7 @@ import { CreditService } from './modules/credit/credit.service';
 import { SubscriptionService } from './modules/subscription/subscription.service';
 import { InvoiceService } from './modules/invoice/invoice.service';
 import { ProductService } from './modules/product/product.service';
+import { NotificationService } from './modules/notification/notification.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -56,6 +57,10 @@ export async function processEvent(
       InvoiceService.handlePaymentWebhookData,
 
     [ScsEventType.LIST_INVOICES]: InvoiceService.listInvoices,
+
+    [ScsEventType.GET_NOTIFICATIONS]: NotificationService.getNotificationList,
+    [ScsEventType.CREATE_NOTIFICATION]: NotificationService.createNotification,
+    [ScsEventType.UPDATE_NOTIFICATION]: NotificationService.updateNotification,
   };
 
   return await processors[event.eventName](event, context);

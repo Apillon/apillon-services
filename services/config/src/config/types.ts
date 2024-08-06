@@ -9,6 +9,7 @@ export enum DbTables {
   SUBSCRIPTION = 'subscription',
   SUBSCRIPTION_PACKAGE = 'subscriptionPackage',
   INVOICE = 'invoice',
+  NOTIFICATION = 'notification',
 }
 
 /**
@@ -62,6 +63,7 @@ export enum ConfigErrorCode {
   CREDIT_PACKAGE_NOT_FOUND = 404010005,
   SUBSCRIPTION_NOT_FOUND = 404010006,
   PROJECT_CREDIT_NOT_FOUND = 404010007,
+  NOTIFICATION_NOT_FOUND = 404010008,
 
   // 500 - Internal Error
   ERROR_WRITING_TO_DATABASE = 50010001,

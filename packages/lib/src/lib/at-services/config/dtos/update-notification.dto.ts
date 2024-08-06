@@ -1,13 +1,12 @@
+import { booleanParser, integerParser } from '@rawmodel/parsers';
+import { ModelBase, prop } from '../../../base-models/base';
 import {
-  ModelBase,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
   ValidatorErrorCode,
-  presenceValidator,
-  prop,
-} from '@apillon/lib';
-import { booleanParser, integerParser } from '@rawmodel/parsers';
+} from '../../../../config/types';
+import { presenceValidator } from '../../../validators';
 
 export class UpdateNotificationDto extends ModelBase {
   @prop({
@@ -22,6 +21,7 @@ export class UpdateNotificationDto extends ModelBase {
     ],
   })
   public isRead: boolean;
+
   /**
    * status
    */

@@ -132,7 +132,3 @@ export enum ServiceStatusType {
   ERROR = 2,
   WARNING = 3,
 }
-
-export enum NotificationType {
-  UNKNOWN = 0,
-}
