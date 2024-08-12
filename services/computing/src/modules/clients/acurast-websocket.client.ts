@@ -31,7 +31,7 @@ export class AcurastWebsocketClient {
       });
 
       try {
-        client.send(jobPublicKey, JSON.stringify(payload));
+        client.send(jobPublicKey, payload);
       } catch (error) {
         reject(error);
       }
