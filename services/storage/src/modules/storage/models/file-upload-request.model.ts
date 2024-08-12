@@ -237,6 +237,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [
+      PopulateFrom.DB,
       PopulateFrom.SERVICE,
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
@@ -344,14 +345,14 @@ export class FileUploadRequest extends AdvancedSQLModel {
   public async populateFileUploadRequestsInSessionWithFileSize(
     session_id: number,
     context: ServiceContext,
-  ): Promise<(this & { fileSize: number | null })[]> {
+  ): Promise<this[]> {
     if (!session_id) {
       throw new Error('session_id should not be null');
     }
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT fur.*, f.size as fileSize
+      SELECT fur.*, f.size as size
       FROM \`${DbTables.FILE_UPLOAD_REQUEST}\` fur
       LEFT JOIN \`${DbTables.FILE}\` f ON f.file_uuid = fur.file_uuid
       WHERE session_id = @session_id
@@ -360,7 +361,11 @@ export class FileUploadRequest extends AdvancedSQLModel {
       { session_id },
     );
 
-    return data || [];
+    return (
+      data?.map((d) =>
+        new FileUploadRequest({}, context).populate(d, PopulateFrom.DB),
+      ) || []
+    );
   }
 
   public async populateByS3FileKey(s3FileKey: string): Promise<this> {
