@@ -663,6 +663,22 @@ export class Collection extends UuidSqlModel {
   public useApillonIpfsGateway: boolean;
 
   @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SELECT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    defaultValue: false,
+    fakeValue: false,
+  })
+  public useIpns: boolean;
+
+  @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
     serializable: [

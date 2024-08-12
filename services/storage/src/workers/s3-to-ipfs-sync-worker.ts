@@ -56,7 +56,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
     const needsHtmlValidation = data?.needsHtmlValidation ?? true;
     data.wrappingDirectoryPath = data?.wrappingDirectoryPath?.trim();
 
-    let files: (FileUploadRequest & { fileSize: number | null })[] = [];
+    let files: FileUploadRequest[] = [];
     let bucket: Bucket = undefined;
     let session: FileUploadSession = undefined;
 
@@ -121,7 +121,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         if (needsHtmlValidation) {
           try {
             await runWithWorkers(files, 20, this.context, async (file) => {
-              if (file.fileSize > MAX_HTML_SIZE_IN_B) {
+              if (file.size > MAX_HTML_SIZE_IN_B) {
                 return;
               }
               let fileStream = await s3Client.get(

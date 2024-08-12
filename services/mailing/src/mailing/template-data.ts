@@ -289,7 +289,7 @@ export function generateTemplateData(key: string, data: any) {
 
       <p>Your project has consumed almost all of this month's available storage bandwidth.<p><br>
       <p><b>Used storage bandwidth: ${data.usedBandwidth}/${data.availableBandwidth}</b></p><br><br>
-      <p>If your project exceeds the storage bandwidth limit, the Apillon IPFS gateway will start to block requests. 
+      <p>If your project exceeds the storage bandwidth limit, the Apillon IPFS gateway will start to block requests.
       This means that all files, NFT metadata, and, most importantly, all websites in this project will become inaccessible via the Apillon IPFS gateway.</p>
 
       <p>You can increase the available storage bandwidth by upgrading your subscription plan in the <a href="https://app.apillon.io/dashboard/payments">Billing and Usage section</a>.</p><br>`,
@@ -313,7 +313,7 @@ export function generateTemplateData(key: string, data: any) {
 
       <p>Your project has consumed all of this month's available storage bandwidth.<p><br>
       <p><b>Used storage bandwidth: ${data.usedBandwidth}/${data.availableBandwidth}</b></p><br><br>
-      <p>Apillon IPFS gateway will now start blocking requests for your content on IPFS. 
+      <p>Apillon IPFS gateway will now start blocking requests for your content on IPFS.
       All files, NFT metadata, and, most importantly, all websites in this project will become inaccessible via the Apillon IPFS gateway.</p>
 
       <p>You can increase the available storage bandwidth by upgrading your subscription plan in the <a href="https://app.apillon.io/dashboard/payments">Billing and Usage section</a>.</p><br>`,
@@ -330,14 +330,11 @@ export function generateTemplateData(key: string, data: any) {
     },
     [EmailTemplate.OTP_VERIFICATION]: {
       subject: 'OTP Verification',
-      title: 'Here is your verification code',
+      title: 'Your verification code is here',
       text: `
-        <p>Hello,</p><br>
-        
-        <p>Here is your verification code:</p><br>
+        <p>Please use this code to verify your account ownership:</p><br>
         <p><b>${data.code}</b></p><br>
-        <p>Please use this code to verify you are the account owner.</p><br>
-        <p>If you didn't request a Verification code, please contact our Customer Service team as soon as possible to secure your account.`,
+        <p>If you didn’t request a verification code, please contact our Support team as soon as possible to secure your account.`,
     },
   };
 

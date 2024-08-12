@@ -31,7 +31,16 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
 
     // Running all in parallel might be too heavy on the RPC and database
     for (const job of jobs) {
-      await this.processJob(job, acurastEndpoint);
+      try {
+        await this.processJob(job, acurastEndpoint);
+      } catch (err) {
+        await this.writeEventLog({
+          logType: LogType.ERROR,
+          message: `Error processing job with ID=${job.id}`,
+          service: ServiceName.COMPUTING,
+          err,
+        });
+      }
     }
   }
 
