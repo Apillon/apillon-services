@@ -17,6 +17,7 @@ import {
   Delete,
   Get,
   Param,
+  Put,
   Post,
   Query,
   UseGuards,
@@ -77,6 +78,19 @@ export class ComputingController {
     @Param('uuid') uuid: string,
   ) {
     return await this.computingService.archiveContract(context, uuid);
+  }
+
+  @Put('contracts/:uuid/activate')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async activateContract(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+  ) {
+    return await this.computingService.activateContract(context, uuid);
   }
 
   @Get('contracts/:uuid/transactions')

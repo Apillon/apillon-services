@@ -421,6 +421,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async activateWebsite(website_uuid: string) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_ACTIVATE,
+      website_uuid,
+    };
+    return await this.callService(data);
+  }
+
   public async maxWebsitesQuotaReached(
     params: WebsitesQuotaReachedQueryFilter,
   ) {

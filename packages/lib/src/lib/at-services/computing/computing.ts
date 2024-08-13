@@ -61,6 +61,14 @@ export class ComputingMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async activateContract(uuid: string) {
+    const data = {
+      eventName: ComputingEventType.ACTIVATE_CONTRACT,
+      uuid,
+    };
+    return await this.callService(data);
+  }
+
   public async listTransactions(params: ComputingTransactionQueryFilter) {
     const data = {
       eventName: ComputingEventType.LIST_TRANSACTIONS,

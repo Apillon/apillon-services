@@ -20,6 +20,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -109,6 +110,19 @@ export class HostingController {
     @Param('website_uuid') website_uuid: string,
   ) {
     return await this.hostingService.archiveWebsite(context, website_uuid);
+  }
+
+  @Put('websites/:website_uuid/activate')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async activateWebsite(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('website_uuid') website_uuid: string,
+  ) {
+    return await this.hostingService.activateWebsite(context, website_uuid);
   }
 
   //#region deployments

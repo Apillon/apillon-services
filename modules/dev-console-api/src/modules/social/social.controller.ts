@@ -23,6 +23,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -72,6 +73,19 @@ export class SocialController {
     @Param('space_uuid') space_uuid: string,
   ) {
     return await this.socialService.archiveSpace(context, space_uuid);
+  }
+
+  @Put('spaces/:space_uuid/activate')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async activateSpace(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('space_uuid') space_uuid: string,
+  ) {
+    return await this.socialService.activateSpace(context, space_uuid);
   }
 
   @Post('spaces')
@@ -124,6 +138,19 @@ export class SocialController {
     @Param('post_uuid') post_uuid: string,
   ) {
     return await this.socialService.archivePost(context, post_uuid);
+  }
+
+  @Put('posts/:post_uuid/activate')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async activatePost(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('post_uuid') post_uuid: string,
+  ) {
+    return await this.socialService.activatePost(context, post_uuid);
   }
 
   @Post('posts')

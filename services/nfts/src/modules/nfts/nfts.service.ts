@@ -1176,6 +1176,30 @@ export class NftsService {
     return await collection.markArchived();
   }
 
+  /**
+   * Set a collection's status to active
+   * @param {{ collecton_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Collection>}
+   */
+  static async activateCollection(
+    event: { collection_uuid: string },
+    context: ServiceContext,
+  ): Promise<Collection> {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(event.collection_uuid);
+
+    await NftsService.checkCollection(
+      collection,
+      'activateCollection()',
+      context,
+    );
+
+    return await collection.markActive();
+  }
+
   private static async checkCollection(
     collection: Collection,
     sourceFunction: string,
