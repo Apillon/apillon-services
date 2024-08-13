@@ -1,16 +1,24 @@
 import {
+  CreateNotificationDto,
   NotificationQueryFilter,
   NotificationType,
   SqlModelStatus,
+  UpdateNotificationDto,
 } from '@apillon/lib';
 import { Stage, setupTest, releaseStage } from '../../../test/setup';
 import { NotificationService } from './notification.service';
+import { ServiceContext } from '@apillon/service-lib';
 
 describe('Notification unit tests', () => {
   let stage: Stage;
-
+  let context: ServiceContext;
+  const userId = 1;
   beforeAll(async () => {
     stage = await setupTest();
+    context = stage.context;
+    context.user = {
+      id: userId,
+    };
   });
 
   afterAll(async () => {
@@ -22,12 +30,14 @@ describe('Notification unit tests', () => {
       const notificationToCreate = {
         type: NotificationType.UNKNOWN,
       };
+
       await stage.db.paramExecute(
-        `INSERT INTO notification (type, createUser) VALUES ('${notificationToCreate.type}', ${stage.context.user.id})`,
+        `INSERT INTO notification (type, userId) VALUES ('${notificationToCreate.type}', ${userId})`,
       );
+
       const result = await NotificationService.getNotificationList(
-        new NotificationQueryFilter(),
-        stage.context,
+        { query: new NotificationQueryFilter() },
+        context,
       );
       expect(result.items).toHaveLength(1);
       expect(result.total).toBe(1);
@@ -40,7 +50,11 @@ describe('Notification unit tests', () => {
 
     test('Notification filtering', async () => {
       const result = await NotificationService.getNotificationList(
-        new NotificationQueryFilter({ type: NotificationType.UNKNOWN }),
+        {
+          query: new NotificationQueryFilter({
+            type: NotificationType.UNKNOWN,
+          }),
+        },
         stage.context,
       );
       expect(result.items).toHaveLength(1);
@@ -52,7 +66,7 @@ describe('Notification unit tests', () => {
       expect(returnedNotification.status).toBe(SqlModelStatus.ACTIVE);
 
       const readNotifications = await NotificationService.getNotificationList(
-        new NotificationQueryFilter({ isRead: true }),
+        { query: new NotificationQueryFilter({ isRead: true }) },
         stage.context,
       );
 
@@ -65,17 +79,19 @@ describe('Notification unit tests', () => {
     test('Successfully create notification', async () => {
       const notificationToCreate = {
         type: NotificationType.UNKNOWN,
+        userId: userId,
       };
 
       const result = await NotificationService.createNotification(
-        notificationToCreate,
-        stage.context,
+        new CreateNotificationDto(notificationToCreate),
+        context,
       );
 
       expect(result).toBeDefined();
       expect(result.id).toBeDefined();
       expect(result.type).toBe(notificationToCreate.type);
-      expect(result.isRead).toBe(0);
+      expect(result.isRead).toBe(false);
+      expect(result.userId).toBe(notificationToCreate.userId);
       expect(result.status).toBe(SqlModelStatus.ACTIVE);
 
       const notificationInDB = await stage.db.paramExecute(
@@ -91,9 +107,9 @@ describe('Notification unit tests', () => {
       expect(dbNotification.type).toBe(notificationToCreate.type);
       expect(dbNotification.isRead).toBe(0);
       expect(dbNotification.status).toBe(SqlModelStatus.ACTIVE);
-      expect(dbNotification.createUser).toBe(stage.context.user.id);
-      expect(dbNotification.createDate).toBeDefined();
-      expect(dbNotification.updateDate).toBeDefined();
+      expect(dbNotification.userId).toBe(stage.context.user.id);
+      expect(dbNotification.createTime).toBeDefined();
+      expect(dbNotification.updateTime).toBeDefined();
     });
   });
 
@@ -102,15 +118,23 @@ describe('Notification unit tests', () => {
       const notificationToUpdate = {
         isRead: true,
       };
-      const createdData = await stage.db.paramExecute(
-        `INSERT INTO notification (type, createUser) VALUES ('${NotificationType.UNKNOWN}', ${stage.context.user.id}) RETURNING id`,
+
+      await stage.db.paramExecute(
+        `INSERT INTO notification (type, userId) VALUES ('${NotificationType.UNKNOWN}', ${stage.context.user.id})`,
       );
 
-      const notificationId = createdData[0].id;
+      const lastInsertId = await stage.db.paramExecute(
+        `SELECT LAST_INSERT_ID() as id`,
+      );
+
+      const notificationId = lastInsertId[0].id;
 
       const result = await NotificationService.updateNotification(
-        { id: notificationId, data: notificationToUpdate },
-        stage.context,
+        {
+          id: notificationId,
+          data: new UpdateNotificationDto(notificationToUpdate),
+        },
+        context,
       );
 
       expect(result).toBeDefined();
@@ -132,9 +156,9 @@ describe('Notification unit tests', () => {
       expect(dbNotification.type).toBe(NotificationType.UNKNOWN);
       expect(dbNotification.isRead).toBe(1);
       expect(dbNotification.status).toBe(SqlModelStatus.ACTIVE);
-      expect(dbNotification.createUser).toBe(stage.context.user.id);
-      expect(dbNotification.createDate).toBeDefined();
-      expect(dbNotification.updateDate).toBeDefined();
+      expect(dbNotification.userId).toBe(stage.context.user.id);
+      expect(dbNotification.createTime).toBeDefined();
+      expect(dbNotification.updateTime).toBeDefined();
     });
   });
 });

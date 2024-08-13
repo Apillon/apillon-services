@@ -10,13 +10,10 @@ export const upgrade = async (
         \`type\` INT NOT NULL,
         \`isRead\` BOOLEAN NOT NULL DEFAULT 0,
         \`status\` INT NOT NULL DEFAULT '${SqlModelStatus.ACTIVE}',
+        \`userId\` INT,
         \`createTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        \`createUser\` INT NULL,
         \`updateTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        \`updateUser\` INT NULL,
-        PRIMARY KEY (\`id\`),
-        FOREIGN KEY (\`createUser\`) REFERENCES user(\`id\`) ON DELETE SET NULL,
-        FOREIGN KEY (\`updateUser\`) REFERENCES user(\`id\`) ON DELETE SET NULL
+        PRIMARY KEY (\`id\`)
     );`,
   );
 };

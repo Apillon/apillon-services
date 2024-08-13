@@ -8,16 +8,22 @@ import { Notification } from './models/notification.model';
 import { ServiceContext } from '@apillon/service-lib';
 import { HttpStatus } from '@nestjs/common';
 import { ConfigErrorCode } from '../../config/types';
+import { CreateNotificationDto, UpdateNotificationDto } from '@apillon/lib';
 
 export class NotificationService {
   static async getNotificationList(
-    query: NotificationQueryFilter,
+    data: { query: NotificationQueryFilter },
     context: ServiceContext,
   ) {
-    return await new Notification({}, context).getListForUser(query);
+    return await new Notification({}, context).getListForUser(
+      new NotificationQueryFilter(data.query, context),
+    );
   }
 
-  static async createNotification(data: any, context: ServiceContext) {
+  static async createNotification(
+    data: CreateNotificationDto,
+    context: ServiceContext,
+  ) {
     const notification = new Notification(data, context);
     await notification.validateOrThrow(
       ModelValidationException,
@@ -28,13 +34,13 @@ export class NotificationService {
   }
 
   static async updateNotification(
-    { notificationId, data }: any,
+    { id, data }: { id: number; data: UpdateNotificationDto },
     context: ServiceContext,
   ) {
     const notification = await new Notification(
       {},
       context,
-    ).populateByIdForUser(notificationId);
+    ).populateByIdForUser(id);
 
     if (!notification.exists()) {
       throw new CodeException({
@@ -44,6 +50,7 @@ export class NotificationService {
     }
 
     notification.populate(data);
+
     await notification.validateOrThrow(
       ModelValidationException,
       ValidatorErrorCode,

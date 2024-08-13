@@ -36,7 +36,7 @@ describe('Notification controller tests', () => {
       };
 
       await stage.db.config.paramExecute(
-        `INSERT INTO notification (type, createUser) VALUES ('${createdNotification.type}', ${createdNotification.userId})`,
+        `INSERT INTO notification (type, userId) VALUES ('${createdNotification.type}', ${createdNotification.userId})`,
       );
 
       const response = await request(stage.http)
@@ -70,7 +70,7 @@ describe('Notification controller tests', () => {
     };
 
     await stage.db.config.paramExecute(
-      `INSERT INTO notification (type, createUser, isRead) VALUES (${createdNotification.type}, ${createdNotification.userId}, 1)`,
+      `INSERT INTO notification (type, userId, isRead) VALUES (${createdNotification.type}, ${createdNotification.userId}, 1)`,
     );
 
     const response = await request(stage.http)

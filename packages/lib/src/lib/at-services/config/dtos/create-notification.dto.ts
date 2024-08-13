@@ -8,7 +8,7 @@ import {
 } from '../../../../config/types';
 import { enumInclusionValidator } from '../../../validators';
 
-export class createNotification extends ModelBase {
+export class CreateNotificationDto extends ModelBase {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.SERVICE, PopulateFrom.WORKER],
