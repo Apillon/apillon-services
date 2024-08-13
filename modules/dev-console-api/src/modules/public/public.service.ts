@@ -7,6 +7,7 @@ import {
   Mailing,
   NotificationQueryFilter,
   Scs,
+  UpdateNotificationDto,
   env,
 } from '@apillon/lib';
 import { User } from '../user/models/user.model';
@@ -63,5 +64,17 @@ export class PublicService {
     query: NotificationQueryFilter,
   ) {
     return (await new Scs(context).getNotificationList(query)).data;
+  }
+
+  async updateNotification(
+    id: number,
+    data: UpdateNotificationDto,
+    context: DevConsoleApiContext,
+  ) {
+    return (await new Scs(context).updateNotification(id, data)).data;
+  }
+
+  async readAllNotifications(context: DevConsoleApiContext) {
+    return (await new Scs(context).readAllNotifications()).data;
   }
 }

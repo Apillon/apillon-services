@@ -60,7 +60,11 @@ export async function processEvent(
 
     [ScsEventType.GET_NOTIFICATIONS]: NotificationService.getNotificationList,
     [ScsEventType.CREATE_NOTIFICATION]: NotificationService.createNotification,
+    [ScsEventType.CREATE_GLOBAL_NOTIFICATION]:
+      NotificationService.createGlobalNotification,
     [ScsEventType.UPDATE_NOTIFICATION]: NotificationService.updateNotification,
+    [ScsEventType.READ_ALL_NOTIFICATIONS]:
+      NotificationService.readAllNotifications,
   };
 
   return await processors[event.eventName](event, context);

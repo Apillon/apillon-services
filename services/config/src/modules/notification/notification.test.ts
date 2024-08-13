@@ -46,6 +46,9 @@ describe('Notification unit tests', () => {
       expect(returnedNotification.type).toBe(notificationToCreate.type);
       expect(returnedNotification.isRead).toBe(0);
       expect(returnedNotification.status).toBe(SqlModelStatus.ACTIVE);
+      expect(returnedNotification.userId).toBe(userId);
+      expect(returnedNotification.createTime).toBeDefined();
+      expect(returnedNotification.isPublic).toBe(0);
     });
 
     test('Notification filtering', async () => {

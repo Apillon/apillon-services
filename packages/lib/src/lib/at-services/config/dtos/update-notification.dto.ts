@@ -4,23 +4,15 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
-  ValidatorErrorCode,
 } from '../../../../config/types';
-import { presenceValidator } from '../../../validators';
 
 export class UpdateNotificationDto extends ModelBase {
   @prop({
     parser: { resolver: booleanParser() },
     serializable: [SerializeFor.ADMIN, SerializeFor.PROFILE],
     populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
   })
-  public isRead: boolean;
+  public isRead?: boolean;
 
   /**
    * status
@@ -31,5 +23,5 @@ export class UpdateNotificationDto extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     defaultValue: SqlModelStatus.ACTIVE,
   })
-  public status: SqlModelStatus;
+  public status?: SqlModelStatus;
 }

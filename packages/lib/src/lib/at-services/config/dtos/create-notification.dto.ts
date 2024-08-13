@@ -1,4 +1,4 @@
-import { integerParser } from '@rawmodel/parsers';
+import { booleanParser, integerParser } from '@rawmodel/parsers';
 import { ModelBase, prop } from '../../../base-models/base';
 import {
   BadRequestErrorCode,

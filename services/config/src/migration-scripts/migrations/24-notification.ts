@@ -10,7 +10,8 @@ export const upgrade = async (
         \`type\` INT NOT NULL,
         \`isRead\` BOOLEAN NOT NULL DEFAULT 0,
         \`status\` INT NOT NULL DEFAULT '${SqlModelStatus.ACTIVE}',
-        \`userId\` INT,
+        \`userId\` INT NOT NULL,
+        \`isPublic\` BOOLEAN NOT NULL DEFAULT 0,
         \`createTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         \`updateTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (\`id\`)

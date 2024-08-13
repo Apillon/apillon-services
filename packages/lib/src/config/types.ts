@@ -257,7 +257,9 @@ export enum ScsEventType {
   HAS_ACTIVE_RPC_PLAN = 'has-active-rpc-plan',
   GET_NOTIFICATIONS = 'get-notifications',
   CREATE_NOTIFICATION = 'create-notification',
+  CREATE_GLOBAL_NOTIFICATION = 'create-global-notification',
   UPDATE_NOTIFICATION = 'update-notification',
+  READ_ALL_NOTIFICATIONS = 'read-all-notifications',
 }
 
 export enum NftsEventType {

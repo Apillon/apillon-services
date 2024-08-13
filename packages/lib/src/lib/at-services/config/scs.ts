@@ -296,10 +296,24 @@ export class Scs extends BaseService {
     });
   }
 
-  public async updateNotification(data: UpdateNotificationDto) {
+  public async createGlobalNotification(data: CreateNotificationDto) {
     return await this.callService({
-      eventName: ScsEventType.UPDATE_NOTIFICATION,
+      eventName: ScsEventType.CREATE_GLOBAL_NOTIFICATION,
       data,
     });
   }
+
+  public async updateNotification(id: number, data: UpdateNotificationDto) {
+    return await this.callService({
+      eventName: ScsEventType.UPDATE_NOTIFICATION,
+      data: { id, data },
+    });
+  }
+
+  public async readAllNotifications() {
+    return await this.callService({
+      eventName: ScsEventType.READ_ALL_NOTIFICATIONS,
+    });
+  }
+  //#endregion
 }

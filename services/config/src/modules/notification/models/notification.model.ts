@@ -76,10 +76,10 @@ export class Notification extends BaseSQLModel {
    */
   @prop({
     parser: { resolver: dateParser() },
-    serializable: [SerializeFor.APILLON_API],
+    serializable: [SerializeFor.PROFILE, SerializeFor.SELECT_DB],
     populatable: [PopulateFrom.DB],
   })
-  public createTime?: Date;
+  public createTime: Date;
 
   /**
    * Updated at property definition.
@@ -138,8 +138,23 @@ export class Notification extends BaseSQLModel {
       SerializeFor.UPDATE_DB,
     ],
     populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE, PopulateFrom.DB],
+    defaultValue: false,
   })
-  public userId: number | null;
+  public isPublic: boolean;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.ADMIN_SELECT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.UPDATE_DB,
+    ],
+    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE, PopulateFrom.DB],
+  })
+  public userId: number;
 
   /**
    * Tells if the model represents a document stored in the database.
@@ -164,7 +179,7 @@ export class Notification extends BaseSQLModel {
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields('n', '', SerializeFor.SELECT_DB)}`,
       qFrom: `FROM \`${DbTables.NOTIFICATION}\` n
-              WHERE (@type IS NULL or n.type = @type) AND (@isRead IS NULL or n.isRead = @isRead) AND (n.userId is NULL or n.userId = ${context.user.id} ) AND (@status IS NULL OR n.status = @status)`,
+              WHERE (@type IS NULL or n.type = @type) AND (@isRead IS NULL or n.isRead = @isRead) AND n.userId = ${context.user.id} AND (@status IS NULL OR n.status = @status)`,
       qFilter: `
               ORDER BY ${filters.orderStr}
               LIMIT ${filters.limit} OFFSET ${filters.offset};`,
@@ -178,7 +193,7 @@ export class Notification extends BaseSQLModel {
     this.reset();
     const data = await context.mysql.paramExecute(
       `
-      SELECT * FROM notification WHERE id = @id AND (userId is null or userId = @user_id)
+      SELECT * FROM notification WHERE id = @id AND userId = @user_id
     `,
       { id, user_id: context.user.id },
     );
@@ -191,21 +206,20 @@ export class Notification extends BaseSQLModel {
   /**
    * Saves model data in the database as a new document.
    */
-  public async insert(
+  public async create(
+    readUserFromContext = true,
     strategy: SerializeFor = SerializeFor.INSERT_DB,
-    conn?: PoolConnection,
-    insertIgnore?: boolean,
   ): Promise<this> {
-    this.userId = this.getContext().user.id;
+    this.userId = readUserFromContext ? this.getContext().user.id : this.userId;
     const serializedModel = this.serialize(strategy);
     let isSingleTrans = false;
-    if (!conn) {
-      isSingleTrans = true;
-      conn = await this.getContext().mysql.start();
-    }
+
+    isSingleTrans = true;
+    const conn = await this.getContext().mysql.start();
+
     try {
       const createQuery = `
-        INSERT ${insertIgnore ? 'IGNORE' : ''} INTO \`${this.tableName}\`
+        INSERT INTO \`${this.tableName}\`
         ( ${Object.keys(serializedModel)
           .map((x) => `\`${x}\``)
           .join(', ')} )
@@ -295,5 +309,16 @@ export class Notification extends BaseSQLModel {
     }
 
     return this;
+  }
+
+  public async readAllForUser(): Promise<boolean> {
+    const context = this.getContext();
+    await context.mysql.paramExecute(
+      `
+      UPDATE notification SET isRead = 1 WHERE userId = @user_id
+    `,
+      { user_id: context.user.id },
+    );
+    return true;
   }
 }
