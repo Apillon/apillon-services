@@ -419,6 +419,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             baseUri = await ipfsCluster.generateLink(
               bucket.project_uuid,
               ipnsDbRecord?.ipnsName || data.metadataCid,
+              ipnsDbRecord?.ipnsName ? true : false,
             );
           } else {
             baseUri = ipnsDbRecord?.ipnsName
