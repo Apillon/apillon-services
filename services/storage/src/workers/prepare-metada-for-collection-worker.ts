@@ -241,7 +241,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
                 .filter((x) => x.name == fileContent.image)
                 .pop();
 
-              if (collectionMetadata.useApillonIpfsGateway) {
+              if (data.useApillonIpfsGateway) {
                 fileContent.image = await ipfsCluster.generateLink(
                   bucket.project_uuid,
                   imageFile.CIDv1,
@@ -419,6 +419,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             baseUri = await ipfsCluster.generateLink(
               bucket.project_uuid,
               ipnsDbRecord?.ipnsName || data.metadataCid,
+              ipnsDbRecord?.ipnsName ? true : false,
             );
           } else {
             baseUri = ipnsDbRecord?.ipnsName
