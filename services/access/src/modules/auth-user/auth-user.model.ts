@@ -318,7 +318,7 @@ export class AuthUser extends AdvancedSQLModel {
         WHERE u.status = ${SqlModelStatus.ACTIVE}
       `,
     );
-    return data.map((user) => this.populate(user));
+    return data;
   }
 
   public async assignRole(

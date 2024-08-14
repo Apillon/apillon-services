@@ -46,7 +46,7 @@ describe('Notification tests', () => {
       const responseNotification = response.body.data;
       expect(responseNotification).toBe(true);
 
-      const data = await stage.db.devConsole.paramExecute(`
+      const data = await stage.db.config.paramExecute(`
         SELECT * FROM notification`);
 
       expect(data).toHaveLength(2);
