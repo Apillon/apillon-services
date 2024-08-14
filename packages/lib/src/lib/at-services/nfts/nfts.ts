@@ -173,4 +173,12 @@ export class NftsMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async addIpnsToCollection(collection_uuid: string) {
+    const data = {
+      eventName: NftsEventType.ADD_IPNS_TO_COLLECTION,
+      collection_uuid,
+    };
+    return await this.callService(data);
+  }
 }

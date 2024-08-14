@@ -262,6 +262,19 @@ export class NftsController {
     );
   }
 
+  @Post('collections/:collectionUuid/ipns')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async addIpnsToCollection(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collectionUuid') collectionUuid: string,
+  ) {
+    return await this.nftsService.addIpnsToCollection(context, collectionUuid);
+  }
+
   @Get('collections/:collectionUuid/nfts-metadata')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({

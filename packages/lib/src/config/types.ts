@@ -261,6 +261,7 @@ export enum NftsEventType {
   PROJECT_COLLECTION_DETAILS = 'project-collections-details',
   ADD_NFTS_METADATA = 'add-nfts-metadata',
   ARCHIVE_COLLECTION = 'archive-collection',
+  ADD_IPNS_TO_COLLECTION = 'add-ipns-to-collection',
 }
 
 export enum ComputingEventType {

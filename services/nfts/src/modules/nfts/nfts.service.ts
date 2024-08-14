@@ -686,9 +686,13 @@ export class NftsService {
       createIpnsDto,
     );
 
+    console.info('Ipns for collection', ipnsRes);
+
     const baseUri = collection.useApillonIpfsGateway
       ? ipnsRes.link.split('?token')[0]
       : `ipns://${ipnsRes.ipnsName}`;
+
+    console.info('baseUri', baseUri);
 
     //Submit change base uri transaction
     const setBaseUriBody = new SetCollectionBaseUriDTO(
@@ -698,6 +702,8 @@ export class NftsService {
       context,
     );
     await this.setNftCollectionBaseUri({ body: setBaseUriBody }, context);
+
+    console.info('Set collection base uri succeeded. Updating collection...');
 
     collection.baseUri = baseUri;
     collection.ipns_uuid = ipnsRes.ipns_uuid;
