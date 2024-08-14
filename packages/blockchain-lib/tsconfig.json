@@ -1,0 +1,26 @@
+{
+  "extends": "tsconfig/service.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "paths": {
+      "@apillon/blockchain-lib/evm": [
+        "./src/lib/evm"
+      ],
+      "@apillon/blockchain-lib/substrate": [
+        "./src/lib/substrate"
+      ],
+      "@apillon/blockchain-lib/*": [
+        "./src"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

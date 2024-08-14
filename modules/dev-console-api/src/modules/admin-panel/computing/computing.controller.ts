@@ -1,7 +1,6 @@
 import {
   ClusterWalletQueryFilter,
   DefaultUserRole,
-  DepositToClusterDto,
   ValidateFor,
 } from '@apillon/lib';
 import {
@@ -18,6 +17,7 @@ import { AuthGuard } from '../../../guards/auth.guard';
 import { DevConsoleApiContext } from '../../../context';
 import { ComputingService } from './computing.service';
 import { ValidationGuard } from '../../../guards/validation.guard';
+import { DepositToClusterDto } from '@apillon/blockchain-lib/common';
 
 @Controller('admin-panel/computing')
 @Permissions({ role: DefaultUserRole.ADMIN })

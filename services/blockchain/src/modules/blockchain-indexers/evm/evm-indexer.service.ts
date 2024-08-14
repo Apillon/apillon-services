@@ -10,6 +10,8 @@ export class EvmBlockchainIndexer {
     [EvmChain.MOONBASE, env.BLOCKCHAIN_MOONBASE_GRAPHQL_SERVER],
     [EvmChain.MOONBEAM, env.BLOCKCHAIN_MOONBEAM_GRAPHQL_SERVER],
     [EvmChain.ASTAR, env.BLOCKCHAIN_ASTAR_GRAPHQL_SERVER],
+    [EvmChain.ETHEREUM, env.BLOCKCHAIN_ETHEREUM_GRAPHQL_SERVER],
+    [EvmChain.SEPOLIA, env.BLOCKCHAIN_SEPOLIA_GRAPHQL_SERVER],
   ]);
 
   constructor(chain: EvmChain) {
@@ -57,13 +59,11 @@ export class EvmBlockchainIndexer {
       }
     `;
 
-    address = address.toLowerCase();
-    const data: EvmTransfers = await this.graphQlClient.request(GRAPHQL_QUERY, {
-      address,
+    return await this.graphQlClient.request(GRAPHQL_QUERY, {
+      address: address.toLowerCase(),
       fromBlock,
       toBlock,
     });
-    return data;
   }
 
   public async getWalletIncomingTxs(
@@ -101,13 +101,11 @@ export class EvmBlockchainIndexer {
       }
     `;
 
-    address = address.toLowerCase();
-    const data: EvmTransfers = await this.graphQlClient.request(GRAPHQL_QUERY, {
-      address,
+    return await this.graphQlClient.request(GRAPHQL_QUERY, {
+      address: address.toLowerCase(),
       fromBlock,
       toBlock,
     });
-    return data;
   }
 
   public async getWalletTransactions(
@@ -165,6 +163,7 @@ export class EvmBlockchainIndexer {
     `;
 
     const data: BlockHeight = await this.graphQlClient.request(GRAPHQL_QUERY);
+
     return data.squidStatus.height;
   }
 }

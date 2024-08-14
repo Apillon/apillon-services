@@ -164,7 +164,7 @@ export function getEnumKey<TEnum>(
  * @param splitBy num of elements in chunk
  * @returns
  */
-export function splitArray(arr, splitBy) {
+export function splitArray<T>(arr: T[], splitBy: number): T[][] {
   const cache = [];
   const tmp = [...arr];
   while (tmp.length) {

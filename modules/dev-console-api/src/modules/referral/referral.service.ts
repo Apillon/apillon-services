@@ -143,10 +143,14 @@ export class ReferralService {
    * @returns {Promise<any>} - UserAirdropTask model from Referral MS
    */
   async getAirdropTasks(context: DevConsoleApiContext): Promise<any> {
-    return (
-      await new ReferralMicroservice(context).getAirdropTasks(
-        context.user.user_uuid,
-      )
-    ).data;
+    return (await new ReferralMicroservice(context).getAirdropTasks()).data;
+  }
+
+  /**
+   * Get claim parameters for a user for smart contract claim call
+   * @param {DevConsoleApiContext} context - Dev Console API context object.
+   */
+  async getClaimParameters(context: DevConsoleApiContext): Promise<any> {
+    return (await new ReferralMicroservice(context).getClaimParameters()).data;
   }
 }
