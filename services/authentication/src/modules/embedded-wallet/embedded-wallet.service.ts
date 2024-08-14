@@ -16,7 +16,7 @@ import { AuthenticationValidationException } from '../../lib/exceptions';
 import { OasisSignature } from './models/oasis-signature.model';
 import { DbTables } from '../../config/types';
 
-export class OasisService {
+export class EmbeddedWalletService {
   static async createOasisSignature(
     event: { body: CreateOasisSignatureDto },
     context: ServiceContext,

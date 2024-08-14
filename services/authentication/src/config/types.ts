@@ -8,6 +8,7 @@ export enum DbTables {
   IDENTITY_CONFIG = 'identity_config',
   OASIS_SIGNATURE = 'oasis_signature',
   OTP = 'otp',
+  EMBEDDED_WALLET_INTEGRATION = 'embedded-wallet-integration',
 }
 
 /**
@@ -53,8 +54,9 @@ export enum AuthenticationErrorCode {
   TRANSACTION_CHAIN_ID_NOT_PRESENT = 422130501,
   TRANSACTION_TYPE_NOT_PRESENT = 422130502,
   TRANSACTION_RAW_TRANSACTION_NOT_PRESENT = 422130503,
-  // Oasis
+  // Embedded wallet
   OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT = 422130600,
+  EMBEDDED_WALLET_INTEGRATION_REQUIRED_DATA_NOT_PRESENT = 422130601,
   // Otp
   INVALID_OTP = 422130700,
 }
