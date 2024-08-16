@@ -802,10 +802,10 @@ export class StorageService {
       secret: ipfsClusterJwtSecretForProject,
       project_uuid: event.project_uuid,
       ipfsGateway: ipfsCluster.subdomainGateway
-        ? `https://<CIDv1>.${ipfsCluster.subdomainGateway}`
+        ? `https://<CIDv1>.ipfs.${ipfsCluster.subdomainGateway}`
         : ipfsCluster.ipfsGateway,
       ipnsGateway: ipfsCluster.subdomainGateway
-        ? `https://<IPNS>.${ipfsCluster.subdomainGateway}`
+        ? `https://<IPNS>.ipns.${ipfsCluster.subdomainGateway}`
         : ipfsCluster.ipnsGateway,
       loadBalancerIp: ipfsCluster.loadBalancerIp,
     };
