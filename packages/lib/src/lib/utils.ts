@@ -145,6 +145,22 @@ export function dateToSqlString(date: Date): string {
   return date.toISOString().replace(/T/, ' ').replace(/Z/, '');
 }
 
+/**
+ * Compare only date part of two dates
+ * @param date1
+ * @param date2
+ * @returns true if date is the same
+ */
+export function compareDatesWithoutTime(date1: Date, date2: Date): boolean {
+  if (!date1 || !date2) return false;
+
+  return (
+    date1.getFullYear() == date2.getFullYear() &&
+    date1.getMonth() == date2.getMonth() &&
+    date1.getDate() == date2.getDate()
+  );
+}
+
 // DO NOT SET RETURN TYPE AS IT WILL MESS WITH CI/CD BUILD!
 export function getFaker() {
   // eslint-disable-next-line @typescript-eslint/no-var-requires

@@ -3,72 +3,76 @@ import { DevConsoleApiContext } from '../../context';
 import {
   AuthenticationMicroservice,
   BaseProjectQueryFilter,
-  OasisSignaturesQueryFilter,
+  CreateEWIntegrationDto,
+  EmbeddedWalletSignaturesQueryFilter,
 } from '@apillon/lib';
 
 @Injectable()
 export class EmbeddedWalletService {
+  async getEmbeddedWalletInfo(
+    context: DevConsoleApiContext,
+    query: BaseProjectQueryFilter,
+  ) {
+    return (
+      await new AuthenticationMicroservice(context).getEmbeddedWalletInfo(
+        query.project_uuid,
+      )
+    ).data;
+  }
+
   async getIntegrationsList(
     context: DevConsoleApiContext,
-    project_uuid: string,
+    query: BaseProjectQueryFilter,
   ) {
     return (
       await new AuthenticationMicroservice(
         context,
-      ).getOasisSignaturesCountByApiKey(project_uuid)
+      ).listEmbeddedWalletIntegrations(query)
     ).data;
   }
 
-  async getIntegrations(
+  async getIntegration(
     context: DevConsoleApiContext,
     integration_uuid: string,
   ) {
     return (
       await new AuthenticationMicroservice(
         context,
-      ).getOasisSignaturesCountByApiKey(project_uuid)
+      ).getEmbeddedWalletIntegration(integration_uuid)
     ).data;
   }
 
   async createIntegration(
     context: DevConsoleApiContext,
-    integration_uuid: string,
+    body: CreateEWIntegrationDto,
   ) {
     return (
       await new AuthenticationMicroservice(
         context,
-      ).getOasisSignaturesCountByApiKey(project_uuid)
+      ).createEmbeddedWalletIntegration(body)
     ).data;
   }
 
   async updateIntegration(
     context: DevConsoleApiContext,
     integration_uuid: string,
+    body: any,
   ) {
     return (
       await new AuthenticationMicroservice(
         context,
-      ).getOasisSignaturesCountByApiKey(project_uuid)
+      ).updateEmbeddedWalletIntegration(integration_uuid, body)
     ).data;
   }
 
-  async getOasisSignaturesCountByApiKey(
+  async listSignatures(
     context: DevConsoleApiContext,
-    project_uuid: string,
+    query: EmbeddedWalletSignaturesQueryFilter,
   ) {
     return (
       await new AuthenticationMicroservice(
         context,
-      ).getOasisSignaturesCountByApiKey(project_uuid)
-    ).data;
-  }
-
-  async listOasisSignatures(
-    context: DevConsoleApiContext,
-    query: OasisSignaturesQueryFilter,
-  ) {
-    return (
-      await new AuthenticationMicroservice(context).listOasisSignatures(query)
+      ).listEmbeddedWalletSignatures(query)
     ).data;
   }
 }

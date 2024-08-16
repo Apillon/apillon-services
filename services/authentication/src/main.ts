@@ -2,8 +2,8 @@ import { AuthenticationEventType, Context } from '@apillon/lib';
 import { VerificationService } from './modules/verification/verification.service';
 import { IdentityService } from './modules/identity/identity.service';
 import { SporranService } from './modules/sporran/sporran.service';
-import { OasisService } from './modules/oasis/oasis.service';
 import { OtpService } from './modules/otp/otp.service';
+import { EmbeddedWalletService } from './modules/embedded-wallet/embedded-wallet.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -41,13 +41,21 @@ export async function processEvent(event, context: Context): Promise<any> {
     // GENERAL
     [AuthenticationEventType.GET_TOTAL_DIDS]:
       IdentityService.getTotalDidsCreated,
-    // OASIS
+    // Embedded wallet
+    [AuthenticationEventType.EW_INFO]:
+      EmbeddedWalletService.getEmbeddedWalletInfo,
+    [AuthenticationEventType.EW_INTEGRATION_CREATE]:
+      EmbeddedWalletService.createEWIntegration,
+    [AuthenticationEventType.EW_INTEGRATION_LIST]:
+      EmbeddedWalletService.listEWIntegrations,
+    [AuthenticationEventType.EW_INTEGRATION_GET]:
+      EmbeddedWalletService.getEWIntegration,
+    [AuthenticationEventType.EW_INTEGRATION_UPDATE]:
+      EmbeddedWalletService.updateEWIntegration,
     [AuthenticationEventType.CREATE_OASIS_SIGNATURE]:
-      OasisService.createOasisSignature,
-    [AuthenticationEventType.GET_OASIS_SIGNATURES_COUNT_BY_API_KEY]:
-      OasisService.getOasisSignaturesCountByApiKey,
+      EmbeddedWalletService.createOasisSignature,
     [AuthenticationEventType.LIST_OASIS_SIGNATURES]:
-      OasisService.listOasisSignatures,
+      EmbeddedWalletService.listOasisSignatures,
     // OTP
     [AuthenticationEventType.GENERATE_OTP]: OtpService.generateOtp,
     [AuthenticationEventType.VALIDATE_OTP]: OtpService.validateOtp,
