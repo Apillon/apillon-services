@@ -20,11 +20,11 @@ export class CreateJobDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.COMPUTING_PROJECT_UUID_NOT_PRESENT,
+        code: ValidatorErrorCode.COMPUTING_FIELD_NOT_PRESENT,
       },
     ],
   })
-  public project_uuid: string;
+  public deployment_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },

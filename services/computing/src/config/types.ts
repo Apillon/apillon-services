@@ -5,6 +5,7 @@ export enum DbTables {
   CLUSTER_WALLET = 'cluster_wallet',
   CLUSTER_TRANSACTION_LOG = 'cluster_transaction_log',
 
+  CLOUD_FUNCTION = 'cloud_function',
   ACURAST_JOB = 'acurast_job',
 }
 

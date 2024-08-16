@@ -77,6 +77,19 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable,
+    serializable: serializableProfile,
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public function_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable,
     serializable: serializableUpdateProfile,
     validators: [
       {
@@ -87,13 +100,6 @@ export class AcurastJob extends UuidSqlModel {
     fakeValue: 'Acurast job#1',
   })
   public name: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable,
-    serializable: serializableUpdateProfile,
-  })
-  public description: string;
 
   /**
    * IPFS CID of the script's code
