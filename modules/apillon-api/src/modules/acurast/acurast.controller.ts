@@ -53,7 +53,7 @@ export class AcurastController {
     @Ctx() context: ApillonApiContext,
     @Query() query: JobQueryFilter,
   ) {
-    return await this.acurastService.listJobs(context, query);
+    // return await this.acurastService.listJobs(context, query);
   }
 
   @Get('jobs/:job_uuid')

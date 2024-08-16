@@ -84,6 +84,7 @@ export enum AcurastJobStatus {
   DEPLOYING = 1,
   DEPLOYED = 2,
   MATCHED = 3,
+  INACTIVE = 4,
   DELETED = 9,
 }
 

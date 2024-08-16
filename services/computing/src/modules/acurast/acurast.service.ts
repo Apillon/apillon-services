@@ -117,15 +117,15 @@ export class AcurastService {
    * @param {ServiceContext} context
    * @returns {AcurastJob[]}
    */
-  static async listJobs(
-    event: { query: JobQueryFilter },
-    context: ServiceContext,
-  ) {
-    return await new AcurastJob(
-      { project_uuid: event.query.project_uuid },
-      context,
-    ).getList(context, new JobQueryFilter(event.query));
-  }
+  // static async listJobs(
+  //   event: { query: JobQueryFilter },
+  //   context: ServiceContext,
+  // ) {
+  //   return await new AcurastJob(
+  //     { project_uuid: event.query.project_uuid },
+  //     context,
+  //   ).getList(context, new JobQueryFilter(event.query));
+  // }
 
   /**
    * Gets a job by UUID
@@ -274,26 +274,7 @@ export class AcurastService {
 
     const conn = await context.mysql.start();
     try {
-      await job.validateOrThrow(ComputingModelValidationException);
-
-      const referenceId = uuidV4();
-      await spendCreditAction(
-        context,
-        new SpendCreditDto(
-          {
-            project_uuid: job.project_uuid,
-            product_id: ProductCode.COMPUTING_JOB_DELETE,
-            referenceTable: DbTables.TRANSACTION,
-            referenceId,
-            location: 'AcurastService.deleteJob',
-            service: ServiceName.COMPUTING,
-          },
-          context,
-        ),
-        async () => await deleteAcurastJob(context, job, referenceId, conn),
-      );
-
-      await context.mysql.commit(conn);
+      await deleteAcurastJob(context, job, conn);
 
       await new Lmas().writeLog({
         context,

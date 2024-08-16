@@ -276,8 +276,12 @@ export enum ComputingEventType {
   PROJECT_COMPUTING_DETAILS = 'project-computing-details',
   ARCHIVE_CONTRACT = 'archive-contract',
 
+  CREATE_CLOUD_FUNCTION = 'create-cloud-function',
+  LIST_CLOUD_FUNCTIONS = 'list-cloud-functions',
+  UPDATE_CLOUD_FUNCTION = 'update-cloud-function',
+
+  GET_CLOUD_FUNCTION = 'get-cloud-function',
   CREATE_JOB = 'create-job',
-  LIST_JOBS = 'list-jobs',
   GET_JOB = 'get-job',
   SET_JOB_ENVIRONMENT = 'set-job-environment',
   SEND_JOB_MESSAGE = 'send-job-message',
@@ -981,7 +985,6 @@ export enum ProductCode {
 
   COMPUTING_JOB_CREATE = 52,
   COMPUTING_JOB_SET_ENVIRONMENT = 53,
-  COMPUTING_JOB_DELETE = 54,
 
   IPNS = 55,
 }

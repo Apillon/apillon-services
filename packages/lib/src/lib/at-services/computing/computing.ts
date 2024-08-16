@@ -12,6 +12,11 @@ import { CreateJobDto } from './dtos/create-job.dto';
 import { SetJobEnvironmentDto } from './dtos/set-job-environment.dto';
 import { JobQueryFilter } from './dtos/job-query-filter.dto';
 import { UpdateJobDto } from './dtos/update-job.dto';
+import {
+  CreateCloudFunctionDto,
+  UpdateCloudFunctionDto,
+} from './dtos/create-or-update-cloud-function.dto';
+import { BaseProjectQueryFilter } from '../../base-models/base-project-query-filter.model';
 
 export class ComputingMicroservice extends BaseService {
   lambdaFunctionName =
@@ -120,18 +125,49 @@ export class ComputingMicroservice extends BaseService {
     });
   }
 
-  public async createJob(body: CreateJobDto) {
+  public async createCloudFunction(body: CreateCloudFunctionDto) {
     const data = {
-      eventName: ComputingEventType.CREATE_JOB,
+      eventName: ComputingEventType.CREATE_CLOUD_FUNCTION,
       body: body.serialize(),
     };
     return await this.callService(data);
   }
 
-  public async listJobs(query: JobQueryFilter) {
+  public async listCloudFunctions(query: BaseProjectQueryFilter) {
     const data = {
-      eventName: ComputingEventType.LIST_JOBS,
+      eventName: ComputingEventType.LIST_CLOUD_FUNCTIONS,
       query: query.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getCloudFunction(query: JobQueryFilter): Promise<{
+    data: {
+      name: string;
+      description: string;
+      activeJobUuid: string;
+      jobs: any[];
+    };
+  }> {
+    const data = {
+      eventName: ComputingEventType.GET_CLOUD_FUNCTION,
+      query: query.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async updateCloudFunction(body: UpdateCloudFunctionDto) {
+    const data = {
+      eventName: ComputingEventType.UPDATE_CLOUD_FUNCTION,
+      body,
+    };
+    return await this.callService(data);
+  }
+
+  public async createJob(body: CreateJobDto) {
+    const data = {
+      eventName: ComputingEventType.CREATE_JOB,
+      body: body.serialize(),
     };
     return await this.callService(data);
   }

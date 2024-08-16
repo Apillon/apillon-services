@@ -19,6 +19,7 @@ import {
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { TransactionService } from '../../modules/transaction/transaction.service';
 import { AcurastClient } from '../../modules/clients/acurast.client';
+import { v4 as uuidV4 } from 'uuid';
 
 export async function getAcurastEndpoint(context: Context) {
   return (
@@ -124,7 +125,6 @@ export async function setAcurastJobEnvironment(
 export async function deleteAcurastJob(
   context: ServiceContext,
   job: AcurastJob,
-  transaction_uuid: string,
   conn: PoolConnection,
 ) {
   const acurastClient = new AcurastClient(await getAcurastEndpoint(context));
@@ -148,7 +148,7 @@ export async function deleteAcurastJob(
   await TransactionService.saveTransaction(
     new Transaction(
       {
-        transaction_uuid,
+        transaction_uuid: uuidV4(),
         walletAddress: response.data.address,
         transactionType: TransactionType.DELETE_JOB,
         refTable: DbTables.ACURAST_JOB,
