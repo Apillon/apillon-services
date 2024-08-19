@@ -12,6 +12,7 @@ import {
   env,
   EvmChain,
   getChainName,
+  IpnsQueryFilter,
   Lmas,
   LogType,
   Mailing,
@@ -698,6 +699,7 @@ export class NftsService {
     const setBaseUriBody = new SetCollectionBaseUriDTO(
       {
         uri: baseUri,
+        collection_uuid: collection.collection_uuid,
       },
       context,
     );
