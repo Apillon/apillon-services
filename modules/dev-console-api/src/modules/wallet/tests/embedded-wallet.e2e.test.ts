@@ -1,8 +1,8 @@
 import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
-import { OasisSignature } from '@apillon/authentication/src/modules/oasis/models/oasis-signature.model';
+import { OasisSignature } from '@apillon/authentication/src/modules/embedded-wallet/models/oasis-signature.model';
 import { Endpoint } from '@apillon/blockchain/src/common/models/endpoint';
 import { Wallet } from '@apillon/blockchain/src/modules/wallet/wallet.model';
-import { ChainType, EvmChain, SqlModelStatus } from '@apillon/lib';
+import { ChainType, EvmChain, QuotaCode, SqlModelStatus } from '@apillon/lib';
 import {
   Stage,
   TestUser,
@@ -15,8 +15,11 @@ import {
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
+import { EmbeddedWalletIntegration } from '@apillon/authentication/src/modules/embedded-wallet/models/embedded-wallet-integration.model';
+import { v4 as uuid } from 'uuid';
+import { Override } from '@apillon/config/src/modules/override/models/override.model';
 
-describe('Wallet tests', () => {
+describe('Embedded wallet tests', () => {
   let stage: Stage;
   let config: any;
 
@@ -28,6 +31,7 @@ describe('Wallet tests', () => {
   let apiKey: ApiKey;
   let apiKey2: ApiKey;
 
+  let testIntegration: EmbeddedWalletIntegration;
   let testOasisSignature: OasisSignature;
 
   beforeAll(async () => {
@@ -55,44 +59,23 @@ describe('Wallet tests', () => {
       testProject2.project_uuid,
     );
 
-    //Insert endpoint
-    await new Endpoint({}, stage.context.blockchain)
-      .populate({
-        url: 'https://testnet.sapphire.oasis.io',
-        chain: EvmChain.OASIS,
-        chainType: ChainType.EVM,
-      })
-      .insert();
-
-    //Insert wallet
-    await new Wallet(
+    //Insert some test embedded wallet integrations and signatures
+    testIntegration = await new EmbeddedWalletIntegration(
       {
-        chain: EvmChain.OASIS,
-        chainType: ChainType.EVM,
-        address: config.oasis.wallet.address,
-        seed: config.oasis.wallet.seed,
-        blockParseSize: 50,
-        lastParsedBlock: 0,
+        integration_uuid: uuid(),
+        project_uuid: testProject.project_uuid,
+        title: 'Test EW integration',
+        description: 'Test description',
       },
-      stage.context.blockchain,
+      stage.context.authentication,
     ).insert();
 
-    await new Wallet(
-      {
-        ...config.subsocial.wallet,
-        chain: config.subsocial.chain,
-        chainType: config.subsocial.chainType,
-        nextNonce: 1,
-      },
-      stage.context.blockchain,
-    ).insert();
-
-    //Insert some test oasis signatures
     testOasisSignature = await new OasisSignature(
       {},
       stage.context.authentication,
     )
       .populate({
+        embeddedWalletIntegration_id: testIntegration.id,
         apiKey: apiKey.apiKey,
         project_uuid: testProject.project_uuid,
         dataHash:
@@ -107,6 +90,7 @@ describe('Wallet tests', () => {
 
     await new OasisSignature({}, stage.context.authentication)
       .populate({
+        embeddedWalletIntegration_id: testIntegration.id,
         apiKey: apiKey.apiKey,
         project_uuid: testProject.project_uuid,
         dataHash:
@@ -115,26 +99,140 @@ describe('Wallet tests', () => {
       })
       .insert();
 
-    await new OasisSignature({}, stage.context.authentication)
-      .populate({
-        apiKey: apiKey2.apiKey,
-        project_uuid: testProject2.project_uuid,
-        dataHash:
-          '0xf4688cf1bce1a2b84753ac4f7dd8b0f044ba06666bdf0b379203c3551d569735',
-        status: SqlModelStatus.INACTIVE,
-      })
-      .insert();
+    //Insert overrides for test project, so if defaults changes, tests still works
+    await new Override(
+      {
+        quota_id: QuotaCode.MAX_EMBEDDED_WALLET_INTEGRATIONS,
+        status: SqlModelStatus.ACTIVE,
+        project_uuid: testProject.project_uuid,
+        value: 2,
+      },
+      stage.context.config,
+    ).insert();
+
+    await new Override(
+      {
+        quota_id: QuotaCode.MAX_EMBEDDED_WALLET_SIGNATURES,
+        status: SqlModelStatus.ACTIVE,
+        project_uuid: testProject.project_uuid,
+        value: 100,
+      },
+      stage.context.config,
+    ).insert();
   });
 
   afterAll(async () => {
     await releaseStage(stage);
   });
 
-  describe('Oasis signature tests', () => {
-    test('User should be able to list oasis signatures for the project', async () => {
+  test('User should be able to get info about embedded wallet quotas', async () => {
+    const response = await request(stage.http)
+      .get(`/embedded-wallet/info?project_uuid=${testProject.project_uuid}`)
+      .set('Authorization', `Bearer ${testUser.token}`);
+    expect(response.status).toBe(200);
+    expect(response.body.data.maxNumOfEWIntegrations).toBe(2);
+    expect(response.body.data.numOfEWIntegrations).toBe(1);
+    expect(response.body.data.maxNumOfEWSignatures).toBe(100);
+    expect(response.body.data.numOfEWSignaturesForCurrentMonth).toBe(2);
+  });
+
+  describe('Embedded wallet (EW) integration tests', () => {
+    test('User should be able to list EW integrations', async () => {
       const response = await request(stage.http)
         .get(
-          `/wallet/oasis-signatures?project_uuid=${testProject.project_uuid}`,
+          `/embedded-wallet/integrations?project_uuid=${testProject.project_uuid}`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBe(1);
+      const tmpIntegration = response.body.data.items[0];
+      expect(tmpIntegration.title).toEqual(testIntegration.title);
+      expect(tmpIntegration.description).toEqual(testIntegration.description);
+      expect(tmpIntegration.integration_uuid).toEqual(
+        testIntegration.integration_uuid,
+      );
+    });
+
+    test('User should be able to get EW integration by uuid', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/embedded-wallet/integrations/${testIntegration.integration_uuid}`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data).toMatchObject({
+        integration_uuid: testIntegration.integration_uuid,
+        title: testIntegration.title,
+        description: testIntegration.description,
+      });
+      expect(response.body.data.usage?.length).toBeGreaterThan(20);
+      expect(
+        response.body.data.usage.filter((x) => x.countOfSignatures > 0).length,
+      ).toBe(1);
+    });
+
+    test('User should be able to create new embedded wallet integration', async () => {
+      const body = {
+        project_uuid: testProject.project_uuid,
+        title: 'New test integration',
+        description: 'New test integration description',
+      };
+
+      const response = await request(stage.http)
+        .post(`/embedded-wallet/integration`)
+        .send(body)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(201);
+      const tmpUuid = response.body.data.integration_uuid;
+      expect(tmpUuid).toBeTruthy();
+
+      const tmpIntegration = await new EmbeddedWalletIntegration(
+        {},
+        stage.context.authentication,
+      ).populateByUUID(tmpUuid, 'integration_uuid');
+      expect(tmpIntegration.exists()).toBeTruthy();
+      expect(tmpIntegration).toMatchObject(body);
+    });
+
+    test('User should NOT be able to create more integrations than the limit is', async () => {
+      const body = {
+        project_uuid: testProject.project_uuid,
+        title: 'New test integration',
+        description: 'New test integration description',
+      };
+
+      const response = await request(stage.http)
+        .post(`/embedded-wallet/integration`)
+        .send(body)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(400);
+      expect(response.body.code).toBe(40013001);
+    });
+
+    test('User should be able to update embedded wallet integration', async () => {
+      const body = {
+        title: 'Updated title',
+      };
+
+      const response = await request(stage.http)
+        .patch(
+          `/embedded-wallet/integrations/${testIntegration.integration_uuid}`,
+        )
+        .send(body)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+
+      const tmpIntegration = await new EmbeddedWalletIntegration(
+        {},
+        stage.context.authentication,
+      ).populateByUUID(testIntegration.integration_uuid, 'integration_uuid');
+      expect(tmpIntegration).toMatchObject(body);
+    });
+
+    test('User should be able to get signatures of specific EW integration', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/embedded-wallet/integrations/${testIntegration.integration_uuid}/signatures`,
         )
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
@@ -142,32 +240,66 @@ describe('Wallet tests', () => {
       const tmpSignature = response.body.data.items.find(
         (x) => x.dataHash == testOasisSignature.dataHash,
       );
-      expect(tmpSignature).toBeTruthy();
+      expect(tmpSignature.publicAddress).toBe(testOasisSignature.publicAddress);
       expect(tmpSignature.hashedUsername).toBe(
         testOasisSignature.hashedUsername,
       );
-      expect(tmpSignature.publicAddress).toBe(testOasisSignature.publicAddress);
-      expect(tmpSignature.status).toBe(SqlModelStatus.ACTIVE);
     });
-
-    test('User should NOT be able to get ANOTHER USER signatures list', async () => {
+  });
+  describe('Embedded wallet (EW) integration access tests', () => {
+    test('User should NOT be able to list EW integrations of another project', async () => {
       const response = await request(stage.http)
         .get(
-          `/wallet/oasis-signatures?project_uuid=${testProject2.project_uuid}`,
+          `/embedded-wallet/integrations?project_uuid=${testProject.project_uuid}`,
         )
-        .set('Authorization', `Bearer ${testUser.token}`);
+        .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
     });
 
-    test('User should be able to get count of signatures by api key', async () => {
+    test('User should NOT be able to get EW integration of another project', async () => {
       const response = await request(stage.http)
         .get(
-          `/wallet/oasis-signatures-count-by-api-key?project_uuid=${testProject.project_uuid}`,
+          `/embedded-wallet/integrations/${testIntegration.integration_uuid}`,
         )
-        .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(200);
-      expect(response.body.data[0].oasisSignatures).toBe(2);
-      expect(response.body.data[0].name).toBe(apiKey.name);
+        .set('Authorization', `Bearer ${testUser2.token}`);
+      expect(response.status).toBe(403);
+    });
+
+    test('User should be NOT able to create new embedded wallet integration into ANOTHER project', async () => {
+      const body = {
+        project_uuid: testProject.project_uuid,
+        title: 'New test integration',
+        description: 'New test integration description',
+      };
+
+      const response = await request(stage.http)
+        .post(`/embedded-wallet/integration`)
+        .send(body)
+        .set('Authorization', `Bearer ${testUser2.token}`);
+      expect(response.status).toBe(403);
+    });
+
+    test('User should NOT be able to update ANOTHER project embedded wallet integration', async () => {
+      const body = {
+        title: 'Updated title',
+      };
+
+      const response = await request(stage.http)
+        .patch(
+          `/embedded-wallet/integrations/${testIntegration.integration_uuid}`,
+        )
+        .send(body)
+        .set('Authorization', `Bearer ${testUser2.token}`);
+      expect(response.status).toBe(403);
+    });
+
+    test('User should NOT be able to get signatures of specific EW integration of ANOTHER project', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/embedded-wallet/integrations/${testIntegration.integration_uuid}/signatures`,
+        )
+        .set('Authorization', `Bearer ${testUser2.token}`);
+      expect(response.status).toBe(403);
     });
   });
 });

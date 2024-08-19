@@ -22,6 +22,7 @@ import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { EmbeddedWalletService } from './embedded-wallet.service';
+import { ProjectAccessGuard } from '../../guards/project-access.guard';
 
 @Controller('embedded-wallet')
 @Permissions({ permission: DefaultPermission.WALLET })
@@ -31,7 +32,7 @@ export class EmbeddedWalletController {
   @Get('info')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: BaseProjectQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @UseGuards(ProjectAccessGuard, ValidationGuard, AuthGuard)
   async getEmbeddedWalletInfo(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseProjectQueryFilter,
