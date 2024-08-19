@@ -682,9 +682,9 @@ export class NftsService {
       name: `${collection.name} IPNS record`,
       cid: collection.cid,
     });
-    const ipnsRes = await new StorageMicroservice(context).createIpns(
-      createIpnsDto,
-    );
+    const ipnsRes = (
+      await new StorageMicroservice(context).createIpns(createIpnsDto)
+    ).data;
 
     console.info('Ipns for collection', ipnsRes);
 
@@ -701,7 +701,10 @@ export class NftsService {
       },
       context,
     );
-    await this.setNftCollectionBaseUri({ body: setBaseUriBody }, context);
+    await NftsService.setNftCollectionBaseUri(
+      { body: setBaseUriBody },
+      context,
+    );
 
     console.info('Set collection base uri succeeded. Updating collection...');
 
