@@ -135,7 +135,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     this.status = status;
 
     try {
-      return await this.update(SerializeFor.INSERT_DB, conn);
+      return await this.update(SerializeFor.UPDATE_DB, conn);
     } catch (err) {
       this.reset();
       throw err;
@@ -406,9 +406,6 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     return await this.markDeleted(conn, SqlModelStatus.ARCHIVED);
   }
 
-  /**
-   *
-   */
   public async markActive(conn?: PoolConnection) {
     return await this.updateStatus(SqlModelStatus.ACTIVE, conn);
   }

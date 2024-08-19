@@ -27,7 +27,7 @@ import {
   Delete,
   Get,
   Param,
-  Put,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -308,7 +308,7 @@ export class NftsController {
     return await this.nftsService.archiveCollection(context, collectionUuid);
   }
 
-  @Put('collections/:collectionUuid/activate')
+  @Patch('collections/:collectionUuid/activate')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },

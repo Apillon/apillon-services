@@ -20,7 +20,6 @@ import {
   Param,
   Patch,
   Post,
-  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -112,7 +111,7 @@ export class HostingController {
     return await this.hostingService.archiveWebsite(context, website_uuid);
   }
 
-  @Put('websites/:website_uuid/activate')
+  @Patch('websites/:website_uuid/activate')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },

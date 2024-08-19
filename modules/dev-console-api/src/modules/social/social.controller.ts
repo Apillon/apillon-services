@@ -23,7 +23,7 @@ import {
   Get,
   Param,
   Post,
-  Put,
+  Patch,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -75,7 +75,7 @@ export class SocialController {
     return await this.socialService.archiveSpace(context, space_uuid);
   }
 
-  @Put('spaces/:space_uuid/activate')
+  @Patch('spaces/:space_uuid/activate')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -140,7 +140,7 @@ export class SocialController {
     return await this.socialService.archivePost(context, post_uuid);
   }
 
-  @Put('posts/:post_uuid/activate')
+  @Patch('posts/:post_uuid/activate')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },

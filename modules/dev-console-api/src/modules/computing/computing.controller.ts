@@ -17,7 +17,7 @@ import {
   Delete,
   Get,
   Param,
-  Put,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -80,7 +80,7 @@ export class ComputingController {
     return await this.computingService.archiveContract(context, uuid);
   }
 
-  @Put('contracts/:uuid/activate')
+  @Patch('contracts/:uuid/activate')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
