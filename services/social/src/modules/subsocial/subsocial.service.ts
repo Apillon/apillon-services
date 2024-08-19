@@ -49,6 +49,16 @@ export class SubsocialService {
     return await space.markArchived();
   }
 
+  static async activateSpace(
+    event: { space_uuid: string },
+    context: ServiceContext,
+  ) {
+    const space = await new Space({}, context).populateByUuidAndCheckAccess(
+      event.space_uuid,
+    );
+    return await space.markActive();
+  }
+
   static async createSpace(
     params: { body: CreateSpaceDto },
     context: ServiceContext,
@@ -101,6 +111,17 @@ export class SubsocialService {
     );
 
     return await post.markArchived();
+  }
+
+  static async activatePost(
+    event: { post_uuid: string },
+    context: ServiceContext,
+  ) {
+    const post = await new Post({}, context).populateByUuidAndCheckAccess(
+      event.post_uuid,
+    );
+
+    return await post.markActive();
   }
 
   static async createPost(

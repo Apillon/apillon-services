@@ -162,6 +162,7 @@ export enum StorageEventType {
   WEBSITE_CREATE = 'create-website',
   WEBSITE_UPDATE = 'update-website',
   WEBSITE_ARCHIVE = 'archive-website',
+  WEBSITE_ACTIVATE = 'activate-website',
   WEBSITE_GET = 'get-website',
   WEBSITE_DEPLOY = 'deploy-website',
   WEBSITE_LIST_DOMAINS = 'list-website-domains',
@@ -262,6 +263,7 @@ export enum NftsEventType {
   ADD_NFTS_METADATA = 'add-nfts-metadata',
   ARCHIVE_COLLECTION = 'archive-collection',
   ADD_IPNS_TO_COLLECTION = 'add-ipns-to-collection',
+  ACTIVATE_COLLECTION = 'activate-collection',
 }
 
 export enum ComputingEventType {
@@ -276,6 +278,7 @@ export enum ComputingEventType {
   LIST_CLUSTER_WALLETS = 'list-cluster-wallets',
   PROJECT_COMPUTING_DETAILS = 'project-computing-details',
   ARCHIVE_CONTRACT = 'archive-contract',
+  ACTIVATE_CONTRACT = 'activate-contract',
 
   CREATE_JOB = 'create-job',
   LIST_JOBS = 'list-jobs',
@@ -311,10 +314,12 @@ export enum SocialEventType {
   LIST_SPACES = 'list-spaces',
   GET_SPACE = 'get-space',
   ARCHIVE_SPACE = 'archive-space',
+  ACTIVATE_SPACE = 'activate-space',
   CREATE_POST = 'create-post',
   LIST_POSTS = 'list-posts',
   GET_POST = 'get-post',
   ARCHIVE_POST = 'archive-post',
+  ACTIVATE_POST = 'activate-post',
   GET_WALLET_IDENTITY = 'get-wallet-identity',
   PROJECT_SOCIAL_DETAILS = 'project-social-details',
 }

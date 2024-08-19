@@ -27,6 +27,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -305,5 +306,18 @@ export class NftsController {
     @Param('collectionUuid') collectionUuid: string,
   ) {
     return await this.nftsService.archiveCollection(context, collectionUuid);
+  }
+
+  @Patch('collections/:collectionUuid/activate')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async activateCollection(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collectionUuid') collectionUuid: string,
+  ) {
+    return await this.nftsService.activateCollection(context, collectionUuid);
   }
 }

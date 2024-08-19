@@ -231,6 +231,28 @@ export class HostingService {
     return await website.markArchived();
   }
 
+  /**
+   * Set a website's status to active
+   * @param {{ website_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Website>}
+   */
+  static async activateWebsite(
+    event: { website_uuid: string },
+    context: ServiceContext,
+  ): Promise<Website> {
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+    website.canModify(context);
+
+    return await website.markActive();
+  }
+
   static async maxWebsitesQuotaReached(
     event: { query: WebsitesQuotaReachedQueryFilter },
     context: ServiceContext,
