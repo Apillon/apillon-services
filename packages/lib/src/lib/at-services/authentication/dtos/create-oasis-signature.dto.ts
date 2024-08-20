@@ -38,19 +38,6 @@ export class CreateOasisSignatureDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.CREATE_OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-  })
-  public integration_uuid: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
   })
   public project_uuid: string;

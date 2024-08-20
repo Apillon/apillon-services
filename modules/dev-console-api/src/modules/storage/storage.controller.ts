@@ -28,7 +28,6 @@ import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { StorageService } from './storage.service';
-import { ProjectAccessGuard } from '../../guards/project-access.guard';
 
 @Controller('storage')
 @Permissions({ permission: DefaultPermission.STORAGE })
@@ -38,7 +37,7 @@ export class StorageController {
   @Get('info')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: BaseProjectQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(AuthGuard, ValidationGuard, ProjectAccessGuard)
+  @UseGuards(AuthGuard, ValidationGuard)
   async getStorageInfo(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseProjectQueryFilter,
