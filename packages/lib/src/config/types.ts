@@ -204,13 +204,9 @@ export enum AuthenticationEventType {
   SPORRAN_REQUEST_CREDENTIAL = 'sporran-request-credential',
   SPORRAN_VERIFY_CREDENTIAL = 'sporran-verify-credential',
   GET_TOTAL_DIDS = 'get-total-dids',
-  EW_INFO = 'get-embedded-wallets-info',
-  EW_INTEGRATION_CREATE = 'create-ew-integration',
-  EW_INTEGRATION_GET = 'get-ew-integration',
-  EW_INTEGRATION_LIST = 'list-ew-integration',
-  EW_INTEGRATION_UPDATE = 'update-ew-integration',
   CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
   LIST_OASIS_SIGNATURES = 'list-oasis-signatures',
+  GET_OASIS_SIGNATURES_COUNT_BY_API_KEY = 'get-oasis-signatures-count-by-api-key',
   GENERATE_OTP = 'generate-otp',
   VALIDATE_OTP = 'validate-otp',
 }
@@ -685,7 +681,6 @@ export enum ValidatorErrorCode {
   CREATE_OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT = 42200165,
   GENERATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200166,
   VALIDATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200167,
-  CREATE_EW_INTEGRATION_REQUIRED_DATA_NOT_PRESENT = 42200168,
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
   COMPUTING_CONTRACT_TYPE_NOT_PRESENT = 42200202,
@@ -835,8 +830,6 @@ export enum QuotaCode {
   MAX_NFT_COLLECTIONS = 9,
   MAX_STORAGE = 10,
   MAX_BANDWIDTH = 11,
-  MAX_EMBEDDED_WALLET_INTEGRATIONS = 12,
-  MAX_EMBEDDED_WALLET_SIGNATURES = 13,
 }
 
 /**
@@ -1067,7 +1060,7 @@ export enum JwtExpireTime {
 
 export enum SubscriptionPackageId {
   FREEMIUM = 1,
-  CATERPILLAR = 2,
-  COCOON = 3,
-  BUTTERFLY = 4,
+  CATERPILLAR,
+  COCOON,
+  BUTTERFLY,
 }
