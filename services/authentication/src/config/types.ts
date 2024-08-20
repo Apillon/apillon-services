@@ -8,12 +8,18 @@ export enum DbTables {
   IDENTITY_CONFIG = 'identity_config',
   OASIS_SIGNATURE = 'oasis_signature',
   OTP = 'otp',
+  EMBEDDED_WALLET_INTEGRATION = 'embedded-wallet-integration',
 }
 
 /**
  * Validation error codes - 42213000.
  */
 export enum AuthenticationErrorCode {
+  //400
+  MAX_NUMBER_OF_EMBEDDED_WALLET_INTEGRATIONS_REACHED = 40013001,
+  MAX_NUMBER_OF_EMBEDDED_WALLET_SIGNATURES_REACHED = 40013002,
+
+  //422
   DEFAULT_VALIDATION_ERROR = 42213000,
   USER_EMAIL_ALREADY_TAKEN = 422130001,
   USER_EMAIL_NOT_PRESENT = 422130002,
@@ -53,8 +59,9 @@ export enum AuthenticationErrorCode {
   TRANSACTION_CHAIN_ID_NOT_PRESENT = 422130501,
   TRANSACTION_TYPE_NOT_PRESENT = 422130502,
   TRANSACTION_RAW_TRANSACTION_NOT_PRESENT = 422130503,
-  // Oasis
+  // Embedded wallet
   OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT = 422130600,
+  EMBEDDED_WALLET_INTEGRATION_REQUIRED_DATA_NOT_PRESENT = 422130601,
   // Otp
   INVALID_OTP = 422130700,
 }
@@ -64,6 +71,7 @@ export enum AuthenticationErrorCode {
  */
 export enum ResourceNotFoundErrorCode {
   DEFAULT_RESOURCE_NOT_FOUND_ERROR = 404130000,
+  EMBEDDED_WALLET_INTEGRATION_NOT_FOUND = 404130001,
 }
 
 export enum HttpStatus {
@@ -230,4 +238,9 @@ export class IdentityState {
 
 export enum IdentityConfigKey {
   ATTESTER_DID_TX_COUNTER = 'ATTESTER_DID_TX_COUNTER',
+}
+
+export enum Defaults {
+  MAX_EMBEDDED_WALLET_INTEGRATIONS = 1,
+  MAX_EMBEDDED_WALLET_SIGNATURES = 100,
 }

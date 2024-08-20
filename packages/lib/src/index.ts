@@ -72,7 +72,8 @@ export * from './lib/at-services/authentication/dtos/sporran/message/submit-atte
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-terms.dto';
 export * from './lib/at-services/authentication/dtos/wallet-identity.dto';
 export * from './lib/at-services/authentication/dtos/create-oasis-signature.dto';
-export * from './lib/at-services/authentication/dtos/oasis-signatures-query-filter.dto';
+export * from './lib/at-services/authentication/dtos/embedded-wallet-signatures-query-filter.dto';
+export * from './lib/at-services/authentication/dtos/create-embedded-wallet-integration.dto';
 
 //#REGION NTFS
 export * from './lib/at-services/nfts/nfts';

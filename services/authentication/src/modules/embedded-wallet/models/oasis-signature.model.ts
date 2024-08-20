@@ -1,6 +1,6 @@
 import {
   Context,
-  OasisSignaturesQueryFilter,
+  EmbeddedWalletSignaturesQueryFilter,
   PopulateFrom,
   ProjectAccessModel,
   SerializeFor,
@@ -14,6 +14,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
 import { AuthenticationErrorCode, DbTables } from '../../../config/types';
+import { EmbeddedWalletIntegration } from './embedded-wallet-integration.model';
 
 export class OasisSignature extends ProjectAccessModel {
   public readonly tableName = DbTables.OASIS_SIGNATURE;
@@ -33,6 +34,26 @@ export class OasisSignature extends ProjectAccessModel {
     populatable: [PopulateFrom.DB],
   })
   public id: number;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: AuthenticationErrorCode.OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+    fakeValue: () => uuidV4(),
+  })
+  public embeddedWalletIntegration_id: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -123,28 +144,30 @@ export class OasisSignature extends ProjectAccessModel {
   })
   public apiKey: string;
 
-  public async signaturesByApiKey(): Promise<
-    { apiKey: string; numOfSignatures: number }[]
-  > {
+  public async getNumOfSignaturesForCurrentMonth(): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(
       `
-        SELECT apiKey, COUNT(*) as numOfSignatures
+        SELECT COUNT(*) as numOfSignatures
         FROM \`${DbTables.OASIS_SIGNATURE}\`
         WHERE project_uuid = @project_uuid
         AND status IN (${SqlModelStatus.ACTIVE}, ${SqlModelStatus.INACTIVE})
-        GROUP BY apiKey;
+        AND month(createTime) = month(curdate());
       `,
       { project_uuid: this.project_uuid },
     );
 
-    return data;
+    return data[0].numOfSignatures;
   }
 
   public async getList(
     context: ServiceContext,
-    filter: OasisSignaturesQueryFilter,
+    filter: EmbeddedWalletSignaturesQueryFilter,
   ) {
-    this.canAccess(context);
+    await new EmbeddedWalletIntegration(
+      {},
+      context,
+    ).populateByUUIDAndCheckAccess(filter.integration_uuid);
+
     // Map url query with sql fields.
     const fieldMap = {
       id: 'o.id',
@@ -162,8 +185,9 @@ export class OasisSignature extends ProjectAccessModel {
         `,
       qFrom: `
         FROM \`${DbTables.OASIS_SIGNATURE}\` o
-        WHERE o.project_uuid = IFNULL(@project_uuid, o.project_uuid)
-        AND status <> ${SqlModelStatus.DELETED}
+        JOIN \`${DbTables.EMBEDDED_WALLET_INTEGRATION}\` i on i.id = o.embeddedWalletIntegration_id
+        WHERE i.integration_uuid = @integration_uuid
+        AND o.status <> ${SqlModelStatus.DELETED}
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}

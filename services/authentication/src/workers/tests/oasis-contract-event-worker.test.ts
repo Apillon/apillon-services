@@ -5,7 +5,7 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
-import { OasisSignature } from '../../modules/oasis/models/oasis-signature.model';
+import { OasisSignature } from '../../modules/embedded-wallet/models/oasis-signature.model';
 import { OasisContractEventWorker } from '../oasis-contract-event.worker';
 import { SqlModelStatus } from '@apillon/lib';
 
