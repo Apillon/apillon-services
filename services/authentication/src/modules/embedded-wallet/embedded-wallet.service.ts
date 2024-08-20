@@ -20,6 +20,7 @@ import { v4 as uuid } from 'uuid';
 import {
   AuthenticationErrorCode,
   DbTables,
+  Defaults,
   ResourceNotFoundErrorCode,
 } from '../../config/types';
 import {
@@ -53,18 +54,18 @@ export class EmbeddedWalletService {
     ]);
 
     return {
-      maxNumOfEWIntegrations: quotas.find(
-        (q) => q.id === QuotaCode.MAX_EMBEDDED_WALLET_INTEGRATIONS,
-      )?.value,
+      maxNumOfEWIntegrations:
+        quotas.find((q) => q.id === QuotaCode.MAX_EMBEDDED_WALLET_INTEGRATIONS)
+          ?.value || Defaults.MAX_EMBEDDED_WALLET_INTEGRATIONS,
       numOfEWIntegrations: numOfIntegrations,
-      maxNumOfEWSignatures: quotas.find(
-        (q) => q.id === QuotaCode.MAX_EMBEDDED_WALLET_SIGNATURES,
-      )?.value,
+      maxNumOfEWSignatures:
+        quotas.find((q) => q.id === QuotaCode.MAX_EMBEDDED_WALLET_SIGNATURES)
+          ?.value || Defaults.MAX_EMBEDDED_WALLET_SIGNATURES,
       numOfEWSignaturesForCurrentMonth: numOfSignatures,
     };
   }
 
-  static async listEWIntegrations(
+  static async listEmbeddedWalletIntegrations(
     event: { query: BaseProjectQueryFilter },
     context: ServiceContext,
   ) {
@@ -74,7 +75,7 @@ export class EmbeddedWalletService {
     ).getList(context, new BaseProjectQueryFilter(event.query));
   }
 
-  static async getEWIntegration(
+  static async getEmbeddedWalletIntegration(
     event: { integration_uuid: string },
     context: ServiceContext,
   ) {
@@ -90,7 +91,7 @@ export class EmbeddedWalletService {
     return { ...ewIntegration.serializeByContext(context), usage };
   }
 
-  static async createEWIntegration(
+  static async createEmbeddedWalletIntegration(
     event: { body: CreateEWIntegrationDto },
     context: ServiceContext,
   ) {
@@ -127,7 +128,7 @@ export class EmbeddedWalletService {
     return ewIntegration.serialize(context.getSerializationStrategy());
   }
 
-  static async updateEWIntegration(
+  static async updateEmbeddedWalletIntegration(
     event: { integration_uuid: string; body: any },
     context: ServiceContext,
   ) {

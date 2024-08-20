@@ -147,7 +147,7 @@ describe('Embedded wallet tests', () => {
     expect(response.status).toBe(400);
   });
 
-  test('Application should recieve 422 error if missing required data', async () => {
+  test('Application should receive 422 error if missing required data', async () => {
     const response = await request(stage.http)
       .post(`/embedded-wallet/signature`)
       .send({
@@ -156,7 +156,7 @@ describe('Embedded wallet tests', () => {
     expect(response.status).toBe(422);
   });
 
-  test('Application should recieve 400 error if sending invalid token', async () => {
+  test('Application should receive 400 error if sending invalid token', async () => {
     const response = await request(stage.http)
       .post(`/embedded-wallet/signature`)
       .send({
@@ -167,7 +167,7 @@ describe('Embedded wallet tests', () => {
     expect(response.status).toBe(400);
   });
 
-  test('Application should recieve error if sending invalid data', async () => {
+  test('Application should receive error if sending invalid data', async () => {
     const response = await request(stage.http)
       .post(`/embedded-wallet/signature`)
       .send({
@@ -178,7 +178,7 @@ describe('Embedded wallet tests', () => {
     expect(response.status).toBe(500);
   });
 
-  test('Application should recieve error if sending invalid integration_uuid', async () => {
+  test('Application should receive error if sending invalid integration_uuid', async () => {
     const response = await request(stage.http)
       .post(`/embedded-wallet/signature`)
       .send({
@@ -189,7 +189,7 @@ describe('Embedded wallet tests', () => {
     expect(response.status).toBe(404);
   });
 
-  test('Application should recieve error if using integration of another project', async () => {
+  test('Application should receive error if using integration of another project', async () => {
     const response = await request(stage.http)
       .post(`/embedded-wallet/signature`)
       .send({

@@ -45,13 +45,13 @@ export async function processEvent(event, context: Context): Promise<any> {
     [AuthenticationEventType.EW_INFO]:
       EmbeddedWalletService.getEmbeddedWalletInfo,
     [AuthenticationEventType.EW_INTEGRATION_CREATE]:
-      EmbeddedWalletService.createEWIntegration,
+      EmbeddedWalletService.createEmbeddedWalletIntegration,
     [AuthenticationEventType.EW_INTEGRATION_LIST]:
-      EmbeddedWalletService.listEWIntegrations,
+      EmbeddedWalletService.listEmbeddedWalletIntegrations,
     [AuthenticationEventType.EW_INTEGRATION_GET]:
-      EmbeddedWalletService.getEWIntegration,
+      EmbeddedWalletService.getEmbeddedWalletIntegration,
     [AuthenticationEventType.EW_INTEGRATION_UPDATE]:
-      EmbeddedWalletService.updateEWIntegration,
+      EmbeddedWalletService.updateEmbeddedWalletIntegration,
     [AuthenticationEventType.CREATE_OASIS_SIGNATURE]:
       EmbeddedWalletService.createOasisSignature,
     [AuthenticationEventType.LIST_OASIS_SIGNATURES]:

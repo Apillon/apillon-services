@@ -239,3 +239,8 @@ export class IdentityState {
 export enum IdentityConfigKey {
   ATTESTER_DID_TX_COUNTER = 'ATTESTER_DID_TX_COUNTER',
 }
+
+export enum Defaults {
+  MAX_EMBEDDED_WALLET_INTEGRATIONS = 1,
+  MAX_EMBEDDED_WALLET_SIGNATURES = 100,
+}
