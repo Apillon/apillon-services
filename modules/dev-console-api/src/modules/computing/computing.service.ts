@@ -80,6 +80,11 @@ export class ComputingService {
       .data;
   }
 
+  async activateContract(context: DevConsoleApiContext, uuid: string) {
+    return (await new ComputingMicroservice(context).activateContract(uuid))
+      .data;
+  }
+
   async listTransactions(
     context: DevConsoleApiContext,
     query: ComputingTransactionQueryFilter,

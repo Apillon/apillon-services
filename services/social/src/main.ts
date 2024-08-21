@@ -14,6 +14,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [SocialEventType.LIST_SPACES]: SubsocialService.listSpaces,
     [SocialEventType.GET_SPACE]: SubsocialService.getSpace,
     [SocialEventType.ARCHIVE_SPACE]: SubsocialService.archiveSpace,
+    [SocialEventType.ACTIVATE_SPACE]: SubsocialService.activateSpace,
     [SocialEventType.CREATE_SPACE]: SubsocialService.createSpace,
     [SocialEventType.LIST_POSTS]: SubsocialService.listPosts,
     [SocialEventType.GET_POST]: SubsocialService.getPost,

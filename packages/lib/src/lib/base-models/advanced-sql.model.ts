@@ -129,6 +129,19 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     return this.status !== SqlModelStatus.DELETED;
   }
 
+  public async updateStatus(status: SqlModelStatus, conn?: PoolConnection) {
+    this.updateUser = this.getContext()?.user?.id;
+
+    this.status = status;
+
+    try {
+      return await this.update(SerializeFor.UPDATE_DB, conn);
+    } catch (err) {
+      this.reset();
+      throw err;
+    }
+  }
+
   /**
    * Populates model fields by loading the document with the provided id from the database.
    * @param id Document's ID.
@@ -383,16 +396,7 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     conn?: PoolConnection,
     status = SqlModelStatus.DELETED,
   ): Promise<this> {
-    this.updateUser = this.getContext()?.user?.id;
-
-    this.status = status;
-
-    try {
-      return await this.update(SerializeFor.INSERT_DB, conn);
-    } catch (err) {
-      this.reset();
-      throw err;
-    }
+    return await this.updateStatus(status, conn);
   }
 
   /**
@@ -400,6 +404,10 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
    */
   public async markArchived(conn?: PoolConnection) {
     return await this.markDeleted(conn, SqlModelStatus.ARCHIVED);
+  }
+
+  public async markActive(conn?: PoolConnection) {
+    return await this.updateStatus(SqlModelStatus.ACTIVE, conn);
   }
 
   /*
