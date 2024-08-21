@@ -1,6 +1,7 @@
 import { getSecrets } from '../lib/aws/aws-secrets';
 import * as dotenv from 'dotenv';
 import { AppEnvironment, CacheKeyTTL } from './types';
+import { trim } from 'lodash';
 
 export interface IEnv {
   /**
@@ -182,6 +183,7 @@ export interface IEnv {
   URL_SCREENSHOT_FUNCTION_NAME: string;
   URL_SCREENSHOT_API_URL: string;
   SEND_WEBSITES_TO_REVIEW: number;
+  VALID_WEBSITE_DOMAIN_TARGETS: string[];
   /**
    * Max number of files that can be transferred to ipfs in one worker iteration
    */
@@ -735,6 +737,9 @@ export let env: IEnv = {
   URL_SCREENSHOT_API_URL: process.env['URL_SCREENSHOT_API_URL'],
   SEND_WEBSITES_TO_REVIEW:
     parseInt(process.env['SEND_WEBSITES_TO_REVIEW']) || 1,
+  VALID_WEBSITE_DOMAIN_TARGETS:
+    process.env.VALID_WEBSITE_DOMAIN_TARGETS?.split(',')?.map((x) => trim(x)) ||
+    [],
   STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS:
     parseInt(process.env['STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS']) || 1000,
   STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY:
