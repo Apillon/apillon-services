@@ -42,20 +42,6 @@ export class AcurastController {
     return await this.acurastService.createJob(context, body);
   }
 
-  @Get('jobs')
-  @ApiKeyPermissions({
-    role: DefaultApiKeyRole.KEY_READ,
-    serviceType: AttachedServiceType.COMPUTING,
-  })
-  @Validation({ dto: JobQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(AuthGuard, ValidationGuard)
-  async listJobs(
-    @Ctx() context: ApillonApiContext,
-    @Query() query: JobQueryFilter,
-  ) {
-    // return await this.acurastService.listJobs(context, query);
-  }
-
   @Get('jobs/:job_uuid')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,

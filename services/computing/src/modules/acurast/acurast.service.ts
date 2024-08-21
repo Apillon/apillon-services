@@ -14,6 +14,9 @@ import {
   runCachedFunction,
   CacheKeyPrefix,
   CacheKeyTTL,
+  BaseProjectQueryFilter,
+  CreateCloudFunctionDto,
+  UpdateCloudFunctionDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -36,8 +39,96 @@ import {
   DbTables,
 } from '../../config/types';
 import { AcurastWebsocketClient } from '../clients/acurast-websocket.client';
+import { CloudFunction } from './models/cloud-function.model';
 
 export class AcurastService {
+  /**
+   * Creates a new cloud function with the given data
+   * @param {{ body: CreateCloudFunctionDto }} event - CF creation params
+   * @param {ServiceContext} context
+   * @returns {Promise<CloudFunction>}
+   */
+  static async createCloudFunction(
+    event: { body: CreateCloudFunctionDto },
+    context: ServiceContext,
+  ): Promise<CloudFunction> {
+    const cloudFunction = new CloudFunction(event.body, context).populate({
+      function_uuid: uuidV4(),
+    });
+
+    await cloudFunction.validateOrThrow(ComputingModelValidationException);
+    await cloudFunction.insert();
+
+    return cloudFunction.serializeByContext() as CloudFunction;
+  }
+
+  /**
+   * Returns a list of all cloud functions a project
+   * @param {{ query: BaseProjectQueryFilter }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<CloudFunction[]>}
+   */
+  static async listCloudFunctions(
+    event: { query: BaseProjectQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new CloudFunction(
+      { project_uuid: event.query.project_uuid },
+      context,
+    ).getList(context, new BaseProjectQueryFilter(event.query));
+  }
+
+  /**
+   * Gets a cloud function by UUID
+   * @param {{ function_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<CloudFunction>}
+   */
+  static async getCloudFunctionByUuid(
+    { function_uuid }: { function_uuid: string },
+    context: ServiceContext,
+  ): Promise<AcurastJob> {
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      function_uuid,
+    );
+
+    if (!cloudFunction.exists()) {
+      throw new ComputingNotFoundException(
+        ComputingErrorCode.CLOUD_FUNCTION_NOT_FOUND,
+      );
+    }
+
+    cloudFunction.canAccess(context);
+
+    return cloudFunction.serializeByContext() as AcurastJob;
+  }
+
+  /**
+   * Updates a cloud function by UUID
+   * @param {{ body: UpdateCloudFunctionDto }} event - contains cloud function update params
+   * @param {ServiceContext} context
+   * @returns {Promise<CloudFunction>}
+   */
+  static async updateCloudFunction(
+    event: { body: UpdateCloudFunctionDto },
+    context: ServiceContext,
+  ): Promise<CloudFunction> {
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      event.body.function_uuid,
+    );
+
+    if (!cloudFunction.exists()) {
+      throw new ComputingNotFoundException(
+        ComputingErrorCode.CLOUD_FUNCTION_NOT_FOUND,
+      );
+    }
+    cloudFunction.canAccess(context);
+
+    await cloudFunction.populate(event.body).update();
+
+    return cloudFunction.serializeByContext() as CloudFunction;
+  }
+
   /**
    * Creates a new acurast job with the given data
    * @param {{ body: CreateJobDto }} event - job creation params
@@ -110,22 +201,6 @@ export class AcurastService {
 
     return job.serializeByContext() as AcurastJob;
   }
-
-  /**
-   * Returns a list of all jobs for a project
-   * @param {{ query: JobQueryFilter }} event
-   * @param {ServiceContext} context
-   * @returns {AcurastJob[]}
-   */
-  // static async listJobs(
-  //   event: { query: JobQueryFilter },
-  //   context: ServiceContext,
-  // ) {
-  //   return await new AcurastJob(
-  //     { project_uuid: event.query.project_uuid },
-  //     context,
-  //   ).getList(context, new JobQueryFilter(event.query));
-  // }
 
   /**
    * Gets a job by UUID

@@ -28,6 +28,15 @@ export async function processEvent(event: any, context: Context): Promise<any> {
       ComputingService.getProjectComputingDetails,
     [ComputingEventType.ARCHIVE_CONTRACT]: ComputingService.archiveContract,
 
+    [ComputingEventType.CREATE_CLOUD_FUNCTION]:
+      AcurastService.createCloudFunction,
+    [ComputingEventType.GET_CLOUD_FUNCTION]:
+      AcurastService.getCloudFunctionByUuid,
+    [ComputingEventType.LIST_CLOUD_FUNCTIONS]:
+      AcurastService.listCloudFunctions,
+    [ComputingEventType.UPDATE_CLOUD_FUNCTION]:
+      AcurastService.updateCloudFunction,
+
     [ComputingEventType.CREATE_JOB]: AcurastService.createJob,
     [ComputingEventType.GET_JOB]: AcurastService.getJobByUuid,
     [ComputingEventType.SET_JOB_ENVIRONMENT]: AcurastService.setJobEnvironment,

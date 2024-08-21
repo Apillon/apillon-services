@@ -7,10 +7,10 @@ import {
   SerializeFor,
   SqlModelStatus,
   UuidSqlModel,
-  BaseQueryFilter,
   getQueryParams,
+  BaseProjectQueryFilter,
 } from '@apillon/lib';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import { ComputingErrorCode, DbTables } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 
@@ -28,20 +28,13 @@ const serializable = [
   SerializeFor.SELECT_DB,
 ];
 
-const serializableProfile = [...serializable, SerializeFor.PROFILE];
-const serializableUpdateProfile = [
-  ...serializable,
-  SerializeFor.PROFILE,
-  SerializeFor.UPDATE_DB,
-];
-
 export class CloudFunction extends UuidSqlModel {
   public readonly tableName = DbTables.CLOUD_FUNCTION;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable,
-    serializable: serializableProfile,
+    serializable,
     validators: [
       {
         resolver: presenceValidator(),
@@ -54,7 +47,7 @@ export class CloudFunction extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable,
-    serializable: serializableProfile,
+    serializable,
     validators: [
       {
         resolver: presenceValidator(),
@@ -67,7 +60,7 @@ export class CloudFunction extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable,
-    serializable: serializableProfile,
+    serializable,
     validators: [
       {
         resolver: presenceValidator(),
@@ -81,14 +74,14 @@ export class CloudFunction extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable,
-    serializable: serializableProfile,
+    serializable,
   })
   public description: string;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable,
-    serializable: serializableProfile,
+    serializable,
   })
   public activeJob_uuid: string;
 
@@ -100,7 +93,10 @@ export class CloudFunction extends UuidSqlModel {
     return super.populateByUUID(function_uuid, 'function_uuid');
   }
 
-  public async getList(context: ServiceContext, filter: BaseQueryFilter) {
+  public async getList(
+    context: ServiceContext,
+    filter: BaseProjectQueryFilter,
+  ) {
     this.canAccess(context);
 
     const fieldMap = {

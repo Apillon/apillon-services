@@ -126,19 +126,17 @@ export class ComputingMicroservice extends BaseService {
   }
 
   public async createCloudFunction(body: CreateCloudFunctionDto) {
-    const data = {
+    return await this.callService({
       eventName: ComputingEventType.CREATE_CLOUD_FUNCTION,
       body: body.serialize(),
-    };
-    return await this.callService(data);
+    });
   }
 
   public async listCloudFunctions(query: BaseProjectQueryFilter) {
-    const data = {
+    return await this.callService({
       eventName: ComputingEventType.LIST_CLOUD_FUNCTIONS,
       query: query.serialize(),
-    };
-    return await this.callService(data);
+    });
   }
 
   public async getCloudFunction(query: JobQueryFilter): Promise<{
@@ -149,67 +147,59 @@ export class ComputingMicroservice extends BaseService {
       jobs: any[];
     };
   }> {
-    const data = {
+    return await this.callService({
       eventName: ComputingEventType.GET_CLOUD_FUNCTION,
       query: query.serialize(),
-    };
-    return await this.callService(data);
+    });
   }
 
   public async updateCloudFunction(body: UpdateCloudFunctionDto) {
-    const data = {
+    return await this.callService({
       eventName: ComputingEventType.UPDATE_CLOUD_FUNCTION,
       body,
-    };
-    return await this.callService(data);
+    });
   }
 
   public async createJob(body: CreateJobDto) {
-    const data = {
+    return await this.callService({
       eventName: ComputingEventType.CREATE_JOB,
       body: body.serialize(),
-    };
-    return await this.callService(data);
+    });
   }
 
   public async getJob(job_uuid: string) {
-    const data = {
+    return await this.callService({
       eventName: ComputingEventType.GET_JOB,
       job_uuid,
-    };
-    return await this.callService(data);
+    });
   }
 
   public async setJobEnvironment(body: SetJobEnvironmentDto) {
-    const data = {
+    return await this.callService({
       eventName: ComputingEventType.SET_JOB_ENVIRONMENT,
       body: body.serialize(),
-    };
-    return await this.callService(data);
+    });
   }
 
   public async sendJobMessage(payload: string, job_uuid: string) {
-    const data = {
+    return await this.callService({
       eventName: ComputingEventType.SEND_JOB_MESSAGE,
       payload,
       job_uuid,
-    };
-    return await this.callService(data);
+    });
   }
 
   public async updateJob(body: UpdateJobDto) {
-    const data = {
+    return await this.callService({
       eventName: ComputingEventType.UPDATE_JOB,
       body,
-    };
-    return await this.callService(data);
+    });
   }
 
   public async deleteJob(job_uuid: string) {
-    const data = {
+    return await this.callService({
       eventName: ComputingEventType.DELETE_JOB,
       job_uuid,
-    };
-    return await this.callService(data);
+    });
   }
 }
