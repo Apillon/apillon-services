@@ -37,11 +37,12 @@ export async function processEvent(event: any, context: Context): Promise<any> {
       AcurastService.listCloudFunctions,
     [ComputingEventType.UPDATE_CLOUD_FUNCTION]:
       AcurastService.updateCloudFunction,
+    [ComputingEventType.EXECUTE_CLOUD_FUNCTION]:
+      AcurastService.executeCloudFunction,
 
     [ComputingEventType.CREATE_JOB]: AcurastService.createJob,
     [ComputingEventType.GET_JOB]: AcurastService.getJobByUuid,
     [ComputingEventType.SET_JOB_ENVIRONMENT]: AcurastService.setJobEnvironment,
-    [ComputingEventType.SEND_JOB_MESSAGE]: AcurastService.sendJobMessage,
     [ComputingEventType.UPDATE_JOB]: AcurastService.updateJob,
     [ComputingEventType.DELETE_JOB]: AcurastService.deleteJob,
   };

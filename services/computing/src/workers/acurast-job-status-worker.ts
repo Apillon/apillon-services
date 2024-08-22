@@ -4,6 +4,7 @@ import {
   PoolConnection,
   SerializeFor,
   ServiceName,
+  SqlModelStatus,
 } from '@apillon/lib';
 import {
   BaseSingleThreadWorker,

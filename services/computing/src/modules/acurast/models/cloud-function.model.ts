@@ -16,6 +16,7 @@ import { ComputingErrorCode, DbTables } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuid } from 'uuid';
 import { AcurastJob } from './acurast-job.model';
+import { ComputingNotFoundException } from '../../../lib/exceptions';
 
 const populatable = [
   PopulateFrom.DB,
@@ -106,7 +107,19 @@ export class CloudFunction extends UuidSqlModel {
   }
 
   public override async populateByUUID(function_uuid: string): Promise<this> {
-    return super.populateByUUID(function_uuid, 'function_uuid');
+    const cloudFunction = await super.populateByUUID(
+      function_uuid,
+      'function_uuid',
+    );
+    if (!cloudFunction.exists()) {
+      throw new ComputingNotFoundException(
+        ComputingErrorCode.CLOUD_FUNCTION_NOT_FOUND,
+      );
+    }
+
+    cloudFunction.canAccess(this.getContext());
+
+    return cloudFunction;
   }
 
   public async populateJobs(query: JobQueryFilter) {

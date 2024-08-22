@@ -77,13 +77,17 @@ export class AcurastController {
     serviceType: AttachedServiceType.COMPUTING,
   })
   @UseGuards(AuthGuard)
-  async sendJobMessage(
+  async executeCloudFunction(
     @Ctx() context: ApillonApiContext,
     @Body() payload: any,
     @Param('job_uuid') job_uuid: string,
   ) {
     payload = JSON.stringify(payload); // safety
-    return await this.acurastService.sendJobMessage(context, payload, job_uuid);
+    return await this.acurastService.executeCloudFunction(
+      context,
+      payload,
+      job_uuid,
+    );
   }
 
   @Patch('jobs/:job_uuid')

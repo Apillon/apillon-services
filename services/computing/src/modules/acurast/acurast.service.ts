@@ -152,14 +152,6 @@ export class AcurastService {
       event.body.function_uuid,
     );
 
-    if (!cloudFunction.exists()) {
-      throw new ComputingNotFoundException(
-        ComputingErrorCode.CLOUD_FUNCTION_NOT_FOUND,
-      );
-    }
-
-    cloudFunction.canAccess(context);
-
     const job = new AcurastJob(event.body, context).populate({
       job_uuid: uuidV4(),
       function_uuid: cloudFunction.function_uuid,
@@ -295,23 +287,43 @@ export class AcurastService {
   }
 
   /**
-   * Send a message to a job and return response
-   * @param {{ payload: string, job_uuid: string }} event - job message payload
+   * Send a payload to a job and return response
+   * @param {{ payload: string, function_uuid: string }} event - job message payload
    * @param {ServiceContext} context
-   * @returns {Promise<AcurastJob>}
+   * @returns {Promise<any>}
    */
-  static async sendJobMessage(
-    event: { payload: string; job_uuid: string },
+  static async executeCloudFunction(
+    event: { payload: string; function_uuid: string },
     context: ServiceContext,
-  ): Promise<AcurastJob> {
+  ): Promise<any> {
     const publicKey = await runCachedFunction(
-      `${CacheKeyPrefix.ACURAST_JOB}:${event.job_uuid}`,
+      `${CacheKeyPrefix.ACURAST_JOB}:${event.function_uuid}`,
       async () => {
+        const cloudFunction = await new CloudFunction(
+          {},
+          context,
+        ).populateByUUID(event.function_uuid);
+
+        if (!cloudFunction.activeJob_uuid) {
+          throw new ComputingCodeException({
+            status: 500,
+            code: ComputingErrorCode.JOB_NOT_DEPLOYED,
+            context,
+            sourceFunction: 'executeCloudFunction',
+          });
+        }
+
         const job = await new AcurastJob({}, context).populateByUUID(
-          event.job_uuid,
+          cloudFunction.activeJob_uuid,
         );
+
         // access is not checked for sendMessage
-        job.verifyStatusAndAccess('sendJobMessage', context, undefined, true);
+        job.verifyStatusAndAccess(
+          'executeCloudFunction',
+          context,
+          undefined,
+          true,
+        );
         return job.publicKey;
       },
       CacheKeyTTL.DEFAULT,

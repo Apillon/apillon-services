@@ -122,19 +122,23 @@ export class AcurastController {
     return await this.acurastService.setJobEnvironment(context, body);
   }
 
-  @Post('jobs/:job_uuid/message')
+  @Post('jobs/:job_uuid/execute')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
   @UseGuards(AuthGuard)
-  async sendJobMessage(
+  async executeCloudFunction(
     @Ctx() context: DevConsoleApiContext,
     @Body() payload: any,
     @Param('job_uuid') job_uuid: string,
   ) {
     payload = JSON.stringify(payload); // safety
-    return await this.acurastService.sendJobMessage(context, payload, job_uuid);
+    return await this.acurastService.executeCloudFunction(
+      context,
+      payload,
+      job_uuid,
+    );
   }
 
   @Patch('jobs/:job_uuid')

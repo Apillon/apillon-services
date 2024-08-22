@@ -268,6 +268,7 @@ export class AcurastJob extends UuidSqlModel {
         sourceFunction,
       });
     }
+
     if (!this.jobId) {
       throw new ComputingCodeException({
         status: 500,
@@ -276,6 +277,7 @@ export class AcurastJob extends UuidSqlModel {
         sourceFunction,
       });
     }
+
     if (!skipAccessCheck) {
       this.canModify(context);
     }

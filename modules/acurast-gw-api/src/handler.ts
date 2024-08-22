@@ -2,7 +2,7 @@ import { ComputingMicroservice } from '@apillon/lib';
 import type { APIGatewayProxyHandler } from 'aws-lambda';
 
 export const handler: APIGatewayProxyHandler = async (event) => {
-  const job_uuid = event.requestContext?.domainPrefix;
+  const function_uuid = event.requestContext?.domainPrefix;
 
   const blockedHeadersRegex = new RegExp('^(X-|CloudFront-|Via).*$');
   const headers = Object.keys(event.headers)
@@ -24,7 +24,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   console.log(event);
   console.log(JSON.stringify(payload));
 
-  if (event.httpMethod !== 'POST' || !job_uuid || !payload) {
+  if (event.httpMethod !== 'POST' || !function_uuid || !payload) {
     return {
       statusCode: 400,
       body: JSON.stringify({ message: 'Invalid request' }),
@@ -34,7 +34,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   try {
     const serviceResponse = await new ComputingMicroservice(
       null,
-    ).sendJobMessage(JSON.stringify(payload), job_uuid);
+    ).executeCloudFunction(JSON.stringify(payload), function_uuid);
 
     return {
       statusCode: 200,

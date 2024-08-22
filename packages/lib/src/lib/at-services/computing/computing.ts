@@ -189,11 +189,11 @@ export class ComputingMicroservice extends BaseService {
     });
   }
 
-  public async sendJobMessage(payload: string, job_uuid: string) {
+  public async executeCloudFunction(payload: string, function_uuid: string) {
     return await this.callService({
-      eventName: ComputingEventType.SEND_JOB_MESSAGE,
+      eventName: ComputingEventType.EXECUTE_CLOUD_FUNCTION,
       payload,
-      job_uuid,
+      function_uuid,
     });
   }
 
