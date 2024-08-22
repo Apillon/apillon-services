@@ -85,11 +85,11 @@ export class AcurastService {
    * @returns {Promise<CloudFunction>}
    */
   static async getCloudFunctionByUuid(
-    { function_uuid }: { function_uuid: string },
+    event: { query: JobQueryFilter },
     context: ServiceContext,
-  ): Promise<AcurastJob> {
+  ): Promise<CloudFunction> {
     const cloudFunction = await new CloudFunction({}, context).populateByUUID(
-      function_uuid,
+      event.query.function_uuid,
     );
 
     if (!cloudFunction.exists()) {
@@ -100,7 +100,13 @@ export class AcurastService {
 
     cloudFunction.canAccess(context);
 
-    return cloudFunction.serializeByContext() as AcurastJob;
+    cloudFunction.jobs = (
+      await new AcurastJob(
+        { project_uuid: cloudFunction.project_uuid },
+        context,
+      ).getList(new JobQueryFilter(event.query))
+    ).items;
+    return cloudFunction.serializeByContext() as CloudFunction;
   }
 
   /**

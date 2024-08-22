@@ -105,6 +105,7 @@ export class AcurastController {
     return await this.acurastService.getJob(context, uuid);
   }
 
+  // TODO: When environment can be configured for multiple jobs dynamically
   @Post('jobs/:job_uuid/environment')
   @Validation({ dto: SetJobEnvironmentDto })
   @Permissions(

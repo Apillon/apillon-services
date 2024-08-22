@@ -28,12 +28,6 @@ export class UpdateCloudFunctionDto extends BaseComputingEntityDto {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.COMPUTING_FIELD_NOT_PRESENT,
-      },
-    ],
   })
   public function_uuid: string;
 }

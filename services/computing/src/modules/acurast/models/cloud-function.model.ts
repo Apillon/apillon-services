@@ -10,9 +10,11 @@ import {
   getQueryParams,
   BaseProjectQueryFilter,
 } from '@apillon/lib';
-import { stringParser } from '@rawmodel/parsers';
+import { arrayParser, stringParser } from '@rawmodel/parsers';
 import { ComputingErrorCode, DbTables } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
+import { v4 as uuid } from 'uuid';
+import { AcurastJob } from './acurast-job.model';
 
 const populatable = [
   PopulateFrom.DB,
@@ -22,10 +24,12 @@ const populatable = [
 ];
 const serializable = [
   SerializeFor.INSERT_DB,
+  SerializeFor.UPDATE_DB,
   SerializeFor.ADMIN,
   SerializeFor.SERVICE,
   SerializeFor.APILLON_API,
   SerializeFor.SELECT_DB,
+  SerializeFor.PROFILE,
 ];
 
 export class CloudFunction extends UuidSqlModel {
@@ -41,6 +45,7 @@ export class CloudFunction extends UuidSqlModel {
         code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
+    fakeValue: uuid(),
   })
   public function_uuid: string;
 
@@ -67,7 +72,7 @@ export class CloudFunction extends UuidSqlModel {
         code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
-    fakeValue: 'Function #1',
+    fakeValue: 'Cloud Function #1',
   })
   public name: string;
 
@@ -84,6 +89,16 @@ export class CloudFunction extends UuidSqlModel {
     serializable,
   })
   public activeJob_uuid: string;
+
+  /**
+   * Virtual field - list of jobs for this CF
+   */
+  @prop({
+    parser: { resolver: arrayParser() },
+    populatable: [],
+    serializable: [SerializeFor.PROFILE],
+  })
+  public jobs: AcurastJob[];
 
   public constructor(data: any, context: Context) {
     super(data, context);

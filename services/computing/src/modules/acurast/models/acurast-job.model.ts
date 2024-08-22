@@ -22,6 +22,7 @@ import {
   ComputingCodeException,
   ComputingNotFoundException,
 } from '../../../lib/exceptions';
+import { v4 as uuid } from 'uuid';
 
 const populatable = [
   PopulateFrom.DB,
@@ -58,6 +59,7 @@ export class AcurastJob extends UuidSqlModel {
         code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
+    fakeValue: uuid(),
   })
   public job_uuid: string;
 
@@ -115,6 +117,7 @@ export class AcurastJob extends UuidSqlModel {
         code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
+    fakeValue: 'QmUq4iFLKZUpEsHCAqfsBermXHRnPuE5CNcyPv1xaNkyGp',
   })
   public scriptCid: string;
 
@@ -131,6 +134,8 @@ export class AcurastJob extends UuidSqlModel {
         code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
+    // 5 min from now
+    fakeValue: Date.now() + 5 * 60_000,
   })
   public startTime: Date;
 
@@ -147,6 +152,7 @@ export class AcurastJob extends UuidSqlModel {
         code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
+    fakeValue: Date.now() + 60 * 60_000,
   })
   public endTime: Date;
 
@@ -209,6 +215,7 @@ export class AcurastJob extends UuidSqlModel {
       },
     ],
     defaultValue: AcurastJobStatus.DEPLOYING,
+    fakeValue: AcurastJobStatus.DEPLOYING,
   })
   public jobStatus: AcurastJobStatus;
 
@@ -273,7 +280,13 @@ export class AcurastJob extends UuidSqlModel {
     }
   }
 
-  public async getList(context: ServiceContext, filter: JobQueryFilter) {
+  public async getList(filter: JobQueryFilter) {
+    if (!filter.function_uuid) {
+      throw new Error(
+        `function_uuid should not be null: ${filter.function_uuid}`,
+      );
+    }
+    const context = this.getContext();
     this.canAccess(context);
 
     const fieldMap = {
@@ -297,6 +310,7 @@ export class AcurastJob extends UuidSqlModel {
       qFrom: `
         FROM \`${DbTables.ACURAST_JOB}\` j
         WHERE j.project_uuid = @project_uuid
+        AND j.function_uuid = @function_uuid
         AND (@search IS null OR j.name LIKE CONCAT('%', @search, '%'))
         AND (@jobStatus IS null OR j.jobStatus = @jobStatus)
         AND

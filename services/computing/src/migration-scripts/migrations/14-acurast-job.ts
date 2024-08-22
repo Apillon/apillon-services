@@ -9,7 +9,7 @@ export async function upgrade(
       \`id\` INT NOT NULL AUTO_INCREMENT,
       \`job_uuid\` VARCHAR(36) NOT NULL,
       \`project_uuid\` VARCHAR(36) NOT NULL,
-      \`project_uuid\` VARCHAR(36) NOT NULL,
+      \`function_uuid\` VARCHAR(36) NOT NULL,
       \`status\` INT NULL,
       \`name\` VARCHAR(255) NOT NULL,
       \`scriptCid\` VARCHAR(255) NOT NULL,
@@ -26,12 +26,7 @@ export async function upgrade(
       \`createUser\` INT NULL,
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       \`updateUser\` INT NULL,
-      PRIMARY KEY(\`id\`),
-      CONSTRAINT \`fk_job_function\`
-        FOREIGN KEY (\`function_uuid\`)
-        REFERENCES \`${DbTables.CLOUD_FUNCTION}\` (\`function_uuid\`)
-        ON DELETE NO ACTION
-        ON UPDATE NO ACTION,
+      PRIMARY KEY(\`id\`)
     );
   `);
 }
