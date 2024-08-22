@@ -121,7 +121,6 @@ export class PinToCrustWorker extends BaseWorker {
         WorkerName.PIN_TO_CRUST_WORKER,
         [data],
         null,
-        null,
       );
       return true;
     }
