@@ -105,6 +105,18 @@ describe('CheckWebsiteDomainWorker integration test', () => {
       },
       stage.context,
     ).insert();
+
+    await new Website(
+      {
+        website_uuid: uuidV4(),
+        project_uuid,
+        bucket_id: bucket.id,
+        stagingBucket_id: stgBucket.id,
+        productionBucket_id: prodBucket.id,
+        name: 'Website without domain',
+      },
+      stage.context,
+    ).insert();
   });
 
   afterAll(async () => {
@@ -143,5 +155,14 @@ describe('CheckWebsiteDomainWorker integration test', () => {
   test('Another run of planner should not return records', async () => {
     const data = await worker.runPlanner();
     expect(data.length).toBe(0);
+  });
+
+  test('Websites with updated domain in last 6 hours, should be checked in every interval', async () => {
+    website.domainChangeDate = new Date();
+    await website.update();
+
+    const data = await worker.runPlanner();
+    expect(data.length).toBe(1);
+    expect(data[0].length).toBe(1);
   });
 });

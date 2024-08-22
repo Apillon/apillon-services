@@ -691,6 +691,7 @@ export class Website extends UuidSqlModel {
         AND w.domain <> ''
         AND b.CID IS NOT NULL
         AND w.status <> ${SqlModelStatus.DELETED}
+        AND w.domainStatus <> ${WebsiteDomainStatus.INVALID}
       ) t
       WHERE (@ipfsClusterDomain IS NULL OR ipfsClusterDomain = @ipfsClusterDomain)
         `,

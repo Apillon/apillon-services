@@ -9,7 +9,7 @@ import { DbTables, WebsiteDomainStatus } from '../config/types';
 import { checkDomainDns } from '../lib/domains';
 
 export class CheckWebsiteDomainWorker extends BaseQueueWorker {
-  private recordLimit = 20;
+  private recordLimit = 100;
 
   public constructor(
     workerDefinition: WorkerDefinition,
@@ -21,41 +21,30 @@ export class CheckWebsiteDomainWorker extends BaseQueueWorker {
   }
   async runPlanner(data?: any): Promise<any[]> {
     const batchedData = [];
-    const conn = await this.context.mysql.start();
     try {
+      //Get domains which were not yet checked, were not checked in last 24hours or has changed domain in last 6hours
       const domains = await this.context.mysql.paramExecute(
         `
         SELECT w.* 
         from \`${DbTables.WEBSITE}\` w
         WHERE w.status <> ${SqlModelStatus.DELETED}
-        AND w.domainStatus <> ${WebsiteDomainStatus.CHECKING}
-        AND (w.domainLastCheckDate IS NULL OR DATE_ADD(w.domainLastCheckDate,INTERVAL 24 HOUR) < NOW())
         AND TRIM(IFNULL(w.domain,'')) <> ''
+        AND w.domainStatus <> ${WebsiteDomainStatus.HAS_CDN}
+        AND (
+          w.domainLastCheckDate IS NULL 
+          OR DATE_ADD(w.domainLastCheckDate,INTERVAL 24 HOUR) < NOW()
+          OR DATE_ADD(w.domainChangeDate, INTERVAL 6 HOUR) > NOW()
+        )
         ORDER BY domainLastCheckDate ASC
         LIMIT ${this.recordLimit}
     `,
         {},
-        conn,
       );
 
       await this.writeLogToDb(
         WorkerLogStatus.INFO,
-        `Resolving ${domains.length} Domains!`,
+        `Checking ${domains.length} domains!`,
       );
-
-      if (domains.length) {
-        // lock the records for following jobs
-        await this.context.mysql.paramExecute(
-          `
-        UPDATE \`${DbTables.WEBSITE}\` 
-        SET domainStatus = ${WebsiteDomainStatus.CHECKING}
-        WHERE id IN (${domains.map((x) => x.id).join(',')})
-        `,
-          conn,
-        );
-      }
-
-      await this.context.mysql.commit(conn);
 
       // batch data
       let batch = [];
@@ -72,10 +61,9 @@ export class CheckWebsiteDomainWorker extends BaseQueueWorker {
       console.log(JSON.stringify(batchedData));
       return batchedData;
     } catch (err) {
-      await this.context.mysql.rollback(conn);
       await this.writeLogToDb(
         WorkerLogStatus.ERROR,
-        `Error resolving website domains`,
+        `Error checking website domains`,
         null,
         err,
       );
@@ -84,7 +72,7 @@ export class CheckWebsiteDomainWorker extends BaseQueueWorker {
     return [];
   }
   async runExecutor(data: any): Promise<any> {
-    console.log('ResolveWebsiteDomainWorker data: ', data);
+    console.log('CheckWebsiteDomainWorker data: ', data);
     const lookupResults: { id: number; lookupSuccessful: boolean }[] = [];
 
     for (const item of data) {
@@ -94,7 +82,7 @@ export class CheckWebsiteDomainWorker extends BaseQueueWorker {
       });
     }
 
-    // update successfully resolved websites
+    // update successfully checked websites
     if (lookupResults.find((x) => x.lookupSuccessful == true)) {
       await this.context.mysql.paramExecute(
         `
