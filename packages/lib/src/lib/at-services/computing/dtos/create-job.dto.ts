@@ -1,10 +1,6 @@
-import { ModelBase, prop } from '../../../base-models/base';
+import { prop } from '../../../base-models/base';
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
-import {
-  numberSizeValidator,
-  presenceValidator,
-  stringLengthValidator,
-} from '@rawmodel/validators';
+import { numberSizeValidator, presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
   SerializeFor,
@@ -20,6 +16,13 @@ export class CreateJobDto extends BaseComputingEntityDto {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
   public function_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public project_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },

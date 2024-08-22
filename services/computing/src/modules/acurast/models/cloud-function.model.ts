@@ -9,6 +9,7 @@ import {
   UuidSqlModel,
   getQueryParams,
   BaseProjectQueryFilter,
+  JobQueryFilter,
 } from '@apillon/lib';
 import { arrayParser, stringParser } from '@rawmodel/parsers';
 import { ComputingErrorCode, DbTables } from '../../../config/types';
@@ -108,6 +109,15 @@ export class CloudFunction extends UuidSqlModel {
     return super.populateByUUID(function_uuid, 'function_uuid');
   }
 
+  public async populateJobs(query: JobQueryFilter) {
+    this.jobs = (
+      await new AcurastJob(
+        { project_uuid: this.project_uuid },
+        this.getContext(),
+      ).getList(new JobQueryFilter(query))
+    ).items;
+  }
+
   public async getList(
     context: ServiceContext,
     filter: BaseProjectQueryFilter,
@@ -131,7 +141,7 @@ export class CloudFunction extends UuidSqlModel {
         AND (@search IS null OR d.name LIKE CONCAT('%', @search, '%'))
         AND
             (
-                (@status IS null AND d.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.ARCHIVED}))
+                (@status IS NULL AND d.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.ARCHIVED}))
                 OR
                 (d.status = @status)
             )

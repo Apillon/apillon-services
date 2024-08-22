@@ -17,6 +17,7 @@ import {
   BaseProjectQueryFilter,
   CreateCloudFunctionDto,
   UpdateCloudFunctionDto,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -54,6 +55,7 @@ export class AcurastService {
   ): Promise<CloudFunction> {
     const cloudFunction = new CloudFunction(event.body, context).populate({
       function_uuid: uuidV4(),
+      status: SqlModelStatus.INACTIVE,
     });
 
     await cloudFunction.validateOrThrow(ComputingModelValidationException);
@@ -85,8 +87,9 @@ export class AcurastService {
    * @returns {Promise<CloudFunction>}
    */
   static async getCloudFunctionByUuid(
-    event: { query: JobQueryFilter },
+    event: { query: JobQueryFilter | { function_uuid: string } },
     context: ServiceContext,
+    includeJobs = true,
   ): Promise<CloudFunction> {
     const cloudFunction = await new CloudFunction({}, context).populateByUUID(
       event.query.function_uuid,
@@ -100,12 +103,9 @@ export class AcurastService {
 
     cloudFunction.canAccess(context);
 
-    cloudFunction.jobs = (
-      await new AcurastJob(
-        { project_uuid: cloudFunction.project_uuid },
-        context,
-      ).getList(new JobQueryFilter(event.query))
-    ).items;
+    if (includeJobs) {
+      await cloudFunction.populateJobs(event.query as JobQueryFilter);
+    }
     return cloudFunction.serializeByContext() as CloudFunction;
   }
 
@@ -151,11 +151,24 @@ export class AcurastService {
     );
     event.body = new CreateJobDto(event.body);
 
+    const cloudFunction = await AcurastService.getCloudFunctionByUuid(
+      { query: { function_uuid: event.body.function_uuid } },
+      context,
+    );
+
     const job = new AcurastJob(event.body, context).populate({
       job_uuid: uuidV4(),
+      function_uuid: cloudFunction.function_uuid,
+      project_uuid: cloudFunction.project_uuid,
     });
 
     await job.validateOrThrow(ComputingModelValidationException);
+    if (new Date(job.endTime).getTime() <= new Date(job.startTime).getTime()) {
+      throw new ComputingValidationException({
+        code: ComputingErrorCode.FIELD_INVALID,
+        property: 'endTime',
+      });
+    }
 
     const conn = await context.mysql.start();
     try {
@@ -195,7 +208,7 @@ export class AcurastService {
         code: ComputingErrorCode.DEPLOY_JOB_ERROR,
         context,
         sourceFunction: 'AcruastService/createJob',
-        errorMessage: `Error creating acurast job: ${err}`,
+        errorMessage: `Error creating acurast job: ${JSON.stringify(err)}`,
         details: err,
       }).writeToMonitor({
         logType: LogType.ERROR,
@@ -374,7 +387,7 @@ export class AcurastService {
         code: ComputingErrorCode.DELETE_JOB_ERROR,
         context,
         sourceFunction: 'AcruastService/deleteJob',
-        errorMessage: `Error deleting acurast job: ${err}`,
+        errorMessage: `Error deleting acurast job: ${JSON.stringify(err)}`,
         details: err,
       }).writeToMonitor({
         logType: LogType.ERROR,
