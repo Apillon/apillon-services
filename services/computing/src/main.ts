@@ -27,6 +27,7 @@ export async function processEvent(event: any, context: Context): Promise<any> {
     [ComputingEventType.PROJECT_COMPUTING_DETAILS]:
       ComputingService.getProjectComputingDetails,
     [ComputingEventType.ARCHIVE_CONTRACT]: ComputingService.archiveContract,
+    [ComputingEventType.ACTIVATE_CONTRACT]: ComputingService.activateContract,
 
     [ComputingEventType.CREATE_CLOUD_FUNCTION]:
       AcurastService.createCloudFunction,

@@ -12,6 +12,7 @@ import {
   env,
   EvmChain,
   getChainName,
+  IpnsQueryFilter,
   Lmas,
   LogType,
   Mailing,
@@ -682,22 +683,32 @@ export class NftsService {
       name: `${collection.name} IPNS record`,
       cid: collection.cid,
     });
-    const ipnsRes = await new StorageMicroservice(context).createIpns(
-      createIpnsDto,
-    );
+    const ipnsRes = (
+      await new StorageMicroservice(context).createIpns(createIpnsDto)
+    ).data;
+
+    console.info('Ipns for collection', ipnsRes);
 
     const baseUri = collection.useApillonIpfsGateway
       ? ipnsRes.link.split('?token')[0]
       : `ipns://${ipnsRes.ipnsName}`;
 
+    console.info('baseUri', baseUri);
+
     //Submit change base uri transaction
     const setBaseUriBody = new SetCollectionBaseUriDTO(
       {
         uri: baseUri,
+        collection_uuid: collection.collection_uuid,
       },
       context,
     );
-    await this.setNftCollectionBaseUri({ body: setBaseUriBody }, context);
+    await NftsService.setNftCollectionBaseUri(
+      { body: setBaseUriBody },
+      context,
+    );
+
+    console.info('Set collection base uri succeeded. Updating collection...');
 
     collection.baseUri = baseUri;
     collection.ipns_uuid = ipnsRes.ipns_uuid;
@@ -1168,6 +1179,30 @@ export class NftsService {
     );
 
     return await collection.markArchived();
+  }
+
+  /**
+   * Set a collection's status to active
+   * @param {{ collecton_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Collection>}
+   */
+  static async activateCollection(
+    event: { collection_uuid: string },
+    context: ServiceContext,
+  ): Promise<Collection> {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(event.collection_uuid);
+
+    await NftsService.checkCollection(
+      collection,
+      'activateCollection()',
+      context,
+    );
+
+    return await collection.markActive();
   }
 
   private static async checkCollection(
