@@ -83,9 +83,9 @@ export class ProjectService {
       context,
     ).getProjectCollectionDetails(project_uuid);
 
-    const { data: projectContractsDetails } = await new ContractsMicroservice(
-      context,
-    ).getProjectDeployedContractsDetails(project_uuid);
+    // const { data: projectContractsDetails } = await new ContractsMicroservice(
+    //   context,
+    // ).getProjectDeployedContractsDetails(project_uuid);
 
     const { data: projectCredit } = await new Scs(context).getProjectCredit(
       project_uuid,
@@ -96,7 +96,7 @@ export class ProjectService {
       projectUsers,
       ...projectStorageDetails,
       ...projectCollectionDetails,
-      ...projectContractsDetails,
+      // ...projectContractsDetails,
       creditBalance: projectCredit.balance,
     };
   }
