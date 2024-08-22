@@ -215,7 +215,7 @@ export class Website extends UuidSqlModel {
     ],
     validators: [],
   })
-  public domainLastResolveDate?: Date;
+  public domainLastCheckDate?: Date;
 
   @prop({
     parser: { resolver: integerParser() },

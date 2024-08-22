@@ -1,4 +1,3 @@
-import { IpfsKuboRpcHttpClient } from '@apillon/ipfs-kubo-rpc-http-client';
 import { Context, SqlModelStatus, env } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -7,10 +6,9 @@ import {
   WorkerLogStatus,
 } from '@apillon/workers-lib';
 import { DbTables, WebsiteDomainStatus } from '../config/types';
-import { IPFSService } from '../modules/ipfs/ipfs.service';
-import dns from 'node:dns';
+import { checkDomainDns } from '../lib/domains';
 
-export class ResolveWebsiteDomainWorker extends BaseQueueWorker {
+export class CheckWebsiteDomainWorker extends BaseQueueWorker {
   private recordLimit = 20;
 
   public constructor(
@@ -30,10 +28,10 @@ export class ResolveWebsiteDomainWorker extends BaseQueueWorker {
         SELECT w.* 
         from \`${DbTables.WEBSITE}\` w
         WHERE w.status <> ${SqlModelStatus.DELETED}
-        AND w.domainStatus <> ${WebsiteDomainStatus.RESOLVING}
-        AND (w.domainLastResolveDate IS NULL OR DATE_ADD(w.domainLastResolveDate,INTERVAL 24 HOUR) < NOW())
+        AND w.domainStatus <> ${WebsiteDomainStatus.CHECKING}
+        AND (w.domainLastCheckDate IS NULL OR DATE_ADD(w.domainLastCheckDate,INTERVAL 24 HOUR) < NOW())
         AND TRIM(IFNULL(w.domain,'')) <> ''
-        ORDER BY domainLastResolveDate ASC
+        ORDER BY domainLastCheckDate ASC
         LIMIT ${this.recordLimit}
     `,
         {},
@@ -50,7 +48,7 @@ export class ResolveWebsiteDomainWorker extends BaseQueueWorker {
         await this.context.mysql.paramExecute(
           `
         UPDATE \`${DbTables.WEBSITE}\` 
-        SET domainStatus = ${WebsiteDomainStatus.RESOLVING}
+        SET domainStatus = ${WebsiteDomainStatus.CHECKING}
         WHERE id IN (${domains.map((x) => x.id).join(',')})
         `,
           conn,
@@ -102,8 +100,8 @@ export class ResolveWebsiteDomainWorker extends BaseQueueWorker {
         `
        UPDATE \`${DbTables.WEBSITE}\` 
        SET  
-        domainLastResolveDate = NOW(),
-        domainStatus = ${WebsiteDomainStatus.RESOLVED}
+        domainLastCheckDate = NOW(),
+        domainStatus = ${WebsiteDomainStatus.OK}
        WHERE id IN (${lookupResults
          .filter((x) => x.lookupSuccessful == true)
          .map((x) => x.id)
@@ -117,8 +115,8 @@ export class ResolveWebsiteDomainWorker extends BaseQueueWorker {
       await this.context.mysql.paramExecute(
         `
      UPDATE \`${DbTables.WEBSITE}\` 
-     SET  domainLastResolveDate = NOW(),
-          domainStatus = ${WebsiteDomainStatus.UNRESOLVED}
+     SET  domainLastCheckDate = NOW(),
+          domainStatus = ${WebsiteDomainStatus.INVALID}
      WHERE id IN (${lookupResults
        .filter((x) => x.lookupSuccessful == false)
        .map((x) => x.id)
@@ -127,24 +125,4 @@ export class ResolveWebsiteDomainWorker extends BaseQueueWorker {
       );
     }
   }
-}
-
-async function checkDomainDns(domain: string): Promise<boolean> {
-  const validIps = env.VALID_WEBSITE_DOMAIN_TARGETS || [];
-
-  if (!validIps.length) {
-    console.log('[WARNING] NO VALID DOMAIN TARGETS IS SET!');
-    return true;
-  }
-
-  const { address } = await dns.promises.lookup(domain).catch((err) => {
-    console.error(`Error resolving DNS domain: ${err}`);
-    return { address: null };
-  });
-
-  if (validIps.includes(address)) {
-    return true;
-  }
-  console.log(`Domain does not not resolve to valid IP!`);
-  return false;
 }

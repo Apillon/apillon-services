@@ -3,22 +3,17 @@ import {
   ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
-import { Stage, releaseStage, setupTest } from '../../../test/setup';
-import { Bucket } from '../../modules/bucket/models/bucket.model';
-import { Ipns } from '../../modules/ipns/models/ipns.model';
-import { RepublishIpnsWorker } from '../republish-ipns-worker';
-import { IPFSService } from '../../modules/ipfs/ipfs.service';
-import { SerializeFor, SqlModelStatus } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
-import { ResolveWebsiteDomainWorker } from '../resolve-website-domain-worker';
-import { Website } from '../../modules/hosting/models/website.model';
+import { Stage, releaseStage, setupTest } from '../../../test/setup';
 import { BucketType, WebsiteDomainStatus } from '../../config/types';
-import exp from 'constants';
+import { Bucket } from '../../modules/bucket/models/bucket.model';
+import { Website } from '../../modules/hosting/models/website.model';
+import { CheckWebsiteDomainWorker } from '../check-website-domain-worker';
 
-describe('ResolveWebsiteDomainWorker integration test', () => {
+describe('CheckWebsiteDomainWorker integration test', () => {
   let stage: Stage;
 
-  let worker: ResolveWebsiteDomainWorker;
+  let worker: CheckWebsiteDomainWorker;
   const batchLimit = 200;
   let website: Website;
   let website2: Website;
@@ -34,10 +29,10 @@ describe('ResolveWebsiteDomainWorker integration test', () => {
         config: { region: 'test' },
         params: { FunctionName: 'test' },
       },
-      'test-resolve-website-domain-worker',
+      'test-check-website-domain-worker',
       { parameters: { batchLimit } },
     );
-    worker = new ResolveWebsiteDomainWorker(
+    worker = new CheckWebsiteDomainWorker(
       workerDefinition,
       stage.context,
       QueueWorkerType.PLANNER,
@@ -65,7 +60,7 @@ describe('ResolveWebsiteDomainWorker integration test', () => {
         stagingBucket_id: stgBucket.id,
         productionBucket_id: prodBucket.id,
         name: 'Website 1',
-        domain: 'apillon.io',
+        domain: 'nino.ninja',
       },
       stage.context,
     ).insert();
@@ -105,8 +100,8 @@ describe('ResolveWebsiteDomainWorker integration test', () => {
         productionBucket_id: prodBucket.id,
         name: 'Already resolved website',
         domain: 'test.io',
-        domainLastResolveDate: new Date(),
-        domainStatus: WebsiteDomainStatus.RESOLVED,
+        domainLastCheckDate: new Date(),
+        domainStatus: WebsiteDomainStatus.OK,
       },
       stage.context,
     ).insert();
@@ -116,7 +111,7 @@ describe('ResolveWebsiteDomainWorker integration test', () => {
     await releaseStage(stage);
   });
 
-  test('Test resolve website domain', async () => {
+  test('Test check website domain', async () => {
     const data = await worker.runPlanner();
     expect(data.length).toBe(1);
     expect(data[0].length).toBe(3);
@@ -132,17 +127,17 @@ describe('ResolveWebsiteDomainWorker integration test', () => {
     let tmpwebsite = await new Website({}, stage.context).populateById(
       website.id,
     );
-    expect(tmpwebsite.domainLastResolveDate).toBeTruthy();
-    expect(tmpwebsite.domainStatus).toBe(WebsiteDomainStatus.RESOLVED);
+    expect(tmpwebsite.domainLastCheckDate).toBeTruthy();
+    expect(tmpwebsite.domainStatus).toBe(WebsiteDomainStatus.OK);
 
     //Test websites with invalid domains
     tmpwebsite = await new Website({}, stage.context).populateById(website2.id);
-    expect(tmpwebsite.domainLastResolveDate).toBeTruthy();
-    expect(tmpwebsite.domainStatus).toBe(WebsiteDomainStatus.UNRESOLVED);
+    expect(tmpwebsite.domainLastCheckDate).toBeTruthy();
+    expect(tmpwebsite.domainStatus).toBe(WebsiteDomainStatus.INVALID);
 
     tmpwebsite = await new Website({}, stage.context).populateById(website3.id);
-    expect(tmpwebsite.domainLastResolveDate).toBeTruthy();
-    expect(tmpwebsite.domainStatus).toBe(WebsiteDomainStatus.UNRESOLVED);
+    expect(tmpwebsite.domainLastCheckDate).toBeTruthy();
+    expect(tmpwebsite.domainStatus).toBe(WebsiteDomainStatus.INVALID);
   });
 
   test('Another run of planner should not return records', async () => {

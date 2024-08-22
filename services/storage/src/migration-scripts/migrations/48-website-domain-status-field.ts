@@ -5,9 +5,9 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
     ALTER TABLE \`${DbTables.WEBSITE}\`
-    ADD COLUMN \`domainLastResolveDate\` DATETIME NULL AFTER \`domainChangeDate\`,
-    ADD COLUMN \`domainStatus\` INT NOT NULL DEFAULT 1 AFTER \`domainLastResolveDate\`,
-    ADD INDEX \`resolveDate_idx\` (\`domainLastResolveDate\` ASC) VISIBLE;
+    ADD COLUMN \`domainLastCheckDate\` DATETIME NULL AFTER \`domainChangeDate\`,
+    ADD COLUMN \`domainStatus\` INT NOT NULL DEFAULT 1 AFTER \`domainLastCheckDate\`,
+    ADD INDEX \`resolveDate_idx\` (\`domainLastCheckDate\` ASC) VISIBLE;
     `);
 }
 
@@ -18,6 +18,6 @@ export async function downgrade(
         ALTER TABLE \`${DbTables.WEBSITE}\` 
         DROP INDEX \`resolveDate_idx\`,
         DROP COLUMN \`domainStatus\`,
-        DROP COLUMN \`domainLastResolveDate\`;
+        DROP COLUMN \`domainLastCheckDate\`;
     `);
 }

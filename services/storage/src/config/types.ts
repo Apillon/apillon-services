@@ -245,10 +245,10 @@ export enum PrepareCollectionMetadataStep {
 export enum WebsiteDomainStatus {
   /** Not yet processed and resolved */
   PENDING = 0,
-  /** Currently in progress */
-  RESOLVING = 1,
+  /** Locked by CheckWebsiteDomainWorker - check is in progress */
+  CHECKING = 1,
   /** Domain is pointing to Apillon */
-  RESOLVED = 2,
+  OK = 2,
   /** Domain is not pointing to Apillon IP */
-  UNRESOLVED = 10,
+  INVALID = 10,
 }
