@@ -12,7 +12,6 @@ import {
   env,
   EvmChain,
   getChainName,
-  IpnsQueryFilter,
   Lmas,
   LogType,
   Mailing,
@@ -34,6 +33,9 @@ import {
   TransactionDto,
   TransactionStatus,
   TransferCollectionDTO,
+  Context,
+  Chain,
+  SubscriptionPackageId,
 } from '@apillon/lib';
 import {
   CreateCollectionDTO,
@@ -86,18 +88,20 @@ export class NftsService {
     context: ServiceContext,
   ) {
     console.log(`Creating NFT collections: ${JSON.stringify(params.body)}`);
-
-    //Create collection object
     const collection: Collection = new Collection(
       params.body,
       context,
     ).populate({
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
-      chainType: Object.values(EvmChain).includes(params.body.chain as number)
-        ? ChainType.EVM
-        : ChainType.SUBSTRATE,
+      chainType: params.body.chainType,
     });
+    await NftsService.assertIsAllowedToCreateNftCollection(
+      context,
+      collection.chainType,
+      collection.chain,
+      params.body.project_uuid,
+    );
 
     const product_id = {
       [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_COLLECTION,
@@ -107,8 +111,6 @@ export class NftsService {
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_COLLECTION,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_COLLECTION,
     }[params.body.chain];
-
-    //Spend credit
     const spendCredit: SpendCreditDto = new SpendCreditDto(
       {
         project_uuid: collection.project_uuid,
@@ -1353,7 +1355,6 @@ export class NftsService {
 
   //#endregion
 
-  // TODO: we don't need this anymore so remove on separate PR
   static async maxCollectionsQuotaReached(
     event: { query: CollectionsQuotaReachedQueryFilter },
     context: ServiceContext,
@@ -1363,14 +1364,18 @@ export class NftsService {
       context,
     );
 
-    const collectionsCount = await collection.getCollectionsCount();
+    const ethereumCollectionsCount = await collection.getChainCollectionsCount(
+      ChainType.EVM,
+      EvmChain.ETHEREUM,
+    );
     const maxCollectionsQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_NFT_COLLECTIONS,
+      quota_id: QuotaCode.MAX_ETHEREUM_NFT_COLLECTIONS,
       project_uuid: collection.project_uuid,
     });
 
     return {
-      maxCollectionsQuotaReached: collectionsCount >= maxCollectionsQuota.value,
+      maxEthereumQuotaReached:
+        ethereumCollectionsCount >= maxCollectionsQuota.value,
     };
   }
 
@@ -1446,6 +1451,65 @@ export class NftsService {
       } else {
         throw err;
       }
+    }
+  }
+
+  //#REGION PRIVATE METHODS
+
+  /**
+   * Only projects with specific plan and available quota can crate Ethereum and Sepolia NFTs
+   *
+   * @param context
+   * @param chainType
+   * @param chain
+   * @param project_uuid
+   */
+  private static async assertIsAllowedToCreateNftCollection(
+    context: Context,
+    chainType: ChainType,
+    chain: Chain,
+    project_uuid: string,
+  ) {
+    if (chainType !== ChainType.EVM) {
+      return;
+    }
+    if (![EvmChain.ETHEREUM, EvmChain.SEPOLIA].includes(chain as EvmChain)) {
+      return;
+    }
+
+    const { data } = await new Scs(context).getProjectActiveSubscription(
+      project_uuid,
+    );
+
+    if (
+      !data.package_id ||
+      data.package_id !== SubscriptionPackageId.BUTTERFLY
+    ) {
+      throw new NftsCodeException({
+        status: 402,
+        code: NftsErrorCode.REQUIRES_BUTTERFLY_PLAN,
+        context,
+      });
+    }
+    if (chain == EvmChain.SEPOLIA) {
+      return;
+    }
+
+    const chainCollectionsCount = await new Collection(
+      {},
+      context,
+    ).getChainCollectionsCount(chainType, chain, project_uuid);
+    const maxCollectionsQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_ETHEREUM_NFT_COLLECTIONS,
+      project_uuid: project_uuid,
+    });
+
+    if (chainCollectionsCount >= maxCollectionsQuota.value) {
+      throw new NftsCodeException({
+        status: 403,
+        code: NftsErrorCode.ETHEREUM_COLLECTION_QUOTA_REACHED,
+        context,
+      });
     }
   }
 }
