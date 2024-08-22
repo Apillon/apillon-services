@@ -10,12 +10,14 @@ import {
   BaseWorker,
   Job,
   LogOutput,
+  sendToWorkerQueue,
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { CrustPinningStatus } from '../config/types';
 import { CrustService } from '../modules/crust/crust.service';
 import { PinToCrustRequest } from '../modules/crust/models/pin-to-crust-request.model';
 import { Bucket } from '../modules/bucket/models/bucket.model';
+import { WorkerName } from './worker-executor';
 
 export class PinToCrustWorker extends BaseWorker {
   protected context: Context;
@@ -38,7 +40,7 @@ export class PinToCrustWorker extends BaseWorker {
     console.info(`Num of pendingPinRequests: ${pendingPinRequests.length}`);
 
     await runWithWorkers(
-      pendingPinRequests,
+      pendingPinRequests.slice(0, env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_CRUST),
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||
         env.APP_ENV == AppEnvironment.TEST
         ? 1
@@ -111,6 +113,18 @@ export class PinToCrustWorker extends BaseWorker {
         }
       },
     );
+
+    if (pendingPinRequests.length > env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_CRUST) {
+      console.info('Sending remaining files to another iteration');
+      await sendToWorkerQueue(
+        env.STORAGE_AWS_WORKER_SQS_URL,
+        WorkerName.PIN_TO_CRUST_WORKER,
+        [data],
+        null,
+        null,
+      );
+      return true;
+    }
 
     console.info(
       'Pinning completed. Checking for pins, that should be renewed',
