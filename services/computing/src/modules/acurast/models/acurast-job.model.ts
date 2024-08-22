@@ -3,6 +3,7 @@ import {
   enumInclusionValidator,
   getQueryParams,
   JobQueryFilter,
+  PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
@@ -235,7 +236,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable,
-    serializable,
+    serializable: serializableUpdate,
   })
   public deployerAddress: string;
 
@@ -340,7 +341,7 @@ export class AcurastJob extends UuidSqlModel {
       `
       SELECT *
       FROM ${DbTables.ACURAST_JOB}
-      WHERE startTime < NOW() AND endTime > NOW()
+      WHERE endTime > NOW()
       AND jobStatus = ${AcurastJobStatus.DEPLOYED}
       AND jobId IS NOT NULL
       AND status = ${SqlModelStatus.ACTIVE}
@@ -349,6 +350,28 @@ export class AcurastJob extends UuidSqlModel {
 
     return jobs.map((j) =>
       new AcurastJob({}, context).populate(j, PopulateFrom.DB),
+    );
+  }
+
+  /**
+   * When a new job is deployed, clear the older jobs of a function_uuid
+   * Sets the status of all jobs to inactive a
+   * @param {string} function_uuid - uuid of the function whose jobs become inactive
+   */
+  public async clearJobs(
+    function_uuid: string,
+    conn?: PoolConnection,
+  ): Promise<void> {
+    const context = this.getContext();
+    await context.mysql.paramExecute(
+      `
+      UPDATE ${DbTables.ACURAST_JOB}
+      SET jobStatus = ${AcurastJobStatus.INACTIVE}
+      WHERE function_uuid = @function_uuid
+      AND status = ${SqlModelStatus.ACTIVE}
+      `,
+      { function_uuid },
+      conn,
     );
   }
 }

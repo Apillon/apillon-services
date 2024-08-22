@@ -73,12 +73,13 @@ export async function deployAcurastJob(
     conn,
   );
 
-  job.populate({
-    transactionHash: response.data.transactionHash,
-    jobStatus: AcurastJobStatus.DEPLOYING,
-    deployerAddress: response.data.address,
-  });
-  await job.update(SerializeFor.INSERT_DB, conn);
+  await job
+    .populate({
+      transactionHash: response.data.transactionHash,
+      jobStatus: AcurastJobStatus.DEPLOYING,
+      deployerAddress: response.data.address,
+    })
+    .update(SerializeFor.UPDATE_DB, conn);
 }
 
 export async function setAcurastJobEnvironment(

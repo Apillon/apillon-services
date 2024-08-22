@@ -87,9 +87,8 @@ export class AcurastService {
    * @returns {Promise<CloudFunction>}
    */
   static async getCloudFunctionByUuid(
-    event: { query: JobQueryFilter | { function_uuid: string } },
+    event: { query: JobQueryFilter },
     context: ServiceContext,
-    includeJobs = true,
   ): Promise<CloudFunction> {
     const cloudFunction = await new CloudFunction({}, context).populateByUUID(
       event.query.function_uuid,
@@ -103,9 +102,7 @@ export class AcurastService {
 
     cloudFunction.canAccess(context);
 
-    if (includeJobs) {
-      await cloudFunction.populateJobs(event.query as JobQueryFilter);
-    }
+    await cloudFunction.populateJobs(event.query as JobQueryFilter);
     return cloudFunction.serializeByContext() as CloudFunction;
   }
 
@@ -151,10 +148,17 @@ export class AcurastService {
     );
     event.body = new CreateJobDto(event.body);
 
-    const cloudFunction = await AcurastService.getCloudFunctionByUuid(
-      { query: { function_uuid: event.body.function_uuid } },
-      context,
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      event.body.function_uuid,
     );
+
+    if (!cloudFunction.exists()) {
+      throw new ComputingNotFoundException(
+        ComputingErrorCode.CLOUD_FUNCTION_NOT_FOUND,
+      );
+    }
+
+    cloudFunction.canAccess(context);
 
     const job = new AcurastJob(event.body, context).populate({
       job_uuid: uuidV4(),
@@ -172,6 +176,12 @@ export class AcurastService {
 
     const conn = await context.mysql.start();
     try {
+      // Set to inactive until job gets fully deployed
+      await cloudFunction
+        .populate({ status: SqlModelStatus.INACTIVE })
+        .update(SerializeFor.UPDATE_DB, conn);
+      await job.clearJobs(cloudFunction.function_uuid, conn);
+
       await job.insert(SerializeFor.INSERT_DB, conn);
       const referenceId = uuidV4();
       await spendCreditAction(
@@ -189,6 +199,7 @@ export class AcurastService {
         ),
         async () => await deployAcurastJob(context, job, referenceId, conn),
       );
+
       await context.mysql.commit(conn);
 
       await new Lmas().writeLog({
