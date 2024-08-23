@@ -61,7 +61,7 @@ export class CreateJobDto extends BaseComputingEntityDto {
         code: ValidatorErrorCode.COMPUTING_FIELD_NOT_PRESENT,
       },
       {
-        resolver: minutesInFutureValidator(5),
+        resolver: minutesInFutureValidator(3),
         code: ValidatorErrorCode.JOB_DATE_NOT_VALID,
       },
     ],

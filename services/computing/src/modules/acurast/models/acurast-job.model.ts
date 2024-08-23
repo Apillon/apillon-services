@@ -301,26 +301,24 @@ export class AcurastJob extends UuidSqlModel {
       fieldMap,
       filter.serialize(),
     );
-    const selectFields = this.generateSelectFields(
-      'j',
-      '',
-      SerializeFor.SELECT_DB,
-    );
+
     const sqlQuery = {
-      qSelect: `
-        SELECT ${selectFields}
-        `,
+      qSelect: `SELECT ${this.generateSelectFields('j', '', SerializeFor.SELECT_DB)}`,
       qFrom: `
         FROM \`${DbTables.ACURAST_JOB}\` j
-        WHERE j.project_uuid = @project_uuid
-        AND j.function_uuid = @function_uuid
-        AND (@search IS null OR j.name LIKE CONCAT('%', @search, '%'))
-        AND (@jobStatus IS null OR j.jobStatus = @jobStatus)
+        WHERE j.function_uuid = @function_uuid
+        AND (@search IS NULL OR j.name LIKE CONCAT('%', @search, '%'))
         AND
             (
-                (@status IS null AND j.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.ARCHIVED}))
-                OR
-                (j.status = @status)
+              (@jobStatus IS NULL AND j.jobStatus <> ${AcurastJobStatus.DELETED})
+              OR
+              (j.jobStatus = @jobStatus)
+            )
+        AND
+            (
+              (@status IS NULL AND j.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.ARCHIVED}))
+              OR
+              (j.status = @status)
             )
       `,
       qFilter: `
@@ -329,7 +327,21 @@ export class AcurastJob extends UuidSqlModel {
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'j.id');
+    const jobResults = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'j.id',
+    );
+
+    return {
+      ...jobResults,
+      items: jobResults.items.map((job) =>
+        new AcurastJob({}, context)
+          .populate(job, PopulateFrom.DB)
+          .serialize(SerializeFor.PROFILE),
+      ),
+    };
   }
 
   /**
