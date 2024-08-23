@@ -94,12 +94,6 @@ export class AcurastService {
       event.query.function_uuid,
     );
 
-    if (!cloudFunction.exists()) {
-      throw new ComputingNotFoundException(
-        ComputingErrorCode.CLOUD_FUNCTION_NOT_FOUND,
-      );
-    }
-
     cloudFunction.canAccess(context);
 
     await cloudFunction.populateJobs(event.query as JobQueryFilter);
@@ -120,11 +114,6 @@ export class AcurastService {
       event.body.function_uuid,
     );
 
-    if (!cloudFunction.exists()) {
-      throw new ComputingNotFoundException(
-        ComputingErrorCode.CLOUD_FUNCTION_NOT_FOUND,
-      );
-    }
     cloudFunction.canAccess(context);
 
     await cloudFunction.populate(event.body).update();
@@ -151,6 +140,8 @@ export class AcurastService {
     const cloudFunction = await new CloudFunction({}, context).populateByUUID(
       event.body.function_uuid,
     );
+
+    cloudFunction.canAccess(context);
 
     const job = new AcurastJob(event.body, context).populate({
       job_uuid: uuidV4(),

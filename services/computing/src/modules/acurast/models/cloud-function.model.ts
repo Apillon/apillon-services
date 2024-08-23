@@ -111,13 +111,12 @@ export class CloudFunction extends UuidSqlModel {
       function_uuid,
       'function_uuid',
     );
+
     if (!cloudFunction.exists()) {
       throw new ComputingNotFoundException(
         ComputingErrorCode.CLOUD_FUNCTION_NOT_FOUND,
       );
     }
-
-    cloudFunction.canAccess(this.getContext());
 
     return cloudFunction;
   }

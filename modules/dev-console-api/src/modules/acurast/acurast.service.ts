@@ -117,12 +117,12 @@ export class AcurastService {
   async executeCloudFunction(
     context: DevConsoleApiContext,
     payload: string,
-    job_uuid: string,
+    function_uuid: string,
   ) {
     return (
       await new ComputingMicroservice(context).executeCloudFunction(
         payload,
-        job_uuid,
+        function_uuid,
       )
     ).data;
   }

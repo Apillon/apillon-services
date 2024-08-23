@@ -17,6 +17,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -94,6 +95,26 @@ export class AcurastController {
     return await this.acurastService.createJob(context, body);
   }
 
+  @Post('cloud-functions/:function_uuid/execute')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  @HttpCode(200)
+  async executeCloudFunction(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() payload: any,
+    @Param('function_uuid') function_uuid: string,
+  ) {
+    payload = JSON.stringify(payload); // safety
+    return await this.acurastService.executeCloudFunction(
+      context,
+      payload,
+      function_uuid,
+    );
+  }
+
   // TODO: Is this needed?
   @Get('jobs/:job_uuid')
   @Permissions({ role: RoleGroup.ProjectAccess })
@@ -120,25 +141,6 @@ export class AcurastController {
   ) {
     body.job_uuid = job_uuid;
     return await this.acurastService.setJobEnvironment(context, body);
-  }
-
-  @Post('jobs/:job_uuid/execute')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
-  @UseGuards(AuthGuard)
-  async executeCloudFunction(
-    @Ctx() context: DevConsoleApiContext,
-    @Body() payload: any,
-    @Param('job_uuid') job_uuid: string,
-  ) {
-    payload = JSON.stringify(payload); // safety
-    return await this.acurastService.executeCloudFunction(
-      context,
-      payload,
-      job_uuid,
-    );
   }
 
   @Patch('jobs/:job_uuid')

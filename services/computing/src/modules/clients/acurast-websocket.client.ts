@@ -22,11 +22,12 @@ export class AcurastWebsocketClient {
 
     const websocketPromise = new Promise((resolve, reject) => {
       client.onMessage((message: Message) => {
-        resolve({
-          sender: Buffer.from(message.sender).toString('hex'),
-          recipient: Buffer.from(message.recipient).toString('hex'),
-          payload: Buffer.from(message.payload).toString(),
-        });
+        // resolve({
+        //   sender: Buffer.from(message.sender).toString('hex'),
+        //   recipient: Buffer.from(message.recipient).toString('hex'),
+        //   response: Buffer.from(message.payload).toString(),
+        // });
+        resolve(Buffer.from(message.payload).toString());
         client.close();
       });
 
