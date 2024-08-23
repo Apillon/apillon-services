@@ -41,6 +41,7 @@ import {
 } from '../../config/types';
 import { AcurastWebsocketClient } from '../clients/acurast-websocket.client';
 import { CloudFunction } from './models/cloud-function.model';
+import { CloudFunctionCall } from './models/cloud-function-call.model';
 
 export class AcurastService {
   /**
@@ -278,7 +279,8 @@ export class AcurastService {
   }
 
   /**
-   * Send a payload to a job and return response
+   * Send a payload to a job and returns response
+   * Also tracks the function call in DB and marks it as success or error
    * @param {{ payload: string, function_uuid: string }} event - job message payload
    * @param {ServiceContext} context
    * @returns {Promise<any>}
@@ -287,7 +289,7 @@ export class AcurastService {
     event: { payload: string; function_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const publicKey = await runCachedFunction(
+    const job: AcurastJob = await runCachedFunction(
       `${CacheKeyPrefix.ACURAST_JOB}:${event.function_uuid}`,
       async () => {
         const cloudFunction = await new CloudFunction(
@@ -315,7 +317,7 @@ export class AcurastService {
           undefined,
           true,
         );
-        return job.publicKey;
+        return job;
       },
       CacheKeyTTL.DEFAULT,
     );
@@ -328,8 +330,20 @@ export class AcurastService {
     }
 
     return await new AcurastWebsocketClient(await getAcurastWebsocketUrl())
-      .send(publicKey, event.payload)
+      .send(job.publicKey, event.payload)
+      .then(async (result) => {
+        await new CloudFunctionCall({}, context).save({
+          function_uuid: job.function_uuid,
+          success: true,
+        });
+        return result;
+      })
       .catch(async (err) => {
+        await new CloudFunctionCall({}, context).save({
+          function_uuid: job.function_uuid,
+          success: false,
+          error: `${err}`,
+        });
         throw await new ComputingCodeException({
           status: 500,
           code: ComputingErrorCode.ERROR_SENDING_JOB_PAYLOAD,

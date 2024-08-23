@@ -289,6 +289,7 @@ export class AcurastJob extends UuidSqlModel {
         `function_uuid should not be null: ${filter.function_uuid}`,
       );
     }
+
     const context = this.getContext();
     this.canAccess(context);
 
@@ -337,9 +338,7 @@ export class AcurastJob extends UuidSqlModel {
     return {
       ...jobResults,
       items: jobResults.items.map((job) =>
-        new AcurastJob({}, context)
-          .populate(job, PopulateFrom.DB)
-          .serialize(SerializeFor.PROFILE),
+        new AcurastJob(job, context).serialize(SerializeFor.PROFILE),
       ),
     };
   }
