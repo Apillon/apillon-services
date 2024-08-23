@@ -1,6 +1,11 @@
 import { env } from '@apillon/lib';
 import dns from 'node:dns';
 
+/**
+ * Resolve domain dns and check if it is pointing to Apillon IPs
+ * @param domain
+ * @returns true if it points to valid Apillon IP (Ipfs node IP)
+ */
 export async function checkDomainDns(domain: string): Promise<boolean> {
   const validIps = env.VALID_WEBSITE_DOMAIN_TARGETS || [];
 
@@ -14,8 +19,5 @@ export async function checkDomainDns(domain: string): Promise<boolean> {
     return { address: null };
   });
 
-  if (validIps.includes(address)) {
-    return true;
-  }
-  return false;
+  return validIps.includes(address);
 }

@@ -24,7 +24,6 @@ import { setupTest } from '../../../../../test/helpers/setup';
 import { Project } from '../../../project/models/project.model';
 import { Deployment } from '@apillon/storage/src/modules/hosting/models/deployment.model';
 import { ProjectConfig } from '@apillon/storage/src/modules/config/models/project-config.model';
-import exp from 'constants';
 
 describe('Hosting tests', () => {
   let stage: Stage;
@@ -207,7 +206,7 @@ describe('Hosting tests', () => {
       expect(wp.domain).toBe('https://tests-2.si');
     });
 
-    test.only('User should be able to check domain dns', async () => {
+    test('User should be able to check domain dns', async () => {
       const response = await request(stage.http)
         .post(
           `/storage/hosting/websites/${testWebsite.website_uuid}/check-domain`,

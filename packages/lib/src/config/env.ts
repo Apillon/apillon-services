@@ -1,7 +1,6 @@
 import { getSecrets } from '../lib/aws/aws-secrets';
 import * as dotenv from 'dotenv';
 import { AppEnvironment, CacheKeyTTL } from './types';
-import { trim } from 'lodash';
 
 export interface IEnv {
   /**
@@ -737,9 +736,9 @@ export let env: IEnv = {
   URL_SCREENSHOT_API_URL: process.env['URL_SCREENSHOT_API_URL'],
   SEND_WEBSITES_TO_REVIEW:
     parseInt(process.env['SEND_WEBSITES_TO_REVIEW']) || 1,
-  VALID_WEBSITE_DOMAIN_TARGETS:
-    process.env.VALID_WEBSITE_DOMAIN_TARGETS?.split(',')?.map((x) => trim(x)) ||
-    [],
+  VALID_WEBSITE_DOMAIN_TARGETS: process.env.VALID_WEBSITE_DOMAIN_TARGETS?.split(
+    ',',
+  )?.map((x) => x.trim()) || ['52.19.92.40', '52.209.139.147'],
   STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS:
     parseInt(process.env['STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS']) || 1000,
   STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY:

@@ -1,4 +1,4 @@
-import { Context, SqlModelStatus, env } from '@apillon/lib';
+import { Context, SqlModelStatus, env, splitArray } from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -20,7 +20,6 @@ export class CheckWebsiteDomainWorker extends BaseQueueWorker {
     this.recordLimit = workerDefinition.parameters?.recordLimit ?? 20;
   }
   async runPlanner(data?: any): Promise<any[]> {
-    const batchedData = [];
     try {
       //Get domains which were not yet checked, were not checked in last 24hours or has changed domain in last 6hours
       const domains = await this.context.mysql.paramExecute(
@@ -47,17 +46,7 @@ export class CheckWebsiteDomainWorker extends BaseQueueWorker {
       );
 
       // batch data
-      let batch = [];
-      for (let i = 0; i < domains.length; i++) {
-        batch.push(domains[i]);
-        if (batch.length === 10) {
-          batchedData.push(batch);
-          batch = [];
-        }
-      }
-      if (batch.length) {
-        batchedData.push(batch);
-      }
+      const batchedData = splitArray(domains, 10);
       console.log(JSON.stringify(batchedData));
       return batchedData;
     } catch (err) {
@@ -71,7 +60,9 @@ export class CheckWebsiteDomainWorker extends BaseQueueWorker {
 
     return [];
   }
-  async runExecutor(data: any): Promise<any> {
+  async runExecutor(
+    data: { id: number; domain: string; website_uuid: string }[],
+  ): Promise<void> {
     console.log('CheckWebsiteDomainWorker data: ', data);
     const lookupResults: { id: number; lookupSuccessful: boolean }[] = [];
 
@@ -82,35 +73,23 @@ export class CheckWebsiteDomainWorker extends BaseQueueWorker {
       });
     }
 
-    // update successfully checked websites
-    if (lookupResults.find((x) => x.lookupSuccessful == true)) {
-      await this.context.mysql.paramExecute(
-        `
-       UPDATE \`${DbTables.WEBSITE}\` 
-       SET  
-        domainLastCheckDate = NOW(),
-        domainStatus = ${WebsiteDomainStatus.OK}
-       WHERE id IN (${lookupResults
-         .filter((x) => x.lookupSuccessful == true)
-         .map((x) => x.id)
-         .join(',')})
-      `,
-      );
-    }
+    const successfulIds = [
+      -1,
+      ...lookupResults.filter((x) => x.lookupSuccessful).map((x) => x.id),
+    ];
 
-    // update websites which does not resolve to valid IPs
-    if (lookupResults.find((x) => x.lookupSuccessful == false)) {
-      await this.context.mysql.paramExecute(
-        `
+    // update checked websites
+    await this.context.mysql.paramExecute(
+      `
      UPDATE \`${DbTables.WEBSITE}\` 
-     SET  domainLastCheckDate = NOW(),
-          domainStatus = ${WebsiteDomainStatus.INVALID}
-     WHERE id IN (${lookupResults
-       .filter((x) => x.lookupSuccessful == false)
-       .map((x) => x.id)
-       .join(',')})
+     SET  
+      domainLastCheckDate = NOW(),
+      domainStatus = CASE WHEN id IN (${successfulIds.join(',')}) 
+        THEN ${WebsiteDomainStatus.OK} 
+        ELSE ${WebsiteDomainStatus.INVALID} 
+      END
+     WHERE id IN (${lookupResults.map((x) => x.id).join(',')})
     `,
-      );
-    }
+    );
   }
 }
