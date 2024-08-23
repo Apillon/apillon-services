@@ -41,7 +41,7 @@ export class AcurastWebsocketClient {
     const timeoutPromise = new Promise((_, reject): void => {
       setTimeout(
         () => reject(new Error('The Acurast websocket request timed out.')),
-        15_000,
+        30_000,
       );
     });
 
