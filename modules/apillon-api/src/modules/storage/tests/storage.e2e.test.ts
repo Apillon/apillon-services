@@ -602,12 +602,12 @@ describe('Apillon API storage tests', () => {
         expect(response.body.data.projectUuid).toBe(apiKey.project_uuid);
         expect(response.body.data.ipfsGateway).toBe(
           ipfsCluster.subdomainGateway
-            ? `https://<CIDv1>.${ipfsCluster.subdomainGateway}`
+            ? `https://<CIDv1>.ipfs.${ipfsCluster.subdomainGateway}`
             : ipfsCluster.ipfsGateway,
         );
         expect(response.body.data.ipnsGateway).toBe(
           ipfsCluster.subdomainGateway
-            ? `https://<IPNS>.${ipfsCluster.subdomainGateway}`
+            ? `https://<IPNS>.ipns.${ipfsCluster.subdomainGateway}`
             : ipfsCluster.ipnsGateway,
         );
       });

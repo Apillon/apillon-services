@@ -289,7 +289,7 @@ export class AcurastService {
     event: { payload: string; function_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const job: AcurastJob = await runCachedFunction(
+    const job = await runCachedFunction<AcurastJob>(
       `${CacheKeyPrefix.ACURAST_JOB}:${event.function_uuid}`,
       async () => {
         const cloudFunction = await new CloudFunction(
@@ -306,28 +306,15 @@ export class AcurastService {
           });
         }
 
-        const job = await new AcurastJob({}, context).populateByUUID(
+        return await new AcurastJob({}, context).populateByUUID(
           cloudFunction.activeJob_uuid,
         );
-
-        // access is not checked for sendMessage
-        job.verifyStatusAndAccess(
-          'executeCloudFunction',
-          context,
-          undefined,
-          true,
-        );
-        return job;
       },
       CacheKeyTTL.DEFAULT,
     );
 
-    if (!event.payload) {
-      throw new ComputingValidationException({
-        code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
-        property: 'payload',
-      });
-    }
+    // access is not checked for sendMessage
+    job.verifyStatusAndAccess('executeCloudFunction', context, undefined, true);
 
     return await new AcurastWebsocketClient(await getAcurastWebsocketUrl())
       .send(job.publicKey, event.payload)

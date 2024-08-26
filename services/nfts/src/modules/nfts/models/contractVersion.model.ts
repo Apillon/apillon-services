@@ -162,7 +162,7 @@ export class ContractVersion extends AdvancedSQLModel {
     chainType: ChainType = ChainType.EVM,
   ): Promise<string> {
     try {
-      const abi = await runCachedFunction(
+      const abi = await runCachedFunction<string>(
         `${CacheKeyPrefix.CONTRACT_ABI}:${[
           collectionType,
           version_id,

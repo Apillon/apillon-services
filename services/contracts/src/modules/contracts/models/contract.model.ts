@@ -223,7 +223,7 @@ export class Contract extends UuidSqlModel {
    */
   public async getContractWithLatestVersion(
     contract_uuid: string,
-  ): Promise<Contract> {
+  ): Promise<Contract[]> {
     const contractVersion = new ContractVersion({}, this.getContext());
     return await this.getContext().mysql.paramExecute(
       `

@@ -532,7 +532,7 @@ export class File extends UuidSqlModel {
   public async populateFilesInBucket(
     bucket_id: number,
     context: ServiceContext,
-  ): Promise<this[]> {
+  ): Promise<File[]> {
     if (!bucket_id) {
       throw new Error('bucket_id should not be null');
     }
@@ -556,7 +556,7 @@ export class File extends UuidSqlModel {
    * @param project_uuid
    * @returns array of files
    */
-  public async populateFilesForProject(project_uuid: string): Promise<this[]> {
+  public async populateFilesForProject(project_uuid: string): Promise<File[]> {
     if (!project_uuid) {
       throw new Error('project_uuid should not be null');
     }
