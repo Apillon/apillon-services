@@ -10,12 +10,6 @@ import { enumInclusionValidator } from '../../../validators';
 
 export class NotificationQueryFilter extends BaseQueryFilter {
   @prop({
-    parser: { resolver: booleanParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-  })
-  public isRead?: boolean;
-
-  @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [

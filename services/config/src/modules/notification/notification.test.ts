@@ -1,13 +1,13 @@
 import {
-  CreateNotificationDto,
+  CreateOrUpdateNotificationDto,
   NotificationQueryFilter,
   NotificationType,
   SqlModelStatus,
-  UpdateNotificationDto,
 } from '@apillon/lib';
 import { Stage, setupTest, releaseStage } from '../../../test/setup';
 import { NotificationService } from './notification.service';
 import { ServiceContext } from '@apillon/service-lib';
+import { Notification } from './models/notification.model';
 
 describe('Notification unit tests', () => {
   let stage: Stage;
@@ -44,11 +44,9 @@ describe('Notification unit tests', () => {
       const returnedNotification = result.items[0];
       expect(returnedNotification.id).toBeDefined();
       expect(returnedNotification.type).toBe(notificationToCreate.type);
-      expect(returnedNotification.isRead).toBe(0);
       expect(returnedNotification.status).toBe(SqlModelStatus.ACTIVE);
       expect(returnedNotification.userId).toBe(userId);
       expect(returnedNotification.createTime).toBeDefined();
-      expect(returnedNotification.isPublic).toBe(0);
     });
 
     test('Notification filtering', async () => {
@@ -65,11 +63,10 @@ describe('Notification unit tests', () => {
       const returnedNotification = result.items[0];
       expect(returnedNotification.id).toBeDefined();
       expect(returnedNotification.type).toBe(NotificationType.UNKNOWN);
-      expect(returnedNotification.isRead).toBe(0);
       expect(returnedNotification.status).toBe(SqlModelStatus.ACTIVE);
 
       const readNotifications = await NotificationService.getNotificationList(
-        { query: new NotificationQueryFilter({ isRead: true }) },
+        { query: new NotificationQueryFilter({ type: 4 }) },
         stage.context,
       );
 
@@ -86,14 +83,13 @@ describe('Notification unit tests', () => {
       };
 
       const result = await NotificationService.createNotification(
-        new CreateNotificationDto(notificationToCreate),
+        { data: new CreateOrUpdateNotificationDto(notificationToCreate) },
         context,
       );
 
       expect(result).toBeDefined();
       expect(result.id).toBeDefined();
       expect(result.type).toBe(notificationToCreate.type);
-      expect(result.isRead).toBe(false);
       expect(result.userId).toBe(notificationToCreate.userId);
       expect(result.status).toBe(SqlModelStatus.ACTIVE);
 
@@ -108,7 +104,6 @@ describe('Notification unit tests', () => {
       const dbNotification = notificationInDB[0];
       expect(dbNotification.id).toBe(result.id);
       expect(dbNotification.type).toBe(notificationToCreate.type);
-      expect(dbNotification.isRead).toBe(0);
       expect(dbNotification.status).toBe(SqlModelStatus.ACTIVE);
       expect(dbNotification.userId).toBe(stage.context.user.id);
       expect(dbNotification.createTime).toBeDefined();
@@ -119,7 +114,8 @@ describe('Notification unit tests', () => {
   describe('Update notification', () => {
     test('Successfully update notification', async () => {
       const notificationToUpdate = {
-        isRead: true,
+        message: 'Test message',
+        userId: stage.context.user.id,
       };
 
       await stage.db.paramExecute(
@@ -134,8 +130,10 @@ describe('Notification unit tests', () => {
 
       const result = await NotificationService.updateNotification(
         {
-          id: notificationId,
-          data: new UpdateNotificationDto(notificationToUpdate),
+          data: {
+            id: notificationId,
+            data: new CreateOrUpdateNotificationDto(notificationToUpdate),
+          },
         },
         context,
       );
@@ -143,8 +141,9 @@ describe('Notification unit tests', () => {
       expect(result).toBeDefined();
       expect(result.id).toBe(notificationId);
       expect(result.type).toBe(NotificationType.UNKNOWN);
-      expect(result.isRead).toBe(1);
       expect(result.status).toBe(SqlModelStatus.ACTIVE);
+      expect(result.message).toBe(notificationToUpdate.message);
+      expect(result.userId).toBe(stage.context.user.id);
 
       const notificationInDB = await stage.db.paramExecute(
         `
@@ -157,11 +156,46 @@ describe('Notification unit tests', () => {
       const dbNotification = notificationInDB[0];
       expect(dbNotification.id).toBe(notificationId);
       expect(dbNotification.type).toBe(NotificationType.UNKNOWN);
-      expect(dbNotification.isRead).toBe(1);
       expect(dbNotification.status).toBe(SqlModelStatus.ACTIVE);
+      expect(dbNotification.message).toBe(notificationToUpdate.message);
       expect(dbNotification.userId).toBe(stage.context.user.id);
       expect(dbNotification.createTime).toBeDefined();
       expect(dbNotification.updateTime).toBeDefined();
+    });
+  });
+
+  describe('deleteNotification', () => {
+    test('Successfully delete notification', async () => {
+      const notificationToCreate = {
+        type: NotificationType.UNKNOWN,
+      };
+      await stage.db.paramExecute(
+        `INSERT INTO notification (type, userId) VALUES ('${notificationToCreate.type}', ${userId})`,
+      );
+
+      const lastInsertId = await stage.db.paramExecute(
+        `SELECT LAST_INSERT_ID() as id`,
+      );
+
+      const notificationId = lastInsertId[0].id;
+
+      await NotificationService.deleteNotification(
+        { id: notificationId },
+        context,
+      );
+
+      const notificationInDB = (
+        await stage.db.paramExecute(
+          `
+        SELECT * FROM notification WHERE id = @id
+      `,
+          { id: notificationId },
+        )
+      )[0] as Notification;
+
+      expect(notificationInDB.id).toBe(notificationId);
+      expect(notificationInDB.type).toBe(NotificationType.UNKNOWN);
+      expect(notificationInDB.status).toBe(SqlModelStatus.DELETED);
     });
   });
 });

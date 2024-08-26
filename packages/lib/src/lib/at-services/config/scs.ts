@@ -22,8 +22,7 @@ import { UpdateSubscriptionDto } from './dtos/update-subscription.dto';
 import { PricelistQueryFilter } from './dtos/pricelist-query-filter.dto';
 import { ConfigureCreditDto } from './dtos/configure-credit.dto';
 import { NotificationQueryFilter } from './dtos/notification-query-filter.dto';
-import { CreateNotificationDto } from './dtos/create-notification.dto';
-import { UpdateNotificationDto } from './dtos/update-notification.dto';
+import { CreateOrUpdateNotificationDto } from './dtos/create-or-update-notification.dto';
 
 /**
  * System config Service client
@@ -289,30 +288,27 @@ export class Scs extends BaseService {
     });
   }
 
-  public async createNotification(data: CreateNotificationDto) {
+  public async createNotification(data: CreateOrUpdateNotificationDto) {
     return await this.callService({
       eventName: ScsEventType.CREATE_NOTIFICATION,
       data,
     });
   }
 
-  public async createGlobalNotification(data: CreateNotificationDto) {
-    return await this.callService({
-      eventName: ScsEventType.CREATE_GLOBAL_NOTIFICATION,
-      data,
-    });
-  }
-
-  public async updateNotification(id: number, data: UpdateNotificationDto) {
+  public async updateNotification(
+    id: number,
+    data: CreateOrUpdateNotificationDto,
+  ) {
     return await this.callService({
       eventName: ScsEventType.UPDATE_NOTIFICATION,
       data: { id, data },
     });
   }
 
-  public async readAllNotifications() {
+  public async deleteNotification(id: number) {
     return await this.callService({
-      eventName: ScsEventType.READ_ALL_NOTIFICATIONS,
+      eventName: ScsEventType.DELETE_NOTIFICATION,
+      id,
     });
   }
   //#endregion

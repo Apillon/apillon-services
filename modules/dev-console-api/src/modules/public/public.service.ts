@@ -1,13 +1,10 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ContactFormDto } from './dtos/contact-form.dto';
 import {
   BlockchainMicroservice,
   EmailDataDto,
   EmailTemplate,
   Mailing,
-  NotificationQueryFilter,
-  Scs,
-  UpdateNotificationDto,
   env,
 } from '@apillon/lib';
 import { User } from '../user/models/user.model';
@@ -57,24 +54,5 @@ export class PublicService {
     query: ServiceStatusQueryFilter,
   ) {
     return await new ServiceStatus({}, context).getList(context, query);
-  }
-
-  async getNotificationList(
-    context: DevConsoleApiContext,
-    query: NotificationQueryFilter,
-  ) {
-    return (await new Scs(context).getNotificationList(query)).data;
-  }
-
-  async updateNotification(
-    id: number,
-    data: UpdateNotificationDto,
-    context: DevConsoleApiContext,
-  ) {
-    return (await new Scs(context).updateNotification(id, data)).data;
-  }
-
-  async readAllNotifications(context: DevConsoleApiContext) {
-    return (await new Scs(context).readAllNotifications()).data;
   }
 }

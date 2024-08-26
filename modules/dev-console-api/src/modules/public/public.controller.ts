@@ -5,10 +5,7 @@ import {
   Post,
   Query,
   UseGuards,
-  Param,
   UseInterceptors,
-  Put,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { PublicService } from './public.service';
 import {
@@ -23,13 +20,7 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { ContactFormDto } from './dtos/contact-form.dto';
 import { AuthGuard } from '../../guards/auth.guard';
 import { DevConsoleApiContext } from '../../context';
-import {
-  CacheKeyPrefix,
-  CacheKeyTTL,
-  DefaultUserRole,
-  NotificationQueryFilter,
-  UpdateNotificationDto,
-} from '@apillon/lib';
+import { CacheKeyPrefix, CacheKeyTTL, DefaultUserRole } from '@apillon/lib';
 import { ServiceStatusQueryFilter } from '../service-status/dtos/service-status-query-filter.dto';
 import { ValidateFor } from '@apillon/lib';
 
@@ -67,34 +58,5 @@ export class PublicController {
     @Query() query: ServiceStatusQueryFilter,
   ) {
     return await this.publicService.getServiceStatusList(context, query);
-  }
-
-  @Get('notification')
-  @Permissions({ role: DefaultUserRole.USER })
-  @Validation({ dto: NotificationQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
-  async getNotifications(
-    @Ctx() context: DevConsoleApiContext,
-    @Query() query: NotificationQueryFilter,
-  ) {
-    return await this.publicService.getNotificationList(context, query);
-  }
-
-  @Put('notification/:id')
-  @Permissions({ role: DefaultUserRole.USER })
-  @UseGuards(AuthGuard)
-  async updateNotification(
-    @Ctx() context: DevConsoleApiContext,
-    @Body() data: UpdateNotificationDto,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return await this.publicService.updateNotification(id, data, context);
-  }
-
-  @Put('notification/read-all')
-  @Permissions({ role: DefaultUserRole.USER })
-  @UseGuards(AuthGuard)
-  async readAllNotifications(@Ctx() context: DevConsoleApiContext) {
-    return await this.publicService.readAllNotifications(context);
   }
 }

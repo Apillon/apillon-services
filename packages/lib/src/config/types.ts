@@ -257,9 +257,8 @@ export enum ScsEventType {
   HAS_ACTIVE_RPC_PLAN = 'has-active-rpc-plan',
   GET_NOTIFICATIONS = 'get-notifications',
   CREATE_NOTIFICATION = 'create-notification',
-  CREATE_GLOBAL_NOTIFICATION = 'create-global-notification',
   UPDATE_NOTIFICATION = 'update-notification',
-  READ_ALL_NOTIFICATIONS = 'read-all-notifications',
+  DELETE_NOTIFICATION = 'delete-notification',
 }
 
 export enum NftsEventType {
@@ -631,6 +630,7 @@ export enum BadRequestErrorCode {
   THIRD_PARTY_SERVICE_CONNECTION_FAILED = 40000005,
   RESOURCE_DOES_NOT_EXISTS = 40000006,
   INVALID_NOTIFICATION_TYPE = 40000007,
+  NOTIFICATION_TYPE_OR_MESSAGE_MISSING = 40000008,
 }
 
 export enum ValidatorErrorCode {

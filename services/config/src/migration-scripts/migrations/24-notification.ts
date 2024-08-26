@@ -7,13 +7,14 @@ export const upgrade = async (
   await queryFn(
     `CREATE TABLE ${DbTables.NOTIFICATION} (
         \`id\` INT NOT NULL AUTO_INCREMENT,
-        \`type\` INT NOT NULL,
-        \`isRead\` BOOLEAN NOT NULL DEFAULT 0,
+        \`type\` INT,
         \`status\` INT NOT NULL DEFAULT '${SqlModelStatus.ACTIVE}',
-        \`userId\` INT NOT NULL,
-        \`isPublic\` BOOLEAN NOT NULL DEFAULT 0,
+        \`message\` TEXT NULL,
+        \`userId\` INT NULL,
         \`createTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         \`updateTime\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        \`createUser\` INT NULL,
+        \`updateUser\` INT NULL,
         PRIMARY KEY (\`id\`)
     );`,
   );
