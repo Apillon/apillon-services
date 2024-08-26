@@ -11,6 +11,7 @@ import {
 import { Collection } from 'mongodb';
 import { ServiceContext } from './context';
 import { generateMongoLogsQuery, systemRoutes } from './lib/queries';
+import { CloudFunctionUsageDto } from '@apillon/lib/src';
 /**
  * Logger class for logging events intodatabase.
  */
@@ -253,5 +254,26 @@ export class Logger {
         ...call.serialize(),
         timestamp: new Date(),
       });
+  }
+
+  /**
+   * Get cloud function calls from MongoDB, filter by date
+   * @param {CloudFunctionUsageDto} params - filter by date and flags
+   * @param {ServiceContext} context
+   * @returns {CloudFunctionCall[]}
+   */
+  static async getCloudFunctionUsage(
+    params: CloudFunctionUsageDto,
+    context: ServiceContext,
+  ) {
+    return await context.mongo.db
+      .collection(MongoCollections.CLOUD_FUNCTION_CALL)
+      .find({
+        function_uuid: params.function_uuid,
+        ...(params.dateFrom ? { timestamp: { $gte: params.dateFrom } } : {}),
+        ...(params.dateTo ? { timestamp: { $lte: params.dateTo } } : {}),
+        ...(params.success != null ? { success: params.success } : {}),
+      })
+      .toArray();
   }
 }

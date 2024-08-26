@@ -11,6 +11,7 @@ import {
   RequestLogsQueryFilter,
   LogsQueryFilter,
   RequestLogDto,
+  CloudFunctionUsageDto,
 } from '../../..';
 import { CloudFunctionCallDto } from './dtos/cloud-function-call.dto';
 
@@ -204,6 +205,15 @@ export class Lmas extends BaseService {
     this.callService({
       eventName: LmasEventType.SAVE_CLOUD_FUNCTION_CALL,
       call: call.serialize(),
+    });
+  }
+
+  public async getCloudFunctionUsage(params: CloudFunctionUsageDto) {
+    this.defaultQueueUrl = null;
+    this.isDefaultAsync = false;
+    return await this.callService({
+      eventName: LmasEventType.GET_CLOUD_FUNCTION_USAGE,
+      params: params.serialize(),
     });
   }
 }

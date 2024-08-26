@@ -1,11 +1,13 @@
 import {
   AttachedServiceType,
   BaseProjectQueryFilter,
+  CloudFunctionUsageDto,
   CodeException,
   ComputingMicroservice,
   CreateCloudFunctionDto,
   CreateJobDto,
   JobQueryFilter,
+  Lmas,
   SetJobEnvironmentDto,
   UpdateCloudFunctionDto,
   UpdateJobDto,
@@ -85,10 +87,6 @@ export class AcurastService {
       .data;
   }
 
-  async createJob(context: DevConsoleApiContext, body: CreateJobDto) {
-    return (await new ComputingMicroservice(context).createJob(body)).data;
-  }
-
   async getCloudFunction(
     context: DevConsoleApiContext,
     query: JobQueryFilter,
@@ -100,6 +98,14 @@ export class AcurastService {
   }> {
     return (await new ComputingMicroservice(context).getCloudFunction(query))
       .data;
+  }
+
+  async getCloudFunctionUsage(query: CloudFunctionUsageDto) {
+    return (await new Lmas().getCloudFunctionUsage(query)).data;
+  }
+
+  async createJob(context: DevConsoleApiContext, body: CreateJobDto) {
+    return (await new ComputingMicroservice(context).createJob(body)).data;
   }
 
   async getJob(context: DevConsoleApiContext, job_uuid: string) {

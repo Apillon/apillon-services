@@ -11,7 +11,7 @@ export { prop };
 /**
  * Base model.
  */
-export abstract class ModelBase extends Model<Context> {
+export abstract class ModelBase extends Model<any> {
   /**
    * Class constructor.
    * @param data Input data.

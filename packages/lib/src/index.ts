@@ -104,6 +104,7 @@ export * from './lib/at-services/computing/dtos/update-job.dto';
 export * from './lib/at-services/computing/dtos/set-job-environment.dto';
 export * from './lib/at-services/computing/dtos/job-query-filter.dto';
 export * from './lib/at-services/computing/dtos/create-or-update-cloud-function.dto';
+export * from './lib/at-services/computing/dtos/cloud-function-usage.dto';
 
 //#REGION CONTRACTS
 export * from './lib/at-services/contracts/eventTypes';

@@ -103,6 +103,7 @@ export enum LmasEventType {
   SEND_MESSAGE_TO_SLACK = 'send-message-to-slack',
 
   SAVE_CLOUD_FUNCTION_CALL = 'save-cloud-function-call',
+  GET_CLOUD_FUNCTION_USAGE = 'get-cloud-function-usage',
 }
 
 export enum BlockchainEventType {

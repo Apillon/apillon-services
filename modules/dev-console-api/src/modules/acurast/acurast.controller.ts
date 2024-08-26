@@ -1,5 +1,6 @@
 import {
   BaseProjectQueryFilter,
+  CloudFunctionUsageDto,
   CreateCloudFunctionDto,
   CreateJobDto,
   DefaultPermission,
@@ -113,6 +114,17 @@ export class AcurastController {
       payload,
       function_uuid,
     );
+  }
+
+  @Get('cloud-functions/:function_uuid/usage')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({ dto: CloudFunctionUsageDto, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getCloudFunctionUsage(
+    @Param('function_uuid') function_uuid: string,
+    @Query() query: CloudFunctionUsageDto,
+  ) {
+    return await this.acurastService.getCloudFunctionUsage(query);
   }
 
   // TODO: Is this needed?

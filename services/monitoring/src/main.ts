@@ -25,6 +25,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [LmasEventType.SEND_MESSAGE_TO_SLACK]: Alerting.sendMessageToSlack,
 
     [LmasEventType.SAVE_CLOUD_FUNCTION_CALL]: Logger.saveCloudFunctionCall,
+    [LmasEventType.GET_CLOUD_FUNCTION_USAGE]: Logger.getCloudFunctionUsage,
   };
 
   return await processors[event.eventName](event, context);
