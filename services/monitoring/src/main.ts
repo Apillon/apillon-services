@@ -23,6 +23,8 @@ export async function processEvent(event, context: Context): Promise<any> {
     [LmasEventType.SEND_ALERT]: Alerting.sendAlert,
     [LmasEventType.SEND_ADMIN_ALERT]: Alerting.sendAdminAlert,
     [LmasEventType.SEND_MESSAGE_TO_SLACK]: Alerting.sendMessageToSlack,
+
+    [LmasEventType.SAVE_CLOUD_FUNCTION_CALL]: Logger.saveCloudFunctionCall,
   };
 
   return await processors[event.eventName](event, context);

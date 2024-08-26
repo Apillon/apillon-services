@@ -170,6 +170,7 @@ export * from './lib/at-services/lmas/dtos/request-log.dto';
 export * from './lib/at-services/lmas/dtos/base-logs-query-filter.dto';
 export * from './lib/at-services/lmas/dtos/logs-query-filter.dto';
 export * from './lib/at-services/lmas/dtos/request-logs-query-filter.dto';
+export * from './lib/at-services/lmas/dtos/cloud-function-call.dto';
 export * from './lib/exceptions/exceptions';
 export * from './lib/exceptions/http-exception';
 export * from './lib/base-models/base-query-filter.model';

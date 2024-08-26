@@ -12,6 +12,7 @@ import {
   LogsQueryFilter,
   RequestLogDto,
 } from '../../..';
+import { CloudFunctionCallDto } from './dtos/cloud-function-call.dto';
 
 /**
  * Logging / Monitoring / Alerting Service client
@@ -196,6 +197,13 @@ export class Lmas extends BaseService {
     this.isDefaultAsync = false;
     return await this.callService({
       eventName: LmasEventType.GET_TOTAL_REQUESTS,
+    });
+  }
+
+  public saveCloudFunctionCall(call: CloudFunctionCallDto) {
+    this.callService({
+      eventName: LmasEventType.SAVE_CLOUD_FUNCTION_CALL,
+      call: call.serialize(),
     });
   }
 }

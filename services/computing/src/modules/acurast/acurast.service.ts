@@ -18,6 +18,7 @@ import {
   CreateCloudFunctionDto,
   UpdateCloudFunctionDto,
   SqlModelStatus,
+  CloudFunctionCallDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -41,7 +42,6 @@ import {
 } from '../../config/types';
 import { AcurastWebsocketClient } from '../clients/acurast-websocket.client';
 import { CloudFunction } from './models/cloud-function.model';
-import { CloudFunctionCall } from './models/cloud-function-call.model';
 
 export class AcurastService {
   /**
@@ -332,18 +332,22 @@ export class AcurastService {
     return await new AcurastWebsocketClient(await getAcurastWebsocketUrl())
       .send(job.publicKey, event.payload)
       .then(async (result) => {
-        await new CloudFunctionCall({}, context).save({
-          function_uuid: job.function_uuid,
-          success: true,
-        });
+        new Lmas().saveCloudFunctionCall(
+          new CloudFunctionCallDto({
+            function_uuid: job.function_uuid,
+            success: true,
+          }),
+        );
         return result;
       })
       .catch(async (err) => {
-        await new CloudFunctionCall({}, context).save({
-          function_uuid: job.function_uuid,
-          success: false,
-          error: `${err}`,
-        });
+        new Lmas().saveCloudFunctionCall(
+          new CloudFunctionCallDto({
+            function_uuid: job.function_uuid,
+            success: false,
+            error: `${err}`,
+          }),
+        );
         throw await new ComputingCodeException({
           status: 500,
           code: ComputingErrorCode.ERROR_SENDING_JOB_PAYLOAD,

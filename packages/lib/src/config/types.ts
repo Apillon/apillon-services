@@ -101,6 +101,8 @@ export enum LmasEventType {
   GET_TOTAL_REQUESTS = 'get-total-requests',
 
   SEND_MESSAGE_TO_SLACK = 'send-message-to-slack',
+
+  SAVE_CLOUD_FUNCTION_CALL = 'save-cloud-function-call',
 }
 
 export enum BlockchainEventType {
@@ -910,6 +912,7 @@ export enum MongoCollections {
   REQUEST_LOGS = 'request_logs',
   API_REQUEST_LOGS = 'api_request_logs',
   IPFS_TRAFFIC_LOG = 'ipfs-traffic-log',
+  CLOUD_FUNCTION_CALL = 'cloud-function-call',
 }
 
 export enum ApiName {
