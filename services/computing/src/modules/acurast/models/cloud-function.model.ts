@@ -124,7 +124,7 @@ export class CloudFunction extends UuidSqlModel {
   public async populateJobs(query: JobQueryFilter) {
     this.jobs = (
       await new AcurastJob(
-        { function_uuid: this.function_uuid },
+        { function_uuid: this.function_uuid, project_uuid: this.project_uuid },
         this.getContext(),
       ).getList(new JobQueryFilter(query))
     ).items as AcurastJob[];
