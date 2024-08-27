@@ -131,6 +131,9 @@ export * from './lib/at-services/social/dtos/create-space.dto';
 export * from './lib/at-services/social/dtos/create-post.dto';
 export * from './lib/at-services/social/dtos/post-query-filter.dto';
 
+//#Region Infrastructure
+export * from './lib/at-services/infrastructure/infrastructure';
+
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';
 export * from './lib/at-services/ams/dtos/discord-user-list-filter.dto';

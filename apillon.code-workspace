@@ -49,6 +49,10 @@
       "path": "services/social",
     },
     {
+      "name": "🌐@services_infrastructure [@apillon_infrastructure]",
+      "path": "services/infrastructure",
+    },
+    {
       "name": "😎@modules_dev-console-api",
       "path": "modules/dev-console-api",
     },

@@ -75,6 +75,13 @@ export const SQL_CONFIGS: StageObject<ConnectionOptions> = {
     port: env.SOCIAL_MYSQL_PORT_TEST,
     user: env.SOCIAL_MYSQL_USER_TEST,
   },
+  [StageName.INFRASTRUCTURE]: {
+    host: env.INFRASTRUCTURE_MYSQL_HOST_TEST,
+    database: env.INFRASTRUCTURE_MYSQL_DATABASE_TEST,
+    password: env.INFRASTRUCTURE_MYSQL_PASSWORD_TEST,
+    port: env.INFRASTRUCTURE_MYSQL_PORT_TEST,
+    user: env.INFRASTRUCTURE_MYSQL_USER_TEST,
+  },
   [StageName.CONTRACTS]: {
     host: env.CONTRACTS_MYSQL_HOST_TEST,
     database: env.CONTRACTS_MYSQL_DATABASE_TEST,
