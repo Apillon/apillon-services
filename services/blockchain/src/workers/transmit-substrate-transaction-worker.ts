@@ -4,6 +4,7 @@ import {
   ServiceName,
   SubstrateChain,
   getEnumKey,
+  writeLog,
 } from '@apillon/lib';
 import {
   WorkerDefinition,
@@ -71,6 +72,8 @@ export class TransmitSubstrateTransactionWorker extends BaseSingleThreadWorker {
       );
       throw err;
     }
+
+    writeLog(LogType.INFO, 'TransmitSubstrateTranscationWorker finished');
 
     // try {
     //   await sendToWorkerQueue(
