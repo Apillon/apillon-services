@@ -375,6 +375,7 @@ export enum ServiceName {
   COMPUTING = 'COMPUTING',
   SOCIAL = 'SOCIAL',
   CONTRACTS = 'CONTRACTS',
+  INFRASTRUCTURE = 'INFRASTRUCTURE',
 }
 
 export enum ServiceCode {
@@ -394,6 +395,7 @@ export enum ServiceCode {
   BLOCKCHAIN = '16',
   COMPUTING = '18',
   SOCIAL = '19',
+  INFRASTRUCTURE = '20',
 }
 
 export enum AppEnvironment {

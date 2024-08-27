@@ -1,0 +1,15 @@
+{
+    "version": "0.3.0",
+    "configurations": [
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Infrastructure",
+        "runtimeExecutable": "nodemon",
+        "runtimeArgs": ["./src/scripts/dev/run-server.ts", "--inspect=9235"],
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen"
+      }
+    ]
+  }
+  
