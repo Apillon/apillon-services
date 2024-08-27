@@ -300,16 +300,7 @@ export class CreateCollectionDTO extends CreateCollectionDTOBase {
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_PRESENT,
-      },
-      {
-        resolver: enumInclusionValidator(ChainType),
-        code: ValidatorErrorCode.NFT_COLLECTION_CHAIN_NOT_VALID,
-      },
-    ],
+    validators: [],
   })
   public chainType: ChainType;
 

@@ -1470,10 +1470,7 @@ export class NftsService {
     chain: Chain,
     project_uuid: string,
   ) {
-    if (chainType !== ChainType.EVM) {
-      return;
-    }
-    if (![EvmChain.ETHEREUM, EvmChain.SEPOLIA].includes(chain as EvmChain)) {
+    if (chainType !== ChainType.EVM || chain !== EvmChain.ETHEREUM) {
       return;
     }
 
@@ -1490,9 +1487,6 @@ export class NftsService {
         code: NftsErrorCode.REQUIRES_BUTTERFLY_PLAN,
         context,
       });
-    }
-    if (chain == EvmChain.SEPOLIA) {
-      return;
     }
 
     const chainCollectionsCount = await new Collection(
