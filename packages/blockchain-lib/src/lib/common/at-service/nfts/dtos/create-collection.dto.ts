@@ -1,4 +1,4 @@
-import { ModelBase, prop } from '@apillon/lib';
+import { ChainType, ModelBase, prop } from '@apillon/lib';
 import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   ethAddressValidator,
@@ -295,6 +295,14 @@ export class CreateCollectionDTO extends CreateCollectionDTOBase {
     defaultValue: true,
   })
   public isAutoIncrement: boolean;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public chainType: ChainType;
 
   @prop({
     parser: { resolver: integerParser() },
