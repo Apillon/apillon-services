@@ -86,6 +86,8 @@ export class SubstrateRpcApi {
     if (await isTransactionIndexed(wallet, transactionHash)) {
       return lastProcessedNonce;
     }
+
+    return null;
   }
 
   async getApi() {
