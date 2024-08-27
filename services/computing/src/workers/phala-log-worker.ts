@@ -64,7 +64,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
     }));
   }
 
-  public async runExecutor(data: { clusterWalletId: number }): Promise<any> {
+  public async runExecutor(data: { clusterWalletId: string }): Promise<any> {
     console.log('runExecutor data', data);
     const clusterWallet = await new ClusterWallet(
       {},

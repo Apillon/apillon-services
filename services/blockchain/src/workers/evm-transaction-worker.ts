@@ -140,7 +140,7 @@ export class EvmTransactionWorker extends BaseSingleThreadWorker {
             err,
             data: {
               error: err,
-              wallet: wallets.address,
+              wallet: wallets[0].address,
             },
           },
           LogOutput.NOTIFY_ALERT,

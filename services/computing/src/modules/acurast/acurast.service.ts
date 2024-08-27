@@ -199,7 +199,7 @@ export class AcurastService {
     event: { payload: string; job_uuid: string },
     context: ServiceContext,
   ): Promise<AcurastJob> {
-    const publicKey = await runCachedFunction(
+    const publicKey = await runCachedFunction<string>(
       `${CacheKeyPrefix.ACURAST_JOB}:${event.job_uuid}`,
       async () => {
         const job = await new AcurastJob({}, context).populateByUUID(

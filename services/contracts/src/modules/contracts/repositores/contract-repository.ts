@@ -40,7 +40,7 @@ export class ContractRepository extends BaseRepository {
   }
 
   async getContractWithLatestVersion(contract_uuid: string) {
-    const data = await runCachedFunction(
+    const data = await runCachedFunction<any>(
       `${CacheKeyPrefix.CONTRACT_BY_UUID_WITH_LATEST_VERSION}:${[contract_uuid].join(':')}`,
       async () =>
         await new Contract({}, this.context).getContractWithLatestVersion(
@@ -50,7 +50,7 @@ export class ContractRepository extends BaseRepository {
     );
 
     const { c: contract, cv: contractVersion } = this.extractModelDataFromRow(
-      data[0],
+      data[0] as any,
       {
         c: Contract,
         cv: ContractVersion,
@@ -84,7 +84,7 @@ export class ContractRepository extends BaseRepository {
 
   async getContractWithVersionAndMethods(contract_uuid: string) {
     const cacheKey = `${CacheKeyPrefix.CONTRACT_VERSION_BY_UUID_WITH_METHODS}:${contract_uuid}`;
-    const data = await runCachedFunction(
+    const data = await runCachedFunction<any>(
       cacheKey as any,
       async () =>
         new Contract({}, this.context).getContractWithLatestVersionAndMethods(
@@ -147,7 +147,7 @@ export class ContractRepository extends BaseRepository {
         AND c.status = ${SqlModelStatus.ACTIVE}
       LIMIT 1;
     `;
-    const data = await runCachedFunction(
+    const data = await runCachedFunction<ContractVersion[]>(
       `${CacheKeyPrefix.CONTRACT_VERSION_BY_CONTRACT_UUID}:${contract_uuid}`,
       async () => await this.mysql.paramExecute(query, { contract_uuid }),
       CacheKeyTTL.EXTRA_LONG,
