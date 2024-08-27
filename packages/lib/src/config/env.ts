@@ -187,6 +187,10 @@ export interface IEnv {
    */
   STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS: number;
   /**
+   * Max number of files that can be pinned to crust in one worker iteration
+   */
+  STORAGE_MAX_FILE_BATCH_SIZE_FOR_CRUST: number;
+  /**
    * Maximum number of files in session without delay between worker iterations
    */
   STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY: number;
@@ -737,6 +741,8 @@ export let env: IEnv = {
     parseInt(process.env['SEND_WEBSITES_TO_REVIEW']) || 1,
   STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS:
     parseInt(process.env['STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS']) || 1000,
+  STORAGE_MAX_FILE_BATCH_SIZE_FOR_CRUST:
+    parseInt(process.env['STORAGE_MAX_FILE_BATCH_SIZE_FOR_CRUST']) || 100,
   STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY:
     parseInt(process.env['STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY']) ||
     2000,

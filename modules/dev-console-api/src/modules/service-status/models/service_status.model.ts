@@ -3,6 +3,7 @@ import {
   Context,
   PopulateFrom,
   SerializeFor,
+  SqlModelStatus,
   enumInclusionValidator,
   getQueryParams,
   prop,
@@ -92,7 +93,8 @@ export class ServiceStatus extends AdvancedSQLModel {
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields('s', '', SerializeFor.SELECT_DB)}`,
       qFrom: `FROM \`${DbTables.SERVICE_STATUS}\` s
-        WHERE (@type IS NULL OR s.type = @type) AND (@status IS NULL OR s.status = @status)`,
+        WHERE (@type IS NULL OR s.type = @type)
+        AND IFNULL(@status, ${SqlModelStatus.ACTIVE}) = status`,
       qFilter: `
         ORDER BY ${filters.orderStr}
         LIMIT ${filters.limit} OFFSET ${filters.offset};`,

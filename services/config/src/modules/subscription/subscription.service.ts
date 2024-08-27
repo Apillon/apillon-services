@@ -430,7 +430,7 @@ export class SubscriptionService {
   static async getSubscriptionPackages(
     event: any,
     context: ServiceContext,
-  ): Promise<string> {
+  ): Promise<any[]> {
     return await new SubscriptionPackage({}, context).getAll();
   }
 }

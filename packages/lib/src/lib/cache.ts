@@ -38,11 +38,11 @@ export function generateCacheKey(
  * @param action function to be executed if no hit in cache
  * @param expire cache TTL
  */
-export async function runCachedFunction(
+export async function runCachedFunction<T>(
   key: CacheKeyPrefix | `${CacheKeyPrefix}:${string}`,
   action: () => any,
   expire = env.DEFAULT_CACHE_TTL,
-) {
+): Promise<T> {
   let cache: AppCache = null;
   let result: any;
   if (env.REDIS_URL) {
