@@ -23,6 +23,7 @@ import { SocialModule } from './modules/social/social.module';
 import { AcurastModule } from './modules/acurast/acurast.module';
 import { ContractsModule } from './modules/contracts/contracts.module';
 import { EmbeddedWalletModule } from './modules/wallet/embedded-wallet.module';
+import { RpcModule } from './modules/rpc/rpc.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { EmbeddedWalletModule } from './modules/wallet/embedded-wallet.module';
     EmbeddedWalletModule,
     AcurastModule,
     ContractsModule,
+    RpcModule,
   ],
   controllers: [],
   providers: [],

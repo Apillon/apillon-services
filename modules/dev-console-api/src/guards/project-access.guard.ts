@@ -17,9 +17,19 @@ export class ProjectAccessGuard implements CanActivate {
     const context: Context = execCtx.getArgByIndex(0).context;
     const project_uuid =
       execCtx.getArgByIndex(0).params?.project_uuid ||
+      execCtx.getArgByIndex(0).params?.projectUuid ||
       execCtx.getArgByIndex(0).query?.project_uuid ||
-      execCtx.getArgByIndex(0).body?.project_uuid;
+      execCtx.getArgByIndex(0).query?.projectUuid ||
+      execCtx.getArgByIndex(0).body?.project_uuid ||
+      execCtx.getArgByIndex(0).body?.projectUuid;
 
+    if (!project_uuid) {
+      throw new CodeException({
+        code: ForbiddenErrorCodes.FORBIDDEN,
+        status: HttpStatus.FORBIDDEN,
+        errorMessage: 'Project UUID not provided',
+      });
+    }
     if (
       !context.hasRoleOnProject(
         [
