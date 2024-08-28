@@ -2,7 +2,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { RpcUrl } from './rpc-url.model';
 import {
   CreateRpcUrlDto,
-  ListRpcUrlsForEnvironmentQueryFilter,
+  ListRpcUrlsForApiKeyQueryFilter,
   ModelValidationException,
   SqlModelStatus,
   UpdateRpcUrlDto,
@@ -11,33 +11,33 @@ import {
 } from '@apillon/lib';
 import { InfrastructureCodeException } from '../../lib/exceptions';
 import { InfrastructureErrorCode } from '../../config/types';
-import { RpcEnvironment } from './rpc-environment.model';
+import { RpcApiKey } from './rpc-api-key.model';
 export class RpcUrlService {
   static async createRpcUrl(
     { data }: { data: CreateRpcUrlDto },
     context: ServiceContext,
   ) {
-    const rpcEnvironment = await new RpcEnvironment({}, context).populateById(
-      data.environmentId,
+    const rpcApiKey = await new RpcApiKey({}, context).populateById(
+      data.apiKeyId,
     );
-    if (!rpcEnvironment.exists()) {
+    if (!rpcApiKey.exists()) {
       throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.RPC_ENVIRONMENT_NOT_FOUND,
+        code: InfrastructureErrorCode.RPC_API_KEY_NOT_FOUND,
         status: 404,
       });
     }
-    if (!hasProjectAccess(rpcEnvironment.projectUuid, context)) {
+    if (!hasProjectAccess(rpcApiKey.projectUuid, context)) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.USER_IS_NOT_AUTHORIZED,
         status: 403,
       });
     }
-    const rpcUrlByNetworkAndEnvironment = await new RpcUrl(
+    const rpcUrlByNetworkAndApiKey = await new RpcUrl(
       {},
       context,
-    ).populateByNetworkAndEnvironment(data.network, data.environmentId);
-    if (rpcUrlByNetworkAndEnvironment.exists()) {
-      return rpcUrlByNetworkAndEnvironment.serializeByContext();
+    ).populateByNetworkAndApiKey(data.network, data.apiKeyId);
+    if (rpcUrlByNetworkAndApiKey.exists()) {
+      return rpcUrlByNetworkAndApiKey.serializeByContext();
     }
     const rpcUrl = new RpcUrl(data, context);
     // TO-DO fetch from dwellir
@@ -92,29 +92,26 @@ export class RpcUrlService {
   }
   static async listRpcUrls(
     event: {
-      query: ListRpcUrlsForEnvironmentQueryFilter;
+      query: ListRpcUrlsForApiKeyQueryFilter;
     },
     context: ServiceContext,
   ) {
-    const environment = await new RpcEnvironment({}, context).populateById(
-      event.query.environmentId,
+    const apiKey = await new RpcApiKey({}, context).populateById(
+      event.query.apiKeyId,
     );
-    if (!environment.exists()) {
+    if (!apiKey.exists()) {
       throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.RPC_ENVIRONMENT_NOT_FOUND,
+        code: InfrastructureErrorCode.RPC_API_KEY_NOT_FOUND,
         status: 404,
       });
     }
-    if (!hasProjectAccess(environment.projectUuid, context)) {
+    if (!hasProjectAccess(apiKey.projectUuid, context)) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.USER_IS_NOT_AUTHORIZED,
         status: 403,
       });
     }
-    const filter = new ListRpcUrlsForEnvironmentQueryFilter(
-      event.query,
-      context,
-    );
-    return await new RpcUrl({}, context).listForEnvironment(filter);
+    const filter = new ListRpcUrlsForApiKeyQueryFilter(event.query, context);
+    return await new RpcUrl({}, context).listForApiKey(filter);
   }
 }

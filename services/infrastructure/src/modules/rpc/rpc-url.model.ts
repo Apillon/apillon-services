@@ -1,7 +1,7 @@
 import {
   AdvancedSQLModel,
   Context,
-  ListRpcUrlsForEnvironmentQueryFilter,
+  ListRpcUrlsForApiKeyQueryFilter,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
@@ -138,11 +138,11 @@ export class RpcUrl extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: InfrastructureErrorCode.RPC_URL_ENVIRONMENT_ID_NOT_PRESENT,
+        code: InfrastructureErrorCode.RPC_URL_API_KEY_ID_NOT_PRESENT,
       },
     ],
   })
-  environmentId: number;
+  apiKeyId: number;
   // Joined fields
   @prop({
     parser: { resolver: stringParser() },
@@ -156,25 +156,20 @@ export class RpcUrl extends AdvancedSQLModel {
     validators: [],
   })
   projectUuid: string;
-  public async populateByNetworkAndEnvironment(
-    network: string,
-    environmentId: number,
-  ) {
+  public async populateByNetworkAndApiKey(network: string, apiKeyId: number) {
     this.reset();
     const data = await this.getContext().mysql.paramExecute(
-      `SELECT * FROM ${this.tableName} WHERE network = @network and environmentId = @environmentId LIMIT 1`,
+      `SELECT * FROM ${this.tableName} WHERE network = @network and apiKeyId = @apiKeyId LIMIT 1`,
       {
         network,
-        environmentId,
+        apiKeyId,
       },
     );
     return data?.length
       ? this.populate(data[0], PopulateFrom.DB)
       : this.reset();
   }
-  public async listForEnvironment(
-    filter: ListRpcUrlsForEnvironmentQueryFilter,
-  ) {
+  public async listForApiKey(filter: ListRpcUrlsForApiKeyQueryFilter) {
     const fieldMap = {
       id: 'u.id',
     };
@@ -187,7 +182,7 @@ export class RpcUrl extends AdvancedSQLModel {
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields()}`,
       qFrom: `FROM ${DbTables.RPC_URL} u
-          WHERE u.environmentId = ${filter.environmentId}`,
+          WHERE u.apiKeyId = ${filter.apiKeyId}`,
       qFilter: `
         ORDER BY ${filters.orderStr}
         LIMIT ${filters.limit} OFFSET ${filters.offset}`,
@@ -219,7 +214,7 @@ export class RpcUrl extends AdvancedSQLModel {
       `
           SELECT u.*, e.projectUuid
           FROM \`${this.tableName}\` u
-          LEFT JOIN \`${DbTables.RPC_ENVIRONMENT}\` e ON u.environmentId = e.id
+          LEFT JOIN \`${DbTables.RPC_API_KEY}\` e ON u.apiKeyId = e.id
           WHERE u.id = @id
           AND u.status <> ${SqlModelStatus.DELETED}
           `,

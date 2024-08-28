@@ -1,9 +1,9 @@
 import {
   CreateRpcUrlDto,
   DefaultUserRole,
-  ListRpcUrlsForEnvironmentQueryFilter,
+  ListRpcUrlsForApiKeyQueryFilter,
   SqlModelStatus,
-  UpdateRpcEnvironmentDto,
+  UpdateRpcApiKeyDto,
 } from '@apillon/lib';
 import { Stage, releaseStage, setupTest } from '../../../../test/setup';
 import { DbTables } from '../../../config/types';
@@ -11,7 +11,7 @@ import { RpcUrlService } from '../rpc-url.service';
 describe('RPC Url tests', () => {
   const projectUuid = 'uuid';
   let stage: Stage;
-  let environmentId: number;
+  let apiKeyId: number;
   beforeAll(async () => {
     stage = await setupTest();
     stage.context.user = {
@@ -27,15 +27,15 @@ describe('RPC Url tests', () => {
       },
     };
     await stage.db.paramExecute(
-      `INSERT INTO ${DbTables.RPC_ENVIRONMENT} (name, projectUuid, apiKey, status)
+      `INSERT INTO ${DbTables.RPC_API_KEY} (name, projectUuid, uuid, status)
               VALUES ('RPC ENV', '${projectUuid}', '6e0c9d3e-edaf-46f4-a4db-228467659876', ${SqlModelStatus.ACTIVE})`,
     );
     const result = await stage.db.paramExecute(`SELECT LAST_INSERT_ID() as id`);
-    const createdEnvironmentId = result?.[0]?.id;
-    if (!createdEnvironmentId) {
-      throw new Error('Environment not created');
+    const createdApiKeyId = result?.[0]?.id;
+    if (!createdApiKeyId) {
+      throw new Error('ApiKey not created');
     }
-    environmentId = createdEnvironmentId;
+    apiKeyId = createdApiKeyId;
   });
   afterAll(async () => {
     await releaseStage(stage);
@@ -46,7 +46,7 @@ describe('RPC Url tests', () => {
         name: 'Test url',
         chainName: 'Test Chain',
         network: 'Test Network',
-        environmentId,
+        apiKeyId,
       });
       const createdRpcUrlResponse = await RpcUrlService.createRpcUrl(
         { data: dto },
@@ -61,11 +61,11 @@ describe('RPC Url tests', () => {
       expect(createdRpcUrlResponse.wssUrl).toBeDefined();
       expect(createdRpcUrlResponse.createTime).toBeUndefined();
     });
-    test('User cannot create rpc url on the same network and environment', async () => {
+    test('User cannot create rpc url on the same network and apiKey', async () => {
       const network = 'NETWORK';
       await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_URL} (name, environmentId, chainName,network,httpsUrl, wssUrl)
-                    VALUES ('RPC ENV', ${environmentId}, 'Chain',@network, '','')`,
+        `INSERT INTO ${DbTables.RPC_URL} (name, apiKeyId, chainName,network,httpsUrl, wssUrl)
+                    VALUES ('RPC ENV', ${apiKeyId}, 'Chain',@network, '','')`,
         { network },
       );
       const result = await stage.db.paramExecute(
@@ -79,7 +79,7 @@ describe('RPC Url tests', () => {
         name: 'Test url',
         chainName: 'Test Chain',
         network,
-        environmentId,
+        apiKeyId,
       });
       const createdRpcUrlResponse = await RpcUrlService.createRpcUrl(
         {
@@ -101,17 +101,17 @@ describe('RPC Url tests', () => {
         wssUrl: 'wss://example.com',
       };
       await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_URL} (name, environmentId, chainName,network,httpsUrl, wssUrl)
-                    VALUES (@name, '${environmentId}', @chainName,@network, @httpsUrl,@wssUrl)`,
+        `INSERT INTO ${DbTables.RPC_URL} (name, apiKeyId, chainName,network,httpsUrl, wssUrl)
+                    VALUES (@name, '${apiKeyId}', @chainName,@network, @httpsUrl,@wssUrl)`,
         dto,
       );
       const result = await stage.db.paramExecute(
         `SELECT LAST_INSERT_ID() as id`,
       );
       const createdUrlId = result[0].id;
-      const updateDto = new UpdateRpcEnvironmentDto({
+      const updateDto = new UpdateRpcApiKeyDto({
         name: 'Updated Name',
-        environmentId: 10,
+        apiKeyId: 10,
       });
       const updatedRpcUrlResponse = await RpcUrlService.updateRpcUrl(
         {
@@ -123,7 +123,7 @@ describe('RPC Url tests', () => {
       expect(updatedRpcUrlResponse).toBeDefined();
       expect(updatedRpcUrlResponse.id).toBe(createdUrlId);
       expect(updatedRpcUrlResponse.name).toBe(updateDto.name);
-      expect(updatedRpcUrlResponse.environmentId).toBe(environmentId);
+      expect(updatedRpcUrlResponse.apiKeyId).toBe(apiKeyId);
       const rpcUrlInDb = await stage.db.paramExecute(
         `SELECT * FROM ${DbTables.RPC_URL} WHERE id=@id`,
         { id: createdUrlId },
@@ -131,7 +131,7 @@ describe('RPC Url tests', () => {
       expect(rpcUrlInDb).toHaveLength(1);
       const dbRpcUrl = rpcUrlInDb[0];
       expect(dbRpcUrl.name).toBe(updateDto.name);
-      expect(dbRpcUrl.environmentId).toBe(environmentId);
+      expect(dbRpcUrl.apiKeyId).toBe(apiKeyId);
     });
   });
   describe('deleteRpcUrl', () => {
@@ -144,8 +144,8 @@ describe('RPC Url tests', () => {
         wssUrl: 'wss://example.com',
       };
       await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_URL} (name, environmentId, chainName,network,httpsUrl, wssUrl)
-                        VALUES (@name, ${environmentId}, @chainName,@network, @httpsUrl,@wssUrl)`,
+        `INSERT INTO ${DbTables.RPC_URL} (name, apiKeyId, chainName,network,httpsUrl, wssUrl)
+                        VALUES (@name, ${apiKeyId}, @chainName,@network, @httpsUrl,@wssUrl)`,
         dto,
       );
       const result = await stage.db.paramExecute(
@@ -171,26 +171,26 @@ describe('RPC Url tests', () => {
     });
   });
   describe('listRpcUrls', () => {
-    test('User can list Rpc urls for an environment', async () => {
+    test('User can list Rpc urls for an apiKey', async () => {
       await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_ENVIRONMENT} (name, projectUuid, apiKey, status)
+        `INSERT INTO ${DbTables.RPC_API_KEY} (name, projectUuid, uuid, status)
                     VALUES ('RPC ENV', '${projectUuid}', '6e0c9d3e-edaf-46f4-a4db-228467659876', ${SqlModelStatus.ACTIVE})`,
       );
       const result = await stage.db.paramExecute(
         `SELECT LAST_INSERT_ID() as id`,
       );
-      const createdEnvironmentId = result?.[0]?.id;
-      if (!createdEnvironmentId) {
-        throw new Error('Environment not created');
+      const createdApiKeyId = result?.[0]?.id;
+      if (!createdApiKeyId) {
+        throw new Error('ApiKey not created');
       }
-      const testEnvironmentId = createdEnvironmentId;
+      const testApiKeyId = createdApiKeyId;
       const dto = {
         name: 'Test Env',
         description: 'Test Description',
         projectUuid: 2,
       };
       await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_ENVIRONMENT} (name, description, projectUuid, apiKey, status)
+        `INSERT INTO ${DbTables.RPC_API_KEY} (name, description, projectUuid, uuid, status)
           VALUES ('${dto.name}', '${dto.description}', ${dto.projectUuid}, '6e0c9d3e-edaf-46f4-a4db-228467659876', ${SqlModelStatus.ACTIVE})`,
       );
       const urlDto = {
@@ -201,8 +201,8 @@ describe('RPC Url tests', () => {
         wssUrl: 'wss://example.com',
       };
       await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_URL} (name, environmentId, chainName,network,httpsUrl, wssUrl)
-                        VALUES (@name, ${testEnvironmentId}, @chainName,@network, @httpsUrl,@wssUrl)`,
+        `INSERT INTO ${DbTables.RPC_URL} (name, apiKeyId, chainName,network,httpsUrl, wssUrl)
+                        VALUES (@name, ${testApiKeyId}, @chainName,@network, @httpsUrl,@wssUrl)`,
         urlDto,
       );
       const urlResult = await stage.db.paramExecute(
@@ -210,8 +210,8 @@ describe('RPC Url tests', () => {
       );
       const createdUrlId = urlResult[0].id;
       const event = {
-        query: new ListRpcUrlsForEnvironmentQueryFilter({
-          environmentId: testEnvironmentId,
+        query: new ListRpcUrlsForApiKeyQueryFilter({
+          apiKeyId: testApiKeyId,
         }),
       };
       const rpcUrls = await RpcUrlService.listRpcUrls(event, stage.context);
@@ -220,7 +220,7 @@ describe('RPC Url tests', () => {
       const rpcUrl = rpcUrls.items[0];
       expect(rpcUrl.id).toBe(createdUrlId);
       expect(rpcUrl.name).toBe(urlDto.name);
-      expect(rpcUrl.environmentId).toBe(testEnvironmentId);
+      expect(rpcUrl.apiKeyId).toBe(testApiKeyId);
       expect(rpcUrl.chainName).toBe(urlDto.chainName);
       expect(rpcUrl.network).toBe(urlDto.network);
       expect(rpcUrl.httpsUrl).toBe(urlDto.httpsUrl);

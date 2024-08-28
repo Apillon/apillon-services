@@ -14,7 +14,7 @@ describe('RPC URL Tests', () => {
   let testUser: TestUser;
   let testUser2: TestUser;
   let testProject: Project;
-  let testEnvironmentId: number;
+  let testApiKeyId: number;
   beforeAll(async () => {
     stage = await setupTest();
     testUser = await createTestUser(
@@ -27,15 +27,15 @@ describe('RPC URL Tests', () => {
     );
     testProject = await createTestProject(testUser, stage);
     await stage.db.infrastructure.paramExecute(
-      'INSERT INTO rpc_environment (name, description, projectUuid, apiKey) VALUES (@name, @description, @projectUuid, @apiKey)',
+      'INSERT INTO rpc_api_key (name, description, projectUuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
       {
-        name: 'Test Environment',
+        name: 'Test Api Key',
         description: 'Test Description',
         projectUuid: testProject.project_uuid,
-        apiKey: 'xyz',
+        uuid: 'xyz',
       },
     );
-    testEnvironmentId = (
+    testApiKeyId = (
       await stage.db.infrastructure.paramExecute(
         `SELECT LAST_INSERT_ID() as id`,
       )
@@ -49,10 +49,10 @@ describe('RPC URL Tests', () => {
       name: 'Test URL',
       chainName: 'CHAIN',
       network: 'Network',
-      environmentId: 0,
+      apiKeyId: 0,
     };
     beforeAll(async () => {
-      rpcUrlToCreate.environmentId = testEnvironmentId;
+      rpcUrlToCreate.apiKeyId = testApiKeyId;
     });
     afterAll(async () => {
       await stage.db.infrastructure.paramExecute('DELETE FROM rpc_url');
@@ -68,7 +68,7 @@ describe('RPC URL Tests', () => {
       expect(createdUrl.name).toBe(rpcUrlToCreate.name);
       expect(createdUrl.chainName).toBe(rpcUrlToCreate.chainName);
       expect(createdUrl.network).toBe(rpcUrlToCreate.network);
-      expect(createdUrl.environmentId).toBe(testEnvironmentId);
+      expect(createdUrl.apiKeyId).toBe(testApiKeyId);
     });
     it('User should not be able to create RPC URL for other projects', async () => {
       const response = await request(stage.http)
@@ -86,12 +86,12 @@ describe('RPC URL Tests', () => {
     let createdUrlId: number;
     beforeAll(async () => {
       await stage.db.infrastructure.paramExecute(
-        'INSERT INTO rpc_url (name, chainName, network, environmentId,httpsUrl, wssUrl) VALUES (@name, @chain, @network, @environmentId, @httpsUrl, @wssUrl)',
+        'INSERT INTO rpc_url (name, chainName, network, apiKeyId, httpsUrl, wssUrl) VALUES (@name, @chain, @network, @apiKeyid, @httpsUrl, @wssUrl)',
         {
           name: 'Test URL',
           chain: 'CHAIN',
           network: 'Network',
-          environmentId: testEnvironmentId,
+          apiKeyId: testApiKeyId,
           httpsUrl: 'https://example.com',
           wssUrl: 'wss://example.com',
         },
@@ -134,12 +134,12 @@ describe('RPC URL Tests', () => {
     let createdUrlId: number;
     beforeEach(async () => {
       await stage.db.infrastructure.paramExecute(
-        'INSERT INTO rpc_url (name, chainName, network, environmentId,httpsUrl, wssUrl) VALUES (@name, @chain, @network, @environmentId, @httpsUrl, @wssUrl)',
+        'INSERT INTO rpc_url (name, chainName, network, apiKeyId,httpsUrl, wssUrl) VALUES (@name, @chain, @network, @apiKeyId, @httpsUrl, @wssUrl)',
         {
           name: 'Test URL',
           chain: 'CHAIN',
           network: 'Network',
-          environmentId: testEnvironmentId,
+          apiKeyId: testApiKeyId,
           httpsUrl: 'https://example.com',
           wssUrl: 'wss://example.com',
         },

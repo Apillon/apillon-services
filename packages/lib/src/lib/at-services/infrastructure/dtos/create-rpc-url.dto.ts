@@ -39,9 +39,9 @@ export class CreateRpcUrlDto extends RpcUrlBaseDto {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.RPC_URL_ENVIRONMENT_ID_NOT_PRESENT,
+        code: ValidatorErrorCode.RPC_URL_API_KEY_ID_NOT_PRESENT,
       },
     ],
   })
-  environmentId: number;
+  apiKeyId: number;
 }

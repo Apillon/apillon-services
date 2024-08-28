@@ -2,52 +2,44 @@ import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import {
   BaseProjectQueryFilter,
-  BlockchainMicroservice,
-  CreateRpcEnvironmentDto,
+  CreateRpcApiKeyDto,
   CreateRpcUrlDto,
   InfrastructureMicroservice,
-  ListRpcUrlsForEnvironmentQueryFilter,
+  ListRpcUrlsForApiKeyQueryFilter,
   UpdateRpcUrlDto,
 } from '@apillon/lib';
 @Injectable()
 export class RpcService {
-  async listRpcEnvironments(
+  async listRpcApiKeys(
     context: DevConsoleApiContext,
     query: BaseProjectQueryFilter,
   ) {
-    return (
-      await new InfrastructureMicroservice(context).listRpcEnvironments(query)
-    ).data;
+    return (await new InfrastructureMicroservice(context).listRpcApiKeys(query))
+      .data;
   }
-  async getEnvironmentUsage(context: DevConsoleApiContext, id: number) {
-    return (
-      await new InfrastructureMicroservice(context).getEnvironmentUsage(id)
-    ).data;
+  async getApiKeyUsage(context: DevConsoleApiContext, id: number) {
+    return (await new InfrastructureMicroservice(context).getApiKeyUsage(id))
+      .data;
   }
-  async createRpcEnvironment(
+  async createRpcApiKey(
     context: DevConsoleApiContext,
-    body: CreateRpcEnvironmentDto,
+    body: CreateRpcApiKeyDto,
   ) {
-    return (
-      await new InfrastructureMicroservice(context).createRpcEnvironment(body)
-    ).data;
+    return (await new InfrastructureMicroservice(context).createRpcApiKey(body))
+      .data;
   }
-  async updateRpcEnvironment(
+  async updateRpcApiKey(
     context: DevConsoleApiContext,
     id: number,
     data: UpdateRpcUrlDto,
   ) {
     return (
-      await new InfrastructureMicroservice(context).updateRpcEnvironment(
-        id,
-        data,
-      )
+      await new InfrastructureMicroservice(context).updateRpcApiKey(id, data)
     ).data;
   }
-  async revokeRpcEnvironment(context: DevConsoleApiContext, id: number) {
-    return (
-      await new InfrastructureMicroservice(context).revokeRpcEnvironment(id)
-    ).data;
+  async revokeRpcApiKey(context: DevConsoleApiContext, id: number) {
+    return (await new InfrastructureMicroservice(context).revokeRpcApiKey(id))
+      .data;
   }
   async createRpcUrl(context: DevConsoleApiContext, body: CreateRpcUrlDto) {
     return (await new InfrastructureMicroservice(context).createRpcUrl(body))
@@ -66,14 +58,12 @@ export class RpcService {
     return (await new InfrastructureMicroservice(context).deleteRpcUrl(id))
       .data;
   }
-  async listRpcUrlsForEnvironment(
+  async listRpcUrlsForApiKey(
     context: DevConsoleApiContext,
-    query: ListRpcUrlsForEnvironmentQueryFilter,
+    query: ListRpcUrlsForApiKeyQueryFilter,
   ) {
     return (
-      await new InfrastructureMicroservice(context).listRpcUrlsForEnvironment(
-        query,
-      )
+      await new InfrastructureMicroservice(context).listRpcUrlsForApiKey(query)
     ).data;
   }
 }
