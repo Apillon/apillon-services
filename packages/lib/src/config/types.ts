@@ -338,6 +338,18 @@ export enum ContractEventType {
   ARCHIVE_DEPLOYED_CONTRACT = 'archive-deployed-contract',
 }
 
+export enum InfrastructureEventType {
+  LIST_RPC_ENVIRONMENTS = 'list-rpc-environments',
+  REVOKE_RPC_ENVIRONMENT = 'revoke-rpc-environment',
+  UPDATE_RPC_ENVIRONMENT = 'update-rpc-environment',
+  CREATE_RPC_ENVIRONMENT = 'create-rpc-environment',
+  GET_RPC_ENVIRONMENT_USAGE = 'get-rpc-environment-usage',
+  CREATE_RPC_URL = 'create-rpc-url',
+  UPDATE_RPC_URL = 'update-rpc-url',
+  DELETE_RPC_URL = 'delete-rpc-url',
+  LIST_RPC_URLS = 'list-rpc-urls',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
@@ -755,6 +767,14 @@ export enum ValidatorErrorCode {
   TARGET_URL_NOT_PRESENT = 422001010,
   TARGET_URL_NOT_VALID = 422001011,
   //#endregion
+
+  //#region Infrastructure
+  RPC_ENVIRONMENT_NAME_NOT_PRESENT = 422001101,
+  RPC_ENVIRONMENT_PROJECT_ID_NOT_PRESENT = 422001102,
+  RPC_URL_NAME_NOT_PRESENT = 422001103,
+  RPC_URL_ENVIRONMENT_ID_NOT_PRESENT = 422001104,
+  RPC_URL_NETWORK_NOT_PRESENT = 422001105,
+  RPC_URL_CHAIN_NAME_NOT_PRESENT = 422001106,
 }
 
 /**
@@ -832,6 +852,7 @@ export enum QuotaCode {
   MAX_NFT_COLLECTIONS = 9,
   MAX_STORAGE = 10,
   MAX_BANDWIDTH = 11,
+  MAX_RPC_USAGE = 12,
 }
 
 /**
