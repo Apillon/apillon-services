@@ -1,5 +1,6 @@
 import {
-  ProjectAccessModel,
+  Chain,
+  ChainType,
   Context,
   enumInclusionValidator,
   EvmChain,
@@ -13,15 +14,14 @@ import {
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
-  ChainType,
   SubstrateChain,
   UuidSqlModel,
 } from '@apillon/lib';
 import {
   booleanParser,
+  floatParser,
   integerParser,
   stringParser,
-  floatParser,
 } from '@rawmodel/parsers';
 import {
   CollectionStatus,
@@ -820,6 +820,38 @@ export class Collection extends UuidSqlModel {
           AND status <> ${SqlModelStatus.DELETED};
       `,
       {
+        project_uuid: project_uuid || this.project_uuid,
+      },
+    );
+
+    return data[0].collectionsCount;
+  }
+
+  /**
+   * Function to get count of active NFT collections on the project and chain
+   * @param chainType
+   * @param chain
+   * @param project_uuid
+   * @returns Number of collections
+   */
+  public async getChainCollectionsCount(
+    chainType: ChainType,
+    chain: Chain,
+    project_uuid?: string,
+  ): Promise<number> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT COUNT(*) as collectionsCount
+        FROM \`${DbTables.COLLECTION}\`
+        WHERE project_uuid = @project_uuid
+          AND chainType = @chainType
+          AND chain = @chain
+          AND collectionStatus <> ${CollectionStatus.FAILED}
+          AND status <> ${SqlModelStatus.DELETED};
+      `,
+      {
+        chainType,
+        chain,
         project_uuid: project_uuid || this.project_uuid,
       },
     );

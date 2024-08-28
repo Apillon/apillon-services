@@ -86,7 +86,6 @@ export * from './lib/at-services/nfts/dtos/burn-nft.dto';
 export * from './lib/at-services/nfts/dtos/collections-quota-reached-query-filter.dto';
 export * from './lib/at-services/nfts/dtos/add-nfts-metadata.dto';
 export * from './lib/at-services/nfts/constants';
-export * from './lib/at-services/nfts/permissions/subscription';
 export * from './lib/at-services/nfts/validators/create-collection-drop-reserve-validator';
 export * from './lib/at-services/nfts/validators/create-collection-drop-price-validator';
 
