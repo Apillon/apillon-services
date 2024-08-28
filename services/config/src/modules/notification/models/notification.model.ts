@@ -24,22 +24,6 @@ export class Notification extends AdvancedSQLModel {
     super(data, context);
   }
 
-  /**
-   * id
-   */
-  @prop({
-    parser: { resolver: integerParser() },
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.SELECT_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.WORKER,
-    ],
-    populatable: [PopulateFrom.DB],
-  })
-  public id: number;
-
   @prop({
     parser: { resolver: integerParser() },
     serializable: [
@@ -98,13 +82,6 @@ export class Notification extends AdvancedSQLModel {
     populatable: [PopulateFrom.DB],
   })
   public createTime?: Date;
-
-  /**
-   * Tells if the model represents a document stored in the database.
-   */
-  public exists(): boolean {
-    return !!this.id;
-  }
 
   public async getListForUser(filter: NotificationQueryFilter) {
     const context = this.getContext();

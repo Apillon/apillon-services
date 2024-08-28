@@ -39,7 +39,6 @@ export class NotificationService {
     }: { data: { id: number; data: CreateOrUpdateNotificationDto } },
     context: ServiceContext,
   ) {
-    console.log(id);
     const notification = await new Notification({}, context).populateById(id);
 
     if (!notification.exists()) {
