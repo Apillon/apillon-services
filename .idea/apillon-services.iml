@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/modules/apillon-api/src/modules/authentication/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/apillon-api/src/modules/hosting/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/apillon-api/src/modules/nfts/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/apillon-api/src/modules/storage/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/apillon-api/src/modules/system/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/authentication-api/src/modules/identity/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/dev-console-api/src/modules/api-key/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/dev-console-api/src/modules/instruction/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/dev-console-api/src/modules/nfts/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/dev-console-api/src/modules/project/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/dev-console-api/src/modules/referral/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/dev-console-api/src/modules/services/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/dev-console-api/src/modules/storage/bucket/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/dev-console-api/src/modules/storage/directory/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/dev-console-api/src/modules/storage/hosting/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/dev-console-api/src/modules/storage/ipns/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/dev-console-api/src/modules/storage/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/dev-console-api/src/modules/user/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/services/computing/src/workers/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/dev-console-api/src/modules/contracts/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/services/contracts/src/workers/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/apillon-api/src/modules/computing/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/apillon-api/src/modules/contracts/tests" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/.tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/temp" />
+      <excludeFolder url="file://$MODULE_DIR$/tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/modules/apillon-api/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/modules/authentication-api/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/modules/dev-console-api/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/lib/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/.vscode" />
+      <excludeFolder url="file://$MODULE_DIR$/db" />
+      <excludeFolder url="file://$MODULE_DIR$/services/access/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/services/authentication/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/services/nfts/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/node_modules" />
+      <excludeFolder url="file://$MODULE_DIR$/node_modules/@apillon" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/blockchain-lib/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/services/blockchain/dist" />
+    </content>
+    <content url="file://$MODULE_DIR$/node_modules" />
+    <content url="file://$MODULE_DIR$/node_modules/@apillon" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
