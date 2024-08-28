@@ -339,11 +339,11 @@ export enum ContractEventType {
 }
 
 export enum InfrastructureEventType {
-  LIST_RPC_ENVIRONMENTS = 'list-rpc-environments',
-  REVOKE_RPC_ENVIRONMENT = 'revoke-rpc-environment',
-  UPDATE_RPC_ENVIRONMENT = 'update-rpc-environment',
-  CREATE_RPC_ENVIRONMENT = 'create-rpc-environment',
-  GET_RPC_ENVIRONMENT_USAGE = 'get-rpc-environment-usage',
+  LIST_RPC_API_KEYS = 'list-rpc-api-keys',
+  REVOKE_RPC_API_KEY = 'revoke-rpc-api-key',
+  UPDATE_RPC_API_KEY = 'update-rpc-api-key',
+  CREATE_RPC_API_KEY = 'create-rpc-api-key',
+  GET_RPC_API_KEY_USAGE = 'get-rpc-api-key-usage',
   CREATE_RPC_URL = 'create-rpc-url',
   UPDATE_RPC_URL = 'update-rpc-url',
   DELETE_RPC_URL = 'delete-rpc-url',
@@ -769,10 +769,10 @@ export enum ValidatorErrorCode {
   //#endregion
 
   //#region Infrastructure
-  RPC_ENVIRONMENT_NAME_NOT_PRESENT = 422001101,
-  RPC_ENVIRONMENT_PROJECT_ID_NOT_PRESENT = 422001102,
+  RPC_API_KEY_NAME_NOT_PRESENT = 422001101,
+  RPC_API_KEY_PROJECT_ID_NOT_PRESENT = 422001102,
   RPC_URL_NAME_NOT_PRESENT = 422001103,
-  RPC_URL_ENVIRONMENT_ID_NOT_PRESENT = 422001104,
+  RPC_URL_API_KEY_ID_NOT_PRESENT = 422001104,
   RPC_URL_NETWORK_NOT_PRESENT = 422001105,
   RPC_URL_CHAIN_NAME_NOT_PRESENT = 422001106,
 }

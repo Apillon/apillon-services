@@ -1,18 +1,18 @@
 import { Context } from 'aws-lambda/handler';
 import { InfrastructureEventType } from '@apillon/lib';
-import { RpcEnvironmentService } from './modules/rpc-environment/rpc-environment.service';
-import { RpcUrlService } from './modules/rpc-environment/rpc-url.service';
+import { RpcApiKeyService } from './modules/rpc/rpc-api-key.service';
+import { RpcUrlService } from './modules/rpc/rpc-url.service';
 
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
-    [InfrastructureEventType.CREATE_RPC_ENVIRONMENT]:
-      RpcEnvironmentService.createRpcEnvironment,
-    [InfrastructureEventType.UPDATE_RPC_ENVIRONMENT]:
-      RpcEnvironmentService.updateRpcEnvironment,
-    [InfrastructureEventType.REVOKE_RPC_ENVIRONMENT]:
-      RpcEnvironmentService.revokeRpcEnvironment,
-    [InfrastructureEventType.LIST_RPC_ENVIRONMENTS]:
-      RpcEnvironmentService.listRpcEnvironments,
+    [InfrastructureEventType.CREATE_RPC_API_KEY]:
+      RpcApiKeyService.createRpcApiKey,
+    [InfrastructureEventType.UPDATE_RPC_API_KEY]:
+      RpcApiKeyService.updateRpcApiKey,
+    [InfrastructureEventType.REVOKE_RPC_API_KEY]:
+      RpcApiKeyService.revokeRpcApiKey,
+    [InfrastructureEventType.LIST_RPC_API_KEYS]:
+      RpcApiKeyService.listRpcApiKeys,
     [InfrastructureEventType.CREATE_RPC_URL]: RpcUrlService.createRpcUrl,
     [InfrastructureEventType.UPDATE_RPC_URL]: RpcUrlService.updateRpcUrl,
     [InfrastructureEventType.LIST_RPC_URLS]: RpcUrlService.listRpcUrls,

@@ -1,8 +1,8 @@
 import {
   BaseProjectQueryFilter,
-  CreateRpcEnvironmentDto,
+  CreateRpcApiKeyDto,
   CreateRpcUrlDto,
-  UpdateRpcEnvironmentDto,
+  UpdateRpcApiKeyDto,
 } from '@apillon/lib';
 import { Ctx, Validation } from '@apillon/modules-lib';
 import {
@@ -25,48 +25,48 @@ import { ProjectAccessGuard } from '../../guards/project-access.guard';
 @Controller('rpc')
 export class RpcController {
   constructor(private readonly rpcService: RpcService) {}
-  @Post('environment')
-  @Validation({ dto: CreateRpcEnvironmentDto })
+  @Post('api-key')
+  @Validation({ dto: CreateRpcApiKeyDto })
   @UseGuards(ValidationGuard, ProjectAccessGuard, AuthGuard)
-  async createEnvironment(
+  async createApiKey(
     @Ctx() context: DevConsoleApiContext,
-    @Body() body: CreateRpcEnvironmentDto,
+    @Body() body: CreateRpcApiKeyDto,
   ) {
-    return await this.rpcService.createRpcEnvironment(context, body);
+    return await this.rpcService.createRpcApiKey(context, body);
   }
-  @Put('environment/:id')
-  @Validation({ dto: UpdateRpcEnvironmentDto })
+  @Put('api-key/:id')
+  @Validation({ dto: UpdateRpcApiKeyDto })
   @UseGuards(ValidationGuard, AuthGuard)
-  async updateEnvironment(
+  async updateApiKey(
     @Ctx() context: DevConsoleApiContext,
-    @Body() body: UpdateRpcEnvironmentDto,
+    @Body() body: UpdateRpcApiKeyDto,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return await this.rpcService.updateRpcEnvironment(context, id, body);
+    return await this.rpcService.updateRpcApiKey(context, id, body);
   }
-  @Put('environment/:id/revoke')
+  @Put('api-key/:id/revoke')
   @UseGuards(AuthGuard)
-  async revokeEnvironment(
+  async revokeApiKey(
     @Ctx() context: DevConsoleApiContext,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return await this.rpcService.revokeRpcEnvironment(context, id);
+    return await this.rpcService.revokeRpcApiKey(context, id);
   }
-  @Get('environment')
+  @Get('api-key')
   @UseGuards(ProjectAccessGuard, AuthGuard)
-  async listEnvironmentsForProject(
+  async listApiKeysForProject(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseProjectQueryFilter,
   ) {
-    return await this.rpcService.listRpcEnvironments(context, query);
+    return await this.rpcService.listRpcApiKeys(context, query);
   }
-  @Get('environment/:id/usage')
+  @Get('api-key/:id/usage')
   @UseGuards(AuthGuard)
-  async getEnvironmentUsage(
+  async getApiKeyUsage(
     @Ctx() context: DevConsoleApiContext,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return await this.rpcService.getEnvironmentUsage(context, id);
+    return await this.rpcService.getApiKeyUsage(context, id);
   }
   @Post('url')
   @Validation({ dto: CreateRpcUrlDto })
@@ -78,11 +78,11 @@ export class RpcController {
     return await this.rpcService.createRpcUrl(context, body);
   }
   @Put('url/:id')
-  @Validation({ dto: UpdateRpcEnvironmentDto })
+  @Validation({ dto: UpdateRpcApiKeyDto })
   @UseGuards(ValidationGuard, AuthGuard)
   async updateUrl(
     @Ctx() context: DevConsoleApiContext,
-    @Body() body: UpdateRpcEnvironmentDto,
+    @Body() body: UpdateRpcApiKeyDto,
     @Param('id', ParseIntPipe) id: number,
   ) {
     return await this.rpcService.updateRpcUrl(context, id, body);

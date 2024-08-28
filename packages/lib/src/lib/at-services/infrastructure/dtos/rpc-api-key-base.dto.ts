@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import { ModelBase, prop } from '../../../base-models/base';
 import {
   PopulateFrom,
@@ -6,7 +6,7 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { presenceValidator } from '@rawmodel/validators';
-export class RpcEnvironmentBaseDto extends ModelBase {
+export class RpcApiKeyBaseDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
@@ -14,7 +14,7 @@ export class RpcEnvironmentBaseDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.RPC_ENVIRONMENT_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.RPC_API_KEY_NAME_NOT_PRESENT,
       },
     ],
   })

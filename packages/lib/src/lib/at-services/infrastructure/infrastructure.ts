@@ -3,10 +3,10 @@ import { AppEnvironment, InfrastructureEventType } from '../../../config/types';
 import { BaseProjectQueryFilter } from '../../base-models/base-project-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
-import { CreateRpcEnvironmentDto } from './dtos/create-rpc-environment.dto';
+import { CreateRpcApiKeyDto } from './dtos/create-rpc-api-key.dto';
 import { CreateRpcUrlDto } from './dtos/create-rpc-url.dto';
-import { ListRpcUrlsForEnvironmentQueryFilter } from './dtos/list-rpc-urls-for-environment-query-filter.dto';
-import { UpdateRpcEnvironmentDto } from './dtos/update-rpc-environment.dto';
+import { ListRpcUrlsForApiKeyQueryFilter } from './dtos/list-rpc-urls-for-api-key-query-filter.dto';
+import { UpdateRpcApiKeyDto } from './dtos/update-rpc-api-key.dto';
 import { UpdateRpcUrlDto } from './dtos/update-rpc-url.dto';
 
 export class InfrastructureMicroservice extends BaseService {
@@ -25,34 +25,34 @@ export class InfrastructureMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
-  public async getEnvironmentUsage(id: number) {
+  public async getApiKeyUsage(id: number) {
     return await this.callService({
-      eventName: InfrastructureEventType.GET_RPC_ENVIRONMENT_USAGE,
+      eventName: InfrastructureEventType.GET_RPC_API_KEY_USAGE,
       id,
     });
   }
-  public async listRpcEnvironments(filter: BaseProjectQueryFilter) {
+  public async listRpcApiKeys(filter: BaseProjectQueryFilter) {
     return await this.callService({
-      eventName: InfrastructureEventType.LIST_RPC_ENVIRONMENTS,
+      eventName: InfrastructureEventType.LIST_RPC_API_KEYS,
       filter,
     });
   }
-  public async createRpcEnvironment(data: CreateRpcEnvironmentDto) {
+  public async createRpcApiKey(data: CreateRpcApiKeyDto) {
     return await this.callService({
-      eventName: InfrastructureEventType.CREATE_RPC_ENVIRONMENT,
+      eventName: InfrastructureEventType.CREATE_RPC_API_KEY,
       data,
     });
   }
 
-  public async updateRpcEnvironment(id: number, data: UpdateRpcEnvironmentDto) {
+  public async updateRpcApiKey(id: number, data: UpdateRpcApiKeyDto) {
     return await this.callService({
-      eventName: InfrastructureEventType.UPDATE_RPC_ENVIRONMENT,
+      eventName: InfrastructureEventType.UPDATE_RPC_API_KEY,
       data: { id, data },
     });
   }
-  public async revokeRpcEnvironment(id: number) {
+  public async revokeRpcApiKey(id: number) {
     return await this.callService({
-      eventName: InfrastructureEventType.REVOKE_RPC_ENVIRONMENT,
+      eventName: InfrastructureEventType.REVOKE_RPC_API_KEY,
       id,
     });
   }
@@ -76,9 +76,7 @@ export class InfrastructureMicroservice extends BaseService {
       id,
     });
   }
-  public async listRpcUrlsForEnvironment(
-    query: ListRpcUrlsForEnvironmentQueryFilter,
-  ) {
+  public async listRpcUrlsForApiKey(query: ListRpcUrlsForApiKeyQueryFilter) {
     return await this.callService({
       eventName: InfrastructureEventType.LIST_RPC_URLS,
       query,

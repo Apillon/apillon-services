@@ -12,8 +12,8 @@ import {
 } from '@apillon/lib';
 import { InfrastructureErrorCode, DbTables } from '../../config/types';
 import { stringParser } from '@rawmodel/parsers';
-export class RpcEnvironment extends AdvancedSQLModel {
-  public readonly tableName = DbTables.RPC_ENVIRONMENT;
+export class RpcApiKey extends AdvancedSQLModel {
+  public readonly tableName = DbTables.RPC_API_KEY;
   public constructor(data: any, context: Context) {
     super(data, context);
   }
@@ -33,7 +33,7 @@ export class RpcEnvironment extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: InfrastructureErrorCode.RPC_ENVIRONMENT_NAME_NOT_PRESENT,
+        code: InfrastructureErrorCode.RPC_API_KEY_NAME_NOT_PRESENT,
       },
     ],
   })
@@ -69,11 +69,11 @@ export class RpcEnvironment extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: InfrastructureErrorCode.RPC_ENVIRONMENT_API_KEY_NOT_PRESENT,
+        code: InfrastructureErrorCode.RPC_API_KEY_API_KEY_NOT_PRESENT,
       },
     ],
   })
-  apiKey: string;
+  uuid: string;
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.SERVICE],
@@ -89,7 +89,7 @@ export class RpcEnvironment extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: InfrastructureErrorCode.RPC_ENVIRONMENT_PROJECT_UUID_NOT_PRESENT,
+        code: InfrastructureErrorCode.RPC_API_KEY_PROJECT_UUID_NOT_PRESENT,
       },
     ],
   })
@@ -106,7 +106,7 @@ export class RpcEnvironment extends AdvancedSQLModel {
     );
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields()}`,
-      qFrom: `FROM ${DbTables.RPC_ENVIRONMENT}
+      qFrom: `FROM ${DbTables.RPC_API_KEY}
         WHERE status <> ${SqlModelStatus.DELETED} and projectUuid = '${filter.project_uuid}'`,
       qFilter: `
          ORDER BY ${filters.orderStr}
