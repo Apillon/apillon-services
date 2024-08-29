@@ -297,7 +297,7 @@ export class AcurastService {
           context,
         ).populateByUUID(event.function_uuid);
 
-        if (!cloudFunction.activeJob_uuid) {
+        if (!cloudFunction.activeJob_id) {
           throw new ComputingCodeException({
             status: 500,
             code: ComputingErrorCode.JOB_NOT_DEPLOYED,
@@ -306,8 +306,8 @@ export class AcurastService {
           });
         }
 
-        return await new AcurastJob({}, context).populateByUUID(
-          cloudFunction.activeJob_uuid,
+        return await new AcurastJob({}, context).populateById(
+          cloudFunction.activeJob_id,
         );
       },
       CacheKeyTTL.DEFAULT,

@@ -11,7 +11,7 @@ import {
   BaseProjectQueryFilter,
   JobQueryFilter,
 } from '@apillon/lib';
-import { arrayParser, stringParser } from '@rawmodel/parsers';
+import { arrayParser, stringParser, integerParser } from '@rawmodel/parsers';
 import { ComputingErrorCode, DbTables } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuid } from 'uuid';
@@ -86,11 +86,11 @@ export class CloudFunction extends UuidSqlModel {
   public description: string;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable,
     serializable,
   })
-  public activeJob_uuid: string;
+  public activeJob_id: number;
 
   /**
    * Virtual field - list of jobs for this CF

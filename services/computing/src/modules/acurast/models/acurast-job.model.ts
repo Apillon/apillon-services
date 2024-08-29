@@ -354,7 +354,7 @@ export class AcurastJob extends UuidSqlModel {
       `
       SELECT *
       FROM ${DbTables.ACURAST_JOB}
-      WHERE endTime > NOW()
+      WHERE startTime < NOW() AND endTime > NOW()
       AND jobStatus = ${AcurastJobStatus.DEPLOYED}
       AND jobId IS NOT NULL
       AND status = ${SqlModelStatus.ACTIVE}

@@ -87,7 +87,7 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
     ).populateByUUID(job.function_uuid);
 
     cloudFunction.populate({
-      activeJob_uuid: job.job_uuid,
+      activeJob_id: job.id,
       status: SqlModelStatus.ACTIVE,
     });
 
