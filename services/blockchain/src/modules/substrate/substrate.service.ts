@@ -14,6 +14,7 @@ import {
   ServiceName,
   SubstrateChain,
   TransactionStatus,
+  writeLog,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
 import { BlockchainErrorCode } from '../../config/types';
@@ -314,6 +315,11 @@ export class SubstrateService {
     context: ServiceContext,
     eventLogger: (options: any, logOutput: LogOutput) => Promise<void>,
   ) {
+    writeLog(
+      LogType.INFO,
+      `Starting to transmit transactions for chain ${_event.chain} & address ${_event.address}.`,
+    );
+
     const wallets = await new Wallet({}, context).getWallets(
       _event.chain,
       ChainType.SUBSTRATE,
@@ -350,6 +356,11 @@ export class SubstrateService {
     // TODO: Refactor to txwrapper when typesBundle supported
     const api = new SubstrateRpcApi(endpoint.url, typesBundle);
     for (const wallet of wallets) {
+      writeLog(
+        LogType.INFO,
+        `Processing wallet with address ${wallet.address} with last nonce ${wallet.lastProcessedNonce}`,
+      );
+
       const transactions = await new Transaction({}, context).getList(
         _event.chain,
         ChainType.SUBSTRATE,
@@ -467,8 +478,20 @@ export class SubstrateService {
         }
       }
 
+      writeLog(
+        LogType.INFO,
+        `Finished transmitting transactions for wallet with address ${wallet.address}. Latest success nonce: ${latestSuccess}.`,
+      );
+
       if (latestSuccess !== null) {
+        writeLog(
+          LogType.INFO,
+          `Updating wallet with last success nonce ${latestSuccess} for wallet address ${wallet.address} & id ${wallet.id}. `,
+          'substrate.service.ts',
+          'transmitTransactions',
+        );
         const dbWallet = new Wallet(wallet, context);
+
         await dbWallet.updateLastProcessedNonce(latestSuccess);
       }
       await eventLogger(
