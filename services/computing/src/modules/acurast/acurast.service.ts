@@ -252,27 +252,27 @@ export class AcurastService {
 
     job.verifyStatusAndAccess('setJobEnvironment', context);
 
-    const referenceId = uuidV4();
-    await spendCreditAction(
+    // const referenceId = uuidV4();
+    // await spendCreditAction(
+    //   context,
+    //   new SpendCreditDto(
+    //     {
+    //       project_uuid: job.project_uuid,
+    //       product_id: ProductCode.COMPUTING_JOB_SET_ENVIRONMENT,
+    //       referenceTable: DbTables.TRANSACTION,
+    //       referenceId,
+    //       location: 'AcurastService.setJobEnvironment',
+    //       service: ServiceName.COMPUTING,
+    //     },
+    //     context,
+    //   ),
+    //   async () =>
+    await setAcurastJobEnvironment(
       context,
-      new SpendCreditDto(
-        {
-          project_uuid: job.project_uuid,
-          product_id: ProductCode.COMPUTING_JOB_SET_ENVIRONMENT,
-          referenceTable: DbTables.TRANSACTION,
-          referenceId,
-          location: 'AcurastService.setJobEnvironment',
-          service: ServiceName.COMPUTING,
-        },
-        context,
-      ),
-      async () =>
-        await setAcurastJobEnvironment(
-          context,
-          job,
-          referenceId,
-          event.body.variables,
-        ),
+      job,
+      // referenceId,
+      event.body.variables,
+      // ),
     );
 
     return job.serializeByContext() as AcurastJob;

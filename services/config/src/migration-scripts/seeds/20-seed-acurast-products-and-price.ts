@@ -10,23 +10,16 @@ export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    INSERT INTO ${DbTables.PRODUCT} (id, name, description, status, service,
-                                     category)
+    INSERT INTO ${DbTables.PRODUCT} (id, name, description, status, service, category)
     VALUES (${ProductCode.COMPUTING_JOB_CREATE}, '${
       ProductCode[ProductCode.COMPUTING_JOB_CREATE]
     }', 'Create new Acurast job', ${SqlModelStatus.ACTIVE},
-            '${ProductService.COMPUTING}', '${ProductCategory.ACURAST}'),
-
-           (${ProductCode.COMPUTING_JOB_SET_ENVIRONMENT}, '${
-             ProductCode[ProductCode.COMPUTING_JOB_SET_ENVIRONMENT]
-           }', 'Set environment for Acurast job', ${SqlModelStatus.ACTIVE},
             '${ProductService.COMPUTING}', '${ProductCategory.ACURAST}')
     ;`);
 
   await queryFn(`
     INSERT INTO ${DbTables.PRODUCT_PRICE} (product_id, price, status)
-    VALUES (${ProductCode.COMPUTING_JOB_CREATE}, 100, ${SqlModelStatus.ACTIVE}),
-           (${ProductCode.COMPUTING_JOB_SET_ENVIRONMENT}, 20, ${SqlModelStatus.ACTIVE})
+    VALUES (${ProductCode.COMPUTING_JOB_CREATE}, 100, ${SqlModelStatus.ACTIVE})
     ;`);
 }
 
