@@ -831,6 +831,7 @@ export enum QuotaCode {
   MAX_NFT_COLLECTIONS = 9,
   MAX_STORAGE = 10,
   MAX_BANDWIDTH = 11,
+  MAX_ETHEREUM_NFT_COLLECTIONS = 12,
 }
 
 /**

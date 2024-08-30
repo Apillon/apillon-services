@@ -76,16 +76,18 @@ export class SubstrateRpcApi {
     console.log('Timing before self repair', this.getTiming(), 's');
     const nextOnChainNonce = await this.getNextOnChainNonce(wallet.address);
     if (!nextOnChainNonce) {
-      return;
+      return null;
     }
     const lastProcessedNonce = nextOnChainNonce - 1;
     if (wallet.lastProcessedNonce > lastProcessedNonce) {
-      return;
+      return null;
     }
 
     if (await isTransactionIndexed(wallet, transactionHash)) {
       return lastProcessedNonce;
     }
+
+    return null;
   }
 
   async getApi() {
