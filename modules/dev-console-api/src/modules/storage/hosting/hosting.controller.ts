@@ -124,6 +124,21 @@ export class HostingController {
     return await this.hostingService.activateWebsite(context, website_uuid);
   }
 
+  @Post('websites/:website_uuid/check-domain')
+  @HttpCode(200)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  async checkWebsiteDomain(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('website_uuid') website_uuid: string,
+  ) {
+    return await this.hostingService.checkWebsiteDomain(context, website_uuid);
+  }
+
   //#region deployments
   @Post('websites/:website_uuid/deploy')
   @HttpCode(200)

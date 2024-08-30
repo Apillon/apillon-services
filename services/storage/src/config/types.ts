@@ -241,3 +241,14 @@ export enum PrepareCollectionMetadataStep {
   PUBLISH_TO_IPNS = 4,
   METADATA_SUCCESSFULLY_PREPARED = 10,
 }
+
+export enum WebsiteDomainStatus {
+  /** Not yet processed and resolved */
+  PENDING = 0,
+  /** Domain is pointing to Apillon */
+  OK = 1,
+  /** Domain is pointing to Apillon, but uses CDN. Domain check should not be performed for such websites */
+  HAS_CDN = 2,
+  /** Domain is not pointing to Apillon IP */
+  INVALID = 10,
+}
