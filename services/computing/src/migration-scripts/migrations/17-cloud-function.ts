@@ -9,6 +9,8 @@ export async function upgrade(
       \`id\` INT NOT NULL AUTO_INCREMENT,
       \`function_uuid\` VARCHAR(36) NOT NULL,
       \`project_uuid\` VARCHAR(36) NOT NULL,
+      \`encryption_key_uuid\` VARCHAR(36) NOT NULL,
+      \`encrypted_variables\` TEXT NULL,
       \`activeJob_id\` INT NOT NULL,
       \`status\` INT NULL,
       \`name\` VARCHAR(255) NOT NULL,

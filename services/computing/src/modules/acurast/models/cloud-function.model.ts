@@ -10,13 +10,17 @@ import {
   getQueryParams,
   BaseProjectQueryFilter,
   JobQueryFilter,
+  AWS_KMS,
 } from '@apillon/lib';
 import { arrayParser, stringParser, integerParser } from '@rawmodel/parsers';
 import { ComputingErrorCode, DbTables } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuid } from 'uuid';
 import { AcurastJob } from './acurast-job.model';
-import { ComputingNotFoundException } from '../../../lib/exceptions';
+import {
+  ComputingModelValidationException,
+  ComputingNotFoundException,
+} from '../../../lib/exceptions';
 
 const populatable = [
   PopulateFrom.DB,
@@ -77,6 +81,27 @@ export class CloudFunction extends UuidSqlModel {
     fakeValue: 'Cloud Function #1',
   })
   public name: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable,
+    serializable,
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+    fakeValue: uuid(),
+  })
+  public encryption_key_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable,
+    serializable,
+  })
+  public encrypted_variables: string | null;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -165,5 +190,35 @@ export class CloudFunction extends UuidSqlModel {
     };
 
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'd.id');
+  }
+
+  public async getEnvironmentVariables(): Promise<[string, string][]> {
+    if (!this.encrypted_variables) {
+      return [];
+    }
+    const decryptedVariables = await new AWS_KMS().decrypt(
+      this.encrypted_variables,
+      this.encryption_key_uuid,
+    );
+
+    return JSON.parse(decryptedVariables);
+  }
+
+  public async setEnvironmentVariables(variables: [string, string][]) {
+    if (!variables.length) {
+      this.encrypted_variables = null;
+      return;
+    }
+
+    this.encrypted_variables = await new AWS_KMS().encrypt(
+      JSON.stringify(variables),
+      this.encryption_key_uuid,
+    );
+
+    await this.validateOrThrow(ComputingModelValidationException);
+
+    await this.update();
+
+    return;
   }
 }

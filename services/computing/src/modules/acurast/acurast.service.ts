@@ -19,6 +19,7 @@ import {
   UpdateCloudFunctionDto,
   SqlModelStatus,
   CloudFunctionCallDto,
+  AWS_KMS,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -54,9 +55,20 @@ export class AcurastService {
     event: { body: CreateCloudFunctionDto },
     context: ServiceContext,
   ): Promise<CloudFunction> {
+    const encryptionKeyId = await new AWS_KMS().generateEncryptionKey();
+
+    if (!encryptionKeyId) {
+      throw new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.ENCRYPTION_KEY_GENERATION_FAILED,
+        context,
+        sourceFunction: 'AcurastService.createCloudFunction',
+      });
+    }
     const cloudFunction = new CloudFunction(event.body, context).populate({
       function_uuid: uuidV4(),
       status: SqlModelStatus.INACTIVE,
+      encryption_key_uuid: encryptionKeyId,
     });
 
     await cloudFunction.validateOrThrow(ComputingModelValidationException);
@@ -251,6 +263,12 @@ export class AcurastService {
     );
 
     job.verifyStatusAndAccess('setJobEnvironment', context);
+
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      job.function_uuid,
+    );
+
+    await cloudFunction.setEnvironmentVariables(event.body.variables);
 
     // const referenceId = uuidV4();
     // await spendCreditAction(
