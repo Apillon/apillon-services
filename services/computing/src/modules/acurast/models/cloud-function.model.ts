@@ -20,7 +20,6 @@ import { AcurastJob } from './acurast-job.model';
 import {
   ComputingModelValidationException,
   ComputingNotFoundException,
-  ComputingValidationException,
 } from '../../../lib/exceptions';
 
 const populatable = [
@@ -197,12 +196,12 @@ export class CloudFunction extends UuidSqlModel {
     if (!this.encrypted_variables) {
       return [];
     }
-    const decrpytedVariables = await new AWS_KMS().decrypt(
+    const decryptedVariables = await new AWS_KMS().decrypt(
       this.encrypted_variables,
       this.encryption_key_uuid,
     );
 
-    const decryptedVariablesAsObject = JSON.parse(decrpytedVariables);
+    const decryptedVariablesAsObject = JSON.parse(decryptedVariables);
 
     return decryptedVariablesAsObject;
   }
