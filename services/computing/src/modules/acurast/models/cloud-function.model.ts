@@ -92,7 +92,7 @@ export class CloudFunction extends UuidSqlModel {
         code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
-    fakeValue: 'f3d4b3b0-0b3b-4b3b-8b3b-0b3b3b0b3b3b',
+    fakeValue: uuid(),
   })
   public encryption_key_uuid: string;
 
@@ -201,9 +201,7 @@ export class CloudFunction extends UuidSqlModel {
       this.encryption_key_uuid,
     );
 
-    const decryptedVariablesAsObject = JSON.parse(decryptedVariables);
-
-    return decryptedVariablesAsObject;
+    return JSON.parse(decryptedVariables);
   }
 
   public async setEnvironmentVariables(variables: [string, string][]) {
