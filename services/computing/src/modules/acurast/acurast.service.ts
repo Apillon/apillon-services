@@ -14,6 +14,12 @@ import {
   runCachedFunction,
   CacheKeyPrefix,
   CacheKeyTTL,
+  BaseProjectQueryFilter,
+  CreateCloudFunctionDto,
+  UpdateCloudFunctionDto,
+  SqlModelStatus,
+  CloudFunctionCallDto,
+  AWS_KMS,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -36,8 +42,98 @@ import {
   DbTables,
 } from '../../config/types';
 import { AcurastWebsocketClient } from '../clients/acurast-websocket.client';
+import { CloudFunction } from './models/cloud-function.model';
 
 export class AcurastService {
+  /**
+   * Creates a new cloud function with the given data
+   * @param {{ body: CreateCloudFunctionDto }} event - CF creation params
+   * @param {ServiceContext} context
+   * @returns {Promise<CloudFunction>}
+   */
+  static async createCloudFunction(
+    event: { body: CreateCloudFunctionDto },
+    context: ServiceContext,
+  ): Promise<CloudFunction> {
+    const encryption_key_uuid = await new AWS_KMS().generateEncryptionKey();
+
+    if (!encryption_key_uuid) {
+      throw new ComputingCodeException({
+        status: 500,
+        code: ComputingErrorCode.ENCRYPTION_KEY_GENERATION_FAILED,
+        context,
+        sourceFunction: 'AcurastService.createCloudFunction',
+      });
+    }
+    const cloudFunction = new CloudFunction(event.body, context).populate({
+      function_uuid: uuidV4(),
+      status: SqlModelStatus.INACTIVE,
+      encryption_key_uuid,
+    });
+
+    await cloudFunction.validateOrThrow(ComputingModelValidationException);
+    await cloudFunction.insert();
+
+    return cloudFunction.serializeByContext() as CloudFunction;
+  }
+
+  /**
+   * Returns a list of all cloud functions a project
+   * @param {{ query: BaseProjectQueryFilter }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<CloudFunction[]>}
+   */
+  static async listCloudFunctions(
+    event: { query: BaseProjectQueryFilter },
+    context: ServiceContext,
+  ) {
+    return await new CloudFunction(
+      { project_uuid: event.query.project_uuid },
+      context,
+    ).getList(context, new BaseProjectQueryFilter(event.query));
+  }
+
+  /**
+   * Gets a cloud function by UUID
+   * @param {{ function_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<CloudFunction>}
+   */
+  static async getCloudFunctionByUuid(
+    event: { query: JobQueryFilter },
+    context: ServiceContext,
+  ): Promise<CloudFunction> {
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      event.query.function_uuid,
+    );
+
+    cloudFunction.canAccess(context);
+
+    await cloudFunction.populateJobs(event.query as JobQueryFilter);
+    return cloudFunction.serializeByContext() as CloudFunction;
+  }
+
+  /**
+   * Updates a cloud function by UUID
+   * @param {{ body: UpdateCloudFunctionDto }} event - contains cloud function update params
+   * @param {ServiceContext} context
+   * @returns {Promise<CloudFunction>}
+   */
+  static async updateCloudFunction(
+    event: { body: UpdateCloudFunctionDto },
+    context: ServiceContext,
+  ): Promise<CloudFunction> {
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      event.body.function_uuid,
+    );
+
+    cloudFunction.canAccess(context);
+
+    await cloudFunction.populate(event.body).update();
+
+    return cloudFunction.serializeByContext() as CloudFunction;
+  }
+
   /**
    * Creates a new acurast job with the given data
    * @param {{ body: CreateJobDto }} event - job creation params
@@ -54,14 +150,32 @@ export class AcurastService {
     );
     event.body = new CreateJobDto(event.body);
 
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      event.body.function_uuid,
+    );
+
+    cloudFunction.canAccess(context);
+
     const job = new AcurastJob(event.body, context).populate({
       job_uuid: uuidV4(),
+      function_uuid: cloudFunction.function_uuid,
+      project_uuid: cloudFunction.project_uuid,
     });
 
     await job.validateOrThrow(ComputingModelValidationException);
+    if (new Date(job.endTime).getTime() <= new Date(job.startTime).getTime()) {
+      throw new ComputingValidationException({
+        code: ComputingErrorCode.FIELD_INVALID,
+        property: 'endTime',
+      });
+    }
 
     const conn = await context.mysql.start();
     try {
+      // Note: This is and should be done on AcurastJobStatusWorker, set to inactive only after deployment
+      // Set to inactive until job gets fully deployed
+      // await job.clearJobs(cloudFunction.function_uuid, conn);
+
       await job.insert(SerializeFor.INSERT_DB, conn);
       const referenceId = uuidV4();
       await spendCreditAction(
@@ -79,6 +193,7 @@ export class AcurastService {
         ),
         async () => await deployAcurastJob(context, job, referenceId, conn),
       );
+
       await context.mysql.commit(conn);
 
       await new Lmas().writeLog({
@@ -98,7 +213,7 @@ export class AcurastService {
         code: ComputingErrorCode.DEPLOY_JOB_ERROR,
         context,
         sourceFunction: 'AcruastService/createJob',
-        errorMessage: `Error creating acurast job: ${err}`,
+        errorMessage: `Error creating acurast job: ${JSON.stringify(err)}`,
         details: err,
       }).writeToMonitor({
         logType: LogType.ERROR,
@@ -109,22 +224,6 @@ export class AcurastService {
     }
 
     return job.serializeByContext() as AcurastJob;
-  }
-
-  /**
-   * Returns a list of all jobs for a project
-   * @param {{ query: JobQueryFilter }} event
-   * @param {ServiceContext} context
-   * @returns {AcurastJob[]}
-   */
-  static async listJobs(
-    event: { query: JobQueryFilter },
-    context: ServiceContext,
-  ) {
-    return await new AcurastJob(
-      { project_uuid: event.query.project_uuid },
-      context,
-    ).getList(context, new JobQueryFilter(event.query));
   }
 
   /**
@@ -163,65 +262,95 @@ export class AcurastService {
 
     job.verifyStatusAndAccess('setJobEnvironment', context);
 
-    const referenceId = uuidV4();
-    await spendCreditAction(
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      job.function_uuid,
+    );
+
+    await cloudFunction.setEnvironmentVariables(event.body.variables);
+
+    // const referenceId = uuidV4();
+    // await spendCreditAction(
+    //   context,
+    //   new SpendCreditDto(
+    //     {
+    //       project_uuid: job.project_uuid,
+    //       product_id: ProductCode.COMPUTING_JOB_SET_ENVIRONMENT,
+    //       referenceTable: DbTables.TRANSACTION,
+    //       referenceId,
+    //       location: 'AcurastService.setJobEnvironment',
+    //       service: ServiceName.COMPUTING,
+    //     },
+    //     context,
+    //   ),
+    //   async () =>
+    await setAcurastJobEnvironment(
       context,
-      new SpendCreditDto(
-        {
-          project_uuid: job.project_uuid,
-          product_id: ProductCode.COMPUTING_JOB_SET_ENVIRONMENT,
-          referenceTable: DbTables.TRANSACTION,
-          referenceId,
-          location: 'AcurastService.setJobEnvironment',
-          service: ServiceName.COMPUTING,
-        },
-        context,
-      ),
-      async () =>
-        await setAcurastJobEnvironment(
-          context,
-          job,
-          referenceId,
-          event.body.variables,
-        ),
+      job,
+      // referenceId,
+      event.body.variables,
+      // ),
     );
 
     return job.serializeByContext() as AcurastJob;
   }
 
   /**
-   * Send a message to a job and return response
-   * @param {{ payload: string, job_uuid: string }} event - job message payload
+   * Send a payload to a job and returns response
+   * Also tracks the function call in DB and marks it as success or error
+   * @param {{ payload: string, function_uuid: string }} event - job message payload
    * @param {ServiceContext} context
-   * @returns {Promise<AcurastJob>}
+   * @returns {Promise<any>}
    */
-  static async sendJobMessage(
-    event: { payload: string; job_uuid: string },
+  static async executeCloudFunction(
+    event: { payload: string; function_uuid: string },
     context: ServiceContext,
-  ): Promise<AcurastJob> {
-    const publicKey = await runCachedFunction<string>(
-      `${CacheKeyPrefix.ACURAST_JOB}:${event.job_uuid}`,
+  ): Promise<any> {
+    const job = await runCachedFunction<AcurastJob>(
+      `${CacheKeyPrefix.ACURAST_JOB}:${event.function_uuid}`,
       async () => {
-        const job = await new AcurastJob({}, context).populateByUUID(
-          event.job_uuid,
+        const cloudFunction = await new CloudFunction(
+          {},
+          context,
+        ).populateByUUID(event.function_uuid);
+
+        if (!cloudFunction.activeJob_id) {
+          throw new ComputingCodeException({
+            status: 500,
+            code: ComputingErrorCode.JOB_NOT_DEPLOYED,
+            context,
+            sourceFunction: 'executeCloudFunction',
+          });
+        }
+
+        return await new AcurastJob({}, context).populateById(
+          cloudFunction.activeJob_id,
         );
-        // access is not checked for sendMessage
-        job.verifyStatusAndAccess('sendJobMessage', context, undefined, true);
-        return job.publicKey;
       },
       CacheKeyTTL.DEFAULT,
     );
 
-    if (!event.payload) {
-      throw new ComputingValidationException({
-        code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
-        property: 'payload',
-      });
-    }
+    // access is not checked for sendMessage
+    job.verifyStatusAndAccess('executeCloudFunction', context, undefined, true);
 
     return await new AcurastWebsocketClient(await getAcurastWebsocketUrl())
-      .send(publicKey, event.payload)
+      .send(job.publicKey, event.payload)
+      .then(async (result) => {
+        new Lmas().saveCloudFunctionCall(
+          new CloudFunctionCallDto({
+            function_uuid: job.function_uuid,
+            success: true,
+          }),
+        );
+        return result;
+      })
       .catch(async (err) => {
+        new Lmas().saveCloudFunctionCall(
+          new CloudFunctionCallDto({
+            function_uuid: job.function_uuid,
+            success: false,
+            error: `${err}`,
+          }),
+        );
         throw await new ComputingCodeException({
           status: 500,
           code: ComputingErrorCode.ERROR_SENDING_JOB_PAYLOAD,
@@ -274,26 +403,7 @@ export class AcurastService {
 
     const conn = await context.mysql.start();
     try {
-      await job.validateOrThrow(ComputingModelValidationException);
-
-      const referenceId = uuidV4();
-      await spendCreditAction(
-        context,
-        new SpendCreditDto(
-          {
-            project_uuid: job.project_uuid,
-            product_id: ProductCode.COMPUTING_JOB_DELETE,
-            referenceTable: DbTables.TRANSACTION,
-            referenceId,
-            location: 'AcurastService.deleteJob',
-            service: ServiceName.COMPUTING,
-          },
-          context,
-        ),
-        async () => await deleteAcurastJob(context, job, referenceId, conn),
-      );
-
-      await context.mysql.commit(conn);
+      await deleteAcurastJob(context, job, conn);
 
       await new Lmas().writeLog({
         context,
@@ -312,7 +422,7 @@ export class AcurastService {
         code: ComputingErrorCode.DELETE_JOB_ERROR,
         context,
         sourceFunction: 'AcruastService/deleteJob',
-        errorMessage: `Error deleting acurast job: ${err}`,
+        errorMessage: `Error deleting acurast job: ${JSON.stringify(err)}`,
         details: err,
       }).writeToMonitor({
         logType: LogType.ERROR,

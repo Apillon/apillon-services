@@ -218,6 +218,7 @@ async function createAcurastJob(
       startTime: new Date().getTime(),
       endTime: new Date().setHours(new Date().getHours() + 8),
       job_uuid: uuidV4(),
+      function_uuid: uuidV4(),
       project_uuid: uuidV4(),
       jobId,
       deployerAddress: DEPLOYER_ADDRESS,

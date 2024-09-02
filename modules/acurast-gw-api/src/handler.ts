@@ -1,8 +1,15 @@
-import { ComputingMicroservice } from '@apillon/lib';
+import { ComputingMicroservice, safeJsonParse } from '@apillon/lib';
 import type { APIGatewayProxyHandler } from 'aws-lambda';
 
 export const handler: APIGatewayProxyHandler = async (event) => {
-  const job_uuid = event.requestContext?.domainPrefix;
+  const function_uuid = event.requestContext?.domainPrefix;
+
+  if (event.httpMethod !== 'POST' || !function_uuid) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ message: 'Invalid request' }),
+    };
+  }
 
   const blockedHeadersRegex = new RegExp('^(X-|CloudFront-|Via).*$');
   const headers = Object.keys(event.headers)
@@ -12,35 +19,26 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       return obj;
     }, {});
 
-  const payload = {
-    body: event.body ? JSON.parse(event.body) : {},
+  const payload = JSON.stringify({
+    body: safeJsonParse(event.body, {}),
     headers,
     path: event.path,
     queryStringParameters: event.queryStringParameters,
     multiValueQueryStringParameters: event.multiValueQueryStringParameters,
     pathParameters: event.pathParameters,
-  };
+  });
 
-  console.log(event);
-  console.log(JSON.stringify(payload));
-
-  if (event.httpMethod !== 'POST' || !job_uuid || !payload) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ message: 'Invalid request' }),
-    };
-  }
+  console.log({ event });
+  console.log({ payload: JSON.stringify(payload) });
 
   try {
     const serviceResponse = await new ComputingMicroservice(
       null,
-    ).sendJobMessage(JSON.stringify(payload), job_uuid);
+    ).executeCloudFunction(JSON.stringify(payload), function_uuid);
 
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: { 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify(serviceResponse),
     };
   } catch (error) {

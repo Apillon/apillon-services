@@ -101,6 +101,9 @@ export enum LmasEventType {
   GET_TOTAL_REQUESTS = 'get-total-requests',
 
   SEND_MESSAGE_TO_SLACK = 'send-message-to-slack',
+
+  SAVE_CLOUD_FUNCTION_CALL = 'save-cloud-function-call',
+  GET_CLOUD_FUNCTION_USAGE = 'get-cloud-function-usage',
 }
 
 export enum BlockchainEventType {
@@ -281,11 +284,15 @@ export enum ComputingEventType {
   ARCHIVE_CONTRACT = 'archive-contract',
   ACTIVATE_CONTRACT = 'activate-contract',
 
+  CREATE_CLOUD_FUNCTION = 'create-cloud-function',
+  LIST_CLOUD_FUNCTIONS = 'list-cloud-functions',
+  UPDATE_CLOUD_FUNCTION = 'update-cloud-function',
+  EXECUTE_CLOUD_FUNCTION = 'execute-cloud-function',
+
+  GET_CLOUD_FUNCTION = 'get-cloud-function',
   CREATE_JOB = 'create-job',
-  LIST_JOBS = 'list-jobs',
   GET_JOB = 'get-job',
   SET_JOB_ENVIRONMENT = 'set-job-environment',
-  SEND_JOB_MESSAGE = 'send-job-message',
   UPDATE_JOB = 'update-job',
   DELETE_JOB = 'delete-job',
 }
@@ -908,6 +915,7 @@ export enum MongoCollections {
   REQUEST_LOGS = 'request_logs',
   API_REQUEST_LOGS = 'api_request_logs',
   IPFS_TRAFFIC_LOG = 'ipfs-traffic-log',
+  CLOUD_FUNCTION_CALL = 'cloud-function-call',
 }
 
 export enum ApiName {
@@ -988,8 +996,6 @@ export enum ProductCode {
   CONTRACT_SEPOLIA_CALL = 51,
 
   COMPUTING_JOB_CREATE = 52,
-  COMPUTING_JOB_SET_ENVIRONMENT = 53,
-  COMPUTING_JOB_DELETE = 54,
 
   IPNS = 55,
 }

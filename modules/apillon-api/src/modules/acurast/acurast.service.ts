@@ -16,10 +16,6 @@ export class AcurastService {
     return (await new ComputingMicroservice(context).createJob(body)).data;
   }
 
-  async listJobs(context: ApillonApiContext, query: JobQueryFilter) {
-    return (await new ComputingMicroservice(context).listJobs(query)).data;
-  }
-
   async getJob(context: ApillonApiContext, job_uuid: string) {
     return (await new ComputingMicroservice(context).getJob(job_uuid)).data;
   }
@@ -32,13 +28,16 @@ export class AcurastService {
       .data;
   }
 
-  async sendJobMessage(
+  async executeCloudFunction(
     context: ApillonApiContext,
     payload: string,
     job_uuid: string,
   ) {
     return (
-      await new ComputingMicroservice(context).sendJobMessage(payload, job_uuid)
+      await new ComputingMicroservice(context).executeCloudFunction(
+        payload,
+        job_uuid,
+      )
     ).data;
   }
 

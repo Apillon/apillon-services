@@ -1,10 +1,15 @@
 import {
   AttachedServiceType,
+  BaseProjectQueryFilter,
+  CloudFunctionUsageDto,
   CodeException,
   ComputingMicroservice,
+  CreateCloudFunctionDto,
   CreateJobDto,
   JobQueryFilter,
+  Lmas,
   SetJobEnvironmentDto,
+  UpdateCloudFunctionDto,
   UpdateJobDto,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -20,7 +25,10 @@ import { ServiceDto } from '../services/dtos/service.dto';
 export class AcurastService {
   constructor(private readonly serviceService: ServicesService) {}
 
-  async createJob(context: DevConsoleApiContext, body: CreateJobDto) {
+  async createCloudFunction(
+    context: DevConsoleApiContext,
+    body: CreateCloudFunctionDto,
+  ) {
     //check project
     const project: Project = await new Project({}, context).populateByUUID(
       body.project_uuid,
@@ -59,11 +67,45 @@ export class AcurastService {
       await this.serviceService.createService(context, AcurastService);
     }
 
-    return (await new ComputingMicroservice(context).createJob(body)).data;
+    return (await new ComputingMicroservice(context).createCloudFunction(body))
+      .data;
   }
 
-  async listJobs(context: DevConsoleApiContext, query: JobQueryFilter) {
-    return (await new ComputingMicroservice(context).listJobs(query)).data;
+  async listCloudFunctions(
+    context: DevConsoleApiContext,
+    query: BaseProjectQueryFilter,
+  ) {
+    return (await new ComputingMicroservice(context).listCloudFunctions(query))
+      .data;
+  }
+
+  async updateCloudFunction(
+    context: DevConsoleApiContext,
+    body: UpdateCloudFunctionDto,
+  ) {
+    return (await new ComputingMicroservice(context).updateCloudFunction(body))
+      .data;
+  }
+
+  async getCloudFunction(
+    context: DevConsoleApiContext,
+    query: JobQueryFilter,
+  ): Promise<{
+    name: string;
+    description: string;
+    activeJobUuid: string;
+    jobs: any[];
+  }> {
+    return (await new ComputingMicroservice(context).getCloudFunction(query))
+      .data;
+  }
+
+  async getCloudFunctionUsage(query: CloudFunctionUsageDto) {
+    return (await new Lmas().getCloudFunctionUsage(query)).data;
+  }
+
+  async createJob(context: DevConsoleApiContext, body: CreateJobDto) {
+    return (await new ComputingMicroservice(context).createJob(body)).data;
   }
 
   async getJob(context: DevConsoleApiContext, job_uuid: string) {
@@ -78,13 +120,16 @@ export class AcurastService {
       .data;
   }
 
-  async sendJobMessage(
+  async executeCloudFunction(
     context: DevConsoleApiContext,
     payload: string,
-    job_uuid: string,
+    function_uuid: string,
   ) {
     return (
-      await new ComputingMicroservice(context).sendJobMessage(payload, job_uuid)
+      await new ComputingMicroservice(context).executeCloudFunction(
+        payload,
+        function_uuid,
+      )
     ).data;
   }
 

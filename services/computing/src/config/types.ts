@@ -5,6 +5,7 @@ export enum DbTables {
   CLUSTER_WALLET = 'cluster_wallet',
   CLUSTER_TRANSACTION_LOG = 'cluster_transaction_log',
 
+  CLOUD_FUNCTION = 'cloud_function',
   ACURAST_JOB = 'acurast_job',
 }
 
@@ -19,6 +20,7 @@ export enum ComputingErrorCode {
   TRANSACTION_NOT_FOUND = 40418002,
   BUCKET_NOT_FOUND = 40418003,
   JOB_NOT_FOUND = 40418004,
+  CLOUD_FUNCTION_NOT_FOUND = 40418005,
   //405
   METHOD_NOT_ALLOWED = 40518001,
 
@@ -36,6 +38,7 @@ export enum ComputingErrorCode {
   REQUIRED_DATA_NOT_PRESENT = 42218013,
   DATA_TYPE_INVALID = 42218014,
   FIELD_NOT_PRESENT = 42218015,
+  FIELD_INVALID = 42218016,
 
   //500
   GENERAL_SERVER_ERROR = 50018000,
@@ -56,6 +59,7 @@ export enum ComputingErrorCode {
   JOB_ID_IS_MISSING = 50018015,
   DELETE_JOB_ERROR = 50018016,
   ERROR_SENDING_JOB_PAYLOAD = 50018017,
+  ENCRYPTION_KEY_GENERATION_FAILED = 50018018,
 }
 
 export enum TransactionType {
@@ -83,6 +87,7 @@ export enum AcurastJobStatus {
   DEPLOYING = 1,
   DEPLOYED = 2,
   MATCHED = 3,
+  INACTIVE = 4,
   DELETED = 9,
 }
 

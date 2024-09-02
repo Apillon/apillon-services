@@ -1,4 +1,11 @@
-import { Context, LogType, ServiceName } from '@apillon/lib';
+import {
+  Context,
+  LogType,
+  PoolConnection,
+  SerializeFor,
+  ServiceName,
+  SqlModelStatus,
+} from '@apillon/lib';
 import {
   BaseSingleThreadWorker,
   WorkerDefinition,
@@ -8,6 +15,7 @@ import { AcurastJob } from '../modules/acurast/models/acurast-job.model';
 import { AcurastClient } from '../modules/clients/acurast.client';
 import { getAcurastEndpoint } from '../lib/utils/acurast-utils';
 import { AcurastJobStatus } from '../config/types';
+import { CloudFunction } from '../modules/acurast/models/cloud-function.model';
 
 /**
  * Processes all deployed acurast jobs and assigns their corresponding processor job addresses based on on-chain data
@@ -31,9 +39,12 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
 
     // Running all in parallel might be too heavy on the RPC and database
     for (const job of jobs) {
+      const conn = await this.context.mysql.start();
       try {
-        await this.processJob(job, acurastEndpoint);
+        await this.processJob(job, acurastEndpoint, conn);
+        await this.context.mysql.commit(conn);
       } catch (err) {
+        await this.context.mysql.rollback(conn);
         await this.writeEventLog({
           logType: LogType.ERROR,
           message: `Error processing job with ID=${job.id}`,
@@ -44,7 +55,11 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
     }
   }
 
-  private async processJob(job: AcurastJob, endpoint: string) {
+  private async processJob(
+    job: AcurastJob,
+    endpoint: string,
+    conn: PoolConnection,
+  ) {
     const client = new AcurastClient(endpoint);
 
     const jobState = await client.getJobStatus(job.deployerAddress, job.jobId);
@@ -66,11 +81,26 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
       job.jobId,
     );
 
+    const cloudFunction = await new CloudFunction(
+      {},
+      this.context,
+    ).populateByUUID(job.function_uuid);
+    cloudFunction.populate({
+      activeJob_id: job.id,
+      status: SqlModelStatus.ACTIVE,
+    });
+
     await this.writeLogToDb(
       WorkerLogStatus.INFO,
       `Updating acurast job ${job.jobId} - account: ${job.account}, public key: ${job.publicKey}`,
     );
 
-    await job.update();
+    // Set status of all other jobs to inactive
+    await job.clearPreviousJobs(cloudFunction.function_uuid, conn);
+
+    await Promise.all([
+      job.update(SerializeFor.UPDATE_DB, conn),
+      cloudFunction.update(SerializeFor.UPDATE_DB, conn),
+    ]);
   }
 }
