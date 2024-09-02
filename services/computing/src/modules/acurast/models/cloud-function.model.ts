@@ -28,6 +28,7 @@ const populatable = [
   PopulateFrom.ADMIN,
   PopulateFrom.PROFILE,
 ];
+
 const serializable = [
   SerializeFor.INSERT_DB,
   SerializeFor.UPDATE_DB,
@@ -84,8 +85,13 @@ export class CloudFunction extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable,
-    serializable,
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
+    serializable: [
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+    ],
     validators: [
       {
         resolver: presenceValidator(),
@@ -98,8 +104,13 @@ export class CloudFunction extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable,
-    serializable,
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
+    serializable: [
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+    ],
   })
   public encrypted_variables: string | null;
 
@@ -205,7 +216,7 @@ export class CloudFunction extends UuidSqlModel {
   }
 
   public async setEnvironmentVariables(variables: [string, string][]) {
-    if (!variables.length) {
+    if (!variables?.length) {
       this.encrypted_variables = null;
       return;
     }
@@ -217,8 +228,6 @@ export class CloudFunction extends UuidSqlModel {
 
     await this.validateOrThrow(ComputingModelValidationException);
 
-    await this.update();
-
-    return;
+    return await this.update();
   }
 }

@@ -9,7 +9,7 @@ import { AssignCidToNft } from './dtos/assign-cid-to-nft.dto';
 import { ClusterWalletQueryFilter } from './dtos/cluster-wallet-query-filter.dto';
 import { ComputingTransactionQueryFilter } from './dtos/computing-transaction-query-filter.dto';
 import { CreateJobDto } from './dtos/create-job.dto';
-import { SetJobEnvironmentDto } from './dtos/set-job-environment.dto';
+import { SetCloudFunctionEnvironmentDto } from './dtos/set-cloud-function-environment.dto';
 import { JobQueryFilter } from './dtos/job-query-filter.dto';
 import { UpdateJobDto } from './dtos/update-job.dto';
 import {
@@ -182,9 +182,11 @@ export class ComputingMicroservice extends BaseService {
     });
   }
 
-  public async setJobEnvironment(body: SetJobEnvironmentDto) {
+  public async setCloudFunctionEnvironment(
+    body: SetCloudFunctionEnvironmentDto,
+  ) {
     return await this.callService({
-      eventName: ComputingEventType.SET_JOB_ENVIRONMENT,
+      eventName: ComputingEventType.SET_CLOUD_FUNCTION_ENVIRONMENT,
       body: body.serialize(),
     });
   }

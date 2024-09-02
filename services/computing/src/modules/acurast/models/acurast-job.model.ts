@@ -258,9 +258,10 @@ export class AcurastJob extends UuidSqlModel {
       throw new ComputingNotFoundException(ComputingErrorCode.JOB_NOT_FOUND);
     }
 
-    if (
-      ![AcurastJobStatus.MATCHED, additionalStatus].includes(this.jobStatus)
-    ) {
+    const requiredStatuses = [AcurastJobStatus.MATCHED];
+    if (additionalStatus) requiredStatuses.push(additionalStatus);
+
+    if (!requiredStatuses.includes(this.jobStatus)) {
       throw new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.JOB_NOT_DEPLOYED,

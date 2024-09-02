@@ -8,7 +8,7 @@ import {
   CreateJobDto,
   JobQueryFilter,
   Lmas,
-  SetJobEnvironmentDto,
+  SetCloudFunctionEnvironmentDto,
   UpdateCloudFunctionDto,
   UpdateJobDto,
 } from '@apillon/lib';
@@ -112,12 +112,13 @@ export class AcurastService {
     return (await new ComputingMicroservice(context).getJob(job_uuid)).data;
   }
 
-  async setJobEnvironment(
+  async setCloudFunctionEnvironment(
     context: DevConsoleApiContext,
-    body: SetJobEnvironmentDto,
+    body: SetCloudFunctionEnvironmentDto,
   ) {
-    return (await new ComputingMicroservice(context).setJobEnvironment(body))
-      .data;
+    return (
+      await new ComputingMicroservice(context).setCloudFunctionEnvironment(body)
+    ).data;
   }
 
   async executeCloudFunction(

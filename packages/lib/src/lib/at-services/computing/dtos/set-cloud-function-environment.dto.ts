@@ -7,13 +7,13 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 
-export class SetJobEnvironmentDto extends ModelBase {
+export class SetCloudFunctionEnvironmentDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
-  public job_uuid: string;
+  public function_uuid: string;
 
   @prop({
     parser: { resolver: arrayParser() },

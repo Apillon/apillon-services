@@ -3,7 +3,7 @@ import {
   CreateJobDto,
   DefaultApiKeyRole,
   JobQueryFilter,
-  SetJobEnvironmentDto,
+  SetCloudFunctionEnvironmentDto,
   UpdateJobDto,
   ValidateFor,
 } from '@apillon/lib';
@@ -56,19 +56,19 @@ export class AcurastController {
   }
 
   @Post('jobs/:job_uuid/environment')
-  @Validation({ dto: SetJobEnvironmentDto })
+  @Validation({ dto: SetCloudFunctionEnvironmentDto })
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
     serviceType: AttachedServiceType.COMPUTING,
   })
   @UseGuards(AuthGuard, ValidationGuard)
-  async setJobEnvironment(
+  async setCloudFunctionEnvironment(
     @Ctx() context: ApillonApiContext,
-    @Body() body: SetJobEnvironmentDto,
-    @Param('job_uuid') job_uuid: string,
+    @Body() body: SetCloudFunctionEnvironmentDto,
+    @Param('function_uuid') function_uuid: string,
   ) {
-    body.job_uuid = job_uuid;
-    return await this.acurastService.setJobEnvironment(context, body);
+    body.function_uuid = function_uuid;
+    return await this.acurastService.setCloudFunctionEnvironment(context, body);
   }
 
   @Post('jobs/:job_uuid/message')
