@@ -15,19 +15,17 @@ export class AWS_KMS {
     this.textEncoder = new TextEncoder();
     this.textDecoder = new TextDecoder();
     try {
-      if (env.AWS_KEY && env.AWS_SECRET) {
-        this.kmsClient = new KMSClient({
-          region: env.AWS_REGION,
-          credentials: {
-            accessKeyId: env.AWS_KEY,
-            secretAccessKey: env.AWS_SECRET,
-          },
-        });
-      } else {
-        this.kmsClient = new KMSClient({
-          region: env.AWS_REGION,
-        });
-      }
+      this.kmsClient = new KMSClient(
+        env.AWS_KEY && env.AWS_SECRET
+          ? {
+              region: env.AWS_REGION,
+              credentials: {
+                accessKeyId: env.AWS_KEY,
+                secretAccessKey: env.AWS_SECRET,
+              },
+            }
+          : { region: env.AWS_REGION },
+      );
     } catch (err) {
       console.error(
         'error creating AWS KMS client',

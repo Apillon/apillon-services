@@ -26,10 +26,7 @@ export async function upgrade(
 export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
-  const ids = [
-    ProductCode.COMPUTING_JOB_CREATE,
-    ProductCode.COMPUTING_JOB_SET_ENVIRONMENT,
-  ];
+  const ids = [ProductCode.COMPUTING_JOB_CREATE];
   await queryFn(`
     DELETE
     FROM ${DbTables.PRODUCT_PRICE}

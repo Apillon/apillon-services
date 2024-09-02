@@ -55,9 +55,9 @@ export class AcurastService {
     event: { body: CreateCloudFunctionDto },
     context: ServiceContext,
   ): Promise<CloudFunction> {
-    const encryptionKeyId = await new AWS_KMS().generateEncryptionKey();
+    const encryption_key_uuid = await new AWS_KMS().generateEncryptionKey();
 
-    if (!encryptionKeyId) {
+    if (!encryption_key_uuid) {
       throw new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.ENCRYPTION_KEY_GENERATION_FAILED,
@@ -68,7 +68,7 @@ export class AcurastService {
     const cloudFunction = new CloudFunction(event.body, context).populate({
       function_uuid: uuidV4(),
       status: SqlModelStatus.INACTIVE,
-      encryption_key_uuid: encryptionKeyId,
+      encryption_key_uuid,
     });
 
     await cloudFunction.validateOrThrow(ComputingModelValidationException);
@@ -172,11 +172,9 @@ export class AcurastService {
 
     const conn = await context.mysql.start();
     try {
+      // Note: This is and should be done on AcurastJobStatusWorker, set to inactive only after deployment
       // Set to inactive until job gets fully deployed
-      await cloudFunction
-        .populate({ status: SqlModelStatus.INACTIVE })
-        .update(SerializeFor.UPDATE_DB, conn);
-      await job.clearJobs(cloudFunction.function_uuid, conn);
+      // await job.clearJobs(cloudFunction.function_uuid, conn);
 
       await job.insert(SerializeFor.INSERT_DB, conn);
       const referenceId = uuidV4();

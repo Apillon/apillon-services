@@ -368,10 +368,10 @@ export class AcurastJob extends UuidSqlModel {
 
   /**
    * When a new job is deployed, clear the older jobs of a function_uuid
-   * Sets the status of all jobs to inactive a
+   * Sets the status of all jobs to inactive
    * @param {string} function_uuid - uuid of the function whose jobs become inactive
    */
-  public async clearJobs(
+  public async clearPreviousJobs(
     function_uuid: string,
     conn?: PoolConnection,
   ): Promise<void> {

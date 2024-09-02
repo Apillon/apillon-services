@@ -85,7 +85,6 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
       {},
       this.context,
     ).populateByUUID(job.function_uuid);
-
     cloudFunction.populate({
       activeJob_id: job.id,
       status: SqlModelStatus.ACTIVE,
@@ -95,6 +94,9 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
       WorkerLogStatus.INFO,
       `Updating acurast job ${job.jobId} - account: ${job.account}, public key: ${job.publicKey}`,
     );
+
+    // Set status of all other jobs to inactive
+    await job.clearPreviousJobs(cloudFunction.function_uuid, conn);
 
     await Promise.all([
       job.update(SerializeFor.UPDATE_DB, conn),
