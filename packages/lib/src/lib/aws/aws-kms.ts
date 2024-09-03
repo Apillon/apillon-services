@@ -14,6 +14,7 @@ export class AWS_KMS {
   constructor() {
     this.textEncoder = new TextEncoder();
     this.textDecoder = new TextDecoder();
+
     try {
       this.kmsClient = new KMSClient(
         env.AWS_KEY && env.AWS_SECRET
@@ -53,16 +54,15 @@ export class AWS_KMS {
   }
 
   async encrypt(data: string, keyId: string) {
-    const stringAsUint8Array = this.textEncoder.encode(data);
-
     const response = await this.kmsClient.send(
       new EncryptCommand({
         KeyId: keyId,
-        Plaintext: stringAsUint8Array,
+        Plaintext: this.textEncoder.encode(data),
       }),
     );
 
     if (!response.CiphertextBlob) {
+      console.warn('No encryption result was returned');
       return;
     }
 
@@ -72,20 +72,19 @@ export class AWS_KMS {
   async decrypt(data: string, keyId: string) {
     const buffer = Buffer.from(data, 'base64');
 
-    const uint8Array = new Uint8Array(
-      buffer.buffer,
-      buffer.byteOffset,
-      buffer.byteLength,
-    );
-
     const decryptionResponse = await this.kmsClient.send(
       new DecryptCommand({
         KeyId: keyId,
-        CiphertextBlob: uint8Array,
+        CiphertextBlob: new Uint8Array(
+          buffer.buffer,
+          buffer.byteOffset,
+          buffer.byteLength,
+        ),
       }),
     );
 
     if (!decryptionResponse.Plaintext) {
+      console.warn('No decryption result was returned');
       return;
     }
 

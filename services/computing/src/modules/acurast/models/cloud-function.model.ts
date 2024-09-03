@@ -11,6 +11,7 @@ import {
   BaseProjectQueryFilter,
   JobQueryFilter,
   AWS_KMS,
+  env,
 } from '@apillon/lib';
 import { arrayParser, stringParser, integerParser } from '@rawmodel/parsers';
 import { ComputingErrorCode, DbTables } from '../../../config/types';
@@ -82,25 +83,6 @@ export class CloudFunction extends UuidSqlModel {
     fakeValue: 'Cloud Function #1',
   })
   public name: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
-    serializable: [
-      SerializeFor.SELECT_DB,
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-    fakeValue: uuid(),
-  })
-  public encryption_key_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -204,12 +186,11 @@ export class CloudFunction extends UuidSqlModel {
   }
 
   public async getEnvironmentVariables(): Promise<[string, string][]> {
-    if (!this.encrypted_variables) {
-      return [];
-    }
+    if (!this.encrypted_variables) return [];
+
     const decryptedVariables = await new AWS_KMS().decrypt(
       this.encrypted_variables,
-      this.encryption_key_uuid,
+      env.COMPUTING_KMS_KEY_ID,
     );
 
     return JSON.parse(decryptedVariables);
@@ -223,7 +204,7 @@ export class CloudFunction extends UuidSqlModel {
 
     this.encrypted_variables = await new AWS_KMS().encrypt(
       JSON.stringify(variables),
-      this.encryption_key_uuid,
+      env.COMPUTING_KMS_KEY_ID,
     );
 
     await this.validateOrThrow(ComputingModelValidationException);

@@ -264,18 +264,20 @@ export class AcurastService {
 
     await cloudFunction.setEnvironmentVariables(event.body.variables);
 
-    const job = await new AcurastJob({}, context).populateById(
-      cloudFunction.activeJob_id,
-    );
+    if (cloudFunction.activeJob_id) {
+      const job = await new AcurastJob({}, context).populateById(
+        cloudFunction.activeJob_id,
+      );
 
-    job.verifyStatusAndAccess(
-      'setCloudFunctionEnvironment',
-      context,
-      AcurastJobStatus.DEPLOYED,
-      true,
-    );
+      job.verifyStatusAndAccess(
+        'setCloudFunctionEnvironment',
+        context,
+        AcurastJobStatus.DEPLOYED,
+        true,
+      );
 
-    await setAcurastJobEnvironment(context, job, event.body.variables);
+      await setAcurastJobEnvironment(context, job, event.body.variables);
+    }
 
     return cloudFunction.serializeByContext() as AcurastJob;
   }
