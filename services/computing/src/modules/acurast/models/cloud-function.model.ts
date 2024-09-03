@@ -11,6 +11,7 @@ import {
   BaseProjectQueryFilter,
   JobQueryFilter,
   AWS_KMS,
+  env,
 } from '@apillon/lib';
 import { arrayParser, stringParser, integerParser } from '@rawmodel/parsers';
 import { ComputingErrorCode, DbTables } from '../../../config/types';
@@ -28,6 +29,7 @@ const populatable = [
   PopulateFrom.ADMIN,
   PopulateFrom.PROFILE,
 ];
+
 const serializable = [
   SerializeFor.INSERT_DB,
   SerializeFor.UPDATE_DB,
@@ -84,22 +86,13 @@ export class CloudFunction extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable,
-    serializable,
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
+    serializable: [
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
     ],
-    fakeValue: uuid(),
-  })
-  public encryption_key_uuid: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable,
-    serializable,
   })
   public encrypted_variables: string | null;
 
@@ -193,32 +186,29 @@ export class CloudFunction extends UuidSqlModel {
   }
 
   public async getEnvironmentVariables(): Promise<[string, string][]> {
-    if (!this.encrypted_variables) {
-      return [];
-    }
+    if (!this.encrypted_variables) return [];
+
     const decryptedVariables = await new AWS_KMS().decrypt(
       this.encrypted_variables,
-      this.encryption_key_uuid,
+      env.COMPUTING_KMS_KEY_ID,
     );
 
     return JSON.parse(decryptedVariables);
   }
 
   public async setEnvironmentVariables(variables: [string, string][]) {
-    if (!variables.length) {
+    if (!variables?.length) {
       this.encrypted_variables = null;
       return;
     }
 
     this.encrypted_variables = await new AWS_KMS().encrypt(
       JSON.stringify(variables),
-      this.encryption_key_uuid,
+      env.COMPUTING_KMS_KEY_ID,
     );
 
     await this.validateOrThrow(ComputingModelValidationException);
 
-    await this.update();
-
-    return;
+    return await this.update();
   }
 }

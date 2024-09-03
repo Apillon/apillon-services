@@ -2,7 +2,7 @@ import {
   ComputingMicroservice,
   CreateJobDto,
   JobQueryFilter,
-  SetJobEnvironmentDto,
+  SetCloudFunctionEnvironmentDto,
   UpdateJobDto,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
@@ -20,12 +20,13 @@ export class AcurastService {
     return (await new ComputingMicroservice(context).getJob(job_uuid)).data;
   }
 
-  async setJobEnvironment(
+  async setCloudFunctionEnvironment(
     context: ApillonApiContext,
-    body: SetJobEnvironmentDto,
+    body: SetCloudFunctionEnvironmentDto,
   ) {
-    return (await new ComputingMicroservice(context).setJobEnvironment(body))
-      .data;
+    return (
+      await new ComputingMicroservice(context).setCloudFunctionEnvironment(body)
+    ).data;
   }
 
   async executeCloudFunction(

@@ -7,7 +7,7 @@ import {
   DefaultUserRole,
   JobQueryFilter,
   RoleGroup,
-  SetJobEnvironmentDto,
+  SetCloudFunctionEnvironmentDto,
   UpdateCloudFunctionDto,
   UpdateJobDto,
   ValidateFor,
@@ -116,6 +116,22 @@ export class AcurastController {
     );
   }
 
+  @Post('cloud-functions/:function_uuid/environment')
+  @Validation({ dto: SetCloudFunctionEnvironmentDto })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard, ValidationGuard)
+  async setCloudFunctionEnvironment(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: SetCloudFunctionEnvironmentDto,
+    @Param('function_uuid') function_uuid: string,
+  ) {
+    body.function_uuid = function_uuid;
+    return await this.acurastService.setCloudFunctionEnvironment(context, body);
+  }
+
   @Get('cloud-functions/:function_uuid/usage')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: CloudFunctionUsageDto, validateFor: ValidateFor.QUERY })
@@ -136,23 +152,6 @@ export class AcurastController {
     @Param('job_uuid') uuid: string,
   ) {
     return await this.acurastService.getJob(context, uuid);
-  }
-
-  // TODO: When environment can be configured for multiple jobs dynamically
-  @Post('jobs/:job_uuid/environment')
-  @Validation({ dto: SetJobEnvironmentDto })
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
-  @UseGuards(AuthGuard, ValidationGuard)
-  async setJobEnvironment(
-    @Ctx() context: DevConsoleApiContext,
-    @Body() body: SetJobEnvironmentDto,
-    @Param('job_uuid') job_uuid: string,
-  ) {
-    body.job_uuid = job_uuid;
-    return await this.acurastService.setJobEnvironment(context, body);
   }
 
   @Patch('jobs/:job_uuid')

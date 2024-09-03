@@ -5,7 +5,7 @@ import {
   LogType,
   ProductCode,
   ServiceName,
-  SetJobEnvironmentDto,
+  SetCloudFunctionEnvironmentDto,
   SpendCreditDto,
   UpdateJobDto,
   spendCreditAction,
@@ -247,51 +247,39 @@ export class AcurastService {
   }
 
   /**
-   * Sets environment variables for an existing job
-   * @param {{ body: SetJobEnvironmentDto }} event - environment variable pairs
+   * Sets environment variables for an existing cloud function
+   * @param {{ body: SetCloudFunctionEnvironmentDto }} event - environment variable pairs
    * @param {ServiceContext} context
    * @returns {Promise<AcurastJob>}
    */
-  static async setJobEnvironment(
-    event: { body: SetJobEnvironmentDto },
+  static async setCloudFunctionEnvironment(
+    event: { body: SetCloudFunctionEnvironmentDto },
     context: ServiceContext,
   ): Promise<AcurastJob> {
-    const job = await new AcurastJob({}, context).populateByUUID(
-      event.body.job_uuid,
-    );
-
-    job.verifyStatusAndAccess('setJobEnvironment', context);
-
     const cloudFunction = await new CloudFunction({}, context).populateByUUID(
-      job.function_uuid,
+      event.body.function_uuid,
     );
+
+    cloudFunction.canModify(context);
 
     await cloudFunction.setEnvironmentVariables(event.body.variables);
 
-    // const referenceId = uuidV4();
-    // await spendCreditAction(
-    //   context,
-    //   new SpendCreditDto(
-    //     {
-    //       project_uuid: job.project_uuid,
-    //       product_id: ProductCode.COMPUTING_JOB_SET_ENVIRONMENT,
-    //       referenceTable: DbTables.TRANSACTION,
-    //       referenceId,
-    //       location: 'AcurastService.setJobEnvironment',
-    //       service: ServiceName.COMPUTING,
-    //     },
-    //     context,
-    //   ),
-    //   async () =>
-    await setAcurastJobEnvironment(
-      context,
-      job,
-      // referenceId,
-      event.body.variables,
-      // ),
-    );
+    if (cloudFunction.activeJob_id) {
+      const job = await new AcurastJob({}, context).populateById(
+        cloudFunction.activeJob_id,
+      );
 
-    return job.serializeByContext() as AcurastJob;
+      job.verifyStatusAndAccess(
+        'setCloudFunctionEnvironment',
+        context,
+        AcurastJobStatus.DEPLOYED,
+        true,
+      );
+
+      await setAcurastJobEnvironment(context, job, event.body.variables);
+    }
+
+    return cloudFunction.serializeByContext() as AcurastJob;
   }
 
   /**
