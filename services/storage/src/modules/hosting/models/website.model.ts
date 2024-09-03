@@ -24,6 +24,7 @@ import {
   DbTables,
   DeploymentEnvironment,
   StorageErrorCode,
+  WebsiteDomainStatus,
 } from '../../../config/types';
 import { StorageValidationException } from '../../../lib/exceptions';
 import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
@@ -200,6 +201,38 @@ export class Website extends UuidSqlModel {
     validators: [],
   })
   public domainChangeDate: Date;
+
+  @prop({
+    parser: { resolver: dateParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public domainLastCheckDate?: Date;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
+      SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+    defaultValue: WebsiteDomainStatus.PENDING,
+  })
+  public domainStatus: WebsiteDomainStatus;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -658,6 +691,7 @@ export class Website extends UuidSqlModel {
         AND w.domain <> ''
         AND b.CID IS NOT NULL
         AND w.status <> ${SqlModelStatus.DELETED}
+        AND w.domainStatus <> ${WebsiteDomainStatus.INVALID}
       ) t
       WHERE (@ipfsClusterDomain IS NULL OR ipfsClusterDomain = @ipfsClusterDomain)
         `,

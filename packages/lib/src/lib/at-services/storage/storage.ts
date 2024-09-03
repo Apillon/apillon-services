@@ -494,6 +494,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async checkWebsiteDomainDns(website_uuid: string) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_CHECK_DOMAIN_DNS,
+      website_uuid,
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 
   //#region nfts storage functions
