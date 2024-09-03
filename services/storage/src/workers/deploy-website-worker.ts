@@ -192,38 +192,42 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           cidSize = stagingDeployment.size;
         }
       }
-      //publish IPNS and update target bucket
-      const ipns = await ipfsService.publishToIPNS(
-        targetBucket.CID,
-        targetBucket.bucket_uuid,
-      );
-      targetBucket.IPNS = ipns.name;
 
-      //create ipns record if it doesn't exists yet
-      const ipnsDbRecord: Ipns = await new Ipns({}, this.context).populateByKey(
-        targetBucket.bucket_uuid,
-      );
-      if (!ipnsDbRecord.exists()) {
-        ipnsDbRecord.populate({
-          project_uuid: targetBucket.project_uuid,
-          bucket_id: targetBucket.id,
-          name: targetBucket.name + ' IPNS',
-          ipnsName: ipns.name,
-          ipnsValue: ipns.value,
-          key: targetBucket.bucket_uuid,
-          cid: targetBucket.CID,
-        });
+      if (targetBucket.IPNS) {
+        //publish IPNS and update target bucket
+        const ipns = await ipfsService.publishToIPNS(
+          targetBucket.CID,
+          targetBucket.bucket_uuid,
+        );
+        targetBucket.IPNS = ipns.name;
 
-        await ipnsDbRecord.insert();
-      } else {
-        //Update db ipns record with new values
-        ipnsDbRecord.populate({
-          ipnsValue: ipns.value,
-          key: targetBucket.bucket_uuid,
-          cid: targetBucket.CID,
-        });
+        //create ipns record if it doesn't exists yet. When IPNS became payable, it should exists. But will keep this for backward compatibility
+        const ipnsDbRecord: Ipns = await new Ipns(
+          {},
+          this.context,
+        ).populateByKey(targetBucket.bucket_uuid);
+        if (!ipnsDbRecord.exists()) {
+          ipnsDbRecord.populate({
+            project_uuid: targetBucket.project_uuid,
+            bucket_id: targetBucket.id,
+            name: targetBucket.name + ' IPNS',
+            ipnsName: ipns.name,
+            ipnsValue: ipns.value,
+            key: targetBucket.bucket_uuid,
+            cid: targetBucket.CID,
+          });
 
-        await ipnsDbRecord.update();
+          await ipnsDbRecord.insert();
+        } else {
+          //Update db ipns record with new values
+          ipnsDbRecord.populate({
+            ipnsValue: ipns.value,
+            key: targetBucket.bucket_uuid,
+            cid: targetBucket.CID,
+          });
+
+          await ipnsDbRecord.update();
+        }
       }
 
       const conn = await this.context.mysql.start();

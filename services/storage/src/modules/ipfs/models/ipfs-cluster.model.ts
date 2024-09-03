@@ -394,7 +394,7 @@ export class IpfsCluster extends AdvancedSQLModel {
     isIpns = false,
     path?: string,
     convertToCidV1 = false,
-  ) {
+  ): Promise<string> {
     let link = '';
 
     if (!isIpns && convertToCidV1) {

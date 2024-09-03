@@ -4,20 +4,26 @@ import {
   StorageMicroservice,
   runCachedFunction,
 } from '@apillon/lib';
-import { APIGatewayProxyHandler } from 'aws-lambda';
+import { APIGatewayProxyResult } from 'aws-lambda';
 
-export const handler: APIGatewayProxyHandler = async (event) => {
+export const handler: (
+  event: any,
+) => Promise<
+  | APIGatewayProxyResult
+  | { statusCode: any; headers: { [key: string]: string }; body: string }
+> = async (event) => {
   const pathParameter = event.pathParameters?.proxy;
 
   if (!pathParameter) {
     return {
       statusCode: 400,
+      headers: { 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ message: 'Invalid request' }),
     };
   }
 
   try {
-    return await runCachedFunction(
+    return await runCachedFunction<APIGatewayProxyResult>(
       `${CacheKeyPrefix.URL_SHORTENER}:${pathParameter}`,
       async () => getTargetUrl(pathParameter),
       CacheKeyTTL.EXTRA_LONG * 24, // one day

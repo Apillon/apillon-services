@@ -421,6 +421,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async activateWebsite(website_uuid: string) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_ACTIVATE,
+      website_uuid,
+    };
+    return await this.callService(data);
+  }
+
   public async maxWebsitesQuotaReached(
     params: WebsitesQuotaReachedQueryFilter,
   ) {
@@ -486,6 +494,14 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async checkWebsiteDomainDns(website_uuid: string) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_CHECK_DOMAIN_DNS,
+      website_uuid,
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 
   //#region nfts storage functions
@@ -497,6 +513,7 @@ export class StorageMicroservice extends BaseService {
     imagesSession: string;
     metadataSession: string;
     useApillonIpfsGateway: boolean;
+    useIpns: boolean;
   }): Promise<{ data: { baseUri: string } }> {
     const data = {
       eventName: StorageEventType.PREPARE_COLLECTION_BASE_URI,

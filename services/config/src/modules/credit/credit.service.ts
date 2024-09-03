@@ -490,7 +490,7 @@ export class CreditService {
   static async getCreditPackages(
     event: any,
     context: ServiceContext,
-  ): Promise<string> {
+  ): Promise<any[]> {
     return await new CreditPackage({}, context).getAll();
   }
 

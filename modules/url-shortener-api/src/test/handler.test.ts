@@ -32,8 +32,6 @@ describe('Lambda Handler', () => {
 
     const result = (await handler(
       event as APIGatewayEvent,
-      context as Context,
-      null,
     )) as APIGatewayProxyResult;
 
     expect(result.statusCode).toBe(302);
@@ -42,12 +40,9 @@ describe('Lambda Handler', () => {
 
   it('should return a 400 error when path parameter is missing', async () => {
     const event: Partial<APIGatewayEvent> = {};
-    const context: Partial<Context> = {};
 
     const result = (await handler(
       event as APIGatewayEvent,
-      context as Context,
-      null,
     )) as APIGatewayProxyResult;
 
     expect(result.statusCode).toBe(400);
@@ -60,12 +55,8 @@ describe('Lambda Handler', () => {
         proxy: 'test-path',
       },
     };
-    const context: Partial<Context> = {};
-
     const result = (await handler(
       event as APIGatewayEvent,
-      context as Context,
-      null,
     )) as APIGatewayProxyResult;
 
     expect(result.statusCode).toBe(404);

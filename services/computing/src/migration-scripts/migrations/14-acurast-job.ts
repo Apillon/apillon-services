@@ -27,7 +27,7 @@ export async function upgrade(
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       \`updateUser\` INT NULL,
       PRIMARY KEY(\`id\`)
-      );
+    );
   `);
 }
 

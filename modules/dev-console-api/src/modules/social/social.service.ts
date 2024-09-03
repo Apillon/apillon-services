@@ -78,6 +78,11 @@ export class SocialService {
       .data;
   }
 
+  async activateSpace(context: DevConsoleApiContext, space_uuid: string) {
+    return (await new SocialMicroservice(context).activateSpace(space_uuid))
+      .data;
+  }
+
   async listPosts(context: DevConsoleApiContext, query: SocialPostQueryFilter) {
     return (await new SocialMicroservice(context).listPosts(query)).data;
   }
@@ -92,5 +97,9 @@ export class SocialService {
 
   async archivePost(context: DevConsoleApiContext, post_uuid: string) {
     return (await new SocialMicroservice(context).archivePost(post_uuid)).data;
+  }
+
+  async activatePost(context: DevConsoleApiContext, post_uuid: string) {
+    return (await new SocialMicroservice(context).activatePost(post_uuid)).data;
   }
 }

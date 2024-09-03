@@ -6,42 +6,13 @@ import {
   SerializeFor,
   ValidatorErrorCode,
 } from '../../../../config/types';
+import { BaseComputingEntityDto } from './base-computing-entity.dto';
 
-export class UpdateJobDto extends ModelBase {
+export class UpdateJobDto extends BaseComputingEntityDto {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
   public job_uuid: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.COMPUTING_FIELD_NOT_PRESENT,
-      },
-      {
-        resolver: stringLengthValidator({ minOrEqual: 1, maxOrEqual: 255 }),
-        code: ValidatorErrorCode.COMPUTING_NAME_NOT_VALID,
-      },
-    ],
-  })
-  public name: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: stringLengthValidator({ minOrEqual: 1, maxOrEqual: 255 }),
-        code: ValidatorErrorCode.COMPUTING_DESCRIPTION_NOT_VALID,
-      },
-    ],
-  })
-  public description: string;
 }

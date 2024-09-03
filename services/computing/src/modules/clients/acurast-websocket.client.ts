@@ -22,16 +22,17 @@ export class AcurastWebsocketClient {
 
     const websocketPromise = new Promise((resolve, reject) => {
       client.onMessage((message: Message) => {
-        resolve({
-          sender: Buffer.from(message.sender).toString('hex'),
-          recipient: Buffer.from(message.recipient).toString('hex'),
-          payload: Buffer.from(message.payload).toString(),
-        });
+        // resolve({
+        //   sender: Buffer.from(message.sender).toString('hex'),
+        //   recipient: Buffer.from(message.recipient).toString('hex'),
+        //   response: Buffer.from(message.payload).toString(),
+        // });
+        resolve(Buffer.from(message.payload).toString());
         client.close();
       });
 
       try {
-        client.send(jobPublicKey, JSON.stringify(payload));
+        client.send(jobPublicKey, payload);
       } catch (error) {
         reject(error);
       }
@@ -40,7 +41,7 @@ export class AcurastWebsocketClient {
     const timeoutPromise = new Promise((_, reject): void => {
       setTimeout(
         () => reject(new Error('The Acurast websocket request timed out.')),
-        15_000,
+        30_000,
       );
     });
 

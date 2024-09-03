@@ -64,12 +64,15 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.WEBSITE_UPDATE]: HostingService.updateWebsite,
     [StorageEventType.WEBSITE_DEPLOY]: HostingService.deployWebsite,
     [StorageEventType.WEBSITE_ARCHIVE]: HostingService.archiveWebsite,
+    [StorageEventType.WEBSITE_ACTIVATE]: HostingService.activateWebsite,
     [StorageEventType.WEBSITE_LIST_DOMAINS]: HostingService.listDomains,
     [StorageEventType.WEBSITE_GET_ALL_DOMAINS]: HostingService.getDomains,
     [StorageEventType.WEBSITE_QUOTA_REACHED]:
       HostingService.maxWebsitesQuotaReached,
     [StorageEventType.REQUEST_S3_SIGNED_URLS_FOR_WEBSITE_UPLOAD]:
       HostingService.generateMultipleS3UrlsForUpload,
+    [StorageEventType.WEBSITE_CHECK_DOMAIN_DNS]:
+      HostingService.checkWebsiteDomainDns,
 
     [StorageEventType.DEPLOYMENT_GET]: HostingService.getDeployment,
     [StorageEventType.DEPLOYMENT_LIST]: HostingService.listDeployments,

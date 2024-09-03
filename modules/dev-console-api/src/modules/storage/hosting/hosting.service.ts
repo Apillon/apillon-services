@@ -93,6 +93,21 @@ export class HostingService {
       .data;
   }
 
+  async activateWebsite(context: DevConsoleApiContext, website_uuid: string) {
+    return (
+      await new StorageMicroservice(context).activateWebsite(website_uuid)
+    ).data;
+  }
+
+  async checkWebsiteDomain(
+    context: DevConsoleApiContext,
+    website_uuid: string,
+  ) {
+    return (
+      await new StorageMicroservice(context).checkWebsiteDomainDns(website_uuid)
+    ).data;
+  }
+
   async isWebsitesQuotaReached(
     context: DevConsoleApiContext,
     query: WebsitesQuotaReachedQueryFilter,

@@ -7,7 +7,6 @@ import {
   CollectionMetadataQueryFilter,
   CollectionsQuotaReachedQueryFilter,
   DeployCollectionDTO,
-  isAllowedToCreateNftCollection,
   MintNftDTO,
   NestMintNftDTO,
   NFTCollectionQueryFilter,
@@ -53,18 +52,6 @@ export class NftsService {
 
     project.canModify(context);
 
-    const isAllowed = await isAllowedToCreateNftCollection(
-      context,
-      chainType,
-      body.chain,
-      project.project_uuid,
-    );
-    if (!isAllowed) {
-      throw new UnauthorizedException(
-        `This operation requires a Butterfly plan.`,
-      );
-    }
-
     // Check if NFT service for this project already exists
     const { total } = await new Service({}).getServices(
       context,
@@ -91,7 +78,7 @@ export class NftsService {
 
     return (
       await new NftsMicroservice(context).createCollection(
-        new CreateCollectionDTO(body.serialize()),
+        new CreateCollectionDTO({ ...body.serialize(), chainType }),
       )
     ).data;
   }
@@ -199,6 +186,15 @@ export class NftsService {
     return (await new NftsMicroservice(context).addNftsMetadata(body)).data;
   }
 
+  async addIpnsToCollection(
+    context: DevConsoleApiContext,
+    collection_uuid: string,
+  ) {
+    return (
+      await new NftsMicroservice(context).addIpnsToCollection(collection_uuid)
+    ).data;
+  }
+
   async listCollectionMetadata(
     context: DevConsoleApiContext,
     collection_uuid: string,
@@ -216,6 +212,15 @@ export class NftsService {
   ) {
     return (
       await new NftsMicroservice(context).archiveCollection(collection_uuid)
+    ).data;
+  }
+
+  async activateCollection(
+    context: DevConsoleApiContext,
+    collection_uuid: string,
+  ) {
+    return (
+      await new NftsMicroservice(context).activateCollection(collection_uuid)
     ).data;
   }
 }

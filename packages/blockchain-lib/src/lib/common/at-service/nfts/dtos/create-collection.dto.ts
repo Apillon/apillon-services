@@ -1,4 +1,4 @@
-import { ModelBase, prop } from '@apillon/lib';
+import { ChainType, ModelBase, prop } from '@apillon/lib';
 import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   ethAddressValidator,
@@ -198,6 +198,22 @@ class CreateCollectionDTOBase extends ModelBase {
     validators: [],
   })
   public baseUri: string;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    defaultValue: false,
+  })
+  public useApillonIpfsGateway: boolean;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    defaultValue: false,
+  })
+  public useIpns: boolean;
 }
 
 // Contains properties from base DTO, with baseUri nullable and additional properties
@@ -279,6 +295,14 @@ export class CreateCollectionDTO extends CreateCollectionDTOBase {
     defaultValue: true,
   })
   public isAutoIncrement: boolean;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public chainType: ChainType;
 
   @prop({
     parser: { resolver: integerParser() },
