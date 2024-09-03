@@ -1,11 +1,12 @@
 import { ModelBase, prop } from '../../../base-models/base';
-import { arrayParser, stringParser } from '@rawmodel/parsers';
-import { presenceValidator } from '@rawmodel/validators';
+import { stringParser } from '@rawmodel/parsers';
+import { jsonStringValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
   SerializeFor,
   ValidatorErrorCode,
 } from '../../../../config/types';
+import { JSONParser } from '../../../parsers';
 
 export class SetCloudFunctionEnvironmentDto extends ModelBase {
   @prop({
@@ -16,15 +17,15 @@ export class SetCloudFunctionEnvironmentDto extends ModelBase {
   public function_uuid: string;
 
   @prop({
-    parser: { resolver: arrayParser() },
+    parser: { resolver: JSONParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
-        resolver: presenceValidator(),
+        resolver: jsonStringValidator(),
         code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
-  public variables: [string, string][];
+  public variables: { key: string; value: string }[];
 }

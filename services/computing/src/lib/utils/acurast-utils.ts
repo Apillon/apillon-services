@@ -20,6 +20,11 @@ import { Transaction } from '../../modules/transaction/models/transaction.model'
 import { TransactionService } from '../../modules/transaction/transaction.service';
 import { AcurastClient } from '../../modules/clients/acurast.client';
 import { v4 as uuidV4 } from 'uuid';
+import { Codec } from '@polkadot/types-codec/types';
+import {
+  AcurastEncryptionService,
+  EnvVar,
+} from '../../modules/acurast/acurast-encryption.service';
 
 export async function getAcurastEndpoint(context: Context) {
   return (
@@ -85,12 +90,20 @@ export async function deployAcurastJob(
 export async function setAcurastJobEnvironment(
   context: ServiceContext,
   job: AcurastJob,
-  variables: [string, string][],
+  variables: EnvVar[],
+  conn?: PoolConnection,
 ) {
   const acurastClient = new AcurastClient(await getAcurastEndpoint(context));
+
+  const encryptedVariables =
+    await new AcurastEncryptionService().encryptEnvironmentVariables(
+      job.publicKey,
+      variables,
+    );
+
   const transaction = await acurastClient.createSetEnvironmentTransaction(
     job,
-    variables,
+    encryptedVariables,
   );
 
   const response = await new BlockchainMicroservice(
@@ -119,6 +132,7 @@ export async function setAcurastJobEnvironment(
       },
       context,
     ),
+    conn,
   );
 }
 

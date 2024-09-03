@@ -13,7 +13,10 @@ import {
 } from '@apillon/workers-lib';
 import { AcurastJob } from '../modules/acurast/models/acurast-job.model';
 import { AcurastClient } from '../modules/clients/acurast.client';
-import { getAcurastEndpoint } from '../lib/utils/acurast-utils';
+import {
+  getAcurastEndpoint,
+  setAcurastJobEnvironment,
+} from '../lib/utils/acurast-utils';
 import { AcurastJobStatus } from '../config/types';
 import { CloudFunction } from '../modules/acurast/models/cloud-function.model';
 
@@ -85,6 +88,12 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
       {},
       this.context,
     ).populateByUUID(job.function_uuid);
+
+    if (job.id !== cloudFunction.activeJob_id) {
+      // If job is new, set the same environment from the previous job
+      const variables = await cloudFunction.getEnvironmentVariables();
+      await setAcurastJobEnvironment(this.context, job, variables, conn);
+    }
     cloudFunction.populate({
       activeJob_id: job.id,
       status: SqlModelStatus.ACTIVE,

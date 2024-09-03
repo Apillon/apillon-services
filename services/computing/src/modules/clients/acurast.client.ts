@@ -2,6 +2,8 @@ import { SubmittableExtrinsic } from '@polkadot/api-base/types';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { AcurastJob } from '../acurast/models/acurast-job.model';
 import { LogType, safeJsonParse, writeLog } from '@apillon/lib';
+import { Codec } from '@polkadot/types-codec/types';
+import { EnvVar, EnvVarEncrypted } from '../acurast/acurast-encryption.service';
 
 export class AcurastClient {
   private api: ApiPromise;
@@ -63,13 +65,11 @@ export class AcurastClient {
 
   async createSetEnvironmentTransaction(
     job: AcurastJob,
-    variables: [string, string][],
+    variables: EnvVarEncrypted[],
   ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
-    return this.api.tx.acurast.setEnvironment(job.jobId, job.account, {
-      publicKey: job.publicKey,
-      variables,
-    });
+    const codec = this.variablesToCodec(job.publicKey, variables);
+    return this.api.tx.acurast.setEnvironment(job.jobId, job.account, codec);
   }
 
   async createDeregisterJobTransaction(
@@ -156,5 +156,19 @@ export class AcurastClient {
       await this.api.disconnect();
       this.api = null;
     }
+  }
+
+  private variablesToCodec(publicKey: string, variables: EnvVarEncrypted[]) {
+    return this.api.createType('AcurastCommonEnvironment', {
+      publicKey: this.api.createType('Bytes', publicKey),
+      variables: this.api.createType(
+        'Vec<(Bytes, Bytes)>',
+        variables.map((variable) => {
+          const key = `0x${Buffer.from(variable.key).toString('hex')}`;
+          const value = `0x${variable.encryptedValue.iv}${variable.encryptedValue.ciphertext}${variable.encryptedValue.authTag}`;
+          return [key, value];
+        }),
+      ),
+    });
   }
 }

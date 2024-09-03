@@ -41,6 +41,7 @@
   },
   "devDependencies": {
     "@apillon/tests-lib": "*",
+    "@types/elliptic": "^6.4.18",
     "eslint-config-common": "*",
     "tsconfig": "*"
   },

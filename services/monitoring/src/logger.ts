@@ -242,16 +242,18 @@ export class Logger {
    * @param {ServiceContext} context - The service context for mongo access.
    */
   static async saveCloudFunctionCall(
-    { call }: { call: RequestLogDto },
+    { call }: { call: CloudFunctionCallDto },
     context: ServiceContext,
   ) {
     // Validate call DTO data
-    new CloudFunctionCallDto(call).validateOrThrow(ModelValidationException);
+    const cfCallDto = await new CloudFunctionCallDto(call).validateOrThrow(
+      ModelValidationException,
+    );
 
     await context.mongo.db
       .collection(MongoCollections.CLOUD_FUNCTION_CALL)
       .insertOne({
-        ...call.serialize(),
+        ...cfCallDto.serialize(),
         timestamp: new Date(),
       });
   }
