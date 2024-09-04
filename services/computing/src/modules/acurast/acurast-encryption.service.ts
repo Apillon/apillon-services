@@ -80,10 +80,7 @@ export class AcurastEncryptionService {
    * @param encryptionKey - The encryption key to use for AES-GCM.
    * @returns The encrypted value, IV, and authentication tag.
    */
-  private encryptWithAesGcm(
-    data: string,
-    encryptionKey: Buffer,
-  ): EncryptedValue {
+  private encryptWithAesGcm(data: any, encryptionKey: Buffer): EncryptedValue {
     const initializationVector = crypto.randomBytes(12); // IV for AES-GCM should be 12 bytes long
     const cipher = crypto.createCipheriv(
       'aes-256-gcm',
@@ -92,7 +89,7 @@ export class AcurastEncryptionService {
     );
 
     // Encrypt the data in UTF-8 format and output it as a hexadecimal string
-    let encryptedData = cipher.update(data, 'utf8', 'hex');
+    let encryptedData = cipher.update(`${data}`, 'utf8', 'hex');
     encryptedData += cipher.final('hex');
 
     return {

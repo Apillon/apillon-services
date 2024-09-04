@@ -19,7 +19,6 @@ import {
   UpdateCloudFunctionDto,
   SqlModelStatus,
   CloudFunctionCallDto,
-  AWS_KMS,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -133,13 +132,21 @@ export class AcurastService {
     event: { body: SetCloudFunctionEnvironmentDto },
     context: ServiceContext,
   ): Promise<AcurastJob> {
+    const variables = event.body.variables;
+    if (!variables?.length || !variables.every((v) => !!v.key && !!v.value)) {
+      throw new ComputingValidationException({
+        code: ComputingErrorCode.FIELD_INVALID,
+        property: 'variables',
+      });
+    }
+
     const cloudFunction = await new CloudFunction({}, context).populateByUUID(
       event.body.function_uuid,
     );
 
     cloudFunction.canModify(context);
 
-    await cloudFunction.setEnvironmentVariables(event.body.variables);
+    await cloudFunction.setEnvironmentVariables(variables);
 
     if (cloudFunction.activeJob_id) {
       const job = await new AcurastJob({}, context).populateById(
@@ -153,7 +160,7 @@ export class AcurastService {
         true,
       );
 
-      await setAcurastJobEnvironment(context, job, event.body.variables);
+      await setAcurastJobEnvironment(context, job, variables);
     }
 
     return cloudFunction.serializeByContext() as AcurastJob;
