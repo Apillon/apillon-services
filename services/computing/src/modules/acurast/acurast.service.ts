@@ -55,20 +55,9 @@ export class AcurastService {
     event: { body: CreateCloudFunctionDto },
     context: ServiceContext,
   ): Promise<CloudFunction> {
-    const encryption_key_uuid = await new AWS_KMS().generateEncryptionKey();
-
-    if (!encryption_key_uuid) {
-      throw new ComputingCodeException({
-        status: 500,
-        code: ComputingErrorCode.ENCRYPTION_KEY_GENERATION_FAILED,
-        context,
-        sourceFunction: 'AcurastService.createCloudFunction',
-      });
-    }
     const cloudFunction = new CloudFunction(event.body, context).populate({
       function_uuid: uuidV4(),
       status: SqlModelStatus.INACTIVE,
-      encryption_key_uuid,
     });
 
     await cloudFunction.validateOrThrow(ComputingModelValidationException);
