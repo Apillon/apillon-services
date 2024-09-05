@@ -13,7 +13,10 @@ import {
 } from '@apillon/workers-lib';
 import { AcurastJob } from '../modules/acurast/models/acurast-job.model';
 import { AcurastClient } from '../modules/clients/acurast.client';
-import { getAcurastEndpoint } from '../lib/utils/acurast-utils';
+import {
+  getAcurastEndpoint,
+  setAcurastJobEnvironment,
+} from '../lib/utils/acurast-utils';
 import { AcurastJobStatus } from '../config/types';
 import { CloudFunction } from '../modules/acurast/models/cloud-function.model';
 
@@ -85,6 +88,30 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
       {},
       this.context,
     ).populateByUUID(job.function_uuid);
+
+    if (job.id !== cloudFunction.activeJob_id) {
+      await this.writeLogToDb(
+        WorkerLogStatus.INFO,
+        `Updating acurast job environment: ${job.jobId}`,
+      );
+      // If job is new, set the same environment from the previous job
+      const variables = await cloudFunction.getEnvironmentVariables();
+      if (variables.length) {
+        await setAcurastJobEnvironment(
+          this.context,
+          job,
+          variables,
+          conn,
+        ).catch((err) =>
+          this.writeLogToDb(
+            WorkerLogStatus.ERROR,
+            `Error while
+            updating acurast job environment for ${job.jobId}: ${err}`,
+          ),
+        );
+      }
+    }
+
     cloudFunction.populate({
       activeJob_id: job.id,
       status: SqlModelStatus.ACTIVE,
@@ -96,7 +123,7 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
     );
 
     // Set status of all other jobs to inactive
-    await job.clearPreviousJobs(cloudFunction.function_uuid, conn);
+    await job.clearPreviousJobs(conn);
 
     await Promise.all([
       job.update(SerializeFor.UPDATE_DB, conn),

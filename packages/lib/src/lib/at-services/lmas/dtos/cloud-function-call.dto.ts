@@ -1,5 +1,5 @@
 import { prop } from '@rawmodel/core';
-import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { booleanParser, stringParser } from '@rawmodel/parsers';
 import {
   PopulateFrom,
   SerializeFor,
@@ -9,17 +9,6 @@ import { ModelBase } from '../../../base-models/base';
 import { presenceValidator } from '@rawmodel/validators';
 
 export class CloudFunctionCallDto extends ModelBase {
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE],
-    serializable: [
-      SerializeFor.SERVICE,
-      SerializeFor.SELECT_DB,
-      SerializeFor.PROFILE,
-    ],
-  })
-  public id: number;
-
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.SERVICE],

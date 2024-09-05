@@ -242,16 +242,18 @@ export class Logger {
    * @param {ServiceContext} context - The service context for mongo access.
    */
   static async saveCloudFunctionCall(
-    { call }: { call: RequestLogDto },
+    { call }: { call: CloudFunctionCallDto },
     context: ServiceContext,
   ) {
     // Validate call DTO data
-    new CloudFunctionCallDto(call).validateOrThrow(ModelValidationException);
+    const cfCallDto = await new CloudFunctionCallDto(call).validateOrThrow(
+      ModelValidationException,
+    );
 
     await context.mongo.db
       .collection(MongoCollections.CLOUD_FUNCTION_CALL)
       .insertOne({
-        ...call.serialize(),
+        ...cfCallDto.serialize(),
         timestamp: new Date(),
       });
   }
@@ -263,15 +265,19 @@ export class Logger {
    * @returns {CloudFunctionCall[]}
    */
   static async getCloudFunctionUsage(
-    params: CloudFunctionUsageDto,
+    { params }: { params: CloudFunctionUsageDto },
     context: ServiceContext,
   ) {
     return await context.mongo.db
       .collection(MongoCollections.CLOUD_FUNCTION_CALL)
       .find({
         function_uuid: params.function_uuid,
-        ...(params.dateFrom ? { timestamp: { $gte: params.dateFrom } } : {}),
-        ...(params.dateTo ? { timestamp: { $lte: params.dateTo } } : {}),
+        ...(params.dateFrom
+          ? { timestamp: { $gte: new Date(params.dateFrom) } }
+          : {}),
+        ...(params.dateTo
+          ? { timestamp: { $lte: new Date(params.dateTo) } }
+          : {}),
         ...(params.success != null ? { success: params.success } : {}),
       })
       .toArray();

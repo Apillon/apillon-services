@@ -19,7 +19,6 @@ import {
   UpdateCloudFunctionDto,
   SqlModelStatus,
   CloudFunctionCallDto,
-  AWS_KMS,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -124,6 +123,50 @@ export class AcurastService {
   }
 
   /**
+   * Sets environment variables for an existing cloud function
+   * @param {{ body: SetCloudFunctionEnvironmentDto }} event - environment variable pairs
+   * @param {ServiceContext} context
+   * @returns {Promise<AcurastJob>}
+   */
+  static async setCloudFunctionEnvironment(
+    event: { body: SetCloudFunctionEnvironmentDto },
+    context: ServiceContext,
+  ): Promise<AcurastJob> {
+    const variables = event.body.variables;
+    if (!variables?.length || !variables.every((v) => !!v.key && !!v.value)) {
+      throw new ComputingValidationException({
+        code: ComputingErrorCode.FIELD_INVALID,
+        property: 'variables',
+      });
+    }
+
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      event.body.function_uuid,
+    );
+
+    cloudFunction.canModify(context);
+
+    await cloudFunction.setEnvironmentVariables(variables);
+
+    if (cloudFunction.activeJob_id) {
+      const job = await new AcurastJob({}, context).populateById(
+        cloudFunction.activeJob_id,
+      );
+
+      job.verifyStatusAndAccess(
+        'setCloudFunctionEnvironment',
+        context,
+        AcurastJobStatus.DEPLOYED,
+        true,
+      );
+
+      await setAcurastJobEnvironment(context, job, variables);
+    }
+
+    return cloudFunction.serializeByContext() as AcurastJob;
+  }
+
+  /**
    * Creates a new acurast job with the given data
    * @param {{ body: CreateJobDto }} event - job creation params
    * @param {ServiceContext} context
@@ -132,6 +175,7 @@ export class AcurastService {
   static async createJob(
     event: { body: CreateJobDto },
     context: ServiceContext,
+    skipAccessCheck = false,
   ): Promise<AcurastJob> {
     writeLog(
       LogType.INFO,
@@ -143,28 +187,21 @@ export class AcurastService {
       event.body.function_uuid,
     );
 
-    cloudFunction.canAccess(context);
+    if (!skipAccessCheck) cloudFunction.canAccess(context);
 
     const job = new AcurastJob(event.body, context).populate({
       job_uuid: uuidV4(),
       function_uuid: cloudFunction.function_uuid,
       project_uuid: cloudFunction.project_uuid,
+      // 3 months from now, cannot be indefinite due to protocol limitations
+      // After 3 months gets renewed in RenewAcurastJobWorker
+      endTime: new Date().setMonth(new Date().getMonth() + 3),
     });
 
     await job.validateOrThrow(ComputingModelValidationException);
-    if (new Date(job.endTime).getTime() <= new Date(job.startTime).getTime()) {
-      throw new ComputingValidationException({
-        code: ComputingErrorCode.FIELD_INVALID,
-        property: 'endTime',
-      });
-    }
 
     const conn = await context.mysql.start();
     try {
-      // Note: This is and should be done on AcurastJobStatusWorker, set to inactive only after deployment
-      // Set to inactive until job gets fully deployed
-      // await job.clearJobs(cloudFunction.function_uuid, conn);
-
       await job.insert(SerializeFor.INSERT_DB, conn);
       const referenceId = uuidV4();
       await spendCreditAction(
@@ -236,42 +273,6 @@ export class AcurastService {
   }
 
   /**
-   * Sets environment variables for an existing cloud function
-   * @param {{ body: SetCloudFunctionEnvironmentDto }} event - environment variable pairs
-   * @param {ServiceContext} context
-   * @returns {Promise<AcurastJob>}
-   */
-  static async setCloudFunctionEnvironment(
-    event: { body: SetCloudFunctionEnvironmentDto },
-    context: ServiceContext,
-  ): Promise<AcurastJob> {
-    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
-      event.body.function_uuid,
-    );
-
-    cloudFunction.canModify(context);
-
-    await cloudFunction.setEnvironmentVariables(event.body.variables);
-
-    if (cloudFunction.activeJob_id) {
-      const job = await new AcurastJob({}, context).populateById(
-        cloudFunction.activeJob_id,
-      );
-
-      job.verifyStatusAndAccess(
-        'setCloudFunctionEnvironment',
-        context,
-        AcurastJobStatus.DEPLOYED,
-        true,
-      );
-
-      await setAcurastJobEnvironment(context, job, event.body.variables);
-    }
-
-    return cloudFunction.serializeByContext() as AcurastJob;
-  }
-
-  /**
    * Send a payload to a job and returns response
    * Also tracks the function call in DB and marks it as success or error
    * @param {{ payload: string, function_uuid: string }} event - job message payload
@@ -312,12 +313,14 @@ export class AcurastService {
     return await new AcurastWebsocketClient(await getAcurastWebsocketUrl())
       .send(job.publicKey, event.payload)
       .then(async (result) => {
-        new Lmas().saveCloudFunctionCall(
-          new CloudFunctionCallDto({
-            function_uuid: job.function_uuid,
-            success: true,
-          }),
-        );
+        new Lmas()
+          .saveCloudFunctionCall(
+            new CloudFunctionCallDto({
+              function_uuid: job.function_uuid,
+              success: true,
+            }),
+          )
+          .catch();
         return result;
       })
       .catch(async (err) => {
@@ -366,7 +369,7 @@ export class AcurastService {
 
   /**
    * Unregister an acurast job and mark as deleted
-   * @param {{ job_uuid: string }} event - environment variable pairs
+   * @param {{ job_uuid: string }} event
    * @param {ServiceContext} context
    * @returns {Promise<AcurastJob>}
    */

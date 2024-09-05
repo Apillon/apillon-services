@@ -1,12 +1,11 @@
 import { prop } from '../../../base-models/base';
-import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { numberSizeValidator, presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
   SerializeFor,
   ValidatorErrorCode,
 } from '../../../../config/types';
-import { minutesInFutureValidator } from '../../../validators';
 import { BaseComputingEntityDto } from './base-computing-entity.dto';
 
 export class CreateJobDto extends BaseComputingEntityDto {
@@ -50,38 +49,4 @@ export class CreateJobDto extends BaseComputingEntityDto {
     defaultValue: 1,
   })
   public slots: number;
-
-  @prop({
-    parser: { resolver: dateParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.COMPUTING_FIELD_NOT_PRESENT,
-      },
-      {
-        resolver: minutesInFutureValidator(3),
-        code: ValidatorErrorCode.JOB_DATE_NOT_VALID,
-      },
-    ],
-  })
-  startTime: Date;
-
-  @prop({
-    parser: { resolver: dateParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.COMPUTING_FIELD_NOT_PRESENT,
-      },
-      {
-        resolver: minutesInFutureValidator(15),
-        code: ValidatorErrorCode.JOB_DATE_NOT_VALID,
-      },
-    ],
-  })
-  endTime: Date;
 }

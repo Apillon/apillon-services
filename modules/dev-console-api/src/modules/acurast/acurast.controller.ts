@@ -140,6 +140,7 @@ export class AcurastController {
     @Param('function_uuid') function_uuid: string,
     @Query() query: CloudFunctionUsageDto,
   ) {
+    query.function_uuid = function_uuid;
     return await this.acurastService.getCloudFunctionUsage(query);
   }
 
