@@ -316,12 +316,14 @@ export class AcurastService {
     return await new AcurastWebsocketClient(await getAcurastWebsocketUrl())
       .send(job.publicKey, event.payload)
       .then(async (result) => {
-        new Lmas().saveCloudFunctionCall(
-          new CloudFunctionCallDto({
-            function_uuid: job.function_uuid,
-            success: true,
-          }),
-        );
+        new Lmas()
+          .saveCloudFunctionCall(
+            new CloudFunctionCallDto({
+              function_uuid: job.function_uuid,
+              success: true,
+            }),
+          )
+          .catch();
         return result;
       })
       .catch(async (err) => {

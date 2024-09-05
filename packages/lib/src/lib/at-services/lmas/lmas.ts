@@ -202,7 +202,7 @@ export class Lmas extends BaseService {
   }
 
   public saveCloudFunctionCall(call: CloudFunctionCallDto) {
-    this.callService({
+    return this.callService({
       eventName: LmasEventType.SAVE_CLOUD_FUNCTION_CALL,
       call: call.serialize(),
     });

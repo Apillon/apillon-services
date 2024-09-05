@@ -265,15 +265,19 @@ export class Logger {
    * @returns {CloudFunctionCall[]}
    */
   static async getCloudFunctionUsage(
-    params: CloudFunctionUsageDto,
+    { params }: { params: CloudFunctionUsageDto },
     context: ServiceContext,
   ) {
     return await context.mongo.db
       .collection(MongoCollections.CLOUD_FUNCTION_CALL)
       .find({
         function_uuid: params.function_uuid,
-        ...(params.dateFrom ? { timestamp: { $gte: params.dateFrom } } : {}),
-        ...(params.dateTo ? { timestamp: { $lte: params.dateTo } } : {}),
+        ...(params.dateFrom
+          ? { timestamp: { $gte: new Date(params.dateFrom) } }
+          : {}),
+        ...(params.dateTo
+          ? { timestamp: { $lte: new Date(params.dateTo) } }
+          : {}),
         ...(params.success != null ? { success: params.success } : {}),
       })
       .toArray();
