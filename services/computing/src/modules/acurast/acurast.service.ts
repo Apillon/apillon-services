@@ -175,6 +175,7 @@ export class AcurastService {
   static async createJob(
     event: { body: CreateJobDto },
     context: ServiceContext,
+    skipAccessCheck = false,
   ): Promise<AcurastJob> {
     writeLog(
       LogType.INFO,
@@ -186,7 +187,7 @@ export class AcurastService {
       event.body.function_uuid,
     );
 
-    cloudFunction.canAccess(context);
+    if (!skipAccessCheck) cloudFunction.canAccess(context);
 
     const job = new AcurastJob(event.body, context).populate({
       job_uuid: uuidV4(),
@@ -201,10 +202,6 @@ export class AcurastService {
 
     const conn = await context.mysql.start();
     try {
-      // Note: This is and should be done on AcurastJobStatusWorker, set to inactive only after deployment
-      // Set to inactive until job gets fully deployed
-      // await job.clearJobs(cloudFunction.function_uuid, conn);
-
       await job.insert(SerializeFor.INSERT_DB, conn);
       const referenceId = uuidV4();
       await spendCreditAction(

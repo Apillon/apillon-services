@@ -6,7 +6,7 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
     INSERT INTO \`${DbTables.JOB}\` (\`name\`, \`channel\`, \`interval\`, \`nextRun\`, \`status\`, \`timeout\`)
-    VALUES ('${WorkerName.ACURAST_JOB_STATUS_WORKER}', 0, '*/2 * * * *', '2024-01-01 10:00:00', 9, 900);
+    VALUES ('${WorkerName.RENEW_ACURAST_JOB_WORKER}', 0, '0 0 */1 * *', '2024-01-01 10:00:00', 9, 900);
   `);
 }
 
@@ -16,6 +16,6 @@ export async function downgrade(
   await queryFn(`
     DELETE
     FROM \`${DbTables.JOB}\`
-    WHERE name = '${WorkerName.ACURAST_JOB_STATUS_WORKER}';
+    WHERE name = '${WorkerName.RENEW_ACURAST_JOB_WORKER}';
   `);
 }

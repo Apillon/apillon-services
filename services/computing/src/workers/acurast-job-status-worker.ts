@@ -90,10 +90,26 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
     ).populateByUUID(job.function_uuid);
 
     if (job.id !== cloudFunction.activeJob_id) {
+      await this.writeLogToDb(
+        WorkerLogStatus.INFO,
+        `Updating acurast job environment: ${job.jobId}`,
+      );
       // If job is new, set the same environment from the previous job
       const variables = await cloudFunction.getEnvironmentVariables();
-      if (variables.length)
-        await setAcurastJobEnvironment(this.context, job, variables, conn);
+      if (variables.length) {
+        await setAcurastJobEnvironment(
+          this.context,
+          job,
+          variables,
+          conn,
+        ).catch((err) =>
+          this.writeLogToDb(
+            WorkerLogStatus.ERROR,
+            `Error while
+            updating acurast job environment for ${job.jobId}: ${err}`,
+          ),
+        );
+      }
     }
 
     cloudFunction.populate({
@@ -107,7 +123,7 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
     );
 
     // Set status of all other jobs to inactive
-    await job.clearPreviousJobs(cloudFunction.function_uuid, conn);
+    await job.clearPreviousJobs(conn);
 
     await Promise.all([
       job.update(SerializeFor.UPDATE_DB, conn),
