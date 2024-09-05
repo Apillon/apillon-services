@@ -192,15 +192,12 @@ export class AcurastService {
       job_uuid: uuidV4(),
       function_uuid: cloudFunction.function_uuid,
       project_uuid: cloudFunction.project_uuid,
+      // 3 months from now, cannot be indefinite due to protocol limitations
+      // After 3 months gets renewed in RenewAcurastJobWorker
+      endTime: new Date().setMonth(new Date().getMonth() + 3),
     });
 
     await job.validateOrThrow(ComputingModelValidationException);
-    if (new Date(job.endTime).getTime() <= new Date(job.startTime).getTime()) {
-      throw new ComputingValidationException({
-        code: ComputingErrorCode.FIELD_INVALID,
-        property: 'endTime',
-      });
-    }
 
     const conn = await context.mysql.start();
     try {

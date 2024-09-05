@@ -92,8 +92,10 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
     if (job.id !== cloudFunction.activeJob_id) {
       // If job is new, set the same environment from the previous job
       const variables = await cloudFunction.getEnvironmentVariables();
-      await setAcurastJobEnvironment(this.context, job, variables, conn);
+      if (variables.length)
+        await setAcurastJobEnvironment(this.context, job, variables, conn);
     }
+
     cloudFunction.populate({
       activeJob_id: job.id,
       status: SqlModelStatus.ACTIVE,

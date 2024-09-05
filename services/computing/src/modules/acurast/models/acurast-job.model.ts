@@ -123,25 +123,7 @@ export class AcurastJob extends UuidSqlModel {
   public scriptCid: string;
 
   /**
-   * The timestamp where the job will become available
-   */
-  @prop({
-    parser: { resolver: dateParser() },
-    populatable,
-    serializable: serializableProfile,
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-    // 5 min from now
-    fakeValue: Date.now() + 5 * 60_000,
-  })
-  public startTime: Date;
-
-  /**
-   * The timestamp where the job will expire
+   * The timestamp when the job will expire
    */
   @prop({
     parser: { resolver: dateParser() },

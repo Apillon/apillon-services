@@ -2,8 +2,7 @@ import { SubmittableExtrinsic } from '@polkadot/api-base/types';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { AcurastJob } from '../acurast/models/acurast-job.model';
 import { LogType, safeJsonParse, writeLog } from '@apillon/lib';
-import { Codec } from '@polkadot/types-codec/types';
-import { EnvVar, EnvVarEncrypted } from '../acurast/acurast-encryption.service';
+import { EnvVarEncrypted } from '../acurast/acurast-encryption.service';
 
 export class AcurastClient {
   private api: ApiPromise;
@@ -33,15 +32,9 @@ export class AcurastClient {
     job: AcurastJob,
   ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
-    // Uncomment below for local testing
-    // const addMinutes = (date: Date, seconds: number) => {
-    //   const t = new Date(date);
-    //   t.setMinutes(t.getMinutes() + seconds);
-    //   return t;
-    // };
-    // const startTime = this.addMinutes(new Date(), 10).getTime();
-    // const endTime = this.addMinutes(startTime, 60).getTime();
-    const startTime = job.startTime.getTime();
+
+    // 4 minutes from now, cannot be at the same moment due to protocol limitations
+    const startTime = Date.now() + 3 * 60_000;
     const endTime = job.endTime.getTime();
 
     const interval = endTime - startTime;
