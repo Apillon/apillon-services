@@ -185,6 +185,24 @@ export class AcurastService {
   }
 
   /**
+   * Gets environment variables for an existing cloud function
+   * @param {ServiceContext} context
+   * @returns {Promise<AcurastJob>}
+   */
+  static async getCloudFunctionEnvironment(
+    { function_uuid }: { function_uuid: string },
+    context: ServiceContext,
+  ): Promise<EnvVar[]> {
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      function_uuid,
+    );
+
+    cloudFunction.canModify(context);
+
+    return await cloudFunction.getEnvironmentVariables();
+  }
+
+  /**
    * Creates a new acurast job with the given data
    * @param {{ body: CreateJobDto }} event - job creation params
    * @param {ServiceContext} context
