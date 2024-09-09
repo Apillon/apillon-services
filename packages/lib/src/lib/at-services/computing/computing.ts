@@ -191,6 +191,13 @@ export class ComputingMicroservice extends BaseService {
     });
   }
 
+  public async getCloudFunctionEnvironment(function_uuid: string) {
+    return await this.callService({
+      eventName: ComputingEventType.GET_CLOUD_FUNCTION_ENVIRONMENT,
+      function_uuid,
+    });
+  }
+
   public async executeCloudFunction(payload: string, function_uuid: string) {
     return await this.callService({
       eventName: ComputingEventType.EXECUTE_CLOUD_FUNCTION,

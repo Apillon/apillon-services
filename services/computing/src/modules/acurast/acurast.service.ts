@@ -19,6 +19,8 @@ import {
   UpdateCloudFunctionDto,
   SqlModelStatus,
   CloudFunctionCallDto,
+  StorageMicroservice,
+  CreateBucketDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -42,6 +44,7 @@ import {
 } from '../../config/types';
 import { AcurastWebsocketClient } from '../clients/acurast-websocket.client';
 import { CloudFunction } from './models/cloud-function.model';
+import { EnvVar } from './acurast-encryption.service';
 
 export class AcurastService {
   /**
@@ -60,6 +63,21 @@ export class AcurastService {
     });
 
     await cloudFunction.validateOrThrow(ComputingModelValidationException);
+
+    console.info(
+      `Creating bucket for cloud function with name ${cloudFunction.name}.`,
+    );
+    const bucket = (
+      await new StorageMicroservice(context).createBucket(
+        new CreateBucketDto({
+          project_uuid: cloudFunction.project_uuid,
+          bucketType: 1, // Storage
+          name: `${cloudFunction.name} Bucket`,
+        }),
+      )
+    ).data;
+    cloudFunction.bucket_uuid = bucket.bucket_uuid;
+
     await cloudFunction.insert();
 
     return cloudFunction.serializeByContext() as CloudFunction;
@@ -164,6 +182,24 @@ export class AcurastService {
     }
 
     return cloudFunction.serializeByContext() as AcurastJob;
+  }
+
+  /**
+   * Gets environment variables for an existing cloud function
+   * @param {ServiceContext} context
+   * @returns {Promise<AcurastJob>}
+   */
+  static async getCloudFunctionEnvironment(
+    { function_uuid }: { function_uuid: string },
+    context: ServiceContext,
+  ): Promise<EnvVar[]> {
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      function_uuid,
+    );
+
+    cloudFunction.canModify(context);
+
+    return await cloudFunction.getEnvironmentVariables();
   }
 
   /**

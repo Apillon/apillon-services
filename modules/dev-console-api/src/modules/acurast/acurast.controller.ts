@@ -132,6 +132,23 @@ export class AcurastController {
     return await this.acurastService.setCloudFunctionEnvironment(context, body);
   }
 
+  @Get('cloud-functions/:function_uuid/environment')
+  @Validation({ dto: SetCloudFunctionEnvironmentDto })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getCloudFunctionEnvironment(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('function_uuid') function_uuid: string,
+  ) {
+    return await this.acurastService.getCloudFunctionEnvironment(
+      context,
+      function_uuid,
+    );
+  }
+
   @Get('cloud-functions/:function_uuid/usage')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: CloudFunctionUsageDto, validateFor: ValidateFor.QUERY })
