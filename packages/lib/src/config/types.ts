@@ -228,6 +228,10 @@ export enum MailEventType {
   SEND_MAIL = 'send-mail',
   SEND_CUSTOM_MAIL = 'send-custom-mail',
   SET_MAILERLITE_FIELD = 'set-mailerlite-field',
+  GET_NOTIFICATIONS = 'get-notifications',
+  CREATE_NOTIFICATION = 'create-notification',
+  UPDATE_NOTIFICATION = 'update-notification',
+  DELETE_NOTIFICATION = 'delete-notification',
 }
 
 export enum ScsEventType {
@@ -809,7 +813,6 @@ export enum ValidatorErrorCode {
   PRODUCT_CATEGORY_NOT_VALID = 422001004,
   CONFIGURE_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001005,
   CONFIGURE_CREDIT_REQUIRED_DATA_NOT_VALID = 422001006,
-  INVALID_NOTIFICATION_TYPE = 422001007,
   //#endregion
 
   //#region short url
@@ -827,6 +830,9 @@ export enum ValidatorErrorCode {
 
   INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001120,
   DEPLOY_INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001121,
+
+  //#region Mailing MS
+  INVALID_NOTIFICATION_TYPE = 422001201,
 }
 
 /**

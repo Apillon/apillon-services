@@ -21,8 +21,6 @@ import { InvoicesQueryFilter } from './dtos/invoices-query-filter.dto';
 import { UpdateSubscriptionDto } from './dtos/update-subscription.dto';
 import { PricelistQueryFilter } from './dtos/pricelist-query-filter.dto';
 import { ConfigureCreditDto } from './dtos/configure-credit.dto';
-import { NotificationQueryFilter } from './dtos/notification-query-filter.dto';
-import { CreateOrUpdateNotificationDto } from './dtos/create-or-update-notification.dto';
 
 /**
  * System config Service client
@@ -278,38 +276,5 @@ export class Scs extends BaseService {
     });
   }
 
-  //#endregion
-
-  //#region notifications
-  public async getNotificationList(query: NotificationQueryFilter) {
-    return await this.callService({
-      eventName: ScsEventType.GET_NOTIFICATIONS,
-      query,
-    });
-  }
-
-  public async createNotification(data: CreateOrUpdateNotificationDto) {
-    return await this.callService({
-      eventName: ScsEventType.CREATE_NOTIFICATION,
-      data,
-    });
-  }
-
-  public async updateNotification(
-    id: number,
-    data: CreateOrUpdateNotificationDto,
-  ) {
-    return await this.callService({
-      eventName: ScsEventType.UPDATE_NOTIFICATION,
-      data: { id, data },
-    });
-  }
-
-  public async deleteNotification(id: number) {
-    return await this.callService({
-      eventName: ScsEventType.DELETE_NOTIFICATION,
-      id,
-    });
-  }
   //#endregion
 }

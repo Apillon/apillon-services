@@ -1,6 +1,6 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../../context';
-import { Ams, CodeException, Scs } from '@apillon/lib';
+import { Ams, CodeException, Mailing } from '@apillon/lib';
 import { CreateOrUpdateNotificationDto } from './dtos/create-or-update-notification.dto';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
 
@@ -21,7 +21,7 @@ export class NotificationService {
       }
       body.userId = user.data.id;
     }
-    return (await new Scs(context).createNotification(body)).data;
+    return (await new Mailing(context).createNotification(body)).data;
   }
 
   async updateNotification(
@@ -40,10 +40,10 @@ export class NotificationService {
       }
       data.userId = user.data.id;
     }
-    return (await new Scs(context).updateNotification(id, data)).data;
+    return (await new Mailing(context).updateNotification(id, data)).data;
   }
 
   async deleteNotification(id: number, context: DevConsoleApiContext) {
-    return (await new Scs(context).deleteNotification(id)).data;
+    return (await new Mailing(context).deleteNotification(id)).data;
   }
 }

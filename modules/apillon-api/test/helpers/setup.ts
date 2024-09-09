@@ -28,6 +28,7 @@ export async function setupTest(
   env.MONITORING_MONGO_SRV = null; // safety
   env.STORAGE_MYSQL_HOST = null; // safety
   env.CONFIG_MYSQL_HOST = null; // safety
+  env.MAILING_MYSQL_HOST = null; // safety
 
   //Solve problem with certificates, when accessing ipfs gateway content through supertest request
   process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';

@@ -35,7 +35,7 @@ describe('Notification controller tests', () => {
         userId: testUser.user.id,
       };
 
-      await stage.db.config.paramExecute(
+      await stage.db.mailing.paramExecute(
         `INSERT INTO notification (type, userId) VALUES ('${createdNotification.type}', ${createdNotification.userId})`,
       );
       const response = await request(stage.http)
@@ -65,7 +65,7 @@ describe('Notification controller tests', () => {
         userId: testUser.user.id,
       };
 
-      await stage.db.config.paramExecute(
+      await stage.db.mailing.paramExecute(
         `INSERT INTO notification (type, userId) VALUES (${createdNotification.type}, ${createdNotification.userId})`,
       );
 
@@ -92,7 +92,7 @@ describe('Notification controller tests', () => {
       const createdNotification = {
         type: NotificationType.UNKNOWN,
       };
-      await stage.db.config.paramExecute(
+      await stage.db.mailing.paramExecute(
         `INSERT INTO notification (type) VALUES (${createdNotification.type})`,
       );
 

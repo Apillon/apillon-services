@@ -1,6 +1,5 @@
 import { DbTables } from '../../config/types';
 import { SqlModelStatus } from '@apillon/lib';
-
 export const upgrade = async (
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> => {
@@ -19,7 +18,6 @@ export const upgrade = async (
     );`,
   );
 };
-
 export const downgrade = async (
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> => {

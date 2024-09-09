@@ -10,20 +10,16 @@ import {
   prop,
   selectAndCountQuery,
 } from '@apillon/lib';
-
 import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables } from '../../../config/types';
-
 /**
  * Used to store user's notifications on the application.
  */
 export class Notification extends AdvancedSQLModel {
   public readonly tableName = DbTables.NOTIFICATION;
-
   public constructor(data: any, context: any) {
     super(data, context);
   }
-
   @prop({
     parser: { resolver: integerParser() },
     serializable: [
@@ -44,7 +40,6 @@ export class Notification extends AdvancedSQLModel {
     ],
   })
   public type: NotificationType | null;
-
   @prop({
     parser: { resolver: stringParser() },
     serializable: [
@@ -88,23 +83,20 @@ export class Notification extends AdvancedSQLModel {
     const fieldMap = {
       id: 'n.id',
     };
-
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
       'n',
       fieldMap,
       filter.serialize(),
     );
-
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields('n', '', SerializeFor.SELECT_DB)}`,
       qFrom: `FROM \`${DbTables.NOTIFICATION}\` n
-              WHERE (@type IS NULL or n.type = @type) AND (n.userId = ${context.user.id} OR n.userId IS NULL) AND (@status IS NULL OR n.status = @status)`,
+                WHERE (@type IS NULL or n.type = @type) AND (n.userId = ${context.user.id} OR n.userId IS NULL) AND (@status IS NULL OR n.status = @status)`,
       qFilter: `
-              ORDER BY ${filters.orderStr}
-              LIMIT ${filters.limit} OFFSET ${filters.offset};`,
+                ORDER BY ${filters.orderStr}
+                LIMIT ${filters.limit} OFFSET ${filters.offset};`,
     };
-
     return selectAndCountQuery(context.mysql, sqlQuery, params, 'n.id');
   }
 }

@@ -310,17 +310,6 @@ export class AuthUser extends AdvancedSQLModel {
     await this.assignRole('', DefaultUserRole.USER, conn);
   }
 
-  public async getActiveUsers(): Promise<this[]> {
-    const data = await this.db().paramExecute(
-      `
-        SELECT ${this.generateSelectFields()}
-        FROM \`${DbTables.AUTH_USER}\` u
-        WHERE u.status = ${SqlModelStatus.ACTIVE}
-      `,
-    );
-    return data;
-  }
-
   public async assignRole(
     project_uuid: string,
     role_id: number,

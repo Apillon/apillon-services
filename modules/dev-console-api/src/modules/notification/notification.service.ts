@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
-import { NotificationQueryFilter, Scs } from '@apillon/lib';
+import { Mailing, NotificationQueryFilter } from '@apillon/lib';
 
 @Injectable()
 export class NotificationService {
@@ -8,6 +8,6 @@ export class NotificationService {
     context: DevConsoleApiContext,
     query: NotificationQueryFilter,
   ) {
-    return (await new Scs(context).getNotificationList(query)).data;
+    return (await new Mailing(context).getNotificationList(query)).data;
   }
 }

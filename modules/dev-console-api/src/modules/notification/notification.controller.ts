@@ -12,7 +12,7 @@ import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('notification')
 export class NotificationController {
-  constructor(private notificatioonService: NotificationService) {}
+  constructor(private notificationService: NotificationService) {}
 
   @Get()
   @Permissions({ role: DefaultUserRole.USER })
@@ -22,6 +22,6 @@ export class NotificationController {
     @Ctx() context: DevConsoleApiContext,
     @Query() query: NotificationQueryFilter,
   ) {
-    return await this.notificatioonService.getNotificationList(context, query);
+    return await this.notificationService.getNotificationList(context, query);
   }
 }

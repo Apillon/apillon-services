@@ -27,6 +27,7 @@ export async function setupTest(
   env.ACCESS_MYSQL_HOST = null; // safety
   env.STORAGE_MYSQL_HOST = null; // safety
   env.CONFIG_MYSQL_HOST = null; // safety
+  env.MAILING_MYSQL_HOST = null; // safety
   env.REFERRAL_MYSQL_HOST = null; // safety
   env.NFTS_MYSQL_HOST = null; // safety
   env.AUTH_API_MYSQL_HOST = null; // safety

@@ -6,7 +6,6 @@ import {
 } from '@apillon/tests-lib';
 import { setupTest } from '../../../../../test/helpers/setup';
 import * as request from 'supertest';
-import { ServiceStatusType } from '../../../../config/types';
 import {
   DefaultUserRole,
   NotificationType,
@@ -33,7 +32,7 @@ describe('Notification tests', () => {
   });
 
   afterEach(async () => {
-    await stage.db.config.paramExecute('DELETE FROM notification');
+    await stage.db.mailing.paramExecute('DELETE FROM notification');
   });
 
   afterAll(async () => {
@@ -59,7 +58,7 @@ describe('Notification tests', () => {
       expect(responseNotification.userId).toBe(requestBody.userId);
       expect(responseNotification.message).toBeNull();
 
-      const data = await stage.db.config.paramExecute(`
+      const data = await stage.db.mailing.paramExecute(`
         SELECT * FROM notification`);
 
       expect(data).toHaveLength(1);
@@ -84,7 +83,7 @@ describe('Notification tests', () => {
       expect(responseNotification.userId).toBe(testUser.user.id);
       expect(responseNotification.message).toBeNull();
 
-      const data = await stage.db.config.paramExecute(`
+      const data = await stage.db.mailing.paramExecute(`
         SELECT * FROM notification`);
 
       expect(data).toHaveLength(1);
@@ -108,7 +107,7 @@ describe('Notification tests', () => {
       expect(responseNotification.userId).toBeNull();
       expect(responseNotification.message).toBeNull();
 
-      const data = await stage.db.config.paramExecute(`
+      const data = await stage.db.mailing.paramExecute(`
         SELECT * FROM notification`);
 
       expect(data).toHaveLength(1);
@@ -143,7 +142,7 @@ describe('Notification tests', () => {
       const requestBody = {
         id: 2,
         message: 'Service unavailable',
-        type: ServiceStatusType.ERROR,
+        type: NotificationType.UNKNOWN,
       };
       const response = await request(stage.http)
         .post('/notification')
@@ -156,7 +155,7 @@ describe('Notification tests', () => {
       const requestBody = {
         id: 3,
         message: 'Service unavailable',
-        type: ServiceStatusType.ERROR,
+        type: NotificationType.UNKNOWN,
       };
       const response = await request(stage.http)
         .post('/notification')
@@ -167,10 +166,10 @@ describe('Notification tests', () => {
 
   describe('Update notification', () => {
     test('Admin can update a global notification', async () => {
-      await stage.db.config.paramExecute(`
+      await stage.db.mailing.paramExecute(`
       INSERT INTO notification(message) VALUES ('Initial message')`);
 
-      const lastInsertId = await stage.db.config.paramExecute(
+      const lastInsertId = await stage.db.mailing.paramExecute(
         `SELECT LAST_INSERT_ID() as id`,
       );
 
@@ -192,10 +191,10 @@ describe('Notification tests', () => {
     });
 
     test("Admin can update user's notification", async () => {
-      await stage.db.config.paramExecute(`
+      await stage.db.mailing.paramExecute(`
       INSERT INTO notification(message, userId) VALUES ('Initial message', ${testUser.user.id})`);
 
-      const lastInsertId = await stage.db.config.paramExecute(
+      const lastInsertId = await stage.db.mailing.paramExecute(
         `SELECT LAST_INSERT_ID() as id`,
       );
 
@@ -219,10 +218,10 @@ describe('Notification tests', () => {
     });
 
     test('User cannot update notifications', async () => {
-      await stage.db.config.paramExecute(`
+      await stage.db.mailing.paramExecute(`
       INSERT INTO notification(message) VALUES ('Initial message')`);
 
-      const lastInsertId = await stage.db.config.paramExecute(
+      const lastInsertId = await stage.db.mailing.paramExecute(
         `SELECT LAST_INSERT_ID() as id`,
       );
 
@@ -243,10 +242,10 @@ describe('Notification tests', () => {
 
   describe('Delete notification', () => {
     test('Admin can delete a notification', async () => {
-      await stage.db.config.paramExecute(`
+      await stage.db.mailing.paramExecute(`
       INSERT INTO notification(message) VALUES ('Initial message')`);
 
-      const lastInsertId = await stage.db.config.paramExecute(
+      const lastInsertId = await stage.db.mailing.paramExecute(
         `SELECT LAST_INSERT_ID() as id`,
       );
 
@@ -262,7 +261,7 @@ describe('Notification tests', () => {
       expect(responseNotification.status).toBe(SqlModelStatus.DELETED);
       expect(responseNotification.message).toBe('Initial message');
 
-      const data = await stage.db.config.paramExecute(`
+      const data = await stage.db.mailing.paramExecute(`
         SELECT * FROM notification`);
 
       expect(data).toHaveLength(1);

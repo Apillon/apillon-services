@@ -1,4 +1,4 @@
-import { booleanParser, integerParser } from '@rawmodel/parsers';
+import { integerParser } from '@rawmodel/parsers';
 import {
   NotificationType,
   PopulateFrom,
