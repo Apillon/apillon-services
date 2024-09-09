@@ -34,8 +34,6 @@ import { FileUploadSession } from '../modules/storage/models/file-upload-session
 import { WorkerName } from './worker-executor';
 import { Readable } from 'stream';
 
-// Maximum file size for which we will check if it is HTML. Currently approx. 100KB
-const MAX_HTML_SIZE_IN_B = 100000;
 export class SyncToIPFSWorker extends BaseQueueWorker {
   public constructor(
     workerDefinition: WorkerDefinition,
@@ -121,7 +119,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         if (needsHtmlValidation) {
           try {
             await runWithWorkers(files, 20, this.context, async (file) => {
-              if (file.size > MAX_HTML_SIZE_IN_B) {
+              if (file.size > env.STORAGE_MAX_HTML_SIZE_IN_B) {
                 return;
               }
               let fileStream = await s3Client.get(
