@@ -76,6 +76,13 @@ export class CloudFunction extends UuidSqlModel {
     parser: { resolver: stringParser() },
     populatable,
     serializable,
+  })
+  public bucket_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable,
+    serializable,
     validators: [
       {
         resolver: presenceValidator(),
@@ -90,7 +97,6 @@ export class CloudFunction extends UuidSqlModel {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
     serializable: [
-      SerializeFor.SELECT_DB,
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
