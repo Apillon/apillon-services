@@ -44,7 +44,7 @@ import {
 } from '../../config/types';
 import { AcurastWebsocketClient } from '../clients/acurast-websocket.client';
 import { CloudFunction } from './models/cloud-function.model';
-import { EnvVar } from './acurast-encryption.service';
+import { JobEnvVar } from './acurast-types';
 
 export class AcurastService {
   /**
@@ -192,7 +192,7 @@ export class AcurastService {
   static async getCloudFunctionEnvironment(
     { function_uuid }: { function_uuid: string },
     context: ServiceContext,
-  ): Promise<EnvVar[]> {
+  ): Promise<JobEnvVar[]> {
     const cloudFunction = await new CloudFunction({}, context).populateByUUID(
       function_uuid,
     );
@@ -420,6 +420,7 @@ export class AcurastService {
     const conn = await context.mysql.start();
     try {
       await deleteAcurastJob(context, job, conn);
+      await context.mysql.commit(conn);
 
       await new Lmas().writeLog({
         context,

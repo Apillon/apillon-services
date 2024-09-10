@@ -2,7 +2,7 @@ import { SubmittableExtrinsic } from '@polkadot/api-base/types';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { AcurastJob } from '../acurast/models/acurast-job.model';
 import { LogType, safeJsonParse, writeLog } from '@apillon/lib';
-import { EnvVarEncrypted } from '../acurast/acurast-encryption.service';
+import { EncryptedEnvVar, JobPublicKey } from '../acurast/acurast-types';
 
 export class AcurastClient {
   private api: ApiPromise;
@@ -58,7 +58,7 @@ export class AcurastClient {
 
   async createSetEnvironmentTransaction(
     job: AcurastJob,
-    variables: EnvVarEncrypted[],
+    variables: EncryptedEnvVar[],
   ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
     const codec = this.variablesToCodec(job.publicKey, variables);
@@ -119,16 +119,16 @@ export class AcurastClient {
   }
 
   /**
-   * Get a job's matches
+   * Get a job's public keys
    * @param {string} deployerAddress - Deployer wallet address
    * @param {string} jobAccount - Acurast wallet address of the processor
    * @param {number} jobId - on-chain ID of the job
    */
-  async getJobPublicKey(
+  async getJobPublicKeys(
     deployerAddress: string,
     jobAccount: string,
     jobId: number,
-  ): Promise<string> {
+  ): Promise<JobPublicKey[]> {
     await this.initializeProvider();
 
     const storedMatches = await this.api.query.acurastMarketplace.storedMatches(
@@ -141,7 +141,7 @@ export class AcurastClient {
       `[Acurast] storedMatches response for jobId ${jobId}: ${storedMatches.toString()}`,
     );
 
-    return JSON.parse(storedMatches.toString())?.pubKeys[0]?.secp256r1;
+    return JSON.parse(storedMatches.toString()).pubKeys;
   }
 
   async destroy() {
@@ -151,17 +151,16 @@ export class AcurastClient {
     }
   }
 
-  private variablesToCodec(publicKey: string, variables: EnvVarEncrypted[]) {
+  private variablesToCodec(publicKey: string, variables: EncryptedEnvVar[]) {
+    const encodedVariables = variables.map((variable) => {
+      const key = `0x${Buffer.from(variable.key).toString('hex')}`;
+      const value = `0x${variable.encryptedValue.iv}${variable.encryptedValue.ciphertext}${variable.encryptedValue.authTag}`;
+      return [key, value];
+    });
+
     return this.api.createType('AcurastCommonEnvironment', {
       publicKey: this.api.createType('Bytes', publicKey),
-      variables: this.api.createType(
-        'Vec<(Bytes, Bytes)>',
-        variables.map((variable) => {
-          const key = `0x${Buffer.from(variable.key).toString('hex')}`;
-          const value = `0x${variable.encryptedValue.iv}${variable.encryptedValue.ciphertext}${variable.encryptedValue.authTag}`;
-          return [key, value];
-        }),
-      ),
+      variables: this.api.createType('Vec<(Bytes, Bytes)>', encodedVariables),
     });
   }
 }

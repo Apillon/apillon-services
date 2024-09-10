@@ -23,7 +23,7 @@ import {
   ComputingModelValidationException,
   ComputingNotFoundException,
 } from '../../../lib/exceptions';
-import { EnvVar as AcurastEnvVar } from '../acurast-encryption.service';
+import { JobEnvVar } from '../acurast-types';
 
 const populatable = [
   PopulateFrom.DB,
@@ -193,7 +193,7 @@ export class CloudFunction extends UuidSqlModel {
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'd.id');
   }
 
-  public async getEnvironmentVariables(): Promise<AcurastEnvVar[]> {
+  public async getEnvironmentVariables(): Promise<JobEnvVar[]> {
     if (!this.encrypted_variables) return [];
 
     const decryptedVariables = await new AWS_KMS().decrypt(
@@ -204,7 +204,7 @@ export class CloudFunction extends UuidSqlModel {
     return safeJsonParse(decryptedVariables, []);
   }
 
-  public async setEnvironmentVariables(variables: AcurastEnvVar[]) {
+  public async setEnvironmentVariables(variables: JobEnvVar[]) {
     if (!variables?.length) {
       this.encrypted_variables = null;
       return;

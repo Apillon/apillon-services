@@ -1,15 +1,9 @@
 {
-    "extends": "tsconfig/service.json",
-    "compilerOptions": {
-        "outDir": "./dist",
-        "removeComments": true,
-    },
-    "include": [
-        "**/*.ts",
-        "**/*.tsx"
-    ],
-    "exclude": [
-        "node_modules",
-        "dist"
-    ]
+  "extends": "tsconfig/service.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "removeComments": true
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "test/**", "dist", "**/*spec.ts"]
 }

@@ -20,11 +20,8 @@ import { Transaction } from '../../modules/transaction/models/transaction.model'
 import { TransactionService } from '../../modules/transaction/transaction.service';
 import { AcurastClient } from '../../modules/clients/acurast.client';
 import { v4 as uuidV4 } from 'uuid';
-import { Codec } from '@polkadot/types-codec/types';
-import {
-  AcurastEncryptionService,
-  EnvVar,
-} from '../../modules/acurast/acurast-encryption.service';
+import { AcurastEncryptionService } from '../../modules/acurast/acurast-encryption.service';
+import { JobEnvVar } from '../../modules/acurast/acurast-types';
 
 export async function getAcurastEndpoint(context: Context) {
   return (
@@ -90,15 +87,21 @@ export async function deployAcurastJob(
 export async function setAcurastJobEnvironment(
   context: ServiceContext,
   job: AcurastJob,
-  variables: EnvVar[],
+  variables: JobEnvVar[],
   conn?: PoolConnection,
 ) {
   const acurastClient = new AcurastClient(await getAcurastEndpoint(context));
 
+  const jobPublicKeys = await acurastClient.getJobPublicKeys(
+    job.deployerAddress,
+    job.account,
+    job.jobId,
+  );
+
   const encryptedVariables =
     await new AcurastEncryptionService().encryptEnvironmentVariables(
-      job.publicKey,
       variables,
+      jobPublicKeys,
     );
 
   const transaction = await acurastClient.createSetEnvironmentTransaction(
