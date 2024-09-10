@@ -21,6 +21,7 @@ export enum SubstrateChain {
   XSOCIAL = 7,
   ASTAR = 8,
   ACURAST = 9,
+  UNIQUE = 11,
 }
 
 export enum EvmChain {
@@ -998,6 +999,13 @@ export enum ProductCode {
   COMPUTING_JOB_CREATE = 52,
 
   IPNS = 55,
+
+  // UNIQUE NFTS
+  NFT_UNIQUE_COLLECTION = 56,
+  NFT_UNIQUE_MINT = 57,
+  NFT_UNIQUE_BURN = 58,
+  NFT_UNIQUE_TRANSFER_COLLECTION = 59,
+  //NFT_UNIQUE_SET_BASE_URI = 60,
 }
 
 export enum ProductService {
@@ -1030,6 +1038,7 @@ export enum ProductCategory {
   ACURAST = 'ACURAST',
   IPNS = 'IPNS',
   SIGNATURE = 'SIGNATURE',
+  UNIQUE_NFT = 'UNIQUE_NFT',
 }
 
 export enum EmailTemplate {

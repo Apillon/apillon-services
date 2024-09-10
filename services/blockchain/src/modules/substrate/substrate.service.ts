@@ -87,6 +87,7 @@ export class SubstrateService {
         typesBundle = SubsocialTypesBundle;
         break;
       }
+      case SubstrateChain.UNIQUE:
       case SubstrateChain.ASTAR:
       case SubstrateChain.ACURAST: {
         keyring = new Keyring({ type: 'sr25519' });

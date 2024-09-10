@@ -8,6 +8,7 @@ import { PhalaBlockchainIndexer } from './phala/indexer.service';
 import { SubsocialBlockchainIndexer } from './subsocial/indexer.service';
 import { AstarSubstrateBlockchainIndexer } from './astar/indexer.service';
 import { AcurastBlockchainIndexer } from './acurast/indexer.service';
+import { UniqueBlockchainIndexer } from './unique/indexer.service';
 
 /**
  * Checks indexer to determine if transaction exists (is indexed).
@@ -65,6 +66,13 @@ export async function isTransactionIndexed(
     case SubstrateChain.ACURAST:
       transactions =
         await new AcurastBlockchainIndexer().getAccountTransactionsByHash(
+          wallet.address,
+          transactionHash,
+        );
+      break;
+    case SubstrateChain.UNIQUE:
+      transactions =
+        await new UniqueBlockchainIndexer().getAccountTransactionsByHash(
           wallet.address,
           transactionHash,
         );

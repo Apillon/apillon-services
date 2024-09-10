@@ -51,6 +51,10 @@ export class TransactionStatusWorker extends BaseQueueWorker {
           nftTransaction.transactionStatus = res.transactionStatus;
           await nftTransaction.update();
 
+          const collection: Collection = await new Collection(
+            {},
+            this.context,
+          ).populateById(nftTransaction.refId);
           // perform custom logic, depend of transactionType
           if (
             nftTransaction.transactionType == TransactionType.DEPLOY_CONTRACT ||
@@ -58,8 +62,27 @@ export class TransactionStatusWorker extends BaseQueueWorker {
               TransactionType.TRANSFER_CONTRACT_OWNERSHIP
           ) {
             //Update collection
-            await this.updateCollectionStatus(nftTransaction, res.data);
+            await this.updateCollectionStatus(
+              nftTransaction,
+              collection,
+              res.data,
+            );
           }
+
+          // // TODO: even needed?
+          // // TODO: separate worker?
+          // if (
+          //   collection.chainType === ChainType.SUBSTRATE &&
+          //   nftTransaction.chainId === SubstrateChain.UNIQUE &&
+          //   nftTransaction.transactionType == TransactionType.MINT_NFT
+          // ) {
+          //   // TODO: set NFT metadata via blockchain service
+          //   const client = new UniqueNftClient();
+          //   const tx = await client.configureNft(
+          //     collection.contractAddress,
+          //     res.data.tokenId,
+          //   );
+          // }
 
           //Refund credit if transaction failed
           if (res.transactionStatus > 2) {
@@ -86,13 +109,12 @@ export class TransactionStatusWorker extends BaseQueueWorker {
     );
   }
 
-  private async updateCollectionStatus(tx: Transaction, data: string) {
+  private async updateCollectionStatus(
+    tx: Transaction,
+    collection: Collection,
+    data: string,
+  ) {
     if (tx.transactionStatus === TransactionStatus.CONFIRMED) {
-      const collection: Collection = await new Collection(
-        {},
-        this.context,
-      ).populateById(tx.refId);
-
       if (tx.transactionType === TransactionType.DEPLOY_CONTRACT) {
         collection.collectionStatus = CollectionStatus.DEPLOYED;
         if (data && collection.chainType === ChainType.SUBSTRATE) {

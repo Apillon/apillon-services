@@ -62,6 +62,9 @@ export function substrateChainToWorkerName(chain: SubstrateChain): string {
     case SubstrateChain.ACURAST: {
       return WorkerName.TRANSMIT_ACURAST_TRANSACTIONS;
     }
+    case SubstrateChain.UNIQUE: {
+      return WorkerName.TRANSMIT_UNIQUE_TRANSACTIONS;
+    }
     default: {
       throw new Error('Unsupported');
     }

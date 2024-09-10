@@ -2,8 +2,10 @@ import {
   AddNftsMetadataDto,
   BlockchainMicroservice,
   BurnNftDto,
+  Chain,
   ChainType,
   CollectionsQuotaReachedQueryFilter,
+  Context,
   CreateBucketDto,
   CreateEvmTransactionDto,
   CreateIpnsDto,
@@ -29,13 +31,11 @@ import {
   SpendCreditDto,
   SqlModelStatus,
   StorageMicroservice,
+  SubscriptionPackageId,
   SubstrateChain,
   TransactionDto,
   TransactionStatus,
   TransferCollectionDTO,
-  Context,
-  Chain,
-  SubscriptionPackageId,
 } from '@apillon/lib';
 import {
   CreateCollectionDTO,
@@ -76,7 +76,12 @@ import {
 } from '../../lib/utils/collection-utils';
 import { ContractVersion } from './models/contractVersion.model';
 import { EVM_MAX_INT } from '@apillon/blockchain-lib/evm';
+import { UniqueNftClient } from './clients/unique-nft-client';
+import axios from 'axios';
 import { SubstrateChainPrefix } from '@apillon/blockchain-lib/substrate';
+
+const IPFS_SCHEMA = 'ipfs://';
+const IPNS_SCHEMA = 'ipns://';
 
 export class NftsService {
   //#region collection functions
@@ -110,6 +115,7 @@ export class NftsService {
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_COLLECTION,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_COLLECTION,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_COLLECTION,
+      [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_COLLECTION,
     }[params.body.chain];
     const spendCredit: SpendCreditDto = new SpendCreditDto(
       {
@@ -251,7 +257,6 @@ export class NftsService {
 
     //Call Storage MS function, which will prepareBase uri.
     //At the end, this function will trigger workers: DeployCollectionWorker, PrepareMetadataForCollectionWorker
-
     try {
       await new StorageMicroservice(context).prepareCollectionBaseUri({
         bucket_uuid: collection.bucket_uuid,
@@ -375,7 +380,9 @@ export class NftsService {
       !isEvmOrSubstrateWalletAddress(
         body.address,
         collection.chainType,
-        SubstrateChainPrefix.ASTAR,
+        collection.chain === SubstrateChain.UNIQUE
+          ? SubstrateChainPrefix.UNIQUE
+          : SubstrateChainPrefix.ASTAR,
       )
     ) {
       throw new NftsValidationException({
@@ -401,6 +408,7 @@ export class NftsService {
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_TRANSFER_COLLECTION,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_TRANSFER_COLLECTION,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_TRANSFER_COLLECTION,
+      [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_TRANSFER_COLLECTION,
     }[collection.chain];
 
     //Spend credit
@@ -417,10 +425,6 @@ export class NftsService {
     );
 
     await spendCreditAction(context, spendCredit, async () => {
-      const { abi } = await new ContractVersion({}, context).getContractVersion(
-        collection.collectionType,
-        collection.chainType,
-      );
       const chainName = getChainName(collection.chainType, collection.chain);
       console.log(
         `[${chainName}] Creating NFT transfer contract ownership transaction from wallet address: ${
@@ -430,6 +434,10 @@ export class NftsService {
       let txHash: string;
       switch (collection.chainType) {
         case ChainType.EVM: {
+          const { abi } = await new ContractVersion(
+            {},
+            context,
+          ).getContractVersion(collection.collectionType, collection.chainType);
           const evmContractClient = await getEvmContractClient(
             context,
             collection.chain as EvmChain,
@@ -443,21 +451,37 @@ export class NftsService {
           break;
         }
         case ChainType.SUBSTRATE: {
-          const substrateContractClient = await getSubstrateContractClient(
-            context,
-            collection.chain as SubstrateChain,
-            JSON.parse(abi),
-            collection.contractAddress,
-          );
-          try {
-            const tx = await substrateContractClient.createTransaction(
-              'ownable::transferOwnership',
-              [body.address],
-              collection.deployerAddress,
+          if (collection.chain === SubstrateChain.UNIQUE) {
+            const client = new UniqueNftClient();
+            // TODO: check current owner?
+            txHash = await client.transferOwnership(
+              collection.contractAddress,
+              body.address,
             );
-            txHash = tx.toHex();
-          } finally {
-            await substrateContractClient.destroy();
+          } else {
+            const { abi } = await new ContractVersion(
+              {},
+              context,
+            ).getContractVersion(
+              collection.collectionType,
+              collection.chainType,
+            );
+            const substrateContractClient = await getSubstrateContractClient(
+              context,
+              collection.chain as SubstrateChain,
+              JSON.parse(abi),
+              collection.contractAddress,
+            );
+            try {
+              const tx = await substrateContractClient.createTransaction(
+                'ownable::transferOwnership',
+                [body.address],
+                collection.deployerAddress,
+              );
+              txHash = tx.toHex();
+            } finally {
+              await substrateContractClient.destroy();
+            }
           }
           break;
         }
@@ -512,6 +536,16 @@ export class NftsService {
       'setNftCollectionBaseUri()',
       context,
     );
+    if (
+      collection.chainType === ChainType.SUBSTRATE &&
+      collection.chain === SubstrateChain.UNIQUE
+    ) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.METHOD_NOT_ALLOWED,
+        context,
+      });
+    }
 
     const product_id = {
       [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_SET_BASE_URI,
@@ -736,7 +770,9 @@ export class NftsService {
       !isEvmOrSubstrateWalletAddress(
         body.receivingAddress,
         collection.chainType,
-        SubstrateChainPrefix.ASTAR,
+        collection.chain === SubstrateChain.UNIQUE
+          ? SubstrateChainPrefix.UNIQUE
+          : SubstrateChainPrefix.ASTAR,
       )
     ) {
       throw new NftsValidationException({
@@ -757,6 +793,7 @@ export class NftsService {
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_MINT,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_MINT,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_MINT,
+      [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_MINT,
     }[collection.chain];
 
     //Spend credit
@@ -773,20 +810,20 @@ export class NftsService {
     );
 
     const { data } = await spendCreditAction(context, spendCredit, async () => {
-      const { abi } = await new ContractVersion({}, context).getContractVersion(
-        collection.collectionType,
-        collection.chainType,
-      );
       const chainName = getChainName(collection.chainType, collection.chain);
       console.log(
         `[${chainName}] Creating mint NFT transaction from wallet address: ${
           collection.deployerAddress
         }, parameters=${JSON.stringify(collection)}`,
       );
-      let serializedTransaction: string;
       let minimumGas = null;
+      let serializedTransaction: string;
       switch (collection.chainType) {
         case ChainType.EVM: {
+          const { abi } = await new ContractVersion(
+            {},
+            context,
+          ).getContractVersion(collection.collectionType, collection.chainType);
           const evmContractClient = await getEvmContractClient(
             context,
             collection.chain as EvmChain,
@@ -825,29 +862,64 @@ export class NftsService {
           break;
         }
         case ChainType.SUBSTRATE: {
-          const substrateContractClient = await getSubstrateContractClient(
-            context,
-            collection.chain as SubstrateChain,
-            JSON.parse(abi),
-            collection.contractAddress,
-          );
-          try {
-            const minted =
-              await substrateContractClient.query<number>('psp34::totalSupply');
+          if (collection.chain === SubstrateChain.UNIQUE) {
+            const client = new UniqueNftClient();
+            const onChainCollection = await client.getCollection(
+              collection.contractAddress,
+            );
             await NftsService.checkMintConditions(
               body,
               context,
               collection,
-              minted,
+              onChainCollection.lastTokenId,
             );
-            const tx = await substrateContractClient.createTransaction(
-              'launchpad::mintProject',
-              [body.receivingAddress, body.quantity],
-              collection.deployerAddress,
+            // TODO: we blindly use lastTokenId which means we would get
+            //  duplicates if user mints twice in a row
+            const mintTokens = await getMintPayload(
+              context,
+              collection,
+              body.receivingAddress,
+              body.quantity,
+              onChainCollection.lastTokenId,
             );
-            serializedTransaction = tx.toHex();
-          } finally {
-            await substrateContractClient.destroy();
+            serializedTransaction = await client.mintNft(
+              collection.contractAddress,
+              mintTokens,
+            );
+          } else {
+            const { abi } = await new ContractVersion(
+              {},
+              context,
+            ).getContractVersion(
+              collection.collectionType,
+              collection.chainType,
+            );
+            const substrateContractClient = await getSubstrateContractClient(
+              context,
+              collection.chain as SubstrateChain,
+              JSON.parse(abi),
+              collection.contractAddress,
+            );
+            try {
+              const minted =
+                await substrateContractClient.query<number>(
+                  'psp34::totalSupply',
+                );
+              await NftsService.checkMintConditions(
+                body,
+                context,
+                collection,
+                minted,
+              );
+              const tx = await substrateContractClient.createTransaction(
+                'launchpad::mintProject',
+                [body.receivingAddress, body.quantity],
+                collection.deployerAddress,
+              );
+              serializedTransaction = tx.toHex();
+            } finally {
+              await substrateContractClient.destroy();
+            }
           }
           break;
         }
@@ -901,7 +973,10 @@ export class NftsService {
       context,
     ).populateByUUID(body.parentCollectionUuid);
     // WASM contract doesnt support nestable collections
-    if (parentCollection.chainType === ChainType.SUBSTRATE) {
+    if (
+      parentCollection.chainType === ChainType.SUBSTRATE &&
+      parentCollection.chain !== SubstrateChain.UNIQUE
+    ) {
       throw new NftsCodeException({
         status: 501,
         code: NftsErrorCode.ACTION_NOT_SUPPORTED,
@@ -938,52 +1013,94 @@ export class NftsService {
     // checks if we can mint child collection
     await NftsService.checkCollection(childCollection, sourceFunction, context);
 
-    // on-chain checks for child collection
-    const childAbi = await new ContractVersion({}, context).getContractAbi(
-      childCollection.collectionType,
-      childCollection.contractVersion_id,
-    );
-    const childEvmContractClient = await getEvmContractClient(
-      context,
-      childCollection.chain as EvmChain,
-      childAbi,
-      childCollection.contractAddress,
-    );
-    const isChildNestable = await childEvmContractClient.query<boolean>(
-      'supportsInterface',
-      ['0x42b0e56f'],
-    );
-    if (!isChildNestable) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.COLLECTION_NOT_NESTABLE,
-        context,
-        sourceFunction: 'nestMintNftTo()',
-      });
-    }
-    let minted: number;
-    if (
-      (childCollection.collectionStatus != CollectionStatus.DEPLOYED &&
-        childCollection.collectionStatus != CollectionStatus.TRANSFERED) ||
-      !childCollection.contractAddress
-    ) {
-      minted = 0;
-    } else {
-      const totalSupply =
-        await childEvmContractClient.query<BigNumber>('totalSupply');
-      minted = parseInt(totalSupply._hex, 16);
-    }
-    await NftsService.checkNestMintConditions(
-      body,
-      context,
-      childCollection,
-      minted,
-    );
+    let txData: string;
+    switch (parentCollection.chainType) {
+      case ChainType.EVM: {
+        // on-chain checks for child collection
+        const childAbi = await new ContractVersion({}, context).getContractAbi(
+          childCollection.collectionType,
+          childCollection.contractVersion_id,
+        );
+        const childEvmContractClient = await getEvmContractClient(
+          context,
+          childCollection.chain as EvmChain,
+          childAbi,
+          childCollection.contractAddress,
+        );
+        const isChildNestable = await childEvmContractClient.query<boolean>(
+          'supportsInterface',
+          ['0x42b0e56f'],
+        );
+        if (!isChildNestable) {
+          throw new NftsCodeException({
+            status: 500,
+            code: NftsErrorCode.COLLECTION_NOT_NESTABLE,
+            context,
+            sourceFunction: 'nestMintNftTo()',
+          });
+        }
+        let minted: number;
+        if (
+          (childCollection.collectionStatus != CollectionStatus.DEPLOYED &&
+            childCollection.collectionStatus != CollectionStatus.TRANSFERED) ||
+          !childCollection.contractAddress
+        ) {
+          minted = 0;
+        } else {
+          const totalSupply =
+            await childEvmContractClient.query<BigNumber>('totalSupply');
+          minted = parseInt(totalSupply._hex, 16);
+        }
+        await NftsService.checkNestMintConditions(
+          body,
+          context,
+          childCollection,
+          minted,
+        );
 
-    const txData = await childEvmContractClient.createTransaction(
-      'ownerNestMint',
-      [parentCollection.contractAddress, body.quantity, body.parentNftId],
-    );
+        txData = await childEvmContractClient.createTransaction(
+          'ownerNestMint',
+          [parentCollection.contractAddress, body.quantity, body.parentNftId],
+        );
+        break;
+      }
+      case ChainType.SUBSTRATE: {
+        const client = new UniqueNftClient();
+        const receivingAddress = client.getTokenAddress(
+          parentCollection.contractAddress,
+          body.parentNftId,
+        );
+        const onChainChildCollection = await client.getCollection(
+          childCollection.contractAddress,
+        );
+        await NftsService.checkNestMintConditions(
+          body,
+          context,
+          childCollection,
+          onChainChildCollection.lastTokenId,
+        );
+        const mintTokens = await getMintPayload(
+          context,
+          childCollection,
+          receivingAddress,
+          body.quantity,
+          onChainChildCollection.lastTokenId,
+        );
+
+        txData = await client.mintNft(
+          childCollection.contractAddress,
+          mintTokens,
+        );
+        break;
+      }
+      default: {
+        throw new NftsCodeException({
+          status: 501,
+          code: NftsErrorCode.ACTION_NOT_SUPPORTED,
+          context,
+        });
+      }
+    }
 
     const product_id = {
       [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_MINT,
@@ -991,6 +1108,7 @@ export class NftsService {
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_MINT,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_MINT,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_MINT,
+      [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_MINT,
     }[childCollection.chain];
 
     //Spend credit
@@ -1045,15 +1163,6 @@ export class NftsService {
       {},
       context,
     ).populateByUUID(body.collection_uuid);
-    // WASM contract doesnt implement burning for contract owner
-    if (collection.chainType === ChainType.SUBSTRATE) {
-      throw new NftsCodeException({
-        status: 501,
-        code: NftsErrorCode.ACTION_NOT_SUPPORTED,
-        context,
-      });
-    }
-
     await NftsService.checkCollection(collection, 'burnNftToken()', context);
 
     const product_id = {
@@ -1063,6 +1172,7 @@ export class NftsService {
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_BURN,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_BURN,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_BURN,
+      [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_BURN,
     }[collection.chain];
 
     //Spend credit
@@ -1108,25 +1218,33 @@ export class NftsService {
             );
             break;
           }
-          // case ChainType.SUBSTRATE: {
-          //   const substrateContractClient = await getSubstrateContractClient(
-          //     context,
-          //     collection.chain as SubstrateChain,
-          //     JSON.parse(abi),
-          //     collection.contractAddress,
-          //   );
-          //   try {
-          //     const tx = await substrateContractClient.createTransaction(
-          //       'psp34Burnable::burn',
-          //       [collection.deployerAddress, body.tokenId],
-          //       collection.deployerAddress,
-          //     );
-          //     txHash = tx.toHex();
-          //   } finally {
-          //     await substrateContractClient.destroy();
-          //   }
-          //   break;
-          // }
+          case ChainType.SUBSTRATE: {
+            // Astar WASM contract doesnt implement burning for contract owner
+            if (collection.chain !== SubstrateChain.UNIQUE) {
+              throw new Error(
+                `Support for substrate chain ${collection.chain} not implemented`,
+              );
+            }
+            const client = new UniqueNftClient();
+            try {
+              await client.getCollectionToken(
+                collection.contractAddress,
+                body.tokenId,
+              );
+            } catch (err: unknown) {
+              // TODO: better exception?
+              throw new NftsCodeException({
+                code: NftsErrorCode.BURN_NFT_ERROR,
+                status: 500,
+                errorMessage: `Token with id ${body.tokenId} doesn't exist on collection with id ${collection.contractAddress}: ${err}`,
+              });
+            }
+            txHash = await client.burnNft(
+              collection.contractAddress,
+              body.tokenId,
+            );
+            break;
+          }
           default: {
             throw new Error(
               `Support for chain type ${collection.chainType} not implemented`,
@@ -1518,3 +1636,106 @@ const TYPE_ERROR_MAP: Record<TransactionType, NftsErrorCode> = {
   [TransactionType.NEST_MINT_NFT]: NftsErrorCode.NEST_MINT_NFT_ERROR,
   [TransactionType.BURN_NFT]: NftsErrorCode.BURN_NFT_ERROR,
 };
+
+async function getFullUrlFromIpfsUrl(
+  storageClient: StorageMicroservice,
+  project_uuid: string,
+  url: string,
+) {
+  if (url.startsWith(IPFS_SCHEMA)) {
+    const result = await storageClient.getLink(
+      project_uuid,
+      url.replace(IPFS_SCHEMA, ''),
+      'cid',
+    );
+    return result.link;
+  }
+  if (url.startsWith(IPNS_SCHEMA)) {
+    const result = await storageClient.getLink(
+      project_uuid,
+      url.replace(IPNS_SCHEMA, ''),
+      'ipns',
+    );
+    return result.link;
+  }
+  return url;
+}
+
+async function getMintPayload(
+  context: Context,
+  collection: Collection,
+  receivingAddress: string,
+  quantity: number,
+  lastTokenId: number,
+) {
+  const storageClient = new StorageMicroservice(context);
+  const mintTokens = [];
+  const royalties =
+    collection.royaltiesAddress && collection.royaltiesFees
+      ? [
+          {
+            address: collection.royaltiesAddress,
+            percent: collection.royaltiesFees,
+          },
+        ]
+      : [];
+  for (let tokenIndex = 0; tokenIndex < quantity; tokenIndex++) {
+    const tokenId = lastTokenId + tokenIndex + 1;
+    // get metadata for NFT
+    const tokenMetadataUrl = await getFullUrlFromIpfsUrl(
+      storageClient,
+      collection.project_uuid,
+      collection.getTokenMetadataUrl(tokenId),
+    );
+    if (!tokenMetadataUrl) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.GET_NFT_METADATA_ERROR,
+        errorMessage: `Failed to get metadata URL for NFT with id ${tokenId}`,
+      });
+    }
+    const metadataResponse = await axios.get(tokenMetadataUrl);
+    if (metadataResponse.status !== 200) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.GET_NFT_METADATA_ERROR,
+        errorMessage: `Failed to fetch metadata for NFT with id ${tokenId}`,
+      });
+    }
+    const nftMetadata = metadataResponse.data;
+    const nftImage = await getFullUrlFromIpfsUrl(
+      storageClient,
+      collection.project_uuid,
+      nftMetadata.image,
+    );
+    if (!nftImage) {
+      throw new NftsCodeException({
+        status: 500,
+        code: NftsErrorCode.GET_NFT_METADATA_ERROR,
+        errorMessage: `Failed to get metadata image URL for NFT with id ${tokenId}`,
+      });
+    }
+    // mint token payload
+    mintTokens.push({
+      owner: receivingAddress,
+      data: {
+        name: nftMetadata.name ?? undefined,
+        description: nftMetadata.description ?? undefined,
+        image: nftImage,
+        // image_details: {
+        //   name: "Artwork",
+        //   type: "image",
+        //   format: "PNG",
+        //   bytes: 1048576,
+        //   width: 1000,
+        //   height: 1000,
+        //   sha256: "0x1234...",
+        // }
+        attributes: nftMetadata.attributes,
+        royalties,
+      },
+      //properties: [{ key: 'A', value: 'value A' }],
+    });
+  }
+  return mintTokens;
+}
