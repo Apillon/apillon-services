@@ -60,7 +60,7 @@ describe('Acurast Job Status Worker Tests', () => {
     );
     getJobPublicKeyMock = jest.spyOn(
       AcurastClient.prototype,
-      'getJobPublicKey',
+      'getJobPublicKeys',
     );
     getAcurastEndpointMock = jest.spyOn(
       BlockchainMicroservice.prototype,

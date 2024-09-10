@@ -78,11 +78,9 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
       job.jobId,
     );
 
-    job.publicKey = await client.getJobPublicKey(
-      job.deployerAddress,
-      job.account,
-      job.jobId,
-    );
+    job.publicKey = (
+      await client.getJobPublicKeys(job.deployerAddress, job.account, job.jobId)
+    )[0].secp256r1;
 
     const cloudFunction = await new CloudFunction(
       {},
