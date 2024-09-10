@@ -420,6 +420,7 @@ export class AcurastService {
     const conn = await context.mysql.start();
     try {
       await deleteAcurastJob(context, job, conn);
+      await context.mysql.commit(conn);
 
       await new Lmas().writeLog({
         context,
