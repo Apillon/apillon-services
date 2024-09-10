@@ -2,6 +2,7 @@ import { SubmittableExtrinsic } from '@polkadot/api-base/types';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { AcurastJob } from '../acurast/models/acurast-job.model';
 import { LogType, safeJsonParse, writeLog } from '@apillon/lib';
+import { EncryptedEnvVar, JobPublicKey } from '../acurast/acurast-types';
 
 export class AcurastClient {
   private api: ApiPromise;
@@ -31,15 +32,9 @@ export class AcurastClient {
     job: AcurastJob,
   ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
-    // Uncomment below for local testing
-    // const addMinutes = (date: Date, seconds: number) => {
-    //   const t = new Date(date);
-    //   t.setMinutes(t.getMinutes() + seconds);
-    //   return t;
-    // };
-    // const startTime = this.addMinutes(new Date(), 10).getTime();
-    // const endTime = this.addMinutes(startTime, 60).getTime();
-    const startTime = job.startTime.getTime();
+
+    // 4 minutes from now, cannot be at the same moment due to protocol limitations
+    const startTime = Date.now() + 3 * 60_000;
     const endTime = job.endTime.getTime();
 
     const interval = endTime - startTime;
@@ -63,13 +58,11 @@ export class AcurastClient {
 
   async createSetEnvironmentTransaction(
     job: AcurastJob,
-    variables: [string, string][],
+    variables: EncryptedEnvVar[],
   ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
-    return this.api.tx.acurast.setEnvironment(job.jobId, job.account, {
-      publicKey: job.publicKey,
-      variables,
-    });
+    const codec = this.variablesToCodec(job.publicKey, variables);
+    return this.api.tx.acurast.setEnvironment(job.jobId, job.account, codec);
   }
 
   async createDeregisterJobTransaction(
@@ -126,16 +119,16 @@ export class AcurastClient {
   }
 
   /**
-   * Get a job's matches
+   * Get a job's public keys
    * @param {string} deployerAddress - Deployer wallet address
    * @param {string} jobAccount - Acurast wallet address of the processor
    * @param {number} jobId - on-chain ID of the job
    */
-  async getJobPublicKey(
+  async getJobPublicKeys(
     deployerAddress: string,
     jobAccount: string,
     jobId: number,
-  ): Promise<string> {
+  ): Promise<JobPublicKey[]> {
     await this.initializeProvider();
 
     const storedMatches = await this.api.query.acurastMarketplace.storedMatches(
@@ -148,7 +141,7 @@ export class AcurastClient {
       `[Acurast] storedMatches response for jobId ${jobId}: ${storedMatches.toString()}`,
     );
 
-    return JSON.parse(storedMatches.toString())?.pubKeys[0]?.secp256r1;
+    return JSON.parse(storedMatches.toString()).pubKeys;
   }
 
   async destroy() {
@@ -156,5 +149,18 @@ export class AcurastClient {
       await this.api.disconnect();
       this.api = null;
     }
+  }
+
+  private variablesToCodec(publicKey: string, variables: EncryptedEnvVar[]) {
+    const encodedVariables = variables.map((variable) => {
+      const key = `0x${Buffer.from(variable.key).toString('hex')}`;
+      const value = `0x${variable.encryptedValue.iv}${variable.encryptedValue.ciphertext}${variable.encryptedValue.authTag}`;
+      return [key, value];
+    });
+
+    return this.api.createType('AcurastCommonEnvironment', {
+      publicKey: this.api.createType('Bytes', publicKey),
+      variables: this.api.createType('Vec<(Bytes, Bytes)>', encodedVariables),
+    });
   }
 }

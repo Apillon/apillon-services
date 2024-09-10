@@ -12,6 +12,7 @@ import {
   JobQueryFilter,
   AWS_KMS,
   env,
+  safeJsonParse,
 } from '@apillon/lib';
 import { arrayParser, stringParser, integerParser } from '@rawmodel/parsers';
 import { ComputingErrorCode, DbTables } from '../../../config/types';
@@ -22,6 +23,7 @@ import {
   ComputingModelValidationException,
   ComputingNotFoundException,
 } from '../../../lib/exceptions';
+import { JobEnvVar } from '../acurast-types';
 
 const populatable = [
   PopulateFrom.DB,
@@ -74,6 +76,13 @@ export class CloudFunction extends UuidSqlModel {
     parser: { resolver: stringParser() },
     populatable,
     serializable,
+  })
+  public bucket_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable,
+    serializable,
     validators: [
       {
         resolver: presenceValidator(),
@@ -88,8 +97,7 @@ export class CloudFunction extends UuidSqlModel {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
     serializable: [
-      SerializeFor.SELECT_DB,
-      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
     ],
@@ -185,7 +193,7 @@ export class CloudFunction extends UuidSqlModel {
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'd.id');
   }
 
-  public async getEnvironmentVariables(): Promise<[string, string][]> {
+  public async getEnvironmentVariables(): Promise<JobEnvVar[]> {
     if (!this.encrypted_variables) return [];
 
     const decryptedVariables = await new AWS_KMS().decrypt(
@@ -193,10 +201,10 @@ export class CloudFunction extends UuidSqlModel {
       env.COMPUTING_KMS_KEY_ID,
     );
 
-    return JSON.parse(decryptedVariables);
+    return safeJsonParse(decryptedVariables, []);
   }
 
-  public async setEnvironmentVariables(variables: [string, string][]) {
+  public async setEnvironmentVariables(variables: JobEnvVar[]) {
     if (!variables?.length) {
       this.encrypted_variables = null;
       return;

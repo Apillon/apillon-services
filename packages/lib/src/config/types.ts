@@ -294,6 +294,7 @@ export enum ComputingEventType {
   CREATE_JOB = 'create-job',
   GET_JOB = 'get-job',
   SET_CLOUD_FUNCTION_ENVIRONMENT = 'set-cloud-function-environment',
+  GET_CLOUD_FUNCTION_ENVIRONMENT = 'get-cloud-function-environment',
   UPDATE_JOB = 'update-job',
   DELETE_JOB = 'delete-job',
 }
@@ -997,6 +998,9 @@ export enum ProductCode {
   CONTRACT_SEPOLIA_CALL = 51,
 
   COMPUTING_JOB_CREATE = 52,
+  // these 2 below are not used
+  COMPUTING_JOB_SET_ENVIRONMENT = 53,
+  COMPUTING_JOB_DELETE = 54,
 
   IPNS = 55,
 

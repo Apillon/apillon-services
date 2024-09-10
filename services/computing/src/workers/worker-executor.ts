@@ -17,12 +17,14 @@ import { Scheduler } from './scheduler';
 import { TransactionStatusWorker } from './transaction-status-worker';
 import { PhalaLogWorker } from './phala-log-worker';
 import { AcurastJobStatusWorker } from './acurast-job-status-worker';
+import { RenewAcurastJobWorker } from './renew-acurast-job-worker';
 
 export enum WorkerName {
   SCHEDULER = 'scheduler',
   TRANSACTION_STATUS = 'TransactionStatusWorker',
   PHALA_LOG_WORKER = 'PhalaLogWorker',
   ACURAST_JOB_STATUS_WORKER = 'AcurastJobStatusWorker',
+  RENEW_ACURAST_JOB_WORKER = 'RenewAcurastJobWorker',
 }
 
 export async function handler(event: any) {
@@ -116,6 +118,9 @@ export async function handleLambdaEvent(
       break;
     case WorkerName.ACURAST_JOB_STATUS_WORKER:
       await new AcurastJobStatusWorker(workerDefinition, context).run();
+      break;
+    case WorkerName.RENEW_ACURAST_JOB_WORKER:
+      await new RenewAcurastJobWorker(workerDefinition, context).run();
       break;
     default:
       console.log(
