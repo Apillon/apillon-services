@@ -47,6 +47,22 @@ export class UniqueNftClient {
     isSoulbound: boolean,
     maxSupply: number,
   ) {
+    const tokenPropertyPermissions = [
+      'URI',
+      'URISuffix',
+      'customizing_overrides',
+      'overrides',
+      'schemaName',
+      'schemaVersion',
+      'tokenData',
+    ].map((key) => ({
+      key,
+      permission: {
+        mutable: true,
+        collectionAdmin: true,
+        tokenOwner: false,
+      },
+    }));
     const result = await this.client.collection.create.build({
       symbol,
       description,
@@ -64,16 +80,7 @@ export class UniqueNftClient {
         mintMode: isDrop,
         nesting: { tokenOwner: isNestable },
       },
-      // tokenPropertyPermissions: [
-      //   {
-      //     key: 'A',
-      //     permission: {
-      //       mutable: true,
-      //       collectionAdmin: true,
-      //       tokenOwner: true,
-      //     },
-      //   },
-      // ],
+      tokenPropertyPermissions,
     });
 
     return this.unsignedExtrinsicPayloadToRawTx(result);
