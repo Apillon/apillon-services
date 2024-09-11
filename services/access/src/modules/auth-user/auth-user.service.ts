@@ -12,9 +12,9 @@ import {
   UserWalletAuthDto,
   SqlModelStatus,
   env,
-  invalidateCacheKey,
   CacheKeyPrefix,
   JwtExpireTime,
+  invalidateCacheMatch,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AmsErrorCode } from '../../config/types';
@@ -381,7 +381,7 @@ export class AuthUserService {
         service: ServiceName.AMS,
       }),
       // Invalidate auth user data cache
-      await invalidateCacheKey(
+      await invalidateCacheMatch(
         `${CacheKeyPrefix.AUTH_USER_DATA}:${authUser.user_uuid}`,
       ),
     ]);
@@ -444,6 +444,7 @@ export class AuthUserService {
 
     try {
       await authUser.update();
+      await authUser.logoutUser();
     } catch (err) {
       throw await new AmsCodeException({
         status: 500,
