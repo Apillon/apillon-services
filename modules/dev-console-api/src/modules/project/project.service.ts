@@ -28,6 +28,7 @@ import {
   EmailTemplate,
   ConfigureCreditDto,
   StorageMicroservice,
+  invalidateCacheMatch,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -103,7 +104,7 @@ export class ProjectService {
 
       // Invalidate project list cache and auth user data cache
       invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]),
-      invalidateCacheKey(
+      invalidateCacheMatch(
         `${CacheKeyPrefix.AUTH_USER_DATA}:${context.user.user_uuid}`,
       ),
 
@@ -587,7 +588,7 @@ export class ProjectService {
         role_id: project_user.role_id,
       };
       await new Ams(context).removeUserRole(params);
-      await invalidateCacheKey(
+      await invalidateCacheMatch(
         `${CacheKeyPrefix.AUTH_USER_DATA}:${removedUser.user_uuid}`,
       );
 
