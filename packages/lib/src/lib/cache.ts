@@ -27,13 +27,13 @@ export function generateCacheKey({
   user_uuid,
   project_uuid,
 }: {
-  prefix: string;
+  prefix: CacheKeyPrefix | `${CacheKeyPrefix}:${string}`;
   path: string;
   query: any;
   params: any;
   user_uuid?: string;
   project_uuid?: string;
-}) {
+}): CacheKeyPrefix | `${CacheKeyPrefix}${string}` {
   return `${prefix}#${path}@${user_uuid ? `user_uuid:${user_uuid}` : ''}|${
     project_uuid ? `project_uuid:${project_uuid}` : ''
   }|${flatObject(params)}|${flatObject(query)}`;
@@ -46,7 +46,7 @@ export function generateCacheKey({
  * @param expire cache TTL
  */
 export async function runCachedFunction<T>(
-  key: string,
+  key: CacheKeyPrefix | `${CacheKeyPrefix}${string}`,
   action: () => any,
   expire = env.DEFAULT_CACHE_TTL,
 ): Promise<T> {
