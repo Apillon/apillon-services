@@ -32,6 +32,7 @@
   "dependencies": {
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
-    "@nestjs/common": "10.3.7"
+    "@nestjs/common": "10.3.7",
+    "ts-mysql-migrate": "^1.1.2"
   }
 }

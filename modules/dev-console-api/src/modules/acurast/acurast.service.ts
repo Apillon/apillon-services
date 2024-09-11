@@ -121,6 +121,17 @@ export class AcurastService {
     ).data;
   }
 
+  async getCloudFunctionEnvironment(
+    context: DevConsoleApiContext,
+    function_uuid: string,
+  ) {
+    return (
+      await new ComputingMicroservice(context).getCloudFunctionEnvironment(
+        function_uuid,
+      )
+    ).data;
+  }
+
   async executeCloudFunction(
     context: DevConsoleApiContext,
     payload: string,

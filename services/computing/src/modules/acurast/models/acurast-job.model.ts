@@ -123,25 +123,7 @@ export class AcurastJob extends UuidSqlModel {
   public scriptCid: string;
 
   /**
-   * The timestamp where the job will become available
-   */
-  @prop({
-    parser: { resolver: dateParser() },
-    populatable,
-    serializable: serializableProfile,
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-    // 5 min from now
-    fakeValue: Date.now() + 5 * 60_000,
-  })
-  public startTime: Date;
-
-  /**
-   * The timestamp where the job will expire
+   * The timestamp when the job will expire
    */
   @prop({
     parser: { resolver: dateParser() },
@@ -355,7 +337,7 @@ export class AcurastJob extends UuidSqlModel {
       `
       SELECT *
       FROM ${DbTables.ACURAST_JOB}
-      WHERE startTime < NOW() AND endTime > NOW()
+      WHERE endTime > NOW()
       AND jobStatus = ${AcurastJobStatus.DEPLOYED}
       AND jobId IS NOT NULL
       AND status = ${SqlModelStatus.ACTIVE}
@@ -370,12 +352,8 @@ export class AcurastJob extends UuidSqlModel {
   /**
    * When a new job is deployed, clear the older jobs of a function_uuid
    * Sets the status of all jobs to inactive
-   * @param {string} function_uuid - uuid of the function whose jobs become inactive
    */
-  public async clearPreviousJobs(
-    function_uuid: string,
-    conn?: PoolConnection,
-  ): Promise<void> {
+  public async clearPreviousJobs(conn?: PoolConnection): Promise<void> {
     const context = this.getContext();
     await context.mysql.paramExecute(
       `
@@ -384,7 +362,26 @@ export class AcurastJob extends UuidSqlModel {
       WHERE function_uuid = @function_uuid
       AND status = ${SqlModelStatus.ACTIVE}
       `,
-      { function_uuid },
+      { function_uuid: this.function_uuid },
+      conn,
+    );
+  }
+
+  /**
+   * Acurast jobs have a limited lifetime of 3 months due to protocol limitations
+   * On the day of expiration, need to deploy a new job with the same parameters
+   */
+  public async getExpiringToday(conn?: PoolConnection): Promise<AcurastJob[]> {
+    const context = this.getContext();
+    return await context.mysql.paramExecute(
+      `
+      SELECT *
+      FROM ${DbTables.ACURAST_JOB}
+      WHERE DATE(endTime) = CURDATE()
+      AND jobStatus = ${AcurastJobStatus.MATCHED}
+      AND status = ${SqlModelStatus.ACTIVE}
+      `,
+      {},
       conn,
     );
   }
