@@ -1065,6 +1065,7 @@ export enum EmailTemplate {
 export enum JwtExpireTime {
   ONE_DAY = '1d',
   ONE_HOUR = '1h',
+  TEN_MINUTES = '10m',
   TWENTY_MINUTES = '20m',
   FIVE_MINUTES = '5m',
   NEVER = 'never',
