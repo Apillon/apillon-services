@@ -319,7 +319,7 @@ export class AcurastService {
     event: { payload: string; function_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const job = await runCachedFunction<AcurastJob>(
+    let job = await runCachedFunction<AcurastJob>(
       `${CacheKeyPrefix.ACURAST_JOB}:${event.function_uuid}`,
       async () => {
         const cloudFunction = await new CloudFunction(
@@ -342,6 +342,8 @@ export class AcurastService {
       },
       CacheKeyTTL.DEFAULT,
     );
+    // In case result is returned from cache
+    job = new AcurastJob(job, context);
 
     // access is not checked for sendMessage
     job.verifyStatusAndAccess('executeCloudFunction', context, undefined, true);
