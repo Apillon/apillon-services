@@ -196,6 +196,11 @@ export interface IEnv {
    */
   STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY: number;
 
+  /**
+   * Maximum file size for which we will check if it is HTML. By default approx. 500KB
+   */
+  STORAGE_MAX_HTML_SIZE_IN_B: number;
+
   STORAGE_MYSQL_HOST: string;
   STORAGE_MYSQL_PORT: number;
   STORAGE_MYSQL_USER: string;
@@ -751,6 +756,9 @@ export let env: IEnv = {
   STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY:
     parseInt(process.env['STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY']) ||
     2000,
+  STORAGE_MAX_HTML_SIZE_IN_B: parseInt(
+    process.env['STORAGE_MAX_HTML_SIZE_IN_B'],
+  ),
 
   /**STORAGE microservice DB*/
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],
