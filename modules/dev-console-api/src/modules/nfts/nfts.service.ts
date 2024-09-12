@@ -19,6 +19,7 @@ import {
 import {
   CreateCollectionDTO,
   CreateSubstrateCollectionDTO,
+  CreateUniqueCollectionDTO,
 } from '@apillon/blockchain-lib/common';
 import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
@@ -79,6 +80,55 @@ export class NftsService {
     return (
       await new NftsMicroservice(context).createCollection(
         new CreateCollectionDTO({ ...body.serialize(), chainType }),
+      )
+    ).data;
+  }
+
+  async createUniqueCollection(
+    context: DevConsoleApiContext,
+    body: CreateUniqueCollectionDTO,
+  ) {
+    //check project
+    const project: Project = await new Project({}, context).populateByUUID(
+      body.project_uuid,
+    );
+    if (!project.exists()) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    project.canModify(context);
+
+    // Check if NFT service for this project already exists
+    const { total } = await new Service({}).getServices(
+      context,
+      new ServiceQueryFilter(
+        {
+          project_uuid: project.project_uuid,
+          serviceType_id: AttachedServiceType.NFT,
+        },
+        context,
+      ),
+    );
+    if (total == 0) {
+      // Create NFT service - "Attach"
+      const nftService = new ServiceDto(
+        {
+          project_uuid: project.project_uuid,
+          name: 'NFTs service',
+          serviceType_id: AttachedServiceType.NFT,
+        },
+        context,
+      );
+      await this.serviceService.createService(context, nftService);
+    }
+
+    return (
+      await new NftsMicroservice(context).createUniqueCollection(
+        new CreateUniqueCollectionDTO({ ...body.serialize() }),
       )
     ).data;
   }

@@ -39,6 +39,7 @@ import {
 } from '@apillon/lib';
 import {
   CreateCollectionDTO,
+  CreateUniqueCollectionDTO,
   isEvmOrSubstrateWalletAddress,
 } from '@apillon/blockchain-lib/common';
 import { ServiceContext } from '@apillon/service-lib';
@@ -77,8 +78,8 @@ import {
 import { ContractVersion } from './models/contractVersion.model';
 import { EVM_MAX_INT } from '@apillon/blockchain-lib/evm';
 import { UniqueNftClient } from './clients/unique-nft-client';
-import axios from 'axios';
 import { SubstrateChainPrefix } from '@apillon/blockchain-lib/substrate';
+import { CollectionMetadata } from './models/collectionMetadata.model';
 
 const IPFS_SCHEMA = 'ipfs://';
 const IPNS_SCHEMA = 'ipns://';
@@ -173,6 +174,109 @@ export class NftsService {
                 await deployNFTCollectionContract(context, collection, conn);
               }
 
+              await context.mysql.commit(conn);
+            } catch (err) {
+              await context.mysql.rollback(conn);
+
+              throw await new NftsContractException(
+                NftsErrorCode.DEPLOY_NFT_CONTRACT_ERROR,
+                context,
+                err,
+              ).writeToMonitor({
+                logType: LogType.ERROR,
+                service: ServiceName.NFTS,
+                project_uuid: collection.project_uuid,
+                user_uuid: context.user?.user_uuid,
+                data: {
+                  collection: collection.serialize(),
+                  err,
+                },
+                sendAdminAlert: true,
+              });
+            }
+            resolve(true);
+          } catch (err) {
+            _reject(err);
+          }
+        }),
+    );
+
+    await Promise.all([
+      new Lmas().writeLog({
+        context,
+        project_uuid: collection.project_uuid,
+        logType: LogType.INFO,
+        message: 'New NFT collection created and submited to deployment',
+        location: 'NftsService/deployNftContract',
+        service: ServiceName.NFTS,
+        data: { collection_uuid: collection.collection_uuid },
+      }),
+
+      // Set mailerlite field indicating the user has an nft collection
+      new Mailing(context).setMailerliteField('has_nft', true),
+    ]);
+
+    collection.updateTime = new Date();
+    collection.createTime = new Date();
+
+    return collection.serializeByContext();
+  }
+  static async createUniqueCollection(
+    params: { body: CreateUniqueCollectionDTO },
+    context: ServiceContext,
+  ) {
+    console.log(
+      `Creating Unique NFT collections: ${JSON.stringify(params.body)}`,
+    );
+    const collection: Collection = new Collection(
+      params.body,
+      context,
+    ).populate({
+      collection_uuid: uuidV4(),
+      status: SqlModelStatus.ACTIVE,
+      chainType: ChainType.SUBSTRATE,
+      chain: SubstrateChain.UNIQUE,
+      // dummy fields for SQL query not to fail
+      dropPrice: 0,
+      dropStart: 0,
+      dropReserve: 0,
+      baseExtension: '',
+    });
+    await collection.validateOrThrow(NftsModelValidationException);
+    await NftsService.assertIsAllowedToCreateNftCollection(
+      context,
+      collection.chainType,
+      collection.chain,
+      params.body.project_uuid,
+    );
+
+    const spendCredit: SpendCreditDto = new SpendCreditDto(
+      {
+        project_uuid: collection.project_uuid,
+        product_id: ProductCode.NFT_UNIQUE_COLLECTION,
+        referenceTable: DbTables.COLLECTION,
+        referenceId: collection.collection_uuid,
+        location: 'NftsService.createCollection',
+        service: ServiceName.NFTS,
+      },
+      context,
+    );
+
+    await spendCreditAction(
+      context,
+      spendCredit,
+      () =>
+        new Promise(async (resolve, _reject) => {
+          try {
+            const conn = await context.mysql.start();
+            try {
+              await collection.insert(SerializeFor.INSERT_DB, conn);
+              await new CollectionMetadata({}, context).batchInsert(
+                collection.id,
+                params.body.metadata,
+                conn,
+              );
+              await deployNFTCollectionContract(context, collection, conn);
               await context.mysql.commit(conn);
             } catch (err) {
               await context.mysql.rollback(conn);
@@ -809,6 +913,7 @@ export class NftsService {
       context,
     );
 
+    let tokenIds: number[] = [];
     const { data } = await spendCreditAction(context, spendCredit, async () => {
       const chainName = getChainName(collection.chainType, collection.chain);
       console.log(
@@ -875,13 +980,23 @@ export class NftsService {
             );
             // TODO: we blindly use lastTokenId which means we would get
             //  duplicates if user mints twice in a row
-            const mintTokens = await getMintPayload(
+            const metadata = await new CollectionMetadata(
+              {},
               context,
+            ).getNextTokens(collection.id, body.quantity);
+            if (metadata.length !== body.quantity) {
+              throw new NftsValidationException({
+                code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
+                property: 'quantity',
+                message: `Can't mint ${body.quantity} NFTs since only ${metadata.length} metadata rows left.`,
+              });
+            }
+            const mintTokens = await getMintPayload(
               collection,
               body.receivingAddress,
-              body.quantity,
-              onChainCollection.lastTokenId,
+              metadata,
             );
+            tokenIds = metadata.map((m) => m.tokenId);
             serializedTransaction = await client.mintNft(
               collection.contractAddress,
               mintTokens,
@@ -938,6 +1053,14 @@ export class NftsService {
         minimumGas,
       );
     });
+
+    // mark token with on-chain metadata as used
+    if (tokenIds.length > 0) {
+      await new CollectionMetadata({}, context).markTokensAsMinted(
+        collection.id,
+        tokenIds,
+      );
+    }
 
     await new Lmas().writeLog({
       context,
@@ -1079,17 +1202,23 @@ export class NftsService {
           childCollection,
           onChainChildCollection.lastTokenId,
         );
-        const mintTokens = await getMintPayload(
+        const metadata = await new CollectionMetadata(
+          {},
           context,
+        ).getNextTokens(childCollection.id, body.quantity);
+        const mintTokens = await getMintPayload(
           childCollection,
           receivingAddress,
-          body.quantity,
-          onChainChildCollection.lastTokenId,
+          metadata,
         );
 
         txData = await client.mintNft(
           childCollection.contractAddress,
           mintTokens,
+        );
+        await new CollectionMetadata({}, context).markTokensAsMinted(
+          childCollection.id,
+          metadata.map((m) => m.tokenId),
         );
         break;
       }
@@ -1662,13 +1791,10 @@ async function getFullUrlFromIpfsUrl(
 }
 
 async function getMintPayload(
-  context: Context,
   collection: Collection,
   receivingAddress: string,
-  quantity: number,
-  lastTokenId: number,
+  metadata: CollectionMetadata[],
 ) {
-  const storageClient = new StorageMicroservice(context);
   const mintTokens = [];
   const royalties =
     collection.royaltiesAddress && collection.royaltiesFees
@@ -1679,49 +1805,13 @@ async function getMintPayload(
           },
         ]
       : [];
-  for (let tokenIndex = 0; tokenIndex < quantity; tokenIndex++) {
-    const tokenId = lastTokenId + tokenIndex + 1;
-    // get metadata for NFT
-    const tokenMetadataUrl = await getFullUrlFromIpfsUrl(
-      storageClient,
-      collection.project_uuid,
-      collection.getTokenMetadataUrl(tokenId),
-    );
-    if (!tokenMetadataUrl) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.GET_NFT_METADATA_ERROR,
-        errorMessage: `Failed to get metadata URL for NFT with id ${tokenId}`,
-      });
-    }
-    const metadataResponse = await axios.get(tokenMetadataUrl);
-    if (metadataResponse.status !== 200) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.GET_NFT_METADATA_ERROR,
-        errorMessage: `Failed to fetch metadata for NFT with id ${tokenId}`,
-      });
-    }
-    const nftMetadata = metadataResponse.data;
-    const nftImage = await getFullUrlFromIpfsUrl(
-      storageClient,
-      collection.project_uuid,
-      nftMetadata.image,
-    );
-    if (!nftImage) {
-      throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.GET_NFT_METADATA_ERROR,
-        errorMessage: `Failed to get metadata image URL for NFT with id ${tokenId}`,
-      });
-    }
-    // mint token payload
+  for (const tokenData of metadata) {
     mintTokens.push({
       owner: receivingAddress,
       data: {
-        name: nftMetadata.name ?? undefined,
-        description: nftMetadata.description ?? undefined,
-        image: nftImage,
+        name: tokenData.metadata.name ?? undefined,
+        description: tokenData.metadata.description ?? undefined,
+        image: tokenData.metadata.image,
         // image_details: {
         //   name: "Artwork",
         //   type: "image",
@@ -1731,7 +1821,7 @@ async function getMintPayload(
         //   height: 1000,
         //   sha256: "0x1234...",
         // }
-        attributes: nftMetadata.attributes,
+        attributes: tokenData.metadata.attributes,
         royalties,
       },
       //properties: [{ key: 'A', value: 'value A' }],
