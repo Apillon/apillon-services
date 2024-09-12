@@ -48,6 +48,7 @@ describe('Acurast controller tests', () => {
   describe('Cloud Function tests', () => {
     const name = 'Acurast';
     const description = 'My new Cloud Function';
+
     test('User should be able to create a cloud function', async () => {
       const response = await request(stage.http)
         .post('/acurast/cloud-functions')
@@ -62,7 +63,7 @@ describe('Acurast controller tests', () => {
         {},
         stage.context.computing,
       ).populateByUUID(response.body.data.function_uuid);
-      expect(newCloudFunction.exists());
+      expect(newCloudFunction.exists()).toBeTruthy();
       expect(newCloudFunction.name).toEqual(name);
       expect(newCloudFunction.description).toEqual(description);
     });
@@ -106,30 +107,55 @@ describe('Acurast controller tests', () => {
     });
   });
 
-  describe('Job tests', () => {
-    // test('User should be able to create a job for a cloud function', async () => {
-    //   const response = await request(stage.http)
-    //     .post(`/acurast/cloud-functions/${cloudFunction.function_uuid}/jobs`)
-    //     .send({ name: 'My new Job', cron: '* * * * *' })
-    //     .set('Authorization', `Bearer ${testUser.token}`);
-    //   expect(response.status).toBe(201);
-    //   expect(response.body.data.job_uuid).toBeTruthy();
-
-    //   const newJob = await new AcurastJob(
-    //     {},
-    //     stage.context.computing,
-    //   ).populateByUUID(response.body.data.job_uuid);
-    //   expect(newJob.exists()).toBeTruthy();
-    // });
-
-    test('User should be able to get a specific job', async () => {
+  describe('Cloud Function Environment tests', () => {
+    test('User should be able to set cloud function environment', async () => {
+      const environmentVariables = [{ key: 'API_KEY', value: '12345' }];
       const response = await request(stage.http)
-        .get(`/acurast/jobs/${job.job_uuid}`)
+        .post(
+          `/acurast/cloud-functions/${cloudFunction.function_uuid}/environment`,
+        )
+        .send({ variables: environmentVariables })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data.job_uuid).toBe(job.job_uuid);
-      expect(response.body.data.name).toBe(job.name);
+      expect(response.body.data.function_uuid).toBe(
+        cloudFunction.function_uuid,
+      );
     });
+
+    test('User should be able to get cloud function environment', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/acurast/cloud-functions/${cloudFunction.function_uuid}/environment`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.function_uuid).toBe(
+        cloudFunction.function_uuid,
+      );
+    });
+  });
+
+  describe('Cloud Function Usage tests', () => {
+    test('User should be able to get cloud function usage', async () => {
+      const response = await request(stage.http)
+        .get(`/acurast/cloud-functions/${cloudFunction.function_uuid}/usage`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.function_uuid).toBe(
+        cloudFunction.function_uuid,
+      );
+    });
+  });
+
+  describe('Job tests', () => {
+    // test('User should be able to get a specific job', async () => {
+    //   const response = await request(stage.http)
+    //     .get(`/acurast/jobs/${job.job_uuid}`)
+    //     .set('Authorization', `Bearer ${testUser.token}`);
+    //   expect(response.status).toBe(200);
+    //   expect(response.body.data.job_uuid).toBe(job.job_uuid);
+    //   expect(response.body.data.name).toBe(job.name);
+    // });
 
     test('User should be able to update a job', async () => {
       const response = await request(stage.http)
@@ -147,33 +173,13 @@ describe('Acurast controller tests', () => {
       expect(updatedJob.name).toBe('Updated Job');
     });
 
-    // test('User should be able to delete a job', async () => {
-    //   const jobToDelete = await new AcurastJob({}, stage.context.computing)
-    //     .fake()
-    //     .populate({ function_uuid: cloudFunction.function_uuid })
-    //     .insert();
-
-    //   const response = await request(stage.http)
-    //     .delete(`/acurast/jobs/${jobToDelete.job_uuid}`)
-    //     .set('Authorization', `Bearer ${testUser.token}`);
-    //   expect(response.status).toBe(200);
-
-    //   const deletedJob = await new AcurastJob(
-    //     {},
-    //     stage.context.computing,
-    //   ).populateByUUID(jobToDelete.job_uuid);
-    //   expect(deletedJob.exists()).toBeFalsy();
-    // });
+    test('User should be able to execute a cloud function', async () => {
+      const payload = { someKey: 'someValue' };
+      const response = await request(stage.http)
+        .post(`/acurast/cloud-functions/${cloudFunction.function_uuid}/execute`)
+        .send(payload)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+    });
   });
-
-  // describe('Job Environment tests', () => {
-  //   test('User should be able to set the job environment', async () => {
-  //     const response = await request(stage.http)
-  //       .post(`/acurast/jobs/${job.job_uuid}/environment`)
-  //       .send({ environment: { VAR: 'value' } })
-  //       .set('Authorization', `Bearer ${testUser.token}`);
-  //     expect(response.status).toBe(200);
-  //     expect(response.body.data.job_uuid).toBe(job.job_uuid);
-  //   });
-  // });
 });

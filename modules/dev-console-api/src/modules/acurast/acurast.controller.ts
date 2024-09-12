@@ -161,16 +161,15 @@ export class AcurastController {
     return await this.acurastService.getCloudFunctionUsage(query);
   }
 
-  // TODO: Is this needed?
-  @Get('jobs/:job_uuid')
-  @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(AuthGuard)
-  async getJob(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('job_uuid') uuid: string,
-  ) {
-    return await this.acurastService.getJob(context, uuid);
-  }
+  // @Get('jobs/:job_uuid')
+  // @Permissions({ role: RoleGroup.ProjectAccess })
+  // @UseGuards(AuthGuard)
+  // async getJob(
+  //   @Ctx() context: DevConsoleApiContext,
+  //   @Param('job_uuid') uuid: string,
+  // ) {
+  //   return await this.acurastService.getJob(context, uuid);
+  // }
 
   @Patch('jobs/:job_uuid')
   @Permissions({ role: RoleGroup.ProjectAccess })

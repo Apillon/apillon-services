@@ -163,7 +163,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable,
-    serializable: serializableUpdate,
+    serializable: serializableUpdateProfile,
   })
   public jobId: number;
 
@@ -233,7 +233,7 @@ export class AcurastJob extends UuidSqlModel {
   verifyStatusAndAccess(
     sourceFunction: string,
     context: ServiceContext,
-    additionalStatus?: AcurastJobStatus,
+    additionalStatuses?: AcurastJobStatus[],
     skipAccessCheck = false,
   ) {
     if (!this.exists()) {
@@ -241,7 +241,8 @@ export class AcurastJob extends UuidSqlModel {
     }
 
     const requiredStatuses = [AcurastJobStatus.MATCHED];
-    if (additionalStatus) requiredStatuses.push(additionalStatus);
+    if (additionalStatuses?.length)
+      requiredStatuses.push(...additionalStatuses);
 
     if (!requiredStatuses.includes(this.jobStatus)) {
       throw new ComputingCodeException({
