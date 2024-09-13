@@ -140,7 +140,7 @@ export class CloudFunction extends UuidSqlModel {
     populatable: [],
     serializable: [SerializeFor.PROFILE, SerializeFor.APILLON_API],
     getter() {
-      return `https://${this.function_uuid}/${env.ACURAST_GATEWAY_URL}`;
+      return `https://${this.function_uuid}.${env.ACURAST_GATEWAY_URL}`;
     },
   })
   public gatewayUrl: string;
