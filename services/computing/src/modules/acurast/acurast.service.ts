@@ -174,7 +174,7 @@ export class AcurastService {
       job.verifyStatusAndAccess(
         'setCloudFunctionEnvironment',
         context,
-        AcurastJobStatus.DEPLOYED,
+        [AcurastJobStatus.DEPLOYED],
         true,
       );
 
@@ -346,7 +346,7 @@ export class AcurastService {
     job = new AcurastJob(job, context);
 
     // access is not checked for sendMessage
-    job.verifyStatusAndAccess('executeCloudFunction', context, undefined, true);
+    job.verifyStatusAndAccess('executeCloudFunction', context, [], true);
 
     return await new AcurastWebsocketClient(await getAcurastWebsocketUrl())
       .send(job.publicKey, event.payload)
@@ -417,7 +417,10 @@ export class AcurastService {
   ): Promise<AcurastJob> {
     const job = await new AcurastJob({}, context).populateByUUID(job_uuid);
 
-    job.verifyStatusAndAccess('deleteJob', context, AcurastJobStatus.DEPLOYED);
+    job.verifyStatusAndAccess('deleteJob', context, [
+      AcurastJobStatus.DEPLOYED,
+      AcurastJobStatus.INACTIVE,
+    ]);
 
     const conn = await context.mysql.start();
     try {

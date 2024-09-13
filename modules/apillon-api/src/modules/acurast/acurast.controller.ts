@@ -1,20 +1,20 @@
 import {
-  AttachedServiceType,
+  BaseProjectQueryFilter,
+  CreateCloudFunctionDto,
   CreateJobDto,
   DefaultApiKeyRole,
   JobQueryFilter,
   SetCloudFunctionEnvironmentDto,
-  UpdateJobDto,
   ValidateFor,
+  AttachedServiceType,
 } from '@apillon/lib';
-import { ApiKeyPermissions, Ctx, Validation } from '@apillon/modules-lib';
+import { Ctx, ApiKeyPermissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
   Delete,
   Get,
   Param,
-  Patch,
   Post,
   Query,
   UseGuards,
@@ -28,7 +28,51 @@ import { AcurastService } from './acurast.service';
 export class AcurastController {
   constructor(private readonly acurastService: AcurastService) {}
 
-  @Post('jobs')
+  @Post('cloud-functions')
+  @Validation({ dto: CreateCloudFunctionDto })
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async createCloudFunction(
+    @Ctx() context: ApillonApiContext,
+    @Body() body: CreateCloudFunctionDto,
+  ) {
+    return await this.acurastService.createCloudFunction(context, body);
+  }
+
+  @Get('cloud-functions')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
+  @Validation({ dto: BaseProjectQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async listCloudFunctions(
+    @Ctx() context: ApillonApiContext,
+    @Query() query: BaseProjectQueryFilter,
+  ) {
+    return await this.acurastService.listCloudFunctions(context, query);
+  }
+
+  @Get('cloud-functions/:function_uuid')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
+  @Validation({ dto: JobQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getCloudFunction(
+    @Ctx() context: ApillonApiContext,
+    @Query() query: JobQueryFilter,
+    @Param('function_uuid') function_uuid: string,
+  ) {
+    query.function_uuid = function_uuid;
+    return await this.acurastService.getCloudFunction(context, query);
+  }
+
+  @Post('cloud-functions/:function_uuid/jobs')
   @Validation({ dto: CreateJobDto })
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_WRITE,
@@ -38,24 +82,13 @@ export class AcurastController {
   async createJob(
     @Ctx() context: ApillonApiContext,
     @Body() body: CreateJobDto,
+    @Param('function_uuid') function_uuid: string,
   ) {
+    body.function_uuid = function_uuid;
     return await this.acurastService.createJob(context, body);
   }
 
-  @Get('jobs/:job_uuid')
-  @ApiKeyPermissions({
-    role: DefaultApiKeyRole.KEY_READ,
-    serviceType: AttachedServiceType.COMPUTING,
-  })
-  @UseGuards(AuthGuard)
-  async getJob(
-    @Ctx() context: ApillonApiContext,
-    @Param('job_uuid') uuid: string,
-  ) {
-    return await this.acurastService.getJob(context, uuid);
-  }
-
-  @Post('jobs/:job_uuid/environment')
+  @Post('cloud-functions/:function_uuid/environment')
   @Validation({ dto: SetCloudFunctionEnvironmentDto })
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
@@ -69,41 +102,6 @@ export class AcurastController {
   ) {
     body.function_uuid = function_uuid;
     return await this.acurastService.setCloudFunctionEnvironment(context, body);
-  }
-
-  @Post('jobs/:job_uuid/message')
-  @ApiKeyPermissions({
-    role: DefaultApiKeyRole.KEY_EXECUTE,
-    serviceType: AttachedServiceType.COMPUTING,
-  })
-  @UseGuards(AuthGuard)
-  async executeCloudFunction(
-    @Ctx() context: ApillonApiContext,
-    @Body() payload: any,
-    @Param('job_uuid') job_uuid: string,
-  ) {
-    payload = JSON.stringify(payload); // safety
-    return await this.acurastService.executeCloudFunction(
-      context,
-      payload,
-      job_uuid,
-    );
-  }
-
-  @Patch('jobs/:job_uuid')
-  @ApiKeyPermissions({
-    role: DefaultApiKeyRole.KEY_WRITE,
-    serviceType: AttachedServiceType.COMPUTING,
-  })
-  @Validation({ dto: UpdateJobDto })
-  @UseGuards(AuthGuard, ValidationGuard)
-  async updateJob(
-    @Ctx() context: ApillonApiContext,
-    @Param('job_uuid') job_uuid: string,
-    @Body() body: UpdateJobDto,
-  ) {
-    body.job_uuid = job_uuid;
-    return await this.acurastService.updateJob(context, body);
   }
 
   @Delete('jobs/:job_uuid')
