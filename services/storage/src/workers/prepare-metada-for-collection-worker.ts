@@ -240,13 +240,15 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
                 .filter((x) => x.name == fileContent.image)
                 .pop();
 
-              if (collectionMetadata.useApillonIpfsGateway) {
-                fileContent.image = await ipfsCluster.generateLink(
-                  bucket.project_uuid,
-                  imageFile.CIDv1,
-                );
-              } else {
-                fileContent.image = 'ipfs://' + imageFile.CID;
+              if (imageFile) {
+                if (collectionMetadata.useApillonIpfsGateway) {
+                  fileContent.image = await ipfsCluster.generateLink(
+                    bucket.project_uuid,
+                    imageFile.CIDv1,
+                  );
+                } else {
+                  fileContent.image = 'ipfs://' + imageFile.CID;
+                }
               }
             }
 
