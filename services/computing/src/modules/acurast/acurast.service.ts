@@ -382,6 +382,50 @@ export class AcurastService {
   }
 
   /**
+   * Set a cloud function's status to archived
+   * @param {{ function_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<CloudFunction>}
+   */
+  static async archiveCloudFunction(
+    event: { function_uuid: string },
+    context: ServiceContext,
+  ): Promise<CloudFunction> {
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      event.function_uuid,
+    );
+
+    if (!cloudFunction.exists()) {
+      throw new ComputingNotFoundException();
+    }
+    cloudFunction.canModify(context);
+
+    return await cloudFunction.markArchived();
+  }
+
+  /**
+   * Set a cloud function's status to active
+   * @param {{ function_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Contract>}
+   */
+  static async activateCloudFunction(
+    event: { function_uuid: string },
+    context: ServiceContext,
+  ): Promise<CloudFunction> {
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      event.function_uuid,
+    );
+
+    if (!cloudFunction.exists()) {
+      throw new ComputingNotFoundException();
+    }
+    cloudFunction.canModify(context);
+
+    return await cloudFunction.markActive();
+  }
+
+  /**
    * Updates a job by UUID
    * @param {{ body: UpdateJobDto }} event - contains job update params
    * @param {ServiceContext} context

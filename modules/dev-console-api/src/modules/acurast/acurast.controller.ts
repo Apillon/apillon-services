@@ -161,6 +161,32 @@ export class AcurastController {
     return await this.acurastService.getCloudFunctionUsage(query);
   }
 
+  @Delete('cloud-functions/:function_uuid')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async archiveContract(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('function_uuid') function_uuid: string,
+  ) {
+    return await this.acurastService.archiveCloudFunction(
+      context,
+      function_uuid,
+    );
+  }
+
+  @Patch('cloud-functions/:function_uuid/activate')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async activateContract(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('function_uuid') function_uuid: string,
+  ) {
+    return await this.acurastService.activateCloudFunction(
+      context,
+      function_uuid,
+    );
+  }
+
   // @Get('jobs/:job_uuid')
   // @Permissions({ role: RoleGroup.ProjectAccess })
   // @UseGuards(AuthGuard)

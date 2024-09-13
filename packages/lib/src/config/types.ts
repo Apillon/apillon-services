@@ -294,6 +294,9 @@ export enum ComputingEventType {
   GET_JOB = 'get-job',
   SET_CLOUD_FUNCTION_ENVIRONMENT = 'set-cloud-function-environment',
   GET_CLOUD_FUNCTION_ENVIRONMENT = 'get-cloud-function-environment',
+  ARCHIVE_CLOUD_FUNCTION = 'archive-cloud-function',
+  ACTIVATE_CLOUD_FUNCTION = 'activate-cloud-function',
+
   UPDATE_JOB = 'update-job',
   DELETE_JOB = 'delete-job',
 }
