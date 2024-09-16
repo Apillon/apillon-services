@@ -20,7 +20,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     }, {});
 
   const payload = JSON.stringify({
-    body: safeJsonParse(event.body, {}),
+    body: safeJsonParse(event.body, event.body),
     headers,
     path: event.path,
     queryStringParameters: event.queryStringParameters,
@@ -32,14 +32,18 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   console.log({ payload: JSON.stringify(payload) });
 
   try {
-    const serviceResponse = await new ComputingMicroservice(
-      null,
-    ).executeCloudFunction(JSON.stringify(payload), function_uuid);
+    const response = await new ComputingMicroservice(null).executeCloudFunction(
+      JSON.stringify(payload),
+      function_uuid,
+    );
+
+    const body =
+      typeof response === 'string' ? response : JSON.stringify(response);
 
     return {
       statusCode: 200,
       headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify(serviceResponse),
+      body,
     };
   } catch (error) {
     console.error(error);
