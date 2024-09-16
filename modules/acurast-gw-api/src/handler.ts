@@ -37,13 +37,12 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       function_uuid,
     );
 
-    const body =
-      typeof response === 'string' ? response : JSON.stringify(response);
+    console.log({ response });
 
     return {
       statusCode: 200,
       headers: { 'Access-Control-Allow-Origin': '*' },
-      body,
+      body: response,
     };
   } catch (error) {
     console.error(error);
