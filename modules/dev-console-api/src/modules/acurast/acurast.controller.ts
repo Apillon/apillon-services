@@ -161,16 +161,41 @@ export class AcurastController {
     return await this.acurastService.getCloudFunctionUsage(query);
   }
 
-  // TODO: Is this needed?
-  @Get('jobs/:job_uuid')
+  @Delete('cloud-functions/:function_uuid')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
-  async getJob(
+  async archiveContract(
     @Ctx() context: DevConsoleApiContext,
-    @Param('job_uuid') uuid: string,
+    @Param('function_uuid') function_uuid: string,
   ) {
-    return await this.acurastService.getJob(context, uuid);
+    return await this.acurastService.archiveCloudFunction(
+      context,
+      function_uuid,
+    );
   }
+
+  @Patch('cloud-functions/:function_uuid/activate')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async activateContract(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('function_uuid') function_uuid: string,
+  ) {
+    return await this.acurastService.activateCloudFunction(
+      context,
+      function_uuid,
+    );
+  }
+
+  // @Get('jobs/:job_uuid')
+  // @Permissions({ role: RoleGroup.ProjectAccess })
+  // @UseGuards(AuthGuard)
+  // async getJob(
+  //   @Ctx() context: DevConsoleApiContext,
+  //   @Param('job_uuid') uuid: string,
+  // ) {
+  //   return await this.acurastService.getJob(context, uuid);
+  // }
 
   @Patch('jobs/:job_uuid')
   @Permissions({ role: RoleGroup.ProjectAccess })

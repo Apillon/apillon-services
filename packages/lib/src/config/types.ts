@@ -294,6 +294,9 @@ export enum ComputingEventType {
   GET_JOB = 'get-job',
   SET_CLOUD_FUNCTION_ENVIRONMENT = 'set-cloud-function-environment',
   GET_CLOUD_FUNCTION_ENVIRONMENT = 'get-cloud-function-environment',
+  ARCHIVE_CLOUD_FUNCTION = 'archive-cloud-function',
+  ACTIVATE_CLOUD_FUNCTION = 'activate-cloud-function',
+
   UPDATE_JOB = 'update-job',
   DELETE_JOB = 'delete-job',
 }
@@ -703,7 +706,7 @@ export enum ValidatorErrorCode {
   COMPUTING_CONTRACT_DATA_NOT_VALID = 42200210,
   COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID = 42200211,
   COMPUTING_FIELD_NOT_PRESENT = 42200212,
-  JOB_DATE_NOT_VALID = 42200213,
+  COMPUTING_FIELD_NOT_VALID = 42200213,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,

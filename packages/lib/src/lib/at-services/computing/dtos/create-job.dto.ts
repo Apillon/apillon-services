@@ -43,7 +43,7 @@ export class CreateJobDto extends BaseComputingEntityDto {
     validators: [
       {
         resolver: numberSizeValidator({ minOrEqual: 0, maxOrEqual: 10 }),
-        code: ValidatorErrorCode.COMPUTING_DESCRIPTION_NOT_VALID,
+        code: ValidatorErrorCode.COMPUTING_FIELD_NOT_VALID,
       },
     ],
     defaultValue: 1,

@@ -145,6 +145,28 @@ export class AcurastService {
     ).data;
   }
 
+  async archiveCloudFunction(
+    context: DevConsoleApiContext,
+    function_uuid: string,
+  ) {
+    return (
+      await new ComputingMicroservice(context).archiveCloudFunction(
+        function_uuid,
+      )
+    ).data;
+  }
+
+  async activateCloudFunction(
+    context: DevConsoleApiContext,
+    function_uuid: string,
+  ) {
+    return (
+      await new ComputingMicroservice(context).activateCloudFunction(
+        function_uuid,
+      )
+    ).data;
+  }
+
   async updateJob(context: DevConsoleApiContext, body: UpdateJobDto) {
     return (await new ComputingMicroservice(context).updateJob(body)).data;
   }
