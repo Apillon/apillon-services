@@ -85,7 +85,7 @@ export class CollectionMetadata extends UuidSqlModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: NftsErrorCode.COLLECTION_PROJECT_UUID_NOT_PRESENT,
+        code: NftsErrorCode.DATA_NOT_PRESENT,
       },
     ],
   })
@@ -93,12 +93,15 @@ export class CollectionMetadata extends UuidSqlModel {
 
   async getNextTokens(
     collection_id: number,
-    tokenCount: number,
+    tokenCount: number = 1,
     conn?: PoolConnection,
   ): Promise<CollectionMetadata[]> {
+    if (!collection_id) {
+      throw new Error('collection_id should not be null');
+    }
     const rows = await this.getContext().mysql.paramExecute(
       `
-        SELECT * FROM \`${this.tableName}\`
+        SELECT * FROM \`${DbTables.COLLECTION_METADATA}\`
         WHERE
           collection_id = @collection_id AND
           minted = false
@@ -122,9 +125,15 @@ export class CollectionMetadata extends UuidSqlModel {
     tokenIds: number[],
     conn?: PoolConnection,
   ): Promise<void> {
+    if (!collection_id) {
+      throw new Error('collection_id should not be null');
+    }
+    if (tokenIds.length <= 0) {
+      throw new Error('tokenIds should contain at least one token id');
+    }
     await this.getContext().mysql.paramExecute(
       `
-        UPDATE \`${this.tableName}\`
+        UPDATE \`${DbTables.COLLECTION_METADATA}\`
         SET minted=true
         WHERE
           collection_id = @collection_id AND
@@ -152,7 +161,7 @@ export class CollectionMetadata extends UuidSqlModel {
 
     await this.getContext().mysql.paramExecute(
       `
-        INSERT INTO \`${this.tableName}\` (collection_id, tokenId, metadata)
+        INSERT INTO \`${DbTables.COLLECTION_METADATA}\` (collection_id, tokenId, metadata)
         VALUES ${rows.join(',')};
       `,
       { collection_id },

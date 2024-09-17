@@ -53,29 +53,11 @@ export class NftsService {
 
     project.canModify(context);
 
-    // Check if NFT service for this project already exists
-    const { total } = await new Service({}).getServices(
+    await this.serviceService.createServiceIfItDoesntExist(
       context,
-      new ServiceQueryFilter(
-        {
-          project_uuid: project.project_uuid,
-          serviceType_id: AttachedServiceType.NFT,
-        },
-        context,
-      ),
+      project.project_uuid,
+      AttachedServiceType.NFT,
     );
-    if (total == 0) {
-      // Create NFT service - "Attach"
-      const nftService = new ServiceDto(
-        {
-          project_uuid: project.project_uuid,
-          name: 'NFTs service',
-          serviceType_id: AttachedServiceType.NFT,
-        },
-        context,
-      );
-      await this.serviceService.createService(context, nftService);
-    }
 
     return (
       await new NftsMicroservice(context).createCollection(
@@ -102,29 +84,11 @@ export class NftsService {
 
     project.canModify(context);
 
-    // Check if NFT service for this project already exists
-    const { total } = await new Service({}).getServices(
+    await this.serviceService.createServiceIfItDoesntExist(
       context,
-      new ServiceQueryFilter(
-        {
-          project_uuid: project.project_uuid,
-          serviceType_id: AttachedServiceType.NFT,
-        },
-        context,
-      ),
+      project.project_uuid,
+      AttachedServiceType.NFT,
     );
-    if (total == 0) {
-      // Create NFT service - "Attach"
-      const nftService = new ServiceDto(
-        {
-          project_uuid: project.project_uuid,
-          name: 'NFTs service',
-          serviceType_id: AttachedServiceType.NFT,
-        },
-        context,
-      );
-      await this.serviceService.createService(context, nftService);
-    }
 
     return (
       await new NftsMicroservice(context).createUniqueCollection(

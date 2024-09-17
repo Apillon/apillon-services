@@ -130,76 +130,69 @@ export class NftsService {
       context,
     );
 
-    await spendCreditAction(
-      context,
-      spendCredit,
-      () =>
-        new Promise(async (resolve, _reject) => {
-          try {
-            //Call storage MS, to create bucket used to upload NFT metadata. Bucket is not created if baseUri is provided.
-            let nftMetadataBucket;
-            if (!collection.baseUri) {
-              try {
-                const createBucketParams: CreateBucketDto =
-                  new CreateBucketDto().populate({
-                    project_uuid: params.body.project_uuid,
-                    bucketType: 3,
-                    name: `${collection.name} bucket`,
-                  });
-                nftMetadataBucket = (
-                  await new StorageMicroservice(context).createBucket(
-                    createBucketParams,
-                  )
-                ).data;
-                collection.bucket_uuid = nftMetadataBucket.bucket_uuid;
-              } catch (err) {
-                throw await new NftsContractException(
-                  NftsErrorCode.CREATE_BUCKET_FOR_NFT_METADATA_ERROR,
-                  context,
-                  err,
-                ).writeToMonitor({});
-              }
-            }
+    await spendCreditAction(context, spendCredit, async () => {
+      //Call storage MS, to create bucket used to upload NFT metadata. Bucket is not created if baseUri is provided.
+      let nftMetadataBucket;
+      if (!collection.baseUri) {
+        try {
+          const createBucketParams: CreateBucketDto =
+            new CreateBucketDto().populate({
+              project_uuid: params.body.project_uuid,
+              bucketType: 3,
+              name: `${collection.name} bucket`,
+            });
+          nftMetadataBucket = (
+            await new StorageMicroservice(context).createBucket(
+              createBucketParams,
+            )
+          ).data;
+          collection.bucket_uuid = nftMetadataBucket.bucket_uuid;
+        } catch (err) {
+          throw await new NftsContractException(
+            NftsErrorCode.CREATE_BUCKET_FOR_NFT_METADATA_ERROR,
+            context,
+            err,
+          ).writeToMonitor({});
+        }
+      }
 
-            await collection.validateOrThrow(NftsModelValidationException);
+      await collection.validateOrThrow(NftsModelValidationException);
 
-            const conn = await context.mysql.start();
+      const conn = await context.mysql.start();
 
-            try {
-              //Insert collection record to DB
-              await collection.insert(SerializeFor.INSERT_DB, conn);
+      try {
+        //Insert collection record to DB
+        await collection.insert(SerializeFor.INSERT_DB, conn);
 
-              //If baseUri is present, deploy nft collection contract
-              if (collection.baseUri) {
-                await deployNFTCollectionContract(context, collection, conn);
-              }
+        //If baseUri is present, deploy nft collection contract
+        if (collection.baseUri) {
+          await deployNFTCollectionContract(context, collection, conn);
+        }
 
-              await context.mysql.commit(conn);
-            } catch (err) {
-              await context.mysql.rollback(conn);
+        await context.mysql.commit(conn);
+      } catch (err) {
+        await context.mysql.rollback(conn);
 
-              throw await new NftsContractException(
-                NftsErrorCode.DEPLOY_NFT_CONTRACT_ERROR,
-                context,
-                err,
-              ).writeToMonitor({
-                logType: LogType.ERROR,
-                service: ServiceName.NFTS,
-                project_uuid: collection.project_uuid,
-                user_uuid: context.user?.user_uuid,
-                data: {
-                  collection: collection.serialize(),
-                  err,
-                },
-                sendAdminAlert: true,
-              });
-            }
-            resolve(true);
-          } catch (err) {
-            _reject(err);
-          }
-        }),
-    );
+        throw await new NftsContractException(
+          NftsErrorCode.DEPLOY_NFT_CONTRACT_ERROR,
+          context,
+          err,
+        ).writeToMonitor({
+          logType: LogType.ERROR,
+          service: ServiceName.NFTS,
+          project_uuid: collection.project_uuid,
+          user_uuid: context.user?.user_uuid,
+          data: {
+            collection_uuid: collection.collection_uuid,
+            chainType: collection.chainType,
+            chain: collection.chain,
+            collectionType: collection.collectionType,
+            err,
+          },
+          sendAdminAlert: true,
+        });
+      }
+    });
 
     await Promise.all([
       new Lmas().writeLog({
@@ -209,7 +202,12 @@ export class NftsService {
         message: 'New NFT collection created and submited to deployment',
         location: 'NftsService/deployNftContract',
         service: ServiceName.NFTS,
-        data: { collection_uuid: collection.collection_uuid },
+        data: {
+          collection_uuid: collection.collection_uuid,
+          chainType: collection.chainType,
+          chain: collection.chain,
+          collectionType: collection.collectionType,
+        },
       }),
 
       // Set mailerlite field indicating the user has an nft collection

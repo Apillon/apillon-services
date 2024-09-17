@@ -1,7 +1,5 @@
 import {
-  enumInclusionValidator,
   ModelBase,
-  NFTCollectionType,
   PopulateFrom,
   prop,
   SerializeFor,
@@ -18,6 +16,7 @@ import {
   substrateAddressValidator,
   SubstrateChainPrefix,
 } from '../../../../substrate';
+import { CreateCollectionDtoGenericBase } from './create-collection.dto';
 
 export class MetadataAttributes extends ModelBase {
   @prop({
@@ -27,7 +26,7 @@ export class MetadataAttributes extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_DEPLOY_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -40,7 +39,7 @@ export class MetadataAttributes extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_DEPLOY_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -53,7 +52,7 @@ export class MetadataAttributes extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_DEPLOY_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -68,7 +67,7 @@ export class Metadata extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_DEPLOY_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
       {
         resolver: stringLengthValidator({ minOrEqual: 1, maxOrEqual: 255 }),
@@ -85,7 +84,7 @@ export class Metadata extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_DEPLOY_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
       {
         resolver: stringLengthValidator({ minOrEqual: 1, maxOrEqual: 255 }),
@@ -102,7 +101,7 @@ export class Metadata extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_DEPLOY_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
       {
         resolver: stringLengthValidator({ minOrEqual: 1, maxOrEqual: 255 }),
@@ -119,91 +118,14 @@ export class Metadata extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_DEPLOY_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
   public attributes: MetadataAttributes;
 }
 
-export class CreateUniqueCollectionDTO extends ModelBase {
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_COLLECTION_TYPE_NOT_PRESENT,
-      },
-      {
-        resolver: enumInclusionValidator(NFTCollectionType),
-        code: ValidatorErrorCode.NFT_COLLECTION_TYPE_NOT_VALID,
-      },
-    ],
-  })
-  public collectionType: NFTCollectionType;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_DEPLOY_SYMBOL_NOT_PRESENT,
-      },
-      {
-        resolver: stringLengthValidator({ minOrEqual: 1, maxOrEqual: 8 }),
-        code: ValidatorErrorCode.NFT_DEPLOY_SYMBOL_NOT_VALID,
-      },
-    ],
-  })
-  public symbol: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_DEPLOY_NAME_NOT_PRESENT,
-      },
-      {
-        resolver: stringLengthValidator({ minOrEqual: 1, maxOrEqual: 255 }),
-        code: ValidatorErrorCode.NFT_DEPLOY_NAME_NOT_VALID,
-      },
-    ],
-  })
-  public name: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_DEPLOY_PROJECT_UUID_NOT_PRESENT,
-      },
-    ],
-  })
-  public project_uuid: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: stringLengthValidator({ minOrEqual: 0, maxOrEqual: 1000 }),
-        code: ValidatorErrorCode.NFT_DEPLOY_COLLECTION_DESCRIPTION_NOT_VALID,
-      },
-    ],
-  })
-  public description: string;
-
+export class CreateUniqueCollectionDTO extends CreateCollectionDtoGenericBase {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
