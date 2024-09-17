@@ -1,5 +1,7 @@
 import {
+  CacheKeyPrefix,
   Context,
+  invalidateCacheKey,
   LogType,
   PoolConnection,
   SerializeFor,
@@ -126,6 +128,9 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
     await Promise.all([
       job.update(SerializeFor.UPDATE_DB, conn),
       cloudFunction.update(SerializeFor.UPDATE_DB, conn),
+      invalidateCacheKey(
+        `${CacheKeyPrefix.ACURAST_JOB}:${cloudFunction.function_uuid}`,
+      ),
     ]);
   }
 }
