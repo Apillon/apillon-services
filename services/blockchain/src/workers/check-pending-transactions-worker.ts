@@ -6,6 +6,7 @@ import {
   getChainName,
   LogType,
   ServiceName,
+  SqlModelStatus,
   TransactionStatus,
 } from '@apillon/lib';
 import {
@@ -51,10 +52,14 @@ export class CheckPendingTransactionsWorker extends BaseWorker {
                LEFT JOIN ${DbTables.ENDPOINT} as e
                          ON (q.chain = e.chain AND e.chainType = w.chainType)
         WHERE q.transactionStatus = @transactionStatus
+          AND q.status = @status
           AND q.createTime < NOW() - INTERVAL 15 MINUTE
         GROUP BY q.address, q.chain, q.chaintype, e.url
       `,
-      { transactionStatus: TransactionStatus.PENDING },
+      {
+        transactionStatus: TransactionStatus.PENDING,
+        status: SqlModelStatus.ACTIVE,
+      },
     );
 
     let message = '';
