@@ -81,9 +81,6 @@ import { UniqueNftClient } from './clients/unique-nft-client';
 import { SubstrateChainPrefix } from '@apillon/blockchain-lib/substrate';
 import { CollectionMetadata } from './models/collectionMetadata.model';
 
-const IPFS_SCHEMA = 'ipfs://';
-const IPNS_SCHEMA = 'ipns://';
-
 export class NftsService {
   //#region collection functions
 
@@ -260,47 +257,37 @@ export class NftsService {
       context,
     );
 
-    await spendCreditAction(
-      context,
-      spendCredit,
-      () =>
-        new Promise(async (resolve, _reject) => {
-          try {
-            const conn = await context.mysql.start();
-            try {
-              await collection.insert(SerializeFor.INSERT_DB, conn);
-              await new CollectionMetadata({}, context).batchInsert(
-                collection.id,
-                params.body.metadata,
-                conn,
-              );
-              await deployNFTCollectionContract(context, collection, conn);
-              await context.mysql.commit(conn);
-            } catch (err) {
-              await context.mysql.rollback(conn);
+    await spendCreditAction(context, spendCredit, async () => {
+      const conn = await context.mysql.start();
+      try {
+        await collection.insert(SerializeFor.INSERT_DB, conn);
+        await new CollectionMetadata({}, context).batchInsert(
+          collection.id,
+          params.body.metadata,
+          conn,
+        );
+        await deployNFTCollectionContract(context, collection, conn);
+        await context.mysql.commit(conn);
+      } catch (err) {
+        await context.mysql.rollback(conn);
 
-              throw await new NftsContractException(
-                NftsErrorCode.DEPLOY_NFT_CONTRACT_ERROR,
-                context,
-                err,
-              ).writeToMonitor({
-                logType: LogType.ERROR,
-                service: ServiceName.NFTS,
-                project_uuid: collection.project_uuid,
-                user_uuid: context.user?.user_uuid,
-                data: {
-                  collection: collection.serialize(),
-                  err,
-                },
-                sendAdminAlert: true,
-              });
-            }
-            resolve(true);
-          } catch (err) {
-            _reject(err);
-          }
-        }),
-    );
+        throw await new NftsContractException(
+          NftsErrorCode.DEPLOY_NFT_CONTRACT_ERROR,
+          context,
+          err,
+        ).writeToMonitor({
+          logType: LogType.ERROR,
+          service: ServiceName.NFTS,
+          project_uuid: collection.project_uuid,
+          user_uuid: context.user?.user_uuid,
+          data: {
+            collection: collection.serialize(),
+            err,
+          },
+          sendAdminAlert: true,
+        });
+      }
+    });
 
     await Promise.all([
       new Lmas().writeLog({
@@ -1763,30 +1750,6 @@ const TYPE_ERROR_MAP: Record<TransactionType, NftsErrorCode> = {
   [TransactionType.NEST_MINT_NFT]: NftsErrorCode.NEST_MINT_NFT_ERROR,
   [TransactionType.BURN_NFT]: NftsErrorCode.BURN_NFT_ERROR,
 };
-
-async function getFullUrlFromIpfsUrl(
-  storageClient: StorageMicroservice,
-  project_uuid: string,
-  url: string,
-) {
-  if (url.startsWith(IPFS_SCHEMA)) {
-    const result = await storageClient.getLink(
-      project_uuid,
-      url.replace(IPFS_SCHEMA, ''),
-      'cid',
-    );
-    return result.link;
-  }
-  if (url.startsWith(IPNS_SCHEMA)) {
-    const result = await storageClient.getLink(
-      project_uuid,
-      url.replace(IPNS_SCHEMA, ''),
-      'ipns',
-    );
-    return result.link;
-  }
-  return url;
-}
 
 async function getMintPayload(
   collection: Collection,
