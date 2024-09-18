@@ -251,6 +251,7 @@ export enum ScsEventType {
 export enum NftsEventType {
   HELLO = 'hello',
   CREATE_COLLECTION = 'create-collection',
+  CREATE_UNIQUE_COLLECTION = 'create-unique-collection',
   NFT_COLLECTIONS_LIST = 'list-nft-collections',
   GET_NFT_COLLECTION = 'get-nft-collection',
   GET_NFT_COLLECTION_BY_UUID = 'get-nft-collection-by-uuid',

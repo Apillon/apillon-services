@@ -19,6 +19,7 @@ import {
 import {
   CreateCollectionDTO,
   CreateSubstrateCollectionDTO,
+  CreateUniqueCollectionDTO,
 } from '@apillon/blockchain-lib/common';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
@@ -79,6 +80,21 @@ export class NftsController {
       ChainType.SUBSTRATE,
       body,
     );
+  }
+
+  @Post('collections/unique')
+  @Validation({ dto: CreateUniqueCollectionDTO })
+  @UseGuards(ValidationGuard)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async createUniqueCollection(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: CreateUniqueCollectionDTO,
+  ) {
+    return await this.nftsService.createUniqueCollection(context, body);
   }
 
   @Get('collections')

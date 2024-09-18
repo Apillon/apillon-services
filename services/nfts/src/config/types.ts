@@ -1,6 +1,7 @@
 export enum DbTables {
   TRANSACTION = 'transaction',
   COLLECTION = 'collection',
+  COLLECTION_METADATA = 'collection_metadata',
   CONTRACT_VERSION = 'contract_version',
 }
 
@@ -44,6 +45,7 @@ export enum NftsErrorCode {
   CHAIN_TYPE_NOT_VALID = 42212016,
   INVALID_EVM_ADDRESS = 42212017,
   INVALID_SUBSTRATE_ADDRESS = 42212018,
+  DATA_NOT_PRESENT = 42212019,
 
   //500
   GENERAL_SERVER_ERROR = 50012000,
