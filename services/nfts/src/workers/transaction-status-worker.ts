@@ -69,21 +69,6 @@ export class TransactionStatusWorker extends BaseQueueWorker {
             );
           }
 
-          // // TODO: even needed?
-          // // TODO: separate worker?
-          // if (
-          //   collection.chainType === ChainType.SUBSTRATE &&
-          //   nftTransaction.chainId === SubstrateChain.UNIQUE &&
-          //   nftTransaction.transactionType == TransactionType.MINT_NFT
-          // ) {
-          //   // TODO: set NFT metadata via blockchain service
-          //   const client = new UniqueNftClient();
-          //   const tx = await client.configureNft(
-          //     collection.contractAddress,
-          //     res.data.tokenId,
-          //   );
-          // }
-
           //Refund credit if transaction failed
           if (res.transactionStatus > 2) {
             //For ContractDeploy, reference for credit is collection. For other transaction_uuid se set as reference.

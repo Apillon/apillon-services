@@ -95,52 +95,6 @@ export class UniqueNftClient {
     return this.unsignedExtrinsicPayloadToRawTx(result);
   }
 
-  // TODO: remove if unused
-  // async configureNft(
-  //   collectionId: string,
-  //   tokenId: number,
-  //   imageUrl: string,
-  //   properties: any[],
-  // ) {
-  //   const updateNftTx = this.unsignedExtrinsicPayloadToRawTx(
-  //     await this.client.token.updateNft.build({
-  //       collectionId,
-  //       tokenId,
-  //       data: {
-  //         image: imageUrl,
-  //         // image_details: {
-  //         //   name: "Artwork",
-  //         //   type: "image",
-  //         //   format: "PNG",
-  //         //   bytes: 1048576,
-  //         //   width: 1000,
-  //         //   height: 1000,
-  //         //   sha256: "0x1234...",
-  //         // }
-  //         attributes: [
-  //           {
-  //             trait_type: 'Color',
-  //             identifier: 'Red',
-  //             //display_type: '',
-  //           },
-  //           {
-  //             trait_type: 'Size',
-  //             identifier: 'Large',
-  //           },
-  //         ],
-  //       },
-  //     }),
-  //   );
-  //   const setPropertiesTx = this.unsignedExtrinsicPayloadToRawTx(
-  //     await this.client.token.setProperties.build({
-  //       collectionId,
-  //       tokenId,
-  //       properties,
-  //     }),
-  //   );
-  //   return;
-  // }
-
   getTokenAddress(collectionId: string, tokenId: number) {
     return Address.nesting.idsToAddress(parseInt(collectionId), tokenId);
   }

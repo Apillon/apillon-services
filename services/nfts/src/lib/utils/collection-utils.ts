@@ -166,10 +166,9 @@ export async function deployNFTCollectionContract(
           collection.name,
           collection.symbol,
           collection.description,
-          // TODO: we can implement admin
+          // we can implement admins
           [],
-          // TODO: unique suggested to avoid using AllowList since they will
-          //  redesign it
+          // unique suggested to avoid using AllowList since they will redesign it
           false, //collection.drop,
           collection.collectionType === NFTCollectionType.NESTABLE,
           collection.isRevokable,

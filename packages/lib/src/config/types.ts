@@ -1010,7 +1010,6 @@ export enum ProductCode {
   NFT_UNIQUE_MINT = 57,
   NFT_UNIQUE_BURN = 58,
   NFT_UNIQUE_TRANSFER_COLLECTION = 59,
-  //NFT_UNIQUE_SET_BASE_URI = 60,
 }
 
 export enum ProductService {

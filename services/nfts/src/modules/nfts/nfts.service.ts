@@ -630,7 +630,7 @@ export class NftsService {
       collection.chain === SubstrateChain.UNIQUE
     ) {
       throw new NftsCodeException({
-        status: 500,
+        status: 405,
         code: NftsErrorCode.METHOD_NOT_ALLOWED,
         context,
       });
@@ -963,8 +963,6 @@ export class NftsService {
               collection,
               onChainCollection.lastTokenId,
             );
-            // TODO: we blindly use lastTokenId which means we would get
-            //  duplicates if user mints twice in a row
             const metadata = await new CollectionMetadata(
               {},
               context,
@@ -1346,10 +1344,9 @@ export class NftsService {
                 body.tokenId,
               );
             } catch (err: unknown) {
-              // TODO: better exception?
               throw new NftsCodeException({
                 code: NftsErrorCode.BURN_NFT_ERROR,
-                status: 500,
+                status: 404,
                 errorMessage: `Token with id ${body.tokenId} doesn't exist on collection with id ${collection.contractAddress}: ${err}`,
               });
             }
