@@ -542,7 +542,6 @@ export class NftsService {
         case ChainType.SUBSTRATE: {
           if (collection.chain === SubstrateChain.UNIQUE) {
             const client = new UniqueNftClient();
-            // TODO: check current owner?
             txHash = await client.transferOwnership(
               collection.contractAddress,
               body.address,
