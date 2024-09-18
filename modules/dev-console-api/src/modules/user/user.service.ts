@@ -328,7 +328,7 @@ export class UserService {
     const token = generateJwtToken(
       JwtTokenType.USER_RESET_PASSWORD,
       { email },
-      JwtExpireTime.ONE_HOUR,
+      JwtExpireTime.TEN_MINUTES,
       emailResult.authUser.password ? emailResult.authUser.password : undefined,
     );
 

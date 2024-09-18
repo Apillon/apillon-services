@@ -174,7 +174,7 @@ export class AcurastService {
       job.verifyStatusAndAccess(
         'setCloudFunctionEnvironment',
         context,
-        AcurastJobStatus.DEPLOYED,
+        [AcurastJobStatus.DEPLOYED],
         true,
       );
 
@@ -319,7 +319,7 @@ export class AcurastService {
     event: { payload: string; function_uuid: string },
     context: ServiceContext,
   ): Promise<any> {
-    const job = await runCachedFunction<AcurastJob>(
+    let job = await runCachedFunction<AcurastJob>(
       `${CacheKeyPrefix.ACURAST_JOB}:${event.function_uuid}`,
       async () => {
         const cloudFunction = await new CloudFunction(
@@ -342,9 +342,11 @@ export class AcurastService {
       },
       CacheKeyTTL.DEFAULT,
     );
+    // In case result is returned from cache
+    job = new AcurastJob(job, context);
 
     // access is not checked for sendMessage
-    job.verifyStatusAndAccess('executeCloudFunction', context, undefined, true);
+    job.verifyStatusAndAccess('executeCloudFunction', context, [], true);
 
     return await new AcurastWebsocketClient(await getAcurastWebsocketUrl())
       .send(job.publicKey, event.payload)
@@ -377,6 +379,50 @@ export class AcurastService {
           data: { ...event },
         });
       });
+  }
+
+  /**
+   * Set a cloud function's status to archived
+   * @param {{ function_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<CloudFunction>}
+   */
+  static async archiveCloudFunction(
+    event: { function_uuid: string },
+    context: ServiceContext,
+  ): Promise<CloudFunction> {
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      event.function_uuid,
+    );
+
+    if (!cloudFunction.exists()) {
+      throw new ComputingNotFoundException();
+    }
+    cloudFunction.canModify(context);
+
+    return await cloudFunction.markArchived();
+  }
+
+  /**
+   * Set a cloud function's status to active
+   * @param {{ function_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Contract>}
+   */
+  static async activateCloudFunction(
+    event: { function_uuid: string },
+    context: ServiceContext,
+  ): Promise<CloudFunction> {
+    const cloudFunction = await new CloudFunction({}, context).populateByUUID(
+      event.function_uuid,
+    );
+
+    if (!cloudFunction.exists()) {
+      throw new ComputingNotFoundException();
+    }
+    cloudFunction.canModify(context);
+
+    return await cloudFunction.markActive();
   }
 
   /**
@@ -415,7 +461,10 @@ export class AcurastService {
   ): Promise<AcurastJob> {
     const job = await new AcurastJob({}, context).populateByUUID(job_uuid);
 
-    job.verifyStatusAndAccess('deleteJob', context, AcurastJobStatus.DEPLOYED);
+    job.verifyStatusAndAccess('deleteJob', context, [
+      AcurastJobStatus.DEPLOYED,
+      AcurastJobStatus.INACTIVE,
+    ]);
 
     const conn = await context.mysql.start();
     try {

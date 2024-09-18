@@ -206,6 +206,22 @@ export class ComputingMicroservice extends BaseService {
     });
   }
 
+  public async archiveCloudFunction(function_uuid: string) {
+    const data = {
+      eventName: ComputingEventType.ARCHIVE_CLOUD_FUNCTION,
+      function_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async activateCloudFunction(function_uuid: string) {
+    const data = {
+      eventName: ComputingEventType.ACTIVATE_CLOUD_FUNCTION,
+      function_uuid,
+    };
+    return await this.callService(data);
+  }
+
   public async updateJob(body: UpdateJobDto) {
     return await this.callService({
       eventName: ComputingEventType.UPDATE_JOB,

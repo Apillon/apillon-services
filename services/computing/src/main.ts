@@ -43,6 +43,10 @@ export async function processEvent(event: any, context: Context): Promise<any> {
       AcurastService.setCloudFunctionEnvironment,
     [ComputingEventType.GET_CLOUD_FUNCTION_ENVIRONMENT]:
       AcurastService.getCloudFunctionEnvironment,
+    [ComputingEventType.ARCHIVE_CLOUD_FUNCTION]:
+      AcurastService.archiveCloudFunction,
+    [ComputingEventType.ACTIVATE_CLOUD_FUNCTION]:
+      AcurastService.activateCloudFunction,
 
     [ComputingEventType.CREATE_JOB]: AcurastService.createJob,
     [ComputingEventType.GET_JOB]: AcurastService.getJobByUuid,

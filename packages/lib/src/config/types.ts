@@ -209,9 +209,13 @@ export enum AuthenticationEventType {
   SPORRAN_REQUEST_CREDENTIAL = 'sporran-request-credential',
   SPORRAN_VERIFY_CREDENTIAL = 'sporran-verify-credential',
   GET_TOTAL_DIDS = 'get-total-dids',
+  EW_INFO = 'get-embedded-wallets-info',
+  EW_INTEGRATION_CREATE = 'create-ew-integration',
+  EW_INTEGRATION_GET = 'get-ew-integration',
+  EW_INTEGRATION_LIST = 'list-ew-integration',
+  EW_INTEGRATION_UPDATE = 'update-ew-integration',
   CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
   LIST_OASIS_SIGNATURES = 'list-oasis-signatures',
-  GET_OASIS_SIGNATURES_COUNT_BY_API_KEY = 'get-oasis-signatures-count-by-api-key',
   GENERATE_OTP = 'generate-otp',
   VALIDATE_OTP = 'validate-otp',
 }
@@ -296,6 +300,9 @@ export enum ComputingEventType {
   GET_JOB = 'get-job',
   SET_CLOUD_FUNCTION_ENVIRONMENT = 'set-cloud-function-environment',
   GET_CLOUD_FUNCTION_ENVIRONMENT = 'get-cloud-function-environment',
+  ARCHIVE_CLOUD_FUNCTION = 'archive-cloud-function',
+  ACTIVATE_CLOUD_FUNCTION = 'activate-cloud-function',
+
   UPDATE_JOB = 'update-job',
   DELETE_JOB = 'delete-job',
 }
@@ -692,6 +699,7 @@ export enum ValidatorErrorCode {
   CREATE_OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT = 42200165,
   GENERATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200166,
   VALIDATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200167,
+  CREATE_EW_INTEGRATION_REQUIRED_DATA_NOT_PRESENT = 42200168,
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
   COMPUTING_CONTRACT_TYPE_NOT_PRESENT = 42200202,
@@ -705,7 +713,7 @@ export enum ValidatorErrorCode {
   COMPUTING_CONTRACT_DATA_NOT_VALID = 42200210,
   COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID = 42200211,
   COMPUTING_FIELD_NOT_PRESENT = 42200212,
-  JOB_DATE_NOT_VALID = 42200213,
+  COMPUTING_FIELD_NOT_VALID = 42200213,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
@@ -842,6 +850,8 @@ export enum QuotaCode {
   MAX_STORAGE = 10,
   MAX_BANDWIDTH = 11,
   MAX_ETHEREUM_NFT_COLLECTIONS = 12,
+  MAX_EMBEDDED_WALLET_INTEGRATIONS = 13,
+  MAX_EMBEDDED_WALLET_SIGNATURES = 14,
 }
 
 /**
@@ -1074,6 +1084,7 @@ export enum EmailTemplate {
 export enum JwtExpireTime {
   ONE_DAY = '1d',
   ONE_HOUR = '1h',
+  TEN_MINUTES = '10m',
   TWENTY_MINUTES = '20m',
   FIVE_MINUTES = '5m',
   NEVER = 'never',
@@ -1081,7 +1092,7 @@ export enum JwtExpireTime {
 
 export enum SubscriptionPackageId {
   FREEMIUM = 1,
-  CATERPILLAR,
-  COCOON,
-  BUTTERFLY,
+  CATERPILLAR = 2,
+  COCOON = 3,
+  BUTTERFLY = 4,
 }

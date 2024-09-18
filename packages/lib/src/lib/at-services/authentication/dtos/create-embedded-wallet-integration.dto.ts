@@ -7,7 +7,7 @@ import {
 } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
 
-export class CreateOasisSignatureDto extends ModelBase {
+export class CreateEWIntegrationDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
@@ -15,43 +15,9 @@ export class CreateOasisSignatureDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.CREATE_OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT,
+        code: ValidatorErrorCode.CREATE_EW_INTEGRATION_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
-  })
-  public token: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.CREATE_OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-  })
-  public data: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.CREATE_OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-  })
-  public integration_uuid: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
   })
   public project_uuid: string;
 
@@ -59,7 +25,20 @@ export class CreateOasisSignatureDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.CREATE_EW_INTEGRATION_REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public title: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
   })
-  public apiKey: string;
+  public description: string;
 }

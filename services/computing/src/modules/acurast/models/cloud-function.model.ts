@@ -45,6 +45,20 @@ const serializable = [
 export class CloudFunction extends UuidSqlModel {
   public readonly tableName = DbTables.CLOUD_FUNCTION;
 
+  /**
+   * Override field to avoid showing in responses
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+      SerializeFor.LOGGER,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable,
@@ -119,12 +133,25 @@ export class CloudFunction extends UuidSqlModel {
   public activeJob_id: number;
 
   /**
+   * Virtual field - gateway URL for this cloud function
+   */
+  @prop({
+    parser: { resolver: arrayParser() },
+    populatable: [],
+    serializable: [SerializeFor.PROFILE, SerializeFor.APILLON_API],
+    getter() {
+      return `https://${this.function_uuid}.${env.ACURAST_GATEWAY_URL}`;
+    },
+  })
+  public gatewayUrl: string;
+
+  /**
    * Virtual field - list of jobs for this CF
    */
   @prop({
     parser: { resolver: arrayParser() },
     populatable: [],
-    serializable: [SerializeFor.PROFILE],
+    serializable: [SerializeFor.PROFILE, SerializeFor.APILLON_API],
   })
   public jobs: AcurastJob[];
 

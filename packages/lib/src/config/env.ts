@@ -629,6 +629,11 @@ export interface IEnv {
   AIRDROP_CLAIM_TIMESTAMP: string;
   AIRDROP_CLAIM_CONTRACT_ADDRESS: string;
   AIRDROP_CLAIM_CHAIN_ID: number;
+
+  /**
+   * ACURAST
+   */
+  ACURAST_GATEWAY_URL: string;
 }
 
 // dotenv.config();
@@ -1139,6 +1144,9 @@ export let env: IEnv = {
   AIRDROP_CLAIM_TIMESTAMP: process.env['AIRDROP_CLAIM_TIMESTAMP'],
   AIRDROP_CLAIM_CONTRACT_ADDRESS: process.env['AIRDROP_CLAIM_CONTRACT_ADDRESS'],
   AIRDROP_CLAIM_CHAIN_ID: +process.env['AIRDROP_CLAIM_CHAIN_ID'],
+
+  /** ACURAST */
+  ACURAST_GATEWAY_URL: process.env['ACURAST_GATEWAY_URL'],
 };
 
 export let isEnvReady = false;

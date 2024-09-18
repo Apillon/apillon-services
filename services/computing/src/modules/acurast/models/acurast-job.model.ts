@@ -35,11 +35,14 @@ const serializable = [
   SerializeFor.INSERT_DB,
   SerializeFor.ADMIN,
   SerializeFor.SERVICE,
-  SerializeFor.APILLON_API,
   SerializeFor.SELECT_DB,
 ];
 
-const serializableProfile = [...serializable, SerializeFor.PROFILE];
+const serializableProfile = [
+  ...serializable,
+  SerializeFor.PROFILE,
+  SerializeFor.APILLON_API,
+];
 const serializableUpdate = [...serializable, SerializeFor.UPDATE_DB];
 const serializableUpdateProfile = [
   ...serializable,
@@ -49,6 +52,22 @@ const serializableUpdateProfile = [
 
 export class AcurastJob extends UuidSqlModel {
   public readonly tableName = DbTables.ACURAST_JOB;
+
+  /**
+   * Override field to show in API
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+      SerializeFor.LOGGER,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -128,7 +147,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: dateParser() },
     populatable,
-    serializable: serializableProfile,
+    serializable,
     validators: [
       {
         resolver: presenceValidator(),
@@ -163,7 +182,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable,
-    serializable: serializableUpdate,
+    serializable: serializableUpdateProfile,
   })
   public jobId: number;
 
@@ -190,7 +209,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable,
-    serializable: serializableUpdateProfile,
+    serializable: serializableUpdateProfile.concat(SerializeFor.APILLON_API),
     validators: [
       {
         resolver: enumInclusionValidator(AcurastJobStatus, true),
@@ -233,7 +252,7 @@ export class AcurastJob extends UuidSqlModel {
   verifyStatusAndAccess(
     sourceFunction: string,
     context: ServiceContext,
-    additionalStatus?: AcurastJobStatus,
+    additionalStatuses?: AcurastJobStatus[],
     skipAccessCheck = false,
   ) {
     if (!this.exists()) {
@@ -241,7 +260,8 @@ export class AcurastJob extends UuidSqlModel {
     }
 
     const requiredStatuses = [AcurastJobStatus.MATCHED];
-    if (additionalStatus) requiredStatuses.push(additionalStatus);
+    if (additionalStatuses?.length)
+      requiredStatuses.push(...additionalStatuses);
 
     if (!requiredStatuses.includes(this.jobStatus)) {
       throw new ComputingCodeException({
@@ -321,7 +341,7 @@ export class AcurastJob extends UuidSqlModel {
     return {
       ...jobResults,
       items: jobResults.items.map((job) =>
-        new AcurastJob(job, context).serialize(SerializeFor.PROFILE),
+        new AcurastJob(job, context).serializeByContext(),
       ),
     };
   }
