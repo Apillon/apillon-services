@@ -8,7 +8,7 @@ export async function upgrade(
     `INSERT INTO \`${DbTables.CONTRACT_VERSION}\`
       (\`collectionType\`, \`chainType\`, \`version\`, \`abi\`, \`bytecode\`, \`status\`)
       VALUES
-      (${NFTCollectionType.GENERIC}, ${ChainType.EVM}, 3, '', '', ${SqlModelStatus.ACTIVE});`,
+      (${NFTCollectionType.GENERIC}, ${ChainType.EVM}, 3, '{}', '{}', ${SqlModelStatus.ACTIVE});`,
   );
 }
 
