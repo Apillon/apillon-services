@@ -26,7 +26,7 @@ import {
 } from '../../../../substrate';
 import { SUBSTRATE_NFTS_MAX_SUPPLY } from '@apillon/lib';
 
-export class CreateCollectionDtoGenericBase {
+export class CreateCollectionDtoGenericBase extends ModelBase {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
