@@ -4,6 +4,7 @@ import {
   Context,
   CreateEvmTransactionDto,
   CreateSubstrateTransactionDto,
+  env,
   EvmChain,
   NFTCollectionType,
   PoolConnection,
@@ -81,6 +82,7 @@ export async function deployNFTCollectionContract(
   collection: Collection,
   conn: PoolConnection,
 ) {
+  const blockchainService = new BlockchainMicroservice(context);
   // TODO: we should use NftsService.sendTransaction() here since code is the same but weoker call makes it difficult
   let response: { data: TransactionDto };
   let contractVersion_id: number = null;
@@ -144,7 +146,7 @@ export async function deployNFTCollectionContract(
         bytecode,
         contractArguments,
       );
-      response = await new BlockchainMicroservice(context).createEvmTransaction(
+      response = await blockchainService.createEvmTransaction(
         new CreateEvmTransactionDto(
           {
             chain: collection.chain,
@@ -161,7 +163,13 @@ export async function deployNFTCollectionContract(
     case ChainType.SUBSTRATE: {
       let transactionHex: string;
       if (collection.chain === SubstrateChain.UNIQUE) {
-        const client = new UniqueNftClient();
+        const wallets = await blockchainService.getWallets(
+          SubstrateChain.UNIQUE,
+        );
+        const client = new UniqueNftClient(
+          env.ACURAST_GATEWAY_URL,
+          wallets[0].address,
+        );
         transactionHex = await client.createCollection(
           collection.name,
           collection.symbol,
@@ -224,9 +232,7 @@ export async function deployNFTCollectionContract(
         ]);
         transactionHex = tx.toHex();
       }
-      response = await new BlockchainMicroservice(
-        context,
-      ).createSubstrateTransaction(
+      response = await blockchainService.createSubstrateTransaction(
         new CreateSubstrateTransactionDto(
           {
             chain: collection.chain,

@@ -5,12 +5,12 @@ import { Address } from '@unique-nft/utils/address';
 export class UniqueNftClient {
   private client: UniqueChainInstance;
 
-  constructor() {
+  constructor(baseUrl: string, fallbackAccountAddress: string) {
     this.client = UniqueChain({
-      // TODO: hardcoded
-      baseUrl: 'https://rest.uniquenetwork.dev/v2/opal',
+      baseUrl,
+      // TODO: remove account once unique team updates SDK
       account: {
-        address: 'unf4iCz1cSYWQvNx1DVii7EP2awrYGTPudaj4fpFtYrqj3Knr',
+        address: fallbackAccountAddress,
       } as any,
     });
   }

@@ -631,9 +631,14 @@ export interface IEnv {
   AIRDROP_CLAIM_CHAIN_ID: number;
 
   /**
-   * ACURAST
+   * UNIQUE NETWORK
    */
   ACURAST_GATEWAY_URL: string;
+
+  /**
+   * ACURAST
+   */
+  UNIQUE_NETWORK_API_URL: string;
 }
 
 // dotenv.config();
@@ -1147,6 +1152,9 @@ export let env: IEnv = {
 
   /** ACURAST */
   ACURAST_GATEWAY_URL: process.env['ACURAST_GATEWAY_URL'],
+
+  /** UNIQUE NETWORK */
+  UNIQUE_NETWORK_API_URL: process.env['UNIQUE_NETWORK_API_URL'],
 };
 
 export let isEnvReady = false;

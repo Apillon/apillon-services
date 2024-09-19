@@ -541,7 +541,13 @@ export class NftsService {
         }
         case ChainType.SUBSTRATE: {
           if (collection.chain === SubstrateChain.UNIQUE) {
-            const client = new UniqueNftClient();
+            const wallets = await new BlockchainMicroservice(
+              context,
+            ).getWallets(SubstrateChain.UNIQUE);
+            const client = new UniqueNftClient(
+              env.ACURAST_GATEWAY_URL,
+              wallets[0].address,
+            );
             txHash = await client.transferOwnership(
               collection.contractAddress,
               body.address,
@@ -952,7 +958,13 @@ export class NftsService {
         }
         case ChainType.SUBSTRATE: {
           if (collection.chain === SubstrateChain.UNIQUE) {
-            const client = new UniqueNftClient();
+            const wallets = await new BlockchainMicroservice(
+              context,
+            ).getWallets(SubstrateChain.UNIQUE);
+            const client = new UniqueNftClient(
+              env.ACURAST_GATEWAY_URL,
+              wallets[0].address,
+            );
             const onChainCollection = await client.getCollection(
               collection.contractAddress,
             );
@@ -1170,7 +1182,13 @@ export class NftsService {
         break;
       }
       case ChainType.SUBSTRATE: {
-        const client = new UniqueNftClient();
+        const wallets = await new BlockchainMicroservice(context).getWallets(
+          SubstrateChain.UNIQUE,
+        );
+        const client = new UniqueNftClient(
+          env.ACURAST_GATEWAY_URL,
+          wallets[0].address,
+        );
         const receivingAddress = client.getTokenAddress(
           parentCollection.contractAddress,
           body.parentNftId,
@@ -1336,7 +1354,13 @@ export class NftsService {
                 `Support for substrate chain ${collection.chain} not implemented`,
               );
             }
-            const client = new UniqueNftClient();
+            const wallets = await new BlockchainMicroservice(
+              context,
+            ).getWallets(SubstrateChain.UNIQUE);
+            const client = new UniqueNftClient(
+              env.ACURAST_GATEWAY_URL,
+              wallets[0].address,
+            );
             try {
               await client.getCollectionToken(
                 collection.contractAddress,
@@ -1626,18 +1650,17 @@ export class NftsService {
         project_uuid: collection.project_uuid,
         minimumGas,
       };
+      const blockchainService = new BlockchainMicroservice(context);
       let response: { data: TransactionDto };
       switch (collection.chainType) {
         case ChainType.EVM: {
-          response = await new BlockchainMicroservice(
-            context,
-          ).createEvmTransaction(new CreateEvmTransactionDto(data));
+          response = await blockchainService.createEvmTransaction(
+            new CreateEvmTransactionDto(data),
+          );
           break;
         }
         case ChainType.SUBSTRATE: {
-          response = await new BlockchainMicroservice(
-            context,
-          ).createSubstrateTransaction(
+          response = await blockchainService.createSubstrateTransaction(
             new CreateSubstrateTransactionDto(data, context),
           );
           break;
