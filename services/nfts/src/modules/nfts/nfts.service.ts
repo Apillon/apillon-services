@@ -81,8 +81,6 @@ import { SubstrateChainPrefix } from '@apillon/blockchain-lib/substrate';
 export class NftsService {
   //#region collection functions
 
-  // TODO: Remove send transaction from all functions bellow, as we are planing to
-  // send those in different worker/job
   static async createCollection(
     params: { body: CreateCollectionDTO },
     context: ServiceContext,
