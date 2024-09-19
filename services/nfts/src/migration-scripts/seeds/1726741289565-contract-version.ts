@@ -6,7 +6,7 @@ export async function upgrade(
 ) {
   await queryFn(
     `INSERT INTO \`${DbTables.CONTRACT_VERSION}\`
-      (\`collectionType \`, \`chainType\`, \`version\`, \`abi\`, \`bytecode\`, \`status\`)
+      (\`collectionType\`, \`chainType\`, \`version\`, \`abi\`, \`bytecode\`, \`status\`)
       VALUES
       (${NFTCollectionType.GENERIC}, ${ChainType.EVM}, 3, '', '', ${SqlModelStatus.ACTIVE});`,
   );
