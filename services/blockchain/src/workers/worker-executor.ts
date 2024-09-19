@@ -162,6 +162,8 @@ export async function handleLambdaEvent(
     case WorkerName.TRANSMIT_MOONBEAM_TRANSACTIONS:
     case WorkerName.TRANSMIT_MOONBASE_TRANSACTIONS:
     case WorkerName.TRANSMIT_ASTAR_TRANSACTIONS:
+    case WorkerName.TRANSMIT_CELO_TRANSACTIONS:
+    case WorkerName.TRANSMIT_ALFAJORES_TRANSACTIONS:
       await new TransmitEvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
@@ -207,6 +209,8 @@ export async function handleLambdaEvent(
     case WorkerName.VERIFY_SEPOLIA_TRANSACTIONS:
     case WorkerName.VERIFY_MOONBASE_TRANSACTIONS:
     case WorkerName.VERIFY_ASTAR_TRANSACTIONS:
+    case WorkerName.VERIFY_CELO_TRANSACTIONS:
+    case WorkerName.VERIFY_ALFAJORES_TRANSACTIONS:
       await new EvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });

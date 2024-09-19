@@ -340,7 +340,9 @@ export class EvmService {
       case EvmChain.SEPOLIA:
       case EvmChain.MOONBASE:
       case EvmChain.MOONBEAM:
-      case EvmChain.ASTAR: {
+      case EvmChain.ASTAR:
+      case EvmChain.CELO:
+      case EvmChain.ALFAJORES: {
         break;
       }
       default: {

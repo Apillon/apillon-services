@@ -1468,7 +1468,10 @@ export class NftsService {
     chain: Chain,
     project_uuid: string,
   ) {
-    if (chainType !== ChainType.EVM || chain !== EvmChain.ETHEREUM) {
+    if (
+      chainType !== ChainType.EVM ||
+      ![EvmChain.ETHEREUM, EvmChain.CELO].includes(chain)
+    ) {
       return;
     }
 
