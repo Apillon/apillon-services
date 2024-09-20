@@ -139,7 +139,6 @@ export class OasisSignature extends ProjectAccessModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
-      SerializeFor.SELECT_DB,
     ],
   })
   public apiKey: string;
