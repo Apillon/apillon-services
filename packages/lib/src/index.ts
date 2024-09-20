@@ -173,6 +173,7 @@ export * from './lib/logger';
 export * from './lib/database/sql-utils';
 export * from './lib/aws/aws-s3';
 export * from './lib/aws/aws-kms';
+export * from './lib/dwellir/dwellir';
 export * from './lib/validators';
 export * from './lib/utils';
 export * from './lib/at-services/ams/dtos/create-api-key.dto';

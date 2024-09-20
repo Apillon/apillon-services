@@ -13,6 +13,8 @@ export async function processEvent(event, context: Context): Promise<any> {
       RpcApiKeyService.revokeRpcApiKey,
     [InfrastructureEventType.LIST_RPC_API_KEYS]:
       RpcApiKeyService.listRpcApiKeys,
+    [InfrastructureEventType.GET_RPC_API_KEY_USAGE]:
+      RpcApiKeyService.getRpcApiKeyUsage,
     [InfrastructureEventType.CREATE_RPC_URL]: RpcUrlService.createRpcUrl,
     [InfrastructureEventType.UPDATE_RPC_URL]: RpcUrlService.updateRpcUrl,
     [InfrastructureEventType.LIST_RPC_URLS]: RpcUrlService.listRpcUrls,

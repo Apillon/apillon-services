@@ -677,6 +677,12 @@ export interface IEnv {
    * UNIQUE NETWORK
    */
   UNIQUE_NETWORK_API_URL: string;
+
+  /*
+   * DWELLIR
+   */
+  DWELLIR_USERNAME: string;
+  DWELLIR_PASSWORD: string;
 }
 
 // dotenv.config();
@@ -1226,6 +1232,10 @@ export let env: IEnv = {
 
   /** UNIQUE NETWORK */
   UNIQUE_NETWORK_API_URL: process.env['UNIQUE_NETWORK_API_URL'],
+
+  /** DWELLIR */
+  DWELLIR_USERNAME: process.env['DWELLIR_USERNAME'],
+  DWELLIR_PASSWORD: process.env['DWELLIR_PASSWORD'],
 };
 
 export let isEnvReady = false;

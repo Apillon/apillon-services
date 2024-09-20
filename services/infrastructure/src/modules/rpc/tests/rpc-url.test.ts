@@ -44,8 +44,8 @@ describe('RPC Url tests', () => {
     test('User can create a new rpc url', async () => {
       const dto = new CreateRpcUrlDto({
         name: 'Test url',
-        chainName: 'Test Chain',
-        network: 'Test Network',
+        chainName: 'Subsocial',
+        network: 'Mainnet',
         apiKeyId,
       });
       const createdRpcUrlResponse = await RpcUrlService.createRpcUrl(

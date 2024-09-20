@@ -8,8 +8,12 @@ import {
   ListRpcUrlsForApiKeyQueryFilter,
   UpdateRpcUrlDto,
 } from '@apillon/lib';
+import { UserService } from '../user/user.service';
+import { User } from '../user/models/user.model';
 @Injectable()
 export class RpcService {
+  constructor(private readonly userService: UserService) {}
+
   async listRpcApiKeys(
     context: DevConsoleApiContext,
     query: BaseProjectQueryFilter,
@@ -18,13 +22,33 @@ export class RpcService {
       .data;
   }
   async getApiKeyUsage(context: DevConsoleApiContext, id: number) {
-    return (await new InfrastructureMicroservice(context).getApiKeyUsage(id))
-      .data;
+    const user = await new User({}, context).populateById(context.user.id);
+
+    if (!user.exists()) {
+      throw new Error('User not found');
+    }
+
+    const dwellirId = user.dwellir_id;
+
+    if (!dwellirId) {
+      throw new Error('Dwellir id not found');
+    }
+
+    return (
+      await new InfrastructureMicroservice(context).getRpcApiKeyUsage(
+        id,
+        dwellirId,
+      )
+    ).data;
   }
   async createRpcApiKey(
     context: DevConsoleApiContext,
     body: CreateRpcApiKeyDto,
   ) {
+    const { created, dwellirId } =
+      await this.userService.getOrCreateDwellirId(context);
+    body.dwellirUserId = dwellirId;
+    body.triggerCreation = !created;
     return (await new InfrastructureMicroservice(context).createRpcApiKey(body))
       .data;
   }
@@ -38,13 +62,30 @@ export class RpcService {
     ).data;
   }
   async revokeRpcApiKey(context: DevConsoleApiContext, id: number) {
-    return (await new InfrastructureMicroservice(context).revokeRpcApiKey(id))
-      .data;
+    const user = await new User({}, context).populateById(context.user.id);
+
+    if (!user.exists()) {
+      throw new Error('User not found');
+    }
+
+    const dwellirId = user.dwellir_id;
+
+    if (!dwellirId) {
+      throw new Error('Dwellir id not found');
+    }
+
+    return (
+      await new InfrastructureMicroservice(context).revokeRpcApiKey(
+        id,
+        dwellirId,
+      )
+    ).data;
   }
   async createRpcUrl(context: DevConsoleApiContext, body: CreateRpcUrlDto) {
     return (await new InfrastructureMicroservice(context).createRpcUrl(body))
       .data;
   }
+
   async updateRpcUrl(
     context: DevConsoleApiContext,
     id: number,

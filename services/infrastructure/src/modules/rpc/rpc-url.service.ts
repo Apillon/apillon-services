@@ -2,6 +2,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { RpcUrl } from './rpc-url.model';
 import {
   CreateRpcUrlDto,
+  Dwellir,
   ListRpcUrlsForApiKeyQueryFilter,
   ModelValidationException,
   SqlModelStatus,
@@ -40,9 +41,41 @@ export class RpcUrlService {
       return rpcUrlByNetworkAndApiKey.serializeByContext();
     }
     const rpcUrl = new RpcUrl(data, context);
-    // TO-DO fetch from dwellir
-    rpcUrl.httpsUrl = 'https://example.com';
-    rpcUrl.wssUrl = 'wss://example.com';
+
+    const endpoints = await Dwellir.getEndpoints();
+
+    const rpcChain = endpoints.find((e) => e.name === data.chainName);
+
+    if (!rpcChain) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.RPC_URL_CHAIN_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    const rpcNetwork = rpcChain.networks.find(
+      (network) => network.name === data.network,
+    );
+
+    if (!rpcNetwork) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.RPC_URL_NETWORK_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    // To-DO check if we need to pick specific node type
+    const node = rpcNetwork.nodes.find((node) => node.https && node.wss);
+
+    if (!node) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.RPC_URL_URLS_NOT_PRESENT,
+        status: 422,
+      });
+    }
+
+    rpcUrl.httpsUrl = `${node.https}/${rpcApiKey.uuid}`;
+    rpcUrl.wssUrl = `${node.wss}/${rpcApiKey.uuid}`;
     return (await rpcUrl.insert()).serializeByContext();
   }
   static async updateRpcUrl(
