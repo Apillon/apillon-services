@@ -631,12 +631,12 @@ export interface IEnv {
   AIRDROP_CLAIM_CHAIN_ID: number;
 
   /**
-   * UNIQUE NETWORK
+   * ACURAST
    */
   ACURAST_GATEWAY_URL: string;
 
   /**
-   * ACURAST
+   * UNIQUE NETWORK
    */
   UNIQUE_NETWORK_API_URL: string;
 }

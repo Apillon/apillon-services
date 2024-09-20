@@ -167,7 +167,7 @@ export async function deployNFTCollectionContract(
           SubstrateChain.UNIQUE,
         );
         const client = new UniqueNftClient(
-          env.ACURAST_GATEWAY_URL,
+          env.UNIQUE_NETWORK_API_URL,
           wallets[0].address,
         );
         transactionHex = await client.createCollection(

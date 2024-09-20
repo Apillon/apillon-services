@@ -545,7 +545,7 @@ export class NftsService {
               context,
             ).getWallets(SubstrateChain.UNIQUE);
             const client = new UniqueNftClient(
-              env.ACURAST_GATEWAY_URL,
+              env.UNIQUE_NETWORK_API_URL,
               wallets[0].address,
             );
             txHash = await client.transferOwnership(
@@ -962,7 +962,7 @@ export class NftsService {
               context,
             ).getWallets(SubstrateChain.UNIQUE);
             const client = new UniqueNftClient(
-              env.ACURAST_GATEWAY_URL,
+              env.UNIQUE_NETWORK_API_URL,
               wallets[0].address,
             );
             const onChainCollection = await client.getCollection(
@@ -1186,7 +1186,7 @@ export class NftsService {
           SubstrateChain.UNIQUE,
         );
         const client = new UniqueNftClient(
-          env.ACURAST_GATEWAY_URL,
+          env.UNIQUE_NETWORK_API_URL,
           wallets[0].address,
         );
         const receivingAddress = client.getTokenAddress(
@@ -1358,7 +1358,7 @@ export class NftsService {
               context,
             ).getWallets(SubstrateChain.UNIQUE);
             const client = new UniqueNftClient(
-              env.ACURAST_GATEWAY_URL,
+              env.UNIQUE_NETWORK_API_URL,
               wallets[0].address,
             );
             try {
