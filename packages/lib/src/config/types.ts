@@ -911,6 +911,9 @@ export enum CacheKeyPrefix {
   URL_SHORTENER = 'url-shortener',
 
   ACURAST_JOB = 'acurast-job',
+
+  // DWELLIR
+  DWELLIR_ACCESS_TOKEN = 'dwellir-access-token',
 }
 
 export enum CacheKeyTTL {
@@ -920,6 +923,7 @@ export enum CacheKeyTTL {
   EXTENDED = 10 * 60, // 10 min
   LONG = 30 * 60, // 30 min
   EXTRA_LONG = 60 * 60, // 60 min
+  THREE_HOURS = 3 * 60 * 60, // 2 hours
 }
 
 export enum MongoCollections {

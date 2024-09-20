@@ -25,10 +25,10 @@ export class InfrastructureMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
-  public async getApiKeyUsage(id: number) {
+  public async getRpcApiKeyUsage(id: number, dwellirId: string) {
     return await this.callService({
       eventName: InfrastructureEventType.GET_RPC_API_KEY_USAGE,
-      id,
+      data: { id, dwellirId },
     });
   }
   public async listRpcApiKeys(filter: BaseProjectQueryFilter) {
@@ -50,10 +50,10 @@ export class InfrastructureMicroservice extends BaseService {
       data: { id, data },
     });
   }
-  public async revokeRpcApiKey(id: number) {
+  public async revokeRpcApiKey(id: number, dwellirUserId: string) {
     return await this.callService({
       eventName: InfrastructureEventType.REVOKE_RPC_API_KEY,
-      id,
+      data: { id, dwellirUserId },
     });
   }
   public async createRpcUrl(data: CreateRpcUrlDto) {

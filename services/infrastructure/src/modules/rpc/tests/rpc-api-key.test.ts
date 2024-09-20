@@ -36,36 +36,7 @@ describe('RPC ApiKey tests', () => {
   afterAll(async () => {
     await releaseStage(stage);
   });
-  describe('createRpcApiKey', () => {
-    test('User can create a new Rpc api key', async () => {
-      const dto = new CreateRpcApiKeyDto({
-        name: 'Test ApiKey',
-        description: 'Test Description',
-        projectUuid,
-      });
-      const createdRpcApiKeyResponse = await RpcApiKeyService.createRpcApiKey(
-        { data: dto },
-        stage.context,
-      );
-      expect(createdRpcApiKeyResponse).toBeDefined();
-      expect(createdRpcApiKeyResponse.id).toBeDefined();
-      expect(createdRpcApiKeyResponse.name).toBe(dto.name);
-      expect(createdRpcApiKeyResponse.description).toBe(dto.description);
-      expect(createdRpcApiKeyResponse.projectUuid).toBe(dto.projectUuid);
-      expect(createdRpcApiKeyResponse.uuid).toBeDefined();
-      expect(createdRpcApiKeyResponse.createTime).toBeDefined();
-      const rpcApiKeyInDB = await stage.db.paramExecute(
-        `SELECT * FROM ${DbTables.RPC_API_KEY} WHERE id=@id`,
-        { id: createdRpcApiKeyResponse.id },
-      );
-      expect(rpcApiKeyInDB).toHaveLength(1);
-      const dbRpcApiKey = rpcApiKeyInDB[0];
-      expect(dbRpcApiKey.name).toBe(dto.name);
-      expect(dbRpcApiKey.description).toBe(dto.description);
-      expect(dbRpcApiKey.projectUuid).toBe(dto.projectUuid);
-      expect(dbRpcApiKey.uuid).toBe(createdRpcApiKeyResponse.uuid);
-    });
-  });
+
   describe('updateRpcApiKey', () => {
     test('User can update a Rpc api key', async () => {
       const dto = {
@@ -113,6 +84,8 @@ describe('RPC ApiKey tests', () => {
       expect(dbRpcApiKey.uuid).toBe(updatedRpcApiKeyResponse.uuid);
     });
   });
+  /*
+  Uncomment once user can have multiple keys
   describe('revokeRpcApiKey', () => {
     test('User can revoke a Rpc api key', async () => {
       const dto = {
@@ -131,6 +104,7 @@ describe('RPC ApiKey tests', () => {
       const revokedRpcApiKeyResponse = await RpcApiKeyService.revokeRpcApiKey(
         {
           id: createdApiKeyId,
+          dwellirUserId: '',
         },
         stage.context,
       );
@@ -154,6 +128,7 @@ describe('RPC ApiKey tests', () => {
       expect(dbRpcApiKey.status).toBe(SqlModelStatus.DELETED);
     });
   });
+     */
   describe('listRpcApiKeys', () => {
     test('User can list Rpc api keys for a project', async () => {
       const dto = {

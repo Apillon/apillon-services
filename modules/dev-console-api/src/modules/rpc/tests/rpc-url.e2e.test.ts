@@ -47,8 +47,8 @@ describe('RPC URL Tests', () => {
   describe('Create RPC URL', () => {
     const rpcUrlToCreate = {
       name: 'Test URL',
-      chainName: 'CHAIN',
-      network: 'Network',
+      chainName: 'Polkadot',
+      network: 'Mainnet',
       apiKeyId: 0,
     };
     beforeAll(async () => {
@@ -69,6 +69,8 @@ describe('RPC URL Tests', () => {
       expect(createdUrl.chainName).toBe(rpcUrlToCreate.chainName);
       expect(createdUrl.network).toBe(rpcUrlToCreate.network);
       expect(createdUrl.apiKeyId).toBe(testApiKeyId);
+      expect(createdUrl.httpsUrl).toBeDefined();
+      expect(createdUrl.wssUrl).toBeDefined();
     });
     it('User should not be able to create RPC URL for other projects', async () => {
       const response = await request(stage.http)
