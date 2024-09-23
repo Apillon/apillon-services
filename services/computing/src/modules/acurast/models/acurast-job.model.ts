@@ -3,6 +3,7 @@ import {
   enumInclusionValidator,
   getQueryParams,
   JobQueryFilter,
+  PoolConnection,
   PopulateFrom,
   presenceValidator,
   prop,
@@ -22,6 +23,7 @@ import {
   ComputingCodeException,
   ComputingNotFoundException,
 } from '../../../lib/exceptions';
+import { v4 as uuid } from 'uuid';
 
 const populatable = [
   PopulateFrom.DB,
@@ -33,11 +35,14 @@ const serializable = [
   SerializeFor.INSERT_DB,
   SerializeFor.ADMIN,
   SerializeFor.SERVICE,
-  SerializeFor.APILLON_API,
   SerializeFor.SELECT_DB,
 ];
 
-const serializableProfile = [...serializable, SerializeFor.PROFILE];
+const serializableProfile = [
+  ...serializable,
+  SerializeFor.PROFILE,
+  SerializeFor.APILLON_API,
+];
 const serializableUpdate = [...serializable, SerializeFor.UPDATE_DB];
 const serializableUpdateProfile = [
   ...serializable,
@@ -47,6 +52,22 @@ const serializableUpdateProfile = [
 
 export class AcurastJob extends UuidSqlModel {
   public readonly tableName = DbTables.ACURAST_JOB;
+
+  /**
+   * Override field to show in API
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+      SerializeFor.LOGGER,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -58,6 +79,7 @@ export class AcurastJob extends UuidSqlModel {
         code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
+    fakeValue: uuid(),
   })
   public job_uuid: string;
 
@@ -77,6 +99,19 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable,
+    serializable: serializableProfile,
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public function_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable,
     serializable: serializableUpdateProfile,
     validators: [
       {
@@ -87,13 +122,6 @@ export class AcurastJob extends UuidSqlModel {
     fakeValue: 'Acurast job#1',
   })
   public name: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable,
-    serializable: serializableUpdateProfile,
-  })
-  public description: string;
 
   /**
    * IPFS CID of the script's code
@@ -109,38 +137,24 @@ export class AcurastJob extends UuidSqlModel {
         code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
+    fakeValue: 'QmUq4iFLKZUpEsHCAqfsBermXHRnPuE5CNcyPv1xaNkyGp',
   })
   public scriptCid: string;
 
   /**
-   * The timestamp where the job will become available
+   * The timestamp when the job will expire
    */
   @prop({
     parser: { resolver: dateParser() },
     populatable,
-    serializable: serializableProfile,
+    serializable,
     validators: [
       {
         resolver: presenceValidator(),
         code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
-  })
-  public startTime: Date;
-
-  /**
-   * The timestamp where the job will expire
-   */
-  @prop({
-    parser: { resolver: dateParser() },
-    populatable,
-    serializable: serializableProfile,
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ComputingErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
+    fakeValue: Date.now() + 60 * 60_000,
   })
   public endTime: Date;
 
@@ -168,7 +182,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable,
-    serializable: serializableUpdate,
+    serializable: serializableUpdateProfile,
   })
   public jobId: number;
 
@@ -195,7 +209,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable,
-    serializable: serializableUpdateProfile,
+    serializable: serializableUpdateProfile.concat(SerializeFor.APILLON_API),
     validators: [
       {
         resolver: enumInclusionValidator(AcurastJobStatus, true),
@@ -203,6 +217,7 @@ export class AcurastJob extends UuidSqlModel {
       },
     ],
     defaultValue: AcurastJobStatus.DEPLOYING,
+    fakeValue: AcurastJobStatus.DEPLOYING,
   })
   public jobStatus: AcurastJobStatus;
 
@@ -222,7 +237,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable,
-    serializable,
+    serializable: serializableUpdate,
   })
   public deployerAddress: string;
 
@@ -237,15 +252,18 @@ export class AcurastJob extends UuidSqlModel {
   verifyStatusAndAccess(
     sourceFunction: string,
     context: ServiceContext,
-    additionalStatus?: AcurastJobStatus,
+    additionalStatuses?: AcurastJobStatus[],
+    skipAccessCheck = false,
   ) {
     if (!this.exists()) {
       throw new ComputingNotFoundException(ComputingErrorCode.JOB_NOT_FOUND);
     }
 
-    if (
-      ![AcurastJobStatus.MATCHED, additionalStatus].includes(this.jobStatus)
-    ) {
+    const requiredStatuses = [AcurastJobStatus.MATCHED];
+    if (additionalStatuses?.length)
+      requiredStatuses.push(...additionalStatuses);
+
+    if (!requiredStatuses.includes(this.jobStatus)) {
       throw new ComputingCodeException({
         status: 500,
         code: ComputingErrorCode.JOB_NOT_DEPLOYED,
@@ -253,6 +271,7 @@ export class AcurastJob extends UuidSqlModel {
         sourceFunction,
       });
     }
+
     if (!this.jobId) {
       throw new ComputingCodeException({
         status: 500,
@@ -262,10 +281,19 @@ export class AcurastJob extends UuidSqlModel {
       });
     }
 
-    this.canModify(context);
+    if (!skipAccessCheck) {
+      this.canModify(context);
+    }
   }
 
-  public async getList(context: ServiceContext, filter: JobQueryFilter) {
+  public async getList(filter: JobQueryFilter) {
+    if (!filter.function_uuid) {
+      throw new Error(
+        `function_uuid should not be null: ${filter.function_uuid}`,
+      );
+    }
+
+    const context = this.getContext();
     this.canAccess(context);
 
     const fieldMap = {
@@ -277,25 +305,24 @@ export class AcurastJob extends UuidSqlModel {
       fieldMap,
       filter.serialize(),
     );
-    const selectFields = this.generateSelectFields(
-      'j',
-      '',
-      SerializeFor.SELECT_DB,
-    );
+
     const sqlQuery = {
-      qSelect: `
-        SELECT ${selectFields}
-        `,
+      qSelect: `SELECT ${this.generateSelectFields('j', '', SerializeFor.SELECT_DB)}`,
       qFrom: `
         FROM \`${DbTables.ACURAST_JOB}\` j
-        WHERE j.project_uuid = @project_uuid
-        AND (@search IS null OR j.name LIKE CONCAT('%', @search, '%'))
-        AND (@jobStatus IS null OR j.jobStatus = @jobStatus)
+        WHERE j.function_uuid = @function_uuid
+        AND (@search IS NULL OR j.name LIKE CONCAT('%', @search, '%'))
         AND
             (
-                (@status IS null AND j.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.ARCHIVED}))
-                OR
-                (j.status = @status)
+              (@jobStatus IS NULL AND j.jobStatus <> ${AcurastJobStatus.DELETED})
+              OR
+              (j.jobStatus = @jobStatus)
+            )
+        AND
+            (
+              (@status IS NULL AND j.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.ARCHIVED}))
+              OR
+              (j.status = @status)
             )
       `,
       qFilter: `
@@ -304,7 +331,19 @@ export class AcurastJob extends UuidSqlModel {
       `,
     };
 
-    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'j.id');
+    const jobResults = await selectAndCountQuery(
+      context.mysql,
+      sqlQuery,
+      params,
+      'j.id',
+    );
+
+    return {
+      ...jobResults,
+      items: jobResults.items.map((job) =>
+        new AcurastJob(job, context).serializeByContext(),
+      ),
+    };
   }
 
   /**
@@ -318,7 +357,7 @@ export class AcurastJob extends UuidSqlModel {
       `
       SELECT *
       FROM ${DbTables.ACURAST_JOB}
-      WHERE startTime < NOW() AND endTime > NOW()
+      WHERE endTime > NOW()
       AND jobStatus = ${AcurastJobStatus.DEPLOYED}
       AND jobId IS NOT NULL
       AND status = ${SqlModelStatus.ACTIVE}
@@ -327,6 +366,43 @@ export class AcurastJob extends UuidSqlModel {
 
     return jobs.map((j) =>
       new AcurastJob({}, context).populate(j, PopulateFrom.DB),
+    );
+  }
+
+  /**
+   * When a new job is deployed, clear the older jobs of a function_uuid
+   * Sets the status of all jobs to inactive
+   */
+  public async clearPreviousJobs(conn?: PoolConnection): Promise<void> {
+    const context = this.getContext();
+    await context.mysql.paramExecute(
+      `
+      UPDATE ${DbTables.ACURAST_JOB}
+      SET jobStatus = ${AcurastJobStatus.INACTIVE}
+      WHERE function_uuid = @function_uuid
+      AND status = ${SqlModelStatus.ACTIVE}
+      `,
+      { function_uuid: this.function_uuid },
+      conn,
+    );
+  }
+
+  /**
+   * Acurast jobs have a limited lifetime of 3 months due to protocol limitations
+   * On the day of expiration, need to deploy a new job with the same parameters
+   */
+  public async getExpiringToday(conn?: PoolConnection): Promise<AcurastJob[]> {
+    const context = this.getContext();
+    return await context.mysql.paramExecute(
+      `
+      SELECT *
+      FROM ${DbTables.ACURAST_JOB}
+      WHERE DATE(endTime) = CURDATE()
+      AND jobStatus = ${AcurastJobStatus.MATCHED}
+      AND status = ${SqlModelStatus.ACTIVE}
+      `,
+      {},
+      conn,
     );
   }
 }

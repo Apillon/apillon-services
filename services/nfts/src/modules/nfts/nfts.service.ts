@@ -6,6 +6,7 @@ import {
   CollectionsQuotaReachedQueryFilter,
   CreateBucketDto,
   CreateEvmTransactionDto,
+  CreateIpnsDto,
   CreateSubstrateTransactionDto,
   DeployCollectionDTO,
   env,
@@ -32,6 +33,9 @@ import {
   TransactionDto,
   TransactionStatus,
   TransferCollectionDTO,
+  Context,
+  Chain,
+  SubscriptionPackageId,
 } from '@apillon/lib';
 import {
   CreateCollectionDTO,
@@ -84,18 +88,20 @@ export class NftsService {
     context: ServiceContext,
   ) {
     console.log(`Creating NFT collections: ${JSON.stringify(params.body)}`);
-
-    //Create collection object
     const collection: Collection = new Collection(
       params.body,
       context,
     ).populate({
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
-      chainType: Object.values(EvmChain).includes(params.body.chain as number)
-        ? ChainType.EVM
-        : ChainType.SUBSTRATE,
+      chainType: params.body.chainType,
     });
+    await NftsService.assertIsAllowedToCreateNftCollection(
+      context,
+      collection.chainType,
+      collection.chain,
+      params.body.project_uuid,
+    );
 
     const product_id = {
       [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_COLLECTION,
@@ -105,8 +111,6 @@ export class NftsService {
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_COLLECTION,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_COLLECTION,
     }[params.body.chain];
-
-    //Spend credit
     const spendCredit: SpendCreditDto = new SpendCreditDto(
       {
         project_uuid: collection.project_uuid,
@@ -255,7 +259,8 @@ export class NftsService {
         collectionName: collection.name,
         imagesSession: collection.imagesSession,
         metadataSession: collection.metadataSession,
-        useApillonIpfsGateway: body.useApillonIpfsGateway,
+        useApillonIpfsGateway: collection.useApillonIpfsGateway,
+        useIpns: collection.useIpns,
       });
     } catch (err) {
       //Status should be set back to CREATED, so that it is possible to execute deploy again
@@ -638,7 +643,10 @@ export class NftsService {
           bucket_uuid: collection.bucket_uuid,
           imagesSession: body.imagesSession,
           metadataSession: body.metadataSession,
-          useApillonIpfsGateway: !collection.baseUri.startsWith('ipfs://'),
+          useApillonIpfsGateway:
+            collection.useApillonIpfsGateway ??
+            !collection.baseUri.startsWith('ipfs://'),
+          ipns_uuid: collection.ipns_uuid,
         },
       ],
       null,
@@ -646,6 +654,69 @@ export class NftsService {
     );
 
     return true;
+  }
+
+  static async addIpnsToCollection(
+    { collection_uuid }: { collection_uuid: string },
+    context: ServiceContext,
+  ) {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(collection_uuid);
+    await NftsService.checkCollection(
+      collection,
+      'addIpnsToCollection()',
+      context,
+    );
+
+    if (collection.ipns_uuid) {
+      throw new NftsCodeException({
+        status: 400,
+        code: NftsErrorCode.COLLECTION_ALREADY_HAVE_IPNS,
+        context,
+        sourceFunction: 'addIpnsToCollection()',
+      });
+    }
+
+    //Call storageMS to generate IPNS
+    const createIpnsDto = new CreateIpnsDto({}, context).populate({
+      bucket_uuid: collection.bucket_uuid,
+      name: `${collection.name} IPNS record`,
+      cid: collection.cid,
+    });
+    const ipnsRes = (
+      await new StorageMicroservice(context).createIpns(createIpnsDto)
+    ).data;
+
+    console.info('Ipns for collection', ipnsRes);
+
+    const baseUri = collection.useApillonIpfsGateway
+      ? ipnsRes.link.split('?token')[0]
+      : `ipns://${ipnsRes.ipnsName}`;
+
+    console.info('baseUri', baseUri);
+
+    //Submit change base uri transaction
+    const setBaseUriBody = new SetCollectionBaseUriDTO(
+      {
+        uri: baseUri,
+        collection_uuid: collection.collection_uuid,
+      },
+      context,
+    );
+    await NftsService.setNftCollectionBaseUri(
+      { body: setBaseUriBody },
+      context,
+    );
+
+    console.info('Set collection base uri succeeded. Updating collection...');
+
+    collection.baseUri = baseUri;
+    collection.ipns_uuid = ipnsRes.ipns_uuid;
+    await collection.update();
+
+    return collection.serializeByContext(context);
   }
 
   static async mintNftTo(
@@ -1112,6 +1183,30 @@ export class NftsService {
     return await collection.markArchived();
   }
 
+  /**
+   * Set a collection's status to active
+   * @param {{ collecton_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Collection>}
+   */
+  static async activateCollection(
+    event: { collection_uuid: string },
+    context: ServiceContext,
+  ): Promise<Collection> {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(event.collection_uuid);
+
+    await NftsService.checkCollection(
+      collection,
+      'activateCollection()',
+      context,
+    );
+
+    return await collection.markActive();
+  }
+
   private static async checkCollection(
     collection: Collection,
     sourceFunction: string,
@@ -1260,7 +1355,6 @@ export class NftsService {
 
   //#endregion
 
-  // TODO: we don't need this anymore so remove on separate PR
   static async maxCollectionsQuotaReached(
     event: { query: CollectionsQuotaReachedQueryFilter },
     context: ServiceContext,
@@ -1270,14 +1364,18 @@ export class NftsService {
       context,
     );
 
-    const collectionsCount = await collection.getCollectionsCount();
+    const ethereumCollectionsCount = await collection.getChainCollectionsCount(
+      ChainType.EVM,
+      EvmChain.ETHEREUM,
+    );
     const maxCollectionsQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_NFT_COLLECTIONS,
+      quota_id: QuotaCode.MAX_ETHEREUM_NFT_COLLECTIONS,
       project_uuid: collection.project_uuid,
     });
 
     return {
-      maxCollectionsQuotaReached: collectionsCount >= maxCollectionsQuota.value,
+      maxEthereumQuotaReached:
+        ethereumCollectionsCount >= maxCollectionsQuota.value,
     };
   }
 
@@ -1353,6 +1451,59 @@ export class NftsService {
       } else {
         throw err;
       }
+    }
+  }
+
+  //#REGION PRIVATE METHODS
+
+  /**
+   * Only projects with specific plan and available quota can crate Ethereum and Sepolia NFTs
+   *
+   * @param context
+   * @param chainType
+   * @param chain
+   * @param project_uuid
+   */
+  private static async assertIsAllowedToCreateNftCollection(
+    context: Context,
+    chainType: ChainType,
+    chain: Chain,
+    project_uuid: string,
+  ) {
+    if (chainType !== ChainType.EVM || chain !== EvmChain.ETHEREUM) {
+      return;
+    }
+
+    const { data } = await new Scs(context).getProjectActiveSubscription(
+      project_uuid,
+    );
+
+    if (
+      !data.package_id ||
+      data.package_id !== SubscriptionPackageId.BUTTERFLY
+    ) {
+      throw new NftsCodeException({
+        status: 402,
+        code: NftsErrorCode.REQUIRES_BUTTERFLY_PLAN,
+        context,
+      });
+    }
+
+    const chainCollectionsCount = await new Collection(
+      {},
+      context,
+    ).getChainCollectionsCount(chainType, chain, project_uuid);
+    const maxCollectionsQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_ETHEREUM_NFT_COLLECTIONS,
+      project_uuid: project_uuid,
+    });
+
+    if (chainCollectionsCount >= maxCollectionsQuota.value) {
+      throw new NftsCodeException({
+        status: 403,
+        code: NftsErrorCode.ETHEREUM_COLLECTION_QUOTA_REACHED,
+        context,
+      });
     }
   }
 }

@@ -182,7 +182,7 @@ describe('Auth tests', () => {
     const token = generateJwtToken(
       JwtTokenType.USER_RESET_PASSWORD,
       { email: testUser.authUser.email },
-      JwtExpireTime.ONE_HOUR,
+      JwtExpireTime.TEN_MINUTES,
       testUser.authUser.password,
     );
 

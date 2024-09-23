@@ -1,9 +1,16 @@
 import { prop } from '@rawmodel/core';
-import { integerParser } from '@rawmodel/parsers';
-import { PopulateFrom } from '../../../../config/types';
-import { BaseProjectQueryFilter } from '../../../base-models/base-project-query-filter.model';
+import { integerParser, stringParser } from '@rawmodel/parsers';
+import { PopulateFrom, SerializeFor } from '../../../../config/types';
+import { BaseQueryFilter } from '../../../base-models/base-query-filter.model';
 
-export class JobQueryFilter extends BaseProjectQueryFilter {
+export class JobQueryFilter extends BaseQueryFilter {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public function_uuid: string;
+
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],

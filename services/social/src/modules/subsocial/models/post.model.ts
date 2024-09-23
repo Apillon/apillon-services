@@ -291,8 +291,8 @@ export class Post extends UuidSqlModel {
         JOIN \`${DbTables.SPACE}\` s ON s.id = p.space_id
         WHERE p.project_uuid = @project_uuid
         ${space_uuid ? ' AND s.space_uuid = @space_uuid' : ''}
-        AND (@search IS null OR p.title LIKE CONCAT('%', @search, '%') OR p.post_uuid = @search)
-        AND ((@status IS null AND s.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.ARCHIVED})) OR @status = p.status)
+        AND (@search IS NULL OR p.title LIKE CONCAT('%', @search, '%') OR p.post_uuid = @search)
+        AND ((@status IS NULL AND p.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.ARCHIVED})) OR p.status = @status)
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}

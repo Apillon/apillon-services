@@ -14,6 +14,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { WorkerName } from '../worker-executor';
 import { getConfig } from '@apillon/tests-lib';
 import { v4 as uuidV4 } from 'uuid';
+import { CloudFunction } from '../../modules/acurast/models/cloud-function.model';
 
 let config: any;
 
@@ -59,7 +60,7 @@ describe('Acurast Job Status Worker Tests', () => {
     );
     getJobPublicKeyMock = jest.spyOn(
       AcurastClient.prototype,
-      'getJobPublicKey',
+      'getJobPublicKeys',
     );
     getAcurastEndpointMock = jest.spyOn(
       BlockchainMicroservice.prototype,
@@ -165,6 +166,57 @@ describe('Acurast Job Status Worker Tests', () => {
       expect(updatedJob.account).toBeNull();
       expect(updatedJob.publicKey).toBeNull();
     });
+
+    test('should update environment variables for new jobs', async () => {
+      mockGetAcurastEndpoint(getAcurastEndpointMock);
+      mockGetJobStatus(getJobStatusMock);
+      mockGetAssignedProcessors(getAssignedProcessorsMock);
+      mockGetJobPublicKey(getJobPublicKeyMock);
+
+      const cloudFunctionMock = jest
+        .spyOn(CloudFunction.prototype, 'getEnvironmentVariables')
+        .mockImplementation(async () => [
+          { key: 'ENV_VAR', value: 'test_value' },
+        ]);
+
+      const jobId = 400;
+      await createAcurastJob(stage, jobId);
+
+      await runAcurastJobStatusWorker(stage.context);
+
+      expect(cloudFunctionMock).toBeCalledTimes(1);
+    });
+
+    test('should update previous jobs to INACTIVE after clearPreviousJobs is called', async () => {
+      mockGetAcurastEndpoint(getAcurastEndpointMock);
+      mockGetJobStatus(getJobStatusMock);
+      mockGetAssignedProcessors(getAssignedProcessorsMock);
+      mockGetJobPublicKey(getJobPublicKeyMock);
+
+      const clearPreviousJobsSpy = jest.spyOn(
+        AcurastJob.prototype,
+        'clearPreviousJobs',
+      );
+
+      const jobId1 = 500;
+      const jobId2 = 501;
+
+      await createAcurastJob(stage, jobId1, AcurastJobStatus.DEPLOYED);
+      await createAcurastJob(stage, jobId2, AcurastJobStatus.MATCHED);
+
+      // Run the job status worker
+      await runAcurastJobStatusWorker(stage.context);
+
+      // Verify that clearPreviousJobs is called
+      expect(clearPreviousJobsSpy).toBeCalledTimes(1);
+
+      // Check that both jobs have been updated to INACTIVE
+      const updatedJob1 = await getAcurastJob(stage, jobId1);
+      const updatedJob2 = await getAcurastJob(stage, jobId2);
+
+      expect(updatedJob1.jobStatus).toEqual(AcurastJobStatus.INACTIVE);
+      expect(updatedJob2.jobStatus).toEqual(AcurastJobStatus.INACTIVE);
+    });
   });
 });
 
@@ -218,6 +270,7 @@ async function createAcurastJob(
       startTime: new Date().getTime(),
       endTime: new Date().setHours(new Date().getHours() + 8),
       job_uuid: uuidV4(),
+      function_uuid: uuidV4(),
       project_uuid: uuidV4(),
       jobId,
       deployerAddress: DEPLOYER_ADDRESS,

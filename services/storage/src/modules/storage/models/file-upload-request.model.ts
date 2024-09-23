@@ -320,7 +320,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
   public async populateFileUploadRequestsInSession(
     session_id: number,
     context: ServiceContext,
-  ): Promise<this[]> {
+  ): Promise<FileUploadRequest[]> {
     if (!session_id) {
       throw new Error('session_id should not be null');
     }
@@ -345,7 +345,7 @@ export class FileUploadRequest extends AdvancedSQLModel {
   public async populateFileUploadRequestsInSessionWithFileSize(
     session_id: number,
     context: ServiceContext,
-  ): Promise<this[]> {
+  ): Promise<FileUploadRequest[]> {
     if (!session_id) {
       throw new Error('session_id should not be null');
     }

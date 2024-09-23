@@ -33,6 +33,7 @@ import {
   DeploymentEnvironment,
   DeploymentStatus,
   StorageErrorCode,
+  WebsiteDomainStatus,
 } from '../../config/types';
 import {
   StorageCodeException,
@@ -46,6 +47,7 @@ import { File } from '../storage/models/file.model';
 import { StorageService } from '../storage/storage.service';
 import { Deployment } from './models/deployment.model';
 import { Website } from './models/website.model';
+import { checkDomainDns } from '../../lib/domains';
 
 export class HostingService {
   //#region web page CRUD
@@ -152,6 +154,8 @@ export class HostingService {
     }
     website.canModify(context);
 
+    let websiteDomainUpdated = false;
+
     //Check if domain was changed
     if (event.data.domain && website.domain != event.data.domain) {
       //Domain can be changed every 15 minutes
@@ -179,13 +183,31 @@ export class HostingService {
       }
 
       website.domainChangeDate = new Date();
+      websiteDomainUpdated = true;
     }
 
     website.populate(event.data, PopulateFrom.PROFILE);
 
     await website.validateOrThrow(StorageValidationException);
 
-    await website.update();
+    if (websiteDomainUpdated) {
+      const spendCredit: SpendCreditDto = new SpendCreditDto(
+        {
+          project_uuid: website.project_uuid,
+          product_id: ProductCode.HOSTING_CHANGE_WEBSITE_DOMAIN,
+          referenceTable: DbTables.WEBSITE,
+          referenceId: website.website_uuid + new Date().toLocaleDateString(),
+          location: 'HostingService/updateWebsite',
+          service: ServiceName.STORAGE,
+        },
+        context,
+      );
+
+      await spendCreditAction(context, spendCredit, () => website.update());
+    } else {
+      await website.update();
+    }
+
     return website.serialize(SerializeFor.PROFILE);
   }
 
@@ -211,6 +233,28 @@ export class HostingService {
     return await website.markArchived();
   }
 
+  /**
+   * Set a website's status to active
+   * @param {{ website_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Website>}
+   */
+  static async activateWebsite(
+    event: { website_uuid: string },
+    context: ServiceContext,
+  ): Promise<Website> {
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+    website.canModify(context);
+
+    return await website.markActive();
+  }
+
   static async maxWebsitesQuotaReached(
     event: { query: WebsitesQuotaReachedQueryFilter },
     context: ServiceContext,
@@ -227,6 +271,39 @@ export class HostingService {
     });
 
     return { maxWebsitesQuotaReached: numOfWebsites >= maxWebsitesQuota.value };
+  }
+
+  /**
+   * Check if the domain is pointing to Apillon IP and updates website domainStatus property.
+   * @param event
+   * @param context
+   * @returns Serialized website
+   */
+  static async checkWebsiteDomainDns(
+    event: { website_uuid: string },
+    context: ServiceContext,
+  ) {
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+    website.canAccess(context);
+
+    if (website.domain) {
+      const lookupRes = await checkDomainDns(website.domain);
+
+      website.domainLastCheckDate = new Date();
+      website.domainStatus = lookupRes
+        ? WebsiteDomainStatus.OK
+        : WebsiteDomainStatus.INVALID;
+
+      await website.update();
+    }
+
+    return website.serializeByContext(context);
   }
 
   //#endregion

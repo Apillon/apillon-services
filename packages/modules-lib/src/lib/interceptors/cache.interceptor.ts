@@ -11,6 +11,7 @@ import { Observable, of, tap } from 'rxjs';
 import {
   AppCache,
   AppEnvironment,
+  CacheKeyPrefix,
   Context,
   env,
   generateCacheKey,
@@ -53,14 +54,14 @@ export class CacheInterceptor implements NestInterceptor {
       request.body?.project_uuid ||
       request.params?.project_uuid;
 
-    const key = generateCacheKey(
-      cacheOptions.keyPrefix,
-      request.route.path,
-      request.query,
-      request.params,
-      cacheOptions.byUser ? user_uuid : null,
-      cacheOptions.byProject ? project_uuid : null,
-    );
+    const key = generateCacheKey({
+      prefix: cacheOptions.keyPrefix as CacheKeyPrefix,
+      path: request.route.path,
+      query: request.query,
+      params: request.params,
+      user_uuid: cacheOptions.byUser ? user_uuid : null,
+      project_uuid: cacheOptions.byProject ? project_uuid : null,
+    });
 
     return this.runCachedInterception(key, next, cacheOptions.ttl);
   }

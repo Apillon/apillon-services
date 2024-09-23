@@ -1,49 +1,55 @@
 import {
+  BaseProjectQueryFilter,
   ComputingMicroservice,
+  CreateCloudFunctionDto,
   CreateJobDto,
   JobQueryFilter,
-  SetJobEnvironmentDto,
-  UpdateJobDto,
+  SetCloudFunctionEnvironmentDto,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 
 @Injectable()
 export class AcurastService {
-  constructor() {}
+  async createCloudFunction(
+    context: ApillonApiContext,
+    body: CreateCloudFunctionDto,
+  ) {
+    return (await new ComputingMicroservice(context).createCloudFunction(body))
+      .data;
+  }
+
+  async listCloudFunctions(
+    context: ApillonApiContext,
+    query: BaseProjectQueryFilter,
+  ) {
+    return (await new ComputingMicroservice(context).listCloudFunctions(query))
+      .data;
+  }
+  async getCloudFunction(
+    context: ApillonApiContext,
+    query: JobQueryFilter,
+  ): Promise<{
+    name: string;
+    description: string;
+    activeJobUuid: string;
+    jobs: any[];
+  }> {
+    return (await new ComputingMicroservice(context).getCloudFunction(query))
+      .data;
+  }
 
   async createJob(context: ApillonApiContext, body: CreateJobDto) {
     return (await new ComputingMicroservice(context).createJob(body)).data;
   }
 
-  async listJobs(context: ApillonApiContext, query: JobQueryFilter) {
-    return (await new ComputingMicroservice(context).listJobs(query)).data;
-  }
-
-  async getJob(context: ApillonApiContext, job_uuid: string) {
-    return (await new ComputingMicroservice(context).getJob(job_uuid)).data;
-  }
-
-  async setJobEnvironment(
+  async setCloudFunctionEnvironment(
     context: ApillonApiContext,
-    body: SetJobEnvironmentDto,
-  ) {
-    return (await new ComputingMicroservice(context).setJobEnvironment(body))
-      .data;
-  }
-
-  async sendJobMessage(
-    context: ApillonApiContext,
-    payload: string,
-    job_uuid: string,
+    body: SetCloudFunctionEnvironmentDto,
   ) {
     return (
-      await new ComputingMicroservice(context).sendJobMessage(payload, job_uuid)
+      await new ComputingMicroservice(context).setCloudFunctionEnvironment(body)
     ).data;
-  }
-
-  async updateJob(context: ApillonApiContext, body: UpdateJobDto) {
-    return (await new ComputingMicroservice(context).updateJob(body)).data;
   }
 
   async deleteJob(context: ApillonApiContext, job_uuid: string) {

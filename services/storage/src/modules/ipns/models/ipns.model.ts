@@ -1,9 +1,12 @@
 import {
   Context,
   IpnsQueryFilter,
+  Lmas,
+  LogType,
   PoolConnection,
   PopulateFrom,
   SerializeFor,
+  ServiceName,
   SqlModelStatus,
   UuidSqlModel,
   getQueryParams,
@@ -14,13 +17,14 @@ import { ServiceContext } from '@apillon/service-lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { v4 as uuidV4 } from 'uuid';
-import { DbTables, StorageErrorCode } from '../../../config/types';
+import { BucketType, DbTables, StorageErrorCode } from '../../../config/types';
 import {
   StorageCodeException,
   StorageValidationException,
 } from '../../../lib/exceptions';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { ProjectConfig } from '../../config/models/project-config.model';
+import { IpnsService } from '../ipns.service';
 
 export class Ipns extends UuidSqlModel {
   public readonly tableName = DbTables.IPNS;
@@ -311,6 +315,56 @@ export class Ipns extends UuidSqlModel {
     await this.validateOrThrow(StorageValidationException);
 
     return super.insert(strategy, conn, insertIgnore);
+  }
+
+  public async createNewIpns(bucket: Bucket) {
+    const context = this.getContext();
+    const conn = await context.mysql.start();
+    try {
+      //Insert
+      await this.insert(SerializeFor.INSERT_DB, conn);
+
+      //If cid is specified, publish ipns to point to cid - other nodes will be able to resolve it
+      if (this.cid) {
+        const ipnsRes = await IpnsService.publishIpns(
+          {
+            ipns_uuid: this.ipns_uuid,
+            cid: this.cid,
+            ipns: this,
+            conn: conn,
+          },
+          context,
+        );
+
+        //For hosting - if bucket has IPNS property then new deployments are published to IPNS
+        if (bucket.bucketType == BucketType.HOSTING) {
+          bucket.IPNS = ipnsRes.ipnsName;
+          await bucket.update(SerializeFor.UPDATE_DB, conn);
+        }
+      }
+
+      await context.mysql.commit(conn);
+    } catch (err) {
+      await context.mysql.rollback(conn);
+      throw new StorageCodeException({
+        context,
+        code: StorageErrorCode.ERROR_CREATING_IPNS_RECORD,
+        details: err,
+        status: 500,
+      }).writeToMonitor({
+        project_uuid: this.project_uuid,
+      });
+    }
+
+    await new Lmas().writeLog({
+      context,
+      project_uuid: this.project_uuid,
+      logType: LogType.INFO,
+      message: 'New ipns record created',
+      location: 'BucketService/createBucket',
+      service: ServiceName.STORAGE,
+      data: this.serialize(),
+    });
   }
 
   public async getList(context: ServiceContext, filter: IpnsQueryFilter) {

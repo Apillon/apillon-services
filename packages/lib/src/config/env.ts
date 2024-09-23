@@ -182,6 +182,7 @@ export interface IEnv {
   URL_SCREENSHOT_FUNCTION_NAME: string;
   URL_SCREENSHOT_API_URL: string;
   SEND_WEBSITES_TO_REVIEW: number;
+  VALID_WEBSITE_DOMAIN_TARGETS: string[];
   /**
    * Max number of files that can be transferred to ipfs in one worker iteration
    */
@@ -194,6 +195,11 @@ export interface IEnv {
    * Maximum number of files in session without delay between worker iterations
    */
   STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY: number;
+
+  /**
+   * Maximum file size for which we will check if it is HTML. By default approx. 500KB
+   */
+  STORAGE_MAX_HTML_SIZE_IN_B: number;
 
   STORAGE_MYSQL_HOST: string;
   STORAGE_MYSQL_PORT: number;
@@ -534,6 +540,7 @@ export interface IEnv {
    */
   COMPUTING_AWS_WORKER_SQS_URL: string;
   COMPUTING_AWS_WORKER_LAMBDA_NAME: string;
+  COMPUTING_KMS_KEY_ID: string;
 
   /**
    * METABASE EMBED
@@ -621,6 +628,11 @@ export interface IEnv {
   AIRDROP_CLAIM_TIMESTAMP: string;
   AIRDROP_CLAIM_CONTRACT_ADDRESS: string;
   AIRDROP_CLAIM_CHAIN_ID: number;
+
+  /**
+   * ACURAST
+   */
+  ACURAST_GATEWAY_URL: string;
 }
 
 // dotenv.config();
@@ -739,6 +751,9 @@ export let env: IEnv = {
   URL_SCREENSHOT_API_URL: process.env['URL_SCREENSHOT_API_URL'],
   SEND_WEBSITES_TO_REVIEW:
     parseInt(process.env['SEND_WEBSITES_TO_REVIEW']) || 1,
+  VALID_WEBSITE_DOMAIN_TARGETS: process.env.VALID_WEBSITE_DOMAIN_TARGETS?.split(
+    ',',
+  )?.map((x) => x.trim()) || ['52.19.92.40', '52.209.139.147'],
   STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS:
     parseInt(process.env['STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS']) || 1000,
   STORAGE_MAX_FILE_BATCH_SIZE_FOR_CRUST:
@@ -746,6 +761,9 @@ export let env: IEnv = {
   STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY:
     parseInt(process.env['STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY']) ||
     2000,
+  STORAGE_MAX_HTML_SIZE_IN_B: parseInt(
+    process.env['STORAGE_MAX_HTML_SIZE_IN_B'],
+  ),
 
   /**STORAGE microservice DB*/
   STORAGE_MYSQL_HOST: process.env['STORAGE_MYSQL_HOST'],
@@ -1024,6 +1042,8 @@ export let env: IEnv = {
   COMPUTING_AWS_WORKER_LAMBDA_NAME:
     process.env['COMPUTING_AWS_WORKER_LAMBDA_NAME'],
 
+  COMPUTING_KMS_KEY_ID: process.env['COMPUTING_KMS_KEY_ID'],
+
   /** SOCIAL */
   SOCIAL_FUNCTION_NAME: process.env['SOCIAL_FUNCTION_NAME'],
   SOCIAL_FUNCTION_NAME_TEST: process.env['SOCIAL_FUNCTION_NAME_TEST'],
@@ -1115,12 +1135,15 @@ export let env: IEnv = {
     ',',
   ) || ['apillon.io', 'nectarnode.io', 'web3approved.com'],
   SHORTENER_DOMAIN:
-    process.env['SHORTENER_DOMAIN'] || 'https://go.nectarnode.io',
+    process.env['SHORTENER_DOMAIN'] || 'https://go.web3approved.com',
 
   /** AIRDROP CLAIM */
   AIRDROP_CLAIM_TIMESTAMP: process.env['AIRDROP_CLAIM_TIMESTAMP'],
   AIRDROP_CLAIM_CONTRACT_ADDRESS: process.env['AIRDROP_CLAIM_CONTRACT_ADDRESS'],
   AIRDROP_CLAIM_CHAIN_ID: +process.env['AIRDROP_CLAIM_CHAIN_ID'],
+
+  /** ACURAST */
+  ACURAST_GATEWAY_URL: process.env['ACURAST_GATEWAY_URL'],
 };
 
 export let isEnvReady = false;

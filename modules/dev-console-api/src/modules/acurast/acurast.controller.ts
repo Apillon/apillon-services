@@ -1,10 +1,14 @@
 import {
+  BaseProjectQueryFilter,
+  CloudFunctionUsageDto,
+  CreateCloudFunctionDto,
   CreateJobDto,
   DefaultPermission,
   DefaultUserRole,
   JobQueryFilter,
   RoleGroup,
-  SetJobEnvironmentDto,
+  SetCloudFunctionEnvironmentDto,
+  UpdateCloudFunctionDto,
   UpdateJobDto,
   ValidateFor,
 } from '@apillon/lib';
@@ -14,6 +18,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -30,68 +35,167 @@ import { AcurastService } from './acurast.service';
 export class AcurastController {
   constructor(private readonly acurastService: AcurastService) {}
 
-  @Post('jobs')
+  @Post('cloud-functions')
+  @Validation({ dto: CreateCloudFunctionDto })
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async createCloudFunction(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: CreateCloudFunctionDto,
+  ) {
+    return await this.acurastService.createCloudFunction(context, body);
+  }
+
+  @Get('cloud-functions')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({ dto: BaseProjectQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async listCloudFunctions(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: BaseProjectQueryFilter,
+  ) {
+    return await this.acurastService.listCloudFunctions(context, query);
+  }
+
+  @Get('cloud-functions/:function_uuid')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({ dto: JobQueryFilter, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getCloudFunction(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: JobQueryFilter,
+    @Param('function_uuid') function_uuid: string,
+  ) {
+    query.function_uuid = function_uuid;
+    return await this.acurastService.getCloudFunction(context, query);
+  }
+
+  @Patch('cloud-functions/:function_uuid')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({ dto: UpdateCloudFunctionDto })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async updateCloudFunction(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('function_uuid') function_uuid: string,
+    @Body() body: UpdateCloudFunctionDto,
+  ) {
+    body.function_uuid = function_uuid;
+    return await this.acurastService.updateCloudFunction(context, body);
+  }
+
+  @Post('cloud-functions/:function_uuid/jobs')
   @Validation({ dto: CreateJobDto })
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard, ValidationGuard)
   async createJob(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateJobDto,
+    @Param('function_uuid') function_uuid: string,
   ) {
+    body.function_uuid = function_uuid;
     return await this.acurastService.createJob(context, body);
   }
 
-  @Get('jobs')
-  @Permissions({ role: RoleGroup.ProjectAccess })
-  @Validation({ dto: JobQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(AuthGuard, ValidationGuard)
-  async listJobs(
-    @Ctx() context: DevConsoleApiContext,
-    @Query() query: JobQueryFilter,
-  ) {
-    return await this.acurastService.listJobs(context, query);
-  }
-
-  @Get('jobs/:job_uuid')
-  @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(AuthGuard)
-  async getJob(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('job_uuid') uuid: string,
-  ) {
-    return await this.acurastService.getJob(context, uuid);
-  }
-
-  @Post('jobs/:job_uuid/environment')
-  @Validation({ dto: SetJobEnvironmentDto })
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
-  @UseGuards(AuthGuard, ValidationGuard)
-  async setJobEnvironment(
-    @Ctx() context: DevConsoleApiContext,
-    @Body() body: SetJobEnvironmentDto,
-    @Param('job_uuid') job_uuid: string,
-  ) {
-    body.job_uuid = job_uuid;
-    return await this.acurastService.setJobEnvironment(context, body);
-  }
-
-  @Post('jobs/:job_uuid/message')
+  @Post('cloud-functions/:function_uuid/execute')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
   @UseGuards(AuthGuard)
-  async sendJobMessage(
+  @HttpCode(200)
+  async executeCloudFunction(
     @Ctx() context: DevConsoleApiContext,
     @Body() payload: any,
-    @Param('job_uuid') job_uuid: string,
+    @Param('function_uuid') function_uuid: string,
   ) {
     payload = JSON.stringify(payload); // safety
-    return await this.acurastService.sendJobMessage(context, payload, job_uuid);
+    return await this.acurastService.executeCloudFunction(
+      context,
+      payload,
+      function_uuid,
+    );
   }
+
+  @Post('cloud-functions/:function_uuid/environment')
+  @Validation({ dto: SetCloudFunctionEnvironmentDto })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard, ValidationGuard)
+  async setCloudFunctionEnvironment(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: SetCloudFunctionEnvironmentDto,
+    @Param('function_uuid') function_uuid: string,
+  ) {
+    body.function_uuid = function_uuid;
+    return await this.acurastService.setCloudFunctionEnvironment(context, body);
+  }
+
+  @Get('cloud-functions/:function_uuid/environment')
+  @Validation({ dto: SetCloudFunctionEnvironmentDto })
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getCloudFunctionEnvironment(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('function_uuid') function_uuid: string,
+  ) {
+    return await this.acurastService.getCloudFunctionEnvironment(
+      context,
+      function_uuid,
+    );
+  }
+
+  @Get('cloud-functions/:function_uuid/usage')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({ dto: CloudFunctionUsageDto, validateFor: ValidateFor.QUERY })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getCloudFunctionUsage(
+    @Param('function_uuid') function_uuid: string,
+    @Query() query: CloudFunctionUsageDto,
+  ) {
+    query.function_uuid = function_uuid;
+    return await this.acurastService.getCloudFunctionUsage(query);
+  }
+
+  @Delete('cloud-functions/:function_uuid')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async archiveContract(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('function_uuid') function_uuid: string,
+  ) {
+    return await this.acurastService.archiveCloudFunction(
+      context,
+      function_uuid,
+    );
+  }
+
+  @Patch('cloud-functions/:function_uuid/activate')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async activateContract(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('function_uuid') function_uuid: string,
+  ) {
+    return await this.acurastService.activateCloudFunction(
+      context,
+      function_uuid,
+    );
+  }
+
+  // @Get('jobs/:job_uuid')
+  // @Permissions({ role: RoleGroup.ProjectAccess })
+  // @UseGuards(AuthGuard)
+  // async getJob(
+  //   @Ctx() context: DevConsoleApiContext,
+  //   @Param('job_uuid') uuid: string,
+  // ) {
+  //   return await this.acurastService.getJob(context, uuid);
+  // }
 
   @Patch('jobs/:job_uuid')
   @Permissions({ role: RoleGroup.ProjectAccess })

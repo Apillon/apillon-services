@@ -256,6 +256,26 @@ export class ComputingService {
   }
 
   /**
+   * Set a contract's status to active
+   * @param {{ uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Contract>}
+   */
+  static async activateContract(
+    event: { uuid: string },
+    context: ServiceContext,
+  ): Promise<Contract> {
+    const contract = await new Contract({}, context).populateByUUID(event.uuid);
+
+    if (!contract.exists()) {
+      throw new ComputingNotFoundException();
+    }
+    contract.canModify(context);
+
+    return await contract.markActive();
+  }
+
+  /**
    * Gets list of the contract's transaction based on the query filter
    * @param {{ query: ComputingTransactionQueryFilter }} event
    * @param {ServiceContext} context

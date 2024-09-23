@@ -19,6 +19,7 @@ import { PinToCrustWorker } from './pin-to-crust-worker';
 import { RepublishIpnsWorker } from './republish-ipns-worker';
 import { IpfsBandwidthWorker } from './ipfs-bandwidth-worker';
 import { FreeProjectResourcesWorker } from './free-project-resources-worker';
+import { CheckWebsiteDomainWorker } from './check-website-domain-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -35,6 +36,7 @@ export enum WorkerName {
   REPUBLISH_IPNS_WORKER = 'RepublishIpnsWorker',
   IPFS_BANDWIDTH_WORKER = 'IpfsBandwidthWorker',
   FREE_PROJECT_RESOURCES_WORKER = 'FreeProjectResourcesWorker',
+  CHECK_WEBSITE_DOMAIN_WORKER = 'CheckWebsiteDomainWorker',
 }
 
 export async function handler(event: any) {
@@ -142,6 +144,13 @@ export async function handleLambdaEvent(
         context,
       );
       await ipfsBandwidthWorker.run();
+      break;
+    case WorkerName.CHECK_WEBSITE_DOMAIN_WORKER:
+      await new CheckWebsiteDomainWorker(
+        workerDefinition,
+        context,
+        QueueWorkerType.PLANNER,
+      ).run();
       break;
     default:
       console.log(
@@ -262,6 +271,15 @@ export async function handleSqsMessages(
           break;
         case WorkerName.FREE_PROJECT_RESOURCES_WORKER:
           await new FreeProjectResourcesWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        case WorkerName.CHECK_WEBSITE_DOMAIN_WORKER:
+          await new CheckWebsiteDomainWorker(
             workerDefinition,
             context,
             QueueWorkerType.EXECUTOR,

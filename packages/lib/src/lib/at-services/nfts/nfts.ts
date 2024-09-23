@@ -140,6 +140,7 @@ export class NftsMicroservice extends BaseService {
   public async executeDeployCollectionWorker(params: {
     collection_uuid: string;
     baseUri: string;
+    ipns_uuid?: string;
   }) {
     const data = {
       eventName: NftsEventType.EXECUTE_DEPLOY_COLLECTION_WORKER,
@@ -168,6 +169,22 @@ export class NftsMicroservice extends BaseService {
   public async archiveCollection(collection_uuid: string) {
     const data = {
       eventName: NftsEventType.ARCHIVE_COLLECTION,
+      collection_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async addIpnsToCollection(collection_uuid: string) {
+    const data = {
+      eventName: NftsEventType.ADD_IPNS_TO_COLLECTION,
+      collection_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async activateCollection(collection_uuid: string) {
+    const data = {
+      eventName: NftsEventType.ACTIVATE_COLLECTION,
       collection_uuid,
     };
     return await this.callService(data);

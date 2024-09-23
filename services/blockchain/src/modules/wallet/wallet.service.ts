@@ -30,7 +30,7 @@ export class WalletService {
   static async getWallets(
     { chain }: { chain: Chain },
     context: ServiceContext,
-  ): Promise<{ items: any[]; total: number }> {
+  ): Promise<any[]> {
     return await new Wallet({}, context).getWallets(chain);
   }
 

@@ -101,6 +101,9 @@ export enum LmasEventType {
   GET_TOTAL_REQUESTS = 'get-total-requests',
 
   SEND_MESSAGE_TO_SLACK = 'send-message-to-slack',
+
+  SAVE_CLOUD_FUNCTION_CALL = 'save-cloud-function-call',
+  GET_CLOUD_FUNCTION_USAGE = 'get-cloud-function-usage',
 }
 
 export enum BlockchainEventType {
@@ -162,11 +165,13 @@ export enum StorageEventType {
   WEBSITE_CREATE = 'create-website',
   WEBSITE_UPDATE = 'update-website',
   WEBSITE_ARCHIVE = 'archive-website',
+  WEBSITE_ACTIVATE = 'activate-website',
   WEBSITE_GET = 'get-website',
   WEBSITE_DEPLOY = 'deploy-website',
   WEBSITE_LIST_DOMAINS = 'list-website-domains',
   WEBSITE_GET_ALL_DOMAINS = 'get-all-domains',
   WEBSITE_QUOTA_REACHED = 'websites-quota-reached',
+  WEBSITE_CHECK_DOMAIN_DNS = 'website-check-domain-dns',
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
@@ -261,6 +266,8 @@ export enum NftsEventType {
   PROJECT_COLLECTION_DETAILS = 'project-collections-details',
   ADD_NFTS_METADATA = 'add-nfts-metadata',
   ARCHIVE_COLLECTION = 'archive-collection',
+  ADD_IPNS_TO_COLLECTION = 'add-ipns-to-collection',
+  ACTIVATE_COLLECTION = 'activate-collection',
 }
 
 export enum ComputingEventType {
@@ -275,12 +282,21 @@ export enum ComputingEventType {
   LIST_CLUSTER_WALLETS = 'list-cluster-wallets',
   PROJECT_COMPUTING_DETAILS = 'project-computing-details',
   ARCHIVE_CONTRACT = 'archive-contract',
+  ACTIVATE_CONTRACT = 'activate-contract',
 
+  CREATE_CLOUD_FUNCTION = 'create-cloud-function',
+  LIST_CLOUD_FUNCTIONS = 'list-cloud-functions',
+  UPDATE_CLOUD_FUNCTION = 'update-cloud-function',
+  EXECUTE_CLOUD_FUNCTION = 'execute-cloud-function',
+
+  GET_CLOUD_FUNCTION = 'get-cloud-function',
   CREATE_JOB = 'create-job',
-  LIST_JOBS = 'list-jobs',
   GET_JOB = 'get-job',
-  SET_JOB_ENVIRONMENT = 'set-job-environment',
-  SEND_JOB_MESSAGE = 'send-job-message',
+  SET_CLOUD_FUNCTION_ENVIRONMENT = 'set-cloud-function-environment',
+  GET_CLOUD_FUNCTION_ENVIRONMENT = 'get-cloud-function-environment',
+  ARCHIVE_CLOUD_FUNCTION = 'archive-cloud-function',
+  ACTIVATE_CLOUD_FUNCTION = 'activate-cloud-function',
+
   UPDATE_JOB = 'update-job',
   DELETE_JOB = 'delete-job',
 }
@@ -310,10 +326,12 @@ export enum SocialEventType {
   LIST_SPACES = 'list-spaces',
   GET_SPACE = 'get-space',
   ARCHIVE_SPACE = 'archive-space',
+  ACTIVATE_SPACE = 'activate-space',
   CREATE_POST = 'create-post',
   LIST_POSTS = 'list-posts',
   GET_POST = 'get-post',
   ARCHIVE_POST = 'archive-post',
+  ACTIVATE_POST = 'activate-post',
   GET_WALLET_IDENTITY = 'get-wallet-identity',
   PROJECT_SOCIAL_DETAILS = 'project-social-details',
 }
@@ -688,7 +706,7 @@ export enum ValidatorErrorCode {
   COMPUTING_CONTRACT_DATA_NOT_VALID = 42200210,
   COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID = 42200211,
   COMPUTING_FIELD_NOT_PRESENT = 42200212,
-  JOB_DATE_NOT_VALID = 42200213,
+  COMPUTING_FIELD_NOT_VALID = 42200213,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
@@ -824,6 +842,7 @@ export enum QuotaCode {
   MAX_NFT_COLLECTIONS = 9,
   MAX_STORAGE = 10,
   MAX_BANDWIDTH = 11,
+  MAX_ETHEREUM_NFT_COLLECTIONS = 12,
 }
 
 /**
@@ -880,6 +899,8 @@ export enum CacheKeyPrefix {
   SERVICE_STATUS = 'service-status',
 
   URL_SHORTENER = 'url-shortener',
+
+  ACURAST_JOB = 'acurast-job',
 }
 
 export enum CacheKeyTTL {
@@ -898,6 +919,7 @@ export enum MongoCollections {
   REQUEST_LOGS = 'request_logs',
   API_REQUEST_LOGS = 'api_request_logs',
   IPFS_TRAFFIC_LOG = 'ipfs-traffic-log',
+  CLOUD_FUNCTION_CALL = 'cloud-function-call',
 }
 
 export enum ApiName {
@@ -978,8 +1000,11 @@ export enum ProductCode {
   CONTRACT_SEPOLIA_CALL = 51,
 
   COMPUTING_JOB_CREATE = 52,
+  // these 2 below are not used
   COMPUTING_JOB_SET_ENVIRONMENT = 53,
   COMPUTING_JOB_DELETE = 54,
+
+  IPNS = 55,
 }
 
 export enum ProductService {
@@ -988,7 +1013,9 @@ export enum ProductService {
   IDENTITY = 'IDENTITY',
   SOCIAL = 'SOCIAL',
   COMPUTING = 'COMPUTING',
+  STORAGE = 'STORAGE',
   CONTRACTS = 'CONTRACTS',
+  WALLET = 'WALLET',
 }
 
 export enum ProductCategory {
@@ -1008,6 +1035,8 @@ export enum ProductCategory {
   MOONBEAM_CONTRACT = 'MOONBEAM_CONTRACT',
   ASTAR_CONTRACT = 'ASTAR_CONTRACT',
   ACURAST = 'ACURAST',
+  IPNS = 'IPNS',
+  SIGNATURE = 'SIGNATURE',
 }
 
 export enum EmailTemplate {
@@ -1039,6 +1068,7 @@ export enum EmailTemplate {
 export enum JwtExpireTime {
   ONE_DAY = '1d',
   ONE_HOUR = '1h',
+  TEN_MINUTES = '10m',
   TWENTY_MINUTES = '20m',
   FIVE_MINUTES = '5m',
   NEVER = 'never',

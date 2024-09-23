@@ -22,6 +22,7 @@
     "tsconfig": "*"
   },
   "dependencies": {
+    "@aws-sdk/client-kms": "^3.637.0",
     "@aws-sdk/client-lambda": "^3.518.0",
     "@aws-sdk/client-s3": "^3.515.0",
     "@aws-sdk/client-secrets-manager": "^3.515.0",
@@ -42,7 +43,7 @@
     "redis": "^4.6.13",
     "saslprep": "^1.0.3",
     "sqlstring": "^2.3.3",
-    "ts-mysql-migrate": "^1.0.2",
+    "ts-mysql-migrate": "^1.1.2",
     "uuid": "^9.0.1"
   }
 }

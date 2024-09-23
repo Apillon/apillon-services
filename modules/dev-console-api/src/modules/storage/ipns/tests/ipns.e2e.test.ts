@@ -252,12 +252,12 @@ describe('Ipns tests', () => {
       ).getIpfsCluster();
 
       expect(publishedIpnsName).toBeTruthy();
+      //This test may fail if ipfs node uses custom ipns resolver
       const response = await request(
-        addJwtToIPFSUrl(
-          ipfsCluster.ipnsGateway + publishedIpnsName,
+        await ipfsCluster.generateLink(
           testProject.project_uuid,
           publishedIpnsName,
-          ipfsCluster,
+          true,
         ),
       ).get('');
       expect(response.status).toBe(200);

@@ -13,7 +13,7 @@ import {
   SqlModelStatus,
   generateJwtToken,
   getQueryParams,
-  invalidateCacheKey,
+  invalidateCacheMatch,
   prop,
   selectAndCountQuery,
   uniqueFieldValue,
@@ -500,7 +500,7 @@ export class AuthUser extends AdvancedSQLModel {
     console.info('Deleting token ...');
     oldToken.status = SqlModelStatus.DELETED;
     await oldToken.update(SerializeFor.UPDATE_DB);
-    await invalidateCacheKey(
+    await invalidateCacheMatch(
       `${CacheKeyPrefix.AUTH_USER_DATA}:${this.user_uuid}`,
     );
   }
