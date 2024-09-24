@@ -876,7 +876,7 @@ export enum QuotaCode {
   MAX_ETHEREUM_NFT_COLLECTIONS = 12,
   MAX_EMBEDDED_WALLET_INTEGRATIONS = 13,
   MAX_EMBEDDED_WALLET_SIGNATURES = 14,
-  MAX_RPC_USAGE = 15,
+  MAX_RPC_KEYS = 15,
 }
 
 /**
@@ -947,7 +947,7 @@ export enum CacheKeyTTL {
   EXTENDED = 10 * 60, // 10 min
   LONG = 30 * 60, // 30 min
   EXTRA_LONG = 60 * 60, // 60 min
-  THREE_HOURS = 3 * 60 * 60, // 2 hours
+  THREE_HOURS = 3 * 60 * 60, // 3 hours
 }
 
 export enum MongoCollections {

@@ -20,14 +20,4 @@ export class CreateRpcApiKeyDto extends RpcApiKeyBaseDto {
     ],
   })
   public projectUuid: string;
-
-  @prop({
-    populatable: [],
-  })
-  public dwellirUserId: string;
-
-  @prop({
-    populatable: [],
-  })
-  public triggerCreation: boolean;
 }

@@ -683,6 +683,7 @@ export interface IEnv {
    */
   DWELLIR_USERNAME: string;
   DWELLIR_PASSWORD: string;
+  DWELLIR_URL: string;
 }
 
 // dotenv.config();
@@ -1236,6 +1237,7 @@ export let env: IEnv = {
   /** DWELLIR */
   DWELLIR_USERNAME: process.env['DWELLIR_USERNAME'],
   DWELLIR_PASSWORD: process.env['DWELLIR_PASSWORD'],
+  DWELLIR_URL: process.env['DWELLIR_URL'],
 };
 
 export let isEnvReady = false;

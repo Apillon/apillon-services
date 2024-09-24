@@ -109,19 +109,6 @@ export class User extends AdvancedSQLModel {
   })
   public phone: string;
 
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.SELECT_DB,
-    ],
-  })
-  public dwellir_id: string | null;
-
   /*************************************************INFO properties - not part of DB table */
 
   /**

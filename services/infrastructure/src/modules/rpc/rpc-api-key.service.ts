@@ -3,8 +3,9 @@ import { RpcApiKey } from './rpc-api-key.model';
 import {
   BaseProjectQueryFilter,
   CreateRpcApiKeyDto,
-  Dwellir,
   ModelValidationException,
+  QuotaCode,
+  Scs,
   SqlModelStatus,
   UpdateRpcApiKeyDto,
   ValidatorErrorCode,
@@ -12,11 +13,16 @@ import {
 } from '@apillon/lib';
 import { InfrastructureCodeException } from '../../lib/exceptions';
 import { InfrastructureErrorCode } from '../../config/types';
+import { Dwellir } from '../../lib/dwellir';
+import { DwellirUser } from './dwelir-user.model';
+
 export class RpcApiKeyService {
   static async getRpcApiKeyUsage(
-    data: { data: { id: number; dwellirId: string } },
+    data: { data: { id: number } },
     context: ServiceContext,
   ) {
+    const dwellirId = await RpcApiKeyService.getDwellirId(context);
+
     const rpcApiKey = await new RpcApiKey({}, context).populateById(
       data.data.id,
     );
@@ -34,7 +40,7 @@ export class RpcApiKeyService {
         status: 403,
       });
     }
-    const usages = await Dwellir.getUsage(data.data.dwellirId);
+    const usages = await Dwellir.getUsage(dwellirId);
     const usagePerKey = usages.by_key[rpcApiKey.uuid];
     if (!usagePerKey) {
       return {
@@ -46,18 +52,82 @@ export class RpcApiKeyService {
     return usagePerKey;
   }
 
+  static async getOrCreateDwellirId(context: ServiceContext) {
+    const dwellirUser = await new DwellirUser({}, context).populateById(
+      context.user.id,
+    );
+
+    if (dwellirUser.exists()) {
+      return {
+        dwellirId: dwellirUser.dwellir_id,
+        created: false,
+      };
+    }
+
+    const responseBody = await Dwellir.createUser(context.user.email);
+
+    const createdDwellirUser = new DwellirUser({}, context).populate({
+      dwellir_id: responseBody.id,
+      user_id: context.user.id,
+    });
+
+    await createdDwellirUser.insert();
+
+    return {
+      dwellirId: responseBody.id,
+      userId: context.user.id,
+      created: true,
+    };
+  }
+
+  static async getDwellirId(context: ServiceContext) {
+    const dwellirUser = await new DwellirUser({}, context).populateById(
+      context.user.id,
+    );
+
+    if (!dwellirUser.exists()) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.DWELLIR_ID_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    return dwellirUser.dwellir_id;
+  }
+
   static async createRpcApiKey(
     { data }: { data: CreateRpcApiKeyDto },
     context: ServiceContext,
   ) {
-    const dwellirUserId = data.dwellirUserId;
+    const { dwellirId, created } =
+      await RpcApiKeyService.getOrCreateDwellirId(context);
+
+    if (!created) {
+      const maxApiKeysQuota = await new Scs(context).getQuota({
+        quota_id: QuotaCode.MAX_RPC_KEYS,
+        object_uuid: context.user.user_uuid,
+      });
+
+      const keysCount = await new RpcApiKey({}, context).getNumberOfKeysPerUser(
+        context.user.id,
+      );
+
+      if (keysCount >= maxApiKeysQuota.value) {
+        throw new InfrastructureCodeException({
+          code: InfrastructureErrorCode.MAX_RPC_KEYS_REACHED,
+          status: 400,
+        });
+      }
+    }
+
     const rpcApiKey = new RpcApiKey(data, context);
-    const apiKeyResponse = data.triggerCreation
-      ? await Dwellir.createApiKey(dwellirUserId)
-      : await Dwellir.getInitialApiKey(dwellirUserId);
+    const apiKeyResponse = !created
+      ? await Dwellir.createApiKey(dwellirId)
+      : await Dwellir.getInitialApiKey(dwellirId);
     rpcApiKey.uuid = apiKeyResponse.api_key;
     return await rpcApiKey.insert();
   }
+
   static async updateRpcApiKey(
     {
       data: { id, data },
@@ -90,12 +160,13 @@ export class RpcApiKeyService {
     await rpcApiKey.update();
     return rpcApiKey.serialize();
   }
+
   static async revokeRpcApiKey(
-    {
-      data: { id, dwellirUserId },
-    }: { data: { id: number; dwellirUserId: string } },
+    { data: { id } }: { data: { id: number } },
     context: ServiceContext,
   ) {
+    const dwellirUserId = await RpcApiKeyService.getDwellirId(context);
+
     const rpcApiKey = await new RpcApiKey({}, context).populateById(id);
     if (!rpcApiKey.exists()) {
       throw new InfrastructureCodeException({
@@ -114,6 +185,7 @@ export class RpcApiKeyService {
     await rpcApiKey.update();
     return rpcApiKey.serialize();
   }
+
   static async listRpcApiKeys(
     event: {
       filter: BaseProjectQueryFilter;

@@ -2,7 +2,6 @@ import { ServiceContext } from '@apillon/service-lib';
 import { RpcUrl } from './rpc-url.model';
 import {
   CreateRpcUrlDto,
-  Dwellir,
   ListRpcUrlsForApiKeyQueryFilter,
   ModelValidationException,
   SqlModelStatus,
@@ -13,6 +12,8 @@ import {
 import { InfrastructureCodeException } from '../../lib/exceptions';
 import { InfrastructureErrorCode } from '../../config/types';
 import { RpcApiKey } from './rpc-api-key.model';
+import { Dwellir } from '../../lib/dwellir';
+
 export class RpcUrlService {
   static async createRpcUrl(
     { data }: { data: CreateRpcUrlDto },
@@ -78,6 +79,7 @@ export class RpcUrlService {
     rpcUrl.wssUrl = `${node.wss}/${rpcApiKey.uuid}`;
     return (await rpcUrl.insert()).serializeByContext();
   }
+
   static async updateRpcUrl(
     {
       id,
@@ -106,6 +108,7 @@ export class RpcUrlService {
     await rpcUrl.update();
     return rpcUrl.serializeByContext();
   }
+
   static async deleteRpcUrl({ id }: { id: number }, context: ServiceContext) {
     const rpcUrl = await new RpcUrl({}, context).populateByIdWithProject(id);
     if (!rpcUrl.exists()) {
@@ -123,6 +126,7 @@ export class RpcUrlService {
     await rpcUrl.updateStatus(SqlModelStatus.DELETED);
     return rpcUrl.serializeByContext();
   }
+
   static async listRpcUrls(
     event: {
       query: ListRpcUrlsForApiKeyQueryFilter;
