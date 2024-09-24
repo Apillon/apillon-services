@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="NFTs test-servers" type="Multirun" separateTabs="false" reuseTabsWithFailures="false" startOneByOne="true" markFailedProcess="true" hideSuccessProcess="false" delayTime="0.0">
+    <runConfiguration name="access &gt; test-server" type="npm" />
+    <runConfiguration name="blockchain &gt; test-server" type="npm" />
+    <runConfiguration name="config &gt; test-server" type="npm" />
+    <runConfiguration name="mailing &gt; test-server" type="npm" />
+    <runConfiguration name="nfts &gt; test-server" type="npm" />
+    <runConfiguration name="storage &gt; test-server" type="npm" />
+    <method v="2" />
+  </configuration>
+</component>

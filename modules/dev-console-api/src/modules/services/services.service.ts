@@ -69,6 +69,40 @@ export class ServicesService {
   }
 
   /**
+   * Create specified service for project if it doesn't exist yet
+   * @param context
+   * @param project_uuid
+   * @param serviceType_id
+   */
+  async createServiceIfItDoesntExist(
+    context: DevConsoleApiContext,
+    project_uuid: string,
+    serviceType_id: AttachedServiceType,
+  ) {
+    const { total } = await new Service({}).getServices(
+      context,
+      new ServiceQueryFilter(
+        {
+          project_uuid,
+          serviceType_id,
+        },
+        context,
+      ),
+    );
+    if (total == 0) {
+      const service = new ServiceDto(
+        {
+          project_uuid,
+          name: `${serviceType_id} service`,
+          serviceType_id,
+        },
+        context,
+      );
+      await this.createService(context, service);
+    }
+  }
+
+  /**
    * Creates a new service.
    *
    * @param {DevConsoleApiContext} context - Dev Console API context object.

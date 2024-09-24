@@ -36,6 +36,7 @@ import { StorageOrderTransaction } from '../modules/blockchain-indexers/substrat
 import { SubsocialBlockchainIndexer } from '../modules/blockchain-indexers/substrate/subsocial/indexer.service';
 import { AstarSubstrateBlockchainIndexer } from '../modules/blockchain-indexers/substrate/astar/indexer.service';
 import { AcurastBlockchainIndexer } from '../modules/blockchain-indexers/substrate/acurast/indexer.service';
+import { UniqueBlockchainIndexer } from '../modules/blockchain-indexers/substrate/unique/indexer.service';
 
 export class TransactionLogWorker extends BaseQueueWorker {
   public constructor(
@@ -495,6 +496,77 @@ export class TransactionLogWorker extends BaseQueueWorker {
                 toBlock,
               );
             console.log(`Got ${transfers.length} Acurast transfers!`);
+            // prepare transfer data
+            const transactionLogs: TransactionLog[] = [];
+            // collect transfers without system events (deposits)
+            for (const transfer of transfers) {
+              const systemEvent = systems.find(
+                (s) =>
+                  transfer.blockNumber === s.blockNumber &&
+                  transfer.extrinsicHash === s.extrinsicHash,
+              );
+              if (systemEvent) {
+                continue;
+              }
+              transactionLogs.push(
+                new TransactionLog(
+                  {},
+                  this.context,
+                ).createFromSubstrateIndexerData(
+                  {
+                    system: null,
+                    transfer,
+                  },
+                  wallet,
+                ),
+              );
+            }
+            // collect transfers with system events
+            for (const s of systems) {
+              const transfer = transfers.find(
+                (t) =>
+                  t.blockNumber === s.blockNumber &&
+                  t.extrinsicHash === s.extrinsicHash,
+              );
+              transactionLogs.push(
+                new TransactionLog(
+                  {},
+                  this.context,
+                ).createFromSubstrateIndexerData(
+                  {
+                    system: s,
+                    transfer,
+                  },
+                  wallet,
+                ),
+              );
+            }
+
+            await wallet.updateLastLoggedBlock(toBlock);
+
+            return transactionLogs;
+          },
+
+          [SubstrateChain.UNIQUE]: async () => {
+            const indexer = new UniqueBlockchainIndexer();
+            const blockHeight = await indexer.getBlockHeight();
+            const toBlock =
+              wallet.lastLoggedBlock + wallet.blockParseSize < blockHeight
+                ? wallet.lastLoggedBlock + wallet.blockParseSize
+                : blockHeight;
+            const systems = await indexer.getAllSystemEvents(
+              wallet.address,
+              lastBlock,
+              toBlock,
+            );
+            console.log(`Got ${systems.length} Unique system events!`);
+            const { transfers } =
+              await indexer.getAccountBalanceTransfersForTxs(
+                wallet.address,
+                lastBlock,
+                toBlock,
+              );
+            console.log(`Got ${transfers.length} Unique transfers!`);
             // prepare transfer data
             const transactionLogs: TransactionLog[] = [];
             // collect transfers without system events (deposits)

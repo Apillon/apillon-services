@@ -21,6 +21,7 @@ export enum SubstrateChain {
   XSOCIAL = 7,
   ASTAR = 8,
   ACURAST = 9,
+  UNIQUE = 11,
 }
 
 export enum EvmChain {
@@ -256,6 +257,7 @@ export enum ScsEventType {
 export enum NftsEventType {
   HELLO = 'hello',
   CREATE_COLLECTION = 'create-collection',
+  CREATE_UNIQUE_COLLECTION = 'create-unique-collection',
   NFT_COLLECTIONS_LIST = 'list-nft-collections',
   GET_NFT_COLLECTION = 'get-nft-collection',
   GET_NFT_COLLECTION_BY_UUID = 'get-nft-collection-by-uuid',
@@ -1014,6 +1016,12 @@ export enum ProductCode {
   COMPUTING_JOB_DELETE = 54,
 
   IPNS = 55,
+
+  // UNIQUE NFTS
+  NFT_UNIQUE_COLLECTION = 56,
+  NFT_UNIQUE_MINT = 57,
+  NFT_UNIQUE_BURN = 58,
+  NFT_UNIQUE_TRANSFER_COLLECTION = 59,
 }
 
 export enum ProductService {
@@ -1046,6 +1054,7 @@ export enum ProductCategory {
   ACURAST = 'ACURAST',
   IPNS = 'IPNS',
   SIGNATURE = 'SIGNATURE',
+  UNIQUE_NFT = 'UNIQUE_NFT',
 }
 
 export enum EmailTemplate {
