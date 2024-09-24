@@ -113,7 +113,9 @@ export class EvmService {
       case EvmChain.SEPOLIA:
       case EvmChain.ETHEREUM:
       case EvmChain.ASTAR:
-      case EvmChain.ASTAR_SHIBUYA: {
+      case EvmChain.ASTAR_SHIBUYA:
+      case EvmChain.CELO:
+      case EvmChain.ALFAJORES: {
         maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei');
         estimatedBaseFee = await provider.getGasPrice();
         break;
@@ -338,7 +340,9 @@ export class EvmService {
       case EvmChain.SEPOLIA:
       case EvmChain.MOONBASE:
       case EvmChain.MOONBEAM:
-      case EvmChain.ASTAR: {
+      case EvmChain.ASTAR:
+      case EvmChain.CELO:
+      case EvmChain.ALFAJORES: {
         break;
       }
       default: {

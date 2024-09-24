@@ -49,6 +49,8 @@ export enum WorkerName {
   TRANSMIT_ETHEREUM_TRANSACTIONS = 'TransmitEthereumTransactions',
   TRANSMIT_SEPOLIA_TRANSACTIONS = 'TransmitSepoliaTransactions',
   TRANSMIT_UNIQUE_TRANSACTIONS = 'TransmitUniqueTransactions',
+  TRANSMIT_CELO_TRANSACTIONS = 'TransmitCeloTransactions',
+  TRANSMIT_ALFAJORES_TRANSACTIONS = 'TransmitAlfajoresTransactions',
   VERIFY_CRUST_TRANSACTIONS = 'VerifyCrustTransactions',
   VERIFY_KILT_TRANSACTIONS = 'VerifyKiltTransactions',
   VERIFY_PHALA_TRANSACTIONS = 'VerifyPhalaTransactions',
@@ -62,6 +64,8 @@ export enum WorkerName {
   VERIFY_SEPOLIA_TRANSACTIONS = 'VerifySepoliaTransactions',
   VERIFY_ACURAST_TRANSACTIONS = 'VerifyAcurastTransactions',
   VERIFY_UNIQUE_TRANSACTIONS = 'VerifyUniqueTransactions',
+  VERIFY_CELO_TRANSACTIONS = 'VerifyCeloTransactions',
+  VERIFY_ALFAJORES_TRANSACTIONS = 'VerifyAlfajoresTransactions',
   TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
   TRANSACTION_LOG = 'TransactionLog',
   CHECK_PENDING_TRANSACTIONS = 'CheckPendingTransactions',
@@ -161,6 +165,8 @@ export async function handleLambdaEvent(
     case WorkerName.TRANSMIT_MOONBEAM_TRANSACTIONS:
     case WorkerName.TRANSMIT_MOONBASE_TRANSACTIONS:
     case WorkerName.TRANSMIT_ASTAR_TRANSACTIONS:
+    case WorkerName.TRANSMIT_CELO_TRANSACTIONS:
+    case WorkerName.TRANSMIT_ALFAJORES_TRANSACTIONS:
       await new TransmitEvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
@@ -210,6 +216,8 @@ export async function handleLambdaEvent(
     case WorkerName.VERIFY_SEPOLIA_TRANSACTIONS:
     case WorkerName.VERIFY_MOONBASE_TRANSACTIONS:
     case WorkerName.VERIFY_ASTAR_TRANSACTIONS:
+    case WorkerName.VERIFY_CELO_TRANSACTIONS:
+    case WorkerName.VERIFY_ALFAJORES_TRANSACTIONS:
       await new EvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });

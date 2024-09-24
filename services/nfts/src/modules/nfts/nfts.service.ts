@@ -84,8 +84,6 @@ import { CollectionMetadata } from './models/collectionMetadata.model';
 export class NftsService {
   //#region collection functions
 
-  // TODO: Remove send transaction from all functions bellow, as we are planing to
-  // send those in different worker/job
   static async createCollection(
     params: { body: CreateCollectionDTO },
     context: ServiceContext,
@@ -375,7 +373,6 @@ export class NftsService {
    * Function executes deploy collection worker - This should be used only for LOCAL_DEV
    * Called from storage microservice in PrepareBaseUriForCollectionWorker
    * @param params
-   * @param context
    */
   static async executeDeployCollectionWorker(
     { body }: { body: { collection_uuid: string; baseUri: string } },
@@ -514,8 +511,11 @@ export class NftsService {
     );
 
     await spendCreditAction(context, spendCredit, async () => {
+      const { abi } = await new ContractVersion({}, context).populateById(
+        collection.contractVersion_id,
+      );
       const chainName = getChainName(collection.chainType, collection.chain);
-      console.log(
+      console.info(
         `[${chainName}] Creating NFT transfer contract ownership transaction from wallet address: ${
           collection.deployerAddress
         }, parameters=${JSON.stringify(collection)}`,
@@ -664,12 +664,11 @@ export class NftsService {
     );
 
     await spendCreditAction(context, spendCredit, async () => {
-      const { abi } = await new ContractVersion({}, context).getContractVersion(
-        collection.collectionType,
-        collection.chainType,
+      const { abi } = await new ContractVersion({}, context).populateById(
+        collection.contractVersion_id,
       );
       const chainName = getChainName(collection.chainType, collection.chain);
-      console.log(
+      console.info(
         `[${chainName}] Creating set NFT base URI transaction from wallet address: ${
           collection.deployerAddress
         }, parameters=${JSON.stringify(collection)}`,
@@ -905,8 +904,12 @@ export class NftsService {
 
     let tokenIds: number[] = [];
     const { data } = await spendCreditAction(context, spendCredit, async () => {
+      const { abi } = await new ContractVersion({}, context).populateById(
+        collection.contractVersion_id,
+      );
+
       const chainName = getChainName(collection.chainType, collection.chain);
-      console.log(
+      console.info(
         `[${chainName}] Creating mint NFT transaction from wallet address: ${
           collection.deployerAddress
         }, parameters=${JSON.stringify(collection)}`,
@@ -1318,12 +1321,12 @@ export class NftsService {
     );
     const { data } = await spendCreditAction(context, spendCredit, async () => {
       {
-        const { abi } = await new ContractVersion(
-          {},
-          context,
-        ).getContractVersion(collection.collectionType, collection.chainType);
+        const { abi } = await new ContractVersion({}, context).populateById(
+          collection.contractVersion_id,
+        );
+
         const chainName = getChainName(collection.chainType, collection.chain);
-        console.log(
+        console.info(
           `[${chainName}] Creating NFT burn transaction from wallet address: ${
             collection.deployerAddress
           }, parameters=${JSON.stringify(collection)}`,
@@ -1721,7 +1724,10 @@ export class NftsService {
     chain: Chain,
     project_uuid: string,
   ) {
-    if (chainType !== ChainType.EVM || chain !== EvmChain.ETHEREUM) {
+    if (
+      chainType !== ChainType.EVM ||
+      ![EvmChain.ETHEREUM, EvmChain.CELO].includes(chain as EvmChain)
+    ) {
       return;
     }
 
@@ -1746,7 +1752,7 @@ export class NftsService {
     ).getChainCollectionsCount(chainType, chain, project_uuid);
     const maxCollectionsQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_ETHEREUM_NFT_COLLECTIONS,
-      project_uuid: project_uuid,
+      project_uuid,
     });
 
     if (chainCollectionsCount >= maxCollectionsQuota.value) {

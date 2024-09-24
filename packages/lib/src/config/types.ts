@@ -32,6 +32,8 @@ export enum EvmChain {
   ASTAR_SHIBUYA = 81, // testnet
   ASTAR = 592,
   OASIS = 42262,
+  ALFAJORES = 44787, // Celo testnet
+  CELO = 42220,
 }
 
 export enum NFTCollectionType {
