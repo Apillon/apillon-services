@@ -8,11 +8,9 @@ import {
   ListRpcUrlsForApiKeyQueryFilter,
   UpdateRpcUrlDto,
 } from '@apillon/lib';
-import { User } from '../user/models/user.model';
+
 @Injectable()
 export class RpcService {
-  constructor() {}
-
   async listRpcApiKeys(
     context: DevConsoleApiContext,
     query: BaseProjectQueryFilter,
