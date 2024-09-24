@@ -1,10 +1,22 @@
+import {
+  CacheKeyPrefix,
+  CacheKeyTTL,
+  LogType,
+  env,
+  runCachedFunction,
+  writeLog,
+} from '@apillon/lib';
 import axios from 'axios';
-import { runCachedFunction } from '../cache';
-import { CacheKeyPrefix, CacheKeyTTL, LogType } from '../../config/types';
-import { env } from '../../config/env';
-import { writeLog } from '../logger';
+import {
+  DwellirCreateApiKeyResponse,
+  DwellirCreateUserResponse,
+  DwellirGetAccessTokenResponse,
+  DwellirGetApiKeyResponse,
+  DwellirGetEndpointsResponse,
+  DwellirGetUsageResponse,
+} from '../config/types';
 
-const dwellirAPIUrl = 'https://marly.dwellir.com:9999/partner';
+const dwellirAPIUrl = env.DWELLIR_URL;
 
 export class Dwellir {
   static async makeRequest<T>(
@@ -24,10 +36,11 @@ export class Dwellir {
       });
       return response.data;
     } catch (err) {
+      console.log('err', err);
       writeLog(
         LogType.ERROR,
         `Error making request to ${url} : ${JSON.stringify(err.response?.data || err)}`,
-        'packages/lib/dwellir/dwellir.ts',
+        'services/infrastructure/src/lib/dwellir.ts',
         method,
       );
       throw err;
@@ -39,10 +52,7 @@ export class Dwellir {
       CacheKeyPrefix.DWELLIR_ACCESS_TOKEN,
       async function () {
         try {
-          const response = await axios.post<{
-            access_token: string;
-            token_type: string;
-          }>(
+          const response = await axios.post<DwellirGetAccessTokenResponse>(
             `${dwellirAPIUrl}/v1/login`,
             {
               username: env.DWELLIR_USERNAME,
@@ -60,7 +70,7 @@ export class Dwellir {
           writeLog(
             LogType.ERROR,
             `Error getting Dwellir access token: ${JSON.stringify(err.response?.data || err)}`,
-            'packages/lib/dwellir/dwellir.ts',
+            'services/infrastructure/src/lib/dwellir.ts',
             'getAccessToken',
           );
           throw err;
@@ -71,7 +81,7 @@ export class Dwellir {
   }
 
   static async createUser(email: string) {
-    return this.makeRequest<{ id: string; email: string; name: string }>(
+    return this.makeRequest<DwellirCreateUserResponse>(
       `${dwellirAPIUrl}/v1/user`,
       'post',
       { email, name: email },
@@ -79,14 +89,14 @@ export class Dwellir {
   }
 
   static async createApiKey(userId: string) {
-    return this.makeRequest<{ id: number; api_key: string }>(
+    return this.makeRequest<DwellirCreateApiKeyResponse>(
       `${dwellirAPIUrl}/v1/user/${userId}/api_key`,
       'post',
     );
   }
 
   static async getInitialApiKey(userId: string) {
-    const apiKeys = await this.makeRequest<{ id: number; api_key: string }[]>(
+    const apiKeys = await this.makeRequest<DwellirGetApiKeyResponse[]>(
       `${dwellirAPIUrl}/v1/user/${userId}/api_key`,
       'get',
     );
@@ -108,43 +118,16 @@ export class Dwellir {
   }
 
   static async getEndpoints() {
-    return this.makeRequest<
-      {
-        id: number;
-        name: string;
-        networks: {
-          id: number;
-          name: string;
-          nodes: {
-            id: number;
-            https: string;
-            wss: string;
-            node_type: string;
-            type: string;
-            version: string;
-          }[];
-          type: string;
-          version: string;
-        }[];
-      }[]
-    >(`${dwellirAPIUrl}/v1/endpoint`, 'get');
+    return this.makeRequest<DwellirGetEndpointsResponse>(
+      `${dwellirAPIUrl}/v1/endpoint`,
+      'get',
+    );
   }
 
   static async getUsage(userId: string) {
-    return this.makeRequest<{
-      total_requests: number;
-      total_response: number;
-      by_key: Record<
-        string,
-        Record<
-          string,
-          {
-            responses: number;
-            requests: number;
-            by_method: Record<string, { requests: number; responses: number }>;
-          }
-        >
-      >;
-    }>(`${dwellirAPIUrl}/v1/user/${userId}/analytics/day`, 'get');
+    return this.makeRequest<DwellirGetUsageResponse>(
+      `${dwellirAPIUrl}/v1/user/${userId}/analytics/day`,
+      'get',
+    );
   }
 }

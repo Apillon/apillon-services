@@ -114,4 +114,16 @@ export class RpcApiKey extends AdvancedSQLModel {
     };
     return selectAndCountQuery(this.getContext().mysql, sqlQuery, params, 'id');
   }
+
+  public async getNumberOfKeysPerUser(userId: number): Promise<number | 0> {
+    const data = await this.db().paramExecute(
+      `
+        SELECT COUNT(id) as total
+        FROM \`${DbTables.RPC_API_KEY}\`
+        WHERE createUser = @user_id
+      `,
+      { user_id: userId },
+    );
+    return data?.length ? data[0].total : 0;
+  }
 }

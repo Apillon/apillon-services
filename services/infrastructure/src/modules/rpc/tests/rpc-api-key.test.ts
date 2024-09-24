@@ -1,6 +1,5 @@
 import {
   BaseProjectQueryFilter,
-  CreateRpcApiKeyDto,
   DefaultUserRole,
   SqlModelStatus,
   UpdateRpcApiKeyDto,

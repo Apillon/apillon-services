@@ -22,7 +22,6 @@ import {
   EmailTemplate,
   LogType,
   JwtExpireTime,
-  Dwellir,
 } from '@apillon/lib';
 import { getDiscordProfile } from '@apillon/modules-lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -72,36 +71,6 @@ export class UserService {
     user.evmWallet = context.user.authUser.evmWallet;
 
     return user.serialize(SerializeFor.PROFILE);
-  }
-
-  async getOrCreateDwellirId(context: DevConsoleApiContext) {
-    const user = await new User({}, context).populateById(context.user.id);
-
-    if (!user.exists()) {
-      throw new CodeException({
-        status: HttpStatus.UNAUTHORIZED,
-        code: ResourceNotFoundErrorCode.USER_DOES_NOT_EXISTS,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-    const initialDwellirId = user.dwellir_id;
-
-    if (!initialDwellirId) {
-      const responseBody = await Dwellir.createUser(user.email);
-      const dwellirId = responseBody.id;
-
-      user.dwellir_id = responseBody.id;
-      await user.update(SerializeFor.UPDATE_DB);
-      return {
-        dwellirId,
-        created: true,
-      };
-    }
-
-    return {
-      dwellirId: initialDwellirId,
-      created: false,
-    };
   }
 
   /**

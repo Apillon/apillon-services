@@ -8,12 +8,13 @@ import {
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
-import { SqlModelStatus } from '@apillon/lib';
+
 describe('RPC ApiKey tests', () => {
   let stage: Stage;
   let testUser: TestUser;
   let testUser2: TestUser;
   let testProject: Project;
+  let testProject2: Project;
   beforeAll(async () => {
     stage = await setupTest();
     testUser = await createTestUser(
@@ -25,6 +26,7 @@ describe('RPC ApiKey tests', () => {
       stage.context.access,
     );
     testProject = await createTestProject(testUser, stage);
+    testProject2 = await createTestProject(testUser2, stage);
   });
   afterAll(async () => {
     await releaseStage(stage);
@@ -51,14 +53,26 @@ describe('RPC ApiKey tests', () => {
       expect(createdEnv.projectUuid).toBe(testProject.project_uuid);
 
       const user = (
-        await stage.db.devConsole.paramExecute(
-          'SELECT dwellir_id from user where id = @userId',
+        await stage.db.infrastructure.paramExecute(
+          'SELECT dwellir_id from dwellir_user where user_id = @userId',
           { userId: testUser.user.id },
         )
       )[0];
 
       expect(user.dwellir_id).toBeDefined();
     });
+
+    it("User shouldn't be able to create RPC api-key for his projects once quota has been reached", async () => {
+      const response = await request(stage.http)
+        .post('/rpc/api-key')
+        .send({
+          ...rpcApiKeyToCreate,
+          projectUuid: testProject.project_uuid,
+        })
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(400);
+    });
+
     it('User should not be able to create RPC api-key for other projects', async () => {
       const response = await request(stage.http)
         .post('/rpc/api-key')
@@ -238,16 +252,16 @@ describe('RPC ApiKey tests', () => {
         .post('/rpc/api-key')
         .send({
           ...rpcApiKeyToCreate,
-          projectUuid: testProject.project_uuid,
+          projectUuid: testProject2.project_uuid,
         })
-        .set('Authorization', `Bearer ${testUser.token}`);
+        .set('Authorization', `Bearer ${testUser2.token}`);
       apiKeyId = response.body.data.id;
     });
 
     test('User should be able to get RPC api-key usage', async () => {
       const response = await request(stage.http)
         .get(`/rpc/api-key/${apiKeyId}/usage`)
-        .set('Authorization', `Bearer ${testUser.token}`);
+        .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(200);
     });
   });
