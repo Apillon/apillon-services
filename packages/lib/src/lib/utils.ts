@@ -3,7 +3,6 @@ import { sign, verify, decode, Jwt } from 'jsonwebtoken';
 import { env } from '../config/env';
 import * as crypto from 'crypto';
 import { JwtExpireTime } from '../config/types';
-import { Readable } from 'stream';
 
 export function isPlainObject(testVar: any): boolean {
   if (
@@ -219,43 +218,4 @@ export function generateRandomCode(
     code += characters.charAt(crypto.randomInt(0, characters.length));
   }
   return code;
-}
-
-const htmlCheckRegex =
-  /<(html|head|body|div|span|p|a|table|tr|td|img|ul|li|ol|form|input|button|script|style|link|meta)(\s.*?|)>(.*?)<\/\1>/is;
-const PDF_SIGNATURE = Buffer.from([0x25, 0x50, 0x44, 0x46]);
-
-export async function isStreamHtmlFile(fileStream: Readable) {
-  return new Promise<boolean>((resolve, reject) => {
-    let data = '';
-    let isInitialChunk = true;
-    fileStream.setEncoding('utf8');
-    fileStream.on('data', (chunk: string) => {
-      data = chunk.trim();
-      if (isInitialChunk) {
-        if (
-          Buffer.from(data.slice(0, PDF_SIGNATURE.length)).equals(PDF_SIGNATURE)
-        ) {
-          // PDF File is detected, no need to check html tags
-          fileStream.destroy();
-          resolve(false);
-          return;
-        }
-        isInitialChunk = false;
-      }
-      // Regex that checks if data is has <something> or <something/>
-      if (htmlCheckRegex.test(data)) {
-        fileStream.destroy();
-        resolve(true);
-        return;
-      }
-    });
-    fileStream.on('end', () => {
-      resolve(false);
-    });
-
-    fileStream.on('error', (err) => {
-      reject(err);
-    });
-  });
 }
