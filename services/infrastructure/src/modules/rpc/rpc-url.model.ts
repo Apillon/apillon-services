@@ -155,7 +155,7 @@ export class RpcUrl extends AdvancedSQLModel {
     serializable: [SerializeFor.SERVICE, SerializeFor.PROFILE],
     validators: [],
   })
-  projectUuid: string;
+  project_uuid: string;
   public async populateByNetworkAndApiKey(network: string, apiKeyId: number) {
     this.reset();
     const data = await this.getContext().mysql.paramExecute(
@@ -212,7 +212,7 @@ export class RpcUrl extends AdvancedSQLModel {
     this.reset();
     const data = await this.getContext().mysql.paramExecute(
       `
-          SELECT u.*, e.projectUuid
+          SELECT u.*, e.project_uuid
           FROM \`${this.tableName}\` u
           LEFT JOIN \`${DbTables.RPC_API_KEY}\` e ON u.apiKeyId = e.id
           WHERE u.id = @id

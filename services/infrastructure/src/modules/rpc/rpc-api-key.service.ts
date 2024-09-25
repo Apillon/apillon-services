@@ -9,23 +9,20 @@ import {
   SqlModelStatus,
   UpdateRpcApiKeyDto,
   ValidatorErrorCode,
-  hasProjectAccess,
 } from '@apillon/lib';
 import { InfrastructureCodeException } from '../../lib/exceptions';
 import { InfrastructureErrorCode } from '../../config/types';
-import { Dwellir } from '../../lib/dwellir';
+import { Dwellir } from '../../lib/dwellir/dwellir';
 import { DwellirUser } from './dwelir-user.model';
 
 export class RpcApiKeyService {
   static async getRpcApiKeyUsage(
-    data: { data: { id: number } },
+    { id }: { id: number },
     context: ServiceContext,
   ) {
     const dwellirId = await RpcApiKeyService.getDwellirId(context);
 
-    const rpcApiKey = await new RpcApiKey({}, context).populateById(
-      data.data.id,
-    );
+    const rpcApiKey = await new RpcApiKey({}, context).populateById(id);
 
     if (!rpcApiKey.exists()) {
       throw new InfrastructureCodeException({
@@ -34,12 +31,8 @@ export class RpcApiKeyService {
       });
     }
 
-    if (!hasProjectAccess(rpcApiKey.projectUuid, context)) {
-      throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.USER_IS_NOT_AUTHORIZED,
-        status: 403,
-      });
-    }
+    rpcApiKey.canAccess(context);
+
     const usages = await Dwellir.getUsage(dwellirId);
     const usagePerKey = usages.by_key[rpcApiKey.uuid];
     if (!usagePerKey) {
@@ -68,7 +61,7 @@ export class RpcApiKeyService {
 
     const createdDwellirUser = new DwellirUser({}, context).populate({
       dwellir_id: responseBody.id,
-      user_id: context.user.id,
+      user_uuid: context.user.user_uuid,
     });
 
     await createdDwellirUser.insert();
@@ -146,12 +139,9 @@ export class RpcApiKeyService {
         status: 404,
       });
     }
-    if (!hasProjectAccess(rpcApiKey.projectUuid, context)) {
-      throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.USER_IS_NOT_AUTHORIZED,
-        status: 403,
-      });
-    }
+
+    rpcApiKey.canAccess(context);
+
     rpcApiKey.populate(data);
     await rpcApiKey.validateOrThrow(
       ModelValidationException,
@@ -162,7 +152,7 @@ export class RpcApiKeyService {
   }
 
   static async revokeRpcApiKey(
-    { data: { id } }: { data: { id: number } },
+    { id }: { id: number },
     context: ServiceContext,
   ) {
     const dwellirUserId = await RpcApiKeyService.getDwellirId(context);
@@ -174,12 +164,9 @@ export class RpcApiKeyService {
         status: 404,
       });
     }
-    if (!hasProjectAccess(rpcApiKey.projectUuid, context)) {
-      throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.USER_IS_NOT_AUTHORIZED,
-        status: 403,
-      });
-    }
+
+    rpcApiKey.canAccess(context);
+
     await Dwellir.revokeApiKey(dwellirUserId, rpcApiKey.uuid);
     rpcApiKey.status = SqlModelStatus.DELETED;
     await rpcApiKey.update();

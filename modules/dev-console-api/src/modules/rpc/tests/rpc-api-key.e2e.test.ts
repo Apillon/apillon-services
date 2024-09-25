@@ -42,7 +42,7 @@ describe('RPC ApiKey tests', () => {
         .post('/rpc/api-key')
         .send({
           ...rpcApiKeyToCreate,
-          projectUuid: testProject.project_uuid,
+          project_uuid: testProject.project_uuid,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
@@ -50,12 +50,12 @@ describe('RPC ApiKey tests', () => {
       expect(createdEnv.name).toBe(rpcApiKeyToCreate.name);
       expect(createdEnv.description).toBe(rpcApiKeyToCreate.description);
       expect(createdEnv.uuid).toBeDefined();
-      expect(createdEnv.projectUuid).toBe(testProject.project_uuid);
+      expect(createdEnv.project_uuid).toBe(testProject.project_uuid);
 
       const user = (
         await stage.db.infrastructure.paramExecute(
-          'SELECT dwellir_id from dwellir_user where user_id = @userId',
-          { userId: testUser.user.id },
+          'SELECT dwellir_id from dwellir_user where user_uuid = @userUuid',
+          { userUuid: testUser.user.user_uuid },
         )
       )[0];
 
@@ -67,7 +67,7 @@ describe('RPC ApiKey tests', () => {
         .post('/rpc/api-key')
         .send({
           ...rpcApiKeyToCreate,
-          projectUuid: testProject.project_uuid,
+          project_uuid: testProject.project_uuid,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(400);
@@ -78,12 +78,12 @@ describe('RPC ApiKey tests', () => {
         .post('/rpc/api-key')
         .send({
           ...rpcApiKeyToCreate,
-          projectUuid: testProject.project_uuid,
+          project_uuid: testProject.project_uuid,
         })
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(403);
     });
-    it('User should not be able to create RPC api-key without projectUuid', async () => {
+    it('User should not be able to create RPC api-key without project_uuid', async () => {
       const response = await request(stage.http)
         .post('/rpc/api-key')
         .send(rpcApiKeyToCreate)
@@ -103,7 +103,7 @@ describe('RPC ApiKey tests', () => {
     let apiKeyId: number;
     beforeEach(async () => {
       await stage.db.infrastructure.paramExecute(
-        'INSERT INTO RPC_API_KEY (name, description, projectUuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
+        'INSERT INTO RPC_API_KEY (name, description, project_uuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
         {
           name: existingRpcApiKey.name,
           description: existingRpcApiKey.description,
@@ -156,7 +156,7 @@ describe('RPC ApiKey tests', () => {
         .post('/rpc/api-key')
         .send({
           ...rpcApiKeyToCreate,
-          projectUuid: testProject.project_uuid,
+          project_uuid: testProject.project_uuid,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
 
@@ -165,7 +165,7 @@ describe('RPC ApiKey tests', () => {
         .post('/rpc/api-key')
         .send({
           ...rpcApiKeyToCreate,
-          projectUuid: testProject.project_uuid,
+          project_uuid: testProject.project_uuid,
         })
         .set('Authorization', `Bearer ${testUser.token}`);
 
@@ -180,7 +180,7 @@ describe('RPC ApiKey tests', () => {
     
     test('User should not be able to revoke RPC api-key for other projects', async () => {
       await stage.db.infrastructure.paramExecute(
-        'INSERT INTO RPC_API_KEY (name, description, projectUuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
+        'INSERT INTO RPC_API_KEY (name, description, project_uuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
         {
           name: 'Test ApiKey',
           description: 'Test Description',
@@ -211,7 +211,7 @@ describe('RPC ApiKey tests', () => {
     beforeAll(async () => {
       createdApiKey.projectUuid = testProject.project_uuid;
       await stage.db.infrastructure.paramExecute(
-        'INSERT INTO RPC_API_KEY (name, description, projectUuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
+        'INSERT INTO RPC_API_KEY (name, description, project_uuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
         createdApiKey,
       );
     });
@@ -228,7 +228,7 @@ describe('RPC ApiKey tests', () => {
       const env = response.body.data.items[0];
       expect(env.name).toBe(createdApiKey.name);
       expect(env.description).toBe(createdApiKey.description);
-      expect(env.projectUuid).toBe(testProject.project_uuid);
+      expect(env.project_uuid).toBe(testProject.project_uuid);
       expect(env.uuid).toBe(createdApiKey.uuid);
     });
 
@@ -252,7 +252,7 @@ describe('RPC ApiKey tests', () => {
         .post('/rpc/api-key')
         .send({
           ...rpcApiKeyToCreate,
-          projectUuid: testProject2.project_uuid,
+          project_uuid: testProject2.project_uuid,
         })
         .set('Authorization', `Bearer ${testUser2.token}`);
       apiKeyId = response.body.data.id;

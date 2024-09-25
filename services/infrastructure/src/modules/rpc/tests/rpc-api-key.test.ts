@@ -30,6 +30,7 @@ describe('RPC ApiKey tests', () => {
           },
         ],
       },
+      userRoles: [DefaultUserRole.PROJECT_ADMIN],
     };
   });
   afterAll(async () => {
@@ -44,7 +45,7 @@ describe('RPC ApiKey tests', () => {
         projectUuid,
       };
       await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_API_KEY} (name, description, projectUuid, uuid, status)
+        `INSERT INTO ${DbTables.RPC_API_KEY} (name, description, project_uuid, uuid, status)
                 VALUES ('${dto.name}', '${dto.description}', '${dto.projectUuid}', '6e0c9d3e-edaf-46f4-a4db-228467659876', ${SqlModelStatus.ACTIVE})`,
       );
       const result = await stage.db.paramExecute(
@@ -54,7 +55,7 @@ describe('RPC ApiKey tests', () => {
       const updateDto = new UpdateRpcApiKeyDto({
         name: 'Updated Name',
         description: 'Updated Description',
-        projectUuid: 2,
+        project_uuid: '2',
       });
       const updatedRpcApiKeyResponse = await RpcApiKeyService.updateRpcApiKey(
         {
@@ -69,7 +70,7 @@ describe('RPC ApiKey tests', () => {
       expect(updatedRpcApiKeyResponse.id).toBe(createdApiKeyId);
       expect(updatedRpcApiKeyResponse.name).toBe(updateDto.name);
       expect(updatedRpcApiKeyResponse.description).toBe(updateDto.description);
-      expect(updatedRpcApiKeyResponse.projectUuid).toBe(dto.projectUuid);
+      expect(updatedRpcApiKeyResponse.project_uuid).toBe(dto.projectUuid);
       expect(updatedRpcApiKeyResponse.uuid).toBeDefined();
       const rpcApiKeyInDB = await stage.db.paramExecute(
         `SELECT * FROM ${DbTables.RPC_API_KEY} WHERE id=@id`,
@@ -79,7 +80,7 @@ describe('RPC ApiKey tests', () => {
       const dbRpcApiKey = rpcApiKeyInDB[0];
       expect(dbRpcApiKey.name).toBe(updateDto.name);
       expect(dbRpcApiKey.description).toBe(updateDto.description);
-      expect(dbRpcApiKey.projectUuid).toBe(dto.projectUuid);
+      expect(dbRpcApiKey.project_uuid).toBe(dto.projectUuid);
       expect(dbRpcApiKey.uuid).toBe(updatedRpcApiKeyResponse.uuid);
     });
   });
@@ -93,7 +94,7 @@ describe('RPC ApiKey tests', () => {
         projectUuid,
       };
       await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_API_KEY} (name, description, projectUuid, uuid, status)
+        `INSERT INTO ${DbTables.RPC_API_KEY} (name, description, project_uuid, uuid, status)
                 VALUES ('${dto.name}', '${dto.description}', '${dto.projectUuid}', '6e0c9d3e-edaf-46f4-a4db-228467659876', ${SqlModelStatus.ACTIVE})`,
       );
       const result = await stage.db.paramExecute(
@@ -111,7 +112,7 @@ describe('RPC ApiKey tests', () => {
       expect(revokedRpcApiKeyResponse.id).toBe(createdApiKeyId);
       expect(revokedRpcApiKeyResponse.name).toBe(dto.name);
       expect(revokedRpcApiKeyResponse.description).toBe(dto.description);
-      expect(revokedRpcApiKeyResponse.projectUuid).toBe(dto.projectUuid);
+      expect(revokedRpcApiKeyResponse.project_uuid).toBe(dto.project_uuid);
       expect(revokedRpcApiKeyResponse.uuid).toBeDefined();
       expect(revokedRpcApiKeyResponse.status).toBe(SqlModelStatus.DELETED);
       const rpcApiKeyInDB = await stage.db.paramExecute(
@@ -122,7 +123,7 @@ describe('RPC ApiKey tests', () => {
       const dbRpcApiKey = rpcApiKeyInDB[0];
       expect(dbRpcApiKey.name).toBe(dto.name);
       expect(dbRpcApiKey.description).toBe(dto.description);
-      expect(dbRpcApiKey.projectUuid).toBe(dto.projectUuid);
+      expect(dbRpcApiKey.project_uuid).toBe(dto.projectUuid);
       expect(dbRpcApiKey.uuid).toBe(revokedRpcApiKeyResponse.uuid);
       expect(dbRpcApiKey.status).toBe(SqlModelStatus.DELETED);
     });
@@ -136,7 +137,7 @@ describe('RPC ApiKey tests', () => {
         projectUuid: projectUuid2,
       };
       await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_API_KEY} (name, description, projectUuid, uuid, status)
+        `INSERT INTO ${DbTables.RPC_API_KEY} (name, description, project_uuid, uuid, status)
             VALUES ('${dto.name}', '${dto.description}', '${dto.projectUuid}', '6e0c9d3e-edaf-46f4-a4db-228467659876', ${SqlModelStatus.ACTIVE})`,
       );
       const event = {
@@ -153,7 +154,7 @@ describe('RPC ApiKey tests', () => {
       const rpcApiKey = rpcApiKeys.items[0];
       expect(rpcApiKey.name).toBe(dto.name);
       expect(rpcApiKey.description).toBe(dto.description);
-      expect(rpcApiKey.projectUuid).toBe(dto.projectUuid);
+      expect(rpcApiKey.project_uuid).toBe(dto.projectUuid);
       expect(rpcApiKey.uuid).toBeDefined();
     });
   });

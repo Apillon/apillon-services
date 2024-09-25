@@ -11,7 +11,7 @@ export async function upgrade(
             \`description\` VARCHAR(1000),
             \`uuid\` VARCHAR(36) NOT NULL,
             \`status\` INT NOT NULL DEFAULT ${SqlModelStatus.ACTIVE},
-            \`projectUuid\` VARCHAR(36) NOT NULL,
+            \`project_uuid\` VARCHAR(36) NOT NULL,
             \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
             \`createUser\` INT NULL,
             \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

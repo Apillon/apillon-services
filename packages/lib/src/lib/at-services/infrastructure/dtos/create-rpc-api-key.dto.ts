@@ -19,5 +19,5 @@ export class CreateRpcApiKeyDto extends RpcApiKeyBaseDto {
       },
     ],
   })
-  public projectUuid: string;
+  public project_uuid: string;
 }
