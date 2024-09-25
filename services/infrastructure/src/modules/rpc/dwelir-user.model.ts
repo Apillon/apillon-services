@@ -20,7 +20,7 @@ export class DwellirUser extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
     ],
   })
-  public user_id: number;
+  public user_uuid: number;
 
   @prop({
     parser: { resolver: stringParser() },

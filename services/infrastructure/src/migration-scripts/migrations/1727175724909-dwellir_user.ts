@@ -6,7 +6,7 @@ export async function upgrade(
   await queryFn(`
     CREATE TABLE IF NOT EXISTS \`${DbTables.DWELLIR_USER}\` (
       \`id\` INT AUTO_INCREMENT PRIMARY KEY,
-      \`user_id\` INT NOT NULL,
+      \`user_uuid\` VARCHAR(36) NOT NULL,
       \`dwellir_id\` VARCHAR(36) NOT NULL,
       \`status\` INT NULL,
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,

@@ -27,7 +27,7 @@ describe('RPC URL Tests', () => {
     );
     testProject = await createTestProject(testUser, stage);
     await stage.db.infrastructure.paramExecute(
-      'INSERT INTO rpc_api_key (name, description, projectUuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
+      'INSERT INTO rpc_api_key (name, description, project_uuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
       {
         name: 'Test Api Key',
         description: 'Test Description',

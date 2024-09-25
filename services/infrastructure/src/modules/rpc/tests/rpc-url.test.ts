@@ -15,6 +15,7 @@ describe('RPC Url tests', () => {
   beforeAll(async () => {
     stage = await setupTest();
     stage.context.user = {
+      userRoles: [DefaultUserRole.PROJECT_ADMIN],
       authUser: {
         authUserRoles: [
           {
@@ -27,7 +28,7 @@ describe('RPC Url tests', () => {
       },
     };
     await stage.db.paramExecute(
-      `INSERT INTO ${DbTables.RPC_API_KEY} (name, projectUuid, uuid, status)
+      `INSERT INTO ${DbTables.RPC_API_KEY} (name, project_uuid, uuid, status)
               VALUES ('RPC ENV', '${projectUuid}', '6e0c9d3e-edaf-46f4-a4db-228467659876', ${SqlModelStatus.ACTIVE})`,
     );
     const result = await stage.db.paramExecute(`SELECT LAST_INSERT_ID() as id`);
@@ -173,7 +174,7 @@ describe('RPC Url tests', () => {
   describe('listRpcUrls', () => {
     test('User can list Rpc urls for an apiKey', async () => {
       await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_API_KEY} (name, projectUuid, uuid, status)
+        `INSERT INTO ${DbTables.RPC_API_KEY} (name, project_uuid, uuid, status)
                     VALUES ('RPC ENV', '${projectUuid}', '6e0c9d3e-edaf-46f4-a4db-228467659876', ${SqlModelStatus.ACTIVE})`,
       );
       const result = await stage.db.paramExecute(
@@ -190,7 +191,7 @@ describe('RPC Url tests', () => {
         projectUuid: 2,
       };
       await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_API_KEY} (name, description, projectUuid, uuid, status)
+        `INSERT INTO ${DbTables.RPC_API_KEY} (name, description, project_uuid, uuid, status)
           VALUES ('${dto.name}', '${dto.description}', ${dto.projectUuid}, '6e0c9d3e-edaf-46f4-a4db-228467659876', ${SqlModelStatus.ACTIVE})`,
       );
       const urlDto = {

@@ -12,7 +12,7 @@ import {
 import { InfrastructureCodeException } from '../../lib/exceptions';
 import { InfrastructureErrorCode } from '../../config/types';
 import { RpcApiKey } from './rpc-api-key.model';
-import { Dwellir } from '../../lib/dwellir';
+import { Dwellir } from '../../lib/dwellir/dwellir';
 
 export class RpcUrlService {
   static async createRpcUrl(
@@ -28,7 +28,7 @@ export class RpcUrlService {
         status: 404,
       });
     }
-    if (!hasProjectAccess(rpcApiKey.projectUuid, context)) {
+    if (!hasProjectAccess(rpcApiKey.project_uuid, context)) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.USER_IS_NOT_AUTHORIZED,
         status: 403,
@@ -97,7 +97,7 @@ export class RpcUrlService {
         status: 404,
       });
     }
-    if (!hasProjectAccess(rpcUrl.projectUuid, context)) {
+    if (!hasProjectAccess(rpcUrl.project_uuid, context)) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.USER_IS_NOT_AUTHORIZED,
         status: 403,
@@ -117,7 +117,7 @@ export class RpcUrlService {
         status: 404,
       });
     }
-    if (!hasProjectAccess(rpcUrl.projectUuid, context)) {
+    if (!hasProjectAccess(rpcUrl.project_uuid, context)) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.USER_IS_NOT_AUTHORIZED,
         status: 403,
@@ -142,7 +142,7 @@ export class RpcUrlService {
         status: 404,
       });
     }
-    if (!hasProjectAccess(apiKey.projectUuid, context)) {
+    if (!hasProjectAccess(apiKey.project_uuid, context)) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.USER_IS_NOT_AUTHORIZED,
         status: 403,

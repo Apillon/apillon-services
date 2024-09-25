@@ -14,7 +14,7 @@ import {
   DwellirGetApiKeyResponse,
   DwellirGetEndpointsResponse,
   DwellirGetUsageResponse,
-} from '../config/types';
+} from './types';
 
 const dwellirAPIUrl = env.DWELLIR_URL;
 

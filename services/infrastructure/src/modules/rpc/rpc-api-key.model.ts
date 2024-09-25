@@ -5,6 +5,7 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  UuidSqlModel,
   getQueryParams,
   presenceValidator,
   prop,
@@ -12,11 +13,13 @@ import {
 } from '@apillon/lib';
 import { InfrastructureErrorCode, DbTables } from '../../config/types';
 import { stringParser } from '@rawmodel/parsers';
-export class RpcApiKey extends AdvancedSQLModel {
+export class RpcApiKey extends UuidSqlModel {
   public readonly tableName = DbTables.RPC_API_KEY;
+
   public constructor(data: any, context: Context) {
     super(data, context);
   }
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -38,6 +41,7 @@ export class RpcApiKey extends AdvancedSQLModel {
     ],
   })
   name: string;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -53,6 +57,7 @@ export class RpcApiKey extends AdvancedSQLModel {
     ],
   })
   description: string | null;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -74,6 +79,7 @@ export class RpcApiKey extends AdvancedSQLModel {
     ],
   })
   uuid: string;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.SERVICE],
@@ -93,7 +99,8 @@ export class RpcApiKey extends AdvancedSQLModel {
       },
     ],
   })
-  projectUuid: string;
+  project_uuid: string;
+
   public async listForProject(filter: BaseProjectQueryFilter) {
     const fieldMap = {
       id: 'id',
@@ -107,7 +114,7 @@ export class RpcApiKey extends AdvancedSQLModel {
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields()}`,
       qFrom: `FROM ${DbTables.RPC_API_KEY}
-        WHERE status <> ${SqlModelStatus.DELETED} and projectUuid = '${filter.project_uuid}'`,
+        WHERE status <> ${SqlModelStatus.DELETED} and project_uuid = '${filter.project_uuid}'`,
       qFilter: `
          ORDER BY ${filters.orderStr}
          LIMIT ${filters.limit} OFFSET ${filters.offset}`,
