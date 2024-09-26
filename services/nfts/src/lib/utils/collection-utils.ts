@@ -163,13 +163,7 @@ export async function deployNFTCollectionContract(
     case ChainType.SUBSTRATE: {
       let transactionHex: string;
       if (collection.chain === SubstrateChain.UNIQUE) {
-        const wallets = await blockchainService.getWallets(
-          SubstrateChain.UNIQUE,
-        );
-        const client = new UniqueNftClient(
-          env.UNIQUE_NETWORK_API_URL,
-          wallets[0].address,
-        );
+        const client = new UniqueNftClient(env.UNIQUE_NETWORK_API_URL);
         transactionHex = await client.createCollection(
           collection.name,
           collection.symbol,
