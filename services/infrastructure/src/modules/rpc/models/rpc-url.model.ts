@@ -5,6 +5,7 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  UuidSqlModel,
   getQueryParams,
   presenceValidator,
   prop,
@@ -12,11 +13,29 @@ import {
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { InfrastructureErrorCode, DbTables } from '../../../config/types';
-export class RpcUrl extends AdvancedSQLModel {
+export class RpcUrl extends UuidSqlModel {
   public readonly tableName = DbTables.RPC_URL;
+
   public constructor(data: any, context: Context) {
     super(data, context);
   }
+
+  /**
+   * id
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+      SerializeFor.LOGGER,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -38,6 +57,7 @@ export class RpcUrl extends AdvancedSQLModel {
     ],
   })
   name: string;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -59,6 +79,7 @@ export class RpcUrl extends AdvancedSQLModel {
     ],
   })
   chainName: string;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -80,6 +101,7 @@ export class RpcUrl extends AdvancedSQLModel {
     ],
   })
   network: string;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -101,6 +123,7 @@ export class RpcUrl extends AdvancedSQLModel {
     ],
   })
   httpsUrl: string;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -122,6 +145,7 @@ export class RpcUrl extends AdvancedSQLModel {
     ],
   })
   wssUrl: string;
+
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -143,6 +167,7 @@ export class RpcUrl extends AdvancedSQLModel {
     ],
   })
   apiKeyId: number;
+
   // Joined fields
   @prop({
     parser: { resolver: stringParser() },
@@ -156,6 +181,7 @@ export class RpcUrl extends AdvancedSQLModel {
     validators: [],
   })
   project_uuid: string;
+
   public async populateByNetworkAndApiKey(network: string, apiKeyId: number) {
     this.reset();
     const data = await this.getContext().mysql.paramExecute(

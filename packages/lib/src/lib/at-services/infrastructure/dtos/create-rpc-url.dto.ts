@@ -20,6 +20,7 @@ export class CreateRpcUrlDto extends RpcUrlBaseDto {
     ],
   })
   chainName: string;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
@@ -32,6 +33,7 @@ export class CreateRpcUrlDto extends RpcUrlBaseDto {
     ],
   })
   network: string;
+
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE],

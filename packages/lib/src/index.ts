@@ -135,7 +135,6 @@ export * from './lib/at-services/social/dtos/post-query-filter.dto';
 
 //#Region Infrastructure
 export * from './lib/at-services/infrastructure/infrastructure';
-export * from './lib/at-services/infrastructure/utils';
 export * from './lib/at-services/infrastructure/dtos/create-rpc-api-key.dto';
 export * from './lib/at-services/infrastructure/dtos/create-rpc-url.dto';
 export * from './lib/at-services/infrastructure/dtos/list-rpc-urls-for-api-key-query-filter.dto';
