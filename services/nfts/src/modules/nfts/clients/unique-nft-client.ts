@@ -1,17 +1,12 @@
 import { UniqueChain, UniqueChainInstance } from '@unique-nft/sdk';
-import { compactAddLength, u8aConcat, u8aToHex } from '@polkadot/util';
 import { Address } from '@unique-nft/utils/address';
 
 export class UniqueNftClient {
   private client: UniqueChainInstance;
 
-  constructor(baseUrl: string, fallbackAccountAddress: string) {
+  constructor(baseUrl: string) {
     this.client = UniqueChain({
       baseUrl,
-      // TODO: remove account once unique team updates SDK
-      account: {
-        address: fallbackAccountAddress,
-      } as any,
     });
   }
 
@@ -63,7 +58,7 @@ export class UniqueNftClient {
         tokenOwner: false,
       },
     }));
-    const result = await this.client.collection.create.build({
+    const result = await this.client.collection.create.encode({
       symbol,
       description,
       name,
@@ -83,16 +78,16 @@ export class UniqueNftClient {
       tokenPropertyPermissions,
     });
 
-    return this.unsignedExtrinsicPayloadToRawTx(result);
+    return result.compactExtrinsic;
   }
 
   async mintNft(collectionId: string, tokens: any[]) {
-    const result = await this.client.token.mintNFTs.build({
+    const result = await this.client.token.mintNFTs.encode({
       collectionId,
       tokens,
     });
 
-    return this.unsignedExtrinsicPayloadToRawTx(result);
+    return result.compactExtrinsic;
   }
 
   getTokenAddress(collectionId: string, tokenId: number) {
@@ -100,36 +95,20 @@ export class UniqueNftClient {
   }
 
   async burnNft(collectionId: string, tokenId: number) {
-    const result = await this.client.token.burn.build({
+    const result = await this.client.token.burn.encode({
       collectionId,
       tokenId,
     });
 
-    return this.unsignedExtrinsicPayloadToRawTx(result);
+    return result.compactExtrinsic;
   }
 
   async transferOwnership(collectionId: string, newOwner: string) {
-    const result = await this.client.collection.transferCollection.build({
+    const result = await this.client.collection.transferCollection.encode({
       to: newOwner,
       collectionId: collectionId,
     });
 
-    return this.unsignedExtrinsicPayloadToRawTx(result);
-  }
-
-  private unsignedExtrinsicPayloadToRawTx(
-    unsignedExtrinsicPayload: UnsignedExtrinsicPayload,
-  ): string {
-    const { method, version } = unsignedExtrinsicPayload.signerPayloadJSON;
-
-    const versionWithMethodAndLength = compactAddLength(
-      u8aConcat([version], method),
-    );
-
-    return u8aToHex(versionWithMethodAndLength);
+    return result.compactExtrinsic;
   }
 }
-
-type UnsignedExtrinsicPayload = Awaited<
-  ReturnType<UniqueChainInstance['extrinsic']['build']>
->;
