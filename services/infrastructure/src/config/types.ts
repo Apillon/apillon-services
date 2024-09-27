@@ -2,6 +2,7 @@ export enum DbTables {
   RPC_API_KEY = 'rpc_api_key',
   RPC_URL = 'rpc_url',
   DWELLIR_USER = 'dwellir_user',
+  INDEXER = 'indexer',
 }
 
 export enum InfrastructureErrorCode {
@@ -21,6 +22,8 @@ export enum InfrastructureErrorCode {
   RPC_URL_NETWORK_NOT_FOUND = 42220011,
   RPC_URL_URLS_NOT_PRESENT = 42220012,
   RPC_API_KEY_USAGE_NOT_FOUND = 42220013,
+
+  INDEXER_REQUIRED_DATA_NOT_PRESENT = 42220100,
 
   // 401 - Unauthorized
   USER_IS_NOT_AUTHORIZED = 40120001,

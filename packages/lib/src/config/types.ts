@@ -348,6 +348,11 @@ export enum InfrastructureEventType {
   UPDATE_RPC_URL = 'update-rpc-url',
   DELETE_RPC_URL = 'delete-rpc-url',
   LIST_RPC_URLS = 'list-rpc-urls',
+  INDEXER_LIST = 'list-indexers',
+  INDEXER_GET = 'get-indexer',
+  INDEXER_GET_LOGS = 'get-indexer-logs',
+  INDEXER_UPDATE = 'update-indexer',
+  INDEXER_DEPLOY = 'deploy-indexer',
 }
 
 export enum ServiceName {
