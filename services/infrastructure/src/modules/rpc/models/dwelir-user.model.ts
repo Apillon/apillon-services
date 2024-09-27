@@ -4,7 +4,7 @@ import {
   SerializeFor,
   prop,
 } from '@apillon/lib';
-import { DbTables } from '../../config/types';
+import { DbTables } from '../../../config/types';
 import { stringParser } from '@rawmodel/parsers';
 
 export class DwellirUser extends AdvancedSQLModel {

@@ -1,5 +1,5 @@
 import { ServiceContext } from '@apillon/service-lib';
-import { RpcApiKey } from './rpc-api-key.model';
+import { RpcApiKey } from './models/rpc-api-key.model';
 import {
   BaseProjectQueryFilter,
   CreateRpcApiKeyDto,
@@ -13,7 +13,7 @@ import {
 import { InfrastructureCodeException } from '../../lib/exceptions';
 import { InfrastructureErrorCode } from '../../config/types';
 import { Dwellir } from '../../lib/dwellir/dwellir';
-import { DwellirUser } from './dwelir-user.model';
+import { DwellirUser } from './models/dwelir-user.model';
 
 export class RpcApiKeyService {
   static async getRpcApiKeyUsage(
