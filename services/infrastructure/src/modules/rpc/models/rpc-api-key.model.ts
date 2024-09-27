@@ -11,7 +11,7 @@ import {
   prop,
   selectAndCountQuery,
 } from '@apillon/lib';
-import { InfrastructureErrorCode, DbTables } from '../../config/types';
+import { InfrastructureErrorCode, DbTables } from '../../../config/types';
 import { stringParser } from '@rawmodel/parsers';
 export class RpcApiKey extends UuidSqlModel {
   public readonly tableName = DbTables.RPC_API_KEY;
@@ -114,7 +114,8 @@ export class RpcApiKey extends UuidSqlModel {
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields()}`,
       qFrom: `FROM ${DbTables.RPC_API_KEY}
-        WHERE status <> ${SqlModelStatus.DELETED} and project_uuid = '${filter.project_uuid}'`,
+        WHERE status <> ${SqlModelStatus.DELETED} and project_uuid = '${filter.project_uuid}'
+        AND (@search IS NULL OR name LIKE CONCAT('%',@search,'%'))`,
       qFilter: `
          ORDER BY ${filters.orderStr}
          LIMIT ${filters.limit} OFFSET ${filters.offset}`,

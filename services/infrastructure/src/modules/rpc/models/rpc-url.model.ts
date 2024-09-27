@@ -11,7 +11,7 @@ import {
   selectAndCountQuery,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { InfrastructureErrorCode, DbTables } from '../../config/types';
+import { InfrastructureErrorCode, DbTables } from '../../../config/types';
 export class RpcUrl extends AdvancedSQLModel {
   public readonly tableName = DbTables.RPC_URL;
   public constructor(data: any, context: Context) {
@@ -182,7 +182,7 @@ export class RpcUrl extends AdvancedSQLModel {
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields()}`,
       qFrom: `FROM ${DbTables.RPC_URL} u
-          WHERE u.apiKeyId = ${filter.apiKeyId}`,
+          WHERE u.apiKeyId = ${filter.apiKeyId} AND (@search IS NULL or u.name LIKE CONCAT('%',@search,'%'))`,
       qFilter: `
         ORDER BY ${filters.orderStr}
         LIMIT ${filters.limit} OFFSET ${filters.offset}`,
