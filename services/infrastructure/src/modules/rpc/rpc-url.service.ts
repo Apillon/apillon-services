@@ -1,5 +1,5 @@
 import { ServiceContext } from '@apillon/service-lib';
-import { RpcUrl } from './rpc-url.model';
+import { RpcUrl } from './models/rpc-url.model';
 import {
   CreateRpcUrlDto,
   ListRpcUrlsForApiKeyQueryFilter,
@@ -11,7 +11,7 @@ import {
 } from '@apillon/lib';
 import { InfrastructureCodeException } from '../../lib/exceptions';
 import { InfrastructureErrorCode } from '../../config/types';
-import { RpcApiKey } from './rpc-api-key.model';
+import { RpcApiKey } from './models/rpc-api-key.model';
 import { Dwellir } from '../../lib/dwellir/dwellir';
 
 export class RpcUrlService {
