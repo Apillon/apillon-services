@@ -10,18 +10,16 @@ import {
   HttpStatus,
   Injectable,
 } from '@nestjs/common';
+import { Project } from '../modules/project/models/project.model';
 
 @Injectable()
 export class ProjectAccessGuard implements CanActivate {
   public async canActivate(execCtx: ExecutionContext): Promise<boolean> {
-    const context: Context = execCtx.getArgByIndex(0).context;
-    const project_uuid =
-      execCtx.getArgByIndex(0).params?.project_uuid ||
-      execCtx.getArgByIndex(0).params?.projectUuid ||
-      execCtx.getArgByIndex(0).query?.project_uuid ||
-      execCtx.getArgByIndex(0).query?.projectUuid ||
-      execCtx.getArgByIndex(0).body?.project_uuid ||
-      execCtx.getArgByIndex(0).body?.projectUuid;
+    const payload = execCtx.getArgByIndex(0);
+    const context: Context = payload.context;
+    const project_uuid = ['params', 'query', 'body']
+      .map((key) => payload[key]?.project_uuid || payload[key]?.projectUuid)
+      .find((uuid) => uuid);
 
     if (!project_uuid) {
       throw new CodeException({
@@ -30,23 +28,11 @@ export class ProjectAccessGuard implements CanActivate {
         errorMessage: 'Project UUID not provided',
       });
     }
-    if (
-      !context.hasRoleOnProject(
-        [
-          DefaultUserRole.PROJECT_ADMIN,
-          DefaultUserRole.PROJECT_OWNER,
-          DefaultUserRole.PROJECT_USER,
-        ],
-        project_uuid,
-      ) &&
-      !context.hasRole([DefaultUserRole.ADMIN, DefaultUserRole.SUPPORT])
-    ) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: HttpStatus.FORBIDDEN,
-        errorMessage: 'Insufficient permissions',
-      });
-    }
+
+    const project = new Project({ project_uuid }, context);
+
+    project.canAccess(context);
+
     return true;
   }
 }
