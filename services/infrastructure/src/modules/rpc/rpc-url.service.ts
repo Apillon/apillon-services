@@ -28,12 +28,9 @@ export class RpcUrlService {
         status: 404,
       });
     }
-    if (!hasProjectAccess(rpcApiKey.project_uuid, context)) {
-      throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.USER_IS_NOT_AUTHORIZED,
-        status: 403,
-      });
-    }
+
+    rpcApiKey.canAccess(context);
+
     const rpcUrlByNetworkAndApiKey = await new RpcUrl(
       {},
       context,

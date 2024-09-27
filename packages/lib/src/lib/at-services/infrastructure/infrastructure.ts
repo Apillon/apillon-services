@@ -31,12 +31,14 @@ export class InfrastructureMicroservice extends BaseService {
       id,
     });
   }
+
   public async listRpcApiKeys(filter: BaseProjectQueryFilter) {
     return await this.callService({
       eventName: InfrastructureEventType.LIST_RPC_API_KEYS,
       filter,
     });
   }
+
   public async createRpcApiKey(data: CreateRpcApiKeyDto) {
     return await this.callService({
       eventName: InfrastructureEventType.CREATE_RPC_API_KEY,
@@ -50,12 +52,14 @@ export class InfrastructureMicroservice extends BaseService {
       data: { id, data },
     });
   }
+
   public async revokeRpcApiKey(id: number) {
     return await this.callService({
       eventName: InfrastructureEventType.REVOKE_RPC_API_KEY,
       id,
     });
   }
+
   public async createRpcUrl(data: CreateRpcUrlDto) {
     return await this.callService({
       eventName: InfrastructureEventType.CREATE_RPC_URL,
@@ -70,12 +74,14 @@ export class InfrastructureMicroservice extends BaseService {
       data,
     });
   }
+
   public async deleteRpcUrl(id: number) {
     return await this.callService({
       eventName: InfrastructureEventType.DELETE_RPC_URL,
       id,
     });
   }
+
   public async listRpcUrlsForApiKey(query: ListRpcUrlsForApiKeyQueryFilter) {
     return await this.callService({
       eventName: InfrastructureEventType.LIST_RPC_URLS,
