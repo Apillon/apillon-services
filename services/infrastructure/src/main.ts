@@ -23,6 +23,7 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [InfrastructureEventType.INDEXER_CREATE]: IndexerService.createIndexer,
     [InfrastructureEventType.INDEXER_GET]: IndexerService.getIndexer,
+    [InfrastructureEventType.INDEXER_GET_LOGS]: IndexerService.getIndexerLogs,
     [InfrastructureEventType.INDEXER_LIST]: IndexerService.listIndexers,
     [InfrastructureEventType.INDEXER_GET_URL_FOR_SC_UPLOAD]:
       IndexerService.getUrlForSourceCodeUpload,

@@ -99,17 +99,24 @@ export class IndexerService {
       event.indexer_uuid,
     );
 
-    if (indexer.status != SqlModelStatus.ACTIVE || indexer.reference) {
+    if (indexer.status != SqlModelStatus.ACTIVE || !indexer.reference) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.INDEXER_IS_NOT_DEPLOYED,
         status: 400,
       });
     }
 
+    const query = new IndexerLogsQueryFilter(event.query, context);
+    let queryParams = query.search ? `&search=${query.search}` : '';
+
+    query.container?.forEach((c) => (queryParams += `&container=${c}`));
+    query.level?.forEach((l) => (queryParams += `&level=${l}`));
+    queryParams += `&limit=${query.limit || 100}`;
+    queryParams += query.nextPage ? `&nextPage=${query.nextPage}` : '';
     //call sqd API to get squid info
     const { body } = await sqdApi<any>({
       method: 'GET',
-      path: `/orgs/${env.SQD_ORGANIZATION_CODE}/squids/${indexer.reference}/logs/history?from=${event.query.from.toISOString()}`,
+      path: `/orgs/${env.SQD_ORGANIZATION_CODE}/squids/${indexer.reference}/logs/history?from=${query.from.toISOString()}${queryParams}`,
     });
 
     return body;

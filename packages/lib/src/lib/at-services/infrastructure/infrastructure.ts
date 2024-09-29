@@ -106,7 +106,7 @@ export class InfrastructureMicroservice extends BaseService {
     query: IndexerLogsQueryFilter,
   ) {
     return await this.callService({
-      eventName: InfrastructureEventType.INDEXER_GET,
+      eventName: InfrastructureEventType.INDEXER_GET_LOGS,
       indexer_uuid,
       query: query.serialize(),
     });

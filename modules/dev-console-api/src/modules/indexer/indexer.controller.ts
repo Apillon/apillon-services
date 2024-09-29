@@ -55,7 +55,7 @@ export class IndexerController {
 
   @Get(':indexer_uuid/logs')
   @Validation({ dto: IndexerLogsQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ValidationGuard)
   async getIndexerLogs(
     @Ctx() context: DevConsoleApiContext,
     @Param('indexer_uuid') indexer_uuid: string,
