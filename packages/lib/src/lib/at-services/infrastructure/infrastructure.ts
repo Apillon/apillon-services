@@ -3,8 +3,10 @@ import { AppEnvironment, InfrastructureEventType } from '../../../config/types';
 import { BaseProjectQueryFilter } from '../../base-models/base-project-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { CreateIndexerDto } from './dtos/create-indexer.dto';
 import { CreateRpcApiKeyDto } from './dtos/create-rpc-api-key.dto';
 import { CreateRpcUrlDto } from './dtos/create-rpc-url.dto';
+import { IndexerLogsQueryFilter } from './dtos/indexer-logs-query-filter.dto';
 import { ListRpcUrlsForApiKeyQueryFilter } from './dtos/list-rpc-urls-for-api-key-query-filter.dto';
 import { UpdateRpcApiKeyDto } from './dtos/update-rpc-api-key.dto';
 import { UpdateRpcUrlDto } from './dtos/update-rpc-url.dto';
@@ -82,4 +84,54 @@ export class InfrastructureMicroservice extends BaseService {
       query,
     });
   }
+
+  //#region Indexer
+
+  public async listIndexers(query: BaseProjectQueryFilter) {
+    return await this.callService({
+      eventName: InfrastructureEventType.INDEXER_LIST,
+      query,
+    });
+  }
+
+  public async getIndexer(indexer_uuid: string) {
+    return await this.callService({
+      eventName: InfrastructureEventType.INDEXER_GET,
+      indexer_uuid,
+    });
+  }
+
+  public async getIndexerLogs(
+    indexer_uuid: string,
+    query: IndexerLogsQueryFilter,
+  ) {
+    return await this.callService({
+      eventName: InfrastructureEventType.INDEXER_GET,
+      indexer_uuid,
+      query: query.serialize(),
+    });
+  }
+
+  public async createIndexer(data: CreateIndexerDto) {
+    return await this.callService({
+      eventName: InfrastructureEventType.INDEXER_CREATE,
+      data,
+    });
+  }
+
+  public async getUrlForSourceCodeUpload(indexer_uuid: string) {
+    return await this.callService({
+      eventName: InfrastructureEventType.INDEXER_GET_URL_FOR_SC_UPLOAD,
+      indexer_uuid,
+    });
+  }
+
+  public async deployIndexer(indexer_uuid: string) {
+    return await this.callService({
+      eventName: InfrastructureEventType.INDEXER_DEPLOY,
+      indexer_uuid,
+    });
+  }
+
+  //#endregion
 }

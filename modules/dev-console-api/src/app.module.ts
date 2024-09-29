@@ -24,6 +24,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
 import { AcurastModule } from './modules/acurast/acurast.module';
 import { ContractsModule } from './modules/contracts/contracts.module';
 import { RpcModule } from './modules/rpc/rpc.module';
+import { IndexerModule } from './modules/indexer/indexer.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { RpcModule } from './modules/rpc/rpc.module';
     AcurastModule,
     ContractsModule,
     RpcModule,
+    IndexerModule,
   ],
   controllers: [],
   providers: [],

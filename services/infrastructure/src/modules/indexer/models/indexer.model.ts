@@ -2,6 +2,7 @@ import {
   AdvancedSQLModel,
   BaseProjectQueryFilter,
   Context,
+  PoolConnection,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
@@ -13,8 +14,10 @@ import {
 } from '@apillon/lib';
 import { InfrastructureErrorCode, DbTables } from '../../../config/types';
 import { stringParser } from '@rawmodel/parsers';
+import { stat } from 'fs';
+import { InfrastructureCodeException } from '../../../lib/exceptions';
 export class Indexer extends UuidSqlModel {
-  public readonly tableName = DbTables.RPC_API_KEY;
+  public readonly tableName = DbTables.INDEXER;
 
   public constructor(data: any, context: Context) {
     super(data, context);
@@ -41,6 +44,23 @@ export class Indexer extends UuidSqlModel {
     ],
   })
   indexer_uuid: string;
+
+  /** Reference is used as a identifier for squid in sqd API */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
+    ],
+  })
+  reference: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -98,6 +118,46 @@ export class Indexer extends UuidSqlModel {
     ],
   })
   description: string | null;
+
+  public override populateByUUID(
+    uuid: string,
+    uuid_property?: string,
+    conn?: PoolConnection,
+  ): Promise<this> {
+    return super.populateByUUID(uuid, uuid_property || 'indexer_uuid', conn);
+  }
+
+  public async populateByUUIDAndCheckAccess(uuid: string): Promise<this> {
+    const indexer = await super.populateByUUID(uuid, 'indexer_uuid');
+
+    if (!indexer.exists()) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.INDEXER_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    await indexer.canAccess(this.getContext());
+
+    return indexer;
+  }
+
+  public async getIndexers(
+    status = SqlModelStatus.ACTIVE,
+    conn?: PoolConnection,
+  ): Promise<Indexer[]> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${DbTables.INDEXER}\`
+        WHERE @status = status;
+      `,
+      { status },
+      conn,
+    );
+
+    return data.map((x) => new Indexer({}, this.getContext()).populate(x));
+  }
 
   public async getList(filter: BaseProjectQueryFilter) {
     const fieldMap = {
