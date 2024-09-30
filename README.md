@@ -35,7 +35,7 @@ In this repository you will find source and documentation for microservices, API
 | 17   | SRV-LIB   | Service Code Library                     | [@apillon/service-lib](/packages/service-lib/)        | /packages/service-lib/    |
 | 18   | CS        | Computing service                        | [@apillon/computing](/services/computing/)            | /services/computing/      |
 | 19   | SUBS      | Social service                           | [@apillon/social](/services/social/)                  | /services/social/         |
-| 20   | INFRA     |                                          |                                                       |                           |
+| 20   | INFRA     | Infrastructure service                   | [@apillon/infrastructure](/services/infrastructure)   | /services/infrastructure/ |
 | 21   | CONTRACTS | Contracts service                        | [@apillon/contracts](/services/contracts/)            | /services/contracts/      |
 
 ## Documentation

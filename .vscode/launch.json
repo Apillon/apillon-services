@@ -13,7 +13,8 @@
         "NFTs",
         "Referral",
         "Authentication",
-        "Social"
+        "Social",
+        "Infrastructure"
       ],
       "stopAll": true
     },

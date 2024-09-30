@@ -358,6 +358,18 @@ export enum ContractEventType {
   ARCHIVE_DEPLOYED_CONTRACT = 'archive-deployed-contract',
 }
 
+export enum InfrastructureEventType {
+  LIST_RPC_API_KEYS = 'list-rpc-api-keys',
+  REVOKE_RPC_API_KEY = 'revoke-rpc-api-key',
+  UPDATE_RPC_API_KEY = 'update-rpc-api-key',
+  CREATE_RPC_API_KEY = 'create-rpc-api-key',
+  GET_RPC_API_KEY_USAGE = 'get-rpc-api-key-usage',
+  CREATE_RPC_URL = 'create-rpc-url',
+  UPDATE_RPC_URL = 'update-rpc-url',
+  DELETE_RPC_URL = 'delete-rpc-url',
+  LIST_RPC_URLS = 'list-rpc-urls',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
@@ -375,6 +387,7 @@ export enum ServiceName {
   COMPUTING = 'COMPUTING',
   SOCIAL = 'SOCIAL',
   CONTRACTS = 'CONTRACTS',
+  INFRASTRUCTURE = 'INFRASTRUCTURE',
 }
 
 export enum ServiceCode {
@@ -394,6 +407,7 @@ export enum ServiceCode {
   BLOCKCHAIN = '16',
   COMPUTING = '18',
   SOCIAL = '19',
+  INFRASTRUCTURE = '20',
 }
 
 export enum AppEnvironment {
@@ -774,6 +788,14 @@ export enum ValidatorErrorCode {
   TARGET_URL_NOT_PRESENT = 422001010,
   TARGET_URL_NOT_VALID = 422001011,
   //#endregion
+
+  //#region Infrastructure
+  RPC_API_KEY_NAME_NOT_PRESENT = 422001101,
+  RPC_API_KEY_PROJECT_ID_NOT_PRESENT = 422001102,
+  RPC_URL_NAME_NOT_PRESENT = 422001103,
+  RPC_URL_API_KEY_ID_NOT_PRESENT = 422001104,
+  RPC_URL_NETWORK_NOT_PRESENT = 422001105,
+  RPC_URL_CHAIN_NAME_NOT_PRESENT = 422001106,
 }
 
 /**
@@ -854,6 +876,7 @@ export enum QuotaCode {
   MAX_ETHEREUM_NFT_COLLECTIONS = 12,
   MAX_EMBEDDED_WALLET_INTEGRATIONS = 13,
   MAX_EMBEDDED_WALLET_SIGNATURES = 14,
+  MAX_RPC_KEYS = 15,
 }
 
 /**
@@ -912,6 +935,9 @@ export enum CacheKeyPrefix {
   URL_SHORTENER = 'url-shortener',
 
   ACURAST_JOB = 'acurast-job',
+
+  // DWELLIR
+  DWELLIR_ACCESS_TOKEN = 'dwellir-access-token',
 }
 
 export enum CacheKeyTTL {
@@ -921,6 +947,7 @@ export enum CacheKeyTTL {
   EXTENDED = 10 * 60, // 10 min
   LONG = 30 * 60, // 30 min
   EXTRA_LONG = 60 * 60, // 60 min
+  THREE_HOURS = 3 * 60 * 60, // 3 hours
 }
 
 export enum MongoCollections {

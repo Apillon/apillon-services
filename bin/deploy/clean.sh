@@ -47,6 +47,8 @@ cd ../../services/referral/
 rm node_modules .turbo dist -rf
 cd ../../services/social/
 rm node_modules .turbo dist -rf
+cd ../../services/infrastructure/
+rm node_modules .turbo dist -rf
 
 cd ../..
 
