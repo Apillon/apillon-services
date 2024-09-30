@@ -5,6 +5,7 @@ import {
   DefaultUserRole,
   EmbeddedWalletSignaturesQueryFilter,
   RoleGroup,
+  UpdateEWIntegrationDto,
   ValidateFor,
 } from '@apillon/lib';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
@@ -13,6 +14,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -54,9 +56,9 @@ export class EmbeddedWalletController {
   @Get('integrations/:integration_uuid')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
-  async getIpns(
+  async getIntegration(
     @Ctx() context: DevConsoleApiContext,
-    @Param('integration_uuid') integration_uuid: string,
+    @Param('integration_uuid', ParseUUIDPipe) integration_uuid: string,
   ) {
     return await this.service.getIntegration(context, integration_uuid);
   }
@@ -66,10 +68,9 @@ export class EmbeddedWalletController {
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @UseGuards(AuthGuard)
   @Validation({ dto: CreateEWIntegrationDto })
-  @UseGuards(ValidationGuard)
-  async createIpnsRecord(
+  @UseGuards(ValidationGuard, AuthGuard)
+  async createIntegration(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateEWIntegrationDto,
   ) {
@@ -81,11 +82,12 @@ export class EmbeddedWalletController {
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @UseGuards(AuthGuard)
-  async updateIpns(
+  @Validation({ dto: UpdateEWIntegrationDto })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async updateIntegration(
     @Ctx() context: DevConsoleApiContext,
-    @Param('integration_uuid') integration_uuid: string,
-    @Body() body: any,
+    @Param('integration_uuid', ParseUUIDPipe) integration_uuid: string,
+    @Body() body: UpdateEWIntegrationDto,
   ) {
     return await this.service.updateIntegration(
       context,

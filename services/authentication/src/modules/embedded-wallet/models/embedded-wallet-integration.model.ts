@@ -30,7 +30,7 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
@@ -51,7 +51,7 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
@@ -71,7 +71,7 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
@@ -93,7 +93,7 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
@@ -106,6 +106,22 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
     ],
   })
   public description: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public whitelistedDomains: string;
 
   public async populateByUUIDAndCheckAccess(uuid: string): Promise<this> {
     if (!uuid) {

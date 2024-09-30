@@ -8,6 +8,7 @@ import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 import { EmbeddedWalletService } from './embedded-wallet.service';
 import { ValidationGuard } from '../../guards/validation.guard';
+import { Headers } from '@nestjs/common';
 
 @Controller('embedded-wallet')
 export class EmbeddedWalletController {
@@ -32,7 +33,9 @@ export class EmbeddedWalletController {
   async createOasisSignature(
     @Ctx() context: ApillonApiContext,
     @Body() body: CreateOasisSignatureDto,
+    @Headers('origin') origin: string,
   ) {
+    body.origin = origin;
     return await this.ewalletService.createOasisSignature(context, body);
   }
 

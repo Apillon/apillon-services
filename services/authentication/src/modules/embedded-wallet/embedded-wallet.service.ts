@@ -160,6 +160,16 @@ export class EmbeddedWalletService {
       });
     }
 
+    if (
+      !!ewIntegration ||
+      !ewIntegration.whitelistedDomains.includes(event.body.origin)
+    ) {
+      throw new AuthenticationCodeException({
+        status: 403,
+        code: AuthenticationErrorCode.EMBEDDED_WALLET_INTEGRATION_DOMAIN_NOT_WHITELISTED,
+      });
+    }
+
     const project_uuid = ewIntegration.project_uuid;
 
     const [quotas, numOfSignatures] = await Promise.all([
