@@ -46,18 +46,3 @@ functions:
     description: Apillon infrastructure Service
     memorySize: 512
     timeout: 30
-  infrastructure-service-worker:
-    handler: ./src/workers/worker-executor.handler
-    name: apillon-infrastructure-service-worker-${self:provider.stage}
-    description: Serverless workers for Apillon infrastructure microservice
-    memorySize: 512
-    timeout: 900
-    reservedConcurrency: 30
-    environment:
-      AWS_WORKER_LAMBDA_NAME: ${self:functions.infrastructure-service-worker.name}
-    events:
-      - sqs:
-          arn: ${env:WORKER_SQS_ARN}
-          batchSize: 4
-          maximumBatchingWindow: 5
-          functionResponseType: ReportBatchItemFailures
