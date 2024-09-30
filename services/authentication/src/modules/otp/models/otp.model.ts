@@ -139,9 +139,9 @@ export class Otp extends BaseSQLModel {
         code,
       },
     );
-    data?.length ? this.populate(data[0], PopulateFrom.DB) : this.reset();
-
-    return this;
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   /**

@@ -131,7 +131,7 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
       });
     }
 
-    await this.canAccess(this.getContext());
+    this.canAccess(this.getContext());
 
     return this;
   }
@@ -199,9 +199,9 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
 
     const sqlQuery = {
       qSelect: `
-          SELECT ${this.generateSelectFields('i', '', SerializeFor.SELECT_DB)}, 
+          SELECT ${this.generateSelectFields('i', '', SerializeFor.SELECT_DB)},
           (
-            SELECT COUNT(*) FROM \`${DbTables.OASIS_SIGNATURE}\` s 
+            SELECT COUNT(*) FROM \`${DbTables.OASIS_SIGNATURE}\` s
             WHERE s.embeddedWalletIntegration_id = i.id
             AND status IN (${SqlModelStatus.ACTIVE}, ${SqlModelStatus.INACTIVE})
             AND month(s.createTime) = month(curdate())

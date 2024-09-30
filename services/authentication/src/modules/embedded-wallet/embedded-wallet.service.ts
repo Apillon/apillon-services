@@ -1,11 +1,9 @@
 import {
   BaseProjectQueryFilter,
   BlockchainMicroservice,
-  CodeException,
   CreateEWIntegrationDto,
   CreateOasisSignatureDto,
   EmbeddedWalletSignaturesQueryFilter,
-  ForbiddenErrorCodes,
   GetQuotaDto,
   ProductCode,
   QuotaCode,
@@ -101,9 +99,10 @@ export class EmbeddedWalletService {
     ).populate({
       integration_uuid: uuid(),
     });
+
     await ewIntegration.validateOrThrow(AuthenticationValidationException);
 
-    await ewIntegration.canAccess(context);
+    ewIntegration.canAccess(context);
 
     //Check quota
     const [quotas, numOfIntegrations] = await Promise.all([
@@ -161,23 +160,17 @@ export class EmbeddedWalletService {
       });
     }
 
-    if (ewIntegration.project_uuid != event.body.project_uuid) {
-      throw new CodeException({
-        code: ForbiddenErrorCodes.FORBIDDEN,
-        status: 403,
-        errorMessage: 'Insufficient permissions to access this record',
-      });
-    }
+    const project_uuid = ewIntegration.project_uuid;
 
     const [quotas, numOfSignatures] = await Promise.all([
       new Scs(context).getQuotas(
         new GetQuotaDto({
           quota_id: QuotaCode.MAX_EMBEDDED_WALLET_SIGNATURES,
-          project_uuid: ewIntegration.project_uuid,
+          project_uuid,
         }),
       ),
       new OasisSignature(
-        { project_uuid: ewIntegration.project_uuid },
+        { project_uuid },
         context,
       ).getNumOfSignaturesForCurrentMonth(),
     ]);
@@ -201,16 +194,15 @@ export class EmbeddedWalletService {
     const oasisSignature = new OasisSignature({}, context).populate({
       status: SqlModelStatus.INACTIVE,
       embeddedWalletIntegration_id: ewIntegration.id,
-      project_uuid: event.body.project_uuid,
+      project_uuid,
       dataHash: signatureRes.dataHash,
-      apiKey: event.body.apiKey,
     });
 
     await oasisSignature.validateOrThrow(AuthenticationValidationException);
 
     const spendCredit: SpendCreditDto = new SpendCreditDto(
       {
-        project_uuid: event.body.project_uuid,
+        project_uuid,
         product_id: ProductCode.OASIS_SIGNATURE,
         referenceTable: DbTables.OASIS_SIGNATURE,
         referenceId: signatureRes.dataHash,

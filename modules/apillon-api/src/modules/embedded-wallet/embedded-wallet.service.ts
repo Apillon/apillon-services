@@ -15,18 +15,18 @@ import { ApillonApiContext } from '../../context';
 
 @Injectable()
 export class EmbeddedWalletService {
-  async generateSessionToken(context: ApillonApiContext) {
-    const token = generateJwtToken(
-      JwtTokenType.EMBEDDED_WALLET_SDK_TOKEN,
-      {
-        project_uuid: context.apiKey.project_uuid,
-        apiKey: context.apiKey.apiKey,
-      },
-      JwtExpireTime.TWENTY_MINUTES,
-    );
+  // async generateSessionToken(context: ApillonApiContext) {
+  //   const token = generateJwtToken(
+  //     JwtTokenType.EMBEDDED_WALLET_SDK_TOKEN,
+  //     {
+  //       project_uuid: context.apiKey.project_uuid,
+  //       apiKey: context.apiKey.apiKey,
+  //     },
+  //     JwtExpireTime.TWENTY_MINUTES,
+  //   );
 
-    return { token };
-  }
+  //   return { token };
+  // }
 
   async createOasisSignature(
     context: ApillonApiContext,
