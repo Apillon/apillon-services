@@ -1,16 +1,10 @@
 import {
   AuthenticationMicroservice,
-  BadRequestErrorCode,
-  CodeException,
   CreateOasisSignatureDto,
   GenerateOtpDto,
-  JwtExpireTime,
-  JwtTokenType,
   ValidateOtpDto,
-  generateJwtToken,
-  parseJwtToken,
 } from '@apillon/lib';
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 
 @Injectable()
@@ -32,12 +26,12 @@ export class EmbeddedWalletService {
     context: ApillonApiContext,
     body: CreateOasisSignatureDto,
   ) {
-    const tokenData = parseJwtToken(
-      JwtTokenType.EMBEDDED_WALLET_SDK_TOKEN,
-      body.token,
-    );
-    body.project_uuid = tokenData.project_uuid;
-    body.apiKey = tokenData.apiKey;
+    // const tokenData = parseJwtToken(
+    //   JwtTokenType.EMBEDDED_WALLET_SDK_TOKEN,
+    //   body.token,
+    // );
+    // body.project_uuid = tokenData.project_uuid;
+    // body.apiKey = tokenData.apiKey;
 
     return (
       await new AuthenticationMicroservice(context).createOasisSignature(body)

@@ -45,7 +45,7 @@ export class EmbeddedWalletController {
   @Get('integrations')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: BaseProjectQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(ValidationGuard, AuthGuard)
+  @UseGuards(ProjectAccessGuard, ValidationGuard, AuthGuard)
   async getIntegrationsList(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseProjectQueryFilter,

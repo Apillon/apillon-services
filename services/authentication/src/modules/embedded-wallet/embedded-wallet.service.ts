@@ -161,7 +161,7 @@ export class EmbeddedWalletService {
     }
 
     if (
-      !!ewIntegration ||
+      !!ewIntegration.whitelistedDomains &&
       !ewIntegration.whitelistedDomains.includes(event.body.origin)
     ) {
       throw new AuthenticationCodeException({

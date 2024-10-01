@@ -175,19 +175,22 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
         FROM \`${DbTables.OASIS_SIGNATURE}\`
         WHERE embeddedWalletIntegration_id = @id
         AND status IN (${SqlModelStatus.ACTIVE}, ${SqlModelStatus.INACTIVE})
+        AND createTime >= @dateFrom
         GROUP BY DATE(createTime)
       `,
       { id: this.id },
     );
 
     const usage: { date: Date; countOfSignatures: number }[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     for (
       const tmpDate = new Date(dateFrom);
-      tmpDate <= new Date();
+      tmpDate <= today;
       tmpDate.setDate(tmpDate.getDate() + 1)
     ) {
       usage.push({
-        date: tmpDate,
+        date: new Date(tmpDate),
         countOfSignatures:
           data.find((x) => compareDatesWithoutTime(x.date, tmpDate))
             ?.countOfSignatures || 0,
