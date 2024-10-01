@@ -1,0 +1,48 @@
+# console: true
+# org: apillonadmin
+# app: apillon-v2
+service: apillon-infrastructure-service-${opt:stage, 'dev'}
+frameworkVersion: '3'
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    packager: 'npm'
+    includeModules: true
+    packagerOptions:
+      lockFile: '../../package-lock.json'
+    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
+
+plugins:
+  - serverless-webpack
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: eu-west-1
+  stage: ${opt:stage, 'dev'}
+  iam:
+    role: arn:aws:iam::018021943180:role/serverless-workers-executor
+  vpc:
+    securityGroupIds:
+      - sg-091bc1ce7424a7921
+    subnetIds:
+      - subnet-0bea6dd0c2a5ecc61
+      - subnet-085447b898128fc92
+      - subnet-0ed148d48e931f5fa
+
+  environment: ${file(../../bin/deploy/env/env.yml)}
+
+package:
+  individually: true
+  patterns:
+    - '!dist/**'
+  excludeDevDependencies: true
+
+functions:
+  infrastructure-service:
+    handler: ./src/handler.handler
+    name: 'apillon-infrastructure-service-${self:provider.stage}'
+    description: Apillon infrastructure Service
+    memorySize: 512
+    timeout: 30
