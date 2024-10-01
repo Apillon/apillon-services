@@ -212,6 +212,33 @@ export class HostingService {
   }
 
   /**
+   * Remove a website's domain
+   * @param {{ website_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Website>}
+   */
+  static async removeWebsiteDomain(
+    event: { website_uuid: string },
+    context: ServiceContext,
+  ): Promise<Website> {
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+    website.canModify(context);
+
+    website.domain = null;
+    website.domainChangeDate = new Date();
+
+    await website.update();
+
+    return website.serialize(SerializeFor.PROFILE) as Website;
+  }
+
+  /**
    * Set a website's status to archived
    * @param {{ website_uuid: string }} event
    * @param {ServiceContext} context
