@@ -108,6 +108,15 @@ export class HostingService {
     ).data;
   }
 
+  async removeWebsiteDomain(
+    context: DevConsoleApiContext,
+    website_uuid: string,
+  ) {
+    return (
+      await new StorageMicroservice(context).removeWebsiteDomain(website_uuid)
+    ).data;
+  }
+
   async isWebsitesQuotaReached(
     context: DevConsoleApiContext,
     query: WebsitesQuotaReachedQueryFilter,

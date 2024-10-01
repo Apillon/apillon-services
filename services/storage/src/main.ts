@@ -73,6 +73,8 @@ export async function processEvent(event, context: Context): Promise<any> {
       HostingService.generateMultipleS3UrlsForUpload,
     [StorageEventType.WEBSITE_CHECK_DOMAIN_DNS]:
       HostingService.checkWebsiteDomainDns,
+    [StorageEventType.WEBSITE_REMOVE_DOMAIN]:
+      HostingService.removeWebsiteDomain,
 
     [StorageEventType.DEPLOYMENT_GET]: HostingService.getDeployment,
     [StorageEventType.DEPLOYMENT_LIST]: HostingService.listDeployments,

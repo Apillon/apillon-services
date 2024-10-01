@@ -236,6 +236,21 @@ describe('Hosting tests', () => {
       );
       expect(tmpWebsite.domainStatus).toBe(WebsiteDomainStatus.OK);
     });
+
+    test('User should be able to remove website domain', async () => {
+      // Remove the domain
+      const response = await request(stage.http)
+        .delete(`/storage/hosting/websites/${testWebsite.website_uuid}/domain`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+
+      // Verify the domain has been removed
+      const tmpWebsite = await new Website(
+        {},
+        stage.context.storage,
+      ).populateById(testWebsite.website_uuid);
+      expect(tmpWebsite.domain).toBeNull();
+    });
   });
 
   describe('Website Acess tests', () => {
