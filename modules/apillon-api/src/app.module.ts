@@ -47,8 +47,8 @@ export class AppModule {
       .apply(AuthenticateApiKeyMiddleware)
       .exclude(
         { path: '/', method: RequestMethod.ALL },
-        { path: '/embedded-wallet/signature', method: RequestMethod.POST },
-        { path: '/embedded-wallet/otp(.*)', method: RequestMethod.POST },
+        { path: '/embedded-wallet/(.*)', method: RequestMethod.GET },
+        { path: '/embedded-wallet/(.*)', method: RequestMethod.POST },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer

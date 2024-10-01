@@ -129,20 +129,6 @@ export class OasisSignature extends ProjectAccessModel {
   })
   public publicAddress: string;
 
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.ADMIN_SELECT_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.APILLON_API,
-    ],
-  })
-  public apiKey: string;
-
   public async getNumOfSignaturesForCurrentMonth(): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(
       `
