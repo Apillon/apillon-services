@@ -162,7 +162,13 @@ export class EmbeddedWalletService {
 
     if (
       !!ewIntegration.whitelistedDomains &&
-      !ewIntegration.whitelistedDomains.includes(event.body.origin)
+      !ewIntegration.whitelistedDomains.split(',').some((domain) => {
+        const regexPattern = domain
+          .trim()
+          .replace(/\./g, '\\.')
+          .replace(/\*/g, '.*');
+        return new RegExp(regexPattern).test(event.body.origin);
+      })
     ) {
       throw new AuthenticationCodeException({
         status: 403,

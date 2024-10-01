@@ -62,7 +62,7 @@ describe('Embedded wallet tests', () => {
         title: 'Test EW integration',
         description: 'Test description',
         whitelistedDomains:
-          'https://valid-domain.com, https://valid-domain2.com',
+          'valid-domain.com,*.valid-domain2.com,subdomain.*.valid-domain3.com',
       },
       stage.context.authentication,
     ).insert();
@@ -82,101 +82,131 @@ describe('Embedded wallet tests', () => {
     await releaseStage(stage);
   });
 
-  test('Application should receive 422 error if missing required data', async () => {
-    const response = await request(stage.http)
-      .post(`/embedded-wallet/signature`)
-      .send({ integration_uuid: testIntegration.integration_uuid });
-    expect(response.status).toBe(422);
-  });
+  describe('Signature creation tests', () => {
+    test('Application should receive 422 error if missing required data', async () => {
+      const response = await request(stage.http)
+        .post(`/embedded-wallet/signature`)
+        .send({ integration_uuid: testIntegration.integration_uuid });
+      expect(response.status).toBe(422);
+    });
 
-  test('Application should receive error if sending invalid integration_uuid', async () => {
-    const response = await request(stage.http)
-      .post(`/embedded-wallet/signature`)
-      .send({
-        integration_uuid: 'non existing integration',
-        data,
-      });
-    expect(response.status).toBe(404);
-  });
+    test('Application should receive error if sending invalid integration_uuid', async () => {
+      const response = await request(stage.http)
+        .post(`/embedded-wallet/signature`)
+        .send({
+          integration_uuid: 'non existing integration',
+          data,
+        });
+      expect(response.status).toBe(404);
+    });
 
-  // test('Application should receive error if using integration of another project', async () => {
-  //   const response = await request(stage.http)
-  //     .post(`/embedded-wallet/signature`)
-  //     .send({
-  //       integration_uuid: 'Some_other_integration_uuid',
-  //       data,
-  //     });
-  //   expect(response.status).toBe(403);
-  // });
+    test('Application should be able to generate signature for embedded wallet sdk', async () => {
+      const response = await request(stage.http)
+        .post(`/embedded-wallet/signature`)
+        .set('Origin', 'https://valid-domain.com')
+        .send({
+          integration_uuid: testIntegration.integration_uuid,
+          data,
+        });
+      expect(response.status).toBe(200);
+      expect(response.body.data.signature).toBeTruthy();
 
-  test('Application should be able to generate signature for embedded wallet sdk', async () => {
-    const response = await request(stage.http)
-      .post(`/embedded-wallet/signature`)
-      .set('Origin', 'https://valid-domain.com')
-      .send({
-        integration_uuid: testIntegration.integration_uuid,
-        data,
-      });
-    expect(response.status).toBe(200);
-    expect(response.body.data.signature).toBeTruthy();
-
-    //signature hash should be saved to DB
-    const dbData = await stage.db.authentication.paramExecute(
-      `
+      //signature hash should be saved to DB
+      const dbData = await stage.db.authentication.paramExecute(
+        `
     SELECT COUNT(*) as numOfSignatures
     FROM \`oasis_signature\`;
     `,
-      {},
-    );
-    expect(dbData[0].numOfSignatures).toBe(1);
-  });
+        {},
+      );
+      expect(dbData[0].numOfSignatures).toBe(1);
+    });
 
-  test('Request without origin should return error', async () => {
-    const response = await request(stage.http)
-      .post(`/embedded-wallet/signature`)
-      .send({
-        integration_uuid: testIntegration.integration_uuid,
-        data,
+    describe('Domain whitelist tests', () => {
+      test('Request without origin should return error', async () => {
+        const response = await request(stage.http)
+          .post(`/embedded-wallet/signature`)
+          .send({
+            integration_uuid: testIntegration.integration_uuid,
+            data,
+          });
+        expect(response.status).toBe(403);
+        expect(response.body.message).toBe(
+          'EMBEDDED_WALLET_INTEGRATION_DOMAIN_NOT_WHITELISTED',
+        );
       });
-    expect(response.status).toBe(403);
-    expect(response.body.message).toBe(
-      'EMBEDDED_WALLET_INTEGRATION_DOMAIN_NOT_WHITELISTED',
-    );
-  });
 
-  test('Request with unlisted origin should return error', async () => {
-    const response = await request(stage.http)
-      .post(`/embedded-wallet/signature`)
-      .set('Origin', 'https://invalid-domain.com')
-      .send({
-        integration_uuid: testIntegration.integration_uuid,
-        data,
+      test('Request with unlisted origin should return error', async () => {
+        const response = await request(stage.http)
+          .post(`/embedded-wallet/signature`)
+          .set('Origin', 'https://invalid-domain.com')
+          .send({
+            integration_uuid: testIntegration.integration_uuid,
+            data,
+          });
+        expect(response.status).toBe(403);
+        expect(response.body.message).toBe(
+          'EMBEDDED_WALLET_INTEGRATION_DOMAIN_NOT_WHITELISTED',
+        );
       });
-    expect(response.status).toBe(403);
-    expect(response.body.message).toBe(
-      'EMBEDDED_WALLET_INTEGRATION_DOMAIN_NOT_WHITELISTED',
-    );
-  });
 
-  test('Request with whitelisted origin should succeed', async () => {
-    const response = await request(stage.http)
-      .post(`/embedded-wallet/signature`)
-      .set('Origin', 'https://valid-domain.com')
-      .send({
-        integration_uuid: testIntegration.integration_uuid,
-        data,
-      });
-    expect(response.status).toBe(200);
-    expect(response.body.data.signature).toBeTruthy();
+      test('Request with whitelisted origin should succeed', async () => {
+        const response = await request(stage.http)
+          .post(`/embedded-wallet/signature`)
+          .set('Origin', 'https://valid-domain.com')
+          .send({
+            integration_uuid: testIntegration.integration_uuid,
+            data,
+          });
+        expect(response.status).toBe(200);
+        expect(response.body.data.signature).toBeTruthy();
 
-    // Signature hash should be saved to DB
-    const dbData = await stage.db.authentication.paramExecute(
-      `
+        // Signature hash should be saved to DB
+        const dbData = await stage.db.authentication.paramExecute(
+          `
       SELECT COUNT(*) as numOfSignatures
       FROM \`oasis_signature\`;
       `,
-      {},
-    );
-    expect(dbData[0].numOfSignatures).toBe(2);
+          {},
+        );
+        expect(dbData[0].numOfSignatures).toBe(2);
+      });
+    });
+
+    test('Request with exact whitelisted domain should succeed', async () => {
+      const response = await request(stage.http)
+        .post(`/embedded-wallet/signature`)
+        .set('Origin', 'https://valid-domain.com')
+        .send({
+          integration_uuid: testIntegration.integration_uuid,
+          data,
+        });
+      expect(response.status).toBe(200);
+      expect(response.body.data.signature).toBeTruthy();
+    });
+
+    test('Request with wildcard subdomain should succeed', async () => {
+      const response = await request(stage.http)
+        .post(`/embedded-wallet/signature`)
+        .set('Origin', 'https://sub.valid-domain2.com')
+        .send({
+          integration_uuid: testIntegration.integration_uuid,
+          data,
+        });
+      expect(response.status).toBe(200);
+      expect(response.body.data.signature).toBeTruthy();
+    });
+
+    test('Request with wildcard in middle of domain should succeed', async () => {
+      const response = await request(stage.http)
+        .post(`/embedded-wallet/signature`)
+        .set('Origin', 'https://subdomain.anything.valid-domain3.com')
+        .send({
+          integration_uuid: testIntegration.integration_uuid,
+          data,
+        });
+      expect(response.status).toBe(200);
+      expect(response.body.data.signature).toBeTruthy();
+    });
   });
 });
