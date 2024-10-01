@@ -1,11 +1,12 @@
 import {
   BaseProjectQueryFilter,
   CreateIndexerDto,
+  DefaultPermission,
   IndexerLogsQueryFilter,
   PopulateFrom,
   ValidateFor,
 } from '@apillon/lib';
-import { Ctx, Validation } from '@apillon/modules-lib';
+import { Ctx, Validation, Permissions } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -21,6 +22,7 @@ import { ProjectAccessGuard } from '../../guards/project-access.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { IndexerService } from './indexer.service';
 @Controller('indexer')
+@Permissions({ permission: DefaultPermission.INDEXER })
 export class IndexerController {
   constructor(private readonly indexerService: IndexerService) {}
 

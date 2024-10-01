@@ -445,6 +445,7 @@ export enum AttachedServiceType {
   SOCIAL = 6,
   WALLET = 7,
   CONTRACTS = 8,
+  INDEXER = 10,
   SYSTEM = 999,
 }
 
@@ -532,7 +533,8 @@ export enum DefaultPermission {
   COMPUTING = 5,
   SOCIAL = 6,
   WALLET = 7,
-  CONTRACTS,
+  CONTRACTS = 8,
+  INDEXER = 10,
 }
 
 //#endregion
