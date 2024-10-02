@@ -13,8 +13,7 @@ import {
   selectAndCountQuery,
 } from '@apillon/lib';
 import { InfrastructureErrorCode, DbTables } from '../../../config/types';
-import { stringParser } from '@rawmodel/parsers';
-import { stat } from 'fs';
+import { stringParser, integerParser } from '@rawmodel/parsers';
 import { InfrastructureCodeException } from '../../../lib/exceptions';
 export class Indexer extends UuidSqlModel {
   public readonly tableName = DbTables.INDEXER;
@@ -45,6 +44,23 @@ export class Indexer extends UuidSqlModel {
   })
   indexer_uuid: string;
 
+  /** SquidId is used as a identifier for squid in sqd API */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
+    ],
+  })
+  squidId: number;
+
   /** Reference is used as a identifier for squid in sqd API */
   @prop({
     parser: { resolver: stringParser() },
@@ -60,7 +76,7 @@ export class Indexer extends UuidSqlModel {
       SerializeFor.APILLON_API,
     ],
   })
-  reference: string;
+  squidReference: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -118,6 +134,23 @@ export class Indexer extends UuidSqlModel {
     ],
   })
   description: string | null;
+
+  /** SQD id of last deployment for this indexer */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
+    ],
+  })
+  lastDeploymentId: number;
 
   public override populateByUUID(
     uuid: string,

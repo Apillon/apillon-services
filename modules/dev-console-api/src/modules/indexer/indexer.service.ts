@@ -57,4 +57,15 @@ export class IndexerService {
       await new InfrastructureMicroservice(context).deployIndexer(indexer_uuid)
     ).data;
   }
+
+  async getIndexerDeployments(
+    context: DevConsoleApiContext,
+    indexer_uuid: string,
+  ) {
+    return (
+      await new InfrastructureMicroservice(context).getIndexerDeployments(
+        indexer_uuid,
+      )
+    ).data;
+  }
 }

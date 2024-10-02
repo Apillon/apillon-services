@@ -112,6 +112,13 @@ export class InfrastructureMicroservice extends BaseService {
     });
   }
 
+  public async getIndexerDeployments(indexer_uuid: string) {
+    return await this.callService({
+      eventName: InfrastructureEventType.INDEXER_GET_DEPLOYMENTS,
+      indexer_uuid,
+    });
+  }
+
   public async createIndexer(data: CreateIndexerDto) {
     return await this.callService({
       eventName: InfrastructureEventType.INDEXER_CREATE,

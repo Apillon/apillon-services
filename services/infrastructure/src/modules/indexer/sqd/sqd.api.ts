@@ -59,7 +59,7 @@ export async function sqdApi<T = any>({
           },
         });
       }
-      return { body: response.data };
+      return { body: response.data.payload };
     }
     default:
       throw new InfrastructureCodeException({

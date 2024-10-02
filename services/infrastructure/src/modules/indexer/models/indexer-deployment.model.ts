@@ -14,8 +14,8 @@ import {
 } from '@apillon/lib';
 import { InfrastructureErrorCode, DbTables } from '../../../config/types';
 import { stringParser, integerParser } from '@rawmodel/parsers';
-export class IndexerDeploy extends UuidSqlModel {
-  public readonly tableName = DbTables.INDEXER_DEPLOY;
+export class IndexerDeployment extends UuidSqlModel {
+  public readonly tableName = DbTables.INDEXER_DEPLOYMENT;
 
   public constructor(data: any, context: Context) {
     super(data, context);
@@ -64,8 +64,9 @@ export class IndexerDeploy extends UuidSqlModel {
   })
   deployment_uuid: string;
 
+  /**Id of deployment in sqd */
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.ADMIN,
@@ -77,5 +78,5 @@ export class IndexerDeploy extends UuidSqlModel {
       SerializeFor.APILLON_API,
     ],
   })
-  s3Url: string;
+  deploymentId: number;
 }

@@ -18,10 +18,10 @@ import {
   InfrastructureValidationException,
 } from '../../lib/exceptions';
 import { Indexer } from './models/indexer.model';
-import { IndexerDeploy } from './models/indexer-deploy.model';
 import { InfrastructureErrorCode } from '../../config/types';
 import { sqdApi } from './sqd/sqd.api';
 import { DeploymentResponse } from './sqd/types/deploymentResponse';
+import { IndexerDeployment } from './models/indexer-deployment.model';
 
 export class IndexerService {
   static async createIndexer(
@@ -77,18 +77,29 @@ export class IndexerService {
     );
 
     let squid = undefined;
+    let lastDeployment = undefined;
 
-    if (indexer.status == SqlModelStatus.ACTIVE && indexer.reference) {
+    if (indexer.status == SqlModelStatus.ACTIVE && indexer.squidReference) {
       //call sqd API to get squid info
       const { body } = await sqdApi<any>({
         method: 'GET',
-        path: `/orgs/${env.SQD_ORGANIZATION_CODE}/squids/${indexer.reference}`,
+        path: `/orgs/${env.SQD_ORGANIZATION_CODE}/squids/${indexer.squidReference}`,
       });
 
-      squid = body.payload;
+      squid = body;
     }
 
-    return { ...indexer.serializeByContext(), squid };
+    //Get last deployment
+    if (indexer.lastDeploymentId) {
+      const { body } = await sqdApi<any>({
+        method: 'GET',
+        path: `/orgs/${env.SQD_ORGANIZATION_CODE}/deployments/${indexer.lastDeploymentId}`,
+      });
+
+      lastDeployment = body;
+    }
+
+    return { ...indexer.serializeByContext(), squid, lastDeployment };
   }
 
   static async getIndexerLogs(
@@ -99,7 +110,7 @@ export class IndexerService {
       event.indexer_uuid,
     );
 
-    if (indexer.status != SqlModelStatus.ACTIVE || !indexer.reference) {
+    if (indexer.status != SqlModelStatus.ACTIVE || !indexer.squidReference) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.INDEXER_IS_NOT_DEPLOYED,
         status: 400,
@@ -116,7 +127,7 @@ export class IndexerService {
     //call sqd API to get squid info
     const { body } = await sqdApi<any>({
       method: 'GET',
-      path: `/orgs/${env.SQD_ORGANIZATION_CODE}/squids/${indexer.reference}/logs/history?from=${query.from.toISOString()}${queryParams}`,
+      path: `/orgs/${env.SQD_ORGANIZATION_CODE}/squids/${indexer.squidReference}/logs/history?from=${query.from.toISOString()}${queryParams}`,
     });
 
     return body;
@@ -183,6 +194,47 @@ export class IndexerService {
       method: 'POST',
       path: `/orgs/${env.SQD_ORGANIZATION_CODE}/squids/deploy`,
       data,
+    });
+
+    //Create indexer deployment record
+    /*const deployment = await new IndexerDeployment({}, context)
+      .populate({
+        deployment_uuid: uuidV4(),
+        indexer_id: indexer.id,
+        deploymentId: body.id,
+      })
+      .insert();*/
+
+    indexer.lastDeploymentId = body.id;
+    await indexer.update();
+
+    return { ...body };
+  }
+
+  static async getIndexerDeployments(
+    event: { indexer_uuid: string },
+    context: ServiceContext,
+  ) {
+    const indexer = await new Indexer({}, context).populateByUUIDAndCheckAccess(
+      event.indexer_uuid,
+    );
+    await indexer.canAccess(context);
+
+    const { body } = await sqdApi<any>({
+      method: 'GET',
+      path: `/orgs/${env.SQD_ORGANIZATION_CODE}/deployments?squidId=${indexer.squidId}`,
+    });
+
+    return body;
+  }
+
+  static async getIndexerDeployment(
+    event: { deploymentId: number },
+    context: ServiceContext,
+  ) {
+    const { body } = await sqdApi<any>({
+      method: 'GET',
+      path: `/orgs/${env.SQD_ORGANIZATION_CODE}/deployments/${event.deploymentId}`,
     });
 
     return body;

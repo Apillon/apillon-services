@@ -3,7 +3,7 @@ export enum DbTables {
   RPC_URL = 'rpc_url',
   DWELLIR_USER = 'dwellir_user',
   INDEXER = 'indexer',
-  INDEXER_DEPLOY = 'indexer_deploy',
+  INDEXER_DEPLOYMENT = 'indexer_deployment',
 }
 
 export enum InfrastructureErrorCode {
