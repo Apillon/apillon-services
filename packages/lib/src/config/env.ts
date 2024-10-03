@@ -628,6 +628,7 @@ export interface IEnv {
    * ACURAST
    */
   ACURAST_GATEWAY_URL: string;
+  ACURAST_IPFS_LAMBDA_URL: string;
 }
 
 // dotenv.config();
@@ -1136,6 +1137,7 @@ export let env: IEnv = {
 
   /** ACURAST */
   ACURAST_GATEWAY_URL: process.env['ACURAST_GATEWAY_URL'],
+  ACURAST_IPFS_LAMBDA_URL: process.env['ACURAST_IPFS_LAMBDA_URL'],
 };
 
 export let isEnvReady = false;
