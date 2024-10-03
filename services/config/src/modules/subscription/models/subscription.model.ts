@@ -357,6 +357,16 @@ export class Subscription extends ProjectAccessModel {
     );
   }
 
+  public async deactivateSubscriptions(ids: number[]) {
+    if (!ids.length) {
+      return;
+    }
+
+    await this.getContext().mysql.paramExecute(
+      `UPDATE \`${DbTables.SUBSCRIPTION}\` SET status = ${SqlModelStatus.INACTIVE} WHERE id IN (${ids.join(',')})`,
+    );
+  }
+
   /**
    * Get projects which have active subscription
    * @param subscriptionPackageId optional subscriptionPackageId

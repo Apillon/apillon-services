@@ -137,7 +137,11 @@ export class ExpiredSubscriptionsWorker extends BaseWorker {
     const infrastructureMS = new InfrastructureMicroservice(this.context);
 
     await infrastructureMS.downgradeDwellirSubscriptionsByUserUuids(
-      usersWithExpiredRpcPlan,
+      usersWithExpiredRpcPlan.map((subscription) => subscription.project_uuid),
+    );
+
+    await new Subscription({}, this.context).deactivateSubscriptions(
+      usersWithExpiredRpcPlan.map((subscription) => subscription.id),
     );
   }
 
@@ -209,12 +213,12 @@ export class ExpiredSubscriptionsWorker extends BaseWorker {
       {},
       this.context,
     ).getExpiredSubscriptions(0, true);
-    const project_uuids = expiredSubscriptions.map(
+    /*const project_uuids = expiredSubscriptions.map(
       (subscription) => subscription.project_uuid,
-    );
+    );*/
 
     // TO-DO Determine how to map between projects & users
-    return project_uuids;
+    return expiredSubscriptions;
   }
 
   private daysAgo = (days: number) => {
