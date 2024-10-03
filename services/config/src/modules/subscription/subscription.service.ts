@@ -135,10 +135,15 @@ export class SubscriptionService {
    * @returns {Promise<string>}
    */
   static async getSubscriptionPackageStripeId(
-    { package_id, project_uuid }: { package_id: number; project_uuid: string },
+    { package_id, project_uuid }: { package_id: number; project_uuid?: string },
     context: ServiceContext,
   ): Promise<string> {
-    await SubscriptionService.checkForActiveSubscription(project_uuid, context);
+    if (project_uuid) {
+      await SubscriptionService.checkForActiveSubscription(
+        project_uuid,
+        context,
+      );
+    }
 
     const subscriptionPackage = await new SubscriptionPackage(
       {},
