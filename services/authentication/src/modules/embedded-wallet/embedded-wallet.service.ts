@@ -19,7 +19,6 @@ import {
   AuthenticationErrorCode,
   DbTables,
   Defaults,
-  ResourceNotFoundErrorCode,
 } from '../../config/types';
 import {
   AuthenticationCodeException,
@@ -156,7 +155,7 @@ export class EmbeddedWalletService {
     if (!ewIntegration.exists()) {
       throw new AuthenticationCodeException({
         status: 404,
-        code: ResourceNotFoundErrorCode.EMBEDDED_WALLET_INTEGRATION_NOT_FOUND,
+        code: AuthenticationErrorCode.EMBEDDED_WALLET_INTEGRATION_NOT_FOUND,
       });
     }
 

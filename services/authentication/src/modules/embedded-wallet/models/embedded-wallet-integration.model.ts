@@ -14,11 +14,7 @@ import {
 import { ServiceContext } from '@apillon/service-lib';
 import { stringParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
-import {
-  AuthenticationErrorCode,
-  DbTables,
-  ResourceNotFoundErrorCode,
-} from '../../../config/types';
+import { AuthenticationErrorCode, DbTables } from '../../../config/types';
 import { AuthenticationCodeException } from '../../../lib/exceptions';
 
 export class EmbeddedWalletIntegration extends UuidSqlModel {
@@ -143,7 +139,7 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
     if (!this.exists()) {
       throw new AuthenticationCodeException({
         status: 404,
-        code: ResourceNotFoundErrorCode.EMBEDDED_WALLET_INTEGRATION_NOT_FOUND,
+        code: AuthenticationErrorCode.EMBEDDED_WALLET_INTEGRATION_NOT_FOUND,
       });
     }
 
