@@ -21,6 +21,7 @@ import {
   CloudFunctionCallDto,
   StorageMicroservice,
   CreateBucketDto,
+  env,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -45,6 +46,7 @@ import {
 import { AcurastWebsocketClient } from '../clients/acurast-websocket.client';
 import { CloudFunction } from './models/cloud-function.model';
 import { JobEnvVar } from './acurast-types';
+import axios from 'axios';
 
 export class AcurastService {
   /**
@@ -233,6 +235,11 @@ export class AcurastService {
       // After 3 months gets renewed in RenewAcurastJobWorker
       endTime: new Date().setMonth(new Date().getMonth() + 3),
     });
+
+    const { data } = await axios.get(
+      `${env.ACURAST_IPFS_LAMBDA_URL}/transform/${job.scriptCid}`,
+    );
+    job.scriptCid = data.cidv0;
 
     await job.validateOrThrow(ComputingModelValidationException);
 

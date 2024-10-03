@@ -172,6 +172,7 @@ export enum StorageEventType {
   WEBSITE_GET_ALL_DOMAINS = 'get-all-domains',
   WEBSITE_QUOTA_REACHED = 'websites-quota-reached',
   WEBSITE_CHECK_DOMAIN_DNS = 'website-check-domain-dns',
+  WEBSITE_REMOVE_DOMAIN = 'website-remove-domain',
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
