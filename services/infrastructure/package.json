@@ -31,7 +31,8 @@
         "@apillon/service-lib": "*",
         "@apillon/workers-lib": "*",
         "@middy/core": "^3.3.1",
-        "node-fetch": "^2.6.7"
+        "node-fetch": "^2.6.7",
+        "stripe": "^17.0.0"
     },
     "devDependencies": {
         "@apillon/tests-lib": "*",

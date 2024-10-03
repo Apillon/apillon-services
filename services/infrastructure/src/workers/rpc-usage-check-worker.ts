@@ -1,8 +1,10 @@
 import {
+  AppEnvironment,
   Context,
   EmailDataDto,
   EmailTemplate,
   Mailing,
+  SubscriptionPackageId,
   env,
   runWithWorkers,
 } from '@apillon/lib';
@@ -13,6 +15,7 @@ import {
 } from '@apillon/workers-lib';
 import { Dwellir } from '../lib/dwellir/dwellir';
 import { DwellirUser } from '../modules/rpc/models/dwelir-user.model';
+import Stripe from 'stripe';
 
 const FREE_RPC_API_LIMIT = 400000;
 
@@ -66,6 +69,11 @@ export class RpcUsageCheckWorker extends BaseQueueWorker {
       ),
     ]);
 
+    const stripeClient = new Stripe(
+      env.APP_ENV === AppEnvironment.PROD
+        ? env.STRIPE_SECRET
+        : env.STRIPE_SECRET_TEST,
+    );
     const mailingMS = new Mailing(this.context);
 
     await runWithWorkers(
@@ -73,11 +81,35 @@ export class RpcUsageCheckWorker extends BaseQueueWorker {
       10,
       this.context,
       async (user: DwellirUser) => {
+        const paymentSession = await stripeClient.checkout.sessions.create({
+          line_items: [
+            {
+              price: 'PRICE',
+              quantity: 1,
+            },
+          ],
+          mode: 'subscription',
+          customer_email: user.email,
+          metadata: {
+            project_uuid: user.user_uuid,
+            package_id: SubscriptionPackageId.RPC_PLAN,
+            isCreditPurchase: 'false',
+            environment: env.APP_ENV,
+          },
+          billing_address_collection: 'required',
+          success_url: `${env.APP_URL}/dashboard/service/rpc`,
+          cancel_url: `${env.APP_URL}/dashboard/service/rpc`,
+          automatic_tax: { enabled: true },
+          allow_promotion_codes: true,
+        });
+
         mailingMS.sendMail(
           new EmailDataDto({
             mailAddresses: [user.email],
             templateName: EmailTemplate.RPC_USAGE_EXCEEDED,
-            templateData: {},
+            templateData: {
+              paymentLink: paymentSession.url,
+            },
           }),
         );
       },
