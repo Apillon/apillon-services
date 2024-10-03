@@ -4,6 +4,7 @@ import {
   Context,
   EmailDataDto,
   EmailTemplate,
+  InfrastructureMicroservice,
   LogType,
   Mailing,
   ServiceName,
@@ -126,6 +127,18 @@ export class ExpiredSubscriptionsWorker extends BaseWorker {
         );
       }
     }
+
+    // RPC Plan expiration check
+    const usersWithExpiredRpcPlan = await this.getUsersWithExpiredRpcPlan();
+    if (!usersWithExpiredRpcPlan?.length) {
+      return;
+    }
+
+    const infrastructureMS = new InfrastructureMicroservice(this.context);
+
+    await infrastructureMS.downgradeDwellirSubscriptionsByUserUuids(
+      usersWithExpiredRpcPlan,
+    );
   }
 
   public async onSuccess(_data?: any, _successData?: any): Promise<any> {
@@ -189,6 +202,19 @@ export class ExpiredSubscriptionsWorker extends BaseWorker {
         sourceModule: ServiceName.CONFIG,
       }).writeToMonitor({ sendAdminAlert: true });
     }
+  }
+
+  public async getUsersWithExpiredRpcPlan() {
+    const expiredSubscriptions = await new Subscription(
+      {},
+      this.context,
+    ).getExpiredSubscriptions(0, true);
+    const project_uuids = expiredSubscriptions.map(
+      (subscription) => subscription.project_uuid,
+    );
+
+    // TO-DO Determine how to map between projects & users
+    return project_uuids;
   }
 
   private daysAgo = (days: number) => {

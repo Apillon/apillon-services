@@ -1,6 +1,7 @@
 import {
   CacheKeyPrefix,
   CacheKeyTTL,
+  DwellirSubscription,
   LogType,
   env,
   runCachedFunction,
@@ -8,9 +9,11 @@ import {
 } from '@apillon/lib';
 import axios from 'axios';
 import {
+  DwellirChangeSubscriptionResponse,
   DwellirCreateApiKeyResponse,
   DwellirCreateUserResponse,
   DwellirGetAccessTokenResponse,
+  DwellirGetAllUsagesResponse,
   DwellirGetApiKeyResponse,
   DwellirGetEndpointsResponse,
   DwellirGetUsageResponse,
@@ -128,6 +131,23 @@ export class Dwellir {
     return this.makeRequest<DwellirGetUsageResponse>(
       `${dwellirAPIUrl}/v1/user/${userId}/analytics/day`,
       'get',
+    );
+  }
+
+  static async getAllUsagesPerUser() {
+    return this.makeRequest<DwellirGetAllUsagesResponse>(
+      `${dwellirAPIUrl}/v1/analytics`,
+      'get',
+    );
+  }
+
+  static async changeSubscription(
+    userId: string,
+    subscription: DwellirSubscription,
+  ) {
+    return this.makeRequest<DwellirChangeSubscriptionResponse>(
+      `${dwellirAPIUrl}/v1/user/${userId}/subscription/change_subscription/${subscription}`,
+      'post',
     );
   }
 }

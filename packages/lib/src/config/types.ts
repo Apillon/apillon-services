@@ -253,6 +253,7 @@ export enum ScsEventType {
   GET_PRODUCT_PRICELIST = 'get-product-pricelist',
   GET_PRODUCT_PRICE = 'get-product-price',
   GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION = 'get-projects-with-active-subscription',
+  HAS_ACTIVE_RPC_PLAN = 'has-active-rpc-plan',
 }
 
 export enum NftsEventType {
@@ -365,6 +366,8 @@ export enum InfrastructureEventType {
   UPDATE_RPC_API_KEY = 'update-rpc-api-key',
   CREATE_RPC_API_KEY = 'create-rpc-api-key',
   GET_RPC_API_KEY_USAGE = 'get-rpc-api-key-usage',
+  CHANGE_DWELLIR_SUBSCRIPTION = 'change-dwellir-subscription',
+  DOWNGRADE_DWELLIR_SUBSCRIPTIONS = 'downgrade-dwellir-subscriptions',
   CREATE_RPC_URL = 'create-rpc-url',
   UPDATE_RPC_URL = 'update-rpc-url',
   DELETE_RPC_URL = 'delete-rpc-url',
@@ -546,7 +549,8 @@ export enum DefaultPermission {
   COMPUTING = 5,
   SOCIAL = 6,
   WALLET = 7,
-  CONTRACTS,
+  CONTRACTS = 8,
+  RPC = 9,
 }
 
 //#endregion
@@ -1091,6 +1095,7 @@ export enum EmailTemplate {
   RESET_PASSWORD = 'reset-password',
   NEW_USER_ADDED_TO_PROJECT = 'new-user-added-to-project',
   USER_ADDED_TO_PROJECT = 'user-added-to-project',
+  RPC_USAGE_EXCEEDED = 'rpc-usage-exceeded',
 
   CONTACT_US_FORM = 'contact-us-form',
 
@@ -1126,4 +1131,5 @@ export enum SubscriptionPackageId {
   CATERPILLAR = 2,
   COCOON = 3,
   BUTTERFLY = 4,
+  RPC_PLAN = 5,
 }

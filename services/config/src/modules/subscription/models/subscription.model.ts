@@ -202,6 +202,7 @@ export class Subscription extends ProjectAccessModel {
       FROM \`${DbTables.SUBSCRIPTION}\`
       WHERE project_uuid = @project_uuid
       AND (expiresOn IS NULL OR expiresOn > NOW())
+      AND package_id <> ${SubscriptionPackageId.RPC_PLAN}
       AND status = ${SqlModelStatus.ACTIVE}
       LIMIT 1;
       `,
@@ -212,6 +213,21 @@ export class Subscription extends ProjectAccessModel {
     return data?.length
       ? this.populate(data[0], PopulateFrom.DB)
       : this.reset();
+  }
+
+  public async hasActiveRpcPlan(project_uuid = this.project_uuid) {
+    const data = await this.getContext().mysql.paramExecute(
+      `SELECT * FROM \`${DbTables.SUBSCRIPTION}\`
+      WHERE project_uuid = @project_uuid
+      AND package_id = ${SubscriptionPackageId.RPC_PLAN}
+      AND (expiresOn IS NULL OR expiresOn > NOW())
+      AND status = ${SqlModelStatus.ACTIVE}`,
+      {
+        project_uuid,
+      },
+    );
+
+    return data?.length > 0;
   }
 
   /**

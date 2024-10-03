@@ -2,6 +2,7 @@ import {
   BaseProjectQueryFilter,
   CreateRpcApiKeyDto,
   CreateRpcUrlDto,
+  DefaultPermission,
   DefaultUserRole,
   RoleGroup,
   UpdateRpcApiKeyDto,
@@ -24,7 +25,9 @@ import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ProjectAccessGuard } from '../../guards/project-access.guard';
+
 @Controller('rpc')
+@Permissions({ permission: DefaultPermission.RPC })
 export class RpcController {
   constructor(private readonly rpcService: RpcService) {}
 

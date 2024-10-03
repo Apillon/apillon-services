@@ -3,12 +3,14 @@ import { RpcApiKey } from './models/rpc-api-key.model';
 import {
   BaseProjectQueryFilter,
   CreateRpcApiKeyDto,
+  DwellirSubscription,
   ModelValidationException,
   QuotaCode,
   Scs,
   SqlModelStatus,
   UpdateRpcApiKeyDto,
   ValidatorErrorCode,
+  runWithWorkers,
 } from '@apillon/lib';
 import { InfrastructureCodeException } from '../../lib/exceptions';
 import { InfrastructureErrorCode } from '../../config/types';
@@ -20,6 +22,36 @@ export class RpcApiKeyService {
     { id }: { id: number },
     context: ServiceContext,
   ) {
+    const usagesAll = await Dwellir.getAllUsagesPerUser();
+    const dwellirIdsWithLargeUsage: string[] = [];
+    for (const [userId, usage] of Object.entries(usagesAll)) {
+      if (usage.total_requests > 100000) {
+        dwellirIdsWithLargeUsage.push(userId);
+      }
+    }
+
+    const dwellirUsers = await new DwellirUser(
+      {},
+      context,
+    ).populateByDwellirIds(dwellirIdsWithLargeUsage);
+
+    const newlyExceededUsers = dwellirUsers.filter(
+      (user) => !user.exceeded_monthly_limit,
+    );
+
+    await Promise.all([
+      new DwellirUser({}, context).updateManyExceededMonthlyLimit(
+        newlyExceededUsers.map((dwellirUser) => dwellirUser.id),
+        true,
+      ),
+      // To update the users that might have exceeded the limit in the past
+      new DwellirUser({}, context).updateManyExceededMonthlyLimit(
+        dwellirUsers.map((dwellirUser) => dwellirUser.id),
+        false,
+        true,
+      ),
+    ]);
+
     const dwellirId = await RpcApiKeyService.getDwellirId(context);
 
     const rpcApiKey = await new RpcApiKey({}, context).populateById(id);
@@ -45,6 +77,40 @@ export class RpcApiKeyService {
     return usagePerKey;
   }
 
+  static async changeDwellirSubscription(
+    {
+      subscription,
+    }: {
+      subscription: DwellirSubscription;
+    },
+    context: ServiceContext,
+  ) {
+    const dwellirUserId = await this.getDwellirId(context);
+
+    return await Dwellir.changeSubscription(dwellirUserId, subscription);
+  }
+
+  static async downgradeDwellirSubscriptionsByUserUuids(
+    {
+      user_uuids,
+    }: {
+      user_uuids: string[];
+    },
+    context: ServiceContext,
+  ) {
+    const dwellirUsers = await new DwellirUser({}, context).populateByUserUuids(
+      user_uuids,
+    );
+
+    const dwellirIds = dwellirUsers.map(
+      (dwellirUser) => dwellirUser.dwellir_id,
+    );
+
+    await runWithWorkers(dwellirIds, 10, context, async (dwellirId) => {
+      await Dwellir.changeSubscription(dwellirId, DwellirSubscription.FREE);
+    });
+  }
+
   static async getOrCreateDwellirId(context: ServiceContext) {
     const dwellirUser = await new DwellirUser({}, context).populateById(
       context.user.id,
@@ -62,6 +128,7 @@ export class RpcApiKeyService {
     const createdDwellirUser = new DwellirUser({}, context).populate({
       dwellir_id: responseBody.id,
       user_uuid: context.user.user_uuid,
+      user_email: context.user.email,
     });
 
     await createdDwellirUser.insert();

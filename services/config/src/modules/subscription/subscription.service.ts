@@ -178,6 +178,13 @@ export class SubscriptionService {
     return subscription.serialize(SerializeFor.PROFILE) as Subscription;
   }
 
+  static async hasProjectActiveRpcPlan(
+    { project_uuid }: { project_uuid: string },
+    context: ServiceContext,
+  ): Promise<boolean> {
+    return await new Subscription({ project_uuid }, context).hasActiveRpcPlan();
+  }
+
   /**
    * Update a subscription by stripe ID with given data
    * @param {{ updateSubscriptionDto: UpdateSubscriptionDto }} { updateSubscriptionDto }

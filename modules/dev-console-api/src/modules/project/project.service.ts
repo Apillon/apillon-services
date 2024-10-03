@@ -640,6 +640,13 @@ export class ProjectService {
       .data;
   }
 
+  async hasProjectActiveRpcPlan(
+    context: DevConsoleApiContext,
+    project_uuid: string,
+  ) {
+    return (await new Scs(context).hasProjectActiveRpcPlan(project_uuid)).data;
+  }
+
   async getProjectSubscriptions(
     context: DevConsoleApiContext,
     query: SubscriptionsQueryFilter,
