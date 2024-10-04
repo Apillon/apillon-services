@@ -672,6 +672,7 @@ export interface IEnv {
    * ACURAST
    */
   ACURAST_GATEWAY_URL: string;
+  ACURAST_IPFS_LAMBDA_URL: string;
 
   /**
    * UNIQUE NETWORK
@@ -1230,6 +1231,7 @@ export let env: IEnv = {
 
   /** ACURAST */
   ACURAST_GATEWAY_URL: process.env['ACURAST_GATEWAY_URL'],
+  ACURAST_IPFS_LAMBDA_URL: process.env['ACURAST_IPFS_LAMBDA_URL'],
 
   /** UNIQUE NETWORK */
   UNIQUE_NETWORK_API_URL: process.env['UNIQUE_NETWORK_API_URL'],
