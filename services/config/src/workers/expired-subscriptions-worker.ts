@@ -231,7 +231,7 @@ export class ExpiredSubscriptionsWorker extends BaseWorker {
     await devConsoleSql.connect();
 
     const projectOwners = await devConsoleSql.paramExecute(`
-      SELECT DISTINCT u.user_uuid FROM project_user pu LEFT JOIN user u ON pu.user_id = u.id LEFT JOIN project p ON p.id = pu.project_id WHERE pu.role_id = ${DefaultUserRole.PROJECT_OWNER} AND p.project_uuid IN (${projectUuids.map(() => `${projectUuids}`).join(',')})`);
+      SELECT DISTINCT u.user_uuid FROM project_user pu LEFT JOIN user u ON pu.user_id = u.id LEFT JOIN project p ON p.id = pu.project_id WHERE pu.role_id = ${DefaultUserRole.PROJECT_OWNER} AND p.project_uuid IN (${projectUuids.map(() => `'${projectUuids}'`).join(',')})`);
     await devConsoleSql.close();
 
     return {

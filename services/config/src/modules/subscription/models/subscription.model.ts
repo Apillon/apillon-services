@@ -231,7 +231,7 @@ export class Subscription extends ProjectAccessModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `SELECT * FROM \`${DbTables.SUBSCRIPTION}\`
-      WHERE project_uuid IN (${project_uuids.map((uuid) => `${uuid}`).join(',')})
+      WHERE project_uuid IN (${project_uuids.map((uuid) => `'${uuid}'`).join(',')})
       AND package_id = ${SubscriptionPackageId.RPC_PLAN}
       AND (expiresOn IS NULL OR expiresOn > NOW())
       AND status = ${SqlModelStatus.ACTIVE}`,
@@ -373,7 +373,7 @@ export class Subscription extends ProjectAccessModel {
     }
 
     await this.getContext().mysql.paramExecute(
-      `UPDATE \`${DbTables.SUBSCRIPTION}\` SET status = ${SqlModelStatus.INACTIVE} WHERE id IN (${ids.join(',')})`,
+      `UPDATE \`${DbTables.SUBSCRIPTION}\` SET status = ${SqlModelStatus.INACTIVE} WHERE id IN (${ids.map((id) => `'${id}'`).join(',')})`,
     );
   }
 

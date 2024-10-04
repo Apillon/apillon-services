@@ -836,6 +836,12 @@ export class RoleGroup {
     DefaultUserRole.PROJECT_USER,
     DefaultUserRole.ADMIN,
   ];
+
+  static ProjectOwnerAccess = [
+    DefaultUserRole.PROJECT_OWNER,
+    DefaultUserRole.ADMIN,
+    DefaultUserRole.PROJECT_ADMIN,
+  ];
 }
 
 //#endregion

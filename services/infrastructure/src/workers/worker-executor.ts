@@ -14,7 +14,7 @@ import { RpcUsageCheckWorker } from './rpc-usage-check-worker';
 
 export enum WorkerName {
   SCHEDULER = 'scheduler',
-  RPC_USAGE_CHECK = 'TransactionStatusWorker',
+  RPC_USAGE_CHECK = 'RpcUsageCheckWorker',
 }
 
 export async function handler(event: any) {

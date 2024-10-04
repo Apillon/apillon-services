@@ -644,7 +644,20 @@ export class ProjectService {
     context: DevConsoleApiContext,
     project_uuid: string,
   ) {
-    return (await new Scs(context).hasProjectActiveRpcPlan(project_uuid)).data;
+    const userId = await new ProjectUser({}, context).getProjectOwnerId(
+      project_uuid,
+    );
+
+    if (!userId) {
+      return false;
+    }
+
+    const projectsUuids = await new ProjectUser(
+      {},
+      context,
+    ).getProjectUuidsByOwnerId(userId);
+
+    return (await new Scs(context).hasProjectActiveRpcPlan(projectsUuids)).data;
   }
 
   async getProjectSubscriptions(

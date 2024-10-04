@@ -74,7 +74,7 @@ export class RpcUsageCheckWorker extends BaseQueueWorker {
 
       newlyExceededUsers = newlyExceededUsers.filter(async (user) => {
         const projects = await devConsoleSql.paramExecute(
-          `SELECT pu.project_id from project_user pu left join user u on pu.user_id = u.id where u.uuid = '@user_uuid' and pu.role_id = ${DefaultUserRole.PROJECT_OWNER}`,
+          `SELECT pu.project_id from project_user pu left join user u on pu.user_id = u.id where u.uuid = @user_uuid and pu.role_id = ${DefaultUserRole.PROJECT_OWNER}`,
           {
             user_uuid: user.user_uuid,
           },

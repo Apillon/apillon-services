@@ -45,6 +45,7 @@ export class DwellirUser extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.SELECT_DB,
     ],
+    defaultValue: false,
   })
   public exceeded_monthly_limit: boolean;
 
@@ -99,7 +100,7 @@ export class DwellirUser extends AdvancedSQLModel {
     }
 
     await this.getContext().mysql.paramExecute(
-      `UPDATE ${DbTables.DWELLIR_USER} SET exceeded_monthly_limit = ${value ? 1 : 0} WHERE id ${reverse ? 'NOT' : ''} IN (${ids.join(',')})`,
+      `UPDATE ${DbTables.DWELLIR_USER} SET exceeded_monthly_limit = ${value ? 1 : 0} WHERE id ${reverse ? 'NOT' : ''} IN (${ids.map((id) => `'${id}'`).join(',')})`,
     );
   }
 }

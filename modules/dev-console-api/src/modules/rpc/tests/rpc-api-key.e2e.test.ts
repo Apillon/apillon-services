@@ -8,6 +8,7 @@ import {
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
+import { DefaultPermission, DefaultUserRole } from '@apillon/lib';
 
 describe('RPC ApiKey tests', () => {
   let stage: Stage;
@@ -20,12 +21,22 @@ describe('RPC ApiKey tests', () => {
     testUser = await createTestUser(
       stage.context.devConsole,
       stage.context.access,
+      DefaultUserRole.PROJECT_OWNER,
     );
     testUser2 = await createTestUser(
       stage.context.devConsole,
       stage.context.access,
+      DefaultUserRole.PROJECT_OWNER,
     );
+
     testProject = await createTestProject(testUser, stage);
+
+    await stage.db.access.paramExecute(
+      `INSERT INTO role_permission (role_id, permission_id)
+      VALUES
+       (${DefaultUserRole.PROJECT_OWNER}, ${DefaultPermission.RPC})
+      ;`,
+    );
     testProject2 = await createTestProject(testUser2, stage);
   });
   afterAll(async () => {

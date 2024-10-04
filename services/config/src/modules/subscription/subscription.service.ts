@@ -184,10 +184,10 @@ export class SubscriptionService {
   }
 
   static async hasProjectActiveRpcPlan(
-    { project_uuid }: { project_uuid: string },
+    { project_uuid }: { project_uuid: string | string[] },
     context: ServiceContext,
   ): Promise<boolean> {
-    return await new Subscription({ project_uuid }, context).hasActiveRpcPlan();
+    return await new Subscription({}, context).hasActiveRpcPlan(project_uuid);
   }
 
   /**

@@ -8,7 +8,11 @@ import {
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
 import * as request from 'supertest';
-import { SqlModelStatus } from '@apillon/lib';
+import {
+  DefaultPermission,
+  DefaultUserRole,
+  SqlModelStatus,
+} from '@apillon/lib';
 describe('RPC URL Tests', () => {
   let stage: Stage;
   let testUser: TestUser;
@@ -20,11 +24,20 @@ describe('RPC URL Tests', () => {
     testUser = await createTestUser(
       stage.context.devConsole,
       stage.context.access,
+      DefaultUserRole.PROJECT_OWNER,
     );
     testUser2 = await createTestUser(
       stage.context.devConsole,
       stage.context.access,
+      DefaultUserRole.PROJECT_OWNER,
     );
+    await stage.db.access.paramExecute(
+      `INSERT INTO role_permission (role_id, permission_id)
+      VALUES
+       (${DefaultUserRole.PROJECT_OWNER}, ${DefaultPermission.RPC})
+      ;`,
+    );
+
     testProject = await createTestProject(testUser, stage);
     await stage.db.infrastructure.paramExecute(
       'INSERT INTO rpc_api_key (name, description, project_uuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
@@ -162,7 +175,12 @@ describe('RPC URL Tests', () => {
       expect(response.status).toBe(200);
       const deletedUrl = response.body.data;
       expect(deletedUrl.id).toBe(createdUrlId);
-      expect(deletedUrl.status).toBe(SqlModelStatus.DELETED);
+      const url = (
+        await stage.db.infrastructure.paramExecute(
+          `SELECT * FROM rpc_url WHERE id = ${createdUrlId}`,
+        )
+      )[0];
+      expect(url.status).toBe(SqlModelStatus.DELETED);
     });
     it('User should not be able to delete RPC URL for other projects', async () => {
       const response = await request(stage.http)

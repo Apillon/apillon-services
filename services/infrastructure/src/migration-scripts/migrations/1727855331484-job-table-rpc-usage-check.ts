@@ -37,8 +37,7 @@ export async function upgrade(
       \`timeout\`
       )
       VALUES
-      ('${WorkerName.RPC_USAGE_CHECK}', 0, '0 0 * * *', NOW(), 5, 900),
-    )`);
+      ('${WorkerName.RPC_USAGE_CHECK}', 0, '0 0 * * *', NOW(), 5, 900)`);
 }
 
 export async function downgrade(

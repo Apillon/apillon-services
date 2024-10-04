@@ -100,7 +100,7 @@ export class RpcApiKeyService {
     const createdDwellirUser = new DwellirUser({}, context).populate({
       dwellir_id: responseBody.id,
       user_uuid: context.user.user_uuid,
-      user_email: context.user.email,
+      email: context.user.email,
     });
 
     await createdDwellirUser.insert();

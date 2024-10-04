@@ -33,7 +33,7 @@ export class RpcController {
 
   @Post('api-key')
   @Validation({ dto: CreateRpcApiKeyDto })
-  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Permissions({ role: RoleGroup.ProjectOwnerAccess })
   @UseGuards(ValidationGuard, ProjectAccessGuard, AuthGuard)
   async createApiKey(
     @Ctx() context: DevConsoleApiContext,
@@ -44,7 +44,7 @@ export class RpcController {
 
   @Put('api-key/:id')
   @Validation({ dto: UpdateRpcApiKeyDto })
-  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Permissions({ role: RoleGroup.ProjectOwnerAccess })
   @UseGuards(ValidationGuard, AuthGuard)
   async updateApiKey(
     @Ctx() context: DevConsoleApiContext,
@@ -55,10 +55,7 @@ export class RpcController {
   }
 
   @Put('api-key/:id/revoke')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
+  @Permissions({ role: RoleGroup.ProjectOwnerAccess })
   @UseGuards(AuthGuard)
   async revokeApiKey(
     @Ctx() context: DevConsoleApiContext,

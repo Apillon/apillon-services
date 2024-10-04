@@ -57,6 +57,6 @@ const getConnectionParams = () => {
 export const handler = middy(lambdaHandler);
 handler
   .use(InitializeContextAndFillUser())
-  //.use(MySqlConnect(getConnectionParams))
+  .use(MySqlConnect(getConnectionParams))
   .use(ResponseFormat())
   .use(ErrorHandler());

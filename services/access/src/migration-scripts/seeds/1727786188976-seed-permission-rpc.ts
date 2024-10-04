@@ -6,12 +6,13 @@ export async function upgrade(
 ) {
   await queryFn(`
   INSERT INTO ${DbTables.PERMISSION} (id, status, name)
-  VALUES (${DefaultPermission.RPC}, ${SqlModelStatus.ACTIVE}, 'RPC Permission)`);
+  VALUES (${DefaultPermission.RPC}, ${SqlModelStatus.ACTIVE}, 'RPC Permission')`);
 }
 
 export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<void>,
 ) {
-  await queryFn(`
-  DELETE FROM ${DbTables.PERMISSION} WHERE id = ${DefaultPermission.RPC}`);
+  await queryFn(
+    `DELETE FROM ${DbTables.PERMISSION} WHERE id = ${DefaultPermission.RPC}`,
+  );
 }
