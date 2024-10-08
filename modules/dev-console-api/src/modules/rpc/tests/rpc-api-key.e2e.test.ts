@@ -6,18 +6,17 @@ import {
   releaseStage,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
-import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
-import { DefaultPermission, DefaultUserRole } from '@apillon/lib';
+import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
 
 describe('RPC ApiKey tests', () => {
   let stage: Stage;
   let testUser: TestUser;
   let testUser2: TestUser;
+  let nonOwnerUser: TestUser;
   let testProject: Project;
   let testProject2: Project;
   beforeAll(async () => {
-    stage = await setupTest();
     testUser = await createTestUser(
       stage.context.devConsole,
       stage.context.access,
@@ -31,12 +30,14 @@ describe('RPC ApiKey tests', () => {
 
     testProject = await createTestProject(testUser, stage);
 
-    await stage.db.access.paramExecute(
-      `INSERT INTO role_permission (role_id, permission_id)
-      VALUES
-       (${DefaultUserRole.PROJECT_OWNER}, ${DefaultPermission.RPC})
-      ;`,
+    nonOwnerUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+      DefaultUserRole.USER,
+      SqlModelStatus.ACTIVE,
+      testProject.project_uuid,
     );
+
     testProject2 = await createTestProject(testUser2, stage);
   });
   afterAll(async () => {
@@ -71,6 +72,17 @@ describe('RPC ApiKey tests', () => {
       )[0];
 
       expect(user.dwellir_id).toBeDefined();
+    });
+
+    it("User shouldn't be able to create RPC api-key for projects he doesn't own", async () => {
+      const response = await request(stage.http)
+        .post('/rpc/api-key')
+        .send({
+          ...rpcApiKeyToCreate,
+          project_uuid: testProject.project_uuid,
+        })
+        .set('Authorization', `Bearer ${nonOwnerUser.token}`);
+      expect(response.status).toBe(403);
     });
 
     it("User shouldn't be able to create RPC api-key for his projects once quota has been reached", async () => {

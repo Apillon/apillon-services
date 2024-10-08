@@ -72,20 +72,33 @@ export class RpcUsageCheckWorker extends BaseQueueWorker {
       const devConsoleSql = new MySql(devConsoleConfig);
       await devConsoleSql.connect();
 
-      newlyExceededUsers = newlyExceededUsers.filter(async (user) => {
-        const projects = await devConsoleSql.paramExecute(
-          `SELECT pu.project_id from project_user pu left join user u on pu.user_id = u.id where u.uuid = @user_uuid and pu.role_id = ${DefaultUserRole.PROJECT_OWNER}`,
-          {
-            user_uuid: user.user_uuid,
-          },
-        );
-        const hasRpcPlan = await scs.hasProjectActiveRpcPlan(
-          projects.map((p) => p.project_id),
-        );
+      // Use Promise.all to handle asynchronous operations
+      const filteredUsers = await Promise.all(
+        newlyExceededUsers.map(async (user) => {
+          const projects = await devConsoleSql.paramExecute(
+            `
+              SELECT pu.project_id
+              FROM project_user pu
+              LEFT JOIN user u ON pu.user_id = u.id
+              WHERE u.uuid = @user_uuid 
+              AND pu.role_id = ${DefaultUserRole.PROJECT_OWNER}
+            `,
+            { user_uuid: user.user_uuid },
+          );
+          const hasRpcPlan = await scs.hasProjectActiveRpcPlan(
+            projects.map((p) => p.project_id),
+          );
+          // Return an object with the user and the result of the condition
+          return { user, hasRpcPlan };
+        }),
+      );
 
-        // If the user has an active RPC plan, we don't need to send them an email
-        return !hasRpcPlan;
-      });
+      newlyExceededUsers = filteredUsers.reduce((acc, { user, hasRpcPlan }) => {
+        if (!hasRpcPlan) {
+          acc.push(user);
+        }
+        return acc;
+      }, []);
 
       await devConsoleSql.close();
     }

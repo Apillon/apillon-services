@@ -48,11 +48,7 @@ export class RpcApiKeyService {
   }
 
   static async changeDwellirSubscription(
-    {
-      subscription,
-    }: {
-      subscription: DwellirSubscription;
-    },
+    { subscription }: { subscription: DwellirSubscription },
     context: ServiceContext,
   ) {
     const dwellirUserId = await this.getDwellirId(context);
@@ -61,11 +57,7 @@ export class RpcApiKeyService {
   }
 
   static async downgradeDwellirSubscriptionsByUserUuids(
-    {
-      user_uuids,
-    }: {
-      user_uuids: string[];
-    },
+    { user_uuids }: { user_uuids: string[] },
     context: ServiceContext,
   ) {
     const dwellirUsers = await new DwellirUser({}, context).populateByUserUuids(

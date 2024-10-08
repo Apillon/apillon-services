@@ -335,6 +335,7 @@ export class Subscription extends ProjectAccessModel {
     daysAgo: number,
     activeOnly = true,
     conn?: PoolConnection,
+    packageId?: SubscriptionPackageId,
   ): Promise<this[]> {
     if (!Number.isInteger(daysAgo) || daysAgo < 0) {
       throw new Error('daysAgo should be a non-negative integer');
@@ -345,7 +346,8 @@ export class Subscription extends ProjectAccessModel {
       SELECT ${this.generateSelectFields()}
       FROM \`${DbTables.SUBSCRIPTION}\`
       WHERE expiresOn BETWEEN DATE_SUB(CURRENT_DATE, INTERVAL @daysAgo DAY) AND CURRENT_DATE
-      ${activeOnly ? `AND status = ${SqlModelStatus.ACTIVE}` : ''}
+      ${activeOnly ? ` AND status = ${SqlModelStatus.ACTIVE}` : ''}
+      ${packageId ? ` AND package_id = ${packageId}` : ''}
       `,
       { daysAgo },
       conn,

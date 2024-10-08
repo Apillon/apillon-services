@@ -8,11 +8,7 @@ import {
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
 import * as request from 'supertest';
-import {
-  DefaultPermission,
-  DefaultUserRole,
-  SqlModelStatus,
-} from '@apillon/lib';
+import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
 describe('RPC URL Tests', () => {
   let stage: Stage;
   let testUser: TestUser;
@@ -30,12 +26,6 @@ describe('RPC URL Tests', () => {
       stage.context.devConsole,
       stage.context.access,
       DefaultUserRole.PROJECT_OWNER,
-    );
-    await stage.db.access.paramExecute(
-      `INSERT INTO role_permission (role_id, permission_id)
-      VALUES
-       (${DefaultUserRole.PROJECT_OWNER}, ${DefaultPermission.RPC})
-      ;`,
     );
 
     testProject = await createTestProject(testUser, stage);

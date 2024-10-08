@@ -2,13 +2,10 @@ import {
   AppEnvironment,
   CodeException,
   Context,
-  DefaultUserRole,
   EmailDataDto,
   EmailTemplate,
-  InfrastructureMicroservice,
   LogType,
   Mailing,
-  MySql,
   ServiceName,
   StorageMicroservice,
   env,
@@ -22,14 +19,6 @@ import {
 import { Subscription } from '../modules/subscription/models/subscription.model';
 import { uniqBy } from 'lodash';
 import { ConfigErrorCode, QuotaWarningLevel } from '../config/types';
-
-const devConsoleConfig = {
-  host: env.DEV_CONSOLE_API_MYSQL_HOST,
-  database: env.DEV_CONSOLE_API_MYSQL_DATABASE,
-  password: env.DEV_CONSOLE_API_MYSQL_PASSWORD,
-  user: env.DEV_CONSOLE_API_MYSQL_USER,
-  port: env.DEV_CONSOLE_API_MYSQL_PORT,
-};
 
 /**
  * Checks all expired subscriptions and identifies projects with expired subscriptions which are exceeding quotas
@@ -137,22 +126,6 @@ export class ExpiredSubscriptionsWorker extends BaseWorker {
         );
       }
     }
-
-    // RPC Plan expiration check
-    const expiredRpcPlans = await this.getExpiredRpcPlans();
-    if (!expiredRpcPlans.expiredSubscriptions.length) {
-      return;
-    }
-
-    const infrastructureMS = new InfrastructureMicroservice(this.context);
-
-    await infrastructureMS.downgradeDwellirSubscriptionsByUserUuids(
-      expiredRpcPlans.userUuidsToDowngrade,
-    );
-
-    await new Subscription({}, this.context).deactivateSubscriptions(
-      expiredRpcPlans.expiredSubscriptions,
-    );
   }
 
   public async onSuccess(_data?: any, _successData?: any): Promise<any> {
@@ -216,30 +189,6 @@ export class ExpiredSubscriptionsWorker extends BaseWorker {
         sourceModule: ServiceName.CONFIG,
       }).writeToMonitor({ sendAdminAlert: true });
     }
-  }
-
-  public async getExpiredRpcPlans() {
-    const expiredSubscriptions = await new Subscription(
-      {},
-      this.context,
-    ).getExpiredSubscriptions(0, true);
-    const projectUuids = expiredSubscriptions.map(
-      (subscriptions) => subscriptions.project_uuid,
-    );
-
-    const devConsoleSql = new MySql(devConsoleConfig);
-    await devConsoleSql.connect();
-
-    const projectOwners = await devConsoleSql.paramExecute(`
-      SELECT DISTINCT u.user_uuid FROM project_user pu LEFT JOIN user u ON pu.user_id = u.id LEFT JOIN project p ON p.id = pu.project_id WHERE pu.role_id = ${DefaultUserRole.PROJECT_OWNER} AND p.project_uuid IN (${projectUuids.map(() => `'${projectUuids}'`).join(',')})`);
-    await devConsoleSql.close();
-
-    return {
-      expiredSubscriptions: expiredSubscriptions.map(
-        (subscription) => subscription.id,
-      ),
-      userUuidsToDowngrade: projectOwners.map((user) => user.user_uuid),
-    };
   }
 
   private daysAgo = (days: number) => {

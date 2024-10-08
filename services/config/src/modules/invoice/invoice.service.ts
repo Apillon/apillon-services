@@ -166,8 +166,7 @@ export class InvoiceService {
       );
 
       if (webhookData.package_id === SubscriptionPackageId.RPC_PLAN) {
-        const infrastructureMS = new InfrastructureMicroservice(context);
-        await infrastructureMS.changeDwellirSubscription(
+        await new InfrastructureMicroservice(context).changeDwellirSubscription(
           DwellirSubscription.DEVELOPER,
         );
       }

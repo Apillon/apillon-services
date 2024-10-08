@@ -5,10 +5,10 @@ export async function upgrade(
 ) {
   await queryFn(`DELETE FROM ${DbTables.DWELLIR_USER};`);
   await queryFn(
-    `ALTER TABLE ${DbTables.DWELLIR_USER} ADD COLUMN exceeded_monthly_limit BOOLEAN NOT NULL;`,
+    `ALTER TABLE ${DbTables.DWELLIR_USER} ADD COLUMN exceeded_monthly_limit BOOLEAN NOT NULL AFTER dwellir_id ;`,
   );
   await queryFn(
-    `ALTER TABLE ${DbTables.DWELLIR_USER} ADD COLUMN email VARCHAR(100) NOT NULL;`,
+    `ALTER TABLE ${DbTables.DWELLIR_USER} ADD COLUMN email VARCHAR(100) NOT NULL AFTER exceeded_monthly_limit;`,
   );
 }
 
