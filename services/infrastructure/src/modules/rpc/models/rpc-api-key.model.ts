@@ -107,7 +107,7 @@ export class RpcApiKey extends UuidSqlModel {
     };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
-      'w',
+      '',
       fieldMap,
       filter.serialize(),
     );
