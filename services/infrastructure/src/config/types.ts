@@ -45,4 +45,5 @@ export enum InfrastructureErrorCode {
 
   // 500
   ERROR_CALLING_SQD_API = 50020001,
+  SQD_API_NOT_CONFIGURED = 50020002,
 }

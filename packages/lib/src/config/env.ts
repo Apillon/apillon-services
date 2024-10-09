@@ -1144,7 +1144,7 @@ export let env: IEnv = {
   INFRASTRUCTURE_FUNCTION_NAME_TEST:
     process.env['INFRASTRUCTURE_FUNCTION_NAME_TEST'],
   INFRASTRUCTURE_SOCKET_PORT:
-    parseInt(process.env['SINFRASTRUCTURE_SOCKET_PORT']) || 6402,
+    parseInt(process.env['INFRASTRUCTURE_SOCKET_PORT']) || 6402,
   INFRASTRUCTURE_MYSQL_HOST: process.env['INFRASTRUCTURE_MYSQL_HOST'],
   INFRASTRUCTURE_MYSQL_PORT:
     parseInt(process.env['INFRASTRUCTURE_MYSQL_PORT']) || 3306,
@@ -1175,7 +1175,7 @@ export let env: IEnv = {
     process.env['INDEXER_BUCKET_FOR_SOURCE_CODE'] ||
     'apillon-indexer-source-code-local',
   SQD_API_TOKEN: process.env['SQD_API_TOKEN'],
-  SQD_API_URL: process.env['SQD_API_URL'],
+  SQD_API_URL: process.env['SQD_API_URL'] || 'https://app.subsquid.io/api',
   SQD_ORGANIZATION_CODE: process.env['SQD_ORGANIZATION_CODE'],
 
   /** CONTRACTS */

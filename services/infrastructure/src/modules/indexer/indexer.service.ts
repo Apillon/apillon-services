@@ -156,7 +156,7 @@ export class IndexerService {
   }
 
   /**
-   * Create initial indexer deploy DB record and generate S3 URL for upload.
+   * Generate S3 URL for indexer source code gzip file upload.
    * @param param0
    * @param context
    * @returns

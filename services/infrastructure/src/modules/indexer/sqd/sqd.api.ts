@@ -21,6 +21,13 @@ export async function sqdApi<T = any>({
   headers?: Record<string, string>;
   responseType?: 'json' | 'stream';
 }): Promise<{ body: T }> {
+  if (!env.SQD_API_URL || !env.SQD_API_TOKEN || !env.SQD_ORGANIZATION_CODE) {
+    throw new InfrastructureCodeException({
+      code: InfrastructureErrorCode.SQD_API_NOT_CONFIGURED,
+      status: 500,
+    });
+  }
+
   // add the API_URL to the path if it's not a full url
   const url = !path.startsWith('http')
     ? `${env.SQD_API_URL}/${version}/${path}`

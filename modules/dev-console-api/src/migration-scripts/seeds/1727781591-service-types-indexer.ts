@@ -11,7 +11,7 @@ export async function upgrade(
       (id, name, description, active)
     VALUES (${AttachedServiceType.INDEXING},
             'Indexer',
-            'Service for indexer',
+            'Indexing service',
             1)
     ;
   `);
