@@ -85,7 +85,7 @@ export class InfrastructureMicroservice extends BaseService {
     });
   }
 
-  //#region Indexer
+  //#region Indexing
 
   public async listIndexers(query: BaseProjectQueryFilter) {
     return await this.callService({
@@ -97,6 +97,27 @@ export class InfrastructureMicroservice extends BaseService {
   public async getIndexer(indexer_uuid: string) {
     return await this.callService({
       eventName: InfrastructureEventType.INDEXER_GET,
+      indexer_uuid,
+    });
+  }
+
+  public async updateIndexer(indexer_uuid: string, data: any) {
+    return await this.callService({
+      eventName: InfrastructureEventType.INDEXER_UPDATE,
+      data: { indexer_uuid, ...data },
+    });
+  }
+
+  public async hibernateIndexer(indexer_uuid: string) {
+    return await this.callService({
+      eventName: InfrastructureEventType.INDEXER_HIBERNATE,
+      indexer_uuid,
+    });
+  }
+
+  public async deleteIndexer(indexer_uuid: string) {
+    return await this.callService({
+      eventName: InfrastructureEventType.INDEXER_DELETE,
       indexer_uuid,
     });
   }

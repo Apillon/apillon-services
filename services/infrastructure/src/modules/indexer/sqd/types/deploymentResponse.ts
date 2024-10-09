@@ -41,10 +41,12 @@ export interface DeploymentResponse {
   status: DeploymentResponseStatus;
   /** @enum {string} */
   failed: DeploymentResponseFailed;
-  logs: {
-    severity: string;
-    message: string;
-  };
+  logs: [
+    {
+      severity: string;
+      message: string;
+    },
+  ];
   squid: {
     /** @example 1 */
     id: number;

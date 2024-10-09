@@ -1,9 +1,8 @@
 import {
   AWS_S3,
   BaseProjectQueryFilter,
-  CodeException,
+  checkProjectSubscription,
   CreateIndexerDto,
-  CreateRpcUrlDto,
   env,
   IndexerLogsQueryFilter,
   Lmas,
@@ -13,15 +12,14 @@ import {
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
+import { InfrastructureErrorCode } from '../../config/types';
 import {
   InfrastructureCodeException,
   InfrastructureValidationException,
 } from '../../lib/exceptions';
 import { Indexer } from './models/indexer.model';
-import { InfrastructureErrorCode } from '../../config/types';
 import { sqdApi } from './sqd/sqd.api';
 import { DeploymentResponse } from './sqd/types/deploymentResponse';
-import { IndexerDeployment } from './models/indexer-deployment.model';
 
 export class IndexerService {
   static async createIndexer(
@@ -32,6 +30,7 @@ export class IndexerService {
       {
         ...data,
         indexer_uuid: uuidV4(),
+        status: SqlModelStatus.DRAFT,
       },
       context,
     );
@@ -52,6 +51,20 @@ export class IndexerService {
         data: indexer.serialize(),
       }),
     ]);
+
+    return indexer.serializeByContext();
+  }
+
+  static async updateIndexer({ data }: { data: any }, context: ServiceContext) {
+    const indexer = await new Indexer({}, context).populateByUUIDAndCheckAccess(
+      data.indexer_uuid,
+    );
+
+    await indexer.canModify(context);
+
+    //Update indexer
+    await indexer.populate(data);
+    await indexer.update();
 
     return indexer.serializeByContext();
   }
@@ -79,6 +92,25 @@ export class IndexerService {
     let squid = undefined;
     let lastDeployment = undefined;
 
+    //Get last deployment
+    if (indexer.lastDeploymentId) {
+      const { body } = await sqdApi<DeploymentResponse>({
+        method: 'GET',
+        path: `/orgs/${env.SQD_ORGANIZATION_CODE}/deployments/${indexer.lastDeploymentId}`,
+      });
+
+      lastDeployment = body;
+
+      if (indexer.squidId != body.squid.id) {
+        indexer.populate({
+          squidId: body.squid.id,
+          squidReference: body.squid.reference,
+        });
+        await indexer.update();
+      }
+    }
+
+    //Get squid
     if (indexer.status == SqlModelStatus.ACTIVE && indexer.squidReference) {
       //call sqd API to get squid info
       const { body } = await sqdApi<any>({
@@ -87,16 +119,6 @@ export class IndexerService {
       });
 
       squid = body;
-    }
-
-    //Get last deployment
-    if (indexer.lastDeploymentId) {
-      const { body } = await sqdApi<any>({
-        method: 'GET',
-        path: `/orgs/${env.SQD_ORGANIZATION_CODE}/deployments/${indexer.lastDeploymentId}`,
-      });
-
-      lastDeployment = body;
     }
 
     return { ...indexer.serializeByContext(), squid, lastDeployment };
@@ -171,8 +193,26 @@ export class IndexerService {
     );
     await indexer.canAccess(context);
 
+    //Check that project has subscription
+    if (!(await checkProjectSubscription(context, indexer.project_uuid))) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.PROJECT_HAS_NO_SUBSCRIPTION,
+        status: 400,
+      });
+    }
+
     //Validate compressed source file on s3
     const s3Client: AWS_S3 = new AWS_S3();
+
+    if (
+      !s3Client.exists(env.INDEXER_BUCKET_FOR_SOURCE_CODE, indexer.indexer_uuid)
+    ) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.INDEXER_SOURCE_CODE_NOT_FOUND,
+        status: 400,
+      });
+    }
+
     const source = await s3Client.get(
       env.INDEXER_BUCKET_FOR_SOURCE_CODE,
       indexer.indexer_uuid,
@@ -181,7 +221,7 @@ export class IndexerService {
     if (source.ContentType != 'application/gzip') {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.INDEXER_SOURCE_CODE_INVALID_FORMAT,
-        status: 404,
+        status: 400,
       });
     }
 
@@ -196,19 +236,11 @@ export class IndexerService {
       data,
     });
 
-    //Create indexer deployment record
-    /*const deployment = await new IndexerDeployment({}, context)
-      .populate({
-        deployment_uuid: uuidV4(),
-        indexer_id: indexer.id,
-        deploymentId: body.id,
-      })
-      .insert();*/
-
     indexer.lastDeploymentId = body.id;
+    indexer.status = SqlModelStatus.ACTIVE;
     await indexer.update();
 
-    return { ...body };
+    return { ...indexer.serialize(), deployment: body };
   }
 
   static async getIndexerDeployments(
@@ -218,7 +250,13 @@ export class IndexerService {
     const indexer = await new Indexer({}, context).populateByUUIDAndCheckAccess(
       event.indexer_uuid,
     );
-    await indexer.canAccess(context);
+
+    if (indexer.status != SqlModelStatus.ACTIVE || !indexer.squidId) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.INDEXER_IS_NOT_DEPLOYED,
+        status: 400,
+      });
+    }
 
     const { body } = await sqdApi<any>({
       method: 'GET',
@@ -228,15 +266,69 @@ export class IndexerService {
     return body;
   }
 
-  static async getIndexerDeployment(
-    event: { deploymentId: number },
+  /**
+   * Call squid API to hibernate indexer and update DB record to INACTIVE
+   * @param event
+   * @param context
+   * @returns
+   */
+  static async hibernateIndexer(
+    event: { indexer_uuid: string },
     context: ServiceContext,
   ) {
+    const indexer = await new Indexer({}, context).populateByUUIDAndCheckAccess(
+      event.indexer_uuid,
+    );
+
+    await indexer.canModify(context);
+
+    if (indexer.status != SqlModelStatus.ACTIVE || !indexer.squidId) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.INDEXER_IS_NOT_DEPLOYED,
+        status: 400,
+      });
+    }
+
     const { body } = await sqdApi<any>({
-      method: 'GET',
-      path: `/orgs/${env.SQD_ORGANIZATION_CODE}/deployments/${event.deploymentId}`,
+      method: 'POST',
+      path: `/orgs/${env.SQD_ORGANIZATION_CODE}/squids/${indexer.squidReference}/hibernate`,
     });
 
-    return body;
+    console.info('hibernate indexer response', body);
+
+    indexer.status = SqlModelStatus.INACTIVE;
+    await indexer.update();
+
+    return indexer.serializeByContext();
+  }
+
+  /**
+   * Call squid API to delete indexer if the indexer has reference (was deployed) and update DB record to DELETED
+   * @param event
+   * @param context
+   * @returns
+   */
+  static async deleteIndexer(
+    event: { indexer_uuid: string },
+    context: ServiceContext,
+  ) {
+    const indexer = await new Indexer({}, context).populateByUUIDAndCheckAccess(
+      event.indexer_uuid,
+    );
+
+    await indexer.canModify(context);
+
+    if (indexer.squidReference) {
+      const { body } = await sqdApi<any>({
+        method: 'DELETE',
+        path: `/orgs/${env.SQD_ORGANIZATION_CODE}/squids/${indexer.squidReference}`,
+      });
+
+      console.info('delete indexer response', body);
+    }
+
+    await indexer.markDeleted();
+
+    return indexer.serializeByContext();
   }
 }

@@ -6,7 +6,7 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
     INSERT INTO ${DbTables.PERMISSION} (id, status, name)
-    VALUES (${DefaultPermission.INDEXER}, 5, 'Indexer permission');
+    VALUES (${DefaultPermission.INDEXING}, 5, 'Indexing permission');
   `);
 }
 
@@ -16,6 +16,6 @@ export async function downgrade(
   await queryFn(`
     DELETE
     FROM ${DbTables.PERMISSION}
-    WHERE id = ${DefaultPermission.INDEXER};
+    WHERE id = ${DefaultPermission.INDEXING};
   `);
 }

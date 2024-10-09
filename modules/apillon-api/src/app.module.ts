@@ -17,7 +17,7 @@ import { ProjectModule } from './modules/project/project.module';
 import { SocialModule } from './modules/social/social.module';
 import { ContractsModule } from './modules/contracts/contracts.module';
 import { EmbeddedWalletModule } from './modules/embedded-wallet/embedded-wallet.module';
-
+import { IndexingrModule } from './modules/indexing/indexing.module';
 @Module({
   imports: [
     MySQLModule,
@@ -34,6 +34,7 @@ import { EmbeddedWalletModule } from './modules/embedded-wallet/embedded-wallet.
     EmbeddedWalletModule,
     AcurastModule,
     ContractsModule,
+    IndexingrModule,
   ],
   controllers: [AppController],
   providers: [],

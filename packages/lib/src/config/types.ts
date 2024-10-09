@@ -356,6 +356,8 @@ export enum InfrastructureEventType {
   INDEXER_UPDATE = 'update-indexer',
   INDEXER_GET_URL_FOR_SC_UPLOAD = 'get-url-for-indexer-source-code-upload',
   INDEXER_DEPLOY = 'deploy-indexer',
+  INDEXER_DELETE = 'delete-indexer',
+  INDEXER_HIBERNATE = 'hibernate-indexer',
 }
 
 export enum ServiceName {
@@ -446,7 +448,7 @@ export enum AttachedServiceType {
   SOCIAL = 6,
   WALLET = 7,
   CONTRACTS = 8,
-  INDEXER = 10,
+  INDEXING = 10,
   SYSTEM = 999,
 }
 
@@ -535,7 +537,7 @@ export enum DefaultPermission {
   SOCIAL = 6,
   WALLET = 7,
   CONTRACTS = 8,
-  INDEXER = 10,
+  INDEXING = 10,
 }
 
 //#endregion

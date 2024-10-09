@@ -23,6 +23,7 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [InfrastructureEventType.INDEXER_CREATE]: IndexerService.createIndexer,
     [InfrastructureEventType.INDEXER_GET]: IndexerService.getIndexer,
+    [InfrastructureEventType.INDEXER_UPDATE]: IndexerService.updateIndexer,
     [InfrastructureEventType.INDEXER_GET_LOGS]: IndexerService.getIndexerLogs,
     [InfrastructureEventType.INDEXER_GET_DEPLOYMENTS]:
       IndexerService.getIndexerDeployments,
@@ -30,6 +31,9 @@ export async function processEvent(event, context: Context): Promise<any> {
     [InfrastructureEventType.INDEXER_GET_URL_FOR_SC_UPLOAD]:
       IndexerService.getUrlForSourceCodeUpload,
     [InfrastructureEventType.INDEXER_DEPLOY]: IndexerService.deployIndexer,
+    [InfrastructureEventType.INDEXER_HIBERNATE]:
+      IndexerService.hibernateIndexer,
+    [InfrastructureEventType.INDEXER_DELETE]: IndexerService.deleteIndexer,
   };
   return await processors[event.eventName](event, context);
 }

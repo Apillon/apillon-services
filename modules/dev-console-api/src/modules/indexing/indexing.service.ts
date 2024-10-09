@@ -8,7 +8,7 @@ import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 
 @Injectable()
-export class IndexerService {
+export class IndexingService {
   async listIndexers(
     context: DevConsoleApiContext,
     query: BaseProjectQueryFilter,
@@ -28,6 +28,33 @@ export class IndexerService {
     ).data;
   }
 
+  async updateIndexer(
+    context: DevConsoleApiContext,
+    indexer_uuid: string,
+    body: any,
+  ) {
+    return (
+      await new InfrastructureMicroservice(context).updateIndexer(
+        indexer_uuid,
+        body,
+      )
+    ).data;
+  }
+
+  async hibernateIndexer(context: DevConsoleApiContext, indexer_uuid: string) {
+    return (
+      await new InfrastructureMicroservice(context).hibernateIndexer(
+        indexer_uuid,
+      )
+    ).data;
+  }
+
+  async deleteIndexer(context: DevConsoleApiContext, indexer_uuid: string) {
+    return (
+      await new InfrastructureMicroservice(context).deleteIndexer(indexer_uuid)
+    ).data;
+  }
+
   async getIndexerLogs(
     context: DevConsoleApiContext,
     indexer_uuid: string,
@@ -38,23 +65,6 @@ export class IndexerService {
         indexer_uuid,
         query,
       )
-    ).data;
-  }
-
-  async getUrlForSourceCodeUpload(
-    context: DevConsoleApiContext,
-    indexer_uuid: string,
-  ) {
-    return (
-      await new InfrastructureMicroservice(context).getUrlForSourceCodeUpload(
-        indexer_uuid,
-      )
-    ).data;
-  }
-
-  async deployIndexer(context: DevConsoleApiContext, indexer_uuid: string) {
-    return (
-      await new InfrastructureMicroservice(context).deployIndexer(indexer_uuid)
     ).data;
   }
 

@@ -12,8 +12,10 @@ import { Ctx, Validation, Permissions } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -22,13 +24,13 @@ import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ProjectAccessGuard } from '../../guards/project-access.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
-import { IndexerService } from './indexer.service';
-@Controller('indexer')
-@Permissions({ permission: DefaultPermission.INDEXER })
+import { IndexingService } from './indexing.service';
+@Controller('indexing')
+@Permissions({ permission: DefaultPermission.INDEXING })
 export class IndexerController {
-  constructor(private readonly indexerService: IndexerService) {}
+  constructor(private readonly indexingService: IndexingService) {}
 
-  @Get()
+  @Get('indexers')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: BaseProjectQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(ValidationGuard, ProjectAccessGuard, AuthGuard)
@@ -36,10 +38,10 @@ export class IndexerController {
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseProjectQueryFilter,
   ) {
-    return await this.indexerService.listIndexers(context, query);
+    return await this.indexingService.listIndexers(context, query);
   }
 
-  @Post()
+  @Post('indexer')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -50,20 +52,64 @@ export class IndexerController {
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateIndexerDto,
   ) {
-    return await this.indexerService.createIndexer(context, body);
+    return await this.indexingService.createIndexer(context, body);
   }
 
-  @Get(':indexer_uuid')
+  @Get('indexers/:indexer_uuid')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getIndexer(
     @Ctx() context: DevConsoleApiContext,
     @Param('indexer_uuid') indexer_uuid: string,
   ) {
-    return await this.indexerService.getIndexer(context, indexer_uuid);
+    return await this.indexingService.getIndexer(context, indexer_uuid);
   }
 
-  @Get(':indexer_uuid/logs')
+  @Patch('indexers/:indexer_uuid')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async updateIndexer(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('indexer_uuid') indexer_uuid: string,
+    @Body() body: any,
+  ) {
+    return await this.indexingService.updateIndexer(
+      context,
+      indexer_uuid,
+      body,
+    );
+  }
+
+  @Post('indexers/:indexer_uuid/hibernate')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async hibernateIndexer(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('indexer_uuid') indexer_uuid: string,
+  ) {
+    return await this.indexingService.hibernateIndexer(context, indexer_uuid);
+  }
+
+  @Delete('indexers/:indexer_uuid')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async deleteIndexer(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('indexer_uuid') indexer_uuid: string,
+  ) {
+    return await this.indexingService.deleteIndexer(context, indexer_uuid);
+  }
+
+  @Get('indexers/:indexer_uuid/logs')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: IndexerLogsQueryFilter, validateFor: ValidateFor.QUERY })
   @UseGuards(AuthGuard, ValidationGuard)
@@ -72,50 +118,21 @@ export class IndexerController {
     @Param('indexer_uuid') indexer_uuid: string,
     @Query() query: IndexerLogsQueryFilter,
   ) {
-    return await this.indexerService.getIndexerLogs(
+    return await this.indexingService.getIndexerLogs(
       context,
       indexer_uuid,
       query,
     );
   }
 
-  @Get(':indexer_uuid/url-for-source-code-upload')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
-  @UseGuards(AuthGuard)
-  async getUrlForSourceCodeUpload(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('indexer_uuid') indexer_uuid: string,
-  ) {
-    return await this.indexerService.getUrlForSourceCodeUpload(
-      context,
-      indexer_uuid,
-    );
-  }
-
-  @Post(':indexer_uuid/deploy')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
-  @UseGuards(AuthGuard)
-  async deployIndexer(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('indexer_uuid') indexer_uuid: string,
-  ) {
-    return await this.indexerService.deployIndexer(context, indexer_uuid);
-  }
-
-  @Get(':indexer_uuid/deployments')
+  @Get('indexers/:indexer_uuid/deployments')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getIndexerDeployments(
     @Ctx() context: DevConsoleApiContext,
     @Param('indexer_uuid') indexer_uuid: string,
   ) {
-    return await this.indexerService.getIndexerDeployments(
+    return await this.indexingService.getIndexerDeployments(
       context,
       indexer_uuid,
     );

@@ -6,7 +6,7 @@ export async function upgrade(
 ): Promise<void> {
   await queryFn(`
     INSERT INTO ${DbTables.ROLE_PERMISSION} (role_id, permission_id)
-    VALUES (${DefaultUserRole.USER}, ${DefaultPermission.INDEXER})
+    VALUES (${DefaultUserRole.USER}, ${DefaultPermission.INDEXING})
     ;
   `);
 }
@@ -17,7 +17,7 @@ export async function downgrade(
   await queryFn(`
     DELETE
     FROM ${DbTables.ROLE_PERMISSION}
-    WHERE permission_id = ${DefaultPermission.INDEXER}
+    WHERE permission_id = ${DefaultPermission.INDEXING}
       AND role_id = ${DefaultUserRole.USER};
   `);
 }

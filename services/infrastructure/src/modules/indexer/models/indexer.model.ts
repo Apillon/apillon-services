@@ -1,7 +1,7 @@
 import {
-  AdvancedSQLModel,
   BaseProjectQueryFilter,
   Context,
+  ErrorCode,
   PoolConnection,
   PopulateFrom,
   SerializeFor,
@@ -12,8 +12,8 @@ import {
   prop,
   selectAndCountQuery,
 } from '@apillon/lib';
-import { InfrastructureErrorCode, DbTables } from '../../../config/types';
-import { stringParser, integerParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
+import { DbTables, InfrastructureErrorCode } from '../../../config/types';
 import { InfrastructureCodeException } from '../../../lib/exceptions';
 export class Indexer extends UuidSqlModel {
   public readonly tableName = DbTables.INDEXER;
@@ -43,6 +43,29 @@ export class Indexer extends UuidSqlModel {
     ],
   })
   indexer_uuid: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.LOGGER,
+      SerializeFor.PROFILE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ErrorCode.STATUS_NOT_PRESENT,
+      },
+    ],
+    defaultValue: SqlModelStatus.ACTIVE,
+    fakeValue() {
+      return SqlModelStatus.ACTIVE;
+    },
+  })
+  public status?: number;
 
   /** SquidId is used as a identifier for squid in sqd API */
   @prop({
@@ -198,7 +221,7 @@ export class Indexer extends UuidSqlModel {
     };
     const { params, filters } = getQueryParams(
       filter.getDefaultValues(),
-      'w',
+      'i',
       fieldMap,
       filter.serialize(),
     );
