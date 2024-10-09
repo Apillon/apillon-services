@@ -4,9 +4,11 @@ import {
   DefaultUserRole,
   EmailDataDto,
   EmailTemplate,
+  LogType,
   Mailing,
   MySql,
   Scs,
+  ServiceName,
   SubscriptionPackageId,
   env,
   runWithWorkers,
@@ -67,6 +69,12 @@ export class RpcUsageCheckWorker extends BaseQueueWorker {
       return !user.exceeded_monthly_limit;
     });
 
+    await this.writeEventLog({
+      logType: LogType.INFO,
+      message: `Found ${newlyExceededUsers.length} users that have exceeded the monthly limit since the last check`,
+      service: ServiceName.INFRASTRUCTURE,
+    });
+
     if (newlyExceededUsers.length) {
       const scs = new Scs(this.context);
       const devConsoleSql = new MySql(devConsoleConfig);
@@ -93,6 +101,12 @@ export class RpcUsageCheckWorker extends BaseQueueWorker {
         }),
       );
 
+      await this.writeEventLog({
+        logType: LogType.INFO,
+        message: `Found ${filteredUsers.length} users that have exceeded the monthly limit and do not have an active RPC plan`,
+        service: ServiceName.INFRASTRUCTURE,
+      });
+
       newlyExceededUsers = filteredUsers.reduce((acc, { user, hasRpcPlan }) => {
         if (!hasRpcPlan) {
           acc.push(user);
@@ -104,10 +118,12 @@ export class RpcUsageCheckWorker extends BaseQueueWorker {
     }
 
     await Promise.all([
-      new DwellirUser({}, this.context).updateManyExceededMonthlyLimit(
-        newlyExceededUsers.map((dwellirUser) => dwellirUser.id),
-        true,
-      ),
+      newlyExceededUsers.length
+        ? new DwellirUser({}, this.context).updateManyExceededMonthlyLimit(
+            newlyExceededUsers.map((dwellirUser) => dwellirUser.id),
+            true,
+          )
+        : undefined,
       // To update the users that might have exceeded the limit in the past
       new DwellirUser({}, this.context).updateManyExceededMonthlyLimit(
         dwellirUsers.map((dwellirUser) => dwellirUser.id),
@@ -115,6 +131,12 @@ export class RpcUsageCheckWorker extends BaseQueueWorker {
         true,
       ),
     ]);
+
+    await this.writeEventLog({
+      logType: LogType.INFO,
+      message: `Updated ${newlyExceededUsers.length} users that have exceeded the monthly limit`,
+      service: ServiceName.INFRASTRUCTURE,
+    });
 
     if (!newlyExceededUsers.length) {
       return;
@@ -132,6 +154,12 @@ export class RpcUsageCheckWorker extends BaseQueueWorker {
     const stripePackageId = await scs.getSubscriptionPackageStripeId(
       SubscriptionPackageId.RPC_PLAN,
     );
+
+    await this.writeEventLog({
+      logType: LogType.INFO,
+      message: `Sending ${newlyExceededUsers.length} emails to users that have exceeded the monthly limit`,
+      service: ServiceName.INFRASTRUCTURE,
+    });
 
     await runWithWorkers(
       newlyExceededUsers,
@@ -158,6 +186,19 @@ export class RpcUsageCheckWorker extends BaseQueueWorker {
           cancel_url: `${env.APP_URL}/dashboard/service/rpc`,
           automatic_tax: { enabled: true },
           allow_promotion_codes: true,
+        });
+
+        await this.writeEventLog({
+          logType: LogType.INFO,
+          message: `Sent email to ${user.email} to notify them of exceeding the monthly limit`,
+          data: {
+            mailAddresses: [user.email],
+            templateName: EmailTemplate.RPC_USAGE_EXCEEDED,
+            templateData: {
+              paymentLink: paymentSession.url,
+            },
+          },
+          service: ServiceName.INFRASTRUCTURE,
         });
 
         mailingMS.sendMail(
