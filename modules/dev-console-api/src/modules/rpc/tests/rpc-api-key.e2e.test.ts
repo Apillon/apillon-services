@@ -117,6 +117,60 @@ describe('RPC ApiKey tests', () => {
     });
   });
 
+  describe('Get RPC ApiKey', () => {
+    let apiKeyId: number;
+    const rpcApiKeyToCreate = {
+      name: 'Test ApiKey',
+      description: 'Test Description',
+      uuid: 'xy',
+    };
+    beforeAll(async () => {
+      await stage.db.infrastructure.paramExecute(
+        'INSERT INTO RPC_API_KEY (name, description, project_uuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
+        {
+          ...rpcApiKeyToCreate,
+          projectUuid: testProject.project_uuid,
+        },
+      );
+
+      apiKeyId = (
+        await stage.db.infrastructure.paramExecute(
+          `SELECT LAST_INSERT_ID() as id`,
+        )
+      )[0].id;
+    });
+
+    afterAll(async () => {
+      await stage.db.infrastructure.paramExecute('DELETE FROM RPC_API_KEY');
+    });
+
+    test('User should be able to get RPC key for his projects', async () => {
+      const response = await request(stage.http)
+        .get(`/rpc/api-key/${apiKeyId}`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      const apiKey = response.body.data;
+      expect(apiKey.name).toBe(rpcApiKeyToCreate.name);
+      expect(apiKey.description).toBe(rpcApiKeyToCreate.description);
+      expect(apiKey.project_uuid).toBe(testProject.project_uuid);
+      expect(apiKey.uuid).toBe(rpcApiKeyToCreate.uuid);
+    });
+
+    test('User should not be able to get RPC key for other projects', async () => {
+      const response = await request(stage.http)
+        .get(`/rpc/api-key/${apiKeyId}`)
+        .set('Authorization', `Bearer ${testUser2.token}`);
+      expect(response.status).toBe(403);
+    });
+
+    test('Error should be thrown if RPC key does not exist', async () => {
+      const response = await request(stage.http)
+        .get(`/rpc/api-key/999999`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(404);
+    });
+  });
+
   describe('Update RPC ApiKey', () => {
     const existingRpcApiKey = {
       name: 'Test ApiKey',

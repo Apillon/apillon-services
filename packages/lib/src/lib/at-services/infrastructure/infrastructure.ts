@@ -33,6 +33,13 @@ export class InfrastructureMicroservice extends BaseService {
     });
   }
 
+  public async getRpcApiKey(id: number) {
+    return await this.callService({
+      eventName: InfrastructureEventType.GET_RPC_API_KEY,
+      id,
+    });
+  }
+
   public async changeDwellirSubscription(subscription: DwellirSubscription) {
     return await this.callService({
       evenName: InfrastructureEventType.CHANGE_DWELLIR_SUBSCRIPTION,

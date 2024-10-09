@@ -15,6 +15,7 @@ export async function processEvent(event, context: Context): Promise<any> {
       RpcApiKeyService.listRpcApiKeys,
     [InfrastructureEventType.GET_RPC_API_KEY_USAGE]:
       RpcApiKeyService.getRpcApiKeyUsage,
+    [InfrastructureEventType.GET_RPC_API_KEY]: RpcApiKeyService.getRpcApiKey,
     [InfrastructureEventType.CHANGE_DWELLIR_SUBSCRIPTION]:
       RpcApiKeyService.changeDwellirSubscription,
     [InfrastructureEventType.DOWNGRADE_DWELLIR_SUBSCRIPTIONS]:

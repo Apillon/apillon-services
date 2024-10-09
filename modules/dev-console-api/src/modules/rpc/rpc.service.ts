@@ -24,6 +24,11 @@ export class RpcService {
       .data;
   }
 
+  async getApiKey(context: DevConsoleApiContext, id: number) {
+    return (await new InfrastructureMicroservice(context).getRpcApiKey(id))
+      .data;
+  }
+
   async createRpcApiKey(
     context: DevConsoleApiContext,
     body: CreateRpcApiKeyDto,

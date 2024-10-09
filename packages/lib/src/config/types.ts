@@ -366,6 +366,7 @@ export enum InfrastructureEventType {
   UPDATE_RPC_API_KEY = 'update-rpc-api-key',
   CREATE_RPC_API_KEY = 'create-rpc-api-key',
   GET_RPC_API_KEY_USAGE = 'get-rpc-api-key-usage',
+  GET_RPC_API_KEY = 'get-rpc-api-key',
   CHANGE_DWELLIR_SUBSCRIPTION = 'change-dwellir-subscription',
   DOWNGRADE_DWELLIR_SUBSCRIPTIONS = 'downgrade-dwellir-subscriptions',
   CREATE_RPC_URL = 'create-rpc-url',

@@ -7,6 +7,7 @@ import {
   ModelValidationException,
   QuotaCode,
   Scs,
+  SerializeFor,
   SqlModelStatus,
   UpdateRpcApiKeyDto,
   ValidatorErrorCode,
@@ -45,6 +46,20 @@ export class RpcApiKeyService {
       };
     }
     return usagePerKey;
+  }
+
+  static async getRpcApiKey({ id }: { id: number }, context: ServiceContext) {
+    const rpcApiKey = await new RpcApiKey({}, context).populateById(id);
+
+    if (!rpcApiKey.exists()) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.RPC_API_KEY_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    rpcApiKey.canAccess(context);
+    return rpcApiKey.serialize(SerializeFor.PROFILE);
   }
 
   static async changeDwellirSubscription(
