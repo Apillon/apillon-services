@@ -5,6 +5,7 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  UuidSqlModel,
   getQueryParams,
   presenceValidator,
   prop,
@@ -12,11 +13,29 @@ import {
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { InfrastructureErrorCode, DbTables } from '../../../config/types';
-export class RpcUrl extends AdvancedSQLModel {
+export class RpcUrl extends UuidSqlModel {
   public readonly tableName = DbTables.RPC_URL;
+
   public constructor(data: any, context: Context) {
     super(data, context);
   }
+
+  /**
+   * id
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+      SerializeFor.LOGGER,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],

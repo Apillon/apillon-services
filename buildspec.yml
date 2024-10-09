@@ -13,7 +13,6 @@ phases:
         webpack webpack-node-externals
         ts-loader ts-node
         copyfiles rimraf
-        turbo
   pre_build:
     commands:
       - printenv

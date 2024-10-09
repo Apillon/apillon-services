@@ -4,9 +4,9 @@ import { BaseProjectQueryFilter } from '../../base-models/base-project-query-fil
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreateIndexerDto } from './dtos/create-indexer.dto';
+import { IndexerLogsQueryFilter } from './dtos/indexer-logs-query-filter.dto';
 import { CreateRpcApiKeyDto } from './dtos/create-rpc-api-key.dto';
 import { CreateRpcUrlDto } from './dtos/create-rpc-url.dto';
-import { IndexerLogsQueryFilter } from './dtos/indexer-logs-query-filter.dto';
 import { ListRpcUrlsForApiKeyQueryFilter } from './dtos/list-rpc-urls-for-api-key-query-filter.dto';
 import { UpdateRpcApiKeyDto } from './dtos/update-rpc-api-key.dto';
 import { UpdateRpcUrlDto } from './dtos/update-rpc-url.dto';
@@ -78,6 +78,7 @@ export class InfrastructureMicroservice extends BaseService {
       id,
     });
   }
+
   public async listRpcUrlsForApiKey(query: ListRpcUrlsForApiKeyQueryFilter) {
     return await this.callService({
       eventName: InfrastructureEventType.LIST_RPC_URLS,

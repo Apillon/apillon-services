@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="monitoring &gt; dev" type="js.build_tools.npm" folderName="dev-servers" nameIsGenerated="true">
+    <package-json value="$PROJECT_DIR$/services/monitoring/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="dev" />
+    </scripts>
+    <node-interpreter value="project" />
+    <envs />
+    <method v="2" />
+  </configuration>
+</component>

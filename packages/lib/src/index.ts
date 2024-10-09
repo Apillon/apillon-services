@@ -72,7 +72,8 @@ export * from './lib/at-services/authentication/dtos/sporran/message/submit-atte
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-terms.dto';
 export * from './lib/at-services/authentication/dtos/wallet-identity.dto';
 export * from './lib/at-services/authentication/dtos/create-oasis-signature.dto';
-export * from './lib/at-services/authentication/dtos/oasis-signatures-query-filter.dto';
+export * from './lib/at-services/authentication/dtos/embedded-wallet-signatures-query-filter.dto';
+export * from './lib/at-services/authentication/dtos/create-embedded-wallet-integration.dto';
 
 //#REGION NTFS
 export * from './lib/at-services/nfts/nfts';
@@ -86,7 +87,6 @@ export * from './lib/at-services/nfts/dtos/burn-nft.dto';
 export * from './lib/at-services/nfts/dtos/collections-quota-reached-query-filter.dto';
 export * from './lib/at-services/nfts/dtos/add-nfts-metadata.dto';
 export * from './lib/at-services/nfts/constants';
-export * from './lib/at-services/nfts/permissions/subscription';
 export * from './lib/at-services/nfts/validators/create-collection-drop-reserve-validator';
 export * from './lib/at-services/nfts/validators/create-collection-drop-price-validator';
 
@@ -101,8 +101,10 @@ export * from './lib/at-services/computing/dtos/cluster-wallet-query-filter.dto'
 export * from './lib/at-services/computing/dtos/computing-transaction-query-filter.dto';
 export * from './lib/at-services/computing/dtos/create-job.dto';
 export * from './lib/at-services/computing/dtos/update-job.dto';
-export * from './lib/at-services/computing/dtos/set-job-environment.dto';
+export * from './lib/at-services/computing/dtos/set-cloud-function-environment.dto';
 export * from './lib/at-services/computing/dtos/job-query-filter.dto';
+export * from './lib/at-services/computing/dtos/create-or-update-cloud-function.dto';
+export * from './lib/at-services/computing/dtos/cloud-function-usage.dto';
 
 //#REGION CONTRACTS
 export * from './lib/at-services/contracts/eventTypes';
@@ -173,6 +175,7 @@ export * from './lib/context';
 export * from './lib/logger';
 export * from './lib/database/sql-utils';
 export * from './lib/aws/aws-s3';
+export * from './lib/aws/aws-kms';
 export * from './lib/validators';
 export * from './lib/utils';
 export * from './lib/at-services/ams/dtos/create-api-key.dto';
@@ -183,6 +186,7 @@ export * from './lib/at-services/lmas/dtos/request-log.dto';
 export * from './lib/at-services/lmas/dtos/base-logs-query-filter.dto';
 export * from './lib/at-services/lmas/dtos/logs-query-filter.dto';
 export * from './lib/at-services/lmas/dtos/request-logs-query-filter.dto';
+export * from './lib/at-services/lmas/dtos/cloud-function-call.dto';
 export * from './lib/exceptions/exceptions';
 export * from './lib/exceptions/http-exception';
 export * from './lib/base-models/base-query-filter.model';

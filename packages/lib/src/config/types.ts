@@ -21,6 +21,7 @@ export enum SubstrateChain {
   XSOCIAL = 7,
   ASTAR = 8,
   ACURAST = 9,
+  UNIQUE = 11,
 }
 
 export enum EvmChain {
@@ -31,6 +32,8 @@ export enum EvmChain {
   ASTAR_SHIBUYA = 81, // testnet
   ASTAR = 592,
   OASIS = 42262,
+  ALFAJORES = 44787, // Celo testnet
+  CELO = 42220,
 }
 
 export enum NFTCollectionType {
@@ -101,6 +104,9 @@ export enum LmasEventType {
   GET_TOTAL_REQUESTS = 'get-total-requests',
 
   SEND_MESSAGE_TO_SLACK = 'send-message-to-slack',
+
+  SAVE_CLOUD_FUNCTION_CALL = 'save-cloud-function-call',
+  GET_CLOUD_FUNCTION_USAGE = 'get-cloud-function-usage',
 }
 
 export enum BlockchainEventType {
@@ -168,6 +174,8 @@ export enum StorageEventType {
   WEBSITE_LIST_DOMAINS = 'list-website-domains',
   WEBSITE_GET_ALL_DOMAINS = 'get-all-domains',
   WEBSITE_QUOTA_REACHED = 'websites-quota-reached',
+  WEBSITE_CHECK_DOMAIN_DNS = 'website-check-domain-dns',
+  WEBSITE_REMOVE_DOMAIN = 'website-remove-domain',
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
@@ -204,9 +212,13 @@ export enum AuthenticationEventType {
   SPORRAN_REQUEST_CREDENTIAL = 'sporran-request-credential',
   SPORRAN_VERIFY_CREDENTIAL = 'sporran-verify-credential',
   GET_TOTAL_DIDS = 'get-total-dids',
+  EW_INFO = 'get-embedded-wallets-info',
+  EW_INTEGRATION_CREATE = 'create-ew-integration',
+  EW_INTEGRATION_GET = 'get-ew-integration',
+  EW_INTEGRATION_LIST = 'list-ew-integration',
+  EW_INTEGRATION_UPDATE = 'update-ew-integration',
   CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
   LIST_OASIS_SIGNATURES = 'list-oasis-signatures',
-  GET_OASIS_SIGNATURES_COUNT_BY_API_KEY = 'get-oasis-signatures-count-by-api-key',
   GENERATE_OTP = 'generate-otp',
   VALIDATE_OTP = 'validate-otp',
 }
@@ -246,6 +258,7 @@ export enum ScsEventType {
 export enum NftsEventType {
   HELLO = 'hello',
   CREATE_COLLECTION = 'create-collection',
+  CREATE_UNIQUE_COLLECTION = 'create-unique-collection',
   NFT_COLLECTIONS_LIST = 'list-nft-collections',
   GET_NFT_COLLECTION = 'get-nft-collection',
   GET_NFT_COLLECTION_BY_UUID = 'get-nft-collection-by-uuid',
@@ -280,11 +293,19 @@ export enum ComputingEventType {
   ARCHIVE_CONTRACT = 'archive-contract',
   ACTIVATE_CONTRACT = 'activate-contract',
 
+  CREATE_CLOUD_FUNCTION = 'create-cloud-function',
+  LIST_CLOUD_FUNCTIONS = 'list-cloud-functions',
+  UPDATE_CLOUD_FUNCTION = 'update-cloud-function',
+  EXECUTE_CLOUD_FUNCTION = 'execute-cloud-function',
+
+  GET_CLOUD_FUNCTION = 'get-cloud-function',
   CREATE_JOB = 'create-job',
-  LIST_JOBS = 'list-jobs',
   GET_JOB = 'get-job',
-  SET_JOB_ENVIRONMENT = 'set-job-environment',
-  SEND_JOB_MESSAGE = 'send-job-message',
+  SET_CLOUD_FUNCTION_ENVIRONMENT = 'set-cloud-function-environment',
+  GET_CLOUD_FUNCTION_ENVIRONMENT = 'get-cloud-function-environment',
+  ARCHIVE_CLOUD_FUNCTION = 'archive-cloud-function',
+  ACTIVATE_CLOUD_FUNCTION = 'activate-cloud-function',
+
   UPDATE_JOB = 'update-job',
   DELETE_JOB = 'delete-job',
 }
@@ -707,6 +728,8 @@ export enum ValidatorErrorCode {
   CREATE_OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT = 42200165,
   GENERATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200166,
   VALIDATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200167,
+  CREATE_EW_INTEGRATION_REQUIRED_DATA_NOT_PRESENT = 42200168,
+  CREATE_EW_INTEGRATION_INVALID_WHITELISTED_DOMAINS = 42200169,
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
   COMPUTING_CONTRACT_TYPE_NOT_PRESENT = 42200202,
@@ -720,7 +743,7 @@ export enum ValidatorErrorCode {
   COMPUTING_CONTRACT_DATA_NOT_VALID = 42200210,
   COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID = 42200211,
   COMPUTING_FIELD_NOT_PRESENT = 42200212,
-  JOB_DATE_NOT_VALID = 42200213,
+  COMPUTING_FIELD_NOT_VALID = 42200213,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
@@ -868,7 +891,10 @@ export enum QuotaCode {
   MAX_NFT_COLLECTIONS = 9,
   MAX_STORAGE = 10,
   MAX_BANDWIDTH = 11,
-  MAX_RPC_KEYS = 12,
+  MAX_ETHEREUM_NFT_COLLECTIONS = 12,
+  MAX_EMBEDDED_WALLET_INTEGRATIONS = 13,
+  MAX_EMBEDDED_WALLET_SIGNATURES = 14,
+  MAX_RPC_KEYS = 15,
 }
 
 /**
@@ -949,6 +975,7 @@ export enum MongoCollections {
   REQUEST_LOGS = 'request_logs',
   API_REQUEST_LOGS = 'api_request_logs',
   IPFS_TRAFFIC_LOG = 'ipfs-traffic-log',
+  CLOUD_FUNCTION_CALL = 'cloud-function-call',
 }
 
 export enum ApiName {
@@ -1029,10 +1056,17 @@ export enum ProductCode {
   CONTRACT_SEPOLIA_CALL = 51,
 
   COMPUTING_JOB_CREATE = 52,
+  // these 2 below are not used
   COMPUTING_JOB_SET_ENVIRONMENT = 53,
   COMPUTING_JOB_DELETE = 54,
 
   IPNS = 55,
+
+  // UNIQUE NFTS
+  NFT_UNIQUE_COLLECTION = 56,
+  NFT_UNIQUE_MINT = 57,
+  NFT_UNIQUE_BURN = 58,
+  NFT_UNIQUE_TRANSFER_COLLECTION = 59,
 }
 
 export enum ProductService {
@@ -1065,6 +1099,7 @@ export enum ProductCategory {
   ACURAST = 'ACURAST',
   IPNS = 'IPNS',
   SIGNATURE = 'SIGNATURE',
+  UNIQUE_NFT = 'UNIQUE_NFT',
 }
 
 export enum EmailTemplate {
@@ -1096,6 +1131,7 @@ export enum EmailTemplate {
 export enum JwtExpireTime {
   ONE_DAY = '1d',
   ONE_HOUR = '1h',
+  TEN_MINUTES = '10m',
   TWENTY_MINUTES = '20m',
   FIVE_MINUTES = '5m',
   NEVER = 'never',
@@ -1103,7 +1139,7 @@ export enum JwtExpireTime {
 
 export enum SubscriptionPackageId {
   FREEMIUM = 1,
-  CATERPILLAR,
-  COCOON,
-  BUTTERFLY,
+  CATERPILLAR = 2,
+  COCOON = 3,
+  BUTTERFLY = 4,
 }

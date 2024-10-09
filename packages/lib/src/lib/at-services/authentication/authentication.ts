@@ -1,13 +1,15 @@
 import { env } from '../../../config/env';
 import { AppEnvironment, AuthenticationEventType } from '../../../config/types';
+import { BaseProjectQueryFilter } from '../../base-models/base-project-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { CreateEWIntegrationDto } from './dtos/create-embedded-wallet-integration.dto';
 import { CreateOasisSignatureDto } from './dtos/create-oasis-signature.dto';
+import { EmbeddedWalletSignaturesQueryFilter } from './dtos/embedded-wallet-signatures-query-filter.dto';
 import { GenerateOtpDto } from './dtos/generate-otp.dto';
 import { IdentityCreateDto } from './dtos/identity-create.dto';
 import { IdentityDidRevokeDto } from './dtos/identity-did-revoke.dto';
 import { VerificationEmailDto } from './dtos/identity-verification-email.dto';
-import { OasisSignaturesQueryFilter } from './dtos/oasis-signatures-query-filter.dto';
 import { RequestCredentialDto } from './dtos/sporran/message/request-credential.dto';
 import { SubmitAttestationDto } from './dtos/sporran/message/submit-attestation.dto';
 import { SubmitTermsDto } from './dtos/sporran/message/submit-terms.dto';
@@ -140,7 +142,51 @@ export class AuthenticationMicroservice extends BaseService {
     });
   }
 
-  //#region Oasis
+  //#region Embedded wallet
+
+  public async getEmbeddedWalletInfo(project_uuid: string) {
+    const data = {
+      eventName: AuthenticationEventType.EW_INFO,
+      project_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async listEmbeddedWalletIntegrations(query: BaseProjectQueryFilter) {
+    const data = {
+      eventName: AuthenticationEventType.EW_INTEGRATION_LIST,
+      query: query.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getEmbeddedWalletIntegration(integration_uuid: string) {
+    const data = {
+      eventName: AuthenticationEventType.EW_INTEGRATION_GET,
+      integration_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async createEmbeddedWalletIntegration(body: CreateEWIntegrationDto) {
+    const data = {
+      eventName: AuthenticationEventType.EW_INTEGRATION_CREATE,
+      body,
+    };
+    return await this.callService(data);
+  }
+
+  public async updateEmbeddedWalletIntegration(
+    integration_uuid: string,
+    body: any,
+  ) {
+    const data = {
+      eventName: AuthenticationEventType.EW_INTEGRATION_UPDATE,
+      integration_uuid,
+      body,
+    };
+    return await this.callService(data);
+  }
 
   public async createOasisSignature(params: CreateOasisSignatureDto) {
     const data = {
@@ -150,14 +196,9 @@ export class AuthenticationMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async getOasisSignaturesCountByApiKey(project_uuid: string) {
-    return await this.callService({
-      eventName: AuthenticationEventType.GET_OASIS_SIGNATURES_COUNT_BY_API_KEY,
-      project_uuid,
-    });
-  }
-
-  public async listOasisSignatures(query: OasisSignaturesQueryFilter) {
+  public async listEmbeddedWalletSignatures(
+    query: EmbeddedWalletSignaturesQueryFilter,
+  ) {
     return await this.callService({
       eventName: AuthenticationEventType.LIST_OASIS_SIGNATURES,
       query: query.serialize(),

@@ -7,7 +7,6 @@ import {
   SqlModelStatus,
   UpdateRpcUrlDto,
   ValidatorErrorCode,
-  hasProjectAccess,
 } from '@apillon/lib';
 import { InfrastructureCodeException } from '../../lib/exceptions';
 import { InfrastructureErrorCode } from '../../config/types';
@@ -28,12 +27,9 @@ export class RpcUrlService {
         status: 404,
       });
     }
-    if (!hasProjectAccess(rpcApiKey.project_uuid, context)) {
-      throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.USER_IS_NOT_AUTHORIZED,
-        status: 403,
-      });
-    }
+
+    rpcApiKey.canAccess(context);
+
     const rpcUrlByNetworkAndApiKey = await new RpcUrl(
       {},
       context,
@@ -97,12 +93,9 @@ export class RpcUrlService {
         status: 404,
       });
     }
-    if (!hasProjectAccess(rpcUrl.project_uuid, context)) {
-      throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.USER_IS_NOT_AUTHORIZED,
-        status: 403,
-      });
-    }
+
+    rpcUrl.canAccess(context);
+
     rpcUrl.populate(data);
     await rpcUrl.validateOrThrow(ModelValidationException, ValidatorErrorCode);
     await rpcUrl.update();
@@ -117,12 +110,9 @@ export class RpcUrlService {
         status: 404,
       });
     }
-    if (!hasProjectAccess(rpcUrl.project_uuid, context)) {
-      throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.USER_IS_NOT_AUTHORIZED,
-        status: 403,
-      });
-    }
+
+    rpcUrl.canAccess(context);
+
     await rpcUrl.updateStatus(SqlModelStatus.DELETED);
     return rpcUrl.serializeByContext();
   }
@@ -142,12 +132,9 @@ export class RpcUrlService {
         status: 404,
       });
     }
-    if (!hasProjectAccess(apiKey.project_uuid, context)) {
-      throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.USER_IS_NOT_AUTHORIZED,
-        status: 403,
-      });
-    }
+
+    apiKey.canAccess(context);
+
     const filter = new ListRpcUrlsForApiKeyQueryFilter(event.query, context);
     return await new RpcUrl({}, context).listForApiKey(filter);
   }

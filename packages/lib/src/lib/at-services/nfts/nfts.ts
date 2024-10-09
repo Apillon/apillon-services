@@ -43,6 +43,13 @@ export class NftsMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+  public async createUniqueCollection(params: any) {
+    const data = {
+      eventName: NftsEventType.CREATE_UNIQUE_COLLECTION,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
 
   public async listNftCollections(params: NFTCollectionQueryFilter) {
     const data = {

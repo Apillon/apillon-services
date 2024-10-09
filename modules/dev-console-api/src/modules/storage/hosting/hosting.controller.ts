@@ -124,6 +124,27 @@ export class HostingController {
     return await this.hostingService.activateWebsite(context, website_uuid);
   }
 
+  @Post('websites/:website_uuid/check-domain')
+  @HttpCode(200)
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async checkWebsiteDomain(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('website_uuid') website_uuid: string,
+  ) {
+    return await this.hostingService.checkWebsiteDomain(context, website_uuid);
+  }
+
+  @Delete('websites/:website_uuid/domain')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async removeWebsiteDomain(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('website_uuid') website_uuid: string,
+  ) {
+    return await this.hostingService.removeWebsiteDomain(context, website_uuid);
+  }
+
   //#region deployments
   @Post('websites/:website_uuid/deploy')
   @HttpCode(200)

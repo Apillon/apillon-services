@@ -60,7 +60,7 @@ describe('RPC Url tests', () => {
       expect(createdRpcUrlResponse.network).toBe(dto.network);
       expect(createdRpcUrlResponse.httpsUrl).toBeDefined();
       expect(createdRpcUrlResponse.wssUrl).toBeDefined();
-      expect(createdRpcUrlResponse.createTime).toBeUndefined();
+      expect(createdRpcUrlResponse.createTime).toBeDefined();
     });
     test('User cannot create rpc url on the same network and apiKey', async () => {
       const network = 'NETWORK';
@@ -159,9 +159,9 @@ describe('RPC Url tests', () => {
         },
         stage.context,
       );
+
       expect(deletedResponse).toBeDefined();
-      expect(deletedResponse.id).toBe(createdUrlId);
-      expect(deletedResponse.status).toBe(SqlModelStatus.DELETED);
+
       const rpcUrlInDB = await stage.db.paramExecute(
         `SELECT * FROM ${DbTables.RPC_URL} WHERE id=@id`,
         { id: createdUrlId },

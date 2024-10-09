@@ -41,7 +41,8 @@
     "@polkadot/api": "10.12.2",
     "@polkadot/keyring": "^12.3.2",
     "@polkadot/util": "^12.3.2",
-    "axios": "^1.6.8"
+    "axios": "^1.6.8",
+    "magic-bytes.js": "^1.10.0"
   },
   "devDependencies": {
     "@apillon/tests-lib": "*",

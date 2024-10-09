@@ -3,7 +3,6 @@ import { sign, verify, decode, Jwt } from 'jsonwebtoken';
 import { env } from '../config/env';
 import * as crypto from 'crypto';
 import { JwtExpireTime } from '../config/types';
-import { Readable } from 'stream';
 
 export function isPlainObject(testVar: any): boolean {
   if (
@@ -145,6 +144,22 @@ export function dateToSqlString(date: Date): string {
   return date.toISOString().replace(/T/, ' ').replace(/Z/, '');
 }
 
+/**
+ * Compare only date part of two dates
+ * @param date1
+ * @param date2
+ * @returns true if date is the same
+ */
+export function compareDatesWithoutTime(date1: Date, date2: Date): boolean {
+  if (!date1 || !date2) return false;
+
+  return (
+    date1.getFullYear() == date2.getFullYear() &&
+    date1.getMonth() == date2.getMonth() &&
+    date1.getDate() == date2.getDate()
+  );
+}
+
 // DO NOT SET RETURN TYPE AS IT WILL MESS WITH CI/CD BUILD!
 export function getFaker() {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -203,30 +218,4 @@ export function generateRandomCode(
     code += characters.charAt(crypto.randomInt(0, characters.length));
   }
   return code;
-}
-
-const htmlCheckRegex =
-  /<(html|head|body|div|span|p|a|table|tr|td|img|ul|li|ol|form|input|button|script|style|link|meta)(\s.*?|)>(.*?)<\/\1>/is;
-
-export async function isStreamHtmlFile(fileStream: Readable) {
-  return new Promise<boolean>((resolve, reject) => {
-    let data = '';
-    fileStream.setEncoding('utf8');
-    fileStream.on('data', (chunk: string) => {
-      data = chunk.trim();
-      // Regex that checks if data is has <something> or <something/>
-      if (htmlCheckRegex.test(data)) {
-        fileStream.destroy();
-        resolve(true);
-        return;
-      }
-    });
-    fileStream.on('end', () => {
-      resolve(false);
-    });
-
-    fileStream.on('error', (err) => {
-      reject(err);
-    });
-  });
 }

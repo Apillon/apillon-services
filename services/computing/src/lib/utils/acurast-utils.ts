@@ -19,6 +19,9 @@ import {
 import { Transaction } from '../../modules/transaction/models/transaction.model';
 import { TransactionService } from '../../modules/transaction/transaction.service';
 import { AcurastClient } from '../../modules/clients/acurast.client';
+import { v4 as uuidV4 } from 'uuid';
+import { AcurastEncryptionService } from '../../modules/acurast/acurast-encryption.service';
+import { JobEnvVar } from '../../modules/acurast/acurast-types';
 
 export async function getAcurastEndpoint(context: Context) {
   return (
@@ -31,7 +34,7 @@ export async function getAcurastEndpoint(context: Context) {
 
 export async function getAcurastWebsocketUrl() {
   // TODO: replace with env variable?
-  return 'wss://websocket-proxy-1.prod.gke.acurast.com/';
+  return 'wss://websocket-proxy-2.prod.gke.acurast.com/';
 }
 
 export async function deployAcurastJob(
@@ -72,24 +75,38 @@ export async function deployAcurastJob(
     conn,
   );
 
-  job.populate({
-    transactionHash: response.data.transactionHash,
-    jobStatus: AcurastJobStatus.DEPLOYING,
-    deployerAddress: response.data.address,
-  });
-  await job.update(SerializeFor.INSERT_DB, conn);
+  await job
+    .populate({
+      transactionHash: response.data.transactionHash,
+      jobStatus: AcurastJobStatus.DEPLOYING,
+      deployerAddress: response.data.address,
+    })
+    .update(SerializeFor.UPDATE_DB, conn);
 }
 
 export async function setAcurastJobEnvironment(
   context: ServiceContext,
   job: AcurastJob,
-  transaction_uuid: string,
-  variables: [string, string][],
+  variables: JobEnvVar[],
+  conn?: PoolConnection,
 ) {
   const acurastClient = new AcurastClient(await getAcurastEndpoint(context));
+
+  const jobPublicKeys = await acurastClient.getJobPublicKeys(
+    job.deployerAddress,
+    job.account,
+    job.jobId,
+  );
+
+  const encryptedVariables =
+    await new AcurastEncryptionService().encryptEnvironmentVariables(
+      variables,
+      jobPublicKeys,
+    );
+
   const transaction = await acurastClient.createSetEnvironmentTransaction(
     job,
-    variables,
+    encryptedVariables,
   );
 
   const response = await new BlockchainMicroservice(
@@ -108,7 +125,7 @@ export async function setAcurastJobEnvironment(
   await TransactionService.saveTransaction(
     new Transaction(
       {
-        transaction_uuid,
+        transaction_uuid: uuidV4,
         walletAddress: response.data.address,
         transactionType: TransactionType.SET_JOB_ENVIRONMENT,
         refTable: DbTables.ACURAST_JOB,
@@ -118,13 +135,13 @@ export async function setAcurastJobEnvironment(
       },
       context,
     ),
+    conn,
   );
 }
 
 export async function deleteAcurastJob(
   context: ServiceContext,
   job: AcurastJob,
-  transaction_uuid: string,
   conn: PoolConnection,
 ) {
   const acurastClient = new AcurastClient(await getAcurastEndpoint(context));
@@ -148,7 +165,7 @@ export async function deleteAcurastJob(
   await TransactionService.saveTransaction(
     new Transaction(
       {
-        transaction_uuid,
+        transaction_uuid: uuidV4(),
         walletAddress: response.data.address,
         transactionType: TransactionType.DELETE_JOB,
         refTable: DbTables.ACURAST_JOB,

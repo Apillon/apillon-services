@@ -33,6 +33,7 @@ import {
   DeploymentEnvironment,
   DeploymentStatus,
   StorageErrorCode,
+  WebsiteDomainStatus,
 } from '../../config/types';
 import {
   StorageCodeException,
@@ -46,6 +47,7 @@ import { File } from '../storage/models/file.model';
 import { StorageService } from '../storage/storage.service';
 import { Deployment } from './models/deployment.model';
 import { Website } from './models/website.model';
+import { checkDomainDns } from '../../lib/domains';
 
 export class HostingService {
   //#region web page CRUD
@@ -210,6 +212,33 @@ export class HostingService {
   }
 
   /**
+   * Remove a website's domain
+   * @param {{ website_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Website>}
+   */
+  static async removeWebsiteDomain(
+    event: { website_uuid: string },
+    context: ServiceContext,
+  ): Promise<Website> {
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+    website.canModify(context);
+
+    website.domain = null;
+    website.domainChangeDate = new Date();
+
+    await website.update();
+
+    return website.serialize(SerializeFor.PROFILE) as Website;
+  }
+
+  /**
    * Set a website's status to archived
    * @param {{ website_uuid: string }} event
    * @param {ServiceContext} context
@@ -269,6 +298,39 @@ export class HostingService {
     });
 
     return { maxWebsitesQuotaReached: numOfWebsites >= maxWebsitesQuota.value };
+  }
+
+  /**
+   * Check if the domain is pointing to Apillon IP and updates website domainStatus property.
+   * @param event
+   * @param context
+   * @returns Serialized website
+   */
+  static async checkWebsiteDomainDns(
+    event: { website_uuid: string },
+    context: ServiceContext,
+  ) {
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+    website.canAccess(context);
+
+    if (website.domain) {
+      const lookupRes = await checkDomainDns(website.domain);
+
+      website.domainLastCheckDate = new Date();
+      website.domainStatus = lookupRes
+        ? WebsiteDomainStatus.OK
+        : WebsiteDomainStatus.INVALID;
+
+      await website.update();
+    }
+
+    return website.serializeByContext(context);
   }
 
   //#endregion

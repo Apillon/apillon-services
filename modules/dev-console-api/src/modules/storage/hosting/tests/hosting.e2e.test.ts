@@ -3,6 +3,7 @@ import { DefaultUserRole, JwtTokenType, generateJwtToken } from '@apillon/lib';
 import {
   DeploymentStatus,
   StorageErrorCode,
+  WebsiteDomainStatus,
 } from '@apillon/storage/src/config/types';
 import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
 import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
@@ -203,6 +204,52 @@ describe('Hosting tests', () => {
         response.body.data.website_uuid,
       );
       expect(wp.domain).toBe('https://tests-2.si');
+    });
+
+    test('User should be able to check domain dns', async () => {
+      const response = await request(stage.http)
+        .post(
+          `/storage/hosting/websites/${testWebsite.website_uuid}/check-domain`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+
+      let tmpWebsite = await new Website(
+        {},
+        stage.context.storage,
+      ).populateById(response.body.data.website_uuid);
+      expect(tmpWebsite.domainLastCheckDate).toBeTruthy();
+      expect(tmpWebsite.domainStatus).toBe(WebsiteDomainStatus.INVALID);
+
+      tmpWebsite.domain = 'nino.ninja';
+      await tmpWebsite.update();
+
+      const response2 = await request(stage.http)
+        .post(
+          `/storage/hosting/websites/${testWebsite.website_uuid}/check-domain`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response2.status).toBe(200);
+
+      tmpWebsite = await new Website({}, stage.context.storage).populateById(
+        response2.body.data.website_uuid,
+      );
+      expect(tmpWebsite.domainStatus).toBe(WebsiteDomainStatus.OK);
+    });
+
+    test('User should be able to remove website domain', async () => {
+      // Remove the domain
+      const response = await request(stage.http)
+        .delete(`/storage/hosting/websites/${testWebsite.website_uuid}/domain`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+
+      // Verify the domain has been removed
+      const tmpWebsite = await new Website(
+        {},
+        stage.context.storage,
+      ).populateById(testWebsite.website_uuid);
+      expect(tmpWebsite.domain).toBeNull();
     });
   });
 

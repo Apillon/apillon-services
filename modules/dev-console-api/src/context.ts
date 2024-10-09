@@ -5,6 +5,7 @@ import {
   runCachedFunction,
   CacheKeyPrefix,
   decodeJwtToken,
+  generateCacheKey,
 } from '@apillon/lib';
 import { User } from './modules/user/models/user.model';
 
@@ -26,9 +27,14 @@ export class DevConsoleApiContext extends Context {
       return;
     }
     const { user_uuid } = decodeJwtToken(token);
-
     const user = await runCachedFunction(
-      `${CacheKeyPrefix.AUTH_USER_DATA}:${user_uuid}`,
+      generateCacheKey({
+        prefix: `${CacheKeyPrefix.AUTH_USER_DATA}:${user_uuid}`,
+        path: '',
+        user_uuid: token,
+        query: {},
+        params: {},
+      }),
       async () => {
         const userData = await new Ams(this).getAuthUser({ token });
 

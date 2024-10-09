@@ -29,6 +29,7 @@ import { SubstrateContractTransactionWorker } from './substrate-contract-transac
 import { OasisContractEventsWorker } from './oasis-contract-events-worker';
 import { ClaimContractEventsWorker } from './claim-contract-events-worker';
 import { AcurastJobTransactionWorker } from './accurast-job-transaction-worker';
+import { UniqueJobTransactionWorker } from './unique-substrate-transaction-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -47,6 +48,9 @@ export enum WorkerName {
   TRANSMIT_ACURAST_TRANSACTIONS = 'TransmitAcurastTransactions',
   TRANSMIT_ETHEREUM_TRANSACTIONS = 'TransmitEthereumTransactions',
   TRANSMIT_SEPOLIA_TRANSACTIONS = 'TransmitSepoliaTransactions',
+  TRANSMIT_UNIQUE_TRANSACTIONS = 'TransmitUniqueTransactions',
+  TRANSMIT_CELO_TRANSACTIONS = 'TransmitCeloTransactions',
+  TRANSMIT_ALFAJORES_TRANSACTIONS = 'TransmitAlfajoresTransactions',
   VERIFY_CRUST_TRANSACTIONS = 'VerifyCrustTransactions',
   VERIFY_KILT_TRANSACTIONS = 'VerifyKiltTransactions',
   VERIFY_PHALA_TRANSACTIONS = 'VerifyPhalaTransactions',
@@ -59,6 +63,9 @@ export enum WorkerName {
   VERIFY_ETHEREUM_TRANSACTIONS = 'VerifyEthereumTransactions',
   VERIFY_SEPOLIA_TRANSACTIONS = 'VerifySepoliaTransactions',
   VERIFY_ACURAST_TRANSACTIONS = 'VerifyAcurastTransactions',
+  VERIFY_UNIQUE_TRANSACTIONS = 'VerifyUniqueTransactions',
+  VERIFY_CELO_TRANSACTIONS = 'VerifyCeloTransactions',
+  VERIFY_ALFAJORES_TRANSACTIONS = 'VerifyAlfajoresTransactions',
   TRANSACTION_WEBHOOKS = 'TransactionWebhooks',
   TRANSACTION_LOG = 'TransactionLog',
   CHECK_PENDING_TRANSACTIONS = 'CheckPendingTransactions',
@@ -158,6 +165,8 @@ export async function handleLambdaEvent(
     case WorkerName.TRANSMIT_MOONBEAM_TRANSACTIONS:
     case WorkerName.TRANSMIT_MOONBASE_TRANSACTIONS:
     case WorkerName.TRANSMIT_ASTAR_TRANSACTIONS:
+    case WorkerName.TRANSMIT_CELO_TRANSACTIONS:
+    case WorkerName.TRANSMIT_ALFAJORES_TRANSACTIONS:
       await new TransmitEvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
@@ -169,6 +178,7 @@ export async function handleLambdaEvent(
     case WorkerName.TRANSMIT_XSOCIAL_TRANSACTION:
     case WorkerName.TRANSMIT_ASTAR_SUBSTRATE_TRANSACTIONS:
     case WorkerName.TRANSMIT_ACURAST_TRANSACTIONS:
+    case WorkerName.TRANSMIT_UNIQUE_TRANSACTIONS:
       await new TransmitSubstrateTransactionWorker(
         workerDefinition,
         context,
@@ -198,11 +208,16 @@ export async function handleLambdaEvent(
     case WorkerName.VERIFY_ACURAST_TRANSACTIONS:
       await new AcurastJobTransactionWorker(workerDefinition, context).run();
       break;
+    case WorkerName.VERIFY_UNIQUE_TRANSACTIONS:
+      await new UniqueJobTransactionWorker(workerDefinition, context).run();
+      break;
     // --- EVM ---
     case WorkerName.VERIFY_ETHEREUM_TRANSACTIONS:
     case WorkerName.VERIFY_SEPOLIA_TRANSACTIONS:
     case WorkerName.VERIFY_MOONBASE_TRANSACTIONS:
     case WorkerName.VERIFY_ASTAR_TRANSACTIONS:
+    case WorkerName.VERIFY_CELO_TRANSACTIONS:
+    case WorkerName.VERIFY_ALFAJORES_TRANSACTIONS:
       await new EvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
@@ -301,6 +316,7 @@ export async function handleSqsMessages(
         case WorkerName.TRANSMIT_PHALA_TRANSACTIONS:
         case WorkerName.TRANSMIT_ASTAR_SUBSTRATE_TRANSACTIONS:
         case WorkerName.TRANSMIT_ACURAST_TRANSACTIONS:
+        case WorkerName.TRANSMIT_UNIQUE_TRANSACTIONS:
           await new TransmitSubstrateTransactionWorker(
             workerDefinition,
             context,
@@ -354,6 +370,9 @@ export async function handleSqsMessages(
             workerDefinition,
             context,
           ).run();
+          break;
+        case WorkerName.VERIFY_UNIQUE_TRANSACTIONS:
+          await new UniqueJobTransactionWorker(workerDefinition, context).run();
           break;
         case WorkerName.TRANSACTION_WEBHOOKS:
           await new TransactionWebhookWorker(

@@ -12,6 +12,8 @@ export class EvmBlockchainIndexer {
     [EvmChain.ASTAR, env.BLOCKCHAIN_ASTAR_GRAPHQL_SERVER],
     [EvmChain.ETHEREUM, env.BLOCKCHAIN_ETHEREUM_GRAPHQL_SERVER],
     [EvmChain.SEPOLIA, env.BLOCKCHAIN_SEPOLIA_GRAPHQL_SERVER],
+    [EvmChain.ALFAJORES, env.BLOCKCHAIN_CELO_ALFAJORES_GRAPHQL_SERVER],
+    [EvmChain.CELO, env.BLOCKCHAIN_CELO_GRAPHQL_SERVER],
   ]);
 
   constructor(chain: EvmChain) {

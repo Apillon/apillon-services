@@ -71,6 +71,10 @@ export async function processEvent(event, context: Context): Promise<any> {
       HostingService.maxWebsitesQuotaReached,
     [StorageEventType.REQUEST_S3_SIGNED_URLS_FOR_WEBSITE_UPLOAD]:
       HostingService.generateMultipleS3UrlsForUpload,
+    [StorageEventType.WEBSITE_CHECK_DOMAIN_DNS]:
+      HostingService.checkWebsiteDomainDns,
+    [StorageEventType.WEBSITE_REMOVE_DOMAIN]:
+      HostingService.removeWebsiteDomain,
 
     [StorageEventType.DEPLOYMENT_GET]: HostingService.getDeployment,
     [StorageEventType.DEPLOYMENT_LIST]: HostingService.listDeployments,
