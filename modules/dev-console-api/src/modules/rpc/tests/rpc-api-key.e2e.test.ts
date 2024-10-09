@@ -8,6 +8,7 @@ import {
 import * as request from 'supertest';
 import { Project } from '../../project/models/project.model';
 import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
+import { setupTest } from '../../../../test/helpers/setup';
 
 describe('RPC ApiKey tests', () => {
   let stage: Stage;
@@ -17,6 +18,7 @@ describe('RPC ApiKey tests', () => {
   let testProject: Project;
   let testProject2: Project;
   beforeAll(async () => {
+    stage = await setupTest();
     testUser = await createTestUser(
       stage.context.devConsole,
       stage.context.access,

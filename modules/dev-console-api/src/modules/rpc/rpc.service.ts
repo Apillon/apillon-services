@@ -70,7 +70,9 @@ export class RpcService {
   async listRpcUrlsForApiKey(
     context: DevConsoleApiContext,
     query: ListRpcUrlsForApiKeyQueryFilter,
+    apiKeyId: number,
   ) {
+    query.apiKeyId = apiKeyId;
     return (
       await new InfrastructureMicroservice(context).listRpcUrlsForApiKey(query)
     ).data;

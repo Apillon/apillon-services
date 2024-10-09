@@ -4,8 +4,10 @@ import {
   CreateRpcUrlDto,
   DefaultPermission,
   DefaultUserRole,
+  ListRpcUrlsForApiKeyQueryFilter,
   RoleGroup,
   UpdateRpcApiKeyDto,
+  ValidateFor,
 } from '@apillon/lib';
 import { Ctx, Validation, Permissions } from '@apillon/modules-lib';
 import {
@@ -66,7 +68,11 @@ export class RpcController {
 
   @Get('api-key')
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(ProjectAccessGuard, AuthGuard)
+  @Validation({
+    dto: BaseProjectQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ProjectAccessGuard, AuthGuard, ValidationGuard)
   async listApiKeysForProject(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseProjectQueryFilter,
@@ -82,6 +88,21 @@ export class RpcController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return await this.rpcService.getApiKeyUsage(context, id);
+  }
+
+  @Get('api-key/:id/urls')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({
+    dto: ListRpcUrlsForApiKeyQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getUrlsForApiKey(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: ListRpcUrlsForApiKeyQueryFilter,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.rpcService.listRpcUrlsForApiKey(context, query, id);
   }
 
   @Post('url')
