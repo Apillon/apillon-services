@@ -2,9 +2,12 @@ import {
   BaseProjectQueryFilter,
   CreateRpcApiKeyDto,
   CreateRpcUrlDto,
+  DefaultPermission,
   DefaultUserRole,
+  ListRpcUrlsForApiKeyQueryFilter,
   RoleGroup,
   UpdateRpcApiKeyDto,
+  ValidateFor,
 } from '@apillon/lib';
 import { Ctx, Validation, Permissions } from '@apillon/modules-lib';
 import {
@@ -24,13 +27,15 @@ import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ProjectAccessGuard } from '../../guards/project-access.guard';
+
 @Controller('rpc')
+@Permissions({ permission: DefaultPermission.RPC })
 export class RpcController {
   constructor(private readonly rpcService: RpcService) {}
 
   @Post('api-key')
   @Validation({ dto: CreateRpcApiKeyDto })
-  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Permissions({ role: RoleGroup.ProjectOwnerAccess })
   @UseGuards(ValidationGuard, ProjectAccessGuard, AuthGuard)
   async createApiKey(
     @Ctx() context: DevConsoleApiContext,
@@ -41,7 +46,7 @@ export class RpcController {
 
   @Put('api-key/:id')
   @Validation({ dto: UpdateRpcApiKeyDto })
-  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Permissions({ role: RoleGroup.ProjectOwnerAccess })
   @UseGuards(ValidationGuard, AuthGuard)
   async updateApiKey(
     @Ctx() context: DevConsoleApiContext,
@@ -52,10 +57,7 @@ export class RpcController {
   }
 
   @Put('api-key/:id/revoke')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
+  @Permissions({ role: RoleGroup.ProjectOwnerAccess })
   @UseGuards(AuthGuard)
   async revokeApiKey(
     @Ctx() context: DevConsoleApiContext,
@@ -66,12 +68,26 @@ export class RpcController {
 
   @Get('api-key')
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(ProjectAccessGuard, AuthGuard)
+  @Validation({
+    dto: BaseProjectQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ProjectAccessGuard, AuthGuard, ValidationGuard)
   async listApiKeysForProject(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseProjectQueryFilter,
   ) {
     return await this.rpcService.listRpcApiKeys(context, query);
+  }
+
+  @Get('api-key/:id')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async getApiKey(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.rpcService.getApiKey(context, id);
   }
 
   @Get('api-key/:id/usage')
@@ -82,6 +98,28 @@ export class RpcController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return await this.rpcService.getApiKeyUsage(context, id);
+  }
+
+  @Get('api-key/:id/urls')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({
+    dto: ListRpcUrlsForApiKeyQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getUrlsForApiKey(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: ListRpcUrlsForApiKeyQueryFilter,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.rpcService.listRpcUrlsForApiKey(context, query, id);
+  }
+
+  @Get('endpoints')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async getEndpoints(@Ctx() context: DevConsoleApiContext) {
+    return await this.rpcService.listEndpoints(context);
   }
 
   @Post('url')

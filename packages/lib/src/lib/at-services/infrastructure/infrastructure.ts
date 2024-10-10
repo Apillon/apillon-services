@@ -8,6 +8,7 @@ import { CreateRpcUrlDto } from './dtos/create-rpc-url.dto';
 import { ListRpcUrlsForApiKeyQueryFilter } from './dtos/list-rpc-urls-for-api-key-query-filter.dto';
 import { UpdateRpcApiKeyDto } from './dtos/update-rpc-api-key.dto';
 import { UpdateRpcUrlDto } from './dtos/update-rpc-url.dto';
+import { DwellirSubscription } from './types';
 
 export class InfrastructureMicroservice extends BaseService {
   lambdaFunctionName =
@@ -29,6 +30,27 @@ export class InfrastructureMicroservice extends BaseService {
     return await this.callService({
       eventName: InfrastructureEventType.GET_RPC_API_KEY_USAGE,
       id,
+    });
+  }
+
+  public async getRpcApiKey(id: number) {
+    return await this.callService({
+      eventName: InfrastructureEventType.GET_RPC_API_KEY,
+      id,
+    });
+  }
+
+  public async changeDwellirSubscription(subscription: DwellirSubscription) {
+    return await this.callService({
+      evenName: InfrastructureEventType.CHANGE_DWELLIR_SUBSCRIPTION,
+      subscription,
+    });
+  }
+
+  public async downgradeDwellirSubscriptionsByUserUuids(userUuids: string[]) {
+    return await this.callService({
+      eventName: InfrastructureEventType.DOWNGRADE_DWELLIR_SUBSCRIPTIONS,
+      userUuids,
     });
   }
 
@@ -86,6 +108,12 @@ export class InfrastructureMicroservice extends BaseService {
     return await this.callService({
       eventName: InfrastructureEventType.LIST_RPC_URLS,
       query,
+    });
+  }
+
+  public async listEndpoints() {
+    return await this.callService({
+      eventName: InfrastructureEventType.LIST_ENDPOINTS,
     });
   }
 }

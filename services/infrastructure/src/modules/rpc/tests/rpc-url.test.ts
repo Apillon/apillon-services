@@ -228,4 +228,12 @@ describe('RPC Url tests', () => {
       expect(rpcUrl.wssUrl).toBe(urlDto.wssUrl);
     });
   });
+
+  describe('getEndpoints', () => {
+    test('User can get available endpoints', async () => {
+      const endpoints = await RpcUrlService.getEndpoints();
+      expect(endpoints).toBeDefined();
+      expect(endpoints.length).toBeGreaterThan(0);
+    });
+  });
 });

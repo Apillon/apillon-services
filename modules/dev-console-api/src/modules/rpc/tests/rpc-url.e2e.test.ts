@@ -8,7 +8,7 @@ import {
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
 import * as request from 'supertest';
-import { SqlModelStatus } from '@apillon/lib';
+import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
 describe('RPC URL Tests', () => {
   let stage: Stage;
   let testUser: TestUser;
@@ -20,11 +20,14 @@ describe('RPC URL Tests', () => {
     testUser = await createTestUser(
       stage.context.devConsole,
       stage.context.access,
+      DefaultUserRole.PROJECT_OWNER,
     );
     testUser2 = await createTestUser(
       stage.context.devConsole,
       stage.context.access,
+      DefaultUserRole.PROJECT_OWNER,
     );
+
     testProject = await createTestProject(testUser, stage);
     await stage.db.infrastructure.paramExecute(
       'INSERT INTO rpc_api_key (name, description, project_uuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
@@ -132,6 +135,7 @@ describe('RPC URL Tests', () => {
       expect(response.status).toBe(404);
     });
   });
+
   describe('Delete RPC URL', () => {
     let createdUrlId: number;
     beforeEach(async () => {
@@ -162,7 +166,12 @@ describe('RPC URL Tests', () => {
       expect(response.status).toBe(200);
       const deletedUrl = response.body.data;
       expect(deletedUrl.id).toBe(createdUrlId);
-      expect(deletedUrl.status).toBe(SqlModelStatus.DELETED);
+      const url = (
+        await stage.db.infrastructure.paramExecute(
+          `SELECT * FROM rpc_url WHERE id = ${createdUrlId}`,
+        )
+      )[0];
+      expect(url.status).toBe(SqlModelStatus.DELETED);
     });
     it('User should not be able to delete RPC URL for other projects', async () => {
       const response = await request(stage.http)
@@ -175,6 +184,70 @@ describe('RPC URL Tests', () => {
         .delete(`/rpc/url/999999`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(404);
+    });
+  });
+
+  describe('List RPC URLs for API Key', () => {
+    let createdUrlId: number;
+    beforeEach(async () => {
+      await stage.db.infrastructure.paramExecute(
+        'INSERT INTO rpc_url (name, chainName, network, apiKeyId,httpsUrl, wssUrl) VALUES (@name, @chain, @network, @apiKeyId, @httpsUrl, @wssUrl)',
+        {
+          name: 'Test URL',
+          chain: 'CHAIN',
+          network: 'Network',
+          apiKeyId: testApiKeyId,
+          httpsUrl: 'https://example.com',
+          wssUrl: 'wss://example.com',
+        },
+      );
+      createdUrlId = (
+        await stage.db.infrastructure.paramExecute(
+          `SELECT LAST_INSERT_ID() as id`,
+        )
+      )[0].id;
+    });
+
+    afterEach(async () => {
+      await stage.db.infrastructure.paramExecute('DELETE FROM rpc_url');
+    });
+
+    it('User should be able to list RPC URLs for his projects', async () => {
+      const response = await request(stage.http)
+        .get(`/rpc/api-key/${testApiKeyId}/urls`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      const urls = response.body.data.items;
+      expect(urls.length).toBe(1);
+      expect(urls[0].id).toBe(createdUrlId);
+    });
+
+    it('User should not be able to list RPC URLs for other projects', async () => {
+      const response = await request(stage.http)
+        .get(`/rpc/api-key/${testApiKeyId}/urls`)
+        .set('Authorization', `Bearer ${testUser2.token}`);
+      expect(response.status).toBe(403);
+    });
+
+    it('User should not be able to list RPC URLs for non-existing API Key', async () => {
+      const response = await request(stage.http)
+        .get(`/rpc/api-key/9999/urls`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(404);
+    });
+  });
+
+  describe('List endpoints', () => {
+    test('User can list endpoints', async () => {
+      const response = await request(stage.http)
+        .get('/rpc/endpoints')
+        .set('Authorization', `Bearer ${testUser.token}`);
+
+      expect(response.status).toBe(200);
+      const endpoints = response.body.data;
+      expect(endpoints).toBeDefined();
+      expect(endpoints).toBeInstanceOf(Array);
+      expect(endpoints.length).toBeGreaterThan(0);
     });
   });
 });
