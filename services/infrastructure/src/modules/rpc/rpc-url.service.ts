@@ -3,10 +3,7 @@ import { RpcUrl } from './models/rpc-url.model';
 import {
   CreateRpcUrlDto,
   ListRpcUrlsForApiKeyQueryFilter,
-  ModelValidationException,
   SqlModelStatus,
-  UpdateRpcUrlDto,
-  ValidatorErrorCode,
 } from '@apillon/lib';
 import { InfrastructureCodeException } from '../../lib/exceptions';
 import { InfrastructureErrorCode } from '../../config/types';
@@ -97,32 +94,6 @@ export class RpcUrlService {
     rpcUrl.httpsUrl = `${node.https}/${rpcApiKey.uuid}`;
     rpcUrl.wssUrl = `${node.wss}/${rpcApiKey.uuid}`;
     return (await rpcUrl.insert()).serializeByContext();
-  }
-
-  static async updateRpcUrl(
-    {
-      id,
-      data,
-    }: {
-      id: number;
-      data: UpdateRpcUrlDto;
-    },
-    context: ServiceContext,
-  ) {
-    const rpcUrl = await new RpcUrl({}, context).populateByIdWithProject(id);
-    if (!rpcUrl.exists()) {
-      throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.RPC_URL_NOT_FOUND,
-        status: 404,
-      });
-    }
-
-    rpcUrl.canAccess(context);
-
-    rpcUrl.populate(data);
-    await rpcUrl.validateOrThrow(ModelValidationException, ValidatorErrorCode);
-    await rpcUrl.update();
-    return rpcUrl.serializeByContext();
   }
 
   static async deleteRpcUrl({ id }: { id: number }, context: ServiceContext) {

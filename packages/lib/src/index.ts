@@ -140,9 +140,7 @@ export * from './lib/at-services/infrastructure/dtos/create-rpc-api-key.dto';
 export * from './lib/at-services/infrastructure/dtos/create-rpc-url.dto';
 export * from './lib/at-services/infrastructure/dtos/list-rpc-urls-for-api-key-query-filter.dto';
 export * from './lib/at-services/infrastructure/dtos/update-rpc-api-key.dto';
-export * from './lib/at-services/infrastructure/dtos/update-rpc-url.dto';
 export * from './lib/at-services/infrastructure/dtos/rpc-api-key-base.dto';
-export * from './lib/at-services/infrastructure/dtos/rpc-url-base.dto';
 
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';

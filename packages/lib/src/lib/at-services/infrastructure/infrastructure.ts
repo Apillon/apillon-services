@@ -7,7 +7,6 @@ import { CreateRpcApiKeyDto } from './dtos/create-rpc-api-key.dto';
 import { CreateRpcUrlDto } from './dtos/create-rpc-url.dto';
 import { ListRpcUrlsForApiKeyQueryFilter } from './dtos/list-rpc-urls-for-api-key-query-filter.dto';
 import { UpdateRpcApiKeyDto } from './dtos/update-rpc-api-key.dto';
-import { UpdateRpcUrlDto } from './dtos/update-rpc-url.dto';
 import { DwellirSubscription } from './types';
 
 export class InfrastructureMicroservice extends BaseService {
@@ -85,14 +84,6 @@ export class InfrastructureMicroservice extends BaseService {
   public async createRpcUrl(data: CreateRpcUrlDto) {
     return await this.callService({
       eventName: InfrastructureEventType.CREATE_RPC_URL,
-      data,
-    });
-  }
-
-  public async updateRpcUrl(id: number, data: UpdateRpcUrlDto) {
-    return await this.callService({
-      eventName: InfrastructureEventType.UPDATE_RPC_URL,
-      id,
       data,
     });
   }

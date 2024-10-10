@@ -133,18 +133,6 @@ export class RpcController {
     return await this.rpcService.createRpcUrl(context, body);
   }
 
-  @Put('url/:id')
-  @Validation({ dto: UpdateRpcApiKeyDto })
-  @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(ValidationGuard, AuthGuard)
-  async updateUrl(
-    @Ctx() context: DevConsoleApiContext,
-    @Body() body: UpdateRpcApiKeyDto,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return await this.rpcService.updateRpcUrl(context, id, body);
-  }
-
   @Delete('url/:id')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },

@@ -49,7 +49,6 @@ describe('RPC URL Tests', () => {
   });
   describe('Create RPC URL', () => {
     const rpcUrlToCreate = {
-      name: 'Test URL',
       chainName: 'Polkadot',
       network: 'Mainnet',
       apiKeyId: 0,
@@ -68,7 +67,6 @@ describe('RPC URL Tests', () => {
       expect(response.status).toBe(201);
       const createdUrl = response.body.data;
       expect(createdUrl.id).toBeDefined();
-      expect(createdUrl.name).toBe(rpcUrlToCreate.name);
       expect(createdUrl.chainName).toBe(rpcUrlToCreate.chainName);
       expect(createdUrl.network).toBe(rpcUrlToCreate.network);
       expect(createdUrl.apiKeyId).toBe(testApiKeyId);
@@ -84,65 +82,12 @@ describe('RPC URL Tests', () => {
     });
   });
 
-  describe('Update RPC URL', () => {
-    const rpcUrlToUpdate = {
-      name: 'Updated name',
-    };
-    let createdUrlId: number;
-    beforeAll(async () => {
-      await stage.db.infrastructure.paramExecute(
-        'INSERT INTO rpc_url (name, chainName, network, apiKeyId, httpsUrl, wssUrl) VALUES (@name, @chain, @network, @apiKeyid, @httpsUrl, @wssUrl)',
-        {
-          name: 'Test URL',
-          chain: 'CHAIN',
-          network: 'Network',
-          apiKeyId: testApiKeyId,
-          httpsUrl: 'https://example.com',
-          wssUrl: 'wss://example.com',
-        },
-      );
-      createdUrlId = (
-        await stage.db.infrastructure.paramExecute(
-          `SELECT LAST_INSERT_ID() as id`,
-        )
-      )[0].id;
-    });
-    afterAll(async () => {
-      await stage.db.infrastructure.paramExecute('DELETE FROM rpc_url');
-    });
-    it('User should be able to update RPC URL for his projects', async () => {
-      const response = await request(stage.http)
-        .put(`/rpc/url/${createdUrlId}`)
-        .send(rpcUrlToUpdate)
-        .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(200);
-      const updatedUrl = response.body.data;
-      expect(updatedUrl.id).toBe(createdUrlId);
-      expect(updatedUrl.name).toBe(rpcUrlToUpdate.name);
-    });
-    it('User should not be able to update RPC URL for other projects', async () => {
-      const response = await request(stage.http)
-        .put(`/rpc/url/${createdUrlId}`)
-        .send(rpcUrlToUpdate)
-        .set('Authorization', `Bearer ${testUser2.token}`);
-      expect(response.status).toBe(403);
-    });
-    it('User should not be able to update non-existing RPC URL', async () => {
-      const response = await request(stage.http)
-        .put(`/rpc/url/999999`)
-        .send(rpcUrlToUpdate)
-        .set('Authorization', `Bearer ${testUser.token}`);
-      expect(response.status).toBe(404);
-    });
-  });
-
   describe('Delete RPC URL', () => {
     let createdUrlId: number;
     beforeEach(async () => {
       await stage.db.infrastructure.paramExecute(
-        'INSERT INTO rpc_url (name, chainName, network, apiKeyId,httpsUrl, wssUrl) VALUES (@name, @chain, @network, @apiKeyId, @httpsUrl, @wssUrl)',
+        'INSERT INTO rpc_url (chainName, network, apiKeyId,httpsUrl, wssUrl) VALUES (@chain, @network, @apiKeyId, @httpsUrl, @wssUrl)',
         {
-          name: 'Test URL',
           chain: 'CHAIN',
           network: 'Network',
           apiKeyId: testApiKeyId,
@@ -191,9 +136,8 @@ describe('RPC URL Tests', () => {
     let createdUrlId: number;
     beforeEach(async () => {
       await stage.db.infrastructure.paramExecute(
-        'INSERT INTO rpc_url (name, chainName, network, apiKeyId,httpsUrl, wssUrl) VALUES (@name, @chain, @network, @apiKeyId, @httpsUrl, @wssUrl)',
+        'INSERT INTO rpc_url (chainName, network, apiKeyId,httpsUrl, wssUrl) VALUES (@chain, @network, @apiKeyId, @httpsUrl, @wssUrl)',
         {
-          name: 'Test URL',
           chain: 'CHAIN',
           network: 'Network',
           apiKeyId: testApiKeyId,
