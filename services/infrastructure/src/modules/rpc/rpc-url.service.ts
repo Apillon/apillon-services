@@ -14,6 +14,29 @@ import { RpcApiKey } from './models/rpc-api-key.model';
 import { Dwellir } from '../../lib/dwellir/dwellir';
 
 export class RpcUrlService {
+  static async getEndpoints() {
+    const endpoints = await Dwellir.getEndpoints();
+    const spreadedEndpoints = endpoints.reduce(
+      (acc, endpoint) => {
+        const { networks, ...props } = endpoint;
+
+        const flattenedNetworks = networks.map((network) => {
+          const { name, id, ...networkProps } = network;
+          return {
+            ...props,
+            ...networkProps,
+            networkName: name,
+            networkId: id,
+          };
+        });
+        return acc.concat(flattenedNetworks);
+      },
+      [] as {}[],
+    );
+
+    return spreadedEndpoints;
+  }
+
   static async createRpcUrl(
     { data }: { data: CreateRpcUrlDto },
     context: ServiceContext,

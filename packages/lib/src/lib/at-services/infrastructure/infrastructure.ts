@@ -110,4 +110,10 @@ export class InfrastructureMicroservice extends BaseService {
       query,
     });
   }
+
+  public async listEndpoints() {
+    return await this.callService({
+      eventName: InfrastructureEventType.LIST_ENDPOINTS,
+    });
+  }
 }

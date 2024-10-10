@@ -82,4 +82,8 @@ export class RpcService {
       await new InfrastructureMicroservice(context).listRpcUrlsForApiKey(query)
     ).data;
   }
+
+  async listEndpoints(context: DevConsoleApiContext) {
+    return (await new InfrastructureMicroservice(context).listEndpoints()).data;
+  }
 }

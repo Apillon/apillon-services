@@ -115,6 +115,13 @@ export class RpcController {
     return await this.rpcService.listRpcUrlsForApiKey(context, query, id);
   }
 
+  @Get('endpoints')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async getEndpoints(@Ctx() context: DevConsoleApiContext) {
+    return await this.rpcService.listEndpoints(context);
+  }
+
   @Post('url')
   @Validation({ dto: CreateRpcUrlDto })
   @Permissions({ role: RoleGroup.ProjectAccess })

@@ -236,4 +236,18 @@ describe('RPC URL Tests', () => {
       expect(response.status).toBe(404);
     });
   });
+
+  describe('List endpoints', () => {
+    test('User can list endpoints', async () => {
+      const response = await request(stage.http)
+        .get('/rpc/endpoints')
+        .set('Authorization', `Bearer ${testUser.token}`);
+
+      expect(response.status).toBe(200);
+      const endpoints = response.body.data;
+      expect(endpoints).toBeDefined();
+      expect(endpoints).toBeInstanceOf(Array);
+      expect(endpoints.length).toBeGreaterThan(0);
+    });
+  });
 });

@@ -373,6 +373,7 @@ export enum InfrastructureEventType {
   UPDATE_RPC_URL = 'update-rpc-url',
   DELETE_RPC_URL = 'delete-rpc-url',
   LIST_RPC_URLS = 'list-rpc-urls',
+  LIST_ENDPOINTS = 'list-endpoints',
 }
 
 export enum ServiceName {
