@@ -370,7 +370,6 @@ export enum InfrastructureEventType {
   CHANGE_DWELLIR_SUBSCRIPTION = 'change-dwellir-subscription',
   DOWNGRADE_DWELLIR_SUBSCRIPTIONS = 'downgrade-dwellir-subscriptions',
   CREATE_RPC_URL = 'create-rpc-url',
-  UPDATE_RPC_URL = 'update-rpc-url',
   DELETE_RPC_URL = 'delete-rpc-url',
   LIST_RPC_URLS = 'list-rpc-urls',
   LIST_ENDPOINTS = 'list-endpoints',
@@ -800,7 +799,6 @@ export enum ValidatorErrorCode {
   //#region Infrastructure
   RPC_API_KEY_NAME_NOT_PRESENT = 422001101,
   RPC_API_KEY_PROJECT_ID_NOT_PRESENT = 422001102,
-  RPC_URL_NAME_NOT_PRESENT = 422001103,
   RPC_URL_API_KEY_ID_NOT_PRESENT = 422001104,
   RPC_URL_NETWORK_NOT_PRESENT = 422001105,
   RPC_URL_CHAIN_NAME_NOT_PRESENT = 422001106,

@@ -3,7 +3,6 @@ import {
   DefaultUserRole,
   ListRpcUrlsForApiKeyQueryFilter,
   SqlModelStatus,
-  UpdateRpcApiKeyDto,
 } from '@apillon/lib';
 import { Stage, releaseStage, setupTest } from '../../../../test/setup';
 import { DbTables } from '../../../config/types';
@@ -44,7 +43,6 @@ describe('RPC Url tests', () => {
   describe('createRpcUrl', () => {
     test('User can create a new rpc url', async () => {
       const dto = new CreateRpcUrlDto({
-        name: 'Test url',
         chainName: 'Subsocial',
         network: 'Mainnet',
         apiKeyId,
@@ -55,7 +53,6 @@ describe('RPC Url tests', () => {
       );
       expect(createdRpcUrlResponse).toBeDefined();
       expect(createdRpcUrlResponse.id).toBeDefined();
-      expect(createdRpcUrlResponse.name).toBe(dto.name);
       expect(createdRpcUrlResponse.chainName).toBe(dto.chainName);
       expect(createdRpcUrlResponse.network).toBe(dto.network);
       expect(createdRpcUrlResponse.httpsUrl).toBeDefined();
@@ -65,8 +62,8 @@ describe('RPC Url tests', () => {
     test('User cannot create rpc url on the same network and apiKey', async () => {
       const network = 'NETWORK';
       await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_URL} (name, apiKeyId, chainName,network,httpsUrl, wssUrl)
-                    VALUES ('RPC ENV', ${apiKeyId}, 'Chain',@network, '','')`,
+        `INSERT INTO ${DbTables.RPC_URL} (apiKeyId, chainName,network,httpsUrl, wssUrl)
+                    VALUES (${apiKeyId}, 'Chain',@network, '','')`,
         { network },
       );
       const result = await stage.db.paramExecute(
@@ -77,7 +74,6 @@ describe('RPC Url tests', () => {
         throw new Error('Rpc Url not created');
       }
       const dto = new CreateRpcUrlDto({
-        name: 'Test url',
         chainName: 'Test Chain',
         network,
         apiKeyId,
@@ -92,61 +88,17 @@ describe('RPC Url tests', () => {
       expect(createdRpcUrlResponse.id).toBe(createdRpcUrlId);
     });
   });
-  describe('updateRpUrl', () => {
-    test('User can update a Rpc url', async () => {
-      const dto = {
-        name: 'Test Env',
-        chainName: 'chain',
-        network: 'network1',
-        httpsUrl: 'https://example.com',
-        wssUrl: 'wss://example.com',
-      };
-      await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_URL} (name, apiKeyId, chainName,network,httpsUrl, wssUrl)
-                    VALUES (@name, '${apiKeyId}', @chainName,@network, @httpsUrl,@wssUrl)`,
-        dto,
-      );
-      const result = await stage.db.paramExecute(
-        `SELECT LAST_INSERT_ID() as id`,
-      );
-      const createdUrlId = result[0].id;
-      const updateDto = new UpdateRpcApiKeyDto({
-        name: 'Updated Name',
-        apiKeyId: 10,
-      });
-      const updatedRpcUrlResponse = await RpcUrlService.updateRpcUrl(
-        {
-          id: createdUrlId,
-          data: updateDto,
-        },
-        stage.context,
-      );
-      expect(updatedRpcUrlResponse).toBeDefined();
-      expect(updatedRpcUrlResponse.id).toBe(createdUrlId);
-      expect(updatedRpcUrlResponse.name).toBe(updateDto.name);
-      expect(updatedRpcUrlResponse.apiKeyId).toBe(apiKeyId);
-      const rpcUrlInDb = await stage.db.paramExecute(
-        `SELECT * FROM ${DbTables.RPC_URL} WHERE id=@id`,
-        { id: createdUrlId },
-      );
-      expect(rpcUrlInDb).toHaveLength(1);
-      const dbRpcUrl = rpcUrlInDb[0];
-      expect(dbRpcUrl.name).toBe(updateDto.name);
-      expect(dbRpcUrl.apiKeyId).toBe(apiKeyId);
-    });
-  });
   describe('deleteRpcUrl', () => {
     test('User can delete a Rpc url', async () => {
       const dto = {
-        name: 'Test Env',
         chainName: 'chain',
         network: 'network2',
         httpsUrl: 'https://example.com',
         wssUrl: 'wss://example.com',
       };
       await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_URL} (name, apiKeyId, chainName,network,httpsUrl, wssUrl)
-                        VALUES (@name, ${apiKeyId}, @chainName,@network, @httpsUrl,@wssUrl)`,
+        `INSERT INTO ${DbTables.RPC_URL} (apiKeyId, chainName,network,httpsUrl, wssUrl)
+                        VALUES (${apiKeyId}, @chainName,@network, @httpsUrl,@wssUrl)`,
         dto,
       );
       const result = await stage.db.paramExecute(
@@ -195,15 +147,14 @@ describe('RPC Url tests', () => {
           VALUES ('${dto.name}', '${dto.description}', ${dto.projectUuid}, '6e0c9d3e-edaf-46f4-a4db-228467659876', ${SqlModelStatus.ACTIVE})`,
       );
       const urlDto = {
-        name: 'Test Env',
         chainName: 'chain',
         network: 'network',
         httpsUrl: 'https://example.com',
         wssUrl: 'wss://example.com',
       };
       await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.RPC_URL} (name, apiKeyId, chainName,network,httpsUrl, wssUrl)
-                        VALUES (@name, ${testApiKeyId}, @chainName,@network, @httpsUrl,@wssUrl)`,
+        `INSERT INTO ${DbTables.RPC_URL} (apiKeyId, chainName,network,httpsUrl, wssUrl)
+                        VALUES (${testApiKeyId}, @chainName,@network, @httpsUrl,@wssUrl)`,
         urlDto,
       );
       const urlResult = await stage.db.paramExecute(
@@ -220,7 +171,6 @@ describe('RPC Url tests', () => {
       expect(rpcUrls.items).toHaveLength(1);
       const rpcUrl = rpcUrls.items[0];
       expect(rpcUrl.id).toBe(createdUrlId);
-      expect(rpcUrl.name).toBe(urlDto.name);
       expect(rpcUrl.apiKeyId).toBe(testApiKeyId);
       expect(rpcUrl.chainName).toBe(urlDto.chainName);
       expect(rpcUrl.network).toBe(urlDto.network);

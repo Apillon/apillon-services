@@ -21,7 +21,6 @@ export async function processEvent(event, context: Context): Promise<any> {
     [InfrastructureEventType.DOWNGRADE_DWELLIR_SUBSCRIPTIONS]:
       RpcApiKeyService.downgradeDwellirSubscriptionsByUserUuids,
     [InfrastructureEventType.CREATE_RPC_URL]: RpcUrlService.createRpcUrl,
-    [InfrastructureEventType.UPDATE_RPC_URL]: RpcUrlService.updateRpcUrl,
     [InfrastructureEventType.LIST_RPC_URLS]: RpcUrlService.listRpcUrls,
     [InfrastructureEventType.LIST_ENDPOINTS]: RpcUrlService.getEndpoints,
     [InfrastructureEventType.DELETE_RPC_URL]: RpcUrlService.deleteRpcUrl,

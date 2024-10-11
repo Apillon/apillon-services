@@ -1,5 +1,4 @@
 import {
-  AdvancedSQLModel,
   Context,
   ListRpcUrlsForApiKeyQueryFilter,
   PopulateFrom,
@@ -35,28 +34,6 @@ export class RpcUrl extends UuidSqlModel {
     populatable: [PopulateFrom.DB],
   })
   public id: number;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.ADMIN_SELECT_DB,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-      SerializeFor.APILLON_API,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: InfrastructureErrorCode.RPC_URL_NAME_NOT_PRESENT,
-      },
-    ],
-  })
-  name: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -208,7 +185,7 @@ export class RpcUrl extends UuidSqlModel {
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields()}`,
       qFrom: `FROM ${DbTables.RPC_URL} u
-          WHERE u.apiKeyId = ${filter.apiKeyId} AND (@search IS NULL or u.name LIKE CONCAT('%',@search,'%'))`,
+          WHERE u.apiKeyId = ${filter.apiKeyId} AND (@search IS NULL or u.chainName LIKE CONCAT('%',@search,'%'))`,
       qFilter: `
         ORDER BY ${filters.orderStr}
         LIMIT ${filters.limit} OFFSET ${filters.offset}`,
