@@ -158,4 +158,36 @@ describe('RPC ApiKey tests', () => {
       expect(rpcApiKey.uuid).toBeDefined();
     });
   });
+
+  describe('getRpcApiKey', () => {
+    test('User can get a Rpc api key', async () => {
+      const dto = {
+        name: 'Test ApiKey',
+        description: 'Test Description',
+        projectUuid,
+        uuid: '6e0c9d3e-edaf-46f4-a4db-228467659876',
+      };
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.RPC_API_KEY} (name, description, project_uuid, uuid, status)
+            VALUES ('${dto.name}', '${dto.description}', '${dto.projectUuid}', '${dto.uuid}', ${SqlModelStatus.ACTIVE})`,
+      );
+
+      const keyId = (
+        await stage.db.paramExecute(`SELECT LAST_INSERT_ID() as id`)
+      )[0].id;
+
+      const rpcApiKey = await RpcApiKeyService.getRpcApiKey(
+        {
+          id: keyId,
+        },
+        stage.context,
+      );
+
+      expect(rpcApiKey).toBeDefined();
+      expect(rpcApiKey.name).toBe(dto.name);
+      expect(rpcApiKey.description).toBe(dto.description);
+      expect(rpcApiKey.project_uuid).toBe(dto.projectUuid);
+      expect(rpcApiKey.uuid).toBeDefined();
+    });
+  });
 });

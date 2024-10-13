@@ -1,5 +1,6 @@
 import { AppEnvironment, getEnvSecrets, MySql } from '@apillon/lib';
 import {
+  QueueWorkerType,
   ServiceDefinition,
   ServiceDefinitionType,
   WorkerDefinition,
@@ -9,15 +10,11 @@ import {
 
 import { Context, env } from '@apillon/lib';
 import { Scheduler } from './scheduler';
-import { ExpiredSubscriptionsWorker } from './expired-subscriptions-worker';
-
-// get global mysql connection
-// global['mysql'] = global['mysql'] || new MySql(env);
+import { RpcUsageCheckWorker } from './rpc-usage-check-worker';
 
 export enum WorkerName {
-  SUBSCRIPTION_QUOTA_WORKER = 'ExpiredSubscriptionsWorker',
-  EXPIRED_RPC_SUBSCRIPTIONS_WORKER = 'ExpiredRpcSubscriptionsWorker',
   SCHEDULER = 'scheduler',
+  RPC_USAGE_CHECK = 'RpcUsageCheckWorker',
 }
 
 export async function handler(event: any) {
@@ -26,24 +23,24 @@ export async function handler(event: any) {
   const options = {
     host:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.CONFIG_MYSQL_HOST_TEST
-        : env.CONFIG_MYSQL_HOST,
+        ? env.INFRASTRUCTURE_MYSQL_HOST_TEST
+        : env.INFRASTRUCTURE_MYSQL_HOST,
     port:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.CONFIG_MYSQL_PORT_TEST
-        : env.CONFIG_MYSQL_PORT,
+        ? env.INFRASTRUCTURE_MYSQL_PORT_TEST
+        : env.INFRASTRUCTURE_MYSQL_PORT,
     database:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.CONFIG_MYSQL_DATABASE_TEST
-        : env.CONFIG_MYSQL_DATABASE,
+        ? env.INFRASTRUCTURE_MYSQL_DATABASE_TEST
+        : env.INFRASTRUCTURE_MYSQL_DATABASE,
     user:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.CONFIG_MYSQL_USER_TEST
-        : env.CONFIG_MYSQL_USER,
+        ? env.INFRASTRUCTURE_MYSQL_USER_TEST
+        : env.INFRASTRUCTURE_MYSQL_USER,
     password:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.CONFIG_MYSQL_PASSWORD_TEST
-        : env.CONFIG_MYSQL_PASSWORD,
+        ? env.INFRASTRUCTURE_MYSQL_PASSWORD_TEST
+        : env.INFRASTRUCTURE_MYSQL_PASSWORD,
   };
 
   const mysql = new MySql(options);
@@ -54,7 +51,7 @@ export async function handler(event: any) {
   const serviceDef = {
     type: ServiceDefinitionType.LAMBDA,
     config: { region: env.AWS_REGION },
-    params: { FunctionName: env.CONFIG_AWS_WORKER_LAMBDA_NAME },
+    params: { FunctionName: env.INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME },
   };
 
   console.info(`EVENT: ${JSON.stringify(event)}`);
@@ -100,26 +97,12 @@ export async function handleLambdaEvent(
 
   // eslint-disable-next-line sonarjs/no-small-switch
   switch (workerDefinition.workerName) {
-    case WorkerName.SUBSCRIPTION_QUOTA_WORKER:
-      const subscriptionQuotaWorker = new ExpiredSubscriptionsWorker(
-        workerDefinition,
-        context,
-      );
-      await subscriptionQuotaWorker.run();
-      break;
-    case WorkerName.EXPIRED_RPC_SUBSCRIPTIONS_WORKER:
-      const expiredRpcSubscriptionsWorker = new ExpiredSubscriptionsWorker(
-        workerDefinition,
-        context,
-      );
-      await expiredRpcSubscriptionsWorker.run();
-      break;
     case WorkerName.SCHEDULER:
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
       break;
     default:
-      console.error(
+      console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
       );
       await writeWorkerLog(
@@ -130,6 +113,10 @@ export async function handleLambdaEvent(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
       );
   }
+
+  // if ([WorkerName.SYNC_OLD_API, WorkerName.SYNC_DELETED].includes(event.workerName)) {
+  //   await context.closeMongo();
+  // }
 }
 
 /**
@@ -143,5 +130,51 @@ export async function handleSqsMessages(
   context: Context,
   serviceDef: ServiceDefinition,
 ) {
-  throw new Error('Method not implemented.');
+  console.info('handle sqs message. event.Records: ', event.Records);
+  const response = { batchItemFailures: [] };
+  for (const message of event.Records) {
+    try {
+      let parameters: any;
+      if (message?.messageAttributes?.parameters?.stringValue) {
+        parameters = JSON.parse(
+          message?.messageAttributes?.parameters?.stringValue,
+        );
+      }
+
+      let id: number;
+      if (message?.messageAttributes?.jobId?.stringValue) {
+        id = parseInt(message?.messageAttributes?.jobId?.stringValue);
+      }
+
+      const workerName = message?.messageAttributes?.workerName?.stringValue;
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const workerDefinition = new WorkerDefinition(serviceDef, workerName, {
+        id,
+        parameters,
+      });
+
+      // eslint-disable-next-line sonarjs/no-small-switch
+      switch (workerName) {
+        case WorkerName.RPC_USAGE_CHECK: {
+          await new RpcUsageCheckWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        }
+        default:
+          console.log(
+            `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,
+          );
+      }
+    } catch (error) {
+      console.log(error);
+      response.batchItemFailures.push({ itemIdentifier: message.messageId });
+    }
+  }
+  return response;
 }

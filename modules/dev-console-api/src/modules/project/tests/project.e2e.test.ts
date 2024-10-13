@@ -92,6 +92,14 @@ describe('Project tests', () => {
 
     test('User should be able to check if project-quota is reached', async () => {
       const response = await request(stage.http)
+        .get(`/projects/${testProject.project_uuid}/has-active-rpc-plan`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data).toBe(false);
+    });
+
+    test('User should be able to check if project has rpc plan', async () => {
+      const response = await request(stage.http)
         .get(`/projects/qouta-reached`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);

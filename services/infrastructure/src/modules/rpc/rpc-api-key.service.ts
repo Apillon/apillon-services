@@ -3,12 +3,15 @@ import { RpcApiKey } from './models/rpc-api-key.model';
 import {
   BaseProjectQueryFilter,
   CreateRpcApiKeyDto,
+  DwellirSubscription,
   ModelValidationException,
   QuotaCode,
   Scs,
+  SerializeFor,
   SqlModelStatus,
   UpdateRpcApiKeyDto,
   ValidatorErrorCode,
+  runWithWorkers,
 } from '@apillon/lib';
 import { InfrastructureCodeException } from '../../lib/exceptions';
 import { InfrastructureErrorCode } from '../../config/types';
@@ -45,6 +48,48 @@ export class RpcApiKeyService {
     return usagePerKey;
   }
 
+  static async getRpcApiKey({ id }: { id: number }, context: ServiceContext) {
+    const rpcApiKey = await new RpcApiKey({}, context).populateById(id);
+
+    if (!rpcApiKey.exists()) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.RPC_API_KEY_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    rpcApiKey.canAccess(context);
+    return rpcApiKey.serialize(SerializeFor.PROFILE);
+  }
+
+  static async changeDwellirSubscription(
+    { subscription }: { subscription: DwellirSubscription },
+    context: ServiceContext,
+  ) {
+    const dwellirUserId = await this.getDwellirId(context);
+
+    return await Dwellir.changeSubscription(dwellirUserId, subscription);
+  }
+
+  static async downgradeDwellirSubscriptionsByUserUuids(
+    { user_uuids }: { user_uuids: string[] },
+    context: ServiceContext,
+  ) {
+    const dwellirUsers = await new DwellirUser({}, context).populateByUserUuids(
+      user_uuids,
+    );
+
+    const dwellirIds = dwellirUsers.map(
+      (dwellirUser) => dwellirUser.dwellir_id,
+    );
+
+    await runWithWorkers(dwellirIds, 10, context, async (dwellirId) => {
+      await Dwellir.changeSubscription(dwellirId, DwellirSubscription.FREE);
+    });
+
+    return true;
+  }
+
   static async getOrCreateDwellirId(context: ServiceContext) {
     const dwellirUser = await new DwellirUser({}, context).populateById(
       context.user.id,
@@ -62,6 +107,7 @@ export class RpcApiKeyService {
     const createdDwellirUser = new DwellirUser({}, context).populate({
       dwellir_id: responseBody.id,
       user_uuid: context.user.user_uuid,
+      email: context.user.email,
     });
 
     await createdDwellirUser.insert();

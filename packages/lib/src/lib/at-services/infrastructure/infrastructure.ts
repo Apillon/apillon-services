@@ -9,7 +9,7 @@ import { CreateRpcApiKeyDto } from './dtos/create-rpc-api-key.dto';
 import { CreateRpcUrlDto } from './dtos/create-rpc-url.dto';
 import { ListRpcUrlsForApiKeyQueryFilter } from './dtos/list-rpc-urls-for-api-key-query-filter.dto';
 import { UpdateRpcApiKeyDto } from './dtos/update-rpc-api-key.dto';
-import { UpdateRpcUrlDto } from './dtos/update-rpc-url.dto';
+import { DwellirSubscription } from './types';
 
 export class InfrastructureMicroservice extends BaseService {
   lambdaFunctionName =
@@ -33,6 +33,28 @@ export class InfrastructureMicroservice extends BaseService {
       id,
     });
   }
+
+  public async getRpcApiKey(id: number) {
+    return await this.callService({
+      eventName: InfrastructureEventType.GET_RPC_API_KEY,
+      id,
+    });
+  }
+
+  public async changeDwellirSubscription(subscription: DwellirSubscription) {
+    return await this.callService({
+      evenName: InfrastructureEventType.CHANGE_DWELLIR_SUBSCRIPTION,
+      subscription,
+    });
+  }
+
+  public async downgradeDwellirSubscriptionsByUserUuids(userUuids: string[]) {
+    return await this.callService({
+      eventName: InfrastructureEventType.DOWNGRADE_DWELLIR_SUBSCRIPTIONS,
+      userUuids,
+    });
+  }
+
   public async listRpcApiKeys(filter: BaseProjectQueryFilter) {
     return await this.callService({
       eventName: InfrastructureEventType.LIST_RPC_API_KEYS,
@@ -65,13 +87,6 @@ export class InfrastructureMicroservice extends BaseService {
     });
   }
 
-  public async updateRpcUrl(id: number, data: UpdateRpcUrlDto) {
-    return await this.callService({
-      eventName: InfrastructureEventType.UPDATE_RPC_URL,
-      id,
-      data,
-    });
-  }
   public async deleteRpcUrl(id: number) {
     return await this.callService({
       eventName: InfrastructureEventType.DELETE_RPC_URL,
@@ -83,6 +98,12 @@ export class InfrastructureMicroservice extends BaseService {
     return await this.callService({
       eventName: InfrastructureEventType.LIST_RPC_URLS,
       query,
+    });
+  }
+
+  public async listEndpoints() {
+    return await this.callService({
+      eventName: InfrastructureEventType.LIST_ENDPOINTS,
     });
   }
 
