@@ -3,6 +3,7 @@ import {
   CreateIndexerDto,
   IndexerLogsQueryFilter,
   InfrastructureMicroservice,
+  UpdateIndexerDto,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
@@ -28,17 +29,9 @@ export class IndexingService {
     ).data;
   }
 
-  async updateIndexer(
-    context: DevConsoleApiContext,
-    indexer_uuid: string,
-    body: any,
-  ) {
-    return (
-      await new InfrastructureMicroservice(context).updateIndexer(
-        indexer_uuid,
-        body,
-      )
-    ).data;
+  async updateIndexer(context: DevConsoleApiContext, body: UpdateIndexerDto) {
+    return (await new InfrastructureMicroservice(context).updateIndexer(body))
+      .data;
   }
 
   async hibernateIndexer(context: DevConsoleApiContext, indexer_uuid: string) {

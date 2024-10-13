@@ -4,11 +4,11 @@ import {
   DefaultPermission,
   DefaultUserRole,
   IndexerLogsQueryFilter,
-  PopulateFrom,
   RoleGroup,
+  UpdateIndexerDto,
   ValidateFor,
 } from '@apillon/lib';
-import { Ctx, Validation, Permissions } from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -70,17 +70,15 @@ export class IndexerController {
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @UseGuards(AuthGuard)
+  @Validation({ dto: UpdateIndexerDto })
+  @UseGuards(AuthGuard, ValidationGuard)
   async updateIndexer(
     @Ctx() context: DevConsoleApiContext,
     @Param('indexer_uuid') indexer_uuid: string,
-    @Body() body: any,
+    @Body() body: UpdateIndexerDto,
   ) {
-    return await this.indexingService.updateIndexer(
-      context,
-      indexer_uuid,
-      body,
-    );
+    body.indexer_uuid = indexer_uuid;
+    return await this.indexingService.updateIndexer(context, body);
   }
 
   @Post('indexers/:indexer_uuid/hibernate')

@@ -142,6 +142,7 @@ export * from './lib/at-services/infrastructure/dtos/list-rpc-urls-for-api-key-q
 export * from './lib/at-services/infrastructure/dtos/update-rpc-api-key.dto';
 export * from './lib/at-services/infrastructure/dtos/rpc-api-key-base.dto';
 export * from './lib/at-services/infrastructure/dtos/create-indexer.dto';
+export * from './lib/at-services/infrastructure/dtos/update-indexer.dto';
 export * from './lib/at-services/infrastructure/dtos/indexer-logs-query-filter.dto';
 
 //#REGION Mix

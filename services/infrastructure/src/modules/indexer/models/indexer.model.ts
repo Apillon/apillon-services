@@ -65,7 +65,7 @@ export class Indexer extends UuidSqlModel {
       return SqlModelStatus.ACTIVE;
     },
   })
-  public status?: number;
+  public status: number;
 
   /** SquidId is used as a identifier for squid in sqd API */
   @prop({
@@ -196,6 +196,19 @@ export class Indexer extends UuidSqlModel {
     await indexer.canAccess(this.getContext());
 
     return indexer;
+  }
+
+  public checkIfDeployed(): void {
+    if (
+      this.status != SqlModelStatus.ACTIVE ||
+      !this.squidId ||
+      !this.squidReference
+    ) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.INDEXER_IS_NOT_DEPLOYED,
+        status: 400,
+      });
+    }
   }
 
   public async getIndexers(

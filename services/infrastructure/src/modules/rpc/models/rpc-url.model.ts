@@ -56,6 +56,7 @@ export class RpcUrl extends UuidSqlModel {
     ],
   })
   chainName: string;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -77,6 +78,7 @@ export class RpcUrl extends UuidSqlModel {
     ],
   })
   network: string;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -98,6 +100,7 @@ export class RpcUrl extends UuidSqlModel {
     ],
   })
   httpsUrl: string;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -119,6 +122,7 @@ export class RpcUrl extends UuidSqlModel {
     ],
   })
   wssUrl: string;
+
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -140,6 +144,7 @@ export class RpcUrl extends UuidSqlModel {
     ],
   })
   apiKeyId: number;
+
   // Joined fields
   @prop({
     parser: { resolver: stringParser() },
@@ -153,6 +158,7 @@ export class RpcUrl extends UuidSqlModel {
     validators: [],
   })
   project_uuid: string;
+
   public async populateByNetworkAndApiKey(network: string, apiKeyId: number) {
     this.reset();
     const data = await this.getContext().mysql.paramExecute(
@@ -166,6 +172,7 @@ export class RpcUrl extends UuidSqlModel {
       ? this.populate(data[0], PopulateFrom.DB)
       : this.reset();
   }
+
   public async listForApiKey(filter: ListRpcUrlsForApiKeyQueryFilter) {
     const fieldMap = {
       id: 'u.id',
@@ -191,6 +198,7 @@ export class RpcUrl extends UuidSqlModel {
       'u.id',
     );
   }
+
   /**
    * Populates model fields by loading the document with the provided id from the database.
    * @param id Document's ID.

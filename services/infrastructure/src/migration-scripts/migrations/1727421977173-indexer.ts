@@ -1,3 +1,4 @@
+import { SqlModelStatus } from '@apillon/lib';
 import { DbTables } from '../../config/types';
 
 export async function upgrade(
@@ -8,7 +9,7 @@ export async function upgrade(
       \`id\` INT AUTO_INCREMENT PRIMARY KEY,
       \`indexer_uuid\` VARCHAR(36) NOT NULL,
       \`project_uuid\` VARCHAR(36) NOT NULL,
-      \`status\` INT NULL,
+      \`status\` INT NOT NULL DEFAULT ${SqlModelStatus.DRAFT},
       \`name\` VARCHAR(255) NOT NULL,
       \`description\` VARCHAR(1000),
       \`squidId\` INT NULL,

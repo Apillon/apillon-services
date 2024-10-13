@@ -9,6 +9,7 @@ import {
   LogType,
   ServiceName,
   SqlModelStatus,
+  UpdateIndexerDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
@@ -40,22 +41,23 @@ export class IndexerService {
     //Insert
     await indexer.insert();
 
-    await Promise.all([
-      new Lmas().writeLog({
-        context,
-        project_uuid: indexer.project_uuid,
-        logType: LogType.INFO,
-        message: 'New indexer created',
-        location: 'IndexerService/createIndexer',
-        service: ServiceName.INFRASTRUCTURE,
-        data: indexer.serialize(),
-      }),
-    ]);
+    new Lmas().writeLog({
+      context,
+      project_uuid: indexer.project_uuid,
+      logType: LogType.INFO,
+      message: 'New indexer created',
+      location: 'IndexerService/createIndexer',
+      service: ServiceName.INFRASTRUCTURE,
+      data: indexer.serialize(),
+    });
 
     return indexer.serializeByContext();
   }
 
-  static async updateIndexer({ data }: { data: any }, context: ServiceContext) {
+  static async updateIndexer(
+    { data }: { data: UpdateIndexerDto },
+    context: ServiceContext,
+  ) {
     const indexer = await new Indexer({}, context).populateByUUIDAndCheckAccess(
       data.indexer_uuid,
     );
@@ -132,7 +134,7 @@ export class IndexerService {
       event.indexer_uuid,
     );
 
-    if (indexer.status != SqlModelStatus.ACTIVE || !indexer.squidReference) {
+    if (!indexer.squidReference) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.INDEXER_IS_NOT_DEPLOYED,
         status: 400,
@@ -251,7 +253,7 @@ export class IndexerService {
       event.indexer_uuid,
     );
 
-    if (indexer.status != SqlModelStatus.ACTIVE || !indexer.squidId) {
+    if (!indexer.squidId) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.INDEXER_IS_NOT_DEPLOYED,
         status: 400,
@@ -282,7 +284,7 @@ export class IndexerService {
 
     await indexer.canModify(context);
 
-    if (indexer.status != SqlModelStatus.ACTIVE || !indexer.squidId) {
+    if (indexer.status != SqlModelStatus.ACTIVE || !indexer.squidReference) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.INDEXER_IS_NOT_DEPLOYED,
         status: 400,

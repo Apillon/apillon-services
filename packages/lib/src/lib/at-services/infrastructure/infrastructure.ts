@@ -10,6 +10,7 @@ import { CreateRpcUrlDto } from './dtos/create-rpc-url.dto';
 import { ListRpcUrlsForApiKeyQueryFilter } from './dtos/list-rpc-urls-for-api-key-query-filter.dto';
 import { UpdateRpcApiKeyDto } from './dtos/update-rpc-api-key.dto';
 import { DwellirSubscription } from './types';
+import { UpdateIndexerDto } from './dtos/update-indexer.dto';
 
 export class InfrastructureMicroservice extends BaseService {
   lambdaFunctionName =
@@ -123,10 +124,10 @@ export class InfrastructureMicroservice extends BaseService {
     });
   }
 
-  public async updateIndexer(indexer_uuid: string, data: any) {
+  public async updateIndexer(data: UpdateIndexerDto) {
     return await this.callService({
       eventName: InfrastructureEventType.INDEXER_UPDATE,
-      data: { indexer_uuid, ...data },
+      data: data.serialize(),
     });
   }
 
