@@ -175,6 +175,23 @@ export class Indexer extends UuidSqlModel {
   })
   lastDeploymentId: number;
 
+  // /** SQD status of last deployment */
+  // @prop({
+  //   parser: { resolver: integerParser() },
+  //   populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+  //   serializable: [
+  //     SerializeFor.ADMIN,
+  //     SerializeFor.ADMIN_SELECT_DB,
+  //     SerializeFor.INSERT_DB,
+  //     SerializeFor.UPDATE_DB,
+  //     SerializeFor.SERVICE,
+  //     SerializeFor.PROFILE,
+  //     SerializeFor.SELECT_DB,
+  //     SerializeFor.APILLON_API,
+  //   ],
+  // })
+  // lastDeploymentStatus: number;
+
   public override populateByUUID(
     uuid: string,
     uuid_property?: string,
@@ -196,6 +213,30 @@ export class Indexer extends UuidSqlModel {
     await indexer.canAccess(this.getContext());
 
     return indexer;
+  }
+
+  public async populateBySquidId(
+    squidId: number,
+    conn?: PoolConnection,
+  ): Promise<this> {
+    if (!squidId) {
+      throw new Error(`squidId should not be null!`);
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${DbTables.INDEXER}\`
+        WHERE squidId = @squidId
+        AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { squidId },
+      conn,
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async getIndexers(

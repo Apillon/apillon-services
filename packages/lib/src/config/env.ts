@@ -640,6 +640,7 @@ export interface IEnv {
    */
   INFRASTRUCTURE_AWS_WORKER_SQS_URL: string;
   INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME: string;
+  INFRASTRUCTURE_AWS_WORKER_SQS_ARN: string;
 
   /***************************************************
    * INFRASTRUCTURE - Indexer as a service variables
@@ -1171,6 +1172,8 @@ export let env: IEnv = {
     process.env['INFRASTRUCTURE_AWS_WORKER_SQS_URL'],
   INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME:
     process.env['INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME'],
+  INFRASTRUCTURE_AWS_WORKER_SQS_ARN:
+    process.env['INFRASTRUCTURE_AWS_WORKER_SQS_ARN'],
   INDEXER_BUCKET_FOR_SOURCE_CODE:
     process.env['INDEXER_BUCKET_FOR_SOURCE_CODE'] ||
     'apillon-indexer-source-code-local',

@@ -8,14 +8,10 @@ import {
   createTestUser,
   releaseStage,
 } from '@apillon/tests-lib';
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
 import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
-
-const mockAxios = new MockAdapter(axios);
 
 describe('Indexing module tests', () => {
   //NOTE: Tests for hibernate and delete indexer are written in infrastructure microservice. Calls to sqd endpoints need to be mocked.

@@ -1067,6 +1067,9 @@ export enum ProductCode {
   NFT_UNIQUE_MINT = 57,
   NFT_UNIQUE_BURN = 58,
   NFT_UNIQUE_TRANSFER_COLLECTION = 59,
+
+  // Indexing
+  INDEXER = 60,
 }
 
 export enum ProductService {
@@ -1078,6 +1081,7 @@ export enum ProductService {
   STORAGE = 'STORAGE',
   CONTRACTS = 'CONTRACTS',
   WALLET = 'WALLET',
+  INDEXER = 'INDEXER',
 }
 
 export enum ProductCategory {
@@ -1100,6 +1104,7 @@ export enum ProductCategory {
   IPNS = 'IPNS',
   SIGNATURE = 'SIGNATURE',
   UNIQUE_NFT = 'UNIQUE_NFT',
+  INDEXER = 'INDEXER',
 }
 
 export enum EmailTemplate {
