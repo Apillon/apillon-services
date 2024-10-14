@@ -641,6 +641,21 @@ export interface IEnv {
   INFRASTRUCTURE_AWS_WORKER_SQS_URL: string;
   INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME: string;
 
+  /***************************************************
+   * INFRASTRUCTURE - Indexer as a service variables
+   **************************************************/
+
+  /**
+   * S3 Bucket to where indexer zipped code will be uploaded by users
+   */
+  INDEXER_BUCKET_FOR_SOURCE_CODE: string;
+  /**
+   * sqd (subsquid cloud) API data
+   */
+  SQD_API_TOKEN: string;
+  SQD_API_URL: string;
+  SQD_ORGANIZATION_CODE: string;
+
   /**
    * NOWPAYMENTS
    */
@@ -1129,7 +1144,7 @@ export let env: IEnv = {
   INFRASTRUCTURE_FUNCTION_NAME_TEST:
     process.env['INFRASTRUCTURE_FUNCTION_NAME_TEST'],
   INFRASTRUCTURE_SOCKET_PORT:
-    parseInt(process.env['SINFRASTRUCTURE_SOCKET_PORT']) || 6202,
+    parseInt(process.env['INFRASTRUCTURE_SOCKET_PORT']) || 6402,
   INFRASTRUCTURE_MYSQL_HOST: process.env['INFRASTRUCTURE_MYSQL_HOST'],
   INFRASTRUCTURE_MYSQL_PORT:
     parseInt(process.env['INFRASTRUCTURE_MYSQL_PORT']) || 3306,
@@ -1156,6 +1171,12 @@ export let env: IEnv = {
     process.env['INFRASTRUCTURE_AWS_WORKER_SQS_URL'],
   INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME:
     process.env['INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME'],
+  INDEXER_BUCKET_FOR_SOURCE_CODE:
+    process.env['INDEXER_BUCKET_FOR_SOURCE_CODE'] ||
+    'apillon-indexer-source-code-local',
+  SQD_API_TOKEN: process.env['SQD_API_TOKEN'],
+  SQD_API_URL: process.env['SQD_API_URL'] || 'https://app.subsquid.io/api',
+  SQD_ORGANIZATION_CODE: process.env['SQD_ORGANIZATION_CODE'],
 
   /** CONTRACTS */
   // TODO: fix default ports?

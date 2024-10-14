@@ -14,7 +14,7 @@ In this repository you will find source and documentation for microservices, API
 ### Index of services
 
 | Code | Short     | Service name                             | Package name                                          | path                      |
-|------|-----------|------------------------------------------|-------------------------------------------------------|---------------------------|
+| ---- | --------- | ---------------------------------------- | ----------------------------------------------------- | ------------------------- |
 | 00   | #         | Source repository root                   | [@apillon](/)                                         | /                         |
 | 01   | LIB       | Common Code Library                      | [@apillon/lib](/packages/lib/)                        | /packages/lib/            |
 | 02   | AMS       | Access Management Service                | [@apillon/access](/services/access/)                  | /services/access/         |
@@ -41,7 +41,7 @@ In this repository you will find source and documentation for microservices, API
 ## Documentation
 
 | Resource                                        | Description                                              |
-|-------------------------------------------------|----------------------------------------------------------|
+| ----------------------------------------------- | -------------------------------------------------------- |
 | [Development](docs/development.md)              | A must read for all first-time contributors to this code |
 | [Rest API](docs/rest-API-specs.md)              | Basic information about request, response ...            |
 | [DB migrations](docs/db-migrations.md)          | How to handle changes to database                        |

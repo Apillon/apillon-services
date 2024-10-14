@@ -172,6 +172,7 @@ export class RpcUrl extends UuidSqlModel {
       ? this.populate(data[0], PopulateFrom.DB)
       : this.reset();
   }
+
   public async listForApiKey(filter: ListRpcUrlsForApiKeyQueryFilter) {
     const fieldMap = {
       id: 'u.id',
@@ -197,6 +198,7 @@ export class RpcUrl extends UuidSqlModel {
       'u.id',
     );
   }
+
   /**
    * Populates model fields by loading the document with the provided id from the database.
    * @param id Document's ID.

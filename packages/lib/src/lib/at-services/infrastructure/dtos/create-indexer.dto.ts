@@ -1,5 +1,5 @@
 import { prop } from '@rawmodel/core';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import {
   PopulateFrom,
   SerializeFor,
@@ -7,7 +7,7 @@ import {
 } from '../../../../config/types';
 import { presenceValidator } from '@rawmodel/validators';
 import { ModelBase } from '../../../base-models/base';
-export class CreateRpcUrlDto extends ModelBase {
+export class CreateIndexerDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
@@ -15,11 +15,12 @@ export class CreateRpcUrlDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.RPC_URL_CHAIN_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.INDEXER_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
-  chainName: string;
+  public project_uuid: string;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
@@ -27,21 +28,16 @@ export class CreateRpcUrlDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.RPC_URL_NETWORK_NOT_PRESENT,
+        code: ValidatorErrorCode.INDEXER_REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
-  network: string;
+  public name: string;
+
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.RPC_URL_API_KEY_ID_NOT_PRESENT,
-      },
-    ],
   })
-  apiKeyId: number;
+  public description: string;
 }

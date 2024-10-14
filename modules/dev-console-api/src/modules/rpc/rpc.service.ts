@@ -18,7 +18,6 @@ export class RpcService {
     return (await new InfrastructureMicroservice(context).listRpcApiKeys(query))
       .data;
   }
-
   async getApiKeyUsage(context: DevConsoleApiContext, id: number) {
     return (await new InfrastructureMicroservice(context).getRpcApiKeyUsage(id))
       .data;
@@ -36,7 +35,6 @@ export class RpcService {
     return (await new InfrastructureMicroservice(context).createRpcApiKey(body))
       .data;
   }
-
   async updateRpcApiKey(
     context: DevConsoleApiContext,
     id: number,
@@ -61,7 +59,6 @@ export class RpcService {
     return (await new InfrastructureMicroservice(context).deleteRpcUrl(id))
       .data;
   }
-
   async listRpcUrlsForApiKey(
     context: DevConsoleApiContext,
     query: ListRpcUrlsForApiKeyQueryFilter,

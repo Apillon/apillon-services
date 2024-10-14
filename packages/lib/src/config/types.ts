@@ -373,6 +373,17 @@ export enum InfrastructureEventType {
   DELETE_RPC_URL = 'delete-rpc-url',
   LIST_RPC_URLS = 'list-rpc-urls',
   LIST_ENDPOINTS = 'list-endpoints',
+
+  INDEXER_CREATE = 'create-indexer',
+  INDEXER_LIST = 'list-indexers',
+  INDEXER_GET = 'get-indexer',
+  INDEXER_GET_LOGS = 'get-indexer-logs',
+  INDEXER_GET_DEPLOYMENTS = 'get-indexer-deployment',
+  INDEXER_UPDATE = 'update-indexer',
+  INDEXER_GET_URL_FOR_SC_UPLOAD = 'get-url-for-indexer-source-code-upload',
+  INDEXER_DEPLOY = 'deploy-indexer',
+  INDEXER_DELETE = 'delete-indexer',
+  INDEXER_HIBERNATE = 'hibernate-indexer',
 }
 
 export enum ServiceName {
@@ -463,6 +474,7 @@ export enum AttachedServiceType {
   SOCIAL = 6,
   WALLET = 7,
   CONTRACTS = 8,
+  INDEXING = 10,
   SYSTEM = 999,
 }
 
@@ -551,6 +563,7 @@ export enum DefaultPermission {
   SOCIAL = 6,
   WALLET = 7,
   CONTRACTS = 8,
+  INDEXING = 10,
   RPC = 9,
 }
 
@@ -802,6 +815,10 @@ export enum ValidatorErrorCode {
   RPC_URL_API_KEY_ID_NOT_PRESENT = 422001104,
   RPC_URL_NETWORK_NOT_PRESENT = 422001105,
   RPC_URL_CHAIN_NAME_NOT_PRESENT = 422001106,
+  INDEXER_LOGS_REQUIRED_QUERY_DATA_NOT_PRESENT = 422001107,
+
+  INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001120,
+  DEPLOY_INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001121,
 }
 
 /**
