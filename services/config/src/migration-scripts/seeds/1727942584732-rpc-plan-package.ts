@@ -6,10 +6,10 @@ export async function upgrade(
 ) {
   await queryFn(`
   INSERT INTO ${DbTables.SUBSCRIPTION_PACKAGE} (id, status, name, description, isDefault, creditAmount, stripeId)
-    VALUES (${SubscriptionPackageId.RPC_PLAN}, 5, 'RPC Plan', 'RPC Plan', 0,0,'price_1Q5n0zGlTglE98hYFW9CgmFZ')`);
+    VALUES (${SubscriptionPackageId.RPC_PLAN}, 5, 'RPC Plan', 'RPC Plan', 0,0,'price_1Q9iHYGlTglE98hYzawgWMSR')`);
 
   await queryFn(`
-  INSERT INTO ${DbTables.OVERRIDE} (quota_id, status, package_id, description, value) VALUES 
+  INSERT INTO ${DbTables.OVERRIDE} (quota_id, status, package_id, description, value) VALUES
   (${QuotaCode.MAX_RPC_KEYS}, 10, ${SubscriptionPackageId.RPC_PLAN}, 'Max RPC keys for RPC Plan', 10)`);
 }
 
