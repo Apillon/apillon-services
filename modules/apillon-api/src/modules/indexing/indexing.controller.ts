@@ -16,7 +16,7 @@ import { IndexingService } from './indexing.service';
 export class IndexingController {
   constructor(private readonly service: IndexingService) {}
 
-  @Get('indexer/:indexer_uuid/url-for-source-code-upload')
+  @Get('indexer/:indexer_uuid/upload-url')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_WRITE,
     serviceType: AttachedServiceType.INDEXING,

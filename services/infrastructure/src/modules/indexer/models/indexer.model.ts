@@ -198,19 +198,6 @@ export class Indexer extends UuidSqlModel {
     return indexer;
   }
 
-  public checkIfDeployed(): void {
-    if (
-      this.status != SqlModelStatus.ACTIVE ||
-      !this.squidId ||
-      !this.squidReference
-    ) {
-      throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.INDEXER_IS_NOT_DEPLOYED,
-        status: 400,
-      });
-    }
-  }
-
   public async getIndexers(
     status = SqlModelStatus.ACTIVE,
     conn?: PoolConnection,
