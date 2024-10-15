@@ -174,7 +174,7 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
         AND createTime >= @dateFrom
         GROUP BY DATE(createTime)
       `,
-      { id: this.id },
+      { id: this.id, dateFrom },
     );
 
     const usage: { date: Date; countOfSignatures: number }[] = [];
