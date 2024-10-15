@@ -31,7 +31,8 @@ export enum EvmChain {
   MOONBASE = 1287,
   ASTAR_SHIBUYA = 81, // testnet
   ASTAR = 592,
-  OASIS = 42262,
+  OASIS_TESTNET = 42262,
+  OASIS_SAPPHIRE = 23294,
   ALFAJORES = 44787, // Celo testnet
   CELO = 42220,
 }
