@@ -33,7 +33,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
   try {
     const { data } = await new ComputingMicroservice(null).executeCloudFunction(
-      JSON.stringify(payload),
+      payload,
       function_uuid,
     );
 

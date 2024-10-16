@@ -468,10 +468,11 @@ export class AcurastService {
   ): Promise<AcurastJob> {
     const job = await new AcurastJob({}, context).populateByUUID(job_uuid);
 
-    job.verifyStatusAndAccess('deleteJob', context, [
-      AcurastJobStatus.DEPLOYED,
-      AcurastJobStatus.INACTIVE,
-    ]);
+    // job.verifyStatusAndAccess('deleteJob', context, [
+    //   AcurastJobStatus.DEPLOYED,
+    //   AcurastJobStatus.INACTIVE,
+    // ]);
+    job.canModify(context);
 
     const conn = await context.mysql.start();
     try {
