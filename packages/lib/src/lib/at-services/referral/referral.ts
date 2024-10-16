@@ -122,29 +122,4 @@ export class ReferralMicroservice extends BaseService {
       email,
     });
   }
-
-  public async getAirdropTasks() {
-    return await this.callService({
-      eventName: ReferralEventType.GET_AIRDROP_TASKS,
-    });
-  }
-
-  public async getClaimParameters() {
-    return await this.callService({
-      eventName: ReferralEventType.GET_CLAIM_PARAMETERS,
-    });
-  }
-
-  public async setClaimsCompleted(
-    data: {
-      wallet: string;
-      transactionHash: string;
-    }[],
-  ) {
-    this.isDefaultAsync = true; // This does not need to return a response
-    return await this.callService({
-      eventName: ReferralEventType.SET_CLAIMS_COMPLETED,
-      data,
-    });
-  }
 }
