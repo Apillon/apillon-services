@@ -336,6 +336,17 @@ export function generateTemplateData(key: string, data: any) {
         <p><b>${data.code}</b></p><br>
         <p>If you didn’t request a verification code, please contact our Support team as soon as possible to secure your account.`,
     },
+    //TO-DOs
+    [EmailTemplate.RPC_USAGE_EXCEEDED]: {
+      subject: 'RPC Usage Close to Limit',
+      title: 'RPC Usage Close to Limit',
+      text: `
+        <p>
+          Your RPC usage is close to exceeding the usage limit. Please upgrade your plan to continue using the service.
+        </p>
+        <p>To upgrade your plan, click <a href="${data.paymentLink}">here</a></p>
+      `,
+    },
   };
 
   return templateData[key];

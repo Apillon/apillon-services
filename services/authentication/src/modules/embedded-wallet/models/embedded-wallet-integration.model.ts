@@ -14,11 +14,7 @@ import {
 import { ServiceContext } from '@apillon/service-lib';
 import { stringParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
-import {
-  AuthenticationErrorCode,
-  DbTables,
-  ResourceNotFoundErrorCode,
-} from '../../../config/types';
+import { AuthenticationErrorCode, DbTables } from '../../../config/types';
 import { AuthenticationCodeException } from '../../../lib/exceptions';
 
 export class EmbeddedWalletIntegration extends UuidSqlModel {
@@ -30,7 +26,7 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
@@ -51,7 +47,7 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
@@ -71,7 +67,7 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
@@ -93,7 +89,7 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.UPDATE_DB,
@@ -106,6 +102,22 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
     ],
   })
   public description: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public whitelistedDomains: string;
 
   public async populateByUUIDAndCheckAccess(uuid: string): Promise<this> {
     if (!uuid) {
@@ -127,11 +139,11 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
     if (!this.exists()) {
       throw new AuthenticationCodeException({
         status: 404,
-        code: ResourceNotFoundErrorCode.EMBEDDED_WALLET_INTEGRATION_NOT_FOUND,
+        code: AuthenticationErrorCode.EMBEDDED_WALLET_INTEGRATION_NOT_FOUND,
       });
     }
 
-    await this.canAccess(this.getContext());
+    this.canAccess(this.getContext());
 
     return this;
   }
@@ -159,19 +171,23 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
         FROM \`${DbTables.OASIS_SIGNATURE}\`
         WHERE embeddedWalletIntegration_id = @id
         AND status IN (${SqlModelStatus.ACTIVE}, ${SqlModelStatus.INACTIVE})
+        AND createTime >= @dateFrom
         GROUP BY DATE(createTime)
       `,
-      { id: this.id },
+      { id: this.id, dateFrom },
     );
 
     const usage: { date: Date; countOfSignatures: number }[] = [];
+    const tomorrow = new Date();
+    tomorrow.setHours(0, 0, 0, 0);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     for (
       const tmpDate = new Date(dateFrom);
-      tmpDate <= new Date();
+      tmpDate <= tomorrow;
       tmpDate.setDate(tmpDate.getDate() + 1)
     ) {
       usage.push({
-        date: tmpDate,
+        date: new Date(tmpDate),
         countOfSignatures:
           data.find((x) => compareDatesWithoutTime(x.date, tmpDate))
             ?.countOfSignatures || 0,
@@ -199,9 +215,9 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
 
     const sqlQuery = {
       qSelect: `
-          SELECT ${this.generateSelectFields('i', '', SerializeFor.SELECT_DB)}, 
+          SELECT ${this.generateSelectFields('i', '', SerializeFor.SELECT_DB)},
           (
-            SELECT COUNT(*) FROM \`${DbTables.OASIS_SIGNATURE}\` s 
+            SELECT COUNT(*) FROM \`${DbTables.OASIS_SIGNATURE}\` s
             WHERE s.embeddedWalletIntegration_id = i.id
             AND status IN (${SqlModelStatus.ACTIVE}, ${SqlModelStatus.INACTIVE})
             AND month(s.createTime) = month(curdate())

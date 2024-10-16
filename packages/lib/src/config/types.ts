@@ -6,10 +6,12 @@ export enum ChainType {
 }
 
 export enum TransactionStatus {
+  DRAFT = 0,
   PENDING = 1,
   CONFIRMED = 2,
   FAILED = 3,
   ERROR = 4,
+  CANCELED = 5,
 }
 
 export enum SubstrateChain {
@@ -21,6 +23,7 @@ export enum SubstrateChain {
   XSOCIAL = 7,
   ASTAR = 8,
   ACURAST = 9,
+  HYDRATION = 10,
   UNIQUE = 11,
 }
 
@@ -31,7 +34,8 @@ export enum EvmChain {
   MOONBASE = 1287,
   ASTAR_SHIBUYA = 81, // testnet
   ASTAR = 592,
-  OASIS = 42262,
+  OASIS_TESTNET = 42262,
+  OASIS_SAPPHIRE = 23294,
   ALFAJORES = 44787, // Celo testnet
   CELO = 42220,
 }
@@ -113,6 +117,11 @@ export enum BlockchainEventType {
   SUBSTRATE_SIGN_TRANSACTION = 'substrate-sign-transaction',
   SUBSTRATE_GET_TRANSACTION = 'substrate-get-transaction',
   GET_PHALA_CLUSTER_DEPOSIT_TRANSACTION = 'get-phala-cluster-deposit-transaction',
+  CREATE_MULTI_SIG_WALLET = 'create-multi-sig-wallet',
+  GET_MULTISIG_WALLET = 'get-multi-sig-wallet',
+  LIST_MULTI_SIG_WALLETS = 'list-multi-sig-wallets',
+  TRANSMIT_MULTI_SIG_TRANSACTION = 'transmit-multi-sig-transaction',
+  CANCEL_MULTI_SIG_TRANSACTION = 'cancel-multi-sig-transaction',
   EVM_SIGN_TRANSACTION = 'evm-sign-transaction',
   EVM_GET_TRANSACTION = 'evm-get-transaction',
   GET_CHAIN_ENDPOINT = 'get-chain-endpoint',
@@ -175,6 +184,7 @@ export enum StorageEventType {
   WEBSITE_GET_ALL_DOMAINS = 'get-all-domains',
   WEBSITE_QUOTA_REACHED = 'websites-quota-reached',
   WEBSITE_CHECK_DOMAIN_DNS = 'website-check-domain-dns',
+  WEBSITE_REMOVE_DOMAIN = 'website-remove-domain',
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
@@ -252,6 +262,7 @@ export enum ScsEventType {
   GET_PRODUCT_PRICELIST = 'get-product-pricelist',
   GET_PRODUCT_PRICE = 'get-product-price',
   GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION = 'get-projects-with-active-subscription',
+  HAS_ACTIVE_RPC_PLAN = 'has-active-rpc-plan',
 }
 
 export enum NftsEventType {
@@ -358,16 +369,37 @@ export enum ContractEventType {
   ARCHIVE_DEPLOYED_CONTRACT = 'archive-deployed-contract',
 }
 
+export enum AssetManagementEventType {
+  REFILL_WALLET = 'refill-wallet',
+  REFILL_WALLET_CONFIRM = 'refill-wallet-confirm',
+  REFILL_WALLET_CANCEL = 'refill-wallet-cancel',
+  LIST_TRANSACTIONS = 'list-transactions',
+}
+
 export enum InfrastructureEventType {
   LIST_RPC_API_KEYS = 'list-rpc-api-keys',
   REVOKE_RPC_API_KEY = 'revoke-rpc-api-key',
   UPDATE_RPC_API_KEY = 'update-rpc-api-key',
   CREATE_RPC_API_KEY = 'create-rpc-api-key',
   GET_RPC_API_KEY_USAGE = 'get-rpc-api-key-usage',
+  GET_RPC_API_KEY = 'get-rpc-api-key',
+  CHANGE_DWELLIR_SUBSCRIPTION = 'change-dwellir-subscription',
+  DOWNGRADE_DWELLIR_SUBSCRIPTIONS = 'downgrade-dwellir-subscriptions',
   CREATE_RPC_URL = 'create-rpc-url',
-  UPDATE_RPC_URL = 'update-rpc-url',
   DELETE_RPC_URL = 'delete-rpc-url',
   LIST_RPC_URLS = 'list-rpc-urls',
+  LIST_ENDPOINTS = 'list-endpoints',
+
+  INDEXER_CREATE = 'create-indexer',
+  INDEXER_LIST = 'list-indexers',
+  INDEXER_GET = 'get-indexer',
+  INDEXER_GET_LOGS = 'get-indexer-logs',
+  INDEXER_GET_DEPLOYMENTS = 'get-indexer-deployment',
+  INDEXER_UPDATE = 'update-indexer',
+  INDEXER_GET_URL_FOR_SC_UPLOAD = 'get-url-for-indexer-source-code-upload',
+  INDEXER_DEPLOY = 'deploy-indexer',
+  INDEXER_DELETE = 'delete-indexer',
+  INDEXER_HIBERNATE = 'hibernate-indexer',
 }
 
 export enum ServiceName {
@@ -387,6 +419,7 @@ export enum ServiceName {
   COMPUTING = 'COMPUTING',
   SOCIAL = 'SOCIAL',
   CONTRACTS = 'CONTRACTS',
+  ASSET_MANAGEMENT = 'ASSET_MANAGEMENT',
   INFRASTRUCTURE = 'INFRASTRUCTURE',
 }
 
@@ -458,6 +491,7 @@ export enum AttachedServiceType {
   SOCIAL = 6,
   WALLET = 7,
   CONTRACTS = 8,
+  INDEXING = 10,
   SYSTEM = 999,
 }
 
@@ -545,7 +579,9 @@ export enum DefaultPermission {
   COMPUTING = 5,
   SOCIAL = 6,
   WALLET = 7,
-  CONTRACTS,
+  CONTRACTS = 8,
+  INDEXING = 10,
+  RPC = 9,
 }
 
 //#endregion
@@ -716,6 +752,7 @@ export enum ValidatorErrorCode {
   GENERATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200166,
   VALIDATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200167,
   CREATE_EW_INTEGRATION_REQUIRED_DATA_NOT_PRESENT = 42200168,
+  CREATE_EW_INTEGRATION_INVALID_WHITELISTED_DOMAINS = 42200169,
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
   COMPUTING_CONTRACT_TYPE_NOT_PRESENT = 42200202,
@@ -762,6 +799,11 @@ export enum ValidatorErrorCode {
   EVM_TRANSACTION_NOT_PRESENT = 42200804,
   EVM_CHAIN_NOT_PRESENT = 42200805,
   EVM_CHAIN_NOT_VALID = 42200806,
+  MULTISIG_WALLET_NEEDS_AT_LEAST_ONE_OTHER_SIGNER = 42200807,
+  INVALID_CHAIN_TYPE = 42200808,
+  INVALID_CHAIN = 42200809,
+  AT_LEAST_ONE_OF_ADDRESSES_IS_INVALID = 42200810,
+  NOT_ENOUGH_SIGNERS_FOR_THRESHOLD = 42200811,
   //#endregion
 
   //#region Caching
@@ -792,10 +834,13 @@ export enum ValidatorErrorCode {
   //#region Infrastructure
   RPC_API_KEY_NAME_NOT_PRESENT = 422001101,
   RPC_API_KEY_PROJECT_ID_NOT_PRESENT = 422001102,
-  RPC_URL_NAME_NOT_PRESENT = 422001103,
   RPC_URL_API_KEY_ID_NOT_PRESENT = 422001104,
   RPC_URL_NETWORK_NOT_PRESENT = 422001105,
   RPC_URL_CHAIN_NAME_NOT_PRESENT = 422001106,
+  INDEXER_LOGS_REQUIRED_QUERY_DATA_NOT_PRESENT = 422001107,
+
+  INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001120,
+  DEPLOY_INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001121,
 }
 
 /**
@@ -829,6 +874,12 @@ export class RoleGroup {
     DefaultUserRole.PROJECT_ADMIN,
     DefaultUserRole.PROJECT_USER,
     DefaultUserRole.ADMIN,
+  ];
+
+  static ProjectOwnerAccess = [
+    DefaultUserRole.PROJECT_OWNER,
+    DefaultUserRole.ADMIN,
+    DefaultUserRole.PROJECT_ADMIN,
   ];
 }
 
@@ -1089,6 +1140,7 @@ export enum EmailTemplate {
   RESET_PASSWORD = 'reset-password',
   NEW_USER_ADDED_TO_PROJECT = 'new-user-added-to-project',
   USER_ADDED_TO_PROJECT = 'user-added-to-project',
+  RPC_USAGE_EXCEEDED = 'rpc-usage-exceeded',
 
   CONTACT_US_FORM = 'contact-us-form',
 
@@ -1124,4 +1176,5 @@ export enum SubscriptionPackageId {
   CATERPILLAR = 2,
   COCOON = 3,
   BUTTERFLY = 4,
+  RPC_PLAN = 5,
 }

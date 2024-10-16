@@ -1,6 +1,7 @@
 import {
   CacheKeyPrefix,
   CacheKeyTTL,
+  DwellirSubscription,
   LogType,
   env,
   runCachedFunction,
@@ -8,16 +9,15 @@ import {
 } from '@apillon/lib';
 import axios from 'axios';
 import {
+  DwellirChangeSubscriptionResponse,
   DwellirCreateApiKeyResponse,
   DwellirCreateUserResponse,
   DwellirGetAccessTokenResponse,
+  DwellirGetAllUsagesResponse,
   DwellirGetApiKeyResponse,
   DwellirGetEndpointsResponse,
   DwellirGetUsageResponse,
 } from './types';
-
-const dwellirAPIUrl = env.DWELLIR_URL;
-
 export class Dwellir {
   static async makeRequest<T>(
     url: string,
@@ -53,7 +53,7 @@ export class Dwellir {
       async function () {
         try {
           const response = await axios.post<DwellirGetAccessTokenResponse>(
-            `${dwellirAPIUrl}/v1/login`,
+            `${env.DWELLIR_URL}/v1/login`,
             {
               username: env.DWELLIR_USERNAME,
               password: env.DWELLIR_PASSWORD,
@@ -82,7 +82,7 @@ export class Dwellir {
 
   static async createUser(email: string) {
     return this.makeRequest<DwellirCreateUserResponse>(
-      `${dwellirAPIUrl}/v1/user`,
+      `${env.DWELLIR_URL}/v1/user`,
       'post',
       { email, name: email },
     );
@@ -90,14 +90,14 @@ export class Dwellir {
 
   static async createApiKey(userId: string) {
     return this.makeRequest<DwellirCreateApiKeyResponse>(
-      `${dwellirAPIUrl}/v1/user/${userId}/api_key`,
+      `${env.DWELLIR_URL}/v1/user/${userId}/api_key`,
       'post',
     );
   }
 
   static async getInitialApiKey(userId: string) {
     const apiKeys = await this.makeRequest<DwellirGetApiKeyResponse[]>(
-      `${dwellirAPIUrl}/v1/user/${userId}/api_key`,
+      `${env.DWELLIR_URL}/v1/user/${userId}/api_key`,
       'get',
     );
 
@@ -112,22 +112,39 @@ export class Dwellir {
 
   static async revokeApiKey(userId: string, apiKeyId: string) {
     return this.makeRequest<void>(
-      `${dwellirAPIUrl}/v1/user/${userId}/api_key/${apiKeyId}`,
+      `${env.DWELLIR_URL}/v1/user/${userId}/api_key/${apiKeyId}`,
       'delete',
     );
   }
 
   static async getEndpoints() {
     return this.makeRequest<DwellirGetEndpointsResponse>(
-      `${dwellirAPIUrl}/v1/endpoint`,
+      `${env.DWELLIR_URL}/v1/endpoint`,
       'get',
     );
   }
 
   static async getUsage(userId: string) {
     return this.makeRequest<DwellirGetUsageResponse>(
-      `${dwellirAPIUrl}/v1/user/${userId}/analytics/day`,
+      `${env.DWELLIR_URL}/v1/user/${userId}/analytics/day`,
       'get',
+    );
+  }
+
+  static async getAllUsagesPerUser() {
+    return this.makeRequest<DwellirGetAllUsagesResponse>(
+      `${env.DWELLIR_URL}/v1/analytics`,
+      'get',
+    );
+  }
+
+  static async changeSubscription(
+    userId: string,
+    subscription: DwellirSubscription,
+  ) {
+    return this.makeRequest<DwellirChangeSubscriptionResponse>(
+      `${env.DWELLIR_URL}/v1/user/${userId}/subscription/change_subscription/${subscription}`,
+      'post',
     );
   }
 }

@@ -1,15 +1,10 @@
-import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
 import { OasisSignature } from '@apillon/authentication/src/modules/embedded-wallet/models/oasis-signature.model';
-import { Endpoint } from '@apillon/blockchain/src/common/models/endpoint';
-import { Wallet } from '@apillon/blockchain/src/modules/wallet/wallet.model';
-import { ChainType, EvmChain, QuotaCode, SqlModelStatus } from '@apillon/lib';
+import { QuotaCode, SqlModelStatus } from '@apillon/lib';
 import {
   Stage,
   TestUser,
-  createTestApiKey,
   createTestProject,
   createTestUser,
-  getConfig,
   releaseStage,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
@@ -21,21 +16,16 @@ import { Override } from '@apillon/config/src/modules/override/models/override.m
 
 describe('Embedded wallet tests', () => {
   let stage: Stage;
-  let config: any;
 
   let testUser: TestUser;
   let testUser2: TestUser;
 
   let testProject: Project;
-  let testProject2: Project;
-  let apiKey: ApiKey;
-  let apiKey2: ApiKey;
 
   let testIntegration: EmbeddedWalletIntegration;
   let testOasisSignature: OasisSignature;
 
   beforeAll(async () => {
-    config = await getConfig();
     stage = await setupTest();
     testUser = await createTestUser(
       stage.context.devConsole,
@@ -47,17 +37,6 @@ describe('Embedded wallet tests', () => {
     );
 
     testProject = await createTestProject(testUser, stage, 5000);
-    testProject2 = await createTestProject(testUser2, stage);
-
-    apiKey = await createTestApiKey(
-      stage.context.access,
-      testProject.project_uuid,
-    );
-
-    apiKey2 = await createTestApiKey(
-      stage.context.access,
-      testProject2.project_uuid,
-    );
 
     //Insert some test embedded wallet integrations and signatures
     testIntegration = await new EmbeddedWalletIntegration(
@@ -76,7 +55,6 @@ describe('Embedded wallet tests', () => {
     )
       .populate({
         embeddedWalletIntegration_id: testIntegration.id,
-        apiKey: apiKey.apiKey,
         project_uuid: testProject.project_uuid,
         dataHash:
           '0xf4688cf1bce1a2b84753ac4f7dd8b0f044ba06666bdf0b379203c3551d569736',
@@ -91,7 +69,6 @@ describe('Embedded wallet tests', () => {
     await new OasisSignature({}, stage.context.authentication)
       .populate({
         embeddedWalletIntegration_id: testIntegration.id,
-        apiKey: apiKey.apiKey,
         project_uuid: testProject.project_uuid,
         dataHash:
           '0x3a757d127a10a22d803b6516e7d7919b056cc5047b56d3d273eb8150387d6963',
@@ -164,6 +141,7 @@ describe('Embedded wallet tests', () => {
         integration_uuid: testIntegration.integration_uuid,
         title: testIntegration.title,
         description: testIntegration.description,
+        whitelistedDomains: testIntegration.whitelistedDomains,
       });
       expect(response.body.data.usage?.length).toBeGreaterThan(20);
       expect(
@@ -212,6 +190,7 @@ describe('Embedded wallet tests', () => {
     test('User should be able to update embedded wallet integration', async () => {
       const body = {
         title: 'Updated title',
+        whitelistedDomains: 'test.com,test2.com',
       };
 
       const response = await request(stage.http)

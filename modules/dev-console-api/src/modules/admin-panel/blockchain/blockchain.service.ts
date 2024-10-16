@@ -1,18 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../../context';
 import {
+  AssetManagementMicroservice,
   BaseQueryFilter,
   BlockchainMicroservice,
+  CreateMultisigWalletRequestDto,
+  TransmitMultiSigRequest,
   UpdateTransactionDto,
   WalletDepositsQueryFilter,
+  WalletRefillTransactionQueryFilter,
   WalletTransactionsQueryFilter,
 } from '@apillon/lib';
+import { RefillWalletDto } from '@apillon/blockchain-lib/common';
 
 @Injectable()
 export class BlockchainService {
   /**
    * Retrieves a list of all wallets filtered by query
    * @param {DevConsoleApiContext} context - The API context with current user session.
+   * @param filter
    * @returns {Promise<any[]>} The array of wallets.
    */
   async getWalletList(
@@ -58,6 +64,7 @@ export class BlockchainService {
    * Retreives a list of all transactions for a wallet
    * @async
    * @param {DevConsoleApiContext} context
+   * @param query
    * @param {number} walletId - The wallet's id
    * @returns {Promise<any[]>}
    */
@@ -111,6 +118,77 @@ export class BlockchainService {
         walletId,
         transactionId,
         data,
+      )
+    ).data;
+  }
+
+  async refillWallet(context: DevConsoleApiContext, body: RefillWalletDto) {
+    return (await new AssetManagementMicroservice(context).refillWallet(body))
+      .data;
+  }
+
+  // TODO: remove methods bellow after testing
+  async listWalletRefillTransactions(
+    context: DevConsoleApiContext,
+    body: WalletRefillTransactionQueryFilter,
+  ) {
+    return (
+      await new AssetManagementMicroservice(
+        context,
+      ).listWalletRefillTransactions(body)
+    ).data;
+  }
+
+  async createMultisigWallet(
+    context: DevConsoleApiContext,
+    body: CreateMultisigWalletRequestDto,
+  ) {
+    const data = new CreateMultisigWalletRequestDto({}, context).populate(body);
+    return (
+      await new BlockchainMicroservice(context).createMultisigWallet(data)
+    ).data;
+  }
+
+  async listMultisigWallets(
+    context: DevConsoleApiContext,
+    body: BaseQueryFilter,
+  ) {
+    const filter = new BaseQueryFilter({}, context).populate(body);
+    return (
+      await new BlockchainMicroservice(context).listMultisigWallets(filter)
+    ).data;
+  }
+
+  async getMultisigWallet(context: DevConsoleApiContext, walletId: number) {
+    return (
+      await new BlockchainMicroservice(context).getMultisigWallet(walletId)
+    ).data;
+  }
+
+  async transmitMultiSigTransaction(
+    context: DevConsoleApiContext,
+    body: TransmitMultiSigRequest,
+  ) {
+    const transactionData = new TransmitMultiSigRequest({}, context).populate(
+      body,
+    );
+    return (
+      await new BlockchainMicroservice(context).transmitMultiSigTransaction(
+        transactionData,
+      )
+    ).data;
+  }
+
+  async cancelMultiSigTransaction(
+    context: DevConsoleApiContext,
+    body: TransmitMultiSigRequest,
+  ) {
+    const transactionData = new TransmitMultiSigRequest({}, context).populate(
+      body,
+    );
+    return (
+      await new BlockchainMicroservice(context).cancelMultiSigTransaction(
+        transactionData,
       )
     ).data;
   }

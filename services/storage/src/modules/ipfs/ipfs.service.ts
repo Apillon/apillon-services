@@ -177,6 +177,7 @@ export class IPFSService {
     const filesOnIPFS = await this.kuboRpcApiClient.add({
       content: file.Body as ReadableStream,
       pin: this.ipfsCluster.pinOnAdd,
+      rawLeaves: false,
     });
 
     await this.pinCidToCluster(filesOnIPFS.Hash);
@@ -268,6 +269,7 @@ export class IPFSService {
               fileUploadReq.fileName,
             create: true,
             parents: true,
+            rawLeaves: false,
           });
 
           try {
@@ -614,6 +616,7 @@ export class IPFSService {
     const fileOnIPFS = await this.kuboRpcApiClient.add({
       content: params.content,
       pin: this.ipfsCluster?.pinOnAdd || false,
+      rawLeaves: false,
     });
 
     await this.pinCidToCluster(fileOnIPFS.Hash);

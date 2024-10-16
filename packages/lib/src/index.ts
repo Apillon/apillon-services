@@ -126,6 +126,8 @@ export * from './lib/at-services/blockchain/dtos/transaction-webhook-data.dto';
 export * from './lib/at-services/blockchain/dtos/update-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/wallet-transactions-query-filter';
 export * from './lib/at-services/blockchain/dtos/wallet-deposits-query-filter';
+export * from './lib/at-services/blockchain/dtos/transmit-multi-sig.request';
+export * from './lib/at-services/blockchain/dtos/create-multisig-wallet-request.dto';
 
 //#REGION Social
 export * from './lib/at-services/social/social';
@@ -135,13 +137,15 @@ export * from './lib/at-services/social/dtos/post-query-filter.dto';
 
 //#Region Infrastructure
 export * from './lib/at-services/infrastructure/infrastructure';
+export * from './lib/at-services/infrastructure/types';
 export * from './lib/at-services/infrastructure/dtos/create-rpc-api-key.dto';
 export * from './lib/at-services/infrastructure/dtos/create-rpc-url.dto';
 export * from './lib/at-services/infrastructure/dtos/list-rpc-urls-for-api-key-query-filter.dto';
 export * from './lib/at-services/infrastructure/dtos/update-rpc-api-key.dto';
-export * from './lib/at-services/infrastructure/dtos/update-rpc-url.dto';
 export * from './lib/at-services/infrastructure/dtos/rpc-api-key-base.dto';
-export * from './lib/at-services/infrastructure/dtos/rpc-url-base.dto';
+export * from './lib/at-services/infrastructure/dtos/create-indexer.dto';
+export * from './lib/at-services/infrastructure/dtos/update-indexer.dto';
+export * from './lib/at-services/infrastructure/dtos/indexer-logs-query-filter.dto';
 
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';
@@ -191,3 +195,9 @@ export * from './lib/parsers';
 export * from './lib/cache';
 export * from './lib/captcha';
 export * from './lib/credit-and-subscription';
+
+// #REGION Asset Management
+export * from './lib/at-services/asset-management/asset-management';
+export * from './lib/at-services/asset-management/eventTypes';
+export * from './lib/at-services/asset-management/dtos/refill-wallet-request.dto';
+export * from './lib/at-services/asset-management/dtos/transaction-query-filter.dto';

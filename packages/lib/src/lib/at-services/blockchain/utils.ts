@@ -12,7 +12,13 @@ export function formatWalletAddress(
 }
 
 export function getChainName(chainType: ChainType, chain: Chain) {
-  return chainType === ChainType.EVM ? EvmChain[chain] : SubstrateChain[chain];
+  const chainName =
+    chainType === ChainType.EVM ? EvmChain[chain] : SubstrateChain[chain];
+  if (!chainName) {
+    throw new Error(`missing chain ${chain} for chain type ${chainType}`);
+  }
+
+  return chainName;
 }
 
 export async function getTokenPriceUsd(token: string): Promise<number> {

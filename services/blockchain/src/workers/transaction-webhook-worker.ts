@@ -48,9 +48,12 @@ export class TransactionWebhookWorker extends BaseQueueWorker {
       const contractWebhookItems: TransactionWebhookDataDto[] = [];
 
       if (transactions && transactions.length > 0) {
-        for (let i = 0; i < transactions.length; i++) {
-          const transaction = transactions[i];
-          if (transaction.chain === EvmChain.OASIS) {
+        for (const transaction of transactions) {
+          if (
+            [EvmChain.OASIS_SAPPHIRE, EvmChain.OASIS_TESTNET].includes(
+              transaction.chain,
+            )
+          ) {
             continue;
           }
           const dto = new TransactionWebhookDataDto().populate({

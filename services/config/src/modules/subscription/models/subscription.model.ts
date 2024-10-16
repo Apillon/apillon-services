@@ -202,6 +202,7 @@ export class Subscription extends ProjectAccessModel {
       FROM \`${DbTables.SUBSCRIPTION}\`
       WHERE project_uuid = @project_uuid
       AND (expiresOn IS NULL OR expiresOn > NOW())
+      AND package_id <> ${SubscriptionPackageId.RPC_PLAN}
       AND status = ${SqlModelStatus.ACTIVE}
       LIMIT 1;
       `,
@@ -212,6 +213,31 @@ export class Subscription extends ProjectAccessModel {
     return data?.length
       ? this.populate(data[0], PopulateFrom.DB)
       : this.reset();
+  }
+
+  public async hasActiveRpcPlan(
+    project_uuid: string | string[] = this.project_uuid,
+  ): Promise<boolean> {
+    if (!project_uuid) {
+      throw new Error('project_uuid should not be null');
+    }
+
+    let project_uuids: string[] = [];
+    if (!Array.isArray(project_uuid)) {
+      project_uuids = [project_uuid];
+    } else {
+      project_uuids = project_uuid;
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `SELECT * FROM \`${DbTables.SUBSCRIPTION}\`
+      WHERE project_uuid IN (${project_uuids.map((uuid) => `'${uuid}'`).join(',')})
+      AND package_id = ${SubscriptionPackageId.RPC_PLAN}
+      AND (expiresOn IS NULL OR expiresOn > NOW())
+      AND status = ${SqlModelStatus.ACTIVE}`,
+    );
+
+    return data?.length > 0;
   }
 
   /**
@@ -309,6 +335,7 @@ export class Subscription extends ProjectAccessModel {
     daysAgo: number,
     activeOnly = true,
     conn?: PoolConnection,
+    packageId?: SubscriptionPackageId,
   ): Promise<this[]> {
     if (!Number.isInteger(daysAgo) || daysAgo < 0) {
       throw new Error('daysAgo should be a non-negative integer');
@@ -319,7 +346,8 @@ export class Subscription extends ProjectAccessModel {
       SELECT ${this.generateSelectFields()}
       FROM \`${DbTables.SUBSCRIPTION}\`
       WHERE expiresOn BETWEEN DATE_SUB(CURRENT_DATE, INTERVAL @daysAgo DAY) AND CURRENT_DATE
-      ${activeOnly ? `AND status = ${SqlModelStatus.ACTIVE}` : ''}
+      ${activeOnly ? ` AND status = ${SqlModelStatus.ACTIVE}` : ''}
+      ${packageId ? ` AND package_id = ${packageId}` : ''}
       `,
       { daysAgo },
       conn,
@@ -338,6 +366,16 @@ export class Subscription extends ProjectAccessModel {
       `,
       { stripeId: this.stripeId, quotaWarningLevel },
       conn,
+    );
+  }
+
+  public async deactivateSubscriptions(ids: number[]) {
+    if (!ids.length) {
+      return;
+    }
+
+    await this.getContext().mysql.paramExecute(
+      `UPDATE \`${DbTables.SUBSCRIPTION}\` SET status = ${SqlModelStatus.INACTIVE} WHERE id IN (${ids.map((id) => `'${id}'`).join(',')})`,
     );
   }
 

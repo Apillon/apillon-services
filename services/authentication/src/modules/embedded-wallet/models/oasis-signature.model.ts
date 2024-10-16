@@ -11,7 +11,7 @@ import {
   selectAndCountQuery,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
 import { AuthenticationErrorCode, DbTables } from '../../../config/types';
 import { EmbeddedWalletIntegration } from './embedded-wallet-integration.model';
@@ -130,18 +130,16 @@ export class OasisSignature extends ProjectAccessModel {
   public publicAddress: string;
 
   @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB],
+    parser: { resolver: dateParser() },
     serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.ADMIN_SELECT_DB,
-      SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
     ],
+    populatable: [PopulateFrom.DB],
   })
-  public apiKey: string;
+  public createTime: Date;
 
   public async getNumOfSignaturesForCurrentMonth(): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(

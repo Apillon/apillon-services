@@ -1,5 +1,4 @@
 import { prop } from '@rawmodel/core';
-import { RpcUrlBaseDto } from './rpc-url-base.dto';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   PopulateFrom,
@@ -7,7 +6,8 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { presenceValidator } from '@rawmodel/validators';
-export class CreateRpcUrlDto extends RpcUrlBaseDto {
+import { ModelBase } from '../../../base-models/base';
+export class CreateRpcUrlDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
@@ -20,7 +20,6 @@ export class CreateRpcUrlDto extends RpcUrlBaseDto {
     ],
   })
   chainName: string;
-
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
@@ -33,7 +32,6 @@ export class CreateRpcUrlDto extends RpcUrlBaseDto {
     ],
   })
   network: string;
-
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE],

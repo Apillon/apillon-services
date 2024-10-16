@@ -500,6 +500,45 @@ export interface IEnv {
   CONTRACTS_AWS_WORKER_LAMBDA_NAME: string;
 
   /************************************************************
+   * ASSET MANAGEMENT - Apillon ASSET MANAGEMENT Service
+   ************************************************************/
+  /**
+   *  function name
+   */
+  ASSET_MANAGEMENT_FUNCTION_NAME: string;
+  ASSET_MANAGEMENT_FUNCTION_NAME_TEST: string;
+
+  /**
+   * dev server port
+   */
+  ASSET_MANAGEMENT_SOCKET_PORT: number;
+  ASSET_MANAGEMENT_SOCKET_PORT_TEST: number;
+
+  // /**
+  //  * Database config
+  //  */
+  ASSET_MANAGEMENT_MYSQL_HOST: string;
+  ASSET_MANAGEMENT_MYSQL_PORT: number;
+  ASSET_MANAGEMENT_MYSQL_USER: string;
+  ASSET_MANAGEMENT_MYSQL_PASSWORD: string;
+  ASSET_MANAGEMENT_MYSQL_DEPLOY_USER: string;
+  ASSET_MANAGEMENT_MYSQL_DEPLOY_PASSWORD: string;
+  ASSET_MANAGEMENT_MYSQL_DATABASE: string;
+
+  // TEST
+  ASSET_MANAGEMENT_MYSQL_HOST_TEST: string;
+  ASSET_MANAGEMENT_MYSQL_PORT_TEST: number;
+  ASSET_MANAGEMENT_MYSQL_USER_TEST: string;
+  ASSET_MANAGEMENT_MYSQL_PASSWORD_TEST: string;
+  ASSET_MANAGEMENT_MYSQL_DATABASE_TEST: string;
+
+  /**
+   * Contracts workers config
+   */
+  ASSET_MANAGEMENT_AWS_WORKER_SQS_URL: string;
+  ASSET_MANAGEMENT_AWS_WORKER_LAMBDA_NAME: string;
+
+  /************************************************************
    * COMPUTING - Apillon Computing Service
    ************************************************************/
   /**
@@ -641,6 +680,21 @@ export interface IEnv {
   INFRASTRUCTURE_AWS_WORKER_SQS_URL: string;
   INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME: string;
 
+  /***************************************************
+   * INFRASTRUCTURE - Indexer as a service variables
+   **************************************************/
+
+  /**
+   * S3 Bucket to where indexer zipped code will be uploaded by users
+   */
+  INDEXER_BUCKET_FOR_SOURCE_CODE: string;
+  /**
+   * sqd (subsquid cloud) API data
+   */
+  SQD_API_TOKEN: string;
+  SQD_API_URL: string;
+  SQD_ORGANIZATION_CODE: string;
+
   /**
    * NOWPAYMENTS
    */
@@ -672,6 +726,7 @@ export interface IEnv {
    * ACURAST
    */
   ACURAST_GATEWAY_URL: string;
+  ACURAST_IPFS_LAMBDA_URL: string;
 
   /**
    * UNIQUE NETWORK
@@ -1128,7 +1183,7 @@ export let env: IEnv = {
   INFRASTRUCTURE_FUNCTION_NAME_TEST:
     process.env['INFRASTRUCTURE_FUNCTION_NAME_TEST'],
   INFRASTRUCTURE_SOCKET_PORT:
-    parseInt(process.env['SINFRASTRUCTURE_SOCKET_PORT']) || 6202,
+    parseInt(process.env['INFRASTRUCTURE_SOCKET_PORT']) || 6402,
   INFRASTRUCTURE_MYSQL_HOST: process.env['INFRASTRUCTURE_MYSQL_HOST'],
   INFRASTRUCTURE_MYSQL_PORT:
     parseInt(process.env['INFRASTRUCTURE_MYSQL_PORT']) || 3306,
@@ -1155,9 +1210,14 @@ export let env: IEnv = {
     process.env['INFRASTRUCTURE_AWS_WORKER_SQS_URL'],
   INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME:
     process.env['INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME'],
+  INDEXER_BUCKET_FOR_SOURCE_CODE:
+    process.env['INDEXER_BUCKET_FOR_SOURCE_CODE'] ||
+    'apillon-indexer-source-code-local',
+  SQD_API_TOKEN: process.env['SQD_API_TOKEN'],
+  SQD_API_URL: process.env['SQD_API_URL'] || 'https://app.subsquid.io/api',
+  SQD_ORGANIZATION_CODE: process.env['SQD_ORGANIZATION_CODE'],
 
   /** CONTRACTS */
-  // TODO: fix default ports?
   CONTRACTS_FUNCTION_NAME: process.env['CONTRACTS_FUNCTION_NAME'],
   CONTRACTS_FUNCTION_NAME_TEST: process.env['CONTRACTS_FUNCTION_NAME_TEST'],
   CONTRACTS_SOCKET_PORT: parseInt(process.env['CONTRACTS_SOCKET_PORT']) || 7302,
@@ -1182,6 +1242,43 @@ export let env: IEnv = {
   CONTRACTS_AWS_WORKER_SQS_URL: process.env['CONTRACTS_AWS_WORKER_SQS_URL'],
   CONTRACTS_AWS_WORKER_LAMBDA_NAME:
     process.env['CONTRACTS_AWS_WORKER_LAMBDA_NAME'],
+
+  /** ASSET_MANAGEMENT */
+  ASSET_MANAGEMENT_FUNCTION_NAME: process.env['ASSET_MANAGEMENT_FUNCTION_NAME'],
+  ASSET_MANAGEMENT_FUNCTION_NAME_TEST:
+    process.env['ASSET_MANAGEMENT_FUNCTION_NAME_TEST'],
+  ASSET_MANAGEMENT_SOCKET_PORT:
+    parseInt(process.env['ASSET_MANAGEMENT_SOCKET_PORT']) || 7308,
+  ASSET_MANAGEMENT_MYSQL_HOST: process.env['ASSET_MANAGEMENT_MYSQL_HOST'],
+  ASSET_MANAGEMENT_MYSQL_PORT:
+    parseInt(process.env['ASSET_MANAGEMENT_MYSQL_PORT']) || 3306,
+  ASSET_MANAGEMENT_MYSQL_DATABASE:
+    process.env['ASSET_MANAGEMENT_MYSQL_DATABASE'],
+  ASSET_MANAGEMENT_MYSQL_USER: process.env['ASSET_MANAGEMENT_MYSQL_USER'],
+  ASSET_MANAGEMENT_MYSQL_PASSWORD:
+    process.env['ASSET_MANAGEMENT_MYSQL_PASSWORD'],
+  ASSET_MANAGEMENT_MYSQL_DEPLOY_USER:
+    process.env['ASSET_MANAGEMENT_MYSQL_DEPLOY_USER'],
+  ASSET_MANAGEMENT_MYSQL_DEPLOY_PASSWORD:
+    process.env['ASSET_MANAGEMENT_MYSQL_DEPLOY_PASSWORD'],
+
+  ASSET_MANAGEMENT_SOCKET_PORT_TEST:
+    parseInt(process.env['ASSET_MANAGEMENT_SOCKET_PORT_TEST']) || 7708,
+  ASSET_MANAGEMENT_MYSQL_HOST_TEST:
+    process.env['ASSET_MANAGEMENT_MYSQL_HOST_TEST'],
+  ASSET_MANAGEMENT_MYSQL_PORT_TEST:
+    parseInt(process.env['ASSET_MANAGEMENT_MYSQL_PORT_TEST']) || 3306,
+  ASSET_MANAGEMENT_MYSQL_DATABASE_TEST:
+    process.env['ASSET_MANAGEMENT_MYSQL_DATABASE_TEST'],
+  ASSET_MANAGEMENT_MYSQL_USER_TEST:
+    process.env['ASSET_MANAGEMENT_MYSQL_USER_TEST'],
+  ASSET_MANAGEMENT_MYSQL_PASSWORD_TEST:
+    process.env['ASSET_MANAGEMENT_MYSQL_PASSWORD_TEST'],
+  //
+  ASSET_MANAGEMENT_AWS_WORKER_SQS_URL:
+    process.env['ASSET_MANAGEMENT_AWS_WORKER_SQS_URL'],
+  ASSET_MANAGEMENT_AWS_WORKER_LAMBDA_NAME:
+    process.env['ASSET_MANAGEMENT_AWS_WORKER_LAMBDA_NAME'],
 
   /** DISCORD */
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
@@ -1230,6 +1327,7 @@ export let env: IEnv = {
 
   /** ACURAST */
   ACURAST_GATEWAY_URL: process.env['ACURAST_GATEWAY_URL'],
+  ACURAST_IPFS_LAMBDA_URL: process.env['ACURAST_IPFS_LAMBDA_URL'],
 
   /** UNIQUE NETWORK */
   UNIQUE_NETWORK_API_URL: process.env['UNIQUE_NETWORK_API_URL'],
