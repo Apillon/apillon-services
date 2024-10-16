@@ -334,9 +334,11 @@ export class Transaction extends AdvancedSQLModel {
     return super.populateByUUID(uuid, 'transaction_uuid');
   }
 
-  public async getList(filter: WalletRefillTransactionQueryFilter) {
+  public async getList(
+    filter: WalletRefillTransactionQueryFilter,
+    serializationStrategy = SerializeFor.ADMIN,
+  ) {
     const context = this.getContext();
-    const serializationStrategy = context.getSerializationStrategy();
     // Map url query with sql fields.
     const fieldMap = {
       id: 't.id',
