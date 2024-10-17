@@ -651,11 +651,19 @@ export interface IEnv {
    */
   INDEXER_BUCKET_FOR_SOURCE_CODE: string;
   /**
+   * Provision that Apillon takes for indexer
+   */
+  INDEXER_PROVISION_PERCENT: number;
+  /**
    * sqd (subsquid cloud) API data
    */
   SQD_API_TOKEN: string;
   SQD_API_URL: string;
   SQD_ORGANIZATION_CODE: string;
+
+  /***************************************************
+   * OTHER
+   **************************************************/
 
   /**
    * NOWPAYMENTS
@@ -1170,6 +1178,8 @@ export let env: IEnv = {
   INDEXER_BUCKET_FOR_SOURCE_CODE:
     process.env['INDEXER_BUCKET_FOR_SOURCE_CODE'] ||
     'apillon-indexer-source-code-local',
+  INDEXER_PROVISION_PERCENT:
+    parseInt(process.env['INDEXER_PROVISION_PERCENT']) || 5,
   SQD_API_TOKEN: process.env['SQD_API_TOKEN'],
   SQD_API_URL: process.env['SQD_API_URL'] || 'https://app.subsquid.io/api',
   SQD_ORGANIZATION_CODE: process.env['SQD_ORGANIZATION_CODE'],

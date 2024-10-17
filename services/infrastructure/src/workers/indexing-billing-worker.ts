@@ -60,9 +60,11 @@ export class IndexingBillingWorker extends BaseSingleThreadWorker {
         : 5,
       this.context,
       async (squidId: string) => {
-        const billAmount = body.items
+        let billAmount = body.items
           .filter((item) => item.squidId == squidId)
           .reduce((acc, item) => acc + parseFloat(item.subtotal), 0);
+
+        billAmount = (billAmount * (100 + env.INDEXER_PROVISION_PERCENT)) / 100;
         console.info(`SquidId: ${squidId} - Bill Amount: ${billAmount}`);
 
         const indexer = await new Indexer({}, this.context).populateBySquidId(
@@ -145,6 +147,8 @@ export class IndexingBillingWorker extends BaseSingleThreadWorker {
 
             indexer.status = SqlModelStatus.INACTIVE;
             await indexer.update();
+
+            //Note: Price for hibernated indexers is currently unknown. Maybe we will have to implement indexer deletion in the future, if indexer is hibernated for too long.
           }
 
           await this.writeEventLog(
@@ -160,8 +164,6 @@ export class IndexingBillingWorker extends BaseSingleThreadWorker {
             },
             LogOutput.SYS_ERROR,
           );
-
-          return;
         }
       },
     );
