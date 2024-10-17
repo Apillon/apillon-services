@@ -375,7 +375,7 @@ export enum InfrastructureEventType {
   INDEXER_LIST = 'list-indexers',
   INDEXER_GET = 'get-indexer',
   INDEXER_GET_LOGS = 'get-indexer-logs',
-  INDEXER_GET_DEPLOYMENTS = 'get-indexer-deployment',
+  INDEXER_GET_DEPLOYMENTS = 'get-indexer-deployments',
   INDEXER_UPDATE = 'update-indexer',
   INDEXER_GET_URL_FOR_SC_UPLOAD = 'get-url-for-indexer-source-code-upload',
   INDEXER_DEPLOY = 'deploy-indexer',
