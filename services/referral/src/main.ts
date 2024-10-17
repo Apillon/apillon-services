@@ -3,7 +3,6 @@ import { ReferralService } from './modules/referral/referral.service';
 import { OauthService } from './modules/oauth/oauth.service';
 import { PromoCodeService } from './modules/promo-code/promo-code.service';
 import { ServiceContext } from '@apillon/service-lib';
-import { AirdropService } from './modules/airdrop/airdrop.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -30,9 +29,6 @@ export async function processEvent(
     [ReferralEventType.CONFIRM_RETWEET]: ReferralService.confirmRetweet,
     [ReferralEventType.ADD_PROMO_CODE_CREDITS]:
       PromoCodeService.addPromoCodeCredits,
-    [ReferralEventType.GET_AIRDROP_TASKS]: AirdropService.getAirdropTasks,
-    [ReferralEventType.GET_CLAIM_PARAMETERS]: AirdropService.getClaimParameters,
-    [ReferralEventType.SET_CLAIMS_COMPLETED]: AirdropService.setClaimsCompleted,
   };
 
   return await processors[event.eventName](event, context);

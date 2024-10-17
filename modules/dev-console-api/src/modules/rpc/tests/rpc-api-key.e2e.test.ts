@@ -6,13 +6,15 @@ import {
   releaseStage,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
-import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
+import { DefaultUserRole, SqlModelStatus } from '@apillon/lib';
+import { setupTest } from '../../../../test/helpers/setup';
 
 describe('RPC ApiKey tests', () => {
   let stage: Stage;
   let testUser: TestUser;
   let testUser2: TestUser;
+  let nonOwnerUser: TestUser;
   let testProject: Project;
   let testProject2: Project;
   beforeAll(async () => {
@@ -20,12 +22,24 @@ describe('RPC ApiKey tests', () => {
     testUser = await createTestUser(
       stage.context.devConsole,
       stage.context.access,
+      DefaultUserRole.PROJECT_OWNER,
     );
     testUser2 = await createTestUser(
       stage.context.devConsole,
       stage.context.access,
+      DefaultUserRole.PROJECT_OWNER,
     );
+
     testProject = await createTestProject(testUser, stage);
+
+    nonOwnerUser = await createTestUser(
+      stage.context.devConsole,
+      stage.context.access,
+      DefaultUserRole.USER,
+      SqlModelStatus.ACTIVE,
+      testProject.project_uuid,
+    );
+
     testProject2 = await createTestProject(testUser2, stage);
   });
   afterAll(async () => {
@@ -62,6 +76,17 @@ describe('RPC ApiKey tests', () => {
       expect(user.dwellir_id).toBeDefined();
     });
 
+    it("User shouldn't be able to create RPC api-key for projects he doesn't own", async () => {
+      const response = await request(stage.http)
+        .post('/rpc/api-key')
+        .send({
+          ...rpcApiKeyToCreate,
+          project_uuid: testProject.project_uuid,
+        })
+        .set('Authorization', `Bearer ${nonOwnerUser.token}`);
+      expect(response.status).toBe(403);
+    });
+
     it("User shouldn't be able to create RPC api-key for his projects once quota has been reached", async () => {
       const response = await request(stage.http)
         .post('/rpc/api-key')
@@ -89,6 +114,60 @@ describe('RPC ApiKey tests', () => {
         .send(rpcApiKeyToCreate)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(422);
+    });
+  });
+
+  describe('Get RPC ApiKey', () => {
+    let apiKeyId: number;
+    const rpcApiKeyToCreate = {
+      name: 'Test ApiKey',
+      description: 'Test Description',
+      uuid: 'xy',
+    };
+    beforeAll(async () => {
+      await stage.db.infrastructure.paramExecute(
+        'INSERT INTO RPC_API_KEY (name, description, project_uuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
+        {
+          ...rpcApiKeyToCreate,
+          projectUuid: testProject.project_uuid,
+        },
+      );
+
+      apiKeyId = (
+        await stage.db.infrastructure.paramExecute(
+          `SELECT LAST_INSERT_ID() as id`,
+        )
+      )[0].id;
+    });
+
+    afterAll(async () => {
+      await stage.db.infrastructure.paramExecute('DELETE FROM RPC_API_KEY');
+    });
+
+    test('User should be able to get RPC key for his projects', async () => {
+      const response = await request(stage.http)
+        .get(`/rpc/api-key/${apiKeyId}`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      const apiKey = response.body.data;
+      expect(apiKey.name).toBe(rpcApiKeyToCreate.name);
+      expect(apiKey.description).toBe(rpcApiKeyToCreate.description);
+      expect(apiKey.project_uuid).toBe(testProject.project_uuid);
+      expect(apiKey.uuid).toBe(rpcApiKeyToCreate.uuid);
+    });
+
+    test('User should not be able to get RPC key for other projects', async () => {
+      const response = await request(stage.http)
+        .get(`/rpc/api-key/${apiKeyId}`)
+        .set('Authorization', `Bearer ${testUser2.token}`);
+      expect(response.status).toBe(403);
+    });
+
+    test('Error should be thrown if RPC key does not exist', async () => {
+      const response = await request(stage.http)
+        .get(`/rpc/api-key/999999`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(404);
     });
   });
 

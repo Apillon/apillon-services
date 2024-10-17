@@ -65,7 +65,7 @@ export class Indexer extends UuidSqlModel {
       return SqlModelStatus.ACTIVE;
     },
   })
-  public status?: number;
+  public status: number;
 
   /** SquidId is used as a identifier for squid in sqd API */
   @prop({

@@ -135,14 +135,14 @@ export * from './lib/at-services/social/dtos/post-query-filter.dto';
 
 //#Region Infrastructure
 export * from './lib/at-services/infrastructure/infrastructure';
+export * from './lib/at-services/infrastructure/types';
 export * from './lib/at-services/infrastructure/dtos/create-rpc-api-key.dto';
 export * from './lib/at-services/infrastructure/dtos/create-rpc-url.dto';
 export * from './lib/at-services/infrastructure/dtos/list-rpc-urls-for-api-key-query-filter.dto';
 export * from './lib/at-services/infrastructure/dtos/update-rpc-api-key.dto';
-export * from './lib/at-services/infrastructure/dtos/update-rpc-url.dto';
 export * from './lib/at-services/infrastructure/dtos/rpc-api-key-base.dto';
-export * from './lib/at-services/infrastructure/dtos/rpc-url-base.dto';
 export * from './lib/at-services/infrastructure/dtos/create-indexer.dto';
+export * from './lib/at-services/infrastructure/dtos/update-indexer.dto';
 export * from './lib/at-services/infrastructure/dtos/indexer-logs-query-filter.dto';
 
 //#REGION Mix

@@ -31,7 +31,7 @@ describe('Embedded wallet tests', () => {
     await new Endpoint({}, stage.context.blockchain)
       .populate({
         url: 'https://testnet.sapphire.oasis.io',
-        chain: EvmChain.OASIS,
+        chain: EvmChain.OASIS_TESTNET,
         chainType: ChainType.EVM,
       })
       .insert();
@@ -39,7 +39,7 @@ describe('Embedded wallet tests', () => {
     //Insert wallet
     await new Wallet(
       {
-        chain: EvmChain.OASIS,
+        chain: EvmChain.OASIS_TESTNET,
         chainType: ChainType.EVM,
         address: config.oasis.wallet.address,
         seed: config.oasis.wallet.seed,

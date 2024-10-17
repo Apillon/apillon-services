@@ -174,15 +174,16 @@ export class EmbeddedWalletIntegration extends UuidSqlModel {
         AND createTime >= @dateFrom
         GROUP BY DATE(createTime)
       `,
-      { id: this.id },
+      { id: this.id, dateFrom },
     );
 
     const usage: { date: Date; countOfSignatures: number }[] = [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date();
+    tomorrow.setHours(0, 0, 0, 0);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     for (
       const tmpDate = new Date(dateFrom);
-      tmpDate <= today;
+      tmpDate <= tomorrow;
       tmpDate.setDate(tmpDate.getDate() + 1)
     ) {
       usage.push({

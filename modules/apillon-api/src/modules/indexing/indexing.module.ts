@@ -7,4 +7,4 @@ import { IndexingService } from './indexing.service';
   controllers: [IndexingController],
   providers: [IndexingService],
 })
-export class IndexingrModule {}
+export class IndexingModule {}

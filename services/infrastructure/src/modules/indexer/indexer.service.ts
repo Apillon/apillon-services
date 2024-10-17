@@ -7,8 +7,10 @@ import {
   IndexerLogsQueryFilter,
   Lmas,
   LogType,
+  Scs,
   ServiceName,
   SqlModelStatus,
+  UpdateIndexerDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
@@ -40,22 +42,23 @@ export class IndexerService {
     //Insert
     await indexer.insert();
 
-    await Promise.all([
-      new Lmas().writeLog({
-        context,
-        project_uuid: indexer.project_uuid,
-        logType: LogType.INFO,
-        message: 'New indexer created',
-        location: 'IndexerService/createIndexer',
-        service: ServiceName.INFRASTRUCTURE,
-        data: indexer.serialize(),
-      }),
-    ]);
+    new Lmas().writeLog({
+      context,
+      project_uuid: indexer.project_uuid,
+      logType: LogType.INFO,
+      message: 'New indexer created',
+      location: 'IndexerService/createIndexer',
+      service: ServiceName.INFRASTRUCTURE,
+      data: indexer.serialize(),
+    });
 
     return indexer.serializeByContext();
   }
 
-  static async updateIndexer({ data }: { data: any }, context: ServiceContext) {
+  static async updateIndexer(
+    { data }: { data: UpdateIndexerDto },
+    context: ServiceContext,
+  ) {
     const indexer = await new Indexer({}, context).populateByUUIDAndCheckAccess(
       data.indexer_uuid,
     );
@@ -132,7 +135,7 @@ export class IndexerService {
       event.indexer_uuid,
     );
 
-    if (indexer.status != SqlModelStatus.ACTIVE || !indexer.squidReference) {
+    if (!indexer.squidReference) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.INDEXER_IS_NOT_DEPLOYED,
         status: 400,
@@ -193,10 +196,13 @@ export class IndexerService {
     );
     await indexer.canAccess(context);
 
-    //Check that project has subscription
-    if (!(await checkProjectSubscription(context, indexer.project_uuid))) {
+    //Check that project has enough credits available
+    const creditBalance = (
+      await new Scs(context).getProjectCredit(indexer.project_uuid)
+    ).data.balance;
+    if (creditBalance < 20000) {
       throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.PROJECT_HAS_NO_SUBSCRIPTION,
+        code: InfrastructureErrorCode.PROJECT_CREDIT_BALANCE_TOO_LOW,
         status: 400,
       });
     }
@@ -205,7 +211,10 @@ export class IndexerService {
     const s3Client: AWS_S3 = new AWS_S3();
 
     if (
-      !s3Client.exists(env.INDEXER_BUCKET_FOR_SOURCE_CODE, indexer.indexer_uuid)
+      !(await s3Client.exists(
+        env.INDEXER_BUCKET_FOR_SOURCE_CODE,
+        indexer.indexer_uuid,
+      ))
     ) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.INDEXER_SOURCE_CODE_NOT_FOUND,
@@ -229,6 +238,9 @@ export class IndexerService {
     const data = {
       artifactUrl: `https://${env.INDEXER_BUCKET_FOR_SOURCE_CODE}.s3.${env.AWS_REGION}.amazonaws.com/${indexer.indexer_uuid}`,
       manifestPath: 'squid.yaml',
+      options: {
+        overrideName: `${indexer.id}${env.APP_ENV}`,
+      },
     };
     const { body } = await sqdApi<DeploymentResponse>({
       method: 'POST',
@@ -251,7 +263,7 @@ export class IndexerService {
       event.indexer_uuid,
     );
 
-    if (indexer.status != SqlModelStatus.ACTIVE || !indexer.squidId) {
+    if (!indexer.squidId) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.INDEXER_IS_NOT_DEPLOYED,
         status: 400,
@@ -282,7 +294,7 @@ export class IndexerService {
 
     await indexer.canModify(context);
 
-    if (indexer.status != SqlModelStatus.ACTIVE || !indexer.squidId) {
+    if (indexer.status != SqlModelStatus.ACTIVE || !indexer.squidReference) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.INDEXER_IS_NOT_DEPLOYED,
         status: 400,

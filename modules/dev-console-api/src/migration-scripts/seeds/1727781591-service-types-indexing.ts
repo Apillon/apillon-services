@@ -10,7 +10,7 @@ export async function upgrade(
     INTO \`${DbTables.SERVICE_TYPE}\`
       (id, name, description, active)
     VALUES (${AttachedServiceType.INDEXING},
-            'Indexer',
+            'Indexing',
             'Indexing service',
             1)
     ;

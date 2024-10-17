@@ -6,7 +6,7 @@ import {
   CreateRpcUrlDto,
   InfrastructureMicroservice,
   ListRpcUrlsForApiKeyQueryFilter,
-  UpdateRpcUrlDto,
+  UpdateRpcApiKeyDto,
 } from '@apillon/lib';
 
 @Injectable()
@@ -23,6 +23,11 @@ export class RpcService {
       .data;
   }
 
+  async getApiKey(context: DevConsoleApiContext, id: number) {
+    return (await new InfrastructureMicroservice(context).getRpcApiKey(id))
+      .data;
+  }
+
   async createRpcApiKey(
     context: DevConsoleApiContext,
     body: CreateRpcApiKeyDto,
@@ -33,7 +38,7 @@ export class RpcService {
   async updateRpcApiKey(
     context: DevConsoleApiContext,
     id: number,
-    data: UpdateRpcUrlDto,
+    data: UpdateRpcApiKeyDto,
   ) {
     return (
       await new InfrastructureMicroservice(context).updateRpcApiKey(id, data)
@@ -50,15 +55,6 @@ export class RpcService {
       .data;
   }
 
-  async updateRpcUrl(
-    context: DevConsoleApiContext,
-    id: number,
-    data: UpdateRpcUrlDto,
-  ) {
-    return (
-      await new InfrastructureMicroservice(context).updateRpcUrl(id, data)
-    ).data;
-  }
   async deleteRpcUrl(context: DevConsoleApiContext, id: number) {
     return (await new InfrastructureMicroservice(context).deleteRpcUrl(id))
       .data;
@@ -66,9 +62,15 @@ export class RpcService {
   async listRpcUrlsForApiKey(
     context: DevConsoleApiContext,
     query: ListRpcUrlsForApiKeyQueryFilter,
+    apiKeyId: number,
   ) {
+    query.apiKeyId = apiKeyId;
     return (
       await new InfrastructureMicroservice(context).listRpcUrlsForApiKey(query)
     ).data;
+  }
+
+  async listEndpoints(context: DevConsoleApiContext) {
+    return (await new InfrastructureMicroservice(context).listEndpoints()).data;
   }
 }

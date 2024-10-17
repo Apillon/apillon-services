@@ -44,6 +44,8 @@ export async function processEvent(
     [ScsEventType.UPDATE_SUBSCRIPTION]: SubscriptionService.updateSubscription,
     [ScsEventType.GET_ACTIVE_SUBSCRIPTION]:
       SubscriptionService.getProjectActiveSubscription,
+    [ScsEventType.HAS_ACTIVE_RPC_PLAN]:
+      SubscriptionService.hasProjectActiveRpcPlan,
     [ScsEventType.LIST_SUBSCRIPTIONS]: SubscriptionService.listSubscriptions,
     [ScsEventType.GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION]:
       SubscriptionService.getProjectsWithActiveSubscription,

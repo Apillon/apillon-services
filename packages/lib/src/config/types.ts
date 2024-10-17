@@ -31,7 +31,8 @@ export enum EvmChain {
   MOONBASE = 1287,
   ASTAR_SHIBUYA = 81, // testnet
   ASTAR = 592,
-  OASIS = 42262,
+  OASIS_TESTNET = 42262,
+  OASIS_SAPPHIRE = 23294,
   ALFAJORES = 44787, // Celo testnet
   CELO = 42220,
 }
@@ -253,6 +254,7 @@ export enum ScsEventType {
   GET_PRODUCT_PRICELIST = 'get-product-pricelist',
   GET_PRODUCT_PRICE = 'get-product-price',
   GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION = 'get-projects-with-active-subscription',
+  HAS_ACTIVE_RPC_PLAN = 'has-active-rpc-plan',
 }
 
 export enum NftsEventType {
@@ -324,10 +326,6 @@ export enum ReferralEventType {
   CONFIRM_RETWEET = 'confirm-retweet',
 
   ADD_PROMO_CODE_CREDITS = 'add-promo-code-credits',
-
-  GET_AIRDROP_TASKS = 'get-airdrop-tasks',
-  GET_CLAIM_PARAMETERS = 'get-claim-parameters',
-  SET_CLAIMS_COMPLETED = 'set-claims-completed',
 }
 
 export enum SocialEventType {
@@ -365,15 +363,19 @@ export enum InfrastructureEventType {
   UPDATE_RPC_API_KEY = 'update-rpc-api-key',
   CREATE_RPC_API_KEY = 'create-rpc-api-key',
   GET_RPC_API_KEY_USAGE = 'get-rpc-api-key-usage',
+  GET_RPC_API_KEY = 'get-rpc-api-key',
+  CHANGE_DWELLIR_SUBSCRIPTION = 'change-dwellir-subscription',
+  DOWNGRADE_DWELLIR_SUBSCRIPTIONS = 'downgrade-dwellir-subscriptions',
   CREATE_RPC_URL = 'create-rpc-url',
-  UPDATE_RPC_URL = 'update-rpc-url',
   DELETE_RPC_URL = 'delete-rpc-url',
   LIST_RPC_URLS = 'list-rpc-urls',
+  LIST_ENDPOINTS = 'list-endpoints',
+
   INDEXER_CREATE = 'create-indexer',
   INDEXER_LIST = 'list-indexers',
   INDEXER_GET = 'get-indexer',
   INDEXER_GET_LOGS = 'get-indexer-logs',
-  INDEXER_GET_DEPLOYMENTS = 'get-indexer-deployment',
+  INDEXER_GET_DEPLOYMENTS = 'get-indexer-deployments',
   INDEXER_UPDATE = 'update-indexer',
   INDEXER_GET_URL_FOR_SC_UPLOAD = 'get-url-for-indexer-source-code-upload',
   INDEXER_DEPLOY = 'deploy-indexer',
@@ -559,6 +561,7 @@ export enum DefaultPermission {
   WALLET = 7,
   CONTRACTS = 8,
   INDEXING = 10,
+  RPC = 9,
 }
 
 //#endregion
@@ -806,7 +809,6 @@ export enum ValidatorErrorCode {
   //#region Infrastructure
   RPC_API_KEY_NAME_NOT_PRESENT = 422001101,
   RPC_API_KEY_PROJECT_ID_NOT_PRESENT = 422001102,
-  RPC_URL_NAME_NOT_PRESENT = 422001103,
   RPC_URL_API_KEY_ID_NOT_PRESENT = 422001104,
   RPC_URL_NETWORK_NOT_PRESENT = 422001105,
   RPC_URL_CHAIN_NAME_NOT_PRESENT = 422001106,
@@ -847,6 +849,12 @@ export class RoleGroup {
     DefaultUserRole.PROJECT_ADMIN,
     DefaultUserRole.PROJECT_USER,
     DefaultUserRole.ADMIN,
+  ];
+
+  static ProjectOwnerAccess = [
+    DefaultUserRole.PROJECT_OWNER,
+    DefaultUserRole.ADMIN,
+    DefaultUserRole.PROJECT_ADMIN,
   ];
 }
 
@@ -1112,6 +1120,7 @@ export enum EmailTemplate {
   RESET_PASSWORD = 'reset-password',
   NEW_USER_ADDED_TO_PROJECT = 'new-user-added-to-project',
   USER_ADDED_TO_PROJECT = 'user-added-to-project',
+  RPC_USAGE_EXCEEDED = 'rpc-usage-exceeded',
 
   CONTACT_US_FORM = 'contact-us-form',
 
@@ -1147,4 +1156,5 @@ export enum SubscriptionPackageId {
   CATERPILLAR = 2,
   COCOON = 3,
   BUTTERFLY = 4,
+  RPC_PLAN = 5,
 }

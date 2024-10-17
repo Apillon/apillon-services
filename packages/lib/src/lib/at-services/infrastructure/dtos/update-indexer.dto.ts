@@ -1,36 +1,19 @@
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
-import {
-  PopulateFrom,
-  SerializeFor,
-  ValidatorErrorCode,
-} from '../../../../config/types';
-import { presenceValidator } from '@rawmodel/validators';
+import { PopulateFrom, SerializeFor } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
-export class CreateIndexerDto extends ModelBase {
+export class UpdateIndexerDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.INDEXER_REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
   })
-  public project_uuid: string;
+  public indexer_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.INDEXER_REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
   })
   public name: string;
 

@@ -50,3 +50,21 @@ export type DwellirGetUsageResponse = {
     >
   >;
 };
+
+export type DwellirGetAllUsagesResponse = Record<
+  string,
+  DwellirGetUsageResponse
+>;
+
+export type DwellirChangeSubscriptionResponse = {
+  name: string;
+  id: number;
+  rate_limit: number;
+  monthly_quota: number;
+  api_keys_limit: number;
+  daily_quota: number;
+  type: string;
+  version: string;
+  created_at: string;
+  updated_at: string;
+};

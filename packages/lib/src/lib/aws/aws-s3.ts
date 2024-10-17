@@ -64,7 +64,8 @@ export class AWS_S3 {
   async exists(bucket: string, source: string): Promise<boolean> {
     const command = new HeadObjectCommand({ Bucket: bucket, Key: source });
     try {
-      await this.s3Client.send(command);
+      const res = await this.s3Client.send(command);
+      console.info('headObject', res);
     } catch (err) {
       console.error('headObject error', err);
       return false;
