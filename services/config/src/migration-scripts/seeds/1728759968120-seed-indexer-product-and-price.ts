@@ -14,7 +14,7 @@ export async function upgrade(
     VALUES
     (${ProductCode.INDEXER}, '${
       ProductCode[ProductCode.INDEXER]
-    }', '', ${SqlModelStatus.ACTIVE}, '${ProductService.INDEXER}', '${ProductCategory.INDEXER}')
+    }', '', ${SqlModelStatus.ACTIVE}, '${ProductService.INDEXING}', '${ProductCategory.INDEXER}')
 ;`);
 
   await queryFn(`

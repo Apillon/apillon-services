@@ -175,23 +175,6 @@ export class Indexer extends UuidSqlModel {
   })
   lastDeploymentId: number;
 
-  // /** SQD status of last deployment */
-  // @prop({
-  //   parser: { resolver: integerParser() },
-  //   populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
-  //   serializable: [
-  //     SerializeFor.ADMIN,
-  //     SerializeFor.ADMIN_SELECT_DB,
-  //     SerializeFor.INSERT_DB,
-  //     SerializeFor.UPDATE_DB,
-  //     SerializeFor.SERVICE,
-  //     SerializeFor.PROFILE,
-  //     SerializeFor.SELECT_DB,
-  //     SerializeFor.APILLON_API,
-  //   ],
-  // })
-  // lastDeploymentStatus: number;
-
   public override populateByUUID(
     uuid: string,
     uuid_property?: string,

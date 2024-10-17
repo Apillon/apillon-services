@@ -1089,7 +1089,7 @@ export enum ProductService {
   STORAGE = 'STORAGE',
   CONTRACTS = 'CONTRACTS',
   WALLET = 'WALLET',
-  INDEXER = 'INDEXER',
+  INDEXING = 'INDEXING',
 }
 
 export enum ProductCategory {
