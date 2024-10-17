@@ -47,20 +47,6 @@ describe('RPC ApiKey tests', () => {
     await releaseStage(stage);
   });
 
-  describe('Create User', () => {
-    it('User should be able to create RPC user', async () => {
-      const response = await request(stage.http)
-        .post(`/rpc/${testProject.project_uuid}/user`)
-        .set('Authorization', `Bearer ${testUser.token}`);
-
-      expect(response.status).toBe(201);
-      const createdUser = response.body.data;
-      expect(createdUser.userId).toBeDefined();
-      expect(createdUser.dwellirId).toBeDefined();
-      expect(createdUser.created).toBeTruthy();
-    });
-  });
-
   describe('Create RPC Api Key', () => {
     const rpcApiKeyToCreate = {
       name: 'Test ApiKey',

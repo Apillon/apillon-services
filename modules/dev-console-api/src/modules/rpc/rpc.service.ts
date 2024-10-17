@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import {
+  AttachedServiceType,
   BaseProjectQueryFilter,
   CreateRpcApiKeyDto,
   CreateRpcUrlDto,
@@ -8,14 +9,11 @@ import {
   ListRpcUrlsForApiKeyQueryFilter,
   UpdateRpcApiKeyDto,
 } from '@apillon/lib';
+import { ServicesService } from '../services/services.service';
 
 @Injectable()
 export class RpcService {
-  async createUser(context: DevConsoleApiContext, project_uuid: string) {
-    return (
-      await new InfrastructureMicroservice(context).createUser(project_uuid)
-    ).data;
-  }
+  constructor(private readonly serviceService: ServicesService) {}
 
   async listRpcApiKeys(
     context: DevConsoleApiContext,
@@ -38,9 +36,16 @@ export class RpcService {
     context: DevConsoleApiContext,
     body: CreateRpcApiKeyDto,
   ) {
+    await this.serviceService.createServiceIfItDoesntExist(
+      context,
+      body.project_uuid,
+      AttachedServiceType.RPC,
+    );
+
     return (await new InfrastructureMicroservice(context).createRpcApiKey(body))
       .data;
   }
+
   async updateRpcApiKey(
     context: DevConsoleApiContext,
     id: number,
@@ -65,6 +70,7 @@ export class RpcService {
     return (await new InfrastructureMicroservice(context).deleteRpcUrl(id))
       .data;
   }
+
   async listRpcUrlsForApiKey(
     context: DevConsoleApiContext,
     query: ListRpcUrlsForApiKeyQueryFilter,
