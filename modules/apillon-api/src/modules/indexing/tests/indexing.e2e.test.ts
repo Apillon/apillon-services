@@ -1,5 +1,4 @@
 import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
-import { Subscription } from '@apillon/config/src/modules/subscription/models/subscription.model';
 import { Project } from '@apillon/dev-console-api/src/modules/project/models/project.model';
 import { InfrastructureErrorCode } from '@apillon/infrastructure/src/config/types';
 import { Indexer } from '@apillon/infrastructure/src/modules/indexer/models/indexer.model';
@@ -22,6 +21,7 @@ import {
 import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
 import { setupTest } from '../../../../test/helpers/setup';
+import { Credit } from '@apillon/config/src/modules/credit/models/credit.model';
 
 describe('Indexing tests', () => {
   let stage: Stage;
@@ -54,7 +54,7 @@ describe('Indexing tests', () => {
       stage.context.access,
       DefaultUserRole.ADMIN,
     );
-    testProject = await createTestProject(testUser, stage);
+    testProject = await createTestProject(testUser, stage, 0);
 
     apiKey = await createTestApiKey(
       stage.context.access,
@@ -99,7 +99,7 @@ describe('Indexing tests', () => {
   describe('Tests for source code upload & deployment', () => {
     test('Application (through Apillon API) should be able to get url for indexer source code upload', async () => {
       const response = await getRequest(
-        `/indexing/indexer/${testIndexer.indexer_uuid}/url-for-source-code-upload`,
+        `/indexing/indexers/${testIndexer.indexer_uuid}/upload-url`,
       );
       expect(response.status).toBe(200);
       expect(response.body.data).toBeTruthy();
@@ -118,45 +118,41 @@ describe('Indexing tests', () => {
 
     test('Application (through Apillon API) should NOT be able to get url for another project indexer source code upload', async () => {
       const response = await getRequest2(
-        `/indexing/indexer/${testIndexer.indexer_uuid}/url-for-source-code-upload`,
+        `/indexing/indexers/${testIndexer.indexer_uuid}/upload-url`,
       );
       expect(response.status).toBe(403);
     });
 
     test('Application (through Apillon API) should NOT be able to deploy ANOTHER project indexer', async () => {
       const response = await postRequest2(
-        `/indexing/indexer/${testIndexer.indexer_uuid}/deploy`,
+        `/indexing/indexers/${testIndexer.indexer_uuid}/deploy`,
       );
       expect(response.status).toBe(403);
     });
 
-    test('Application (through Apillon API) should NOT be able to deploy indexer of project, without subscription', async () => {
+    test('Application (through Apillon API) should NOT be able to deploy indexer if project balance is too low', async () => {
       const response = await postRequest(
-        `/indexing/indexer/${testIndexer.indexer_uuid}/deploy`,
+        `/indexing/indexers/${testIndexer.indexer_uuid}/deploy`,
       );
       expect(response.status).toBe(400);
       expect(response.body.code).toBe(
-        InfrastructureErrorCode.PROJECT_HAS_NO_SUBSCRIPTION,
+        InfrastructureErrorCode.PROJECT_CREDIT_BALANCE_TOO_LOW,
       );
     });
 
-    describe('Tests for indexer deployment of project which has subscription', () => {
+    describe('Tests for indexer deployment of project which has enough credit balance', () => {
       beforeAll(async () => {
-        //Add subscription to project
-        await new Subscription(
-          {
-            package_id: 1,
-            project_uuid: testProject.project_uuid,
-            expiresOn: new Date(2050, 1, 1),
-            subscriberEmail: 'subscriber@gmail.com',
-            stripeId: 1,
-          },
+        //add credit to project
+        const projectCredit = await new Credit(
+          {},
           stage.context.config,
-        ).insert();
+        ).populateByProjectUUIDForUpdate(testProject.project_uuid, undefined);
+        projectCredit.balance = 50000;
+        await projectCredit.update();
       });
       test('Application (through Apillon API) should be able to deploy indexer', async () => {
         const response = await postRequest(
-          `/indexing/indexer/${testIndexer.indexer_uuid}/deploy`,
+          `/indexing/indexers/${testIndexer.indexer_uuid}/deploy`,
         );
         expect(response.status).toBe(200);
 
@@ -181,7 +177,7 @@ describe('Indexing tests', () => {
           .insert();
 
         const response = await postRequest(
-          `/indexing/indexer/${testIndexer2.indexer_uuid}/deploy`,
+          `/indexing/indexers/${testIndexer2.indexer_uuid}/deploy`,
         );
         expect(response.status).toBe(400);
         expect(response.body.code).toBe(
@@ -189,7 +185,7 @@ describe('Indexing tests', () => {
         );
       });
 
-      test.only('Application (through Apillon API) should receive error if indexer source code is not in gzip format', async () => {
+      test('Application (through Apillon API) should receive error if indexer source code is not in gzip format', async () => {
         const testIndexer2 = await new Indexer({}, stage.context.infrastructure)
           .populate({
             indexer_uuid: uuidV4(),
@@ -200,7 +196,7 @@ describe('Indexing tests', () => {
           .insert();
 
         const response = await getRequest(
-          `/indexing/indexer/${testIndexer2.indexer_uuid}/url-for-source-code-upload`,
+          `/indexing/indexers/${testIndexer2.indexer_uuid}/upload-url`,
         );
         expect(response.status).toBe(200);
         expect(response.body.data).toBeTruthy();
@@ -212,7 +208,7 @@ describe('Indexing tests', () => {
         expect(s3Response.status).toBe(200);
 
         const deployResponse = await postRequest(
-          `/indexing/indexer/${testIndexer2.indexer_uuid}/deploy`,
+          `/indexing/indexers/${testIndexer2.indexer_uuid}/deploy`,
         );
         expect(deployResponse.status).toBe(400);
         expect(deployResponse.body.code).toBe(
