@@ -139,6 +139,37 @@ describe('Credits unit test', () => {
       expect(creditTransaction.direction).toBe(2);
     });
 
+    test('Test successful spend credit with custom amount', async () => {
+      const data = new SpendCreditDto({
+        project_uuid: project1_uuid,
+        product_id: ProductCode.HOSTING_WEBSITE,
+        referenceTable: 'website',
+        referenceId: '2',
+        location: 'creditTest',
+        service: 'TEST',
+        amount: 5,
+      });
+
+      project1Balance -= 5;
+      await CreditService.spendCredit({ body: data }, stage.context);
+
+      const projectCredit: Credit = await new Credit(
+        {},
+        stage.context,
+      ).populateByUUID(project1_uuid);
+
+      expect(projectCredit?.balance).toBe(project1Balance);
+
+      //Check credit transaction
+      const creditTransaction: CreditTransaction = await new CreditTransaction(
+        {},
+        stage.context,
+      ).populateByReference('website', '2');
+      expect(creditTransaction.exists()).toBeTruthy();
+      expect(creditTransaction.amount).toBe(5);
+      expect(creditTransaction.direction).toBe(2);
+    });
+
     test('Test failed spend credit - balance too low', async () => {
       await new Credit(
         {

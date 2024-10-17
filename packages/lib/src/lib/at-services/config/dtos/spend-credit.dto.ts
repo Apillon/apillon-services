@@ -91,12 +91,6 @@ export class SpendCreditDto extends ModelBase {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.SPEND_CREDIT_REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
   })
   public amount?: number;
 }
