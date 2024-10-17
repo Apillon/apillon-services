@@ -28,6 +28,13 @@ export class InfrastructureMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
+  public async createUser(projectUuid: string) {
+    return await this.callService({
+      eventName: InfrastructureEventType.CREATE_USER,
+      projectUuid,
+    });
+  }
+
   public async hasDwellirId(userUuid: string) {
     return await this.callService({
       eventName: InfrastructureEventType.HAS_DWELLIR_ID,

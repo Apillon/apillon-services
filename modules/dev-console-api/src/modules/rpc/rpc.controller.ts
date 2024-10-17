@@ -33,6 +33,16 @@ import { ProjectAccessGuard } from '../../guards/project-access.guard';
 export class RpcController {
   constructor(private readonly rpcService: RpcService) {}
 
+  @Post('/:project_uuid/user')
+  @Permissions({ role: RoleGroup.ProjectOwnerAccess })
+  @UseGuards(AuthGuard, ProjectAccessGuard)
+  async createUser(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_uuid') project_uuid: string,
+  ) {
+    return await this.rpcService.createUser(context, project_uuid);
+  }
+
   @Post('api-key')
   @Validation({ dto: CreateRpcApiKeyDto })
   @Permissions({ role: RoleGroup.ProjectOwnerAccess })

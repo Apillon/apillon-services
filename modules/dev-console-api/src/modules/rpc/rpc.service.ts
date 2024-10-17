@@ -11,6 +11,12 @@ import {
 
 @Injectable()
 export class RpcService {
+  async createUser(context: DevConsoleApiContext, project_uuid: string) {
+    return (
+      await new InfrastructureMicroservice(context).createUser(project_uuid)
+    ).data;
+  }
+
   async listRpcApiKeys(
     context: DevConsoleApiContext,
     query: BaseProjectQueryFilter,

@@ -374,6 +374,7 @@ export enum InfrastructureEventType {
   LIST_RPC_URLS = 'list-rpc-urls',
   LIST_ENDPOINTS = 'list-endpoints',
   HAS_DWELLIR_ID = 'has-dwellir-id',
+  CREATE_USER = 'create-user',
 
   INDEXER_CREATE = 'create-indexer',
   INDEXER_LIST = 'list-indexers',
