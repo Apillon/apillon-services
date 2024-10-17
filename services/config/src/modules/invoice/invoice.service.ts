@@ -10,6 +10,10 @@ import {
   UpdateSubscriptionDto,
   Lmas,
   LogType,
+  SubscriptionPackageId,
+  InfrastructureMicroservice,
+  DwellirSubscription,
+  CreateQuotaOverrideDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { Invoice } from './models/invoice.model';
@@ -20,6 +24,7 @@ import { ScsCodeException, ScsValidationException } from '../../lib/exceptions';
 import { CreditPackage } from '../credit/models/credit-package.model';
 import { Subscription } from '../subscription/models/subscription.model';
 import { v4 as uuidV4 } from 'uuid';
+import { OverrideService } from '../override/override.service';
 
 export class InvoiceService {
   /**
@@ -159,6 +164,13 @@ export class InvoiceService {
         context,
         conn,
       );
+
+      if (webhookData.package_id === SubscriptionPackageId.RPC_PLAN) {
+        await new InfrastructureMicroservice(context).changeDwellirSubscription(
+          DwellirSubscription.DEVELOPER,
+        );
+      }
+
       return await InvoiceService.createInvoice(
         new CreateInvoiceDto({
           ...webhookData,

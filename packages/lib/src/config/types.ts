@@ -21,6 +21,7 @@ export enum SubstrateChain {
   XSOCIAL = 7,
   ASTAR = 8,
   ACURAST = 9,
+  UNIQUE = 11,
 }
 
 export enum EvmChain {
@@ -30,7 +31,10 @@ export enum EvmChain {
   MOONBASE = 1287,
   ASTAR_SHIBUYA = 81, // testnet
   ASTAR = 592,
-  OASIS = 42262,
+  OASIS_TESTNET = 42262,
+  OASIS_SAPPHIRE = 23294,
+  ALFAJORES = 44787, // Celo testnet
+  CELO = 42220,
 }
 
 export enum NFTCollectionType {
@@ -209,9 +213,13 @@ export enum AuthenticationEventType {
   SPORRAN_REQUEST_CREDENTIAL = 'sporran-request-credential',
   SPORRAN_VERIFY_CREDENTIAL = 'sporran-verify-credential',
   GET_TOTAL_DIDS = 'get-total-dids',
+  EW_INFO = 'get-embedded-wallets-info',
+  EW_INTEGRATION_CREATE = 'create-ew-integration',
+  EW_INTEGRATION_GET = 'get-ew-integration',
+  EW_INTEGRATION_LIST = 'list-ew-integration',
+  EW_INTEGRATION_UPDATE = 'update-ew-integration',
   CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
   LIST_OASIS_SIGNATURES = 'list-oasis-signatures',
-  GET_OASIS_SIGNATURES_COUNT_BY_API_KEY = 'get-oasis-signatures-count-by-api-key',
   GENERATE_OTP = 'generate-otp',
   VALIDATE_OTP = 'validate-otp',
 }
@@ -246,11 +254,13 @@ export enum ScsEventType {
   GET_PRODUCT_PRICELIST = 'get-product-pricelist',
   GET_PRODUCT_PRICE = 'get-product-price',
   GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION = 'get-projects-with-active-subscription',
+  HAS_ACTIVE_RPC_PLAN = 'has-active-rpc-plan',
 }
 
 export enum NftsEventType {
   HELLO = 'hello',
   CREATE_COLLECTION = 'create-collection',
+  CREATE_UNIQUE_COLLECTION = 'create-unique-collection',
   NFT_COLLECTIONS_LIST = 'list-nft-collections',
   GET_NFT_COLLECTION = 'get-nft-collection',
   GET_NFT_COLLECTION_BY_UUID = 'get-nft-collection-by-uuid',
@@ -316,10 +326,6 @@ export enum ReferralEventType {
   CONFIRM_RETWEET = 'confirm-retweet',
 
   ADD_PROMO_CODE_CREDITS = 'add-promo-code-credits',
-
-  GET_AIRDROP_TASKS = 'get-airdrop-tasks',
-  GET_CLAIM_PARAMETERS = 'get-claim-parameters',
-  SET_CLAIMS_COMPLETED = 'set-claims-completed',
 }
 
 export enum SocialEventType {
@@ -351,6 +357,32 @@ export enum ContractEventType {
   ARCHIVE_DEPLOYED_CONTRACT = 'archive-deployed-contract',
 }
 
+export enum InfrastructureEventType {
+  LIST_RPC_API_KEYS = 'list-rpc-api-keys',
+  REVOKE_RPC_API_KEY = 'revoke-rpc-api-key',
+  UPDATE_RPC_API_KEY = 'update-rpc-api-key',
+  CREATE_RPC_API_KEY = 'create-rpc-api-key',
+  GET_RPC_API_KEY_USAGE = 'get-rpc-api-key-usage',
+  GET_RPC_API_KEY = 'get-rpc-api-key',
+  CHANGE_DWELLIR_SUBSCRIPTION = 'change-dwellir-subscription',
+  DOWNGRADE_DWELLIR_SUBSCRIPTIONS = 'downgrade-dwellir-subscriptions',
+  CREATE_RPC_URL = 'create-rpc-url',
+  DELETE_RPC_URL = 'delete-rpc-url',
+  LIST_RPC_URLS = 'list-rpc-urls',
+  LIST_ENDPOINTS = 'list-endpoints',
+
+  INDEXER_CREATE = 'create-indexer',
+  INDEXER_LIST = 'list-indexers',
+  INDEXER_GET = 'get-indexer',
+  INDEXER_GET_LOGS = 'get-indexer-logs',
+  INDEXER_GET_DEPLOYMENTS = 'get-indexer-deployments',
+  INDEXER_UPDATE = 'update-indexer',
+  INDEXER_GET_URL_FOR_SC_UPLOAD = 'get-url-for-indexer-source-code-upload',
+  INDEXER_DEPLOY = 'deploy-indexer',
+  INDEXER_DELETE = 'delete-indexer',
+  INDEXER_HIBERNATE = 'hibernate-indexer',
+}
+
 export enum ServiceName {
   GENERAL = 'GENERAL',
   AMS = 'AMS',
@@ -368,6 +400,7 @@ export enum ServiceName {
   COMPUTING = 'COMPUTING',
   SOCIAL = 'SOCIAL',
   CONTRACTS = 'CONTRACTS',
+  INFRASTRUCTURE = 'INFRASTRUCTURE',
 }
 
 export enum ServiceCode {
@@ -387,6 +420,7 @@ export enum ServiceCode {
   BLOCKCHAIN = '16',
   COMPUTING = '18',
   SOCIAL = '19',
+  INFRASTRUCTURE = '20',
 }
 
 export enum AppEnvironment {
@@ -437,6 +471,7 @@ export enum AttachedServiceType {
   SOCIAL = 6,
   WALLET = 7,
   CONTRACTS = 8,
+  INDEXING = 10,
   SYSTEM = 999,
 }
 
@@ -524,7 +559,9 @@ export enum DefaultPermission {
   COMPUTING = 5,
   SOCIAL = 6,
   WALLET = 7,
-  CONTRACTS,
+  CONTRACTS = 8,
+  INDEXING = 10,
+  RPC = 9,
 }
 
 //#endregion
@@ -694,6 +731,8 @@ export enum ValidatorErrorCode {
   CREATE_OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT = 42200165,
   GENERATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200166,
   VALIDATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200167,
+  CREATE_EW_INTEGRATION_REQUIRED_DATA_NOT_PRESENT = 42200168,
+  CREATE_EW_INTEGRATION_INVALID_WHITELISTED_DOMAINS = 42200169,
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
   COMPUTING_CONTRACT_TYPE_NOT_PRESENT = 42200202,
@@ -766,6 +805,17 @@ export enum ValidatorErrorCode {
   TARGET_URL_NOT_PRESENT = 422001010,
   TARGET_URL_NOT_VALID = 422001011,
   //#endregion
+
+  //#region Infrastructure
+  RPC_API_KEY_NAME_NOT_PRESENT = 422001101,
+  RPC_API_KEY_PROJECT_ID_NOT_PRESENT = 422001102,
+  RPC_URL_API_KEY_ID_NOT_PRESENT = 422001104,
+  RPC_URL_NETWORK_NOT_PRESENT = 422001105,
+  RPC_URL_CHAIN_NAME_NOT_PRESENT = 422001106,
+  INDEXER_LOGS_REQUIRED_QUERY_DATA_NOT_PRESENT = 422001107,
+
+  INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001120,
+  DEPLOY_INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001121,
 }
 
 /**
@@ -799,6 +849,12 @@ export class RoleGroup {
     DefaultUserRole.PROJECT_ADMIN,
     DefaultUserRole.PROJECT_USER,
     DefaultUserRole.ADMIN,
+  ];
+
+  static ProjectOwnerAccess = [
+    DefaultUserRole.PROJECT_OWNER,
+    DefaultUserRole.ADMIN,
+    DefaultUserRole.PROJECT_ADMIN,
   ];
 }
 
@@ -844,6 +900,9 @@ export enum QuotaCode {
   MAX_STORAGE = 10,
   MAX_BANDWIDTH = 11,
   MAX_ETHEREUM_NFT_COLLECTIONS = 12,
+  MAX_EMBEDDED_WALLET_INTEGRATIONS = 13,
+  MAX_EMBEDDED_WALLET_SIGNATURES = 14,
+  MAX_RPC_KEYS = 15,
 }
 
 /**
@@ -902,6 +961,9 @@ export enum CacheKeyPrefix {
   URL_SHORTENER = 'url-shortener',
 
   ACURAST_JOB = 'acurast-job',
+
+  // DWELLIR
+  DWELLIR_ACCESS_TOKEN = 'dwellir-access-token',
 }
 
 export enum CacheKeyTTL {
@@ -911,6 +973,7 @@ export enum CacheKeyTTL {
   EXTENDED = 10 * 60, // 10 min
   LONG = 30 * 60, // 30 min
   EXTRA_LONG = 60 * 60, // 60 min
+  THREE_HOURS = 3 * 60 * 60, // 3 hours
 }
 
 export enum MongoCollections {
@@ -1006,6 +1069,12 @@ export enum ProductCode {
   COMPUTING_JOB_DELETE = 54,
 
   IPNS = 55,
+
+  // UNIQUE NFTS
+  NFT_UNIQUE_COLLECTION = 56,
+  NFT_UNIQUE_MINT = 57,
+  NFT_UNIQUE_BURN = 58,
+  NFT_UNIQUE_TRANSFER_COLLECTION = 59,
 }
 
 export enum ProductService {
@@ -1038,6 +1107,7 @@ export enum ProductCategory {
   ACURAST = 'ACURAST',
   IPNS = 'IPNS',
   SIGNATURE = 'SIGNATURE',
+  UNIQUE_NFT = 'UNIQUE_NFT',
 }
 
 export enum EmailTemplate {
@@ -1045,6 +1115,7 @@ export enum EmailTemplate {
   RESET_PASSWORD = 'reset-password',
   NEW_USER_ADDED_TO_PROJECT = 'new-user-added-to-project',
   USER_ADDED_TO_PROJECT = 'user-added-to-project',
+  RPC_USAGE_EXCEEDED = 'rpc-usage-exceeded',
 
   CONTACT_US_FORM = 'contact-us-form',
 
@@ -1077,7 +1148,8 @@ export enum JwtExpireTime {
 
 export enum SubscriptionPackageId {
   FREEMIUM = 1,
-  CATERPILLAR,
-  COCOON,
-  BUTTERFLY,
+  CATERPILLAR = 2,
+  COCOON = 3,
+  BUTTERFLY = 4,
+  RPC_PLAN = 5,
 }

@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="access &gt; test-server" type="js.build_tools.npm" folderName="test-servers" nameIsGenerated="true">
+    <package-json value="$PROJECT_DIR$/services/access/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="test-server" />
+    </scripts>
+    <node-interpreter value="project" />
+    <envs />
+    <method v="2" />
+  </configuration>
+</component>

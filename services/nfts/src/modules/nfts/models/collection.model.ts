@@ -772,6 +772,10 @@ export class Collection extends UuidSqlModel {
     };
   }
 
+  getTokenMetadataUrl(tokenId: number) {
+    return `${this.baseUri}${tokenId}${this.baseExtension}`;
+  }
+
   public override async populateById(
     id: number | string,
     conn?: PoolConnection,

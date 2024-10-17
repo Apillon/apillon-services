@@ -5,6 +5,7 @@ import { PhalaBlockchainIndexer } from '../modules/blockchain-indexers/substrate
 import { SubsocialBlockchainIndexer } from '../modules/blockchain-indexers/substrate/subsocial/indexer.service';
 import { AstarSubstrateBlockchainIndexer } from '../modules/blockchain-indexers/substrate/astar/indexer.service';
 import { AcurastBlockchainIndexer } from '../modules/blockchain-indexers/substrate/acurast/indexer.service';
+import { UniqueBlockchainIndexer } from '../modules/blockchain-indexers/substrate/unique/indexer.service';
 
 // TODO: Maybe move worker name to env, so it can be configurable
 export const ParachainConfig = {
@@ -56,5 +57,12 @@ export const ParachainConfig = {
     webhookWorkerName: 'TransactionStatusWorker',
     sqsUrl: env.COMPUTING_AWS_WORKER_SQS_URL,
     indexer: AcurastBlockchainIndexer,
+  },
+  UNIQUE: {
+    id: SubstrateChain.UNIQUE,
+    name: 'UNIQUE',
+    webhookWorkerName: 'TransactionStatusWorker',
+    sqsUrl: env.NFTS_AWS_WORKER_SQS_URL,
+    indexer: UniqueBlockchainIndexer,
   },
 };

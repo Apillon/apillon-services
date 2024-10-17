@@ -19,7 +19,7 @@ describe('Oasis contract events tests', () => {
     await new Endpoint({}, stage.context)
       .populate({
         url: 'https://testnet.sapphire.oasis.io',
-        chain: EvmChain.OASIS,
+        chain: EvmChain.OASIS_TESTNET,
         chainType: ChainType.EVM,
       })
       .insert();
@@ -28,7 +28,7 @@ describe('Oasis contract events tests', () => {
     contract = await new Contract({}, stage.context)
       .populate({
         address: '0xDc9e8B6894E4754631887486BcF583B6B3158c4E',
-        chain: EvmChain.OASIS,
+        chain: EvmChain.OASIS_TESTNET,
         chainType: ChainType.EVM,
         abi: `[
           "constructor(address _signer)",

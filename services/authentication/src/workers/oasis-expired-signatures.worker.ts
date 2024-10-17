@@ -17,7 +17,7 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
-import { OasisSignature } from '../modules/oasis/models/oasis-signature.model';
+import { OasisSignature } from '../modules/embedded-wallet/models/oasis-signature.model';
 
 /**
  * Worker updates oasis signatures status and refunds credit for signatures, which were not used for Oasis account creation (were not indexed and updated to status ACTIVE in 2 hours)

@@ -33,16 +33,16 @@ export class ValidateOtpDto extends ModelBase {
   })
   public code: string;
 
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.VALIDATE_OTP_REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-  })
-  public token: string;
+  // @prop({
+  //   parser: { resolver: stringParser() },
+  //   populatable: [PopulateFrom.PROFILE],
+  //   serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  //   validators: [
+  //     {
+  //       resolver: presenceValidator(),
+  //       code: ValidatorErrorCode.VALIDATE_OTP_REQUIRED_DATA_NOT_PRESENT,
+  //     },
+  //   ],
+  // })
+  // public token: string;
 }

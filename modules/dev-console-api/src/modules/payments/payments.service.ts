@@ -17,7 +17,10 @@ import { StripeService } from './stripe.service';
 
 @Injectable()
 export class PaymentsService {
-  constructor(private stripe: Stripe, private stripeService: StripeService) {}
+  constructor(
+    private stripe: Stripe,
+    private stripeService: StripeService,
+  ) {}
 
   /**
    * Creates a stripe payment session for purchasing a credit package
