@@ -28,6 +28,13 @@ export class InfrastructureMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
+  public async hasDwellirId(userUuid: string) {
+    return await this.callService({
+      eventName: InfrastructureEventType.HAS_DWELLIR_ID,
+      userUuid,
+    });
+  }
+
   public async getRpcApiKeyUsage(id: number) {
     return await this.callService({
       eventName: InfrastructureEventType.GET_RPC_API_KEY_USAGE,

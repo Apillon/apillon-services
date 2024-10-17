@@ -119,6 +119,14 @@ export class RpcApiKeyService {
     };
   }
 
+  static async hasDwellirId(userUuid: string, context: ServiceContext) {
+    const foundIds = await new DwellirUser({}, context).populateByUserUuids([
+      userUuid,
+    ]);
+
+    return !!foundIds.length;
+  }
+
   static async getDwellirId(context: ServiceContext) {
     const dwellirUser = await new DwellirUser({}, context).populateById(
       context.user.id,

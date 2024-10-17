@@ -13,6 +13,7 @@ import { Dwellir } from '../../lib/dwellir/dwellir';
 export class RpcUrlService {
   static async getEndpoints() {
     const endpoints = await Dwellir.getEndpoints();
+    endpoints.sort((a, b) => a.name.localeCompare(b.name));
     const spreadedEndpoints = endpoints.reduce(
       (acc, endpoint) => {
         const { networks, ...props } = endpoint;
@@ -53,7 +54,11 @@ export class RpcUrlService {
     const rpcUrlByNetworkAndApiKey = await new RpcUrl(
       {},
       context,
-    ).populateByNetworkAndApiKey(data.network, data.apiKeyId);
+    ).populateByNetworkChainNameAndApiKey(
+      data.network,
+      data.apiKeyId,
+      data.chainName,
+    );
     if (rpcUrlByNetworkAndApiKey.exists()) {
       return rpcUrlByNetworkAndApiKey.serializeByContext();
     }
@@ -91,8 +96,9 @@ export class RpcUrlService {
       });
     }
 
-    rpcUrl.httpsUrl = `${node.https}/${rpcApiKey.uuid}`;
-    rpcUrl.wssUrl = `${node.wss}/${rpcApiKey.uuid}`;
+    // Dwellir returns the URL with <key> placeholder
+    rpcUrl.httpsUrl = node.https.replace('<key>', rpcApiKey.uuid);
+    rpcUrl.wssUrl = node.wss.replace('<key>', rpcApiKey.uuid);
     return (await rpcUrl.insert()).serializeByContext();
   }
 
