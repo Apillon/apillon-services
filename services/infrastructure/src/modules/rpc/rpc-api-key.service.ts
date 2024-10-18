@@ -113,8 +113,8 @@ export class RpcApiKeyService {
   }
 
   static async getOrCreateDwellirId(context: ServiceContext) {
-    const dwellirUser = await new DwellirUser({}, context).populateById(
-      context.user.id,
+    const dwellirUser = await new DwellirUser({}, context).populateByUserUuid(
+      context.user.user_uuid,
     );
 
     if (dwellirUser.exists()) {
