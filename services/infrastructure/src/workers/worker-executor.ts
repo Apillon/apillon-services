@@ -101,6 +101,13 @@ export async function handleLambdaEvent(
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
       break;
+    case WorkerName.RPC_USAGE_CHECK:
+      const rpcUsageCheckWorker = new RpcUsageCheckWorker(
+        workerDefinition,
+        context,
+      );
+      await rpcUsageCheckWorker.run();
+      break;
     default:
       console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
@@ -149,23 +156,13 @@ export async function handleSqsMessages(
       const workerName = message?.messageAttributes?.workerName?.stringValue;
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const workerDefinition = new WorkerDefinition(serviceDef, workerName, {
+      const _workerDefinition = new WorkerDefinition(serviceDef, workerName, {
         id,
         parameters,
       });
 
       // eslint-disable-next-line sonarjs/no-small-switch
       switch (workerName) {
-        case WorkerName.RPC_USAGE_CHECK: {
-          await new RpcUsageCheckWorker(
-            workerDefinition,
-            context,
-            QueueWorkerType.EXECUTOR,
-          ).run({
-            executeArg: message?.body,
-          });
-          break;
-        }
         default:
           console.log(
             `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,
