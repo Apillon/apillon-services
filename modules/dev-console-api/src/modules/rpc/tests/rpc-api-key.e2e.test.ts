@@ -42,6 +42,7 @@ describe('RPC ApiKey tests', () => {
 
     testProject2 = await createTestProject(testUser2, stage);
   });
+
   afterAll(async () => {
     await releaseStage(stage);
   });
