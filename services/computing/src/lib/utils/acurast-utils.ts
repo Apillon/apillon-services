@@ -144,39 +144,42 @@ export async function deleteAcurastJob(
   job: AcurastJob,
   conn: PoolConnection,
 ) {
-  const acurastClient = new AcurastClient(await getAcurastEndpoint(context));
-  const transaction = await acurastClient.createDeregisterJobTransaction(
-    job.jobId,
-  );
+  // If job is already deployed, delete it from acurast
+  if (job.jobId) {
+    const acurastClient = new AcurastClient(await getAcurastEndpoint(context));
+    const transaction = await acurastClient.createDeregisterJobTransaction(
+      job.jobId,
+    );
 
-  const response = await new BlockchainMicroservice(
-    context,
-  ).createSubstrateTransaction(
-    new CreateSubstrateTransactionDto({
-      chain: SubstrateChain.ACURAST,
-      transaction: transaction.toHex(),
-      referenceTable: DbTables.ACURAST_JOB,
-      referenceId: job.id,
-      project_uuid: job.project_uuid,
-    }),
-  );
-
-  // Insert tx record to DB
-  await TransactionService.saveTransaction(
-    new Transaction(
-      {
-        transaction_uuid: uuidV4(),
-        walletAddress: response.data.address,
-        transactionType: TransactionType.DELETE_JOB,
-        refTable: DbTables.ACURAST_JOB,
-        refId: job.id,
-        transactionHash: response.data.transactionHash,
-        transactionStatus: ComputingTransactionStatus.PENDING,
-      },
+    const response = await new BlockchainMicroservice(
       context,
-    ),
-    conn,
-  );
+    ).createSubstrateTransaction(
+      new CreateSubstrateTransactionDto({
+        chain: SubstrateChain.ACURAST,
+        transaction: transaction.toHex(),
+        referenceTable: DbTables.ACURAST_JOB,
+        referenceId: job.id,
+        project_uuid: job.project_uuid,
+      }),
+    );
+
+    // Insert tx record to DB
+    await TransactionService.saveTransaction(
+      new Transaction(
+        {
+          transaction_uuid: uuidV4(),
+          walletAddress: response.data.address,
+          transactionType: TransactionType.DELETE_JOB,
+          refTable: DbTables.ACURAST_JOB,
+          refId: job.id,
+          transactionHash: response.data.transactionHash,
+          transactionStatus: ComputingTransactionStatus.PENDING,
+        },
+        context,
+      ),
+      conn,
+    );
+  }
 
   job.jobStatus = AcurastJobStatus.DELETED;
   job.status = SqlModelStatus.DELETED;

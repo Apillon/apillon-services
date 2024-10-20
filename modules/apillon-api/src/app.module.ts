@@ -17,7 +17,7 @@ import { ProjectModule } from './modules/project/project.module';
 import { SocialModule } from './modules/social/social.module';
 import { ContractsModule } from './modules/contracts/contracts.module';
 import { EmbeddedWalletModule } from './modules/embedded-wallet/embedded-wallet.module';
-
+import { IndexingModule } from './modules/indexing/indexing.module';
 @Module({
   imports: [
     MySQLModule,
@@ -34,6 +34,7 @@ import { EmbeddedWalletModule } from './modules/embedded-wallet/embedded-wallet.
     EmbeddedWalletModule,
     AcurastModule,
     ContractsModule,
+    IndexingModule,
   ],
   controllers: [AppController],
   providers: [],
@@ -47,8 +48,8 @@ export class AppModule {
       .apply(AuthenticateApiKeyMiddleware)
       .exclude(
         { path: '/', method: RequestMethod.ALL },
-        { path: '/embedded-wallet/signature', method: RequestMethod.POST },
-        { path: '/embedded-wallet/otp(.*)', method: RequestMethod.POST },
+        { path: '/embedded-wallet/(.*)', method: RequestMethod.GET },
+        { path: '/embedded-wallet/(.*)', method: RequestMethod.POST },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer

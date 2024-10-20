@@ -198,7 +198,7 @@ export class Scs extends BaseService {
 
   public async getSubscriptionPackageStripeId(
     package_id: number,
-    project_uuid: string,
+    project_uuid?: string,
   ) {
     return await this.callService({
       eventName: ScsEventType.GET_SUBSCRIPTION_PACKAGE_STRIPE_ID,
@@ -219,6 +219,13 @@ export class Scs extends BaseService {
   public async getProjectActiveSubscription(project_uuid: string) {
     return await this.callService({
       eventName: ScsEventType.GET_ACTIVE_SUBSCRIPTION,
+      project_uuid,
+    });
+  }
+
+  public async hasProjectActiveRpcPlan(project_uuid: string | string[]) {
+    return await this.callService({
+      eventName: ScsEventType.HAS_ACTIVE_RPC_PLAN,
       project_uuid,
     });
   }

@@ -59,7 +59,9 @@ export class AbiHelper {
   validateCallMethod(methodName: string, methodArguments: unknown[]) {
     const methods = this.findFunctionMethod(methodName);
     if (methods.length <= 0) {
-      throw new AbiHelperMissingMethodError('method not found');
+      throw new AbiHelperMissingMethodError(
+        `Contract has no method named ${methodName}.`,
+      );
     }
     const atLeastOneValidMethod = methods.reduce(
       (accumulator: boolean, method: object & Record<'inputs', unknown>) => {
@@ -72,14 +74,16 @@ export class AbiHelper {
       false,
     );
     if (!atLeastOneValidMethod) {
-      throw new AbiHelperNotAllowedError('cannot call method');
+      throw new AbiHelperNotAllowedError(
+        `No ${methodName} call accepts ${methodArguments.length} arguments.`,
+      );
     }
   }
 
   validateConstructorCall(methodArguments: unknown[]) {
     const methods = this.findConstructorMethods();
     if (methods.length <= 0) {
-      throw new AbiHelperMissingMethodError('constructor not found');
+      throw new AbiHelperMissingMethodError('Contract has no constructor.');
     }
     const atLeastOneValidConstructor = methods.reduce(
       (accumulator: boolean, method: object & Record<'inputs', unknown>) => {
@@ -92,7 +96,9 @@ export class AbiHelper {
       false,
     );
     if (!atLeastOneValidConstructor) {
-      throw new AbiHelperNotAllowedError('cannot call constructor');
+      throw new AbiHelperNotAllowedError(
+        `No constructor call accepts ${methodArguments.length} arguments.`,
+      );
     }
   }
 

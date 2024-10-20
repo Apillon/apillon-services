@@ -36,6 +36,16 @@ export function evmChainToWorkerName(
         ? WorkerName.TRANSMIT_ASTAR_TRANSACTIONS
         : WorkerName.VERIFY_ASTAR_TRANSACTIONS;
     }
+    case EvmChain.CELO: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_CELO_TRANSACTIONS
+        : WorkerName.VERIFY_CELO_TRANSACTIONS;
+    }
+    case EvmChain.ALFAJORES: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_ALFAJORES_TRANSACTIONS
+        : WorkerName.VERIFY_ALFAJORES_TRANSACTIONS;
+    }
     default: {
       throw new Error('Unsupported');
     }
@@ -61,6 +71,9 @@ export function substrateChainToWorkerName(chain: SubstrateChain): string {
     }
     case SubstrateChain.ACURAST: {
       return WorkerName.TRANSMIT_ACURAST_TRANSACTIONS;
+    }
+    case SubstrateChain.UNIQUE: {
+      return WorkerName.TRANSMIT_UNIQUE_TRANSACTIONS;
     }
     default: {
       throw new Error('Unsupported');

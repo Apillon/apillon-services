@@ -21,7 +21,7 @@ export abstract class ProjectAccessModel extends AdvancedSQLModel {
    */
   public canAccess(context: Context, project_uuid: string = null): boolean {
     // Admins are allowed to access items on any project
-    if (context.user?.userRoles.includes(DefaultUserRole.ADMIN)) {
+    if (context.hasRole([DefaultUserRole.ADMIN, DefaultUserRole.SUPPORT])) {
       return true;
     }
 

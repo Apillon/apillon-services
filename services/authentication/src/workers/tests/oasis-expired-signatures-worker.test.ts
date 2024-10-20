@@ -2,7 +2,7 @@ import { BlockchainMicroservice, Scs, SqlModelStatus } from '@apillon/lib';
 import { getConfig } from '@apillon/tests-lib';
 import { ServiceDefinitionType, WorkerDefinition } from '@apillon/workers-lib';
 import { Stage, releaseStage, setupTest } from '../../../test/setup';
-import { OasisSignature } from '../../modules/oasis/models/oasis-signature.model';
+import { OasisSignature } from '../../modules/embedded-wallet/models/oasis-signature.model';
 import { OasisExpiredSignaturesWorker } from '../oasis-expired-signatures.worker';
 
 describe('Oasis expired signature worker tests', () => {

@@ -135,10 +135,15 @@ export class SubscriptionService {
    * @returns {Promise<string>}
    */
   static async getSubscriptionPackageStripeId(
-    { package_id, project_uuid }: { package_id: number; project_uuid: string },
+    { package_id, project_uuid }: { package_id: number; project_uuid?: string },
     context: ServiceContext,
   ): Promise<string> {
-    await SubscriptionService.checkForActiveSubscription(project_uuid, context);
+    if (project_uuid) {
+      await SubscriptionService.checkForActiveSubscription(
+        project_uuid,
+        context,
+      );
+    }
 
     const subscriptionPackage = await new SubscriptionPackage(
       {},
@@ -176,6 +181,13 @@ export class SubscriptionService {
       context,
     ).getActiveSubscription(project_uuid, conn);
     return subscription.serialize(SerializeFor.PROFILE) as Subscription;
+  }
+
+  static async hasProjectActiveRpcPlan(
+    { project_uuid }: { project_uuid: string | string[] },
+    context: ServiceContext,
+  ): Promise<boolean> {
+    return await new Subscription({}, context).hasActiveRpcPlan(project_uuid);
   }
 
   /**

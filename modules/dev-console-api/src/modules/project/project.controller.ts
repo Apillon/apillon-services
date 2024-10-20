@@ -38,6 +38,7 @@ import { ProjectService } from './project.service';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
 import { InvoicesQueryFilter } from '@apillon/lib';
+import { ProjectAccessGuard } from '../../guards/project-access.guard';
 
 @Controller('projects')
 @UseInterceptors(CacheInterceptor)
@@ -134,6 +135,19 @@ export class ProjectController {
     @Param('projectUserId', ParseIntPipe) projectUserId: number,
   ) {
     return await this.projectService.removeUserProject(context, projectUserId);
+  }
+
+  @Get(':project_uuid/has-active-rpc-plan')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard, ProjectAccessGuard)
+  async hasActiveRpcPlan(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_uuid') project_uuid: string,
+  ) {
+    return await this.projectService.hasProjectActiveRpcPlan(
+      context,
+      project_uuid,
+    );
   }
 
   @Get(':uuid')

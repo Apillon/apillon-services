@@ -4,6 +4,7 @@ import {
   Context,
   CreateEvmTransactionDto,
   CreateSubstrateTransactionDto,
+  env,
   EvmChain,
   NFTCollectionType,
   PoolConnection,
@@ -34,6 +35,7 @@ import {
   SUBSTRATE_MAX_INT,
   SubstrateContractClient,
 } from '@apillon/blockchain-lib/substrate';
+import { UniqueNftClient } from '../../modules/nfts/clients/unique-nft-client';
 
 export async function getEvmContractClient(
   context: Context,
@@ -80,18 +82,17 @@ export async function deployNFTCollectionContract(
   collection: Collection,
   conn: PoolConnection,
 ) {
-  const {
-    id: contractVersion_id,
-    abi,
-    bytecode,
-  } = await new ContractVersion({}, context).getContractVersion(
-    collection.collectionType,
-    collection.chainType,
-  );
+  const blockchainService = new BlockchainMicroservice(context);
   // TODO: we should use NftsService.sendTransaction() here since code is the same but weoker call makes it difficult
   let response: { data: TransactionDto };
+  let contractVersion_id: number = null;
   switch (collection.chainType) {
     case ChainType.EVM: {
+      const { id, abi, bytecode } = await new ContractVersion(
+        {},
+        context,
+      ).getContractVersion(collection.collectionType, collection.chainType);
+      contractVersion_id = id;
       const royaltiesFees = Math.round(collection.royaltiesFees * 100);
       const maxSupply =
         collection.maxSupply === 0 ? EVM_MAX_INT : collection.maxSupply;
@@ -145,7 +146,7 @@ export async function deployNFTCollectionContract(
         bytecode,
         contractArguments,
       );
-      response = await new BlockchainMicroservice(context).createEvmTransaction(
+      response = await blockchainService.createEvmTransaction(
         new CreateEvmTransactionDto(
           {
             chain: collection.chain,
@@ -160,54 +161,76 @@ export async function deployNFTCollectionContract(
       break;
     }
     case ChainType.SUBSTRATE: {
-      const substrateContractClient = await getSubstrateContractClient(
-        context,
-        collection.chain as SubstrateChain,
-        JSON.parse(abi),
-      );
-      console.log(
-        `[${
-          SubstrateChain[collection.chain]
-        }] Creating NFT deploy contract transaction from wallet address: ${
-          collection.deployerAddress
-        }, parameters=${JSON.stringify(collection)}`,
-      );
+      let transactionHex: string;
+      if (collection.chain === SubstrateChain.UNIQUE) {
+        const client = new UniqueNftClient(env.UNIQUE_NETWORK_API_URL);
+        transactionHex = await client.createCollection(
+          collection.name,
+          collection.symbol,
+          collection.description,
+          // we can implement admins
+          [],
+          // unique suggested to avoid using AllowList since they will redesign it
+          false, //collection.drop,
+          collection.collectionType === NFTCollectionType.NESTABLE,
+          collection.isRevokable,
+          collection.isSoulbound,
+          collection.maxSupply,
+        );
+      } else {
+        const { id, abi } = await new ContractVersion(
+          {},
+          context,
+        ).getContractVersion(collection.collectionType, collection.chainType);
+        contractVersion_id = id;
+        const substrateContractClient = await getSubstrateContractClient(
+          context,
+          collection.chain as SubstrateChain,
+          JSON.parse(abi),
+        );
+        console.log(
+          `[${
+            SubstrateChain[collection.chain]
+          }] Creating NFT deploy contract transaction from wallet address: ${
+            collection.deployerAddress
+          }, parameters=${JSON.stringify(collection)}`,
+        );
 
-      const maxSupply =
-        collection.maxSupply === 0
-          ? SUBSTRATE_NFTS_MAX_SUPPLY
-          : collection.maxSupply;
-      const dropPrice = collection.drop
-        ? `${substrateContractClient.toChainInt(collection.dropPrice)}`
-        : SUBSTRATE_MAX_INT.toString();
-      // address is hardcoded since at this point/time we don't have deployer address
-      const royaltiesAddress =
-        collection.royaltiesAddress ??
-        'aZT7hRB5TkBLC5ouScMuRfAV86poS5eBmvbYKYqJJXEoKhk';
-      const tx = await substrateContractClient.createDeployTransaction([
-        [collection.name],
-        [collection.symbol],
-        collection.baseUri,
-        collection.baseExtension,
-        maxSupply,
-        dropPrice, // prepresale_price_per_mint
-        dropPrice, //presale_price_per_mint
-        dropPrice, //price_per_mint
-        0, //prepresale_start_at
-        0, //presale_start_at
-        collection.drop ? collection.dropStart : 0, //public_sale_start_at
-        collection.drop ? SUBSTRATE_MAX_INT.toNumber() : 0, //public_sale_end_at
-        0, //launchpad_fee
-        royaltiesAddress, //project_treasury
-        royaltiesAddress, //launchpad_treasury
-      ]);
-      response = await new BlockchainMicroservice(
-        context,
-      ).createSubstrateTransaction(
+        const maxSupply =
+          collection.maxSupply === 0
+            ? SUBSTRATE_NFTS_MAX_SUPPLY
+            : collection.maxSupply;
+        const dropPrice = collection.drop
+          ? `${substrateContractClient.toChainInt(collection.dropPrice)}`
+          : SUBSTRATE_MAX_INT.toString();
+        // address is hardcoded since at this point/time we don't have deployer address
+        const royaltiesAddress =
+          collection.royaltiesAddress ??
+          'aZT7hRB5TkBLC5ouScMuRfAV86poS5eBmvbYKYqJJXEoKhk';
+        const tx = await substrateContractClient.createDeployTransaction([
+          [collection.name],
+          [collection.symbol],
+          collection.baseUri,
+          collection.baseExtension,
+          maxSupply,
+          dropPrice, // prepresale_price_per_mint
+          dropPrice, //presale_price_per_mint
+          dropPrice, //price_per_mint
+          0, //prepresale_start_at
+          0, //presale_start_at
+          collection.drop ? collection.dropStart : 0, //public_sale_start_at
+          collection.drop ? SUBSTRATE_MAX_INT.toNumber() : 0, //public_sale_end_at
+          0, //launchpad_fee
+          royaltiesAddress, //project_treasury
+          royaltiesAddress, //launchpad_treasury
+        ]);
+        transactionHex = tx.toHex();
+      }
+      response = await blockchainService.createSubstrateTransaction(
         new CreateSubstrateTransactionDto(
           {
             chain: collection.chain,
-            transaction: tx.toHex(),
+            transaction: transactionHex,
             referenceTable: DbTables.COLLECTION,
             referenceId: collection.id,
             project_uuid: collection.project_uuid,

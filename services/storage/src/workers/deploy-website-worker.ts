@@ -1,12 +1,12 @@
 import {
   AppEnvironment,
+  checkProjectSubscription,
   Context,
   env,
   LogType,
   refundCredit,
   SerializeFor,
   ServiceName,
-  checkProjectSubscription,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -20,7 +20,6 @@ import {
   DeploymentEnvironment,
   DeploymentStatus,
   FileStatus,
-  StorageErrorCode,
 } from '../config/types';
 import { createCloudfrontInvalidationCommand } from '../lib/aws-cloudfront';
 import { generateDirectoriesFromPath } from '../lib/generate-directories-from-path';

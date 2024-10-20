@@ -20,9 +20,11 @@ import { IpnsModule } from './modules/storage/ipns/ipns.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { UserModule } from './modules/user/user.module';
 import { SocialModule } from './modules/social/social.module';
-import { WalletModule } from './modules/wallet/wallet.module';
 import { AcurastModule } from './modules/acurast/acurast.module';
 import { ContractsModule } from './modules/contracts/contracts.module';
+import { EmbeddedWalletModule } from './modules/wallet/embedded-wallet.module';
+import { RpcModule } from './modules/rpc/rpc.module';
+import { IndexingModule } from './modules/indexing/indexing.module';
 
 @Module({
   imports: [
@@ -41,9 +43,11 @@ import { ContractsModule } from './modules/contracts/contracts.module';
     PaymentsModule,
     PublicModule,
     SocialModule,
-    WalletModule,
+    EmbeddedWalletModule,
     AcurastModule,
     ContractsModule,
+    RpcModule,
+    IndexingModule,
   ],
   controllers: [],
   providers: [],

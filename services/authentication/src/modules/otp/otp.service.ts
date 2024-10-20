@@ -12,6 +12,7 @@ import {
 } from '@apillon/lib';
 import { Otp } from './models/otp.model';
 import { ServiceContext } from '@apillon/service-lib';
+
 export class OtpService {
   static async generateOtp(
     event: { body: GenerateOtpDto },

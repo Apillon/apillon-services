@@ -32,6 +32,7 @@ export async function setupTest(
   env.AUTH_API_MYSQL_HOST = null; // safety
   env.BLOCKCHAIN_MYSQL_HOST = null; // safety
   env.SOCIAL_MYSQL_HOST = null; // safety
+  env.INFRASTRUCTURE_MYSQL_HOST = null; // safety
   env.CONTRACTS_MYSQL_HOST = null; // safety
 
   //Solve problem with certificates, when accessing ipfs gateway content through supertest request
