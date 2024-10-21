@@ -198,6 +198,30 @@ export class Indexer extends UuidSqlModel {
     return indexer;
   }
 
+  public async populateBySquidId(
+    squidId: number,
+    conn?: PoolConnection,
+  ): Promise<this> {
+    if (!squidId) {
+      throw new Error(`squidId should not be null!`);
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${DbTables.INDEXER}\`
+        WHERE squidId = @squidId
+        AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { squidId },
+      conn,
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
+
   public async getIndexers(
     status = SqlModelStatus.ACTIVE,
     conn?: PoolConnection,

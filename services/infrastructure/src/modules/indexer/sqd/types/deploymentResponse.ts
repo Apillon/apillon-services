@@ -58,3 +58,15 @@ export interface DeploymentResponse {
     reference: string;
   };
 }
+
+export interface BillingReceipt {
+  amount: string;
+  type: string;
+  squidId: string;
+  rate: string;
+  subtotal: string;
+  squid: {
+    id: number;
+    name: string;
+  };
+}
