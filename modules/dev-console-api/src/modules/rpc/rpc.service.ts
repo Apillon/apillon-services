@@ -32,6 +32,12 @@ export class RpcService {
       .data;
   }
 
+  async isRpcApiKeysQuotaReached(context: DevConsoleApiContext) {
+    return (
+      await new InfrastructureMicroservice(context).isRpcApiKeysQuotaReached()
+    ).data;
+  }
+
   async createRpcApiKey(
     context: DevConsoleApiContext,
     body: CreateRpcApiKeyDto,

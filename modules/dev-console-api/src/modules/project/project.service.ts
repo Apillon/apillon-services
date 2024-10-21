@@ -651,9 +651,11 @@ export class ProjectService {
       return RpcPlanType.DISABLED;
     }
 
-    const ownerHasDwellirId = await new InfrastructureMicroservice(
-      context,
-    ).hasDwellirId(projectOwner.user_uuid);
+    const ownerHasDwellirId = (
+      await new InfrastructureMicroservice(context).hasDwellirId(
+        projectOwner.user_uuid,
+      )
+    ).data;
 
     if (!ownerHasDwellirId) {
       return RpcPlanType.DISABLED;

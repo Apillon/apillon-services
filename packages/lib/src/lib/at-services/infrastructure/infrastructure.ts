@@ -35,6 +35,12 @@ export class InfrastructureMicroservice extends BaseService {
     });
   }
 
+  public async isRpcApiKeysQuotaReached() {
+    return await this.callService({
+      eventName: InfrastructureEventType.IS_RPC_API_KEYS_QUOTA_REACHED,
+    });
+  }
+
   public async hasDwellirId(userUuid: string) {
     return await this.callService({
       eventName: InfrastructureEventType.HAS_DWELLIR_ID,

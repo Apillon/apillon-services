@@ -153,8 +153,8 @@ export class RpcApiKeyService {
   }
 
   static async getDwellirId(context: ServiceContext) {
-    const dwellirUser = await new DwellirUser({}, context).populateById(
-      context.user.id,
+    const dwellirUser = await new DwellirUser({}, context).populateByUserUuid(
+      context.user.user_uuid,
     );
 
     if (!dwellirUser.exists()) {
@@ -165,6 +165,22 @@ export class RpcApiKeyService {
     }
 
     return dwellirUser.dwellir_id;
+  }
+
+  static async isRpcApiKeysQuotaReached(
+    _data: unknown,
+    context: ServiceContext,
+  ) {
+    const maxApiKeysQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_RPC_KEYS,
+      object_uuid: context.user.user_uuid,
+    });
+
+    const keysCount = await new RpcApiKey({}, context).getNumberOfKeysPerUser(
+      context.user.id,
+    );
+
+    return keysCount >= maxApiKeysQuota.value;
   }
 
   static async createRpcApiKey(
