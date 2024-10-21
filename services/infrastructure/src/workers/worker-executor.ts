@@ -172,8 +172,6 @@ export async function handleSqsMessages(
         parameters,
       });
 
-      console.log('Worker definition', workerDefinition);
-      console.log('workerName: ', workerDefinition.workerName);
       // eslint-disable-next-line sonarjs/no-small-switch
       switch (workerName) {
         case WorkerName.RPC_USAGE_CHECK: {

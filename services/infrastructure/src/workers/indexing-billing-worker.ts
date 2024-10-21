@@ -106,6 +106,10 @@ export class IndexingBillingWorker extends BaseSingleThreadWorker {
 
           //Spend credits
           if (billAmount > indexerBilling.billedAmount) {
+            console.info(
+              'Spend credits. Amount: ' +
+                (billAmount - indexerBilling.billedAmount) * 1000,
+            );
             const spendCredit: SpendCreditDto = new SpendCreditDto(
               {
                 project_uuid: indexer.project_uuid,
@@ -135,6 +139,7 @@ export class IndexingBillingWorker extends BaseSingleThreadWorker {
             indexer.status == SqlModelStatus.ACTIVE &&
             indexer.squidReference
           ) {
+            console.info('Insufficient credits - hibernate indexer');
             //Insufficient credits - hibernate indexer
             if (env.APP_ENV != AppEnvironment.TEST) {
               const { body } = await sqdApi<any>({
