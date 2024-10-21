@@ -1,6 +1,6 @@
 {
   "name": "@apillon/service-lib",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Apillon common service code library",
   "main": "./dist/index.js",
   "source": "./src/index.ts",
