@@ -370,6 +370,8 @@ export enum InfrastructureEventType {
   DELETE_RPC_URL = 'delete-rpc-url',
   LIST_RPC_URLS = 'list-rpc-urls',
   LIST_ENDPOINTS = 'list-endpoints',
+  HAS_DWELLIR_ID = 'has-dwellir-id',
+  CREATE_USER = 'create-user',
 
   INDEXER_CREATE = 'create-indexer',
   INDEXER_LIST = 'list-indexers',
@@ -471,6 +473,7 @@ export enum AttachedServiceType {
   SOCIAL = 6,
   WALLET = 7,
   CONTRACTS = 8,
+  RPC = 9,
   INDEXING = 10,
   SYSTEM = 999,
 }
