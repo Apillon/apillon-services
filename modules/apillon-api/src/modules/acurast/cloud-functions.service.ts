@@ -10,7 +10,7 @@ import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 
 @Injectable()
-export class AcurastService {
+export class CloudFunctionsService {
   async createCloudFunction(
     context: ApillonApiContext,
     body: CreateCloudFunctionDto,
