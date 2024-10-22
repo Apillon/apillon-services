@@ -105,6 +105,7 @@ export class ProjectUser extends AdvancedSQLModel {
       LEFT JOIN ${DbTables.PROJECT} p ON p.id = pu.project_id
       LEFT JOIN ${DbTables.USER} u ON u.id = pu.user_id
       WHERE p.project_uuid = @project_uuid AND pu.role_id = ${DefaultUserRole.PROJECT_OWNER}`,
+      { project_uuid },
     );
 
     return data?.length ? data[0] : undefined;
