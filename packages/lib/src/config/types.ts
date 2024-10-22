@@ -6,10 +6,12 @@ export enum ChainType {
 }
 
 export enum TransactionStatus {
+  DRAFT = 0,
   PENDING = 1,
   CONFIRMED = 2,
   FAILED = 3,
   ERROR = 4,
+  CANCELED = 5,
 }
 
 export enum SubstrateChain {
@@ -21,6 +23,7 @@ export enum SubstrateChain {
   XSOCIAL = 7,
   ASTAR = 8,
   ACURAST = 9,
+  HYDRATION = 10,
   UNIQUE = 11,
 }
 
@@ -114,6 +117,11 @@ export enum BlockchainEventType {
   SUBSTRATE_SIGN_TRANSACTION = 'substrate-sign-transaction',
   SUBSTRATE_GET_TRANSACTION = 'substrate-get-transaction',
   GET_PHALA_CLUSTER_DEPOSIT_TRANSACTION = 'get-phala-cluster-deposit-transaction',
+  CREATE_MULTI_SIG_WALLET = 'create-multi-sig-wallet',
+  GET_MULTISIG_WALLET = 'get-multi-sig-wallet',
+  LIST_MULTI_SIG_WALLETS = 'list-multi-sig-wallets',
+  TRANSMIT_MULTI_SIG_TRANSACTION = 'transmit-multi-sig-transaction',
+  CANCEL_MULTI_SIG_TRANSACTION = 'cancel-multi-sig-transaction',
   EVM_SIGN_TRANSACTION = 'evm-sign-transaction',
   EVM_GET_TRANSACTION = 'evm-get-transaction',
   GET_CHAIN_ENDPOINT = 'get-chain-endpoint',
@@ -357,6 +365,13 @@ export enum ContractEventType {
   ARCHIVE_DEPLOYED_CONTRACT = 'archive-deployed-contract',
 }
 
+export enum AssetManagementEventType {
+  REFILL_WALLET = 'refill-wallet',
+  REFILL_WALLET_CONFIRM = 'refill-wallet-confirm',
+  REFILL_WALLET_CANCEL = 'refill-wallet-cancel',
+  LIST_TRANSACTIONS = 'list-transactions',
+}
+
 export enum InfrastructureEventType {
   LIST_RPC_API_KEYS = 'list-rpc-api-keys',
   REVOKE_RPC_API_KEY = 'revoke-rpc-api-key',
@@ -403,6 +418,7 @@ export enum ServiceName {
   COMPUTING = 'COMPUTING',
   SOCIAL = 'SOCIAL',
   CONTRACTS = 'CONTRACTS',
+  ASSET_MANAGEMENT = 'ASSET_MANAGEMENT',
   INFRASTRUCTURE = 'INFRASTRUCTURE',
 }
 
@@ -783,6 +799,11 @@ export enum ValidatorErrorCode {
   EVM_TRANSACTION_NOT_PRESENT = 42200804,
   EVM_CHAIN_NOT_PRESENT = 42200805,
   EVM_CHAIN_NOT_VALID = 42200806,
+  MULTISIG_WALLET_NEEDS_AT_LEAST_ONE_OTHER_SIGNER = 42200807,
+  INVALID_CHAIN_TYPE = 42200808,
+  INVALID_CHAIN = 42200809,
+  AT_LEAST_ONE_OF_ADDRESSES_IS_INVALID = 42200810,
+  NOT_ENOUGH_SIGNERS_FOR_THRESHOLD = 42200811,
   //#endregion
 
   //#region Caching

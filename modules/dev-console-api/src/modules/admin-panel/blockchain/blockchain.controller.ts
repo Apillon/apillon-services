@@ -1,11 +1,15 @@
 import {
-  DefaultUserRole,
   BaseQueryFilter,
-  UpdateTransactionDto,
-  ValidateFor,
+  CreateMultisigWalletRequestDto,
+  DefaultUserRole,
   PopulateFrom,
   SqlModelStatus,
+  TransmitMultiSigRequest,
+  UpdateTransactionDto,
+  ValidateFor,
   WalletDepositsQueryFilter,
+  WalletRefillTransactionQueryFilter,
+  WalletTransactionsQueryFilter,
 } from '@apillon/lib';
 import {
   Body,
@@ -14,6 +18,7 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -23,7 +28,7 @@ import { DevConsoleApiContext } from '../../../context';
 import { BlockchainService } from './blockchain.service';
 import { BaseQueryFilterValidator } from '../../../decorators/base-query-filter-validator';
 import { ValidationGuard } from '../../../guards/validation.guard';
-import { WalletTransactionsQueryFilter } from '@apillon/lib';
+import { RefillWalletDto } from '@apillon/blockchain-lib/common';
 
 @Controller('admin-panel/blockchain')
 @Permissions({ role: DefaultUserRole.ADMIN })
@@ -109,6 +114,116 @@ export class BlockchainController {
       walletId,
       transactionId,
       updateTransactionDto,
+    );
+  }
+
+  @Post('wallets/:id/refill')
+  @Validation({
+    dto: RefillWalletDto,
+    validateFor: ValidateFor.BODY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
+  async refillWallet(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id') walletId: number,
+    @Body() body: RefillWalletDto,
+  ) {
+    body.walletId = walletId;
+    return await this.blockchainService.refillWallet(context, body);
+  }
+
+  @Get('multisig-wallets')
+  @Validation({
+    dto: BaseQueryFilter,
+    validateFor: ValidateFor.QUERY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
+  async listMultisigWallet(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: BaseQueryFilter,
+  ) {
+    return await this.blockchainService.listMultisigWallets(context, body);
+  }
+
+  @Get('multisig-wallets/:id')
+  async getMultisigWallet(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id') walletId: number,
+  ) {
+    return await this.blockchainService.getMultisigWallet(context, walletId);
+  }
+
+  @Post('multisig-wallets')
+  @Validation({
+    dto: CreateMultisigWalletRequestDto,
+    validateFor: ValidateFor.BODY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
+  async createMultisigWallet(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: CreateMultisigWalletRequestDto,
+  ) {
+    return await this.blockchainService.createMultisigWallet(context, body);
+  }
+
+  // TODO: remove methods bellow after testing
+  @Post('wallets/:id/multisig/transmit')
+  @Validation({
+    dto: TransmitMultiSigRequest,
+    validateFor: ValidateFor.BODY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
+  async transmitMultiSigTransaction(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id') walletId: number,
+    @Body() body: TransmitMultiSigRequest,
+  ) {
+    body.signerWalletId = walletId;
+    return await this.blockchainService.transmitMultiSigTransaction(
+      context,
+      body,
+    );
+  }
+
+  @Post('wallets/:id/multisig/cancel')
+  @Validation({
+    dto: TransmitMultiSigRequest,
+    validateFor: ValidateFor.BODY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
+  async cancelMultiSigTransaction(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id') walletId: number,
+    @Body() body: TransmitMultiSigRequest,
+  ) {
+    body.signerWalletId = walletId;
+    return await this.blockchainService.cancelMultiSigTransaction(
+      context,
+      body,
+    );
+  }
+
+  @Get('wallets/:id/refill/transactions')
+  @Validation({
+    dto: WalletRefillTransactionQueryFilter,
+    validateFor: ValidateFor.QUERY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
+  async listWalletRefillTransactions(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id') walletId: number,
+    @Body() body: WalletRefillTransactionQueryFilter,
+  ) {
+    body.refId = walletId;
+    return await this.blockchainService.listWalletRefillTransactions(
+      context,
+      body,
     );
   }
 }

@@ -26,6 +26,15 @@ export async function processEvent(
       SubstrateService.getTransactionById,
     [BlockchainEventType.GET_PHALA_CLUSTER_DEPOSIT_TRANSACTION]:
       SubstrateService.getPhalaClusterDepositTransaction,
+    [BlockchainEventType.CREATE_MULTI_SIG_WALLET]:
+      WalletService.createMultisigWallet,
+    [BlockchainEventType.GET_MULTISIG_WALLET]: WalletService.getMultisigWallet,
+    [BlockchainEventType.LIST_MULTI_SIG_WALLETS]:
+      WalletService.listMultisigWallets,
+    [BlockchainEventType.TRANSMIT_MULTI_SIG_TRANSACTION]:
+      SubstrateService.transmitMultiSigTransaction,
+    [BlockchainEventType.CANCEL_MULTI_SIG_TRANSACTION]:
+      SubstrateService.cancelMultiSigTransaction,
     [BlockchainEventType.EVM_SIGN_TRANSACTION]: EvmService.createTransaction,
     [BlockchainEventType.EVM_GET_TRANSACTION]: EvmService.getTransactionById,
     [BlockchainEventType.GET_CHAIN_ENDPOINT]: CommonService.getChainEndpoint,

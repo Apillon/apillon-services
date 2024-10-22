@@ -1,0 +1,85 @@
+{
+  "name": "@apillon/asset-management",
+  "version": "1.5.0",
+  "author": "Apillon",
+  "license": "GNU GPL V3",
+  "description": "Apillon Asset Management service",
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "test-service": "jest --passWithNoTests",
+    "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60008",
+    "build": "tsc",
+    "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60008",
+    "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "deploy:prod": "serverless deploy --stage production",
+    "deploy:staging": "serverless deploy --stage staging",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:test": "serverless deploy --stage src/test",
+    "db-upgrade": "node -r ts-node/register ./src/scripts/db/upgrade-db",
+    "db-downgrade": "node -r ts-node/register ./src/scripts/db/downgrade-db",
+    "db-seed": "node -r ts-node/register ./src/scripts/db/seed-db",
+    "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
+    "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
+    "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
+    "db-generate-migration": "node -r ts-node/register ../../scripts/db/generate-migration-script",
+    "db-generate-seed": "node -r ts-node/register ../../scripts/db/generate-migration-script --seed",
+    "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
+  },
+  "dependencies": {
+    "@apillon/blockchain-lib": "*",
+    "@apillon/lib": "*",
+    "@apillon/service-lib": "*",
+    "@apillon/workers-lib": "*",
+    "@galacticcouncil/api-augment": "^0.2.0",
+    "@galacticcouncil/sdk": "^4.2.1",
+    "@galacticcouncil/xcm-cfg": "^3.5.1",
+    "@galacticcouncil/xcm-core": "^3.0.0",
+    "@galacticcouncil/xcm-sdk": "^4.3.1",
+    "@middy/core": "^3.3.1",
+    "@polkadot/api": "^12.1.1",
+    "@polkadot/api-augment": "^12.1.1",
+    "@polkadot/api-derive": "^12.1.1",
+    "@polkadot/api-base": "^12.1.1",
+    "@polkadot/rpc-augment": "^12.1.1",
+    "@polkadot/rpc-core": "^12.1.1",
+    "@polkadot/rpc-provider": "^12.1.1",
+    "@polkadot/types": "^12.1.1",
+    "@polkadot/types-augment": "^12.1.1",
+    "@polkadot/types-codec": "^12.1.1",
+    "@polkadot/types-create": "^12.1.1",
+    "@polkadot/types-known": "^12.1.1",
+    "@polkadot/keyring": "^12.6.2",
+    "@polkadot/util": "^12.6.2",
+    "@polkadot/util-crypto": "^12.6.2"
+  },
+  "devDependencies": {
+    "@apillon/tests-lib": "*",
+    "eslint-config-common": "*",
+    "tsconfig": "*"
+  },
+  "jest": {
+    "testTimeout": 1800000,
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "rootDir": "src",
+    "testPathIgnorePatterns": [
+      "dist/*"
+    ],
+    "testRegex": ".*\\.test\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "preset": "ts-jest",
+    "verbose": true
+  }
+}

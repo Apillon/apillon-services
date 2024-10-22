@@ -2,8 +2,10 @@ import {
   Chain,
   ClusterDepositTransaction,
   CreateEvmTransactionDto,
+  CreateMultisigWalletRequestDto,
   CreateSubstrateTransactionDto,
   TransactionDto,
+  TransmitMultiSigRequest,
   UpdateTransactionDto,
   WalletDepositsQueryFilter,
   WalletTransactionsQueryFilter,
@@ -96,7 +98,7 @@ export class BlockchainMicroservice extends BaseService {
   public async getChainEndpoint(
     chain: EvmChain | SubstrateChain,
     chainType: ChainType,
-  ): Promise<{ data: { url: string } }> {
+  ): Promise<{ data: { url: string }; status?: boolean }> {
     const data = {
       eventName: BlockchainEventType.GET_CHAIN_ENDPOINT,
       chain,
@@ -200,6 +202,43 @@ export class BlockchainMicroservice extends BaseService {
     return await this.callService({
       eventName: BlockchainEventType.GET_CONTRACT,
       contractId,
+    });
+  }
+
+  //#region Wallets
+
+  public async createMultisigWallet(body: CreateMultisigWalletRequestDto) {
+    return await this.callService({
+      eventName: BlockchainEventType.CREATE_MULTI_SIG_WALLET,
+      body,
+    });
+  }
+
+  public async getMultisigWallet(walletId: number) {
+    return await this.callService({
+      eventName: BlockchainEventType.GET_MULTISIG_WALLET,
+      walletId,
+    });
+  }
+
+  public async listMultisigWallets(body: BaseQueryFilter) {
+    return await this.callService({
+      eventName: BlockchainEventType.LIST_MULTI_SIG_WALLETS,
+      body,
+    });
+  }
+
+  public async transmitMultiSigTransaction(body: TransmitMultiSigRequest) {
+    return await this.callService({
+      eventName: BlockchainEventType.TRANSMIT_MULTI_SIG_TRANSACTION,
+      body,
+    });
+  }
+
+  public async cancelMultiSigTransaction(body: TransmitMultiSigRequest) {
+    return await this.callService({
+      eventName: BlockchainEventType.CANCEL_MULTI_SIG_TRANSACTION,
+      body,
     });
   }
   //#endregion
