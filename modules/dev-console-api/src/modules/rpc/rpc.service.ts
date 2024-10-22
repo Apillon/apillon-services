@@ -42,12 +42,27 @@ export class RpcService {
     context: DevConsoleApiContext,
     body: CreateRpcApiKeyDto,
   ) {
-    await this.serviceService.createServiceIfItDoesntExist(
-      context,
-      body.project_uuid,
-      AttachedServiceType.RPC,
-    );
+    const serviceCreated =
+      await this.serviceService.createServiceIfItDoesntExist(
+        context,
+        body.project_uuid,
+        AttachedServiceType.RPC,
+      );
 
+    if (serviceCreated) {
+      // If service was created, RPC key is created automatically, so we need to return the last one
+      const existingKeys = (
+        await new InfrastructureMicroservice(context).listRpcApiKeys(
+          new BaseProjectQueryFilter({
+            project_uuid: body.project_uuid,
+          }),
+        )
+      ).data;
+
+      if (existingKeys.items.length > 0) {
+        return existingKeys.items[existingKeys.items.length - 1];
+      }
+    }
     return (await new InfrastructureMicroservice(context).createRpcApiKey(body))
       .data;
   }

@@ -64,10 +64,24 @@ export class RpcApiKeyService {
       return {
         responses: 0,
         requests: 0,
-        per_method: {},
+        per_day: {},
       };
     }
-    return usagePerKey;
+
+    // Loop through all days and calculate the sum of requests and responses
+    const calculatedUsage = Object.entries(usagePerKey).reduce(
+      (acc, [_date, usage]) => {
+        acc.requests += usage.requests;
+        acc.responses += usage.responses;
+        return acc;
+      },
+      { requests: 0, responses: 0 },
+    );
+
+    return {
+      ...calculatedUsage,
+      per_day: usagePerKey,
+    };
   }
 
   static async getRpcApiKey({ id }: { id: number }, context: ServiceContext) {

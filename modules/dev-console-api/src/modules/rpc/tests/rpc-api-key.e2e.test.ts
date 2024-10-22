@@ -327,18 +327,16 @@ describe('RPC ApiKey tests', () => {
     };
     let apiKeyId: number;
 
-    beforeAll(async () => {
-      const response = await request(stage.http)
+    test('User should be able to get RPC api-key usage', async () => {
+      const createKeyResponse = await request(stage.http)
         .post('/rpc/api-key')
         .send({
           ...rpcApiKeyToCreate,
           project_uuid: testProject2.project_uuid,
         })
         .set('Authorization', `Bearer ${testUser2.token}`);
-      apiKeyId = response.body.data.id;
-    });
+      apiKeyId = createKeyResponse.body.data.id;
 
-    test('User should be able to get RPC api-key usage', async () => {
       const response = await request(stage.http)
         .get(`/rpc/api-key/${apiKeyId}/usage`)
         .set('Authorization', `Bearer ${testUser2.token}`);
