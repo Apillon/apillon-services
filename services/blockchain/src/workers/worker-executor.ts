@@ -47,7 +47,6 @@ export enum WorkerName {
   TRANSMIT_ACURAST_TRANSACTIONS = 'TransmitAcurastTransactions',
   TRANSMIT_ETHEREUM_TRANSACTIONS = 'TransmitEthereumTransactions',
   TRANSMIT_SEPOLIA_TRANSACTIONS = 'TransmitSepoliaTransactions',
-  TRANSMIT_HYDRATION_TRANSACTIONS = 'TransmitHydrationTransactions',
   TRANSMIT_UNIQUE_TRANSACTIONS = 'TransmitUniqueTransactions',
   TRANSMIT_CELO_TRANSACTIONS = 'TransmitCeloTransactions',
   TRANSMIT_ALFAJORES_TRANSACTIONS = 'TransmitAlfajoresTransactions',
