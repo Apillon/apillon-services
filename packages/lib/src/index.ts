@@ -126,8 +126,6 @@ export * from './lib/at-services/blockchain/dtos/transaction-webhook-data.dto';
 export * from './lib/at-services/blockchain/dtos/update-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/wallet-transactions-query-filter';
 export * from './lib/at-services/blockchain/dtos/wallet-deposits-query-filter';
-export * from './lib/at-services/blockchain/dtos/transmit-multi-sig.request';
-export * from './lib/at-services/blockchain/dtos/create-multisig-wallet-request.dto';
 
 //#REGION Social
 export * from './lib/at-services/social/social';
@@ -195,9 +193,3 @@ export * from './lib/parsers';
 export * from './lib/cache';
 export * from './lib/captcha';
 export * from './lib/credit-and-subscription';
-
-// #REGION Asset Management
-export * from './lib/at-services/asset-management/asset-management';
-export * from './lib/at-services/asset-management/eventTypes';
-export * from './lib/at-services/asset-management/dtos/refill-wallet-request.dto';
-export * from './lib/at-services/asset-management/dtos/transaction-query-filter.dto';

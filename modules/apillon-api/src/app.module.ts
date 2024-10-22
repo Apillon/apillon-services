@@ -1,4 +1,3 @@
-import { AcurastModule } from './modules/acurast/acurast.module';
 import { createRequestLogMiddleware } from '@apillon/modules-lib';
 import { ApiName } from '@apillon/lib';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
@@ -18,6 +17,7 @@ import { SocialModule } from './modules/social/social.module';
 import { ContractsModule } from './modules/contracts/contracts.module';
 import { EmbeddedWalletModule } from './modules/embedded-wallet/embedded-wallet.module';
 import { IndexingModule } from './modules/indexing/indexing.module';
+import { CloudFunctionsModule } from './modules/acurast/cloud-functions.module';
 @Module({
   imports: [
     MySQLModule,
@@ -32,7 +32,7 @@ import { IndexingModule } from './modules/indexing/indexing.module';
     ProjectModule,
     SocialModule,
     EmbeddedWalletModule,
-    AcurastModule,
+    CloudFunctionsModule,
     ContractsModule,
     IndexingModule,
   ],

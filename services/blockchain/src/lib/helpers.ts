@@ -75,12 +75,6 @@ export function substrateChainToWorkerName(chain: SubstrateChain): string {
     case SubstrateChain.UNIQUE: {
       return WorkerName.TRANSMIT_UNIQUE_TRANSACTIONS;
     }
-    case SubstrateChain.HYDRATION: {
-      return WorkerName.TRANSMIT_HYDRATION_TRANSACTIONS;
-    }
-    case SubstrateChain.HYDRATION: {
-      return WorkerName.TRANSMIT_HYDRATION_TRANSACTIONS;
-    }
     default: {
       throw new Error('Unsupported');
     }
