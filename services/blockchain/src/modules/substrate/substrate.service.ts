@@ -14,10 +14,11 @@ import {
   ServiceName,
   SubstrateChain,
   TransactionStatus,
+  TransmitMultiSigRequest,
   writeLog,
 } from '@apillon/lib';
 import { Endpoint } from '../../common/models/endpoint';
-import { BlockchainErrorCode } from '../../config/types';
+import { BlockchainErrorCode, DbTables } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { Transaction } from '../../common/models/transaction';
 import { typesBundleForPolkadot as CrustTypesBundle } from '@crustio/type-definitions';
@@ -31,6 +32,10 @@ import { substrateChainToWorkerName } from '../../lib/helpers';
 import { typesBundle as SubsocialTypesBundle } from './types-bundle/subsocial/definitions';
 import { PhalaBlockchainIndexer } from '../blockchain-indexers/substrate/phala/indexer.service';
 import { transmitAndProcessSubstrateTransaction } from '../../lib/transmit-and-process-substrate-transaction';
+import '@polkadot/api-augment';
+import '@polkadot/rpc-augment';
+import '@polkadot/types-augment';
+import { blake2AsHex } from '@polkadot/util-crypto';
 
 export class SubstrateService {
   static async createTransaction(
@@ -90,6 +95,10 @@ export class SubstrateService {
       case SubstrateChain.UNIQUE:
       case SubstrateChain.ASTAR:
       case SubstrateChain.ACURAST: {
+        keyring = new Keyring({ type: 'sr25519' });
+        break;
+      }
+      case SubstrateChain.HYDRATION: {
         keyring = new Keyring({ type: 'sr25519' });
         break;
       }
@@ -512,5 +521,134 @@ export class SubstrateService {
     await api.destroy();
   }
 
+  // TODO: remove methods bellow after testing, this was moved to AssetManagement
+  static async transmitMultiSigTransaction(
+    event: { body: TransmitMultiSigRequest },
+    context: ServiceContext,
+  ) {
+    const body = new TransmitMultiSigRequest({}, context).populate(event.body);
+    //await body.validateOrThrow(ModelValidationException, ValidatorErrorCode);
+    const signerWallet = await new Wallet({}, context).populateById(
+      event.body.signerWalletId,
+    );
+    if (!signerWallet.exists()) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.ENDPOINT_NOT_FOUND,
+        status: 404,
+        errorMessage: `Wallet with id ${event.body.signerWalletId} not found`,
+      });
+    }
+    const signers = body.signers.filter(
+      (signer: string) => signer !== signerWallet.address,
+    );
+    const endpoint = await new Endpoint({}, context).populateByChain(
+      signerWallet.chain,
+      signerWallet.chainType,
+    );
+    if (!endpoint.exists()) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.ENDPOINT_NOT_FOUND,
+        status: 404,
+        errorMessage: `Endpoint not found for chain ${signerWallet.chain} on chain type ${signerWallet.chainType}`,
+      });
+    }
+
+    const apiHelper = new SubstrateRpcApi(endpoint.url);
+    const api = await apiHelper.getApi();
+    try {
+      const multiSigTx = api.tx.multisig.asMulti(
+        body.threshold,
+        signers,
+        body.timePoint,
+        api.tx(body.transactionHex).method.toHex(),
+        { refTime: 70_000_000_000, proofSize: 1_000_000 },
+      );
+      return await SubstrateService.createTransaction(
+        {
+          params: {
+            transaction: multiSigTx.toHex(),
+            chain: signerWallet.chain as SubstrateChain,
+            fromAddress: signerWallet.address,
+            referenceTable: DbTables.WALLET,
+            referenceId: event.body.signerWalletId.toString(),
+          },
+        },
+        context,
+      );
+    } catch (e: unknown) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
+        status: 500,
+        errorMessage: `Failed to create transaction: ${e}`,
+      });
+    } finally {
+      await apiHelper.destroy();
+    }
+  }
+
+  // TODO: remove methods bellow after testing, this was moved to AssetManagement
+  static async cancelMultiSigTransaction(
+    event: { body: TransmitMultiSigRequest },
+    context: ServiceContext,
+  ) {
+    const body = new TransmitMultiSigRequest({}, context).populate(event.body);
+    const signerWallet = await new Wallet({}, context).populateById(
+      event.body.signerWalletId,
+    );
+    if (!signerWallet.exists()) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.ENDPOINT_NOT_FOUND,
+        status: 404,
+        errorMessage: `Wallet with id ${event.body.signerWalletId} not found`,
+      });
+    }
+    const endpoint = await new Endpoint({}, context).populateByChain(
+      signerWallet.chain,
+      signerWallet.chainType,
+    );
+    if (!endpoint.exists()) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.ENDPOINT_NOT_FOUND,
+        status: 404,
+        errorMessage: `Endpoint not found for chain ${signerWallet.chain} on chain type ${signerWallet.chainType}`,
+      });
+    }
+
+    const signers = body.signers.filter(
+      (signer) => signer !== signerWallet.address,
+    );
+
+    const apiHelper = new SubstrateRpcApi(endpoint.url);
+    const api = await apiHelper.getApi();
+    try {
+      const callHash = blake2AsHex(api.tx(body.transactionHex).method.toHex());
+      const multiSigTx = api.tx.multisig.cancelAsMulti(
+        body.threshold,
+        signers,
+        body.timePoint,
+        callHash,
+      );
+      return await SubstrateService.createTransaction(
+        {
+          params: {
+            transaction: multiSigTx.toHex(),
+            chain: signerWallet.chain as SubstrateChain,
+            fromAddress: signerWallet.address,
+            referenceTable: DbTables.WALLET,
+            referenceId: event.body.signerWalletId.toString(),
+          },
+        },
+        context,
+      );
+    } catch (e: unknown) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
+        status: 500,
+        errorMessage: `Failed to create transaction: ${e}`,
+      });
+    } finally {
+      await apiHelper.destroy();
+    }
+  }
   //#region
 }

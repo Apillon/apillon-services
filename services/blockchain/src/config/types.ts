@@ -4,6 +4,7 @@ export type Chain = SubstrateChain | EvmChain;
 
 export enum DbTables {
   WALLET = 'wallet',
+  MULTISIG_WALLET = 'multisig_wallet',
   ENDPOINT = 'endpoint',
   TRANSACTION_QUEUE = 'transaction_queue',
   TRANSACTION_LOG = 'transaction_log',
@@ -110,6 +111,7 @@ export enum BlockchainErrorCode {
   INVALID_CHAIN = 40016002,
   INVALID_SIGNATURE = 40016003,
   INVALID_DATA_FOR_OASIS_SIGNATURE = 40016004,
+  CHAIN_PREFIX_DOESNT_EXIST = 40016005,
 
   // 401 - Unauthorized (Not authenticated)
   USER_IS_NOT_AUTHENTICATED = 40116100,
@@ -122,9 +124,16 @@ export enum BlockchainErrorCode {
   TRANSACTION_NOT_FOUND = 40416002,
   WALLET_NOT_FOUND = 40416003,
   CONTRACT_NOT_FOUND = 40416004,
+  ENDPOINT_NOT_FOUND = 40416005,
+  MULTISIG_WALLET_NOT_FOUND = 40416006,
 
   // 405 - Method not allowed
   ONLY_FOR_LOCAL_DEV_AND_TEST = 40516001,
+
+  // 422 - Unprocessable Entity
+  INVALID_CHAIN_FOR_MULTISIG_WALLET = 42216001,
+  INVALID_CHAIN_FOR_CHAIN_TYPE = 42216002,
+  INVALID_THRESHOLD_OR_SIGNERS = 42216003,
 
   // 500 - Internal Error
   ERROR_WRITING_TO_DATABASE = 50016001,
