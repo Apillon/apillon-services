@@ -29,6 +29,7 @@ import {
   ConfigureCreditDto,
   StorageMicroservice,
   invalidateCacheMatch,
+  InfrastructureMicroservice,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -45,6 +46,7 @@ import { ProjectUser } from './models/project-user.model';
 import { Project } from './models/project.model';
 import { v4 as uuidV4 } from 'uuid';
 import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
+import { RpcPlanType } from '@apillon/lib';
 
 @Injectable()
 export class ProjectService {
@@ -640,24 +642,35 @@ export class ProjectService {
       .data;
   }
 
-  async hasProjectActiveRpcPlan(
-    context: DevConsoleApiContext,
-    project_uuid: string,
-  ) {
-    const userId = await new ProjectUser({}, context).getProjectOwnerId(
+  async getProjectRpcPlan(context: DevConsoleApiContext, project_uuid: string) {
+    const projectOwner = await new ProjectUser({}, context).getProjectOwner(
       project_uuid,
     );
 
-    if (!userId) {
-      return false;
+    if (!projectOwner) {
+      return RpcPlanType.DISABLED;
+    }
+
+    const ownerHasDwellirId = (
+      await new InfrastructureMicroservice(context).hasDwellirId(
+        projectOwner.user_uuid,
+      )
+    ).data;
+
+    if (!ownerHasDwellirId) {
+      return RpcPlanType.DISABLED;
     }
 
     const projectsUuids = await new ProjectUser(
       {},
       context,
-    ).getProjectUuidsByOwnerId(userId);
+    ).getProjectUuidsByOwnerId(projectOwner.user_id);
 
-    return (await new Scs(context).hasProjectActiveRpcPlan(projectsUuids)).data;
+    const hasActiveRpcPlan = (
+      await new Scs(context).hasProjectActiveRpcPlan(projectsUuids)
+    ).data;
+
+    return hasActiveRpcPlan ? RpcPlanType.DEVELOPER : RpcPlanType.FREE;
   }
 
   async getProjectSubscriptions(

@@ -13,11 +13,7 @@ import {
   env,
   runWithWorkers,
 } from '@apillon/lib';
-import {
-  BaseQueueWorker,
-  QueueWorkerType,
-  WorkerDefinition,
-} from '@apillon/workers-lib';
+import { BaseWorker, Job, WorkerDefinition } from '@apillon/workers-lib';
 import { Dwellir } from '../lib/dwellir/dwellir';
 import { DwellirUser } from '../modules/rpc/models/dwelir-user.model';
 import Stripe from 'stripe';
@@ -32,25 +28,40 @@ const devConsoleConfig = {
   port: env.DEV_CONSOLE_API_MYSQL_PORT,
 };
 
-export class RpcUsageCheckWorker extends BaseQueueWorker {
-  public constructor(
-    workerDefinition: WorkerDefinition,
-    context: Context,
-    type: QueueWorkerType,
-  ) {
-    super(
-      workerDefinition,
-      context,
-      type,
-      env.INFRASTRUCTURE_AWS_WORKER_SQS_URL,
-    );
+export class RpcUsageCheckWorker extends BaseWorker {
+  protected context: Context;
+
+  public constructor(workerDefinition: WorkerDefinition, context: Context) {
+    super(workerDefinition, context);
   }
 
-  public async runPlanner(): Promise<any[]> {
-    return [];
+  public async before(_data?: any): Promise<any> {
+    // No used
   }
 
-  public async runExecutor(input: { data: any }): Promise<any> {
+  public async onSuccess(_data?: any, _successData?: any): Promise<any> {}
+
+  public async onError(error: Error): Promise<any> {
+    this.logFn(`RpcUsageCheckWorker - error: ${error}`);
+  }
+
+  public async onUpdateWorkerDefinition(): Promise<void> {
+    // this.logFn(`DeleteBucketDirectoryFileWorker - update definition: ${this.workerDefinition}`);
+    if (
+      env.APP_ENV != AppEnvironment.LOCAL_DEV &&
+      env.APP_ENV != AppEnvironment.TEST
+    ) {
+      await new Job({}, this.context).updateWorkerDefinition(
+        this.workerDefinition,
+      );
+    }
+  }
+
+  public onAutoRemove(): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+
+  public async execute(_data?: any): Promise<any> {
     console.info('RUN EXECUTOR (RpcUsageCheckWorker');
     const usagesAll = await Dwellir.getAllUsagesPerUser();
     const dwellirIdsWithLargeUsage: string[] = [];

@@ -7,6 +7,7 @@ import {
   IndexerLogsQueryFilter,
   Lmas,
   LogType,
+  Scs,
   ServiceName,
   SqlModelStatus,
   UpdateIndexerDto,
@@ -195,10 +196,13 @@ export class IndexerService {
     );
     await indexer.canAccess(context);
 
-    //Check that project has subscription
-    if (!(await checkProjectSubscription(context, indexer.project_uuid))) {
+    //Check that project has enough credits available
+    const creditBalance = (
+      await new Scs(context).getProjectCredit(indexer.project_uuid)
+    ).data.balance;
+    if (creditBalance < 20000) {
       throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.PROJECT_HAS_NO_SUBSCRIPTION,
+        code: InfrastructureErrorCode.PROJECT_CREDIT_BALANCE_TOO_LOW,
         status: 400,
       });
     }
@@ -207,7 +211,10 @@ export class IndexerService {
     const s3Client: AWS_S3 = new AWS_S3();
 
     if (
-      !s3Client.exists(env.INDEXER_BUCKET_FOR_SOURCE_CODE, indexer.indexer_uuid)
+      !(await s3Client.exists(
+        env.INDEXER_BUCKET_FOR_SOURCE_CODE,
+        indexer.indexer_uuid,
+      ))
     ) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.INDEXER_SOURCE_CODE_NOT_FOUND,
@@ -231,6 +238,9 @@ export class IndexerService {
     const data = {
       artifactUrl: `https://${env.INDEXER_BUCKET_FOR_SOURCE_CODE}.s3.${env.AWS_REGION}.amazonaws.com/${indexer.indexer_uuid}`,
       manifestPath: 'squid.yaml',
+      options: {
+        overrideName: `${indexer.id}${env.APP_ENV}`,
+      },
     };
     const { body } = await sqdApi<DeploymentResponse>({
       method: 'POST',

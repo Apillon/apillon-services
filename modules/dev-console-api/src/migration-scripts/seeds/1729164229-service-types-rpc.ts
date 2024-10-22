@@ -9,9 +9,9 @@ export async function upgrade(
       IGNORE
     INTO \`${DbTables.SERVICE_TYPE}\`
       (id, name, description, active)
-    VALUES (${AttachedServiceType.INDEXING},
-            'Indexer',
-            'Indexing service',
+    VALUES (${AttachedServiceType.RPC},
+            'RPC',
+            'RPC service',
             1)
     ;
   `);
@@ -25,6 +25,6 @@ export async function downgrade(
       IGNORE
     FROM \`${DbTables.SERVICE_TYPE}\`
     WHERE id =
-          ${AttachedServiceType.INDEXING};
+          ${AttachedServiceType.RPC};
   `);
 }

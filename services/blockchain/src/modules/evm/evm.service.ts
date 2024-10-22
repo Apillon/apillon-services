@@ -541,7 +541,9 @@ export class EvmService {
 
     //provider
     const endpoint = await new Endpoint({}, context).populateByChain(
-      env.APP_ENV === AppEnvironment.PROD
+      [AppEnvironment.PROD, AppEnvironment.STG].includes(
+        env.APP_ENV as AppEnvironment,
+      )
         ? EvmChain.OASIS_SAPPHIRE
         : EvmChain.OASIS_TESTNET,
       ChainType.EVM,

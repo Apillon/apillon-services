@@ -135,22 +135,4 @@ export class ReferralService {
   async confirmRetweet(context: DevConsoleApiContext, body: ConfirmRetweetDto) {
     return (await new ReferralMicroservice(context).confirmRetweet(body)).data;
   }
-
-  /**
-   * Get completed airdrop tasks and total points for a user
-   *
-   * @param {DevConsoleApiContext} context - Dev Console API context object.
-   * @returns {Promise<any>} - UserAirdropTask model from Referral MS
-   */
-  async getAirdropTasks(context: DevConsoleApiContext): Promise<any> {
-    return (await new ReferralMicroservice(context).getAirdropTasks()).data;
-  }
-
-  /**
-   * Get claim parameters for a user for smart contract claim call
-   * @param {DevConsoleApiContext} context - Dev Console API context object.
-   */
-  async getClaimParameters(context: DevConsoleApiContext): Promise<any> {
-    return (await new ReferralMicroservice(context).getClaimParameters()).data;
-  }
 }

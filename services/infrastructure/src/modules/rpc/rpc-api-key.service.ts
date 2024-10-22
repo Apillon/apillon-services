@@ -19,6 +19,28 @@ import { Dwellir } from '../../lib/dwellir/dwellir';
 import { DwellirUser } from './models/dwelir-user.model';
 
 export class RpcApiKeyService {
+  static async createUser(
+    { projectUuid }: { projectUuid: string },
+    context: ServiceContext,
+  ) {
+    const createResponse = await RpcApiKeyService.getOrCreateDwellirId(context);
+
+    if (createResponse.created) {
+      const apiKeyResponse = await Dwellir.getInitialApiKey(
+        createResponse.dwellirId,
+      );
+      const rpcApiKey = new RpcApiKey({}, context).populate({
+        uuid: apiKeyResponse.api_key,
+        name: 'Initial API Key',
+        project_uuid: projectUuid,
+      });
+
+      await rpcApiKey.insert();
+    }
+
+    return createResponse;
+  }
+
   static async getRpcApiKeyUsage(
     { id }: { id: number },
     context: ServiceContext,
@@ -91,8 +113,8 @@ export class RpcApiKeyService {
   }
 
   static async getOrCreateDwellirId(context: ServiceContext) {
-    const dwellirUser = await new DwellirUser({}, context).populateById(
-      context.user.id,
+    const dwellirUser = await new DwellirUser({}, context).populateByUserUuid(
+      context.user.user_uuid,
     );
 
     if (dwellirUser.exists()) {
@@ -119,9 +141,20 @@ export class RpcApiKeyService {
     };
   }
 
+  static async hasDwellirId(
+    { userUuid }: { userUuid: string },
+    context: ServiceContext,
+  ) {
+    const foundIds = await new DwellirUser({}, context).populateByUserUuids([
+      userUuid,
+    ]);
+
+    return !!foundIds.length;
+  }
+
   static async getDwellirId(context: ServiceContext) {
-    const dwellirUser = await new DwellirUser({}, context).populateById(
-      context.user.id,
+    const dwellirUser = await new DwellirUser({}, context).populateByUserUuid(
+      context.user.user_uuid,
     );
 
     if (!dwellirUser.exists()) {
@@ -132,6 +165,22 @@ export class RpcApiKeyService {
     }
 
     return dwellirUser.dwellir_id;
+  }
+
+  static async isRpcApiKeysQuotaReached(
+    _data: unknown,
+    context: ServiceContext,
+  ) {
+    const maxApiKeysQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_RPC_KEYS,
+      object_uuid: context.user.user_uuid,
+    });
+
+    const keysCount = await new RpcApiKey({}, context).getNumberOfKeysPerUser(
+      context.user.id,
+    );
+
+    return keysCount >= maxApiKeysQuota.value;
   }
 
   static async createRpcApiKey(

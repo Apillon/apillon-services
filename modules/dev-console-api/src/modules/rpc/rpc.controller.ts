@@ -80,6 +80,13 @@ export class RpcController {
     return await this.rpcService.listRpcApiKeys(context, query);
   }
 
+  @Get('api-key/quota-reached')
+  @Permissions({ role: RoleGroup.ProjectOwnerAccess })
+  @UseGuards(AuthGuard)
+  async isApiKeysQuotaReached(@Ctx() context: DevConsoleApiContext) {
+    return await this.rpcService.isRpcApiKeysQuotaReached(context);
+  }
+
   @Get('api-key/:id')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)

@@ -679,6 +679,7 @@ export interface IEnv {
    */
   INFRASTRUCTURE_AWS_WORKER_SQS_URL: string;
   INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME: string;
+  INFRASTRUCTURE_AWS_WORKER_SQS_ARN: string;
 
   /***************************************************
    * INFRASTRUCTURE - Indexer as a service variables
@@ -689,11 +690,19 @@ export interface IEnv {
    */
   INDEXER_BUCKET_FOR_SOURCE_CODE: string;
   /**
+   * Provision that Apillon takes for indexer
+   */
+  INDEXER_PROVISION_PERCENT: number;
+  /**
    * sqd (subsquid cloud) API data
    */
   SQD_API_TOKEN: string;
   SQD_API_URL: string;
   SQD_ORGANIZATION_CODE: string;
+
+  /***************************************************
+   * OTHER
+   **************************************************/
 
   /**
    * NOWPAYMENTS
@@ -714,13 +723,6 @@ export interface IEnv {
    */
   SHORTENER_VALID_DOMAINS: string[];
   SHORTENER_DOMAIN: string;
-
-  /**
-   * AIRDROP CLAIM
-   */
-  AIRDROP_CLAIM_TIMESTAMP: string;
-  AIRDROP_CLAIM_CONTRACT_ADDRESS: string;
-  AIRDROP_CLAIM_CHAIN_ID: number;
 
   /**
    * ACURAST
@@ -1210,9 +1212,13 @@ export let env: IEnv = {
     process.env['INFRASTRUCTURE_AWS_WORKER_SQS_URL'],
   INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME:
     process.env['INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME'],
+  INFRASTRUCTURE_AWS_WORKER_SQS_ARN:
+    process.env['INFRASTRUCTURE_AWS_WORKER_SQS_ARN'],
   INDEXER_BUCKET_FOR_SOURCE_CODE:
     process.env['INDEXER_BUCKET_FOR_SOURCE_CODE'] ||
     'apillon-indexer-source-code-local',
+  INDEXER_PROVISION_PERCENT:
+    parseInt(process.env['INDEXER_PROVISION_PERCENT']) || 5,
   SQD_API_TOKEN: process.env['SQD_API_TOKEN'],
   SQD_API_URL: process.env['SQD_API_URL'] || 'https://app.subsquid.io/api',
   SQD_ORGANIZATION_CODE: process.env['SQD_ORGANIZATION_CODE'],
@@ -1319,11 +1325,6 @@ export let env: IEnv = {
   ) || ['apillon.io', 'nectarnode.io', 'web3approved.com'],
   SHORTENER_DOMAIN:
     process.env['SHORTENER_DOMAIN'] || 'https://go.web3approved.com',
-
-  /** AIRDROP CLAIM */
-  AIRDROP_CLAIM_TIMESTAMP: process.env['AIRDROP_CLAIM_TIMESTAMP'],
-  AIRDROP_CLAIM_CONTRACT_ADDRESS: process.env['AIRDROP_CLAIM_CONTRACT_ADDRESS'],
-  AIRDROP_CLAIM_CHAIN_ID: +process.env['AIRDROP_CLAIM_CHAIN_ID'],
 
   /** ACURAST */
   ACURAST_GATEWAY_URL: process.env['ACURAST_GATEWAY_URL'],

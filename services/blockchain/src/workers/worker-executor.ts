@@ -27,7 +27,6 @@ import { SubsocialTransactionWorker } from './subsocial-transaction-worker';
 import { CheckPendingTransactionsWorker } from './check-pending-transactions-worker';
 import { SubstrateContractTransactionWorker } from './substrate-contract-transaction-worker';
 import { OasisContractEventsWorker } from './oasis-contract-events-worker';
-import { ClaimContractEventsWorker } from './claim-contract-events-worker';
 import { AcurastJobTransactionWorker } from './accurast-job-transaction-worker';
 import { UniqueJobTransactionWorker } from './unique-substrate-transaction-worker';
 
@@ -71,7 +70,6 @@ export enum WorkerName {
   TRANSACTION_LOG = 'TransactionLog',
   CHECK_PENDING_TRANSACTIONS = 'CheckPendingTransactions',
   OASIS_CONTRACT_EVENTS_WORKER = 'OasisContractEventsWorker',
-  CLAIM_CONTRACT_EVENTS_WORKER = 'ClaimContractEventsWorker',
 }
 
 export async function handler(event: any) {
@@ -248,12 +246,6 @@ export async function handleLambdaEvent(
     }
     case WorkerName.OASIS_CONTRACT_EVENTS_WORKER: {
       await new OasisContractEventsWorker(workerDefinition, context).run({
-        executeArg: JSON.stringify(workerDefinition.parameters),
-      });
-      break;
-    }
-    case WorkerName.CLAIM_CONTRACT_EVENTS_WORKER: {
-      await new ClaimContractEventsWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
       break;

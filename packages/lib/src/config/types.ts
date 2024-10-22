@@ -334,10 +334,6 @@ export enum ReferralEventType {
   CONFIRM_RETWEET = 'confirm-retweet',
 
   ADD_PROMO_CODE_CREDITS = 'add-promo-code-credits',
-
-  GET_AIRDROP_TASKS = 'get-airdrop-tasks',
-  GET_CLAIM_PARAMETERS = 'get-claim-parameters',
-  SET_CLAIMS_COMPLETED = 'set-claims-completed',
 }
 
 export enum SocialEventType {
@@ -389,12 +385,15 @@ export enum InfrastructureEventType {
   DELETE_RPC_URL = 'delete-rpc-url',
   LIST_RPC_URLS = 'list-rpc-urls',
   LIST_ENDPOINTS = 'list-endpoints',
+  HAS_DWELLIR_ID = 'has-dwellir-id',
+  CREATE_USER = 'create-user',
+  IS_RPC_API_KEYS_QUOTA_REACHED = 'is-rpc-api-keys-quota-reached',
 
   INDEXER_CREATE = 'create-indexer',
   INDEXER_LIST = 'list-indexers',
   INDEXER_GET = 'get-indexer',
   INDEXER_GET_LOGS = 'get-indexer-logs',
-  INDEXER_GET_DEPLOYMENTS = 'get-indexer-deployment',
+  INDEXER_GET_DEPLOYMENTS = 'get-indexer-deployments',
   INDEXER_UPDATE = 'update-indexer',
   INDEXER_GET_URL_FOR_SC_UPLOAD = 'get-url-for-indexer-source-code-upload',
   INDEXER_DEPLOY = 'deploy-indexer',
@@ -491,6 +490,7 @@ export enum AttachedServiceType {
   SOCIAL = 6,
   WALLET = 7,
   CONTRACTS = 8,
+  RPC = 9,
   INDEXING = 10,
   SYSTEM = 999,
 }
@@ -1100,6 +1100,9 @@ export enum ProductCode {
   NFT_UNIQUE_MINT = 57,
   NFT_UNIQUE_BURN = 58,
   NFT_UNIQUE_TRANSFER_COLLECTION = 59,
+
+  // Indexing
+  INDEXER = 60,
 }
 
 export enum ProductService {
@@ -1111,6 +1114,7 @@ export enum ProductService {
   STORAGE = 'STORAGE',
   CONTRACTS = 'CONTRACTS',
   WALLET = 'WALLET',
+  INDEXING = 'INDEXING',
 }
 
 export enum ProductCategory {
@@ -1133,6 +1137,7 @@ export enum ProductCategory {
   IPNS = 'IPNS',
   SIGNATURE = 'SIGNATURE',
   UNIQUE_NFT = 'UNIQUE_NFT',
+  INDEXER = 'INDEXER',
 }
 
 export enum EmailTemplate {
