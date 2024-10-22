@@ -1,12 +1,14 @@
 import {
   BaseQueryFilter,
+  Chain,
+  ChainType,
+  CreateMultisigWalletRequestDto,
   PopulateFrom,
   SerializeFor,
-  UpdateTransactionDto,
-  WalletTransactionsQueryFilter,
   SqlModelStatus,
+  UpdateTransactionDto,
   WalletDepositsQueryFilter,
-  Chain,
+  WalletTransactionsQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
@@ -18,6 +20,9 @@ import { TransactionLog } from '../accounting/transaction-log.model';
 import { WalletWithBalanceDto } from '../../common/dto/wallet-with-balance.dto';
 import { Wallet } from './wallet.model';
 import { WalletDeposit } from '../accounting/wallet-deposit.model';
+import { createKeyMulti, encodeAddress } from '@polkadot/util-crypto';
+import { MultisigWallet } from './multisigWallet.model';
+import { SUBSTRATE_CHAIN_PREFIX_MAP } from '@apillon/blockchain-lib/substrate';
 
 export class WalletService {
   static async listWallets(
@@ -161,5 +166,70 @@ export class WalletService {
     context: ServiceContext,
   ): Promise<number> {
     return new Wallet({}, context).getTotalTransactions();
+  }
+
+  static async createMultisigWallet(
+    event: { body: CreateMultisigWalletRequestDto },
+    context: ServiceContext,
+  ) {
+    const body = new CreateMultisigWalletRequestDto({}, context).populate(
+      event.body,
+    );
+
+    const wallets = await new Wallet({}, context).getWallets(
+      body.chain,
+      ChainType.SUBSTRATE,
+    );
+    const signerWallet = wallets[0];
+    const signers = [signerWallet.address, ...body.otherSigners];
+    const payerAddress = encodeAddress(
+      createKeyMulti(signers, body.threshold),
+      SUBSTRATE_CHAIN_PREFIX_MAP[body.chain],
+    );
+    const existingMultisigWallets = await new MultisigWallet(
+      {},
+      context,
+    ).getWallets(body.chain, ChainType.SUBSTRATE, payerAddress);
+    if (existingMultisigWallets.length > 0) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.INVALID_THRESHOLD_OR_SIGNERS,
+        status: 400,
+        errorMessage: `Multisig wallet with address ${payerAddress} already exists.`,
+      });
+    }
+
+    const multisigWallet = new MultisigWallet({}, context).populate({
+      chain: body.chain,
+      chainType: ChainType.SUBSTRATE,
+      description: body.description,
+      address: payerAddress,
+      signers,
+      threshold: body.threshold,
+    });
+
+    return await multisigWallet.insert(SerializeFor.INSERT_DB);
+  }
+
+  static async getMultisigWallet(
+    event: { walletId: number },
+    context: ServiceContext,
+  ) {
+    const multisigWallet = await new MultisigWallet({}, context).populateById(
+      event.walletId,
+    );
+    if (!multisigWallet.exists()) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.MULTISIG_WALLET_NOT_FOUND,
+        status: 404,
+      });
+    }
+    return multisigWallet;
+  }
+
+  static async listMultisigWallets(
+    event: { body: BaseQueryFilter },
+    context: ServiceContext,
+  ) {
+    return new MultisigWallet({}, context).listWallets(event.body);
   }
 }
