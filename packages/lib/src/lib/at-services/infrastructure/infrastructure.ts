@@ -48,10 +48,10 @@ export class InfrastructureMicroservice extends BaseService {
     });
   }
 
-  public async getRpcApiKeyUsage(id: number) {
+  public async getRpcApiKeyUsage(id: number, userUuid: string) {
     return await this.callService({
       eventName: InfrastructureEventType.GET_RPC_API_KEY_USAGE,
-      id,
+      data: { id, userUuid },
     });
   }
 

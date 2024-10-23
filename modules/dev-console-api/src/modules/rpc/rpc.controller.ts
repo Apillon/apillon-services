@@ -97,14 +97,15 @@ export class RpcController {
     return await this.rpcService.getApiKey(context, id);
   }
 
-  @Get('api-key/:id/usage')
+  @Get('/:project_uuid/api-key/:id/usage')
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ProjectAccessGuard)
   async getApiKeyUsage(
     @Ctx() context: DevConsoleApiContext,
     @Param('id', ParseIntPipe) id: number,
+    @Param('project_uuid') projectUuid: string,
   ) {
-    return await this.rpcService.getApiKeyUsage(context, id);
+    return await this.rpcService.getApiKeyUsage(context, id, projectUuid);
   }
 
   @Get('api-key/:id/urls')

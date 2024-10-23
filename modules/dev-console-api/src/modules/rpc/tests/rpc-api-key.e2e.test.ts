@@ -338,7 +338,7 @@ describe('RPC ApiKey tests', () => {
       apiKeyId = createKeyResponse.body.data.id;
 
       const response = await request(stage.http)
-        .get(`/rpc/api-key/${apiKeyId}/usage`)
+        .get(`/rpc/${testProject2.project_uuid}/api-key/${apiKeyId}/usage`)
         .set('Authorization', `Bearer ${testUser2.token}`);
       expect(response.status).toBe(200);
     });
