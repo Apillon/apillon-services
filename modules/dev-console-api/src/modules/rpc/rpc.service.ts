@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import {
   AttachedServiceType,
   BaseProjectQueryFilter,
+  CodeException,
   CreateRpcApiKeyDto,
   CreateRpcUrlDto,
   InfrastructureMicroservice,
@@ -10,6 +11,8 @@ import {
   UpdateRpcApiKeyDto,
 } from '@apillon/lib';
 import { ServicesService } from '../services/services.service';
+import { ProjectUser } from '../project/models/project-user.model';
+import { ResourceNotFoundErrorCode } from '../../config/types';
 
 @Injectable()
 export class RpcService {
@@ -22,9 +25,29 @@ export class RpcService {
     return (await new InfrastructureMicroservice(context).listRpcApiKeys(query))
       .data;
   }
-  async getApiKeyUsage(context: DevConsoleApiContext, id: number) {
-    return (await new InfrastructureMicroservice(context).getRpcApiKeyUsage(id))
-      .data;
+  async getApiKeyUsage(
+    context: DevConsoleApiContext,
+    id: number,
+    project_uuid: string,
+  ) {
+    const projectOwner = await new ProjectUser({}, context).getProjectOwner(
+      project_uuid,
+    );
+
+    if (!projectOwner) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: ResourceNotFoundErrorCode.USER_DOES_NOT_EXISTS,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    return (
+      await new InfrastructureMicroservice(context).getRpcApiKeyUsage(
+        id,
+        projectOwner.user_uuid,
+      )
+    ).data;
   }
 
   async getApiKey(context: DevConsoleApiContext, id: number) {
@@ -42,12 +65,27 @@ export class RpcService {
     context: DevConsoleApiContext,
     body: CreateRpcApiKeyDto,
   ) {
-    await this.serviceService.createServiceIfItDoesntExist(
-      context,
-      body.project_uuid,
-      AttachedServiceType.RPC,
-    );
+    const serviceCreated =
+      await this.serviceService.createServiceIfItDoesntExist(
+        context,
+        body.project_uuid,
+        AttachedServiceType.RPC,
+      );
 
+    if (serviceCreated) {
+      // If service was created, RPC key is created automatically, so we need to return the last one
+      const existingKeys = (
+        await new InfrastructureMicroservice(context).listRpcApiKeys(
+          new BaseProjectQueryFilter({
+            project_uuid: body.project_uuid,
+          }),
+        )
+      ).data;
+
+      if (existingKeys.items.length > 0) {
+        return existingKeys.items[existingKeys.items.length - 1];
+      }
+    }
     return (await new InfrastructureMicroservice(context).createRpcApiKey(body))
       .data;
   }

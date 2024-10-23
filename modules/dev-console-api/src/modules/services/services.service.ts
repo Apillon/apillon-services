@@ -74,6 +74,7 @@ export class ServicesService {
    * @param context
    * @param project_uuid
    * @param serviceType_id
+   * @returns {Promise<boolean>} - True if service was created, false otherwise.
    */
   async createServiceIfItDoesntExist(
     context: DevConsoleApiContext,
@@ -100,7 +101,11 @@ export class ServicesService {
         context,
       );
       await this.createService(context, service);
+
+      return true;
     }
+
+    return false;
   }
 
   /**

@@ -42,11 +42,9 @@ export class RpcApiKeyService {
   }
 
   static async getRpcApiKeyUsage(
-    { id }: { id: number },
+    { data: { id, userUuid } }: { data: { id: number; userUuid: string } },
     context: ServiceContext,
   ) {
-    const dwellirId = await RpcApiKeyService.getDwellirId(context);
-
     const rpcApiKey = await new RpcApiKey({}, context).populateById(id);
 
     if (!rpcApiKey.exists()) {
@@ -58,16 +56,43 @@ export class RpcApiKeyService {
 
     rpcApiKey.canAccess(context);
 
+    const dwellirUser = await new DwellirUser({}, context).populateByUserUuid(
+      userUuid,
+    );
+
+    if (!dwellirUser.exists()) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.DWELLIR_ID_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    const dwellirId = dwellirUser.dwellir_id;
+
     const usages = await Dwellir.getUsage(dwellirId);
     const usagePerKey = usages.by_key[rpcApiKey.uuid];
     if (!usagePerKey) {
       return {
         responses: 0,
         requests: 0,
-        per_method: {},
+        per_day: {},
       };
     }
-    return usagePerKey;
+
+    // Loop through all days and calculate the sum of requests and responses
+    const calculatedUsage = Object.entries(usagePerKey).reduce(
+      (acc, [_date, usage]) => {
+        acc.requests += usage.requests;
+        acc.responses += usage.responses;
+        return acc;
+      },
+      { requests: 0, responses: 0 },
+    );
+
+    return {
+      ...calculatedUsage,
+      per_day: usagePerKey,
+    };
   }
 
   static async getRpcApiKey({ id }: { id: number }, context: ServiceContext) {
