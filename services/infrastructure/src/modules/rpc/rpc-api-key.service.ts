@@ -110,12 +110,26 @@ export class RpcApiKeyService {
   }
 
   static async changeDwellirSubscription(
-    { subscription }: { subscription: DwellirSubscription },
+    {
+      data: { subscription, userUuid },
+    }: { data: { subscription: DwellirSubscription; userUuid: string } },
     context: ServiceContext,
   ) {
-    const dwellirUserId = await this.getDwellirId(context);
+    const dwellirUser = await new DwellirUser({}, context).populateByUserUuid(
+      userUuid,
+    );
 
-    return await Dwellir.changeSubscription(dwellirUserId, subscription);
+    if (!dwellirUser.exists()) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.DWELLIR_ID_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    return await Dwellir.changeSubscription(
+      dwellirUser.dwellir_id,
+      subscription,
+    );
   }
 
   static async downgradeDwellirSubscriptionsByUserUuids(

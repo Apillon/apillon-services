@@ -50,6 +50,7 @@ export class StripeService {
     customer_email: string,
     paymentSessionDto: PaymentSessionDto,
     mode: Stripe.Checkout.SessionCreateParams.Mode,
+    customer_uuid?: string,
   ): Promise<Stripe.Response<Stripe.Checkout.Session>> {
     return await this.stripe.checkout.sessions.create({
       line_items: [
@@ -65,6 +66,7 @@ export class StripeService {
         package_id: +paymentSessionDto.package_id,
         isCreditPurchase: `${mode === 'payment'}`,
         environment: env.APP_ENV,
+        user_uuid: customer_uuid,
       },
       billing_address_collection: 'required',
       success_url: paymentSessionDto.returnUrl,
