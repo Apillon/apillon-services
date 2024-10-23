@@ -77,7 +77,6 @@ export async function isTransactionIndexed(
           transactionHash,
         );
       break;
-    // TODO: add hydration indexer support?
     default:
       throw new BlockchainCodeException({
         code: BlockchainErrorCode.INVALID_CHAIN,

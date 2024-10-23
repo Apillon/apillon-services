@@ -11,7 +11,6 @@ import { StorageModule } from './storage/storage.module';
 import { AdminPanelController } from './admin-panel.controller';
 import { AdminPanelService } from './admin-panel.service';
 import { ServiceStatusModule } from '../service-status/service-status.module';
-import { AssetManagementModule } from './asset-management/asset-management.module';
 
 @Module({
   imports: [
@@ -25,7 +24,6 @@ import { AssetManagementModule } from './asset-management/asset-management.modul
     NftsModule,
     StorageModule,
     ServiceStatusModule,
-    AssetManagementModule,
   ],
   controllers: [AdminPanelController],
   providers: [AdminPanelService],

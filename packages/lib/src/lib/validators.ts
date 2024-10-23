@@ -74,7 +74,7 @@ export function anyPresenceValidator(fields: string[]) {
 }
 
 export function arrayLengthValidator() {
-  return function (this: ModelBase, value: any): boolean {
+  return async function (this: ModelBase, value: any): Promise<boolean> {
     return value?.length > 0;
   };
 }
