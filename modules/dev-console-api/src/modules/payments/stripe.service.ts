@@ -103,7 +103,7 @@ export class StripeService {
   }
 
   combinePaymentData(paymentData: any) {
-    const { project_uuid, package_id } = paymentData.metadata;
+    const { project_uuid, package_id, user_uuid } = paymentData.metadata;
 
     const isCreditPurchase = paymentData.metadata.isCreditPurchase === 'true';
 
@@ -111,6 +111,7 @@ export class StripeService {
       package_id,
       isCreditPurchase,
       project_uuid,
+      user_uuid,
       subtotalAmount: paymentData.amount_subtotal / 100,
       totalAmount: paymentData.amount_total / 100,
       clientName: paymentData.customer_details.name,
