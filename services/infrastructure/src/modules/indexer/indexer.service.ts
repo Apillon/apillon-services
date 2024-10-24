@@ -114,7 +114,7 @@ export class IndexerService {
     }
 
     //Get squid
-    if (indexer.status == SqlModelStatus.ACTIVE && indexer.squidReference) {
+    if (indexer.status != SqlModelStatus.DELETED && indexer.squidReference) {
       //call sqd API to get squid info
       const { body } = await sqdApi<any>({
         method: 'GET',

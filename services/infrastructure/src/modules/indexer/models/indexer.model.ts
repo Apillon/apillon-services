@@ -53,6 +53,7 @@ export class Indexer extends UuidSqlModel {
       SerializeFor.SERVICE,
       SerializeFor.LOGGER,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
