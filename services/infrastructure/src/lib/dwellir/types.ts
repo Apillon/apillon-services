@@ -37,7 +37,7 @@ export type DwellirGetEndpointsResponse = {
 
 export type DwellirGetUsageResponse = {
   total_requests: number;
-  total_response: number;
+  total_responses: number;
   by_key: Record<
     string,
     Record<

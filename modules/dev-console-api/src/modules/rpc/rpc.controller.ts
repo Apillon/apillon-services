@@ -56,7 +56,7 @@ export class RpcController {
     return await this.rpcService.updateRpcApiKey(context, id, body);
   }
 
-  @Put('api-key/:id/revoke')
+  @Delete('api-key/:id')
   @Permissions({ role: RoleGroup.ProjectOwnerAccess })
   @UseGuards(AuthGuard)
   async revokeApiKey(
