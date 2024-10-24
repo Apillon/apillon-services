@@ -166,20 +166,65 @@ export class InvoiceService {
         conn,
       );
 
-      if (webhookData.package_id === SubscriptionPackageId.RPC_PLAN) {
-        await OverrideService.createOverride(
-          new CreateQuotaOverrideDto({
-            quota_id: QuotaCode.MAX_RPC_KEYS,
-            object_uuid: webhookData.user_uuid,
-            value: 5,
-          }),
-          context,
-        );
+      await new Lmas().writeLog({
+        context,
+        logType: LogType.INFO,
+        message: `Subscription created`,
+        location: 'SCS/SubscriptionService/handleSubscriptionPurchase',
+        project_uuid: subscription.project_uuid,
+        service: ServiceName.CONFIG,
+        data: {
+          webhookData,
+        },
+        sendAdminAlert: true,
+      });
 
-        await new InfrastructureMicroservice(context).changeDwellirSubscription(
-          webhookData.user_uuid,
-          DwellirSubscription.DEVELOPER,
-        );
+      if (webhookData.package_id === SubscriptionPackageId.RPC_PLAN) {
+        await new Lmas().writeLog({
+          context,
+          logType: LogType.INFO,
+          message: `Inside IF`,
+        });
+        try {
+          await OverrideService.createOverride(
+            new CreateQuotaOverrideDto({
+              quota_id: QuotaCode.MAX_RPC_KEYS,
+              object_uuid: webhookData.user_uuid,
+              value: 5,
+            }),
+            context,
+          );
+        } catch (err) {
+          await new Lmas().writeLog({
+            context,
+            logType: LogType.INFO,
+            service: ServiceName.CONFIG,
+            data: {
+              err,
+            },
+          });
+
+          throw err;
+        }
+
+        try {
+          await new InfrastructureMicroservice(
+            context,
+          ).changeDwellirSubscription(
+            webhookData.user_uuid,
+            DwellirSubscription.DEVELOPER,
+          );
+        } catch (err) {
+          await new Lmas().writeLog({
+            context,
+            logType: LogType.INFO,
+            data: {
+              err: JSON.stringify(err),
+            },
+          });
+
+          throw err;
+        }
       }
 
       return await InvoiceService.createInvoice(
