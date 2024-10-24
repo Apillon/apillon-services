@@ -70,9 +70,16 @@ export class RpcApiKeyService {
     const dwellirId = dwellirUser.dwellir_id;
 
     const usages = await Dwellir.getUsage(dwellirId);
+
+    const totalResponses = usages.total_responses ?? 0;
+
+    const totalRequests = usages.total_requests ?? 0;
+
     const usagePerKey = usages.by_key[rpcApiKey.uuid];
     if (!usagePerKey) {
       return {
+        totalResponses,
+        totalRequests,
         responses: 0,
         requests: 0,
         per_day: {},
@@ -91,6 +98,8 @@ export class RpcApiKeyService {
 
     return {
       ...calculatedUsage,
+      totalResponses,
+      totalRequests,
       per_day: usagePerKey,
     };
   }
