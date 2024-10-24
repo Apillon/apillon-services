@@ -179,7 +179,7 @@ export class InvoiceService {
         sendAdminAlert: true,
       });
 
-      if (webhookData.package_id === SubscriptionPackageId.RPC_PLAN) {
+      if (Number(webhookData.package_id) === SubscriptionPackageId.RPC_PLAN) {
         await new Lmas().writeLog({
           context,
           logType: LogType.INFO,
