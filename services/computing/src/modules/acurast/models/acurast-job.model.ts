@@ -45,8 +45,7 @@ const serializableProfile = [
 ];
 const serializableUpdate = [...serializable, SerializeFor.UPDATE_DB];
 const serializableUpdateProfile = [
-  ...serializable,
-  SerializeFor.PROFILE,
+  ...serializableProfile,
   SerializeFor.UPDATE_DB,
 ];
 
@@ -209,7 +208,7 @@ export class AcurastJob extends UuidSqlModel {
   @prop({
     parser: { resolver: integerParser() },
     populatable,
-    serializable: serializableUpdateProfile.concat(SerializeFor.APILLON_API),
+    serializable: serializableUpdateProfile,
     validators: [
       {
         resolver: enumInclusionValidator(AcurastJobStatus, true),

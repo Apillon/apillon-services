@@ -22,13 +22,13 @@ import {
 import { ApillonApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
-import { AcurastService } from './acurast.service';
+import { CloudFunctionsService } from './cloud-functions.service';
 
-@Controller('acurast')
-export class AcurastController {
-  constructor(private readonly acurastService: AcurastService) {}
+@Controller('cloud-functions')
+export class CloudFunctionsController {
+  constructor(private readonly cloudFunctionsService: CloudFunctionsService) {}
 
-  @Post('cloud-functions')
+  @Post()
   @Validation({ dto: CreateCloudFunctionDto })
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_WRITE,
@@ -39,10 +39,10 @@ export class AcurastController {
     @Ctx() context: ApillonApiContext,
     @Body() body: CreateCloudFunctionDto,
   ) {
-    return await this.acurastService.createCloudFunction(context, body);
+    return await this.cloudFunctionsService.createCloudFunction(context, body);
   }
 
-  @Get('cloud-functions')
+  @Get()
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.COMPUTING,
@@ -53,10 +53,10 @@ export class AcurastController {
     @Ctx() context: ApillonApiContext,
     @Query() query: BaseProjectQueryFilter,
   ) {
-    return await this.acurastService.listCloudFunctions(context, query);
+    return await this.cloudFunctionsService.listCloudFunctions(context, query);
   }
 
-  @Get('cloud-functions/:function_uuid')
+  @Get(':function_uuid')
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_READ,
     serviceType: AttachedServiceType.COMPUTING,
@@ -69,10 +69,10 @@ export class AcurastController {
     @Param('function_uuid') function_uuid: string,
   ) {
     query.function_uuid = function_uuid;
-    return await this.acurastService.getCloudFunction(context, query);
+    return await this.cloudFunctionsService.getCloudFunction(context, query);
   }
 
-  @Post('cloud-functions/:function_uuid/jobs')
+  @Post(':function_uuid/jobs')
   @Validation({ dto: CreateJobDto })
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_WRITE,
@@ -85,10 +85,10 @@ export class AcurastController {
     @Param('function_uuid') function_uuid: string,
   ) {
     body.function_uuid = function_uuid;
-    return await this.acurastService.createJob(context, body);
+    return await this.cloudFunctionsService.createJob(context, body);
   }
 
-  @Post('cloud-functions/:function_uuid/environment')
+  @Post(':function_uuid/environment')
   @Validation({ dto: SetCloudFunctionEnvironmentDto })
   @ApiKeyPermissions({
     role: DefaultApiKeyRole.KEY_EXECUTE,
@@ -101,7 +101,10 @@ export class AcurastController {
     @Param('function_uuid') function_uuid: string,
   ) {
     body.function_uuid = function_uuid;
-    return await this.acurastService.setCloudFunctionEnvironment(context, body);
+    return await this.cloudFunctionsService.setCloudFunctionEnvironment(
+      context,
+      body,
+    );
   }
 
   @Delete('jobs/:job_uuid')
@@ -114,6 +117,6 @@ export class AcurastController {
     @Ctx() context: ApillonApiContext,
     @Param('job_uuid') job_uuid: string,
   ) {
-    return await this.acurastService.deleteJob(context, job_uuid);
+    return await this.cloudFunctionsService.deleteJob(context, job_uuid);
   }
 }
