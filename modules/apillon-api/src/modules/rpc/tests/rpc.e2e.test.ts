@@ -112,7 +112,6 @@ describe('Apillon API RPC service tests', () => {
     const apiKeyToCreate = {
       name: 'Test ApiKey',
       description: 'Test Description',
-      user_uuid: '0000-0000-0000-0000',
       uuid: '0000-0000-0000-0000',
     };
     beforeAll(async () => {
@@ -173,7 +172,6 @@ describe('Apillon API RPC service tests', () => {
     const apiKeyToCreate = {
       name: 'Test ApiKey',
       description: 'Test Description',
-      user_uuid: '0000-0000-0000-0000',
       uuid: '0000-0000-0000-0000',
     };
     const urlToCreate = {
