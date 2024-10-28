@@ -11,6 +11,7 @@ import {
   ValidateFor,
 } from '@apillon/lib';
 import {
+  ApiCreateUniqueCollectionDTO,
   CreateCollectionDTO,
   CreateSubstrateCollectionDTO,
 } from '@apillon/blockchain-lib/common';
@@ -65,6 +66,20 @@ export class NftController {
       ChainType.SUBSTRATE,
       body,
     );
+  }
+
+  @Post('collections/unique')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_WRITE,
+    serviceType: AttachedServiceType.NFT,
+  })
+  @Validation({ dto: ApiCreateUniqueCollectionDTO })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async createUniqueCollection(
+    @Ctx() context: ApillonApiContext,
+    @Body() body: ApiCreateUniqueCollectionDTO,
+  ) {
+    return await this.nftService.createUniqueCollection(context, body);
   }
 
   @Get('collections')

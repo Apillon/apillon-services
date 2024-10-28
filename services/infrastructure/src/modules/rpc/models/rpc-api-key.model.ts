@@ -129,6 +129,7 @@ export class RpcApiKey extends UuidSqlModel {
         SELECT COUNT(id) as total
         FROM \`${DbTables.RPC_API_KEY}\`
         WHERE createUser = @user_id
+        AND status <> ${SqlModelStatus.DELETED}
       `,
       { user_id: userId },
     );

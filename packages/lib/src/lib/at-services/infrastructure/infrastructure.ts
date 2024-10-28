@@ -62,10 +62,13 @@ export class InfrastructureMicroservice extends BaseService {
     });
   }
 
-  public async changeDwellirSubscription(subscription: DwellirSubscription) {
+  public async changeDwellirSubscription(
+    userUuid: string,
+    subscription: DwellirSubscription,
+  ) {
     return await this.callService({
-      evenName: InfrastructureEventType.CHANGE_DWELLIR_SUBSCRIPTION,
-      subscription,
+      eventName: InfrastructureEventType.CHANGE_DWELLIR_SUBSCRIPTION,
+      data: { userUuid, subscription },
     });
   }
 

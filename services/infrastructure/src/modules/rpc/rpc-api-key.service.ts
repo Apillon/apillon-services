@@ -70,9 +70,16 @@ export class RpcApiKeyService {
     const dwellirId = dwellirUser.dwellir_id;
 
     const usages = await Dwellir.getUsage(dwellirId);
+
+    const totalResponses = usages.total_responses ?? 0;
+
+    const totalRequests = usages.total_requests ?? 0;
+
     const usagePerKey = usages.by_key[rpcApiKey.uuid];
     if (!usagePerKey) {
       return {
+        totalResponses,
+        totalRequests,
         responses: 0,
         requests: 0,
         per_day: {},
@@ -91,6 +98,8 @@ export class RpcApiKeyService {
 
     return {
       ...calculatedUsage,
+      totalResponses,
+      totalRequests,
       per_day: usagePerKey,
     };
   }
@@ -110,12 +119,26 @@ export class RpcApiKeyService {
   }
 
   static async changeDwellirSubscription(
-    { subscription }: { subscription: DwellirSubscription },
+    {
+      data: { subscription, userUuid },
+    }: { data: { subscription: DwellirSubscription; userUuid: string } },
     context: ServiceContext,
   ) {
-    const dwellirUserId = await this.getDwellirId(context);
+    const dwellirUser = await new DwellirUser({}, context).populateByUserUuid(
+      userUuid,
+    );
 
-    return await Dwellir.changeSubscription(dwellirUserId, subscription);
+    if (!dwellirUser.exists()) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.DWELLIR_ID_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    return await Dwellir.changeSubscription(
+      dwellirUser.dwellir_id,
+      subscription,
+    );
   }
 
   static async downgradeDwellirSubscriptionsByUserUuids(

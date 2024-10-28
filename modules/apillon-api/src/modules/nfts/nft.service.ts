@@ -9,8 +9,10 @@ import {
   TransferCollectionDTO,
 } from '@apillon/lib';
 import {
+  ApiCreateUniqueCollectionDTO,
   CreateCollectionDTO,
   CreateSubstrateCollectionDTO,
+  CreateUniqueCollectionDTO,
 } from '@apillon/blockchain-lib/common';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
@@ -29,6 +31,19 @@ export class NftService {
     });
 
     return (await new NftsMicroservice(context).createCollection(dto)).data;
+  }
+
+  async createUniqueCollection(
+    context: ApillonApiContext,
+    body: ApiCreateUniqueCollectionDTO,
+  ) {
+    const dto = new CreateUniqueCollectionDTO().populate({
+      ...body.serialize(),
+      project_uuid: context.apiKey.project_uuid,
+    });
+
+    return (await new NftsMicroservice(context).createUniqueCollection(dto))
+      .data;
   }
 
   async listNftCollections(
