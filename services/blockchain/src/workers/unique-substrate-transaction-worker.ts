@@ -8,6 +8,8 @@ import {
 import { DbTables, TransactionIndexerStatus } from '../config/types';
 import { LogOutput } from '@apillon/workers-lib';
 import { UniqueBlockchainIndexer } from '../modules/blockchain-indexers/substrate/unique/indexer.service';
+import { encodeAddress } from '@polkadot/util-crypto';
+import { SubstrateChainPrefix } from '@apillon/blockchain-lib/substrate';
 
 /**
  * Worker which beside transfer transactions also fetches "collectionCreateds"
@@ -24,9 +26,14 @@ export class UniqueJobTransactionWorker extends SubstrateTransactionWorker {
     const successTransactions = transactions
       .filter((t: any) => t.status == TransactionIndexerStatus.SUCCESS)
       .map((t: any): string => t.extrinsicHash);
+    // for unique we need to convert address from unique to address with prefix 42
+    const convertedWalletAddress = encodeAddress(
+      walletAddress,
+      SubstrateChainPrefix.TESTNETS,
+    );
     const collectionCreatedTxs =
       await this.indexer.getCollectionCreatedTransactions(
-        walletAddress,
+        convertedWalletAddress,
         successTransactions,
       );
     // Update CONTRACT transactions
