@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="NFTs Dev" type="Multirun" separateTabs="false" reuseTabsWithFailures="false" startOneByOne="true" markFailedProcess="true" hideSuccessProcess="false" delayTime="0.0">
+    <runConfiguration name="blockchain &gt; dev" type="npm" />
+    <runConfiguration name="config &gt; dev" type="npm" />
+    <runConfiguration name="nfts &gt; dev" type="npm" />
+    <runConfiguration name="mailing &gt; dev" type="npm" />
+    <runConfiguration name="access &gt; dev" type="npm" />
+    <method v="2" />
+  </configuration>
+</component>

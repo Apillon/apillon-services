@@ -167,7 +167,7 @@ export async function deployNFTCollectionContract(
         transactionHex = await client.createCollection(
           collection.name,
           collection.symbol,
-          collection.description,
+          collection.description ?? '', // unique requires an empty string instead of null
           // we can implement admins
           [],
           // unique suggested to avoid using AllowList since they will redesign it

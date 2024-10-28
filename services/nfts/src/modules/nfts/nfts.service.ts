@@ -219,7 +219,7 @@ export class NftsService {
     context: ServiceContext,
   ) {
     console.log(
-      `Creating Unique NFT collections: ${JSON.stringify(params.body)}`,
+      `Creating Unique NFT collection: ${JSON.stringify(params.body)}`,
     );
     const collection: Collection = new Collection(
       params.body,
