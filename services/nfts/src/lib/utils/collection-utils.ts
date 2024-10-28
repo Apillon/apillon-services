@@ -175,7 +175,9 @@ export async function deployNFTCollectionContract(
           collection.collectionType === NFTCollectionType.NESTABLE,
           collection.isRevokable,
           collection.isSoulbound,
-          collection.maxSupply,
+          collection.maxSupply <= 0
+            ? SUBSTRATE_NFTS_MAX_SUPPLY
+            : collection.maxSupply,
         );
       } else {
         const { id, abi } = await new ContractVersion(
