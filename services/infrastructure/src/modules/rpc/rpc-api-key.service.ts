@@ -1,6 +1,7 @@
 import { ServiceContext } from '@apillon/service-lib';
 import { RpcApiKey } from './models/rpc-api-key.model';
 import {
+  ApillonApiCreateRpcApiKeyDto,
   BaseProjectQueryFilter,
   CreateRpcApiKeyDto,
   DwellirSubscription,
@@ -105,7 +106,7 @@ export class RpcApiKeyService {
   }
 
   static async getRpcApiKey({ id }: { id: number }, context: ServiceContext) {
-    const rpcApiKey = await new RpcApiKey({}, context).populateById(id);
+    const rpcApiKey = await new RpcApiKey({}, context).populateByIdWithUrls(id);
 
     if (!rpcApiKey.exists()) {
       throw new InfrastructureCodeException({
@@ -115,7 +116,7 @@ export class RpcApiKeyService {
     }
 
     rpcApiKey.canAccess(context);
-    return rpcApiKey.serialize(SerializeFor.PROFILE);
+    return rpcApiKey.serialize(SerializeFor.APILLON_API);
   }
 
   static async changeDwellirSubscription(
@@ -160,9 +161,16 @@ export class RpcApiKeyService {
     return true;
   }
 
-  static async getOrCreateDwellirId(context: ServiceContext) {
+  static async getOrCreateDwellirId(
+    context: ServiceContext,
+    uuid?: string,
+    email?: string,
+  ) {
+    const userUuid = uuid ?? context.user.user_uuid;
+    const userEmail = email ?? context.user.email;
+
     const dwellirUser = await new DwellirUser({}, context).populateByUserUuid(
-      context.user.user_uuid,
+      userUuid,
     );
 
     if (dwellirUser.exists()) {
@@ -172,19 +180,18 @@ export class RpcApiKeyService {
       };
     }
 
-    const responseBody = await Dwellir.createUser(context.user.email);
+    const responseBody = await Dwellir.createUser(userEmail);
 
     const createdDwellirUser = new DwellirUser({}, context).populate({
       dwellir_id: responseBody.id,
-      user_uuid: context.user.user_uuid,
-      email: context.user.email,
+      user_uuid: userUuid,
+      email: userEmail,
     });
 
     await createdDwellirUser.insert();
 
     return {
       dwellirId: responseBody.id,
-      userId: context.user.id,
       created: true,
     };
   }
@@ -231,21 +238,63 @@ export class RpcApiKeyService {
     return keysCount >= maxApiKeysQuota.value;
   }
 
-  static async createRpcApiKey(
-    { data }: { data: CreateRpcApiKeyDto },
+  static async apillonApiCreateRpcApiKey(
+    { data }: { data: ApillonApiCreateRpcApiKeyDto },
     context: ServiceContext,
   ) {
-    const { dwellirId, created } =
-      await RpcApiKeyService.getOrCreateDwellirId(context);
+    const dwellirUser = await new DwellirUser({}, context).populateByUserUuid(
+      data.user_uuid,
+    );
+
+    if (!dwellirUser.exists()) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.DWELLIR_ID_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    const dwellirId = dwellirUser.dwellir_id;
+
+    const maxApiKeysQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_RPC_KEYS,
+      object_uuid: data.user_uuid,
+    });
+
+    const keysCount = await new RpcApiKey({}, context).getNumberOfKeysPerUser(
+      data.user_id,
+    );
+
+    if (keysCount >= maxApiKeysQuota.value) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.MAX_RPC_KEYS_REACHED,
+        status: 400,
+      });
+    }
+
+    const rpcApiKey = new RpcApiKey(data, context);
+    const apiKeyResponse = await Dwellir.createApiKey(dwellirId);
+    rpcApiKey.uuid = apiKeyResponse.api_key;
+    return await rpcApiKey.insert();
+  }
+
+  static async createRpcApiKey(
+    { data }: { data: CreateRpcApiKeyDto | ApillonApiCreateRpcApiKeyDto },
+    context: ServiceContext,
+  ) {
+    const { dwellirId, created } = await RpcApiKeyService.getOrCreateDwellirId(
+      context,
+      data['user_uuid'],
+      data['email'],
+    );
 
     if (!created) {
       const maxApiKeysQuota = await new Scs(context).getQuota({
         quota_id: QuotaCode.MAX_RPC_KEYS,
-        object_uuid: context.user.user_uuid,
+        object_uuid: data['user_uuid'] ?? context.user.user_uuid,
       });
 
       const keysCount = await new RpcApiKey({}, context).getNumberOfKeysPerUser(
-        context.user.id,
+        data['user_id'] ?? context.user.id,
       );
 
       if (keysCount >= maxApiKeysQuota.value) {

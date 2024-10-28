@@ -25,6 +25,7 @@ export class RpcUrl extends UuidSqlModel {
   @prop({
     parser: { resolver: integerParser() },
     serializable: [
+      SerializeFor.APILLON_API,
       SerializeFor.SERVICE,
       SerializeFor.WORKER,
       SerializeFor.LOGGER,
