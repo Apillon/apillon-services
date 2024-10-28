@@ -85,6 +85,7 @@ export class InfrastructureMicroservice extends BaseService {
       filter,
     });
   }
+
   public async createRpcApiKey(data: CreateRpcApiKeyDto) {
     return await this.callService({
       eventName: InfrastructureEventType.CREATE_RPC_API_KEY,

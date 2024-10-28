@@ -1,6 +1,6 @@
 {
   "name": "@apillon/blockchain",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "author": "Apillon",
   "license": "GNU GPL V3",
   "description": "Blockchain integration service",

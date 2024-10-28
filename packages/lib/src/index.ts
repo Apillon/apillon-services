@@ -137,6 +137,7 @@ export * from './lib/at-services/social/dtos/post-query-filter.dto';
 export * from './lib/at-services/infrastructure/infrastructure';
 export * from './lib/at-services/infrastructure/types';
 export * from './lib/at-services/infrastructure/dtos/create-rpc-api-key.dto';
+export * from './lib/at-services/infrastructure/dtos/apillon-api-create-rpc-api-key.dto';
 export * from './lib/at-services/infrastructure/dtos/create-rpc-url.dto';
 export * from './lib/at-services/infrastructure/dtos/list-rpc-urls-for-api-key-query-filter.dto';
 export * from './lib/at-services/infrastructure/dtos/update-rpc-api-key.dto';
