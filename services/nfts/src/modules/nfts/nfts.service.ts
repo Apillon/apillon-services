@@ -1265,7 +1265,7 @@ export class NftsService {
     context: ServiceContext,
   ) {
     console.log(
-      `Burning NFT token (collection uuid=${body.collection_uuid}), tokenId= ${body.tokenId})`,
+      `Burning NFT token (collection uuid=${body.collection_uuid}), tokenId=${body.tokenId})`,
     );
     const collection: Collection = await new Collection(
       {},
@@ -1297,10 +1297,6 @@ export class NftsService {
     );
     const { data } = await spendCreditAction(context, spendCredit, async () => {
       {
-        const { abi } = await new ContractVersion({}, context).populateById(
-          collection.contractVersion_id,
-        );
-
         const chainName = getChainName(collection.chainType, collection.chain);
         console.info(
           `[${chainName}] Creating NFT burn transaction from wallet address: ${
@@ -1310,6 +1306,9 @@ export class NftsService {
         let txHash: string;
         switch (collection.chainType) {
           case ChainType.EVM: {
+            const { abi } = await new ContractVersion({}, context).populateById(
+              collection.contractVersion_id,
+            );
             const evmContractClient = await getEvmContractClient(
               context,
               collection.chain as EvmChain,
