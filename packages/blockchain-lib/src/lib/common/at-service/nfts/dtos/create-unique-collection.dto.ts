@@ -12,10 +12,6 @@ import {
   presenceValidator,
   stringLengthValidator,
 } from '@rawmodel/validators';
-import {
-  substrateAddressValidator,
-  SubstrateChainPrefix,
-} from '../../../../substrate';
 import { CreateCollectionDtoGenericBase } from './create-collection.dto';
 
 export class MetadataAttributes extends ModelBase {
@@ -145,18 +141,6 @@ export class ApiCreateUniqueCollectionDTO extends CreateCollectionDtoGenericBase
     ],
   })
   public maxSupply: number;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: substrateAddressValidator(SubstrateChainPrefix.UNIQUE),
-        code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_VALID,
-      },
-    ],
-  })
-  public royaltiesAddress: string;
 
   @prop({
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
