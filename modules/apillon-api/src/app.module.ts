@@ -19,6 +19,7 @@ import { EmbeddedWalletModule } from './modules/embedded-wallet/embedded-wallet.
 import { IndexingModule } from './modules/indexing/indexing.module';
 import { CloudFunctionsModule } from './modules/acurast/cloud-functions.module';
 import { RpcModule } from './modules/rpc/rpc.module';
+
 @Module({
   imports: [
     MySQLModule,
