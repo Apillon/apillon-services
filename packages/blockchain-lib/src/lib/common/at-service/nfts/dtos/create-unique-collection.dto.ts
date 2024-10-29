@@ -6,7 +6,7 @@ import {
   SUBSTRATE_NFTS_MAX_SUPPLY,
   ValidatorErrorCode,
 } from '@apillon/lib';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   numberSizeValidator,
   presenceValidator,
@@ -141,6 +141,34 @@ export class ApiCreateUniqueCollectionDTO extends CreateCollectionDtoGenericBase
     ],
   })
   public maxSupply: number;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_REVOKABLE_NOT_PRESENT,
+      },
+    ],
+    defaultValue: false,
+  })
+  public isRevokable: boolean;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_COLLECTION_SOULBOUND_NOT_PRESENT,
+      },
+    ],
+    defaultValue: false,
+  })
+  public isSoulbound: boolean;
 
   @prop({
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
