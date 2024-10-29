@@ -25,6 +25,7 @@ export class RpcUrl extends UuidSqlModel {
   @prop({
     parser: { resolver: integerParser() },
     serializable: [
+      SerializeFor.APILLON_API,
       SerializeFor.SERVICE,
       SerializeFor.WORKER,
       SerializeFor.LOGGER,
@@ -159,13 +160,22 @@ export class RpcUrl extends UuidSqlModel {
   })
   project_uuid: string;
 
-  public async populateByNetworkAndApiKey(network: string, apiKeyId: number) {
+  public async populateByNetworkChainNameAndApiKey(
+    network: string,
+    apiKeyId: number,
+    chainName: string,
+  ) {
     this.reset();
     const data = await this.getContext().mysql.paramExecute(
-      `SELECT * FROM ${this.tableName} WHERE network = @network and apiKeyId = @apiKeyId LIMIT 1`,
+      `SELECT * FROM ${this.tableName}
+       WHERE network = @network
+       AND apiKeyId = @apiKeyId
+       AND chainName = @chainName
+       AND status <> ${SqlModelStatus.DELETED} LIMIT 1`,
       {
         network,
         apiKeyId,
+        chainName,
       },
     );
     return data?.length
@@ -186,7 +196,7 @@ export class RpcUrl extends UuidSqlModel {
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields()}`,
       qFrom: `FROM ${DbTables.RPC_URL} u
-          WHERE u.apiKeyId = ${filter.apiKeyId} AND (@search IS NULL or u.chainName LIKE CONCAT('%',@search,'%'))`,
+          WHERE u.apiKeyId = ${filter.apiKeyId} AND (@search IS NULL or u.chainName LIKE CONCAT('%',@search,'%')) AND u.status <> ${SqlModelStatus.DELETED}`,
       qFilter: `
         ORDER BY ${filters.orderStr}
         LIMIT ${filters.limit} OFFSET ${filters.offset}`,

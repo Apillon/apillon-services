@@ -71,6 +71,7 @@ export class PaymentsService {
       context.user.email,
       paymentSessionDto,
       'subscription',
+      context.user.user_uuid,
     );
   }
 

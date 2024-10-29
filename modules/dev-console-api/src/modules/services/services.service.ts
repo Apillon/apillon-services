@@ -21,6 +21,7 @@ import { ServiceDto } from './dtos/service.dto';
 import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
 import { Service } from './models/service.model';
 import { ServiceType } from './models/service-type.model';
+import { InfrastructureMicroservice } from '@apillon/lib';
 
 @Injectable()
 export class ServicesService {
@@ -73,6 +74,7 @@ export class ServicesService {
    * @param context
    * @param project_uuid
    * @param serviceType_id
+   * @returns {Promise<boolean>} - True if service was created, false otherwise.
    */
   async createServiceIfItDoesntExist(
     context: DevConsoleApiContext,
@@ -99,7 +101,11 @@ export class ServicesService {
         context,
       );
       await this.createService(context, service);
+
+      return true;
     }
+
+    return false;
   }
 
   /**
@@ -134,6 +140,7 @@ export class ServicesService {
       [AttachedServiceType.NFT]: DefaultPermission.NFTS,
       [AttachedServiceType.COMPUTING]: DefaultPermission.COMPUTING,
       [AttachedServiceType.CONTRACTS]: DefaultPermission.CONTRACTS,
+      [AttachedServiceType.RPC]: DefaultPermission.RPC,
     }[body.serviceType_id];
 
     if (requiredPermission && !context.hasPermission(requiredPermission)) {
@@ -147,6 +154,12 @@ export class ServicesService {
     const service = new Service(body, context);
     service.populate({ service_uuid: uuidV4(), project_id: project.id });
     await service.insert();
+
+    if (body.serviceType_id === AttachedServiceType.RPC) {
+      await new InfrastructureMicroservice(context).createUser(
+        body.project_uuid,
+      );
+    }
 
     await new Lmas().writeLog({
       context,

@@ -131,4 +131,16 @@ export class Override extends AdvancedSQLModel {
 
     return data.map((override) => this.populate(override, PopulateFrom.DB));
   }
+
+  public async deleteByObjectUuidsAndQuotaId(
+    objectUuids: string[],
+    quotaId: number,
+  ) {
+    await this.getContext().mysql.paramExecute(
+      `DELETE FROM \`${DbTables.OVERRIDE}\` WHERE object_uuid IN (${objectUuids.map(
+        (uuid) => `'${uuid}'`,
+      )}) AND quota_id = @quota_id`,
+      { quota_id: quotaId },
+    );
+  }
 }

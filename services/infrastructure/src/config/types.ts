@@ -4,6 +4,7 @@ export enum DbTables {
   DWELLIR_USER = 'dwellir_user',
   INDEXER = 'indexer',
   INDEXER_DEPLOYMENT = 'indexer_deployment',
+  INDEXER_BILLING = 'indexer_billing',
 }
 
 export enum InfrastructureErrorCode {
@@ -31,6 +32,7 @@ export enum InfrastructureErrorCode {
 
   INDEXER_REQUIRED_DATA_NOT_PRESENT = 42220100,
   INDEXER_DEPLOY_REQUIRED_DATA_NOT_PRESENT = 42220101,
+  INDEXER_BILLING_REQUIRED_DATA_NOT_PRESENT = 42220102,
 
   // 401 - Unauthorized
   USER_IS_NOT_AUTHORIZED = 40120001,

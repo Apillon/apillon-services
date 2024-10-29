@@ -35,7 +35,7 @@ import {
 import {
   deleteAcurastJob,
   deployAcurastJob,
-  getAcurastWebsocketUrl,
+  getAcurastWebsocketUrls,
   setAcurastJobEnvironment,
 } from '../../lib/utils/acurast-utils';
 import {
@@ -355,7 +355,7 @@ export class AcurastService {
     // access is not checked for sendMessage
     job.verifyStatusAndAccess('executeCloudFunction', context, [], true);
 
-    return await new AcurastWebsocketClient(await getAcurastWebsocketUrl())
+    return await new AcurastWebsocketClient(await getAcurastWebsocketUrls())
       .send(job.publicKey, event.payload)
       .then(async (result) => {
         new Lmas()

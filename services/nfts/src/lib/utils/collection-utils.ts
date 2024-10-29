@@ -167,7 +167,7 @@ export async function deployNFTCollectionContract(
         transactionHex = await client.createCollection(
           collection.name,
           collection.symbol,
-          collection.description,
+          collection.description ?? '', // unique requires an empty string instead of null
           // we can implement admins
           [],
           // unique suggested to avoid using AllowList since they will redesign it
@@ -175,7 +175,9 @@ export async function deployNFTCollectionContract(
           collection.collectionType === NFTCollectionType.NESTABLE,
           collection.isRevokable,
           collection.isSoulbound,
-          collection.maxSupply,
+          collection.maxSupply <= 0
+            ? SUBSTRATE_NFTS_MAX_SUPPLY
+            : collection.maxSupply,
         );
       } else {
         const { id, abi } = await new ContractVersion(

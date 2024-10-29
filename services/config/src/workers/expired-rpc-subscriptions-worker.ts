@@ -5,12 +5,14 @@ import {
   InfrastructureMicroservice,
   LogType,
   MySql,
+  QuotaCode,
   ServiceName,
   SubscriptionPackageId,
   env,
 } from '@apillon/lib';
 import { BaseWorker, Job, WorkerDefinition } from '@apillon/workers-lib';
 import { Subscription } from '../modules/subscription/models/subscription.model';
+import { OverrideService } from '../modules/override/override.service';
 
 const devConsoleConfig = {
   host: env.DEV_CONSOLE_API_MYSQL_HOST,
@@ -68,6 +70,12 @@ export class ExpiredRpcSubscriptionsWorker extends BaseWorker {
 
     await new Subscription({}, this.context).deactivateSubscriptions(
       expiredRpcPlans.expiredSubscriptions,
+    );
+
+    await OverrideService.deleteOverrides(
+      expiredRpcPlans.userUuidsToDowngrade,
+      QuotaCode.MAX_RPC_KEYS,
+      this.context,
     );
   }
 

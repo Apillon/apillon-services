@@ -93,20 +93,22 @@ export class ProjectUser extends AdvancedSQLModel {
       : this.reset();
   }
 
-  public async getProjectOwnerId(
+  public async getProjectOwner(
     project_uuid: string,
-  ): Promise<number | undefined> {
+  ): Promise<{ user_id: number; user_uuid: string } | undefined> {
     if (!project_uuid) {
       throw new Error('Project UUID is required');
     }
 
     const data = await this.getContext().mysql.paramExecute(
-      `SELECT pu.user_id FROM ${DbTables.PROJECT_USER} pu
+      `SELECT pu.user_id, u.user_uuid FROM ${DbTables.PROJECT_USER} pu
       LEFT JOIN ${DbTables.PROJECT} p ON p.id = pu.project_id
+      LEFT JOIN ${DbTables.USER} u ON u.id = pu.user_id
       WHERE p.project_uuid = @project_uuid AND pu.role_id = ${DefaultUserRole.PROJECT_OWNER}`,
+      { project_uuid },
     );
 
-    return data?.length ? data[0].user_id : undefined;
+    return data?.length ? data[0] : undefined;
   }
 
   public async getProjectUuidsByOwnerId(userId: number): Promise<string[]> {

@@ -12,10 +12,6 @@ import {
   presenceValidator,
   stringLengthValidator,
 } from '@rawmodel/validators';
-import {
-  substrateAddressValidator,
-  SubstrateChainPrefix,
-} from '../../../../substrate';
 import { CreateCollectionDtoGenericBase } from './create-collection.dto';
 
 export class MetadataAttributes extends ModelBase {
@@ -125,7 +121,7 @@ export class Metadata extends ModelBase {
   public attributes: MetadataAttributes;
 }
 
-export class CreateUniqueCollectionDTO extends CreateCollectionDtoGenericBase {
+export class ApiCreateUniqueCollectionDTO extends CreateCollectionDtoGenericBase {
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -147,18 +143,6 @@ export class CreateUniqueCollectionDTO extends CreateCollectionDtoGenericBase {
   public maxSupply: number;
 
   @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: substrateAddressValidator(SubstrateChainPrefix.UNIQUE),
-        code: ValidatorErrorCode.NFT_COLLECTION_ROYALTIES_ADDRESS_NOT_VALID,
-      },
-    ],
-  })
-  public royaltiesAddress: string;
-
-  @prop({
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
@@ -168,4 +152,19 @@ export class CreateUniqueCollectionDTO extends CreateCollectionDtoGenericBase {
     ],
   })
   public metadata: { [tokenId: string]: Metadata };
+}
+
+export class CreateUniqueCollectionDTO extends ApiCreateUniqueCollectionDTO {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.NFT_DEPLOY_PROJECT_UUID_NOT_PRESENT,
+      },
+    ],
+  })
+  public project_uuid: string;
 }

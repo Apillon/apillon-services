@@ -32,9 +32,12 @@ export async function getAcurastEndpoint(context: Context) {
   ).data.url;
 }
 
-export async function getAcurastWebsocketUrl() {
+export async function getAcurastWebsocketUrls() {
   // TODO: replace with env variable?
-  return 'wss://websocket-proxy-2.prod.gke.acurast.com/';
+  return [
+    'wss://websocket-proxy-1.prod.gke.acurast.com/',
+    'wss://websocket-proxy-2.prod.gke.acurast.com/',
+  ];
 }
 
 export async function deployAcurastJob(

@@ -137,17 +137,14 @@ export class ProjectController {
     return await this.projectService.removeUserProject(context, projectUserId);
   }
 
-  @Get(':project_uuid/has-active-rpc-plan')
+  @Get(':project_uuid/rpc-plan')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard, ProjectAccessGuard)
-  async hasActiveRpcPlan(
+  async getProjectRpcPlan(
     @Ctx() context: DevConsoleApiContext,
     @Param('project_uuid') project_uuid: string,
   ) {
-    return await this.projectService.hasProjectActiveRpcPlan(
-      context,
-      project_uuid,
-    );
+    return await this.projectService.getProjectRpcPlan(context, project_uuid);
   }
 
   @Get(':uuid')

@@ -223,17 +223,17 @@ export class Scs extends BaseService {
     });
   }
 
-  public async hasProjectActiveRpcPlan(project_uuid: string | string[]) {
-    return await this.callService({
-      eventName: ScsEventType.HAS_ACTIVE_RPC_PLAN,
-      project_uuid,
-    });
-  }
-
   public async listSubscriptions(query: SubscriptionsQueryFilter) {
     return await this.callService({
       eventName: ScsEventType.LIST_SUBSCRIPTIONS,
       query,
+    });
+  }
+
+  public async hasProjectActiveRpcPlan(project_uuid: string | string[]) {
+    return await this.callService({
+      eventName: ScsEventType.HAS_ACTIVE_RPC_PLAN,
+      project_uuid,
     });
   }
 
