@@ -18,6 +18,8 @@ import { ContractsModule } from './modules/contracts/contracts.module';
 import { EmbeddedWalletModule } from './modules/embedded-wallet/embedded-wallet.module';
 import { IndexingModule } from './modules/indexing/indexing.module';
 import { CloudFunctionsModule } from './modules/acurast/cloud-functions.module';
+import { RpcModule } from './modules/rpc/rpc.module';
+
 @Module({
   imports: [
     MySQLModule,
@@ -35,6 +37,7 @@ import { CloudFunctionsModule } from './modules/acurast/cloud-functions.module';
     CloudFunctionsModule,
     ContractsModule,
     IndexingModule,
+    RpcModule,
   ],
   controllers: [AppController],
   providers: [],

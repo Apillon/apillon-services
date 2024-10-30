@@ -12,6 +12,7 @@ export enum ValidatorErrorCode {
  */
 export enum ResourceNotFoundErrorCode {
   DEFAULT_RESOURCE_NOT_FOUND_ERROR = 40405000,
+  PROJECT_OWNER_NOT_FOUND = 40405001,
 }
 
 export enum ApiErrorCode {

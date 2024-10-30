@@ -36,4 +36,15 @@ export class OverrideService {
     await override.delete();
     return true;
   }
+
+  static async deleteOverrides(
+    objectUuids: string[],
+    quotaId: number,
+    context: ServiceContext,
+  ) {
+    await new Override({}, context).deleteByObjectUuidsAndQuotaId(
+      objectUuids,
+      quotaId,
+    );
+  }
 }

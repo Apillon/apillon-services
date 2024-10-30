@@ -43,11 +43,18 @@ export class AuthGuard implements CanActivate {
         }
       }
 
-      for (const requiredPerm of requiredPermissions.filter((x) => x.role)) {
+      const rolePermissions = requiredPermissions.filter((x) => x.role);
+
+      if (!rolePermissions.length) {
+        return true;
+      }
+
+      for (const requiredPerm of rolePermissions) {
         if (context.hasRole(requiredPerm.role)) {
           return true;
         }
       }
+
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: HttpStatus.FORBIDDEN,

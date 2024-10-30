@@ -28,10 +28,30 @@ export class InfrastructureMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
-  public async getRpcApiKeyUsage(id: number) {
+  public async createUser(projectUuid: string) {
+    return await this.callService({
+      eventName: InfrastructureEventType.CREATE_USER,
+      projectUuid,
+    });
+  }
+
+  public async isRpcApiKeysQuotaReached() {
+    return await this.callService({
+      eventName: InfrastructureEventType.IS_RPC_API_KEYS_QUOTA_REACHED,
+    });
+  }
+
+  public async hasDwellirId(userUuid: string) {
+    return await this.callService({
+      eventName: InfrastructureEventType.HAS_DWELLIR_ID,
+      userUuid,
+    });
+  }
+
+  public async getRpcApiKeyUsage(id: number, userUuid: string) {
     return await this.callService({
       eventName: InfrastructureEventType.GET_RPC_API_KEY_USAGE,
-      id,
+      data: { id, userUuid },
     });
   }
 
@@ -42,10 +62,13 @@ export class InfrastructureMicroservice extends BaseService {
     });
   }
 
-  public async changeDwellirSubscription(subscription: DwellirSubscription) {
+  public async changeDwellirSubscription(
+    userUuid: string,
+    subscription: DwellirSubscription,
+  ) {
     return await this.callService({
-      evenName: InfrastructureEventType.CHANGE_DWELLIR_SUBSCRIPTION,
-      subscription,
+      eventName: InfrastructureEventType.CHANGE_DWELLIR_SUBSCRIPTION,
+      data: { userUuid, subscription },
     });
   }
 
@@ -62,6 +85,7 @@ export class InfrastructureMicroservice extends BaseService {
       filter,
     });
   }
+
   public async createRpcApiKey(data: CreateRpcApiKeyDto) {
     return await this.callService({
       eventName: InfrastructureEventType.CREATE_RPC_API_KEY,

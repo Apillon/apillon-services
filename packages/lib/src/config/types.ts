@@ -370,6 +370,9 @@ export enum InfrastructureEventType {
   DELETE_RPC_URL = 'delete-rpc-url',
   LIST_RPC_URLS = 'list-rpc-urls',
   LIST_ENDPOINTS = 'list-endpoints',
+  HAS_DWELLIR_ID = 'has-dwellir-id',
+  CREATE_USER = 'create-user',
+  IS_RPC_API_KEYS_QUOTA_REACHED = 'is-rpc-api-keys-quota-reached',
 
   INDEXER_CREATE = 'create-indexer',
   INDEXER_LIST = 'list-indexers',
@@ -471,6 +474,7 @@ export enum AttachedServiceType {
   SOCIAL = 6,
   WALLET = 7,
   CONTRACTS = 8,
+  RPC = 9,
   INDEXING = 10,
   SYSTEM = 999,
 }
@@ -1075,6 +1079,9 @@ export enum ProductCode {
   NFT_UNIQUE_MINT = 57,
   NFT_UNIQUE_BURN = 58,
   NFT_UNIQUE_TRANSFER_COLLECTION = 59,
+
+  // Indexing
+  INDEXER = 60,
 }
 
 export enum ProductService {
@@ -1086,6 +1093,7 @@ export enum ProductService {
   STORAGE = 'STORAGE',
   CONTRACTS = 'CONTRACTS',
   WALLET = 'WALLET',
+  INDEXING = 'INDEXING',
 }
 
 export enum ProductCategory {
@@ -1108,6 +1116,7 @@ export enum ProductCategory {
   IPNS = 'IPNS',
   SIGNATURE = 'SIGNATURE',
   UNIQUE_NFT = 'UNIQUE_NFT',
+  INDEXER = 'INDEXER',
 }
 
 export enum EmailTemplate {

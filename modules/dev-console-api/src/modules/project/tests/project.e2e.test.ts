@@ -1,4 +1,9 @@
-import { DefaultUserRole, QuotaCode, SqlModelStatus } from '@apillon/lib';
+import {
+  DefaultUserRole,
+  QuotaCode,
+  RpcPlanType,
+  SqlModelStatus,
+} from '@apillon/lib';
 import * as request from 'supertest';
 import {
   createTestProject,
@@ -90,15 +95,27 @@ describe('Project tests', () => {
       expect(response.body?.data?.project_uuid).toBeFalsy();
     });
 
-    test('User should be able to check if project-quota is reached', async () => {
+    test('User should be able to check if project has rpc plan', async () => {
       const response = await request(stage.http)
-        .get(`/projects/${testProject.project_uuid}/has-active-rpc-plan`)
+        .get(`/projects/${testProject.project_uuid}/rpc-plan`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
-      expect(response.body.data).toBe(false);
+      expect(response.body.data).toBe(RpcPlanType.DISABLED);
     });
 
-    test('User should be able to check if project has rpc plan', async () => {
+    test('User should be able to get 2 when dwellir id is present', async () => {
+      await stage.context.infrastructure.mysql.paramExecute(`
+      INSERT INTO dwellir_user (dwellir_id, user_uuid, email, exceeded_monthly_limit)
+      VALUES ('test-dwellir-id', '${testUser.user.user_uuid}', '${testUser.authUser.email}', 0)
+    `);
+      const response = await request(stage.http)
+        .get(`/projects/${testProject.project_uuid}/rpc-plan`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data).toBe(RpcPlanType.FREE);
+    });
+
+    test('User should be able to check if project-quota is reached', async () => {
       const response = await request(stage.http)
         .get(`/projects/qouta-reached`)
         .set('Authorization', `Bearer ${testUser.token}`);

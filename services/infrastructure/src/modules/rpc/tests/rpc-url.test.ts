@@ -43,7 +43,7 @@ describe('RPC Url tests', () => {
   describe('createRpcUrl', () => {
     test('User can create a new rpc url', async () => {
       const dto = new CreateRpcUrlDto({
-        chainName: 'Subsocial',
+        chainName: 'Starknet',
         network: 'Mainnet',
         apiKeyId,
       });
@@ -59,12 +59,33 @@ describe('RPC Url tests', () => {
       expect(createdRpcUrlResponse.wssUrl).toBeDefined();
       expect(createdRpcUrlResponse.createTime).toBeDefined();
     });
-    test('User cannot create rpc url on the same network and apiKey', async () => {
-      const network = 'NETWORK';
+    test('User can create rpc url on same network with different chainName', async () => {
+      const dto = new CreateRpcUrlDto({
+        chainName: 'Starknet',
+        network: 'Sepolia',
+        apiKeyId,
+      });
+      const createdRpcUrlResponse = await RpcUrlService.createRpcUrl(
+        { data: dto },
+        stage.context,
+      );
+      expect(createdRpcUrlResponse).toBeDefined();
+      expect(createdRpcUrlResponse.id).toBeDefined();
+      expect(createdRpcUrlResponse.chainName).toBe(dto.chainName);
+      expect(createdRpcUrlResponse.network).toBe(dto.network);
+      expect(createdRpcUrlResponse.httpsUrl).toBeDefined();
+      expect(createdRpcUrlResponse.wssUrl).toBeDefined();
+      expect(createdRpcUrlResponse.createTime).toBeDefined();
+    });
+    test('User cannot create rpc url on the same network, apiKey and chainName', async () => {
+      const originalDto = {
+        chainName: 'Chain',
+        network: 'network',
+      };
       await stage.db.paramExecute(
         `INSERT INTO ${DbTables.RPC_URL} (apiKeyId, chainName,network,httpsUrl, wssUrl)
-                    VALUES (${apiKeyId}, 'Chain',@network, '','')`,
-        { network },
+                    VALUES (${apiKeyId}, @chainName,@network, '','')`,
+        originalDto,
       );
       const result = await stage.db.paramExecute(
         `SELECT LAST_INSERT_ID() as id`,
@@ -74,8 +95,7 @@ describe('RPC Url tests', () => {
         throw new Error('Rpc Url not created');
       }
       const dto = new CreateRpcUrlDto({
-        chainName: 'Test Chain',
-        network,
+        ...originalDto,
         apiKeyId,
       });
       const createdRpcUrlResponse = await RpcUrlService.createRpcUrl(

@@ -39,15 +39,28 @@ export async function sqdApi<T = any>({
     ...headers,
   };
 
-  const response = await axios(url, {
-    method,
-    headers: finalHeaders,
-    data,
-    timeout: responseType === 'stream' ? 0 : undefined,
-    responseType,
-    params: pickBy(query, (v) => v),
-    validateStatus: () => true,
-  });
+  let response;
+  try {
+    response = await axios(url, {
+      method,
+      headers: finalHeaders,
+      data,
+      timeout: responseType === 'stream' ? 0 : undefined,
+      responseType,
+      params: pickBy(query, (v) => v),
+      validateStatus: () => true,
+    });
+  } catch (e) {
+    throw new InfrastructureCodeException({
+      code: InfrastructureErrorCode.ERROR_CALLING_SQD_API,
+      status: 500,
+      details: {
+        method: method.toUpperCase(),
+        url,
+        error: e.message,
+      },
+    });
+  }
 
   switch (response.status) {
     case 200:

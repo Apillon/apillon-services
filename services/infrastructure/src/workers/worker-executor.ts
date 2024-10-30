@@ -9,11 +9,18 @@ import {
 } from '@apillon/workers-lib';
 
 import { Context, env } from '@apillon/lib';
+import { IndexingBillingWorker } from './indexing-billing-worker';
 import { Scheduler } from './scheduler';
+import { TestWorker } from './test-worker';
 import { RpcUsageCheckWorker } from './rpc-usage-check-worker';
 
+// get global mysql connection
+// global['mysql'] = global['mysql'] || new MySql(env);
+
 export enum WorkerName {
+  TEST_WORKER = 'TestWorker',
   SCHEDULER = 'scheduler',
+  INDEXING_BILLING_WORKER = 'IndexerBillingWorker',
   RPC_USAGE_CHECK = 'RpcUsageCheckWorker',
 }
 
@@ -97,9 +104,26 @@ export async function handleLambdaEvent(
 
   // eslint-disable-next-line sonarjs/no-small-switch
   switch (workerDefinition.workerName) {
+    case WorkerName.TEST_WORKER:
+      const testLambda = new TestWorker(workerDefinition, context);
+      await testLambda.run();
+      break;
     case WorkerName.SCHEDULER:
       const scheduler = new Scheduler(serviceDef, context);
       await scheduler.run();
+      break;
+    case WorkerName.INDEXING_BILLING_WORKER:
+      const indexingBillingWorker = new IndexingBillingWorker(
+        workerDefinition,
+        context,
+      );
+      await indexingBillingWorker.run();
+    case WorkerName.RPC_USAGE_CHECK:
+      const rpcUsageCheckWorker = new RpcUsageCheckWorker(
+        workerDefinition,
+        context,
+      );
+      await rpcUsageCheckWorker.run();
       break;
     default:
       console.log(
@@ -149,23 +173,13 @@ export async function handleSqsMessages(
       const workerName = message?.messageAttributes?.workerName?.stringValue;
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const workerDefinition = new WorkerDefinition(serviceDef, workerName, {
+      const _workerDefinition = new WorkerDefinition(serviceDef, workerName, {
         id,
         parameters,
       });
 
       // eslint-disable-next-line sonarjs/no-small-switch
       switch (workerName) {
-        case WorkerName.RPC_USAGE_CHECK: {
-          await new RpcUsageCheckWorker(
-            workerDefinition,
-            context,
-            QueueWorkerType.EXECUTOR,
-          ).run({
-            executeArg: message?.body,
-          });
-          break;
-        }
         default:
           console.log(
             `ERROR - INVALID WORKER NAME: ${message?.messageAttributes?.workerName}`,

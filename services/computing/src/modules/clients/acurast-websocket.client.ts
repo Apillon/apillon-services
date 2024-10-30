@@ -3,10 +3,10 @@ import { env, getSecrets } from '@apillon/lib';
 import { createECDH } from 'crypto';
 
 export class AcurastWebsocketClient {
-  private readonly websocketEndpoint: string;
+  private readonly websocketEndpoints: string[];
 
-  constructor(websocketEndpoint: string) {
-    this.websocketEndpoint = websocketEndpoint;
+  constructor(websocketEndpoints: string[]) {
+    this.websocketEndpoints = websocketEndpoints;
   }
 
   /**
@@ -15,7 +15,7 @@ export class AcurastWebsocketClient {
    * @param {(string | Uint8Array)} payload
    */
   async send(jobPublicKey: string, payload: string | Uint8Array): Promise<any> {
-    const client = new AcurastClient(this.websocketEndpoint);
+    const client = new AcurastClient(this.websocketEndpoints);
     await client.start(await this.getWebsocketKeypair());
 
     console.info(`Sending message to acurast processor ${jobPublicKey}`);

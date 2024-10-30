@@ -14,6 +14,7 @@ import {
   InfrastructureMicroservice,
   DwellirSubscription,
   CreateQuotaOverrideDto,
+  QuotaCode,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { Invoice } from './models/invoice.model';
@@ -152,7 +153,7 @@ export class InvoiceService {
 
   static async handleSubscriptionPurchase(
     webhookData: Merge<
-      Partial<CreateSubscriptionDto>,
+      Partial<CreateSubscriptionDto> & { user_uuid?: string },
       Partial<CreateInvoiceDto>
     >,
     context: ServiceContext,
@@ -165,8 +166,18 @@ export class InvoiceService {
         conn,
       );
 
-      if (webhookData.package_id === SubscriptionPackageId.RPC_PLAN) {
+      if (Number(webhookData.package_id) === SubscriptionPackageId.RPC_PLAN) {
+        await OverrideService.createOverride(
+          new CreateQuotaOverrideDto({
+            quota_id: QuotaCode.MAX_RPC_KEYS,
+            object_uuid: webhookData.user_uuid,
+            value: 5,
+          }),
+          context,
+        );
+
         await new InfrastructureMicroservice(context).changeDwellirSubscription(
+          webhookData.user_uuid,
           DwellirSubscription.DEVELOPER,
         );
       }

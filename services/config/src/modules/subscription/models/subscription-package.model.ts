@@ -7,6 +7,7 @@ import {
   prop,
   SerializeFor,
   SqlModelStatus,
+  SubscriptionPackageId,
 } from '@apillon/lib';
 import { DbTables } from '../../../config/types';
 import { v4 as uuid } from 'uuid';
@@ -102,8 +103,7 @@ export class SubscriptionPackage extends AdvancedSQLModel {
       `
       SELECT ${this.generateSelectFields('sp', '', serializationStrategy)}
       FROM \`${DbTables.SUBSCRIPTION_PACKAGE}\` sp
-      WHERE sp.status = ${SqlModelStatus.ACTIVE}
-      `,
+      WHERE sp.status = ${SqlModelStatus.ACTIVE} and sp.id <> ${SubscriptionPackageId.RPC_PLAN}`,
       {},
     );
   }

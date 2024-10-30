@@ -53,6 +53,7 @@ export class Indexer extends UuidSqlModel {
       SerializeFor.SERVICE,
       SerializeFor.LOGGER,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
     ],
     validators: [
       {
@@ -196,6 +197,30 @@ export class Indexer extends UuidSqlModel {
     await indexer.canAccess(this.getContext());
 
     return indexer;
+  }
+
+  public async populateBySquidId(
+    squidId: number,
+    conn?: PoolConnection,
+  ): Promise<this> {
+    if (!squidId) {
+      throw new Error(`squidId should not be null!`);
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${DbTables.INDEXER}\`
+        WHERE squidId = @squidId
+        AND status <> ${SqlModelStatus.DELETED};
+      `,
+      { squidId },
+      conn,
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 
   public async getIndexers(

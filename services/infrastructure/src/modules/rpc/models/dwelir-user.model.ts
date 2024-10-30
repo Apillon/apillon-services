@@ -76,6 +76,20 @@ export class DwellirUser extends AdvancedSQLModel {
     );
   }
 
+  public async populateByUserUuid(userUuid: string): Promise<this> {
+    if (!userUuid) {
+      return null;
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `SELECT * FROM ${DbTables.DWELLIR_USER} WHERE user_uuid = "${userUuid}"`,
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
+
   public async populateByUserUuids(userUuids: string[]): Promise<this[]> {
     if (!userUuids.length) {
       return [];

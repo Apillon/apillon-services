@@ -56,7 +56,7 @@ export class RpcController {
     return await this.rpcService.updateRpcApiKey(context, id, body);
   }
 
-  @Put('api-key/:id/revoke')
+  @Delete('api-key/:id')
   @Permissions({ role: RoleGroup.ProjectOwnerAccess })
   @UseGuards(AuthGuard)
   async revokeApiKey(
@@ -80,6 +80,13 @@ export class RpcController {
     return await this.rpcService.listRpcApiKeys(context, query);
   }
 
+  @Get('api-key/quota-reached')
+  @Permissions({ role: RoleGroup.ProjectOwnerAccess })
+  @UseGuards(AuthGuard)
+  async isApiKeysQuotaReached(@Ctx() context: DevConsoleApiContext) {
+    return await this.rpcService.isRpcApiKeysQuotaReached(context);
+  }
+
   @Get('api-key/:id')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
@@ -90,14 +97,15 @@ export class RpcController {
     return await this.rpcService.getApiKey(context, id);
   }
 
-  @Get('api-key/:id/usage')
+  @Get('/:project_uuid/api-key/:id/usage')
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ProjectAccessGuard)
   async getApiKeyUsage(
     @Ctx() context: DevConsoleApiContext,
     @Param('id', ParseIntPipe) id: number,
+    @Param('project_uuid') projectUuid: string,
   ) {
-    return await this.rpcService.getApiKeyUsage(context, id);
+    return await this.rpcService.getApiKeyUsage(context, id, projectUuid);
   }
 
   @Get('api-key/:id/urls')
