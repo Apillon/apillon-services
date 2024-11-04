@@ -1,11 +1,19 @@
 import {
   CodeException,
   DefaultUserRole,
+  DwellirSubscription,
   ForbiddenErrorCodes,
+  InfrastructureMicroservice,
+  Lmas,
+  LogType,
   PricelistQueryFilter,
+  QuotaCode,
+  QuotaOverrideDto,
   Scs,
+  SubscriptionPackageId,
   UpdateSubscriptionDto,
   env,
+  writeLog,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
@@ -124,11 +132,38 @@ export class PaymentsService {
         break;
       }
       case 'customer.subscription.updated': {
+        const scs = new Scs();
         if (event.data?.previous_attributes?.status === 'incomplete') {
           return; // If update is only for a new subscription
         }
+        if (
+          payment.canceled_at &&
+          Number(payment.plan.id) === SubscriptionPackageId.RPC_PLAN
+        ) {
+          const user_uuid =
+            event.data?.previous_attributes?.metadata?.user_uuid;
+          if (user_uuid) {
+            await new InfrastructureMicroservice().changeDwellirSubscription(
+              user_uuid,
+              DwellirSubscription.FREE,
+            );
+
+            await scs.deleteOverride(
+              new QuotaOverrideDto().populate({
+                object_uuid: user_uuid,
+                quota_id: QuotaCode.MAX_RPC_KEYS,
+              }),
+            );
+          } else {
+            writeLog(
+              LogType.INFO,
+              `User UUID not found in metadata: ${JSON.stringify(event.data?.previous_attributes?.metadata)}`,
+            );
+          }
+        }
+
         // In case subscription is renewed or canceled
-        await new Scs().updateSubscription(
+        await scs.updateSubscription(
           new UpdateSubscriptionDto({
             subscriptionStripeId: payment.id,
             cancelDate: payment.canceled_at
