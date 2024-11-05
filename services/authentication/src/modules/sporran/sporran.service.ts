@@ -21,7 +21,6 @@ import {
   ApillonSupportedCTypes,
   APILLON_DAPP_NAME,
   AuthenticationErrorCode,
-  HttpStatus,
   SporranMessageType,
 } from '../../config/types';
 import {
@@ -48,6 +47,7 @@ import {
   ISubmitTerms,
   PartialClaim,
 } from '@kiltprotocol/types';
+import { HttpStatus } from '@nestjs/common';
 
 import { Identity } from '../identity/models/identity.model';
 import { prepareSignResources } from '../../lib/sporran';

@@ -78,6 +78,13 @@ export enum HttpStatus {
   NOT_FOUND = 404,
 }
 
+/**
+ * Resource not found error codes - 40413000.
+ */
+export enum ResourceNotFoundErrorCode {
+  DEFAULT_RESOURCE_NOT_FOUND_ERROR = 404130000,
+}
+
 // Well known did domain linkage Ctype required props
 export const KILT_CREDENTIAL_IRI_PREFIX = 'kilt:cred:';
 export const APILLON_VERIFIABLECREDENTIAL_TYPE = 'ApillonCredential2023';

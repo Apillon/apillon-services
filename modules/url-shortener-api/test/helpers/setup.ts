@@ -23,6 +23,7 @@ export async function setupTest(): Promise<Stage> {
   env.BLOCKCHAIN_MYSQL_HOST = null; // safety
   env.SOCIAL_MYSQL_HOST = null; // safety
   env.INFRASTRUCTURE_MYSQL_HOST = null;
+  env.MAILING_MYSQL_HOST = null; // safety
 
   try {
     await rebuildTestDatabases();

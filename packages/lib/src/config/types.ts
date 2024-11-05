@@ -228,6 +228,10 @@ export enum MailEventType {
   SEND_MAIL = 'send-mail',
   SEND_CUSTOM_MAIL = 'send-custom-mail',
   SET_MAILERLITE_FIELD = 'set-mailerlite-field',
+  GET_NOTIFICATIONS = 'get-notifications',
+  CREATE_NOTIFICATION = 'create-notification',
+  UPDATE_NOTIFICATION = 'update-notification',
+  DELETE_NOTIFICATION = 'delete-notification',
 }
 
 export enum ScsEventType {
@@ -255,6 +259,10 @@ export enum ScsEventType {
   GET_PRODUCT_PRICE = 'get-product-price',
   GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION = 'get-projects-with-active-subscription',
   HAS_ACTIVE_RPC_PLAN = 'has-active-rpc-plan',
+  GET_NOTIFICATIONS = 'get-notifications',
+  CREATE_NOTIFICATION = 'create-notification',
+  UPDATE_NOTIFICATION = 'update-notification',
+  DELETE_NOTIFICATION = 'delete-notification',
 }
 
 export enum NftsEventType {
@@ -625,6 +633,8 @@ export enum BadRequestErrorCode {
   INVALID_AUTHORIZATION_HEADER = 40000004,
   THIRD_PARTY_SERVICE_CONNECTION_FAILED = 40000005,
   RESOURCE_DOES_NOT_EXISTS = 40000006,
+  INVALID_NOTIFICATION_TYPE = 40000007,
+  NOTIFICATION_TYPE_OR_MESSAGE_MISSING = 40000008,
 }
 
 export enum ValidatorErrorCode {
@@ -820,6 +830,9 @@ export enum ValidatorErrorCode {
 
   INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001120,
   DEPLOY_INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001121,
+
+  //#region Mailing MS
+  INVALID_NOTIFICATION_TYPE = 422001201,
 }
 
 /**
@@ -1161,4 +1174,8 @@ export enum SubscriptionPackageId {
   COCOON = 3,
   BUTTERFLY = 4,
   RPC_PLAN = 5,
+}
+
+export enum NotificationType {
+  UNKNOWN = 0,
 }

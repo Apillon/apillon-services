@@ -3,6 +3,8 @@ export * from './lib/at-services/config/scs';
 export * from './lib/at-services/config/dtos/quota.dto';
 export * from './lib/at-services/config/dtos/get-quota.dto';
 export * from './lib/at-services/config/dtos/create-quota-override.dto';
+export * from './lib/at-services/mailing/dto/create-or-update-notification.dto';
+
 export * from './lib/at-services/config/dtos/quota-override.dto';
 export * from './lib/at-services/config/dtos/create-subscription.dto';
 export * from './lib/at-services/config/dtos/update-subscription.dto';
@@ -15,6 +17,7 @@ export * from './lib/at-services/config/dtos/spend-credit.dto';
 export * from './lib/at-services/config/dtos/add-credit.dto';
 export * from './lib/at-services/config/dtos/credit-transaction-query-filter.dto';
 export * from './lib/at-services/config/dtos/pricelist-query-filter.dto';
+export * from './lib/at-services/mailing/dto/notification-query-filter.dto';
 export * from './lib/at-services/base-service';
 export * from './lib/at-services/config/dtos/configure-credit.dto';
 

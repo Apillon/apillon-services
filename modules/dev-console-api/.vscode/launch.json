@@ -14,7 +14,7 @@
         "--config=${workspaceFolder}/package.json",
         "--detectOpenHandles",
         "--forceExit",
-        "${fileBasename}"
+        "${file}"
       ],
       "env": {
         "LOG_TARGET": "none",
