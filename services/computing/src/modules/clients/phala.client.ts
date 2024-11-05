@@ -15,7 +15,7 @@ import randomBytes from 'randombytes';
 import { hexAddPrefix } from '@polkadot/util';
 
 export class PhalaClient {
-  private api: any;
+  private api: ApiPromise;
   private registry: OnChainRegistry;
   private readonly rpcEndpoint: string;
 
@@ -60,7 +60,7 @@ export class PhalaClient {
     contractAddress: string,
     nonce: `0x${string}`,
     newOwnerAddress: string,
-  ): Promise<any> {
+  ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
     const contract = await this.getContract(contractAddress, contractAbi);
     const { account, certificate } = await this.getDummyAccountAndCertificate();
@@ -114,7 +114,7 @@ export class PhalaClient {
   async createDeployTransaction(
     contract: Contract,
     contractAbi: ContractAbi,
-  ): Promise<any> {
+  ): Promise<SubmittableExtrinsic<'promise'>> {
     await this.initializeProvider();
 
     const blueprintPromise = new PinkBlueprintPromise(
