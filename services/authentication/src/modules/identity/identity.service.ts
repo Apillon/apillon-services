@@ -16,6 +16,7 @@ import {
   EmailDataDto,
   EmailTemplate,
   JwtExpireTime,
+  HttpStatus,
 } from '@apillon/lib';
 import { Identity } from './models/identity.model';
 import {
@@ -58,7 +59,6 @@ import {
 } from '../../lib/utils/transaction-utils';
 import { ServiceContext } from '@apillon/service-lib';
 import { IdentityConfig } from './models/identity-config.model';
-import { HttpStatus } from '@nestjs/common';
 
 export class IdentityService {
   /**

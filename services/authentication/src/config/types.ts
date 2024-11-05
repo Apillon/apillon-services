@@ -73,11 +73,6 @@ export enum AuthenticationErrorCode {
   INVALID_OTP = 422130700,
 }
 
-export enum HttpStatus {
-  BAD_REQUEST = 400,
-  NOT_FOUND = 404,
-}
-
 /**
  * Resource not found error codes - 40413000.
  */

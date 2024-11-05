@@ -3,6 +3,7 @@ import {
   Context,
   env,
   generateJwtToken,
+  HttpStatus,
   JwtExpireTime,
   JwtTokenType,
   Lmas,
@@ -47,8 +48,6 @@ import {
   ISubmitTerms,
   PartialClaim,
 } from '@kiltprotocol/types';
-import { HttpStatus } from '@nestjs/common';
-
 import { Identity } from '../identity/models/identity.model';
 import { prepareSignResources } from '../../lib/sporran';
 import { AuthenticationCodeException } from '../../lib/exceptions';
