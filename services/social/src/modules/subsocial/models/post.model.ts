@@ -92,7 +92,7 @@ export class Post extends UuidSqlModel {
       return SqlModelStatus.ACTIVE;
     },
   })
-  public status?: number;
+  public status?: number = undefined;
 
   @prop({
     parser: { resolver: stringParser() },

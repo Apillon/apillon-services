@@ -187,7 +187,7 @@ export class Invoice extends UuidSqlModel {
     serializable: [SerializeFor.SELECT_DB, SerializeFor.PROFILE],
     populatable: [PopulateFrom.DB],
   })
-  public override createTime?: Date;
+  public override createTime?: Date = undefined;
 
   public async getList(
     filter: InvoicesQueryFilter,

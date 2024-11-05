@@ -41,7 +41,7 @@ export class Job extends AdvancedSQLModel {
     serializable: [SerializeFor.WORKER],
     validators: [],
   })
-  public id: number;
+  public id: number = undefined;
 
   /**
    * job name

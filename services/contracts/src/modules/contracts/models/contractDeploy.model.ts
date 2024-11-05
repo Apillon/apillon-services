@@ -56,7 +56,7 @@ export class ContractDeploy extends UuidSqlModel {
       return SqlModelStatus.ACTIVE;
     },
   })
-  public status?: number;
+  public status?: number = undefined;
 
   @prop({
     parser: { resolver: stringParser() },

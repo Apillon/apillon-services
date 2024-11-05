@@ -33,7 +33,7 @@ export class OasisSignature extends ProjectAccessModel {
     ],
     populatable: [PopulateFrom.DB],
   })
-  public id: number;
+  public id: number = undefined;
 
   @prop({
     parser: { resolver: integerParser() },
@@ -139,7 +139,7 @@ export class OasisSignature extends ProjectAccessModel {
     ],
     populatable: [PopulateFrom.DB],
   })
-  public createTime: Date;
+  public createTime: Date = undefined;
 
   public async getNumOfSignaturesForCurrentMonth(): Promise<number> {
     const data = await this.getContext().mysql.paramExecute(

@@ -76,7 +76,7 @@ export class Notification extends AdvancedSQLModel {
     serializable: [SerializeFor.APILLON_API, SerializeFor.SELECT_DB],
     populatable: [PopulateFrom.DB],
   })
-  public createTime?: Date;
+  public createTime?: Date = undefined;
 
   public async getListForUser(filter: NotificationQueryFilter) {
     const context = this.getContext();

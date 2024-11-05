@@ -29,7 +29,7 @@ const devConsoleConfig = {
 };
 
 export class RpcUsageCheckWorker extends BaseWorker {
-  protected context: Context;
+  protected context: Context = null;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);

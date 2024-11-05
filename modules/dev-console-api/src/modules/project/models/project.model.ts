@@ -38,7 +38,7 @@ export class Project extends ProjectAccessModel {
     ],
     populatable: [PopulateFrom.DB],
   })
-  public id: number;
+  public id: number = undefined;
 
   /**
    * Project's UUID
@@ -137,7 +137,7 @@ export class Project extends ProjectAccessModel {
     ],
     populatable: [PopulateFrom.DB],
   })
-  public createTime?: Date;
+  public createTime?: Date = undefined;
 
   /**
    * Updated at property definition.
@@ -151,7 +151,7 @@ export class Project extends ProjectAccessModel {
     ],
     populatable: [PopulateFrom.DB],
   })
-  public updateTime?: Date;
+  public updateTime?: Date = undefined;
 
   /*******************************************
    * INFO properties

@@ -79,7 +79,7 @@ export class ClusterTransactionLog extends AdvancedSQLModel {
       },
     ],
   })
-  public status: ComputingTransactionStatus;
+  public status: ComputingTransactionStatus = undefined;
 
   @prop({
     parser: { resolver: integerParser() },

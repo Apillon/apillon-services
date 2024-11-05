@@ -21,7 +21,7 @@ import { IpfsBandwidthSync } from '../modules/ipfs/models/ipfs-bandwidth-sync';
  * Increase project used bandwith (IpfsBandwidth) for this month.
  */
 export class IpfsBandwidthWorker extends BaseWorker {
-  protected context: Context;
+  protected context: Context = null;
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
   }
