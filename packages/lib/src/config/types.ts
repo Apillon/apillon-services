@@ -1179,3 +1179,8 @@ export enum SubscriptionPackageId {
 export enum NotificationType {
   UNKNOWN = 0,
 }
+
+export enum HttpStatus {
+  BAD_REQUEST = 400,
+  NOT_FOUND = 404,
+}

@@ -1,11 +1,10 @@
-import { env } from '@apillon/lib';
+import { HttpStatus, env } from '@apillon/lib';
 import { Did, DidUri } from '@kiltprotocol/sdk-js';
 import { AuthenticationErrorCode } from '../config/types';
 import { AuthenticationCodeException } from './exceptions';
 import { connectToKilt, generateKeypairs } from './kilt';
 import { randomChallenge } from './utils/crypto-utils';
 import { ServiceContext } from '@apillon/service-lib';
-import { HttpStatus } from '@nestjs/common';
 
 export async function prepareSignResources(
   encryptionKeyUri: string,

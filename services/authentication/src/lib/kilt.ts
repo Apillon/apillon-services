@@ -7,7 +7,6 @@ import {
   naclBoxPairFromSecret,
   sr25519PairFromSeed,
 } from '@polkadot/util-crypto';
-import { HttpStatus } from '@nestjs/common';
 import { isHex } from '@polkadot/util';
 import {
   ConfigService,
@@ -41,6 +40,7 @@ import {
   BlockchainMicroservice,
   ChainType,
   env,
+  HttpStatus,
   Lmas,
   LogType,
   ServiceName,

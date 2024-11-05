@@ -4,10 +4,10 @@ import {
   NotificationQueryFilter,
   ValidatorErrorCode,
   CreateOrUpdateNotificationDto,
+  HttpStatus,
 } from '@apillon/lib';
 import { Notification } from './models/notification.model';
 import { ServiceContext } from '@apillon/service-lib';
-import { HttpStatus } from '@nestjs/common';
 import { MailErrorCode } from '../../config/types';
 export class NotificationService {
   static async getNotificationList(
