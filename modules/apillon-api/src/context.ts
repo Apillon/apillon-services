@@ -14,7 +14,7 @@ export class ApillonApiContext extends Context {
    * Validate API key and fill context apiKey property
    */
   async authenticate(apiKey: string, apiKeySecret: string) {
-    const apiKeyData = await runCachedFunction(
+    const apiKeyData = await runCachedFunction<any>(
       `${CacheKeyPrefix.AUTH_USER_DATA}:${apiKey}`,
       () =>
         new Ams(this).getApiKey({
@@ -33,9 +33,5 @@ export class ApillonApiContext extends Context {
         errorMessage: 'Invalid Authorization header credentials',
       });
     }
-  }
-
-  isApiKeyValid() {
-    return this.apiKey?.id;
   }
 }

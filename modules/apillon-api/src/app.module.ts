@@ -14,6 +14,11 @@ import { IdentityModule } from './modules/wallet-identity/wallet-identity.module
 import { ComputingModule } from './modules/computing/computing.module';
 import { ProjectModule } from './modules/project/project.module';
 import { SocialModule } from './modules/social/social.module';
+import { ContractsModule } from './modules/contracts/contracts.module';
+import { EmbeddedWalletModule } from './modules/embedded-wallet/embedded-wallet.module';
+import { IndexingModule } from './modules/indexing/indexing.module';
+import { CloudFunctionsModule } from './modules/acurast/cloud-functions.module';
+import { RpcModule } from './modules/rpc/rpc.module';
 
 @Module({
   imports: [
@@ -28,6 +33,11 @@ import { SocialModule } from './modules/social/social.module';
     ComputingModule,
     ProjectModule,
     SocialModule,
+    EmbeddedWalletModule,
+    CloudFunctionsModule,
+    ContractsModule,
+    IndexingModule,
+    RpcModule,
   ],
   controllers: [AppController],
   providers: [],
@@ -39,7 +49,11 @@ export class AppModule {
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
       .apply(AuthenticateApiKeyMiddleware)
-      .exclude({ path: '/', method: RequestMethod.ALL })
+      .exclude(
+        { path: '/', method: RequestMethod.ALL },
+        { path: '/embedded-wallet/(.*)', method: RequestMethod.GET },
+        { path: '/embedded-wallet/(.*)', method: RequestMethod.POST },
+      )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
     consumer
       .apply(createRequestLogMiddleware(ApiName.APILLON_API))

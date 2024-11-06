@@ -7,6 +7,7 @@ import { IpnsService } from './modules/ipns/ipns.service';
 import { NftStorageService } from './modules/nfts/nft-storage.service';
 import { StorageService } from './modules/storage/storage.service';
 import { CrustService } from './modules/crust/crust.service';
+import { UrlShortenerService } from './modules/url-shortener/url-shortener.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -55,18 +56,25 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.IPNS_DELETE]: IpnsService.deleteIpns,
     [StorageEventType.IPNS_PUBLISH]: IpnsService.publishIpns,
     [StorageEventType.IPNS_GET]: IpnsService.getIpns,
+    [StorageEventType.IPNS_GET_BY_NAME]: IpnsService.getIpnsByName,
 
     [StorageEventType.WEBSITE_LIST]: HostingService.listWebsites,
     [StorageEventType.WEBSITE_GET]: HostingService.getWebsite,
     [StorageEventType.WEBSITE_CREATE]: HostingService.createWebsite,
     [StorageEventType.WEBSITE_UPDATE]: HostingService.updateWebsite,
     [StorageEventType.WEBSITE_DEPLOY]: HostingService.deployWebsite,
+    [StorageEventType.WEBSITE_ARCHIVE]: HostingService.archiveWebsite,
+    [StorageEventType.WEBSITE_ACTIVATE]: HostingService.activateWebsite,
     [StorageEventType.WEBSITE_LIST_DOMAINS]: HostingService.listDomains,
     [StorageEventType.WEBSITE_GET_ALL_DOMAINS]: HostingService.getDomains,
     [StorageEventType.WEBSITE_QUOTA_REACHED]:
       HostingService.maxWebsitesQuotaReached,
     [StorageEventType.REQUEST_S3_SIGNED_URLS_FOR_WEBSITE_UPLOAD]:
       HostingService.generateMultipleS3UrlsForUpload,
+    [StorageEventType.WEBSITE_CHECK_DOMAIN_DNS]:
+      HostingService.checkWebsiteDomainDns,
+    [StorageEventType.WEBSITE_REMOVE_DOMAIN]:
+      HostingService.removeWebsiteDomain,
 
     [StorageEventType.DEPLOYMENT_GET]: HostingService.getDeployment,
     [StorageEventType.DEPLOYMENT_LIST]: HostingService.listDeployments,
@@ -92,6 +100,9 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.GET_PROJECT_IPFS_CLUSTER]: StorageService.getIpfsCluster,
     [StorageEventType.GET_IPFS_CLUSTER_INFO]: StorageService.getIpfsClusterInfo,
     [StorageEventType.GET_LINK]: StorageService.getLink,
+
+    [StorageEventType.GENERATE_SHORT_URL]: UrlShortenerService.generateShortUrl,
+    [StorageEventType.GET_TARGET_URL]: UrlShortenerService.getTargetUrl,
   };
 
   return await processors[event.eventName](event, context);

@@ -6,7 +6,7 @@ export const upgrade = async (
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> => {
   await queryFn(`
-  CREATE TABLE IF NOT EXISTS \`${DbTables.INSTRUCTION}\` (
+  CREATE TABLE IF NOT EXISTS \`instruction\` (
     \`id\` INT NOT NULL AUTO_INCREMENT,
     \`instructionEnum\` VARCHAR(100) NOT NULL,
     \`instructionType\` INT NOT NULL,
@@ -28,6 +28,6 @@ export const downgrade = async (
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> => {
   await queryFn(`
-    DROP TABLE IF EXISTS \`${DbTables.INSTRUCTION}\`;
+    DROP TABLE IF EXISTS \`instruction\`;
   `);
 };

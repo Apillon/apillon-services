@@ -10,6 +10,11 @@ import {
   UpdateSubscriptionDto,
   Lmas,
   LogType,
+  SubscriptionPackageId,
+  InfrastructureMicroservice,
+  DwellirSubscription,
+  CreateQuotaOverrideDto,
+  QuotaCode,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { Invoice } from './models/invoice.model';
@@ -20,6 +25,7 @@ import { ScsCodeException, ScsValidationException } from '../../lib/exceptions';
 import { CreditPackage } from '../credit/models/credit-package.model';
 import { Subscription } from '../subscription/models/subscription.model';
 import { v4 as uuidV4 } from 'uuid';
+import { OverrideService } from '../override/override.service';
 
 export class InvoiceService {
   /**
@@ -147,7 +153,7 @@ export class InvoiceService {
 
   static async handleSubscriptionPurchase(
     webhookData: Merge<
-      Partial<CreateSubscriptionDto>,
+      Partial<CreateSubscriptionDto> & { user_uuid?: string },
       Partial<CreateInvoiceDto>
     >,
     context: ServiceContext,
@@ -159,6 +165,23 @@ export class InvoiceService {
         context,
         conn,
       );
+
+      if (Number(webhookData.package_id) === SubscriptionPackageId.RPC_PLAN) {
+        await OverrideService.createOverride(
+          new CreateQuotaOverrideDto({
+            quota_id: QuotaCode.MAX_RPC_KEYS,
+            object_uuid: webhookData.user_uuid,
+            value: 5,
+          }),
+          context,
+        );
+
+        await new InfrastructureMicroservice(context).changeDwellirSubscription(
+          webhookData.user_uuid,
+          DwellirSubscription.DEVELOPER,
+        );
+      }
+
       return await InvoiceService.createInvoice(
         new CreateInvoiceDto({
           ...webhookData,
@@ -227,6 +250,7 @@ export class InvoiceService {
         subtotalAmount:
           updateSubscriptionDto.amount || existingInvoice.subtotalAmount,
         referenceId: subscription.id,
+        invoice_uuid: uuidV4(),
       });
       await existingInvoice.insert(SerializeFor.INSERT_DB, conn);
     } else {

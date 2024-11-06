@@ -11,3 +11,4 @@ export * from './lib/decorators/cache.decorator';
 export * from './lib/middlewares/request-log.middleware';
 export * from './lib/guards/captcha.guard';
 export * from './lib/common/utils';
+export * from './lib/decorators/ip-address.decorator';

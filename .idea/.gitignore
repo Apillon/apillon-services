@@ -1,0 +1,56 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+
+# User-specific stuff
+/tasks.xml
+/usage.statistics.xml
+/dictionaries
+/shelf
+
+# AWS User-specific
+/aws.xml
+
+# Generated files
+/contentModel.xml
+
+# Sensitive or high-churn files
+/dataSources/
+/dataSources.ids
+/dataSources.xml
+/dataSources.local.xml
+/sqlDataSources.xml
+/dynamic.xml
+/uiDesigner.xml
+/dbnavigator.xml
+
+# Gradle
+/gradle.xml
+/libraries
+
+# Gradle and Maven with auto-import
+# When using Gradle or Maven with auto-import, you should exclude module files,
+# since they will be recreated, and may cause churn.  Uncomment if using
+# auto-import.
+# /artifacts
+# /compiler.xml
+# /jarRepositories.xml
+# /modules.xml
+# /*.iml
+# /modules
+# *.iml
+# *.ipr
+
+# Mongo Explorer plugin
+/mongoSettings.xml
+
+# Cursive Clojure plugin
+/replstate.xml
+
+# SonarLint plugin
+/sonarlint/
+
+# Editor-based Rest Client
+/httpRequests

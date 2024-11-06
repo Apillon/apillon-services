@@ -1,6 +1,7 @@
 import {
   AdvancedSQLModel,
   BaseQueryFilter,
+  DefaultUserRole,
   getQueryParams,
   PopulateFrom,
   SerializeFor,
@@ -90,6 +91,39 @@ export class ProjectUser extends AdvancedSQLModel {
     return data?.length
       ? this.populate(data[0], PopulateFrom.DB)
       : this.reset();
+  }
+
+  public async getProjectOwner(
+    project_uuid: string,
+  ): Promise<{ user_id: number; user_uuid: string } | undefined> {
+    if (!project_uuid) {
+      throw new Error('Project UUID is required');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `SELECT pu.user_id, u.user_uuid FROM ${DbTables.PROJECT_USER} pu
+      LEFT JOIN ${DbTables.PROJECT} p ON p.id = pu.project_id
+      LEFT JOIN ${DbTables.USER} u ON u.id = pu.user_id
+      WHERE p.project_uuid = @project_uuid AND pu.role_id = ${DefaultUserRole.PROJECT_OWNER}`,
+      { project_uuid },
+    );
+
+    return data?.length ? data[0] : undefined;
+  }
+
+  public async getProjectUuidsByOwnerId(userId: number): Promise<string[]> {
+    if (!userId) {
+      return [];
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `SELECT p.project_uuid FROM ${DbTables.PROJECT_USER} pu
+      LEFT JOIN ${DbTables.PROJECT} p ON p.id = pu.project_id
+      WHERE pu.user_id = @user_id AND pu.role_id = ${DefaultUserRole.PROJECT_OWNER}`,
+      { user_id: userId },
+    );
+
+    return data.map((d) => d.project_uuid);
   }
 
   public async isUserOnProject(

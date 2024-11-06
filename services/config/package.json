@@ -1,6 +1,6 @@
 {
   "name": "@apillon/config",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "author": "Apillon",
   "license": "GNU GPL V3",
   "description": "System configuration service",
@@ -23,6 +23,8 @@
     "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
     "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
     "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
+    "db-generate-migration": "node -r ts-node/register ../../scripts/db/generate-migration-script",
+    "db-generate-seed": "node -r ts-node/register ../../scripts/db/generate-migration-script --seed",
     "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
   },
   "dependencies": {
@@ -36,13 +38,7 @@
   },
   "devDependencies": {
     "eslint-config-common": "*",
-    "ts-loader": "^9.5.1",
-    "tsconfig": "*",
-    "webpack": "^5.91.0",
-    "webpack-node-externals": "^3.0.0",
-    "@types/jest": "^29.5.12",
-    "jest": "29.7.0",
-    "ts-jest": "29.1.2"
+    "tsconfig": "*"
   },
   "jest": {
     "testTimeout": 1800000,

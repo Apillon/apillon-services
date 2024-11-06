@@ -1,14 +1,19 @@
 import {
+  AppEnvironment,
+  AWS_S3,
   Context,
   EndFileUploadSessionDto,
   env,
   LogType,
+  runWithWorkers,
   ServiceName,
+  SqlModelStatus,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
   sendToWorkerQueue,
+  ServiceDefinitionType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import {
@@ -23,8 +28,11 @@ import { processSessionFiles } from '../lib/process-session-files';
 import { storageBucketSyncFilesToIPFS } from '../lib/storage-bucket-sync-files-to-ipfs';
 import { Bucket } from '../modules/bucket/models/bucket.model';
 import { FileUploadRequest } from '../modules/storage/models/file-upload-request.model';
+import { File } from '../modules/storage/models/file.model';
 import { FileUploadSession } from '../modules/storage/models/file-upload-session.model';
 import { WorkerName } from './worker-executor';
+import { Readable } from 'stream';
+import { isStreamHtmlFile } from '../lib/validation';
 
 export class SyncToIPFSWorker extends BaseQueueWorker {
   public constructor(
@@ -43,9 +51,10 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
 
     const processFilesInSyncWorker = data?.processFilesInSyncWorker;
     const session_uuid = data?.session_uuid;
+    const needsHtmlValidation = data?.needsHtmlValidation ?? true;
     data.wrappingDirectoryPath = data?.wrappingDirectoryPath?.trim();
 
-    let files = [];
+    let files: FileUploadRequest[] = [];
     let bucket: Bucket = undefined;
     let session: FileUploadSession = undefined;
 
@@ -88,12 +97,17 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
       await new FileUploadRequest(
         {},
         this.context,
-      ).populateFileUploadRequestsInSession(session.id, this.context)
+      ).populateFileUploadRequestsInSessionWithFileSize(
+        session.id,
+        this.context,
+      )
     ).filter(
       (x) =>
         x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED &&
         x.fileStatus != FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3,
     );
+    //S3 client
+    const s3Client: AWS_S3 = new AWS_S3();
 
     if (files.length > 0) {
       let transferredFiles = [];
@@ -102,6 +116,67 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         bucket.bucketType == BucketType.STORAGE ||
         bucket.bucketType == BucketType.NFT_METADATA
       ) {
+        if (needsHtmlValidation) {
+          try {
+            await runWithWorkers(files, 20, this.context, async (file) => {
+              let fileStream = await s3Client.get(
+                env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
+                file.s3FileKey,
+              );
+
+              const isHtml = await isStreamHtmlFile(
+                fileStream.Body as Readable,
+              );
+              if (isHtml) {
+                throw new Error('HTML file detected');
+              }
+            });
+          } catch (e) {
+            if (e.message === 'HTML file detected') {
+              session.sessionStatus = FileUploadSessionStatus.VALIDATION_FAILED;
+              await session.update();
+              const fileRequestsToBlock = files.map((file) => file.id);
+              await new FileUploadRequest(
+                {},
+                this.context,
+              ).blockFileUploadRequests(fileRequestsToBlock);
+
+              const filesToBlock = files.map((file) => file.file_uuid);
+              await new File({}, this.context).blockFiles(filesToBlock);
+
+              return;
+            }
+            throw e;
+          }
+
+          session.sessionStatus = FileUploadSessionStatus.VALIDATION_PASSED;
+          await session.update();
+
+          // If all files are not HTML we call the same worker again with needsHtmlValidation set to false
+          if (
+            ![AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
+              env.APP_ENV as AppEnvironment,
+            )
+          ) {
+            const workerData = {
+              ...data,
+              // HTML Validation has been done in the first iteration
+              needsHtmlValidation: false,
+              // Files have been processed in the first iteration
+              processFilesInSyncWorker: false,
+            };
+
+            await sendToWorkerQueue(
+              env.STORAGE_AWS_WORKER_SQS_URL,
+              WorkerName.SYNC_TO_IPFS_WORKER,
+              [workerData],
+              null,
+              null,
+            );
+            return true;
+          }
+        }
+
         transferredFiles = (
           await storageBucketSyncFilesToIPFS(
             this.context,
@@ -151,6 +226,7 @@ export class SyncToIPFSWorker extends BaseQueueWorker {
         [
           {
             ...data,
+            needsHtmlValidation: false, //Files were validated in the first iteration
             processFilesInSyncWorker: false, //Files were processed in first iteration
           },
         ],

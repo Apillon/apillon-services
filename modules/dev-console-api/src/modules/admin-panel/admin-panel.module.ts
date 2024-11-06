@@ -10,6 +10,7 @@ import { NftsModule } from './nfts/nfts.module';
 import { StorageModule } from './storage/storage.module';
 import { AdminPanelController } from './admin-panel.controller';
 import { AdminPanelService } from './admin-panel.service';
+import { ServiceStatusModule } from '../service-status/service-status.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AdminPanelService } from './admin-panel.service';
     LogsModule,
     NftsModule,
     StorageModule,
+    ServiceStatusModule,
   ],
   controllers: [AdminPanelController],
   providers: [AdminPanelService],

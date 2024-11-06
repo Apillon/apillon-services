@@ -1,6 +1,6 @@
 {
   "name": "@apillon/authentication",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "author": "Apillon",
   "license": "GNU GPL V3",
   "description": "Apillon authentication (OAuth) service",
@@ -23,13 +23,15 @@
     "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
     "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
     "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
+    "db-generate-migration": "node -r ts-node/register ../../scripts/db/generate-migration-script",
+    "db-generate-seed": "node -r ts-node/register ../../scripts/db/generate-migration-script --seed",
     "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
   },
   "dependencies": {
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
-    "@kiltprotocol/sdk-js": "^0.31.1",
+    "@kiltprotocol/sdk-js": "0.31.1",
     "@middy/core": "^3.3.1",
     "@polkadot/api": "10.12.2",
     "@polkadot/keyring": "^10.1.9",
@@ -38,9 +40,8 @@
     "valid-url": "^1.0.9"
   },
   "devDependencies": {
-    "@types/uuid": "^9.0.8",
+    "@apillon/tests-lib": "*",
     "eslint-config-common": "*",
-    "rimraf": "^5.0.5",
     "tsconfig": "*"
   },
   "overrides": {

@@ -78,6 +78,9 @@ export class DeployCollectionWorker extends BaseQueueWorker {
 
     collection.collectionStatus = CollectionStatus.DEPLOYING;
     collection.baseUri = data.baseUri.split('?token=')[0];
+    collection.ipns_uuid = data.ipns_uuid;
+    collection.cid = data.cid;
+
     if (data.baseUri.includes('?token=')) {
       collection.baseExtension += data.baseUri.substring(
         data.baseUri.indexOf('?'),

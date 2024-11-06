@@ -12,7 +12,7 @@ import {
   Lmas,
   LogType,
   ServiceName,
-  ValidationException,
+  ModelValidationException,
 } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import { DevConsoleApiContext } from '../../context';
@@ -21,6 +21,7 @@ import { ServiceDto } from './dtos/service.dto';
 import { ServiceQueryFilter } from './dtos/services-query-filter.dto';
 import { Service } from './models/service.model';
 import { ServiceType } from './models/service-type.model';
+import { InfrastructureMicroservice } from '@apillon/lib';
 
 @Injectable()
 export class ServicesService {
@@ -69,6 +70,45 @@ export class ServicesService {
   }
 
   /**
+   * Create specified service for project if it doesn't exist yet
+   * @param context
+   * @param project_uuid
+   * @param serviceType_id
+   * @returns {Promise<boolean>} - True if service was created, false otherwise.
+   */
+  async createServiceIfItDoesntExist(
+    context: DevConsoleApiContext,
+    project_uuid: string,
+    serviceType_id: AttachedServiceType,
+  ) {
+    const { total } = await new Service({}).getServices(
+      context,
+      new ServiceQueryFilter(
+        {
+          project_uuid,
+          serviceType_id,
+        },
+        context,
+      ),
+    );
+    if (total == 0) {
+      const service = new ServiceDto(
+        {
+          project_uuid,
+          name: `${serviceType_id} service`,
+          serviceType_id,
+        },
+        context,
+      );
+      await this.createService(context, service);
+
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Creates a new service.
    *
    * @param {DevConsoleApiContext} context - Dev Console API context object.
@@ -99,6 +139,8 @@ export class ServicesService {
       [AttachedServiceType.HOSTING]: DefaultPermission.HOSTING,
       [AttachedServiceType.NFT]: DefaultPermission.NFTS,
       [AttachedServiceType.COMPUTING]: DefaultPermission.COMPUTING,
+      [AttachedServiceType.CONTRACTS]: DefaultPermission.CONTRACTS,
+      [AttachedServiceType.RPC]: DefaultPermission.RPC,
     }[body.serviceType_id];
 
     if (requiredPermission && !context.hasPermission(requiredPermission)) {
@@ -112,6 +154,12 @@ export class ServicesService {
     const service = new Service(body, context);
     service.populate({ service_uuid: uuidV4(), project_id: project.id });
     await service.insert();
+
+    if (body.serviceType_id === AttachedServiceType.RPC) {
+      await new InfrastructureMicroservice(context).createUser(
+        body.project_uuid,
+      );
+    }
 
     await new Lmas().writeLog({
       context,
@@ -155,7 +203,7 @@ export class ServicesService {
 
     service.populate(data);
 
-    await service.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await service.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     await service.update();
     return service;

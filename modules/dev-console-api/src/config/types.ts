@@ -2,11 +2,9 @@ export enum DbTables {
   USER = 'user',
   PROJECT = 'project',
   SERVICE_TYPE = 'service_type',
+  SERVICE_STATUS = 'service_status',
   SERVICE = 'service',
   PROJECT_USER = 'project_user',
-  FILE = 'file',
-  PROJECT_API_KEY = 'project_api_key',
-  INSTRUCTION = 'instruction',
   PROJECT_USER_PENDING_INVITATION = 'project_user_pending_invitation',
 }
 
@@ -79,6 +77,7 @@ export enum ResourceNotFoundErrorCode {
   USER_EMAIL_NOT_EXISTS = 40404008,
   STRIPE_CUSTOMER_DOES_NOT_EXIST = 40404009,
   CREDIT_PACKAGE_DOES_NOT_EXIST = 40404010,
+  SERVICE_STATUS_DOES_NOT_EXISTS = 40404011,
 }
 
 /**
@@ -96,6 +95,7 @@ export enum BadRequestErrorCode {
   DEFAULT_BAD_REQUEST_ERROR = 40004000,
   CANNOT_MODIFY_PROJECT_OWNER = 40004001,
   ROLE_ON_PROJECT_ALREADY_ASSIGNED = 40004002,
+  INVALID_SERVICE_STATUS_TYPE = 40004003,
   MAX_NUMBER_OF_PROJECTS_REACHED = 40004100,
   MAX_NUMBER_OF_USERS_ON_PROJECT_REACHED = 40004101,
   INVALID_WEBHOOK_SIGNATURE = 40004200,
@@ -119,4 +119,13 @@ export enum InstructionType {
   W3_WARN = 3,
   VIDEO = 4,
   WIKI = 5,
+}
+
+/**
+ * Service Status Type Enum { Info, Error, Warning }
+ */
+export enum ServiceStatusType {
+  INFO = 1,
+  ERROR = 2,
+  WARNING = 3,
 }

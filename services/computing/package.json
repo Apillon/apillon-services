@@ -1,6 +1,6 @@
 {
   "name": "@apillon/computing",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "author": "Apillon",
   "license": "GNU GPL V3",
   "description": "Apillon computing service",
@@ -22,40 +22,29 @@
     "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
     "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
     "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
+    "db-generate-migration": "node -r ts-node/register ../../scripts/db/generate-migration-script",
+    "db-generate-seed": "node -r ts-node/register ../../scripts/db/generate-migration-script --seed",
     "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
   },
   "dependencies": {
+    "@acurast/dapp": "^1.0.1",
+    "@apillon/blockchain-lib": "*",
     "@apillon/lib": "*",
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
     "@middy/core": "^3.3.1",
     "@phala/sdk": "^0.5.10",
-    "@polkadot/api": "10.9.1",
-    "@polkadot/api-contract": "10.9.1",
-    "@polkadot/keyring": "12.3.2",
-    "@polkadot/types": "10.9.1",
-    "@polkadot/types-augment": "10.9.1",
-    "@polkadot/util": "12.3.2",
-    "@polkadot/util-crypto": "12.3.2",
+    "elliptic": "^6.5.7",
     "node-fetch": "^2.6.7"
   },
-  "devDependencies": {
-    "@types/jest": "^29.5.12",
-    "@types/uuid": "^9.0.8",
-    "eslint-config-common": "*",
-    "jest": "29.7.0",
-    "ts-jest": "29.1.2",
-    "ts-loader": "^9.5.1",
-    "tsconfig": "*"
+  "peerDependencies": {
+    "ethers": "^5.7.2"
   },
-  "overrides": {
-    "@polkadot/api": "10.9.1",
-    "@polkadot/api-contract": "10.9.1",
-    "@polkadot/keyring": "12.3.2",
-    "@polkadot/types": "10.9.1",
-    "@polkadot/types-augment": "10.9.1",
-    "@polkadot/util": "12.3.2",
-    "@polkadot/util-crypto": "12.3.2"
+  "devDependencies": {
+    "@apillon/tests-lib": "*",
+    "@types/elliptic": "^6.4.18",
+    "eslint-config-common": "*",
+    "tsconfig": "*"
   },
   "jest": {
     "testTimeout": 1800000,

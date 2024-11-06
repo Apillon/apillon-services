@@ -8,8 +8,6 @@ import { ContextMiddleware } from './middlewares/context.middleware';
 import { ApiKeyModule } from './modules/api-key/api-key.module';
 import { ComputingModule } from './modules/computing/computing.module';
 import { MySQLModule } from './modules/database/mysql.module';
-import { FileModule } from './modules/file/file.module';
-import { InstructionModule } from './modules/instruction/instruction.module';
 import { NftsModule } from './modules/nfts/nfts.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ProjectModule } from './modules/project/project.module';
@@ -22,15 +20,18 @@ import { IpnsModule } from './modules/storage/ipns/ipns.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { UserModule } from './modules/user/user.module';
 import { SocialModule } from './modules/social/social.module';
+import { AcurastModule } from './modules/acurast/acurast.module';
+import { ContractsModule } from './modules/contracts/contracts.module';
+import { EmbeddedWalletModule } from './modules/wallet/embedded-wallet.module';
+import { RpcModule } from './modules/rpc/rpc.module';
+import { IndexingModule } from './modules/indexing/indexing.module';
 
 @Module({
   imports: [
     UserModule,
     MySQLModule,
     ProjectModule,
-    FileModule,
     ServicesModule,
-    InstructionModule,
     BucketModule,
     DirectoryModule,
     StorageModule,
@@ -42,6 +43,11 @@ import { SocialModule } from './modules/social/social.module';
     PaymentsModule,
     PublicModule,
     SocialModule,
+    EmbeddedWalletModule,
+    AcurastModule,
+    ContractsModule,
+    RpcModule,
+    IndexingModule,
   ],
   controllers: [],
   providers: [],

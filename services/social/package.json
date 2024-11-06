@@ -1,6 +1,6 @@
 {
   "name": "@apillon/social",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "author": "Apillon",
   "license": "GNU GPL V3",
   "description": "Apillon social microservice",
@@ -22,6 +22,8 @@
     "db-unseed": "node -r ts-node/register ./src/scripts/db/unseed-db",
     "db-rebuild": "node -r ts-node/register ./src/scripts/db/rebuild-db",
     "db-rebuild-test": "node -r ts-node/register ./src/scripts/db/rebuild-test-db",
+    "db-generate-migration": "node -r ts-node/register ../../scripts/db/generate-migration-script",
+    "db-generate-seed": "node -r ts-node/register ../../scripts/db/generate-migration-script --seed",
     "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F "
   },
   "dependencies": {
@@ -29,21 +31,29 @@
     "@apillon/service-lib": "*",
     "@apillon/workers-lib": "*",
     "@middy/core": "^3.3.1",
-    "@polkadot/api": "10.12.2",
-    "@polkadot/keyring": "^12.3.2",
-    "@polkadot/util": "^12.3.2",
+    "@polkadot/keyring": "12.6.2",
     "@subsocial/api": "^0.8.14",
     "@subsocial/types": "^0.6.8",
     "node-fetch": "^2.6.7"
   },
   "devDependencies": {
     "@apillon/tests-lib": "*",
-    "@types/uuid": "^9.0.8",
     "eslint-config-common": "*",
     "tsconfig": "*"
   },
   "overrides": {
-    "ipfs-utils": "9.0.6"
+    "ipfs-utils": "9.0.6",
+    "@subsocial/api": {
+      "@polkadot/api": "10.12.2",
+      "@polkadot/types": "10.12.2",
+      "@polkadot/types-known": "10.12.2",
+      "@polkadot/types-support": "10.12.2"
+    },
+    "@subsocial/types": {
+      "@polkadot/types": "10.12.2",
+      "@polkadot/types-known": "10.12.2",
+      "@polkadot/types-support": "10.12.2"
+    }
   },
   "jest": {
     "testTimeout": 1800000,

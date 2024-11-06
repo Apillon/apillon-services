@@ -1,6 +1,6 @@
 {
   "name": "@apillon/lib",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "description": "Apillon miscellaneous code library",
   "main": "./dist/index.js",
   "source": "./src/index.ts",
@@ -18,25 +18,22 @@
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.4.1",
-    "@types/jsonwebtoken": "^9.0.6",
     "eslint-config-common": "*",
     "tsconfig": "*"
   },
   "dependencies": {
+    "@aws-sdk/client-kms": "^3.637.0",
     "@aws-sdk/client-lambda": "^3.518.0",
     "@aws-sdk/client-s3": "^3.515.0",
     "@aws-sdk/client-secrets-manager": "^3.515.0",
     "@aws-sdk/client-sqs": "^3.515.0",
     "@aws-sdk/s3-request-presigner": "^3.515.0",
-    "@polkadot/util-crypto": "^12.3.2",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",
     "axios": "^1.6.8",
     "colors": "^1.4.0",
     "dotenv": "^16.4.5",
-    "ethers": "^5.7.2",
     "hcaptcha": "^0.1.1",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
@@ -46,7 +43,7 @@
     "redis": "^4.6.13",
     "saslprep": "^1.0.3",
     "sqlstring": "^2.3.3",
-    "ts-mysql-migrate": "^1.0.2",
+    "ts-mysql-migrate": "^1.1.2",
     "uuid": "^9.0.1"
   }
 }

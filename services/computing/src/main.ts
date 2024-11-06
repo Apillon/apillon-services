@@ -1,6 +1,7 @@
 import { ComputingEventType } from '@apillon/lib';
 import type { Context } from 'aws-lambda/handler';
 import { ComputingService } from './modules/computing/computing.service';
+import { AcurastService } from './modules/acurast/acurast.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -25,6 +26,33 @@ export async function processEvent(event: any, context: Context): Promise<any> {
       ComputingService.listClusterWallets,
     [ComputingEventType.PROJECT_COMPUTING_DETAILS]:
       ComputingService.getProjectComputingDetails,
+    [ComputingEventType.ARCHIVE_CONTRACT]: ComputingService.archiveContract,
+    [ComputingEventType.ACTIVATE_CONTRACT]: ComputingService.activateContract,
+
+    [ComputingEventType.CREATE_CLOUD_FUNCTION]:
+      AcurastService.createCloudFunction,
+    [ComputingEventType.GET_CLOUD_FUNCTION]:
+      AcurastService.getCloudFunctionByUuid,
+    [ComputingEventType.LIST_CLOUD_FUNCTIONS]:
+      AcurastService.listCloudFunctions,
+    [ComputingEventType.UPDATE_CLOUD_FUNCTION]:
+      AcurastService.updateCloudFunction,
+    [ComputingEventType.EXECUTE_CLOUD_FUNCTION]:
+      AcurastService.executeCloudFunction,
+    [ComputingEventType.SET_CLOUD_FUNCTION_ENVIRONMENT]:
+      AcurastService.setCloudFunctionEnvironment,
+    [ComputingEventType.GET_CLOUD_FUNCTION_ENVIRONMENT]:
+      AcurastService.getCloudFunctionEnvironment,
+    [ComputingEventType.ARCHIVE_CLOUD_FUNCTION]:
+      AcurastService.archiveCloudFunction,
+    [ComputingEventType.ACTIVATE_CLOUD_FUNCTION]:
+      AcurastService.activateCloudFunction,
+
+    [ComputingEventType.CREATE_JOB]: AcurastService.createJob,
+    [ComputingEventType.GET_JOB]: AcurastService.getJobByUuid,
+
+    [ComputingEventType.UPDATE_JOB]: AcurastService.updateJob,
+    [ComputingEventType.DELETE_JOB]: AcurastService.deleteJob,
   };
 
   return await processors[event.eventName](event, context);

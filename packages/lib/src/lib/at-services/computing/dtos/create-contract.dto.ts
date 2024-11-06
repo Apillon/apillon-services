@@ -10,8 +10,9 @@ import {
 import { enumInclusionValidator } from '../../../validators';
 import { computingContractDataValidator } from '../validators/computing-contract-validators';
 import { SchrodingerContractDataDto } from './schrodinger-contract-data-dto';
+import { BaseComputingEntityDto } from './base-computing-entity.dto';
 
-export class CreateContractDto extends ModelBase {
+export class CreateContractDto extends BaseComputingEntityDto {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -49,36 +50,6 @@ export class CreateContractDto extends ModelBase {
     ],
   })
   public contractType: ComputingContractType;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.COMPUTING_NAME_NOT_PRESENT,
-      },
-      {
-        resolver: stringLengthValidator({ minOrEqual: 1, maxOrEqual: 255 }),
-        code: ValidatorErrorCode.COMPUTING_NAME_NOT_VALID,
-      },
-    ],
-  })
-  public name: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: stringLengthValidator({ minOrEqual: 0, maxOrEqual: 1000 }),
-        code: ValidatorErrorCode.COMPUTING_DESCRIPTION_NOT_VALID,
-      },
-    ],
-  })
-  public description: string;
 
   /**
    * Contract-specific data, may vary based on contract type

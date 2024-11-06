@@ -19,14 +19,21 @@ function flatObject(obj: Record<any, any>, joinChar = '/') {
  * @param user_uuid user uuid for per-user caching, pass null for global caching
  * @param project_uuid project uuid for per-project caching
  */
-export function generateCacheKey(
-  prefix: string,
-  path: string,
-  query: any,
-  params: any,
-  user_uuid: string,
-  project_uuid: string,
-) {
+export function generateCacheKey({
+  prefix,
+  path,
+  query,
+  params,
+  user_uuid,
+  project_uuid,
+}: {
+  prefix: CacheKeyPrefix | `${CacheKeyPrefix}:${string}`;
+  path: string;
+  query: any;
+  params: any;
+  user_uuid?: string;
+  project_uuid?: string;
+}): CacheKeyPrefix | `${CacheKeyPrefix}${string}` {
   return `${prefix}#${path}@${user_uuid ? `user_uuid:${user_uuid}` : ''}|${
     project_uuid ? `project_uuid:${project_uuid}` : ''
   }|${flatObject(params)}|${flatObject(query)}`;
@@ -38,11 +45,11 @@ export function generateCacheKey(
  * @param action function to be executed if no hit in cache
  * @param expire cache TTL
  */
-export async function runCachedFunction(
-  key: CacheKeyPrefix | `${CacheKeyPrefix}:${string}`,
+export async function runCachedFunction<T>(
+  key: CacheKeyPrefix | `${CacheKeyPrefix}${string}`,
   action: () => any,
   expire = env.DEFAULT_CACHE_TTL,
-) {
+): Promise<T> {
   let cache: AppCache = null;
   let result: any;
   if (env.REDIS_URL) {

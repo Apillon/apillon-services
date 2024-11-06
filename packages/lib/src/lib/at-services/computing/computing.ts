@@ -4,12 +4,19 @@ import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreateContractDto } from './dtos/create-contract.dto';
 import { ContractQueryFilter } from './dtos/contract-query-filter.dto';
-import { DepositToClusterDto } from './dtos/deposit-to-cluster.dto';
-import { TransferOwnershipDto } from './dtos/transfer-ownership.dto';
 import { EncryptContentDto } from './dtos/encrypt-content.dto';
 import { AssignCidToNft } from './dtos/assign-cid-to-nft.dto';
 import { ClusterWalletQueryFilter } from './dtos/cluster-wallet-query-filter.dto';
 import { ComputingTransactionQueryFilter } from './dtos/computing-transaction-query-filter.dto';
+import { CreateJobDto } from './dtos/create-job.dto';
+import { SetCloudFunctionEnvironmentDto } from './dtos/set-cloud-function-environment.dto';
+import { JobQueryFilter } from './dtos/job-query-filter.dto';
+import { UpdateJobDto } from './dtos/update-job.dto';
+import {
+  CreateCloudFunctionDto,
+  UpdateCloudFunctionDto,
+} from './dtos/create-or-update-cloud-function.dto';
+import { BaseProjectQueryFilter } from '../../base-models/base-project-query-filter.model';
 
 export class ComputingMicroservice extends BaseService {
   lambdaFunctionName =
@@ -51,6 +58,22 @@ export class ComputingMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async archiveContract(uuid: string) {
+    const data = {
+      eventName: ComputingEventType.ARCHIVE_CONTRACT,
+      uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async activateContract(uuid: string) {
+    const data = {
+      eventName: ComputingEventType.ACTIVATE_CONTRACT,
+      uuid,
+    };
+    return await this.callService(data);
+  }
+
   public async listTransactions(params: ComputingTransactionQueryFilter) {
     const data = {
       eventName: ComputingEventType.LIST_TRANSACTIONS,
@@ -59,7 +82,8 @@ export class ComputingMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async depositToPhalaCluster(body: DepositToClusterDto) {
+  // TODO: DepositToClusterDto was removed here and replaced with any so that we don't import blockchain-lib into lib
+  public async depositToPhalaCluster(body: any) {
     const data = {
       eventName: ComputingEventType.DEPOSIT_TO_PHALA_CLUSTER,
       body: body.serialize(),
@@ -67,7 +91,8 @@ export class ComputingMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async transferContractOwnership(body: TransferOwnershipDto) {
+  // TODO: TransferOwnershipDto was removed here and replaced with any so that we don't import blockchain-lib into lib
+  public async transferContractOwnership(body: any) {
     const data = {
       eventName: ComputingEventType.TRANSFER_CONTRACT_OWNERSHIP,
       body: body.serialize(),
@@ -105,6 +130,109 @@ export class ComputingMicroservice extends BaseService {
     return await this.callService({
       eventName: ComputingEventType.PROJECT_COMPUTING_DETAILS,
       project_uuid,
+    });
+  }
+
+  public async createCloudFunction(body: CreateCloudFunctionDto) {
+    return await this.callService({
+      eventName: ComputingEventType.CREATE_CLOUD_FUNCTION,
+      body: body.serialize(),
+    });
+  }
+
+  public async listCloudFunctions(query: BaseProjectQueryFilter) {
+    return await this.callService({
+      eventName: ComputingEventType.LIST_CLOUD_FUNCTIONS,
+      query: query.serialize(),
+    });
+  }
+
+  public async getCloudFunction(query: JobQueryFilter): Promise<{
+    data: {
+      name: string;
+      description: string;
+      activeJobUuid: string;
+      jobs: any[];
+    };
+  }> {
+    return await this.callService({
+      eventName: ComputingEventType.GET_CLOUD_FUNCTION,
+      query: query.serialize(),
+    });
+  }
+
+  public async updateCloudFunction(body: UpdateCloudFunctionDto) {
+    return await this.callService({
+      eventName: ComputingEventType.UPDATE_CLOUD_FUNCTION,
+      body,
+    });
+  }
+
+  public async createJob(body: CreateJobDto) {
+    return await this.callService({
+      eventName: ComputingEventType.CREATE_JOB,
+      body: body.serialize(),
+    });
+  }
+
+  public async getJob(job_uuid: string) {
+    return await this.callService({
+      eventName: ComputingEventType.GET_JOB,
+      job_uuid,
+    });
+  }
+
+  public async setCloudFunctionEnvironment(
+    body: SetCloudFunctionEnvironmentDto,
+  ) {
+    return await this.callService({
+      eventName: ComputingEventType.SET_CLOUD_FUNCTION_ENVIRONMENT,
+      body: body.serialize(),
+    });
+  }
+
+  public async getCloudFunctionEnvironment(function_uuid: string) {
+    return await this.callService({
+      eventName: ComputingEventType.GET_CLOUD_FUNCTION_ENVIRONMENT,
+      function_uuid,
+    });
+  }
+
+  public async executeCloudFunction(payload: string, function_uuid: string) {
+    return await this.callService({
+      eventName: ComputingEventType.EXECUTE_CLOUD_FUNCTION,
+      payload,
+      function_uuid,
+    });
+  }
+
+  public async archiveCloudFunction(function_uuid: string) {
+    const data = {
+      eventName: ComputingEventType.ARCHIVE_CLOUD_FUNCTION,
+      function_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async activateCloudFunction(function_uuid: string) {
+    const data = {
+      eventName: ComputingEventType.ACTIVATE_CLOUD_FUNCTION,
+      function_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async updateJob(body: UpdateJobDto) {
+    return await this.callService({
+      eventName: ComputingEventType.UPDATE_JOB,
+      body,
+    });
+  }
+
+  public async deleteJob(job_uuid: string) {
+    return await this.callService({
+      eventName: ComputingEventType.DELETE_JOB,
+      job_uuid,
     });
   }
 }

@@ -5,6 +5,7 @@ import {
   DeploymentQueryFilter,
   DeployWebsiteDto,
   RoleGroup,
+  ShortUrlDto,
   ValidateFor,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
@@ -13,6 +14,7 @@ import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -96,6 +98,54 @@ export class HostingController {
     return await this.hostingService.updateWebsite(context, website_uuid, body);
   }
 
+  @Delete('websites/:website_uuid')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async archiveWebsite(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('website_uuid') website_uuid: string,
+  ) {
+    return await this.hostingService.archiveWebsite(context, website_uuid);
+  }
+
+  @Patch('websites/:website_uuid/activate')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async activateWebsite(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('website_uuid') website_uuid: string,
+  ) {
+    return await this.hostingService.activateWebsite(context, website_uuid);
+  }
+
+  @Post('websites/:website_uuid/check-domain')
+  @HttpCode(200)
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async checkWebsiteDomain(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('website_uuid') website_uuid: string,
+  ) {
+    return await this.hostingService.checkWebsiteDomain(context, website_uuid);
+  }
+
+  @Delete('websites/:website_uuid/domain')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async removeWebsiteDomain(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('website_uuid') website_uuid: string,
+  ) {
+    return await this.hostingService.removeWebsiteDomain(context, website_uuid);
+  }
+
+  //#region deployments
   @Post('websites/:website_uuid/deploy')
   @HttpCode(200)
   @Permissions(
@@ -167,5 +217,22 @@ export class HostingController {
       deployment_uuid,
       token,
     );
+  }
+  //#endregion
+
+  @Post('short-url')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.PROJECT_USER },
+  )
+  @UseGuards(AuthGuard)
+  @Validation({ dto: ShortUrlDto })
+  @UseGuards(ValidationGuard)
+  async generateShortUrl(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: ShortUrlDto,
+  ) {
+    return await this.hostingService.generateShortUrl(body, context);
   }
 }

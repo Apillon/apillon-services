@@ -6,8 +6,9 @@ import {
   DeployWebsiteDto,
   JwtTokenType,
   parseJwtToken,
+  ShortUrlDto,
   StorageMicroservice,
-  ValidationException,
+  ModelValidationException,
   ValidatorErrorCode,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
@@ -87,6 +88,35 @@ export class HostingService {
     ).data;
   }
 
+  async archiveWebsite(context: DevConsoleApiContext, website_uuid: string) {
+    return (await new StorageMicroservice(context).archiveWebsite(website_uuid))
+      .data;
+  }
+
+  async activateWebsite(context: DevConsoleApiContext, website_uuid: string) {
+    return (
+      await new StorageMicroservice(context).activateWebsite(website_uuid)
+    ).data;
+  }
+
+  async checkWebsiteDomain(
+    context: DevConsoleApiContext,
+    website_uuid: string,
+  ) {
+    return (
+      await new StorageMicroservice(context).checkWebsiteDomainDns(website_uuid)
+    ).data;
+  }
+
+  async removeWebsiteDomain(
+    context: DevConsoleApiContext,
+    website_uuid: string,
+  ) {
+    return (
+      await new StorageMicroservice(context).removeWebsiteDomain(website_uuid)
+    ).data;
+  }
+
   async isWebsitesQuotaReached(
     context: DevConsoleApiContext,
     query: WebsitesQuotaReachedQueryFilter,
@@ -102,7 +132,7 @@ export class HostingService {
     body: DeployWebsiteDto,
   ) {
     body.populate({ website_uuid });
-    await body.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await body.validateOrThrow(ModelValidationException, ValidatorErrorCode);
     return (await new StorageMicroservice(context).deployWebsite(body)).data;
   }
 
@@ -165,5 +195,9 @@ export class HostingService {
     );
 
     return 'Website REJECTED!.';
+  }
+
+  async generateShortUrl(body: ShortUrlDto, context: DevConsoleApiContext) {
+    return (await new StorageMicroservice(context).generateShortUrl(body)).data;
   }
 }

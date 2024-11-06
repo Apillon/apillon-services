@@ -16,6 +16,7 @@ export enum DbTables {
   IPFS_BANDWIDTH = 'ipfs_bandwidth',
   IPFS_BANDWIDTH_SYNC = 'ipfs_bandwidth_sync',
   COLLECTION_METADATA = 'collection_metadata',
+  SHORT_URL = 'shortUrl',
 }
 
 export enum DbViews {
@@ -24,7 +25,7 @@ export enum DbViews {
 
 export enum StorageErrorCode {
   //400
-  DEFAULT_BAD_REQUEST_EROR = 40006000,
+  DEFAULT_BAD_REQUEST_ERROR = 40006000,
   FILE_UPLOAD_SESSION_ALREADY_ENDED = 40006001,
   MAX_USED_STORAGE_REACHED = 40006002,
   NOT_ENOUGH_STORAGE_SPACE = 40006003,
@@ -92,6 +93,8 @@ export enum StorageErrorCode {
   PROJECT_CONFIG_REQUIRED_DATA_NOT_PRESENT = 42206044,
   IPNS_REQUIRED_DATA_NOT_PRESENT = 42206045,
   COLLECTION_METADATA_REQUIRED_DATA_NOT_PRESENT = 42206046,
+  MISSING_SHORT_URL_ID = 42206050,
+  MISSING_TARGET_URL = 42206051,
 
   //404
   DEFAULT_RESOURCE_NOT_FOUND_ERROR = 40406000,
@@ -171,6 +174,14 @@ export enum FileUploadSessionStatus {
    * Files in session has been synced to IPFS
    */
   FINISHED = 3,
+  /**
+   * Validation failed before uploading to IPFS
+   */
+  VALIDATION_FAILED = 4,
+  /**
+   * Validation before uploading to IPFS passed
+   */
+  VALIDATION_PASSED = 5,
 }
 
 export enum BucketWebhookAuthMethod {
@@ -227,5 +238,17 @@ export enum PrepareCollectionMetadataStep {
   UPLOAD_IMAGES_TO_IPFS = 1,
   UPDATE_JSONS_ON_S3 = 2,
   UPLOAD_METADATA_TO_IPFS = 3,
+  PUBLISH_TO_IPNS = 4,
   METADATA_SUCCESSFULLY_PREPARED = 10,
+}
+
+export enum WebsiteDomainStatus {
+  /** Not yet processed and resolved */
+  PENDING = 0,
+  /** Domain is pointing to Apillon */
+  OK = 1,
+  /** Domain is pointing to Apillon, but uses CDN. Domain check should not be performed for such websites */
+  HAS_CDN = 2,
+  /** Domain is not pointing to Apillon IP */
+  INVALID = 10,
 }

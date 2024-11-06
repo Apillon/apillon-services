@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Query,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ConfirmRetweetDto,
   CreateReferralDto,
@@ -16,23 +8,14 @@ import {
   TwitterOauthDto,
   ValidateFor,
   BaseQueryFilter,
-  CacheKeyPrefix,
-  CacheKeyTTL,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { ReferralService } from './referral.service';
-import {
-  CacheInterceptor,
-  Ctx,
-  Permissions,
-  Validation,
-  CacheByUser,
-} from '@apillon/modules-lib';
+import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import { AuthGuard } from '../../guards/auth.guard';
 
 @Controller('referral')
-@UseInterceptors(CacheInterceptor)
 export class ReferralController {
   constructor(private referralService: ReferralService) {}
 
@@ -144,16 +127,5 @@ export class ReferralController {
     @Body() body: ConfirmRetweetDto,
   ) {
     return await this.referralService.confirmRetweet(context, body);
-  }
-
-  @Get('airdrop-tasks')
-  @Permissions({ role: DefaultUserRole.USER })
-  @UseGuards(AuthGuard)
-  @CacheByUser({
-    keyPrefix: CacheKeyPrefix.AIRDROP_TASKS,
-    ttl: CacheKeyTTL.DEFAULT,
-  })
-  async getAirdropTasks(@Ctx() context: DevConsoleApiContext) {
-    return await this.referralService.getAirdropTasks(context);
   }
 }

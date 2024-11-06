@@ -73,6 +73,16 @@ export class SocialService {
     return (await new SocialMicroservice(context).createSpace(body)).data;
   }
 
+  async archiveSpace(context: DevConsoleApiContext, space_uuid: string) {
+    return (await new SocialMicroservice(context).archiveSpace(space_uuid))
+      .data;
+  }
+
+  async activateSpace(context: DevConsoleApiContext, space_uuid: string) {
+    return (await new SocialMicroservice(context).activateSpace(space_uuid))
+      .data;
+  }
+
   async listPosts(context: DevConsoleApiContext, query: SocialPostQueryFilter) {
     return (await new SocialMicroservice(context).listPosts(query)).data;
   }
@@ -83,5 +93,13 @@ export class SocialService {
 
   async createPost(context: DevConsoleApiContext, body: CreatePostDto) {
     return (await new SocialMicroservice(context).createPost(body)).data;
+  }
+
+  async archivePost(context: DevConsoleApiContext, post_uuid: string) {
+    return (await new SocialMicroservice(context).archivePost(post_uuid)).data;
+  }
+
+  async activatePost(context: DevConsoleApiContext, post_uuid: string) {
+    return (await new SocialMicroservice(context).activatePost(post_uuid)).data;
   }
 }

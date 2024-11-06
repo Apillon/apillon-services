@@ -5,7 +5,7 @@ import {
   setupTestContextAndSql,
   Stage,
 } from '@apillon/tests-lib';
-import { HttpServer, INestApplication } from '@nestjs/common';
+import { HttpServer } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { AdminAppModule } from '../../src/admin-app.module';
@@ -18,7 +18,7 @@ export async function setupTest(
   apiPort = env.DEV_CONSOLE_API_PORT_TEST,
   apiHost = env.DEV_CONSOLE_API_HOST_TEST,
 ): Promise<Stage> {
-  let app: INestApplication = null;
+  let app = null;
   let http: HttpServer = null;
 
   env.APP_ENV = AppEnvironment.TEST;
@@ -32,6 +32,8 @@ export async function setupTest(
   env.AUTH_API_MYSQL_HOST = null; // safety
   env.BLOCKCHAIN_MYSQL_HOST = null; // safety
   env.SOCIAL_MYSQL_HOST = null; // safety
+  env.INFRASTRUCTURE_MYSQL_HOST = null; // safety
+  env.CONTRACTS_MYSQL_HOST = null; // safety
 
   //Solve problem with certificates, when accessing ipfs gateway content through supertest request
   process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';

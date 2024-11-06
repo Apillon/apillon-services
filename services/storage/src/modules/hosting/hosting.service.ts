@@ -21,6 +21,7 @@ import {
   ServiceName,
   spendCreditAction,
   SpendCreditDto,
+  SqlModelStatus,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
   writeLog,
@@ -32,9 +33,11 @@ import {
   DeploymentEnvironment,
   DeploymentStatus,
   StorageErrorCode,
+  WebsiteDomainStatus,
 } from '../../config/types';
 import {
   StorageCodeException,
+  StorageNotFoundException,
   StorageValidationException,
 } from '../../lib/exceptions';
 import { Bucket } from '../bucket/models/bucket.model';
@@ -44,6 +47,7 @@ import { File } from '../storage/models/file.model';
 import { StorageService } from '../storage/storage.service';
 import { Deployment } from './models/deployment.model';
 import { Website } from './models/website.model';
+import { checkDomainDns } from '../../lib/domains';
 
 export class HostingService {
   //#region web page CRUD
@@ -74,10 +78,7 @@ export class HostingService {
     );
 
     if (!website.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.WEBSITE_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
     }
     website.canAccess(context);
 
@@ -149,12 +150,11 @@ export class HostingService {
     );
 
     if (!website.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.WEBSITE_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
     }
     website.canModify(context);
+
+    let websiteDomainUpdated = false;
 
     //Check if domain was changed
     if (event.data.domain && website.domain != event.data.domain) {
@@ -183,14 +183,103 @@ export class HostingService {
       }
 
       website.domainChangeDate = new Date();
+      websiteDomainUpdated = true;
     }
 
     website.populate(event.data, PopulateFrom.PROFILE);
 
     await website.validateOrThrow(StorageValidationException);
 
-    await website.update();
+    if (websiteDomainUpdated) {
+      const spendCredit: SpendCreditDto = new SpendCreditDto(
+        {
+          project_uuid: website.project_uuid,
+          product_id: ProductCode.HOSTING_CHANGE_WEBSITE_DOMAIN,
+          referenceTable: DbTables.WEBSITE,
+          referenceId: website.website_uuid + new Date().toLocaleDateString(),
+          location: 'HostingService/updateWebsite',
+          service: ServiceName.STORAGE,
+        },
+        context,
+      );
+
+      await spendCreditAction(context, spendCredit, () => website.update());
+    } else {
+      await website.update();
+    }
+
     return website.serialize(SerializeFor.PROFILE);
+  }
+
+  /**
+   * Remove a website's domain
+   * @param {{ website_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Website>}
+   */
+  static async removeWebsiteDomain(
+    event: { website_uuid: string },
+    context: ServiceContext,
+  ): Promise<Website> {
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+    website.canModify(context);
+
+    website.domain = null;
+    website.domainChangeDate = new Date();
+
+    await website.update();
+
+    return website.serialize(SerializeFor.PROFILE) as Website;
+  }
+
+  /**
+   * Set a website's status to archived
+   * @param {{ website_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Website>}
+   */
+  static async archiveWebsite(
+    event: { website_uuid: string },
+    context: ServiceContext,
+  ): Promise<Website> {
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+    website.canModify(context);
+
+    return await website.markArchived();
+  }
+
+  /**
+   * Set a website's status to active
+   * @param {{ website_uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Website>}
+   */
+  static async activateWebsite(
+    event: { website_uuid: string },
+    context: ServiceContext,
+  ): Promise<Website> {
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+    website.canModify(context);
+
+    return await website.markActive();
   }
 
   static async maxWebsitesQuotaReached(
@@ -211,6 +300,39 @@ export class HostingService {
     return { maxWebsitesQuotaReached: numOfWebsites >= maxWebsitesQuota.value };
   }
 
+  /**
+   * Check if the domain is pointing to Apillon IP and updates website domainStatus property.
+   * @param event
+   * @param context
+   * @returns Serialized website
+   */
+  static async checkWebsiteDomainDns(
+    event: { website_uuid: string },
+    context: ServiceContext,
+  ) {
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+    website.canAccess(context);
+
+    if (website.domain) {
+      const lookupRes = await checkDomainDns(website.domain);
+
+      website.domainLastCheckDate = new Date();
+      website.domainStatus = lookupRes
+        ? WebsiteDomainStatus.OK
+        : WebsiteDomainStatus.INVALID;
+
+      await website.update();
+    }
+
+    return website.serializeByContext(context);
+  }
+
   //#endregion
 
   //#region upload files to website
@@ -225,10 +347,7 @@ export class HostingService {
     );
 
     if (!website.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.WEBSITE_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
     }
 
     website.canAccess(context);
@@ -266,10 +385,7 @@ export class HostingService {
     );
 
     if (!website.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.WEBSITE_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
     }
     website.canModify(context);
 
@@ -409,10 +525,7 @@ export class HostingService {
     ).populateByUUID(event.deployment_uuid, 'deployment_uuid');
 
     if (!deployment.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.DEPLOYMENT_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.DEPLOYMENT_NOT_FOUND);
     }
     await deployment.canAccess(context);
 
@@ -438,10 +551,7 @@ export class HostingService {
       event.query.website_uuid,
     );
     if (!website.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.WEBSITE_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
     }
     website.canAccess(context);
 
@@ -461,10 +571,7 @@ export class HostingService {
     ).populateByUUID(event.deployment_uuid, 'deployment_uuid');
 
     if (!deployment.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.DEPLOYMENT_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.DEPLOYMENT_NOT_FOUND);
     }
 
     if (deployment.deploymentStatus != DeploymentStatus.IN_REVIEW) {
@@ -492,10 +599,7 @@ export class HostingService {
     ).populateByUUID(event.deployment_uuid, 'deployment_uuid');
 
     if (!deployment.exists()) {
-      throw new StorageCodeException({
-        code: StorageErrorCode.DEPLOYMENT_NOT_FOUND,
-        status: 404,
-      });
+      throw new StorageNotFoundException(StorageErrorCode.DEPLOYMENT_NOT_FOUND);
     }
 
     if (deployment.deploymentStatus != DeploymentStatus.IN_REVIEW) {
@@ -512,7 +616,7 @@ export class HostingService {
       deployment.website_id,
     );
     //Unpin CID from IPFS
-    const ipfsService = new IPFSService(context, website.project_uuid);
+    const ipfsService = new IPFSService(context, website.project_uuid, true);
     await ipfsService.unpinCidFromCluster(deployment.cid);
 
     //Get project owner

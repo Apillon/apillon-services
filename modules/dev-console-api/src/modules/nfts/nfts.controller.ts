@@ -1,5 +1,4 @@
 import {
-  CreateCollectionDTO,
   DefaultUserRole,
   MintNftDTO,
   NestMintNftDTO,
@@ -14,15 +13,22 @@ import {
   DefaultPermission,
   RoleGroup,
   AddNftsMetadataDto,
-  CreateSubstrateCollectionDTO,
   CollectionMetadataQueryFilter,
+  ChainType,
 } from '@apillon/lib';
+import {
+  CreateCollectionDTO,
+  CreateSubstrateCollectionDTO,
+  CreateUniqueCollectionDTO,
+} from '@apillon/blockchain-lib/common';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -50,7 +56,11 @@ export class NftsController {
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateCollectionDTO,
   ) {
-    return await this.nftsService.createCollection(context, body);
+    return await this.nftsService.createCollection(
+      context,
+      ChainType.EVM,
+      body,
+    );
   }
 
   @Post('collections/substrate')
@@ -65,7 +75,26 @@ export class NftsController {
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateSubstrateCollectionDTO,
   ) {
-    return await this.nftsService.createCollection(context, body);
+    return await this.nftsService.createCollection(
+      context,
+      ChainType.SUBSTRATE,
+      body,
+    );
+  }
+
+  @Post('collections/unique')
+  @Validation({ dto: CreateUniqueCollectionDTO })
+  @UseGuards(ValidationGuard)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async createUniqueCollection(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: CreateUniqueCollectionDTO,
+  ) {
+    return await this.nftsService.createUniqueCollection(context, body);
   }
 
   @Get('collections')
@@ -250,6 +279,19 @@ export class NftsController {
     );
   }
 
+  @Post('collections/:collectionUuid/ipns')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async addIpnsToCollection(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collectionUuid') collectionUuid: string,
+  ) {
+    return await this.nftsService.addIpnsToCollection(context, collectionUuid);
+  }
+
   @Get('collections/:collectionUuid/nfts-metadata')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({
@@ -267,5 +309,31 @@ export class NftsController {
       collectionUuid,
       query,
     );
+  }
+
+  @Delete('collections/:collectionUuid')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async archiveCollection(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collectionUuid') collectionUuid: string,
+  ) {
+    return await this.nftsService.archiveCollection(context, collectionUuid);
+  }
+
+  @Patch('collections/:collectionUuid/activate')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async activateCollection(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collectionUuid') collectionUuid: string,
+  ) {
+    return await this.nftsService.activateCollection(context, collectionUuid);
   }
 }

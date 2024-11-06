@@ -11,7 +11,7 @@ import {
   UnauthorizedErrorCodes,
   UserWalletAuthDto,
   Scs,
-  ValidationException,
+  ModelValidationException,
   env,
   generateJwtToken,
   invalidateCachePrefixes,
@@ -328,7 +328,7 @@ export class UserService {
     const token = generateJwtToken(
       JwtTokenType.USER_RESET_PASSWORD,
       { email },
-      JwtExpireTime.ONE_HOUR,
+      JwtExpireTime.TEN_MINUTES,
       emailResult.authUser.password ? emailResult.authUser.password : undefined,
     );
 
@@ -378,7 +378,7 @@ export class UserService {
     }
 
     user.populate(body);
-    await user.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await user.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     const conn = await context.mysql.start();
 
@@ -501,7 +501,7 @@ export class UserService {
   ) {
     const { isEvmWallet, wallet, signature, timestamp } = walletAuthDto;
     const { message } = this.getAuthMessage(timestamp);
-    const signatureValidityMinutes = 60;
+    const signatureValidityMinutes = 15;
 
     const getSignatureData = isEvmWallet
       ? new Identity(null).validateEvmWalletSignature

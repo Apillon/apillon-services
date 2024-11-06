@@ -27,6 +27,7 @@ import { DomainQueryFilter } from './dtos/domain-query-filter.dto';
 import { FilesQueryFilter } from './dtos/files-query-filter.dto';
 import { FileUploadSessionQueryFilter } from './dtos/file-upload-session-query-filter.dto';
 import { CollectionMetadataQueryFilter } from './dtos/collection-metadata-query-filter.dto';
+import { ShortUrlDto } from './dtos/short-url.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -262,7 +263,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async deleteFile(params: { id: string }) {
+  public async deleteFile(params: { uuid: string }) {
     const data = {
       eventName: StorageEventType.FILE_DELETE,
       ...params,
@@ -270,7 +271,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async restoreFile(params: { id: string }) {
+  public async restoreFile(params: { uuid: string }) {
     const data = {
       eventName: StorageEventType.RESTORE_FILE,
       ...params,
@@ -403,10 +404,27 @@ export class StorageMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
   public async updateWebsite(params: { website_uuid: string; data: any }) {
     const data = {
       eventName: StorageEventType.WEBSITE_UPDATE,
       ...params,
+    };
+    return await this.callService(data);
+  }
+
+  public async archiveWebsite(website_uuid: string) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_ARCHIVE,
+      website_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async activateWebsite(website_uuid: string) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_ACTIVATE,
+      website_uuid,
     };
     return await this.callService(data);
   }
@@ -476,6 +494,22 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async checkWebsiteDomainDns(website_uuid: string) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_CHECK_DOMAIN_DNS,
+      website_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async removeWebsiteDomain(website_uuid: string) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_REMOVE_DOMAIN,
+      website_uuid,
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 
   //#region nfts storage functions
@@ -487,6 +521,7 @@ export class StorageMicroservice extends BaseService {
     imagesSession: string;
     metadataSession: string;
     useApillonIpfsGateway: boolean;
+    useIpns: boolean;
   }): Promise<{ data: { baseUri: string } }> {
     const data = {
       eventName: StorageEventType.PREPARE_COLLECTION_BASE_URI,
@@ -528,6 +563,30 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.BLACKLIST_PROJECT,
       project_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async generateShortUrl(payload: ShortUrlDto) {
+    const data = {
+      eventName: StorageEventType.GENERATE_SHORT_URL,
+      ...payload,
+    };
+    return await this.callService(data);
+  }
+
+  public async getTargetUrl(shortUrl_id: string) {
+    const data = {
+      eventName: StorageEventType.GET_TARGET_URL,
+      shortUrl_id,
+    };
+    return await this.callService(data);
+  }
+
+  public async getIpnsByName(ipnsName: string) {
+    const data = {
+      eventName: StorageEventType.IPNS_GET_BY_NAME,
+      ipnsName,
     };
     return await this.callService(data);
   }

@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   HttpStatus,
   Injectable,
+  Inject,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import {
@@ -15,7 +16,7 @@ import { PermissionPass, PERMISSION_KEY } from '@apillon/modules-lib';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(@Inject(Reflector.name) private readonly reflector: Reflector) {}
 
   public async canActivate(execCtx: ExecutionContext): Promise<boolean> {
     const requiredPermissions = this.reflector.getAllAndMerge<PermissionPass[]>(
@@ -42,11 +43,18 @@ export class AuthGuard implements CanActivate {
         }
       }
 
-      for (const requiredPerm of requiredPermissions.filter((x) => x.role)) {
+      const rolePermissions = requiredPermissions.filter((x) => x.role);
+
+      if (!rolePermissions.length) {
+        return true;
+      }
+
+      for (const requiredPerm of rolePermissions) {
         if (context.hasRole(requiredPerm.role)) {
           return true;
         }
       }
+
       throw new CodeException({
         code: ForbiddenErrorCodes.FORBIDDEN,
         status: HttpStatus.FORBIDDEN,

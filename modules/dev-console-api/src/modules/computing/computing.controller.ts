@@ -7,15 +7,17 @@ import {
   DefaultUserRole,
   EncryptContentDto,
   RoleGroup,
-  TransferOwnershipDto,
   ValidateFor,
 } from '@apillon/lib';
+import { TransferOwnershipDto } from '@apillon/blockchain-lib/common';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -63,6 +65,32 @@ export class ComputingController {
     @Param('uuid') uuid: string,
   ) {
     return await this.computingService.getContract(context, uuid);
+  }
+
+  @Delete('contracts/:uuid')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async archiveContract(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+  ) {
+    return await this.computingService.archiveContract(context, uuid);
+  }
+
+  @Patch('contracts/:uuid/activate')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async activateContract(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+  ) {
+    return await this.computingService.activateContract(context, uuid);
   }
 
   @Get('contracts/:uuid/transactions')

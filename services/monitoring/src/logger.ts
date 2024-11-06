@@ -1,6 +1,8 @@
 import {
+  CloudFunctionCallDto,
   CodeException,
   LogsQueryFilter,
+  ModelValidationException,
   MongoCollections,
   RequestLogDto,
   RequestLogsQueryFilter,
@@ -9,6 +11,7 @@ import {
 import { Collection } from 'mongodb';
 import { ServiceContext } from './context';
 import { generateMongoLogsQuery, systemRoutes } from './lib/queries';
+import { CloudFunctionUsageDto } from '@apillon/lib/src';
 /**
  * Logger class for logging events intodatabase.
  */
@@ -231,5 +234,52 @@ export class Logger {
       .countDocuments();
 
     return { totalApiRequests, totalDevConsoleRequests };
+  }
+
+  /**
+   * Saves data about a call to a cloud function - for monitoring and analytics
+   * @param {{call}} - The function call data to be stored (function_uuid, success, error)
+   * @param {ServiceContext} context - The service context for mongo access.
+   */
+  static async saveCloudFunctionCall(
+    { call }: { call: CloudFunctionCallDto },
+    context: ServiceContext,
+  ) {
+    // Validate call DTO data
+    const cfCallDto = await new CloudFunctionCallDto(call).validateOrThrow(
+      ModelValidationException,
+    );
+
+    await context.mongo.db
+      .collection(MongoCollections.CLOUD_FUNCTION_CALL)
+      .insertOne({
+        ...cfCallDto.serialize(),
+        timestamp: new Date(),
+      });
+  }
+
+  /**
+   * Get cloud function calls from MongoDB, filter by date
+   * @param {CloudFunctionUsageDto} params - filter by date and flags
+   * @param {ServiceContext} context
+   * @returns {CloudFunctionCall[]}
+   */
+  static async getCloudFunctionUsage(
+    { params }: { params: CloudFunctionUsageDto },
+    context: ServiceContext,
+  ) {
+    return await context.mongo.db
+      .collection(MongoCollections.CLOUD_FUNCTION_CALL)
+      .find({
+        function_uuid: params.function_uuid,
+        ...(params.dateFrom
+          ? { timestamp: { $gte: new Date(params.dateFrom) } }
+          : {}),
+        ...(params.dateTo
+          ? { timestamp: { $lte: new Date(params.dateTo) } }
+          : {}),
+        ...(params.success != null ? { success: params.success } : {}),
+      })
+      .toArray();
   }
 }

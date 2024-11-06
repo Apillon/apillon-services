@@ -14,7 +14,7 @@ import {
   PublishIpnsDto,
   SqlModelStatus,
   StorageMicroservice,
-  ValidationException,
+  ModelValidationException,
   ValidatorErrorCode,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
@@ -107,10 +107,10 @@ export class StorageService {
   async getFileDetails(
     context: ApillonApiContext,
     bucket_uuid: string,
-    id: string,
+    uuid: string,
   ) {
     const filter: FileDetailsQueryFilter = new FileDetailsQueryFilter(
-      { bucket_uuid: bucket_uuid, id: id },
+      { bucket_uuid: bucket_uuid, uuid },
       context,
     );
     return (await new StorageMicroservice(context).getFileDetails(filter)).data;
@@ -118,7 +118,7 @@ export class StorageService {
 
   async deleteFile(context: ApillonApiContext, file_uuid: string) {
     return (
-      await new StorageMicroservice(context).deleteFile({ id: file_uuid })
+      await new StorageMicroservice(context).deleteFile({ uuid: file_uuid })
     ).data;
   }
 
@@ -134,7 +134,7 @@ export class StorageService {
     bucket_uuid: string,
     query: ApillonApiDirectoryContentQueryFilter,
   ) {
-    await query.validateOrThrow(ValidationException);
+    await query.validateOrThrow(ModelValidationException);
     return (
       await new StorageMicroservice(context).listDirectoryContent(
         new DirectoryContentQueryFilter().populate({
@@ -218,7 +218,7 @@ export class StorageService {
     body: PublishIpnsDto,
   ) {
     body.populate({ ipns_uuid });
-    await body.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await body.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     return (await new StorageMicroservice(context).publishIpns(body)).data;
   }

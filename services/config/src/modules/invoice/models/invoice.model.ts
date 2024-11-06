@@ -10,12 +10,13 @@ import {
   InvoicesQueryFilter,
   presenceValidator,
   PoolConnection,
+  UuidSqlModel,
 } from '@apillon/lib';
 import { ConfigErrorCode, DbTables } from '../../../config/types';
 import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 
-export class Invoice extends AdvancedSQLModel {
+export class Invoice extends UuidSqlModel {
   public readonly tableName = DbTables.INVOICE;
 
   @prop({

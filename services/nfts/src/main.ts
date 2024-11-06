@@ -12,6 +12,8 @@ import { TransactionService } from './modules/transaction/transaction.service';
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
     [NftsEventType.CREATE_COLLECTION]: NftsService.createCollection,
+    [NftsEventType.CREATE_UNIQUE_COLLECTION]:
+      NftsService.createUniqueCollection,
     [NftsEventType.NFT_COLLECTIONS_LIST]: NftsService.listNftCollections,
     [NftsEventType.TRANSFER_OWNERSHIP]: NftsService.transferCollectionOwnership,
     [NftsEventType.MINT_NFT]: NftsService.mintNftTo,
@@ -32,6 +34,9 @@ export async function processEvent(event, context: Context): Promise<any> {
     [NftsEventType.PROJECT_COLLECTION_DETAILS]:
       NftsService.getProjectCollectionDetails,
     [NftsEventType.ADD_NFTS_METADATA]: NftsService.addNftsMetadata,
+    [NftsEventType.ARCHIVE_COLLECTION]: NftsService.archiveCollection,
+    [NftsEventType.ADD_IPNS_TO_COLLECTION]: NftsService.addIpnsToCollection,
+    [NftsEventType.ACTIVATE_COLLECTION]: NftsService.activateCollection,
   };
 
   return await processors[event.eventName](event, context);

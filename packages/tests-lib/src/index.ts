@@ -20,3 +20,6 @@ export * from './lib/helpers/contracts/bytecode';
 export * from './lib/helpers/configs/hardhat_592.config';
 export * from './lib/helpers/configs/hardhat_1284.config';
 export * from './lib/helpers/configs/hardhat_1287.config';
+
+// contracts
+export * from './contracts/erc20';

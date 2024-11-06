@@ -1,6 +1,6 @@
 {
   "name": "@apillon/monitoring",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "author": "Apillon",
   "license": "GNU GPL V3",
   "description": "Apillon monitoring service",
@@ -27,10 +27,7 @@
   },
   "devDependencies": {
     "eslint-config-common": "*",
-    "ts-loader": "^9.5.1",
-    "tsconfig": "*",
-    "webpack": "^5.91.0",
-    "webpack-node-externals": "^3.0.0"
+    "tsconfig": "*"
   },
   "jest": {
     "testTimeout": 1800000,

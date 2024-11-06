@@ -14,7 +14,6 @@ import {
 import {
   BaseQueryFilter,
   CacheKeyPrefix,
-  CacheKeyTTL,
   ConfigureCreditDto,
   CreditTransactionQueryFilter,
   DefaultUserRole,
@@ -32,7 +31,6 @@ import {
   Validation,
 } from '@apillon/modules-lib';
 import { ValidationGuard } from '../../guards/validation.guard';
-import { File } from '../file/models/file.model';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
 import { ProjectUserUpdateRoleDto } from './dtos/project_user-update-role.dto';
 import { Project } from './models/project.model';
@@ -40,6 +38,7 @@ import { ProjectService } from './project.service';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
 import { InvoicesQueryFilter } from '@apillon/lib';
+import { ProjectAccessGuard } from '../../guards/project-access.guard';
 
 @Controller('projects')
 @UseInterceptors(CacheInterceptor)
@@ -58,21 +57,6 @@ export class ProjectController {
   @UseGuards(AuthGuard)
   async isProjectsQuotaReached(@Ctx() context: DevConsoleApiContext) {
     return await this.projectService.isProjectsQuotaReached(context);
-  }
-
-  @Post(':uuid/image')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-  )
-  @Validation({ dto: File })
-  @UseGuards(AuthGuard, ValidationGuard)
-  async updateProjectImage(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') uuid: string,
-    @Body() body: File,
-  ) {
-    return await this.projectService.updateProjectImage(context, uuid, body);
   }
 
   @Get(':uuid/users')
@@ -151,6 +135,16 @@ export class ProjectController {
     @Param('projectUserId', ParseIntPipe) projectUserId: number,
   ) {
     return await this.projectService.removeUserProject(context, projectUserId);
+  }
+
+  @Get(':project_uuid/rpc-plan')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard, ProjectAccessGuard)
+  async getProjectRpcPlan(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_uuid') project_uuid: string,
+  ) {
+    return await this.projectService.getProjectRpcPlan(context, project_uuid);
   }
 
   @Get(':uuid')

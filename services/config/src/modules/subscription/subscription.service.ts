@@ -83,9 +83,7 @@ export class SubscriptionService {
         project_uuid: createSubscriptionDto.project_uuid,
         // Insert subscription here so referenceId can be filled in, but also pass previousSubscription check
         subscriptionId: async () =>
-          (
-            await subscription.insert(SerializeFor.INSERT_DB, conn)
-          ).id,
+          (await subscription.insert(SerializeFor.INSERT_DB, conn)).id,
         creditAmount: subscriptionPackage.creditAmount,
       });
 
@@ -137,10 +135,15 @@ export class SubscriptionService {
    * @returns {Promise<string>}
    */
   static async getSubscriptionPackageStripeId(
-    { package_id, project_uuid }: { package_id: number; project_uuid: string },
+    { package_id, project_uuid }: { package_id: number; project_uuid?: string },
     context: ServiceContext,
   ): Promise<string> {
-    await SubscriptionService.checkForActiveSubscription(project_uuid, context);
+    if (project_uuid) {
+      await SubscriptionService.checkForActiveSubscription(
+        project_uuid,
+        context,
+      );
+    }
 
     const subscriptionPackage = await new SubscriptionPackage(
       {},
@@ -178,6 +181,13 @@ export class SubscriptionService {
       context,
     ).getActiveSubscription(project_uuid, conn);
     return subscription.serialize(SerializeFor.PROFILE) as Subscription;
+  }
+
+  static async hasProjectActiveRpcPlan(
+    { project_uuid }: { project_uuid: string | string[] },
+    context: ServiceContext,
+  ): Promise<boolean> {
+    return await new Subscription({}, context).hasActiveRpcPlan(project_uuid);
   }
 
   /**
@@ -238,7 +248,7 @@ export class SubscriptionService {
           data: { stripePackageId: updateSubscriptionDto.stripePackageId },
         });
       }
-
+      const previousExpiresOn = subscription.expiresOn;
       subscription.populate(updateSubscriptionDto);
       try {
         await subscription.validate();
@@ -278,9 +288,8 @@ export class SubscriptionService {
                 package_id,
                 project_uuid: newSubscription.project_uuid,
                 subscriptionId: async () =>
-                  (
-                    await newSubscription.insert(SerializeFor.INSERT_DB, conn)
-                  ).id,
+                  (await newSubscription.insert(SerializeFor.INSERT_DB, conn))
+                    .id,
                 creditAmount:
                   subscriptionPackage.creditAmount -
                   previousPackage.creditAmount,
@@ -295,11 +304,11 @@ export class SubscriptionService {
             ),
           ]);
         } else {
+          // Only a downgrade, do not create invoice, just insert the new subscription
           await newSubscription.insert(SerializeFor.INSERT_DB, conn);
         }
       } else if (
-        new Date(updateSubscriptionDto.expiresOn) >
-        new Date(subscription.expiresOn)
+        new Date(updateSubscriptionDto.expiresOn) > new Date(previousExpiresOn)
       ) {
         await InvoiceService.createOnSubscriptionUpdate(
           context,
@@ -433,7 +442,7 @@ export class SubscriptionService {
   static async getSubscriptionPackages(
     event: any,
     context: ServiceContext,
-  ): Promise<string> {
+  ): Promise<any[]> {
     return await new SubscriptionPackage({}, context).getAll();
   }
 }

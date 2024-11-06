@@ -1,6 +1,6 @@
 {
   "name": "@apillon/modules-lib",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "description": "Apillon common module code library",
   "main": "./dist/index.js",
   "source": "./src/index.ts",
@@ -18,14 +18,13 @@
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.6",
     "eslint-config-common": "*",
     "tsconfig": "*"
   },
   "dependencies": {
     "@apillon/lib": "*",
-    "@nestjs/common": "^10.3.7",
-    "@nestjs/core": "^10.3.7",
+    "@nestjs/common": "10.3.7",
+    "@nestjs/core": "10.3.7",
     "@rawmodel/core": "^3.3.4",
     "@rawmodel/parsers": "^3.3.4",
     "@rawmodel/validators": "^3.3.4",

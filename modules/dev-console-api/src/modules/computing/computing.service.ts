@@ -7,8 +7,8 @@ import {
   ContractQueryFilter,
   CreateContractDto,
   EncryptContentDto,
-  TransferOwnershipDto,
 } from '@apillon/lib';
+import { TransferOwnershipDto } from '@apillon/blockchain-lib/common';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
@@ -73,6 +73,16 @@ export class ComputingService {
 
   async getContract(context: DevConsoleApiContext, uuid: string) {
     return (await new ComputingMicroservice(context).getContract(uuid)).data;
+  }
+
+  async archiveContract(context: DevConsoleApiContext, uuid: string) {
+    return (await new ComputingMicroservice(context).archiveContract(uuid))
+      .data;
+  }
+
+  async activateContract(context: DevConsoleApiContext, uuid: string) {
+    return (await new ComputingMicroservice(context).activateContract(uuid))
+      .data;
   }
 
   async listTransactions(

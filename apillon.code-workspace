@@ -1,101 +1,122 @@
 {
   "folders": [
     {
-      "name": "🌐@services/access [@apillon/access]",
-      "path": "services/access"
+      "name": "🌐@services_access [@apillon_access]",
+      "path": "services/access",
     },
     {
-      "name": "🌐@services/monitoring [@apillon/monitoring]",
-      "path": "services/monitoring"
+      "name": "🌐@services_monitoring [@apillon_monitoring]",
+      "path": "services/monitoring",
     },
     {
-      "name": "🌐@services/storage [@apillon/storage]",
-      "path": "services/storage"
+      "name": "🌐@services_storage [@apillon_storage]",
+      "path": "services/storage",
     },
     {
-      "name": "🌐@services/mailing [@apillon/mailing]",
-      "path": "services/mailing"
+      "name": "🌐@services_mailing [@apillon_mailing]",
+      "path": "services/mailing",
     },
     {
-      "name": "🌐@services/config [@apillon/config]",
-      "path": "services/config"
+      "name": "🌐@services_config [@apillon_config]",
+      "path": "services/config",
     },
     {
-      "name": "🌐@services/blockchain [@apillon/blockchain]",
-      "path": "services/blockchain"
+      "name": "🌐@services_blockchain [@apillon_blockchain]",
+      "path": "services/blockchain",
     },
     {
-      "name": "🌐@services/nfts [@apillon/nfts]",
-      "path": "services/nfts"
+      "name": "🌐@services_nfts [@apillon_nfts]",
+      "path": "services/nfts",
     },
     {
-      "name": "🌐@services/referral [@apillon/referral]",
-      "path": "services/referral"
+      "name": "🌐@services_contracts [@apillon_contracts]",
+      "path": "services/contracts/",
     },
     {
-      "name": "🌐@services/authentication [@apillon/authentication]",
-      "path": "services/authentication"
+      "name": "🌐@services_referral [@apillon_referral]",
+      "path": "services/referral",
     },
     {
-      "name": "🌐@services/computing [@apillon/computing]",
-      "path": "services/computing"
+      "name": "🌐@services_authentication [@apillon_authentication]",
+      "path": "services/authentication",
     },
     {
-      "name": "🌐@services/social [@apillon/social]",
-      "path": "services/social"
+      "name": "🌐@services_computing [@apillon_computing]",
+      "path": "services/computing",
     },
     {
-      "name": "😎@modules/dev-console-api",
-      "path": "modules/dev-console-api"
+      "name": "🌐@services_social [@apillon_social]",
+      "path": "services/social",
     },
     {
-      "name": "😎@modules/apillon-api",
-      "path": "modules/apillon-api"
+      "name": "🌐@services_infrastructure [@apillon_infrastructure]",
+      "path": "services/infrastructure",
     },
     {
-      "name": "😎@modules/authentication-api",
-      "path": "modules/authentication-api"
+      "name": "😎@modules_dev-console-api",
+      "path": "modules/dev-console-api",
     },
     {
-      "name": "📦@packages/lib",
-      "path": "packages/lib"
+      "name": "😎@modules_apillon-api",
+      "path": "modules/apillon-api",
     },
     {
-      "name": "📦@packages/modules-lib",
-      "path": "packages/modules-lib"
+      "name": "😎@modules_authentication-api",
+      "path": "modules/authentication-api",
     },
     {
-      "name": "📦@packages/service-lib",
-      "path": "packages/service-lib"
+      "name": "😎@modules_url-shortener-api",
+      "path": "modules/url-shortener-api",
     },
     {
-      "name": "📦@packages/workers-lib",
-      "path": "packages/workers-lib"
+      "name": "😎@modules_acurast-gw-api",
+      "path": "modules/acurast-gw-api",
     },
     {
-      "name": "📦@packages/tests-lib",
-      "path": "packages/tests-lib"
+      "name": "📦@packages_lib",
+      "path": "packages/lib",
+    },
+    {
+      "name": "📦@packages_modules-lib",
+      "path": "packages/modules-lib",
+    },
+    {
+      "name": "📦@packages_service-lib",
+      "path": "packages/service-lib",
+    },
+    {
+      "name": "📦@packages_blockchain-lib",
+      "path": "packages/blockchain-lib",
+    },
+    {
+      "name": "📦@packages_workers-lib",
+      "path": "packages/workers-lib",
+    },
+    {
+      "name": "📦@packages_tests-lib",
+      "path": "packages/tests-lib",
     },
     {
       "name": "🔨_tsconfig",
-      "path": "packages/tsconfig"
+      "path": "packages/tsconfig",
     },
     {
       "name": "🔨_eslint",
-      "path": "packages/eslint-config-common"
+      "path": "packages/eslint-config-common",
     },
     {
       "name": "🥕+Root",
-      "path": "."
-    }
+      "path": ".",
+    },
   ],
   "settings": {
     "editor.formatOnPaste": false,
     "editor.formatOnSave": true,
     "[typescript]": {
-      "editor.defaultFormatter": "esbenp.prettier-vscode"
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
     "cSpell.words": [
+      "ACURAST",
       "Apillon",
       "ASTAR",
       "Authtrail",
@@ -117,8 +138,8 @@
       "**/Thumbs.db": true,
       "**/.serverless": true,
       "**/.turbo": true,
-      "**/node_modules": false
+      "**/node_modules": false,
     },
-    "nuxt.isNuxtApp": false
-  }
+    "nuxt.isNuxtApp": false,
+  },
 }

@@ -182,10 +182,15 @@ export interface IEnv {
   URL_SCREENSHOT_FUNCTION_NAME: string;
   URL_SCREENSHOT_API_URL: string;
   SEND_WEBSITES_TO_REVIEW: number;
+  VALID_WEBSITE_DOMAIN_TARGETS: string[];
   /**
    * Max number of files that can be transferred to ipfs in one worker iteration
    */
   STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS: number;
+  /**
+   * Max number of files that can be pinned to crust in one worker iteration
+   */
+  STORAGE_MAX_FILE_BATCH_SIZE_FOR_CRUST: number;
   /**
    * Maximum number of files in session without delay between worker iterations
    */
@@ -243,6 +248,12 @@ export interface IEnv {
   BLOCKCHAIN_PHALA_GRAPHQL_SERVER: string;
   BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER: string;
   BLOCKCHAIN_ASTAR_SUBSTRATE_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_ETHEREUM_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_SEPOLIA_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_ACURAST_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_UNIQUE_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_CELO_ALFAJORES_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_CELO_GRAPHQL_SERVER: string;
   BLOCKCHAIN_SECRETS: string;
 
   /**
@@ -300,6 +311,8 @@ export interface IEnv {
   AUTH_FUNCTION_NAME_TEST: string;
   AUTH_SOCKET_PORT: number;
   AUTH_SOCKET_PORT_TEST: number;
+
+  AUTH_OTP_EXPIRATION_IN_MIN: number;
 
   //Nova wallet
   NOVA_WALLET_BUCKET_UUID: string;
@@ -448,6 +461,45 @@ export interface IEnv {
   NFTS_AWS_WORKER_LAMBDA_NAME: string;
 
   /************************************************************
+   * Contracts - Apillon Contracts Service
+   ************************************************************/
+  /**
+   *  function name
+   */
+  CONTRACTS_FUNCTION_NAME: string;
+  CONTRACTS_FUNCTION_NAME_TEST: string;
+
+  /**
+   * dev server port
+   */
+  CONTRACTS_SOCKET_PORT: number;
+  CONTRACTS_SOCKET_PORT_TEST: number;
+
+  /**
+   * Database config
+   */
+  CONTRACTS_MYSQL_HOST: string;
+  CONTRACTS_MYSQL_PORT: number;
+  CONTRACTS_MYSQL_USER: string;
+  CONTRACTS_MYSQL_PASSWORD: string;
+  CONTRACTS_MYSQL_DEPLOY_USER: string;
+  CONTRACTS_MYSQL_DEPLOY_PASSWORD: string;
+  CONTRACTS_MYSQL_DATABASE: string;
+
+  // TEST
+  CONTRACTS_MYSQL_HOST_TEST: string;
+  CONTRACTS_MYSQL_PORT_TEST: number;
+  CONTRACTS_MYSQL_USER_TEST: string;
+  CONTRACTS_MYSQL_PASSWORD_TEST: string;
+  CONTRACTS_MYSQL_DATABASE_TEST: string;
+
+  /**
+   * Contracts workers config
+   */
+  CONTRACTS_AWS_WORKER_SQS_URL: string;
+  CONTRACTS_AWS_WORKER_LAMBDA_NAME: string;
+
+  /************************************************************
    * COMPUTING - Apillon Computing Service
    ************************************************************/
   /**
@@ -486,6 +538,7 @@ export interface IEnv {
    */
   COMPUTING_AWS_WORKER_SQS_URL: string;
   COMPUTING_AWS_WORKER_LAMBDA_NAME: string;
+  COMPUTING_KMS_KEY_ID: string;
 
   /**
    * METABASE EMBED
@@ -547,13 +600,108 @@ export interface IEnv {
   SOCIAL_AWS_WORKER_LAMBDA_NAME: string;
 
   SOCIAL_DEFAULT_SPACE: string;
+
+  /************************************************************
+   * Infrastructure - Apillon Infrastructure Service
+   ************************************************************/
+  /**
+   *  function name
+   */
+  INFRASTRUCTURE_FUNCTION_NAME: string;
+  INFRASTRUCTURE_FUNCTION_NAME_TEST: string;
+
+  /**
+   * INFRASTRUCTURE dev server port
+   */
+  INFRASTRUCTURE_SOCKET_PORT: number;
+  INFRASTRUCTURE_SOCKET_PORT_TEST: number;
+
+  /**
+   * INFRASTRUCTURE Database config
+   */
+
+  INFRASTRUCTURE_MYSQL_HOST: string;
+  INFRASTRUCTURE_MYSQL_PORT: number;
+  INFRASTRUCTURE_MYSQL_USER: string;
+  INFRASTRUCTURE_MYSQL_PASSWORD: string;
+  INFRASTRUCTURE_MYSQL_DEPLOY_USER: string;
+  INFRASTRUCTURE_MYSQL_DEPLOY_PASSWORD: string;
+  INFRASTRUCTURE_MYSQL_DATABASE: string;
+
+  // TEST
+  INFRASTRUCTURE_MYSQL_HOST_TEST: string;
+  INFRASTRUCTURE_MYSQL_PORT_TEST: number;
+  INFRASTRUCTURE_MYSQL_USER_TEST: string;
+  INFRASTRUCTURE_MYSQL_PASSWORD_TEST: string;
+  INFRASTRUCTURE_MYSQL_DATABASE_TEST: string;
+
+  /**
+   * INFRASTRUCTURE workers config
+   */
+  INFRASTRUCTURE_AWS_WORKER_SQS_URL: string;
+  INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME: string;
+  INFRASTRUCTURE_AWS_WORKER_SQS_ARN: string;
+
+  /***************************************************
+   * INFRASTRUCTURE - Indexer as a service variables
+   **************************************************/
+
+  /**
+   * S3 Bucket to where indexer zipped code will be uploaded by users
+   */
+  INDEXER_BUCKET_FOR_SOURCE_CODE: string;
+  /**
+   * Provision that Apillon takes for indexer
+   */
+  INDEXER_PROVISION_PERCENT: number;
+  /**
+   * sqd (subsquid cloud) API data
+   */
+  SQD_API_TOKEN: string;
+  SQD_API_URL: string;
+  SQD_ORGANIZATION_CODE: string;
+
+  /***************************************************
+   * OTHER
+   **************************************************/
+
   /**
    * NOWPAYMENTS
    */
   NOWPAYMENTS_API_KEY: string;
   IPN_CALLBACK_URL: string;
   IPN_SECRET_KEY: string;
-  NOWPAYMENTS_INVOICE_EMAIL: string;
+  NOWPAYMENTS_INVOICE_EMAILS: string[];
+
+  /**
+   * OASIS
+   */
+  OASIS_SIGNING_WALLET: string;
+  OASIS_MESSAGE_GAS_LIMIT: number;
+
+  /*
+   * URL SHORTENER
+   */
+  SHORTENER_VALID_DOMAINS: string[];
+  SHORTENER_DOMAIN: string;
+
+  /**
+   * ACURAST
+   */
+  ACURAST_GATEWAY_URL: string;
+  ACURAST_IPFS_LAMBDA_URL: string;
+
+  /**
+   * UNIQUE NETWORK
+   */
+  UNIQUE_NETWORK_API_URL: string;
+
+  /*
+   * DWELLIR
+   */
+  DWELLIR_USERNAME: string;
+  DWELLIR_PASSWORD: string;
+  DWELLIR_URL: string;
 }
 
 // dotenv.config();
@@ -672,8 +820,13 @@ export let env: IEnv = {
   URL_SCREENSHOT_API_URL: process.env['URL_SCREENSHOT_API_URL'],
   SEND_WEBSITES_TO_REVIEW:
     parseInt(process.env['SEND_WEBSITES_TO_REVIEW']) || 1,
+  VALID_WEBSITE_DOMAIN_TARGETS: process.env.VALID_WEBSITE_DOMAIN_TARGETS?.split(
+    ',',
+  )?.map((x) => x.trim()) || ['52.19.92.40', '52.209.139.147'],
   STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS:
     parseInt(process.env['STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS']) || 1000,
+  STORAGE_MAX_FILE_BATCH_SIZE_FOR_CRUST:
+    parseInt(process.env['STORAGE_MAX_FILE_BATCH_SIZE_FOR_CRUST']) || 100,
   STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY:
     parseInt(process.env['STORAGE_NUM_OF_FILES_IN_SESSION_WITHOUT_DELAY']) ||
     2000,
@@ -734,6 +887,17 @@ export let env: IEnv = {
     process.env['BLOCKCHAIN_SUBSOCIAL_GRAPHQL_SERVER'],
   BLOCKCHAIN_ASTAR_SUBSTRATE_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_ASTAR_SUBSTRATE_GRAPHQL_SERVER'],
+  BLOCKCHAIN_ETHEREUM_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_ETHEREUM_GRAPHQL_SERVER'],
+  BLOCKCHAIN_SEPOLIA_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_SEPOLIA_GRAPHQL_SERVER'],
+  BLOCKCHAIN_ACURAST_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_ACURAST_GRAPHQL_SERVER'],
+  BLOCKCHAIN_UNIQUE_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_UNIQUE_GRAPHQL_SERVER'],
+  BLOCKCHAIN_CELO_ALFAJORES_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_CELO_ALFAJORES_GRAPHQL_SERVER'],
+  BLOCKCHAIN_CELO_GRAPHQL_SERVER: process.env['BLOCKCHAIN_CELO_GRAPHQL_SERVER'],
 
   BLOCKCHAIN_SECRETS: process.env['BLOCKCHAIN_SECRETS'],
 
@@ -802,6 +966,8 @@ export let env: IEnv = {
   AUTH_API_MYSQL_USER_TEST: process.env['AUTH_API_MYSQL_USER_TEST'],
   AUTH_API_MYSQL_PASSWORD_TEST: process.env['AUTH_API_MYSQL_PASSWORD_TEST'],
   AUTH_API_MYSQL_DATABASE_TEST: process.env['AUTH_API_MYSQL_DATABASE_TEST'],
+  AUTH_OTP_EXPIRATION_IN_MIN:
+    parseInt(process.env['AUTH_OTP_EXPIRATION_IN_MIN']) || 10,
 
   /** KILT */
   KILT_NETWORK:
@@ -947,6 +1113,8 @@ export let env: IEnv = {
   COMPUTING_AWS_WORKER_LAMBDA_NAME:
     process.env['COMPUTING_AWS_WORKER_LAMBDA_NAME'],
 
+  COMPUTING_KMS_KEY_ID: process.env['COMPUTING_KMS_KEY_ID'],
+
   /** SOCIAL */
   SOCIAL_FUNCTION_NAME: process.env['SOCIAL_FUNCTION_NAME'],
   SOCIAL_FUNCTION_NAME_TEST: process.env['SOCIAL_FUNCTION_NAME_TEST'],
@@ -973,6 +1141,76 @@ export let env: IEnv = {
 
   SOCIAL_DEFAULT_SPACE: process.env['SOCIAL_DEFAULT_SPACE'],
 
+  /** INFRASTRUCTURE */
+  INFRASTRUCTURE_FUNCTION_NAME: process.env['INFRASTRUCTURE_FUNCTION_NAME'],
+  INFRASTRUCTURE_FUNCTION_NAME_TEST:
+    process.env['INFRASTRUCTURE_FUNCTION_NAME_TEST'],
+  INFRASTRUCTURE_SOCKET_PORT:
+    parseInt(process.env['INFRASTRUCTURE_SOCKET_PORT']) || 6402,
+  INFRASTRUCTURE_MYSQL_HOST: process.env['INFRASTRUCTURE_MYSQL_HOST'],
+  INFRASTRUCTURE_MYSQL_PORT:
+    parseInt(process.env['INFRASTRUCTURE_MYSQL_PORT']) || 3306,
+  INFRASTRUCTURE_MYSQL_DATABASE: process.env['INFRASTRUCTURE_MYSQL_DATABASE'],
+  INFRASTRUCTURE_MYSQL_USER: process.env['INFRASTRUCTURE_MYSQL_USER'],
+  INFRASTRUCTURE_MYSQL_PASSWORD: process.env['INFRASTRUCTURE_MYSQL_PASSWORD'],
+  INFRASTRUCTURE_MYSQL_DEPLOY_USER:
+    process.env['INFRASTRUCTURE_MYSQL_DEPLOY_USER'],
+  INFRASTRUCTURE_MYSQL_DEPLOY_PASSWORD:
+    process.env['INFRASTRUCTURE_MYSQL_DEPLOY_PASSWORD'],
+
+  INFRASTRUCTURE_SOCKET_PORT_TEST:
+    parseInt(process.env['INFRASTRUCTURE_SOCKET_PORT_TEST']) || 7402,
+  INFRASTRUCTURE_MYSQL_HOST_TEST: process.env['INFRASTRUCTURE_MYSQL_HOST_TEST'],
+  INFRASTRUCTURE_MYSQL_PORT_TEST:
+    parseInt(process.env['INFRASTRUCTURE_MYSQL_PORT_TEST']) || 3306,
+  INFRASTRUCTURE_MYSQL_DATABASE_TEST:
+    process.env['INFRASTRUCTURE_MYSQL_DATABASE_TEST'],
+  INFRASTRUCTURE_MYSQL_USER_TEST: process.env['INFRASTRUCTURE_MYSQL_USER_TEST'],
+  INFRASTRUCTURE_MYSQL_PASSWORD_TEST:
+    process.env['INFRASTRUCTURE_MYSQL_PASSWORD_TEST'],
+
+  INFRASTRUCTURE_AWS_WORKER_SQS_URL:
+    process.env['INFRASTRUCTURE_AWS_WORKER_SQS_URL'],
+  INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME:
+    process.env['INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME'],
+  INFRASTRUCTURE_AWS_WORKER_SQS_ARN:
+    process.env['INFRASTRUCTURE_AWS_WORKER_SQS_ARN'],
+  INDEXER_BUCKET_FOR_SOURCE_CODE:
+    process.env['INDEXER_BUCKET_FOR_SOURCE_CODE'] ||
+    'apillon-indexer-source-code-local',
+  INDEXER_PROVISION_PERCENT:
+    parseInt(process.env['INDEXER_PROVISION_PERCENT']) || 5,
+  SQD_API_TOKEN: process.env['SQD_API_TOKEN'],
+  SQD_API_URL: process.env['SQD_API_URL'] || 'https://app.subsquid.io/api',
+  SQD_ORGANIZATION_CODE: process.env['SQD_ORGANIZATION_CODE'],
+
+  /** CONTRACTS */
+  // TODO: fix default ports?
+  CONTRACTS_FUNCTION_NAME: process.env['CONTRACTS_FUNCTION_NAME'],
+  CONTRACTS_FUNCTION_NAME_TEST: process.env['CONTRACTS_FUNCTION_NAME_TEST'],
+  CONTRACTS_SOCKET_PORT: parseInt(process.env['CONTRACTS_SOCKET_PORT']) || 7302,
+  CONTRACTS_MYSQL_HOST: process.env['CONTRACTS_MYSQL_HOST'],
+  CONTRACTS_MYSQL_PORT: parseInt(process.env['CONTRACTS_MYSQL_PORT']) || 3306,
+  CONTRACTS_MYSQL_DATABASE: process.env['CONTRACTS_MYSQL_DATABASE'],
+  CONTRACTS_MYSQL_USER: process.env['CONTRACTS_MYSQL_USER'],
+  CONTRACTS_MYSQL_PASSWORD: process.env['CONTRACTS_MYSQL_PASSWORD'],
+  CONTRACTS_MYSQL_DEPLOY_USER: process.env['CONTRACTS_MYSQL_DEPLOY_USER'],
+  CONTRACTS_MYSQL_DEPLOY_PASSWORD:
+    process.env['CONTRACTS_MYSQL_DEPLOY_PASSWORD'],
+
+  CONTRACTS_SOCKET_PORT_TEST:
+    parseInt(process.env['CONTRACTS_SOCKET_PORT_TEST']) || 7702,
+  CONTRACTS_MYSQL_HOST_TEST: process.env['CONTRACTS_MYSQL_HOST_TEST'],
+  CONTRACTS_MYSQL_PORT_TEST:
+    parseInt(process.env['CONTRACTS_MYSQL_PORT_TEST']) || 3306,
+  CONTRACTS_MYSQL_DATABASE_TEST: process.env['CONTRACTS_MYSQL_DATABASE_TEST'],
+  CONTRACTS_MYSQL_USER_TEST: process.env['CONTRACTS_MYSQL_USER_TEST'],
+  CONTRACTS_MYSQL_PASSWORD_TEST: process.env['CONTRACTS_MYSQL_PASSWORD_TEST'],
+
+  CONTRACTS_AWS_WORKER_SQS_URL: process.env['CONTRACTS_AWS_WORKER_SQS_URL'],
+  CONTRACTS_AWS_WORKER_LAMBDA_NAME:
+    process.env['CONTRACTS_AWS_WORKER_LAMBDA_NAME'],
+
   /** DISCORD */
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
   DISCORD_CLIENT_SECRET: process.env['DISCORD_CLIENT_SECRET'] || '',
@@ -998,7 +1236,32 @@ export let env: IEnv = {
   NOWPAYMENTS_API_KEY: process.env['NOWPAYMENTS_API_KEY'],
   IPN_CALLBACK_URL: process.env['IPN_CALLBACK_URL'],
   IPN_SECRET_KEY: process.env['IPN_SECRET_KEY'],
-  NOWPAYMENTS_INVOICE_EMAIL: process.env['NOWPAYMENTS_INVOICE_EMAIL'],
+  NOWPAYMENTS_INVOICE_EMAILS: process.env['NOWPAYMENTS_INVOICE_EMAILS']?.split(
+    ',',
+  ) || [process.env['CONTACT_EMAIL_TO']],
+
+  /** OASIS */
+  OASIS_SIGNING_WALLET: process.env['OASIS_SIGNING_WALLET'],
+  OASIS_MESSAGE_GAS_LIMIT:
+    parseInt(process.env['OASIS_MESSAGE_GAS_LIMIT']) || 1000000,
+  /** URL SHORTENER */
+  SHORTENER_VALID_DOMAINS: process.env['SHORTENER_VALID_DOMAINS']?.split(
+    ',',
+  ) || ['apillon.io', 'nectarnode.io', 'web3approved.com'],
+  SHORTENER_DOMAIN:
+    process.env['SHORTENER_DOMAIN'] || 'https://go.web3approved.com',
+
+  /** ACURAST */
+  ACURAST_GATEWAY_URL: process.env['ACURAST_GATEWAY_URL'],
+  ACURAST_IPFS_LAMBDA_URL: process.env['ACURAST_IPFS_LAMBDA_URL'],
+
+  /** UNIQUE NETWORK */
+  UNIQUE_NETWORK_API_URL: process.env['UNIQUE_NETWORK_API_URL'],
+
+  /** DWELLIR */
+  DWELLIR_USERNAME: process.env['DWELLIR_USERNAME'],
+  DWELLIR_PASSWORD: process.env['DWELLIR_PASSWORD'],
+  DWELLIR_URL: process.env['DWELLIR_URL'],
 };
 
 export let isEnvReady = false;

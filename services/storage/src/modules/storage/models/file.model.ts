@@ -286,6 +286,11 @@ export class File extends UuidSqlModel {
       : this.reset();
   }
 
+  private getWhereQuery(showOnlyDeleted: boolean): string {
+    return `WHERE (f.id LIKE @id OR f.CID LIKE @id OR f.CIDv1 LIKE @id OR f.file_uuid LIKE @id)
+      AND f.status ${showOnlyDeleted ? '=' : '<>'} ${SqlModelStatus.DELETED};`;
+  }
+
   /**
    *
    * @param id internal id, cid or file_uuid
@@ -301,9 +306,7 @@ export class File extends UuidSqlModel {
       SELECT f.*, d.directory_uuid
       FROM \`${DbTables.FILE}\` f
       LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
-      WHERE (f.id LIKE @id OR f.cid LIKE @id OR f.file_uuid LIKE @id)
-      AND f.status <> ${SqlModelStatus.DELETED};
-      `,
+      ${this.getWhereQuery(false)}`,
       { id },
     );
 
@@ -328,8 +331,7 @@ export class File extends UuidSqlModel {
       SELECT f.*, d.directory_uuid
       FROM \`${DbTables.FILE}\` f
       LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
-      WHERE (f.id LIKE @id OR f.cid LIKE @id OR f.file_uuid LIKE @id)
-      AND f.status IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.MARKED_FOR_DELETION});
+      ${this.getWhereQuery(true)}
       `,
       { id },
     );
@@ -344,6 +346,32 @@ export class File extends UuidSqlModel {
     return this.populateById(uuid);
   }
 
+  /**
+   * Populate file by file uuid, without checking status
+   * @param uuid
+   * @returns
+   */
+  public async populateAllByUUID(uuid: string): Promise<this> {
+    if (!uuid) {
+      throw new Error('uuid should not be null');
+    }
+
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT f.*, d.directory_uuid
+      FROM \`${DbTables.FILE}\` f
+      LEFT JOIN \`${DbTables.DIRECTORY}\` d on d.id = f.directory_id
+      WHERE f.file_uuid LIKE @uuid;
+      `,
+      { uuid },
+    );
+
+    data?.length ? this.populate(data[0], PopulateFrom.DB) : this.reset();
+    await this.populateLink();
+
+    return this;
+  }
+
   public async populateLink() {
     if (!this.CID) {
       return;
@@ -355,7 +383,7 @@ export class File extends UuidSqlModel {
       this.getContext(),
     ).getIpfsCluster();
 
-    this.link = ipfsCluster.generateLink(this.project_uuid, this.CIDv1);
+    this.link = await ipfsCluster.generateLink(this.project_uuid, this.CIDv1);
   }
 
   /**
@@ -418,7 +446,7 @@ export class File extends UuidSqlModel {
     //Populate link
     for (const item of data.items) {
       if (item.CID) {
-        item.link = ipfsCluster.generateLink(b.project_uuid, item.CIDv1);
+        item.link = await ipfsCluster.generateLink(b.project_uuid, item.CIDv1);
       }
     }
 
@@ -485,7 +513,7 @@ export class File extends UuidSqlModel {
     //Populate link
     for (const item of data.items) {
       if (item.CID) {
-        item.link = ipfsCluster.generateLink(
+        item.link = await ipfsCluster.generateLink(
           env.DEV_CONSOLE_API_DEFAULT_PROJECT_UUID,
           item.CIDv1,
         );
@@ -504,7 +532,7 @@ export class File extends UuidSqlModel {
   public async populateFilesInBucket(
     bucket_id: number,
     context: ServiceContext,
-  ): Promise<this[]> {
+  ): Promise<File[]> {
     if (!bucket_id) {
       throw new Error('bucket_id should not be null');
     }
@@ -528,7 +556,7 @@ export class File extends UuidSqlModel {
    * @param project_uuid
    * @returns array of files
    */
-  public async populateFilesForProject(project_uuid: string): Promise<this[]> {
+  public async populateFilesForProject(project_uuid: string): Promise<File[]> {
     if (!project_uuid) {
       throw new Error('project_uuid should not be null');
     }
@@ -581,6 +609,12 @@ export class File extends UuidSqlModel {
       { project_uuid },
     );
     return true;
+  }
+
+  public async blockFiles(uuids: string[]): Promise<void> {
+    await this.getContext().mysql.paramExecute(
+      `UPDATE \`${DbTables.FILE}\` SET STATUS = ${SqlModelStatus.BLOCKED} WHERE file_uuid IN (${uuids.map((uuid) => `"${uuid}"`).join(',')})`,
+    );
   }
 
   /**

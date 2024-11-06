@@ -111,7 +111,10 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
         /*Upload nft images to IPFS. If remaining files to upload exceeds DEFAULT_FILE_BATCH_SIZE_FOR_IPFS, 
       worker uploads first batch and sends message to sqs to execute another iteration, until all images are uploaded */
         const remainingImageFURs = imageFURs.filter(
-          (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+          (x) =>
+            x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED &&
+            x.fileStatus !=
+              FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3,
         );
         await storageBucketSyncFilesToIPFS(
           this.context,
@@ -145,6 +148,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
             [
               {
+                ...data,
                 collectionMetadataId: collectionMetadata.id,
               },
             ],
@@ -204,14 +208,24 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           metadataFURs,
           20,
           this.context,
-          async (metadataFUR) => {
+          async (metadataFUR: FileUploadRequest) => {
+            metadataFUR = new FileUploadRequest(metadataFUR, this.context);
+
             if (
               !(await s3Client.exists(
                 env.STORAGE_AWS_IPFS_QUEUE_BUCKET,
                 metadataFUR.s3FileKey,
               ))
             ) {
-              //NOTE: Define flow, what happen in this case. My guess - we should probably throw error
+              console.error(
+                `JSON file does not exists on s3 for File upload request. Updating FUR status to ${FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3}`,
+                metadataFUR,
+              );
+
+              metadataFUR.fileStatus =
+                FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
+              await metadataFUR.update();
+
               return;
             }
             const file = await s3Client.get(
@@ -223,17 +237,19 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
               await streamToString(file.Body, 'utf-8'),
             );
             if (fileContent.image) {
-              const imageFile = imagesInBucket.find(
-                (x) => x.name == fileContent.image,
-              );
+              const imageFile = imagesInBucket
+                .filter((x) => x.name == fileContent.image)
+                .pop();
 
-              if (collectionMetadata.useApillonIpfsGateway) {
-                fileContent.image = ipfsCluster.generateLink(
-                  bucket.project_uuid,
-                  imageFile.CIDv1,
-                );
-              } else {
-                fileContent.image = 'ipfs://' + imageFile.CID;
+              if (imageFile) {
+                if (collectionMetadata.useApillonIpfsGateway) {
+                  fileContent.image = await ipfsCluster.generateLink(
+                    bucket.project_uuid,
+                    imageFile.CIDv1,
+                  );
+                } else {
+                  fileContent.image = 'ipfs://' + imageFile.CID;
+                }
               }
             }
 
@@ -263,6 +279,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
             [
               {
+                ...data,
                 collectionMetadataId: collectionMetadata.id,
               },
             ],
@@ -299,7 +316,10 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             this.context,
           )
         ).filter(
-          (x) => x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED,
+          (x) =>
+            x.fileStatus != FileUploadRequestFileStatus.UPLOAD_COMPLETED &&
+            x.fileStatus !=
+              FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3,
         );
 
         const metadataFiles = await storageBucketSyncFilesToIPFS(
@@ -311,12 +331,13 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           'Metadata',
         );
 
-        if (metadataFURs.length >= env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS) {
+        if (metadataFURs.length > env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_IPFS) {
           await sendToWorkerQueue(
             env.STORAGE_AWS_WORKER_SQS_URL,
             WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
             [
               {
+                ...data,
                 collectionMetadataId: collectionMetadata.id,
               },
             ],
@@ -331,39 +352,84 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           return true;
         } else {
           metadataSession.sessionStatus = FileUploadSessionStatus.FINISHED;
-          await metadataSession.update();
-        }
+          collectionMetadata.currentStep =
+            PrepareCollectionMetadataStep.PUBLISH_TO_IPNS;
 
-        //Publish to IPNS, Pin to IPFS, Remove from S3, ...
+          await Promise.all([
+            metadataSession.update(),
+            collectionMetadata.update(),
+          ]);
 
-        console.info(
-          `pinning metadata CID (${metadataFiles.wrappedDirCid}) to IPNS`,
-        );
-
-        if (collectionMetadata.useApillonIpfsGateway) {
-          //If ipnsId is not specified in data, get first ipns record in bucket
-          if (!collectionMetadata.ipnsId) {
-            const ipnses = await bucket.getBucketIpnsRecords();
-            collectionMetadata.ipnsId = ipnses[0].id;
+          if (
+            env.APP_ENV != AppEnvironment.TEST &&
+            env.APP_ENV != AppEnvironment.LOCAL_DEV
+          ) {
+            await sendToWorkerQueue(
+              env.STORAGE_AWS_WORKER_SQS_URL,
+              WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
+              [
+                {
+                  ...data,
+                  collectionMetadataId: collectionMetadata.id,
+                  metadataCid: metadataFiles.wrappedDirCid,
+                },
+              ],
+              null,
+              null,
+            );
           }
-          //Pin to IPNS
-          const ipnsDbRecord: Ipns = await new Ipns(
-            {},
-            this.context,
-          ).populateById(collectionMetadata.ipnsId);
+          return true;
+        }
+      }
+
+      //Publish to IPNS, Pin to IPFS, Remove from S3, ...
+      if (
+        collectionMetadata.currentStep ==
+        PrepareCollectionMetadataStep.PUBLISH_TO_IPNS
+      ) {
+        let ipnsDbRecord: Ipns = null;
+        if (data.ipns_uuid) {
+          console.info(`pinning metadata CID (${data.metadataCid}) to IPNS`);
+          //publish to IPNS
+          ipnsDbRecord = await new Ipns({}, this.context).populateByUUID(
+            data.ipns_uuid,
+          );
           const ipnsRecord = await new IPFSService(
             this.context,
             ipnsDbRecord.project_uuid,
           ).publishToIPNS(
-            metadataFiles.wrappedDirCid,
+            data.metadataCid,
             `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`,
           );
           ipnsDbRecord.ipnsValue = ipnsRecord.value;
           ipnsDbRecord.key = `${ipnsDbRecord.project_uuid}_${ipnsDbRecord.bucket_id}_${ipnsDbRecord.id}`;
-          ipnsDbRecord.cid = metadataFiles.wrappedDirCid;
+          ipnsDbRecord.cid = data.metadataCid;
           await ipnsDbRecord.update(SerializeFor.UPDATE_DB);
-        } else {
-          //Metadata is prepared. It won't use apillon gateway ipns as base uri, so run nft deploy with wrapping cid as base URI
+        }
+
+        if (data.runDeployCollectionWorker) {
+          //Metadata is prepared. Run nft deploy with cid or ipns as base URI
+
+          //Initialize baseUri
+          let baseUri: string = null;
+          if (data.useApillonIpfsGateway) {
+            //Get IPFS cluster
+            const ipfsCluster = await new ProjectConfig(
+              { project_uuid: bucket.project_uuid },
+              this.context,
+            ).getIpfsCluster();
+            baseUri = await ipfsCluster.generateLink(
+              bucket.project_uuid,
+              ipnsDbRecord?.ipnsName || data.metadataCid,
+              ipnsDbRecord?.ipnsName ? true : false,
+            );
+          } else {
+            baseUri = ipnsDbRecord?.ipnsName
+              ? `ipns://${ipnsDbRecord.ipnsName}`
+              : `ipfs://${data.metadataCid}`;
+          }
+
+          //Execute deploy collection worker
           if (
             env.APP_ENV == AppEnvironment.LOCAL_DEV ||
             env.APP_ENV == AppEnvironment.TEST
@@ -372,7 +438,8 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
               this.context,
             ).executeDeployCollectionWorker({
               collection_uuid: collectionMetadata.collection_uuid,
-              baseUri: 'ipfs://' + metadataFiles.wrappedDirCid,
+              baseUri,
+              ipns_uuid: ipnsDbRecord?.ipns_uuid,
             });
           } else {
             await sendToWorkerQueue(
@@ -381,7 +448,9 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
               [
                 {
                   collection_uuid: collectionMetadata.collection_uuid,
-                  baseUri: 'ipfs://' + metadataFiles.wrappedDirCid,
+                  baseUri,
+                  ipns_uuid: ipnsDbRecord?.ipns_uuid,
+                  cid: data.metadataCid,
                 },
               ],
               null,
@@ -411,7 +480,8 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
         });
       }
     } catch (error) {
-      collectionMetadata.lastError = `Error message: ${error.message}. ${JSON.stringify(error)}`;
+      console.error('PrepareMetadataForCollectionWorker error', error);
+      collectionMetadata.lastError = `Error message: ${error?.message || error?.errorMessage}`;
       await collectionMetadata.update().catch((upgError) => {
         console.error(
           'Error updating collection metadata last error field. ',

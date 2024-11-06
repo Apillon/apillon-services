@@ -14,7 +14,8 @@ import {
   Scs,
   SerializeFor,
   StorageMicroservice,
-  ValidationException,
+  ModelValidationException,
+  ContractsMicroservice,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { UUID } from 'crypto';
@@ -33,6 +34,7 @@ export class ProjectService {
   /**
    * Retrieves a list of all projects
    * @param {DevConsoleApiContext} context - The API context with current user session.
+   * @param filter
    * @returns {Promise<any>} The serialized user data.
    */
   async getProjectList(
@@ -81,6 +83,10 @@ export class ProjectService {
       context,
     ).getProjectCollectionDetails(project_uuid);
 
+    // const { data: projectContractsDetails } = await new ContractsMicroservice(
+    //   context,
+    // ).getProjectDeployedContractsDetails(project_uuid);
+
     const { data: projectCredit } = await new Scs(context).getProjectCredit(
       project_uuid,
     );
@@ -90,6 +96,7 @@ export class ProjectService {
       projectUsers,
       ...projectStorageDetails,
       ...projectCollectionDetails,
+      // ...projectContractsDetails,
       creditBalance: projectCredit.balance,
     };
   }
@@ -111,7 +118,7 @@ export class ProjectService {
   /**
    * Creates or updates a project quota by project_uuid and quota_id
    * @param {DevConsoleApiContext} context
-   * @param {CreateQuotaOverrideDto} dto - Create or Update data
+   * @param {CreateQuotaOverrideDto} data - Create data
    */
   async createProjectQuota(
     context: DevConsoleApiContext,
@@ -123,7 +130,7 @@ export class ProjectService {
   /**
    * Deletes project quota by project_uuid and quota_id
    * @param {DevConsoleApiContext} context
-   * @param {QuotaOverrideDto} dto - Create or Update data
+   * @param {QuotaOverrideDto} data - Create or Update data
    */
   async deleteProjectQuota(
     context: DevConsoleApiContext,
@@ -157,7 +164,7 @@ export class ProjectService {
   async addCreditsToProject(context: DevConsoleApiContext, data: AddCreditDto) {
     data.referenceTable = 'manually_added';
     data.referenceId = uuidV4();
-    await data.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await data.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     return (await new Scs(context).addCredit(data)).data;
   }

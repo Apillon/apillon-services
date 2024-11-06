@@ -4,7 +4,6 @@ import {
   dateToSqlString,
   env,
   EvmChain,
-  formatTokenWithDecimals,
   formatWalletAddress,
   getTokenPriceUsd,
   LogType,
@@ -19,6 +18,7 @@ import {
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
+import { formatTokenWithDecimals } from '@apillon/blockchain-lib/evm';
 import { Wallet } from '../modules/wallet/wallet.model';
 import { DbTables, TxDirection } from '../config/types';
 import { TransactionLog } from '../modules/accounting/transaction-log.model';
@@ -35,6 +35,8 @@ import {
 import { StorageOrderTransaction } from '../modules/blockchain-indexers/substrate/crust/data-models';
 import { SubsocialBlockchainIndexer } from '../modules/blockchain-indexers/substrate/subsocial/indexer.service';
 import { AstarSubstrateBlockchainIndexer } from '../modules/blockchain-indexers/substrate/astar/indexer.service';
+import { AcurastBlockchainIndexer } from '../modules/blockchain-indexers/substrate/acurast/indexer.service';
+import { UniqueBlockchainIndexer } from '../modules/blockchain-indexers/substrate/unique/indexer.service';
 
 export class TransactionLogWorker extends BaseQueueWorker {
   public constructor(
@@ -473,6 +475,148 @@ export class TransactionLogWorker extends BaseQueueWorker {
 
             return transactionLogs;
           },
+
+          [SubstrateChain.ACURAST]: async () => {
+            const indexer = new AcurastBlockchainIndexer();
+            const blockHeight = await indexer.getBlockHeight();
+            const toBlock =
+              wallet.lastLoggedBlock + wallet.blockParseSize < blockHeight
+                ? wallet.lastLoggedBlock + wallet.blockParseSize
+                : blockHeight;
+            const systems = await indexer.getAllSystemEvents(
+              wallet.address,
+              lastBlock,
+              toBlock,
+            );
+            console.log(`Got ${systems.length} Acurast system events!`);
+            const { transfers } =
+              await indexer.getAccountBalanceTransfersForTxs(
+                wallet.address,
+                lastBlock,
+                toBlock,
+              );
+            console.log(`Got ${transfers.length} Acurast transfers!`);
+            // prepare transfer data
+            const transactionLogs: TransactionLog[] = [];
+            // collect transfers without system events (deposits)
+            for (const transfer of transfers) {
+              const systemEvent = systems.find(
+                (s) =>
+                  transfer.blockNumber === s.blockNumber &&
+                  transfer.extrinsicHash === s.extrinsicHash,
+              );
+              if (systemEvent) {
+                continue;
+              }
+              transactionLogs.push(
+                new TransactionLog(
+                  {},
+                  this.context,
+                ).createFromSubstrateIndexerData(
+                  {
+                    system: null,
+                    transfer,
+                  },
+                  wallet,
+                ),
+              );
+            }
+            // collect transfers with system events
+            for (const s of systems) {
+              const transfer = transfers.find(
+                (t) =>
+                  t.blockNumber === s.blockNumber &&
+                  t.extrinsicHash === s.extrinsicHash,
+              );
+              transactionLogs.push(
+                new TransactionLog(
+                  {},
+                  this.context,
+                ).createFromSubstrateIndexerData(
+                  {
+                    system: s,
+                    transfer,
+                  },
+                  wallet,
+                ),
+              );
+            }
+
+            await wallet.updateLastLoggedBlock(toBlock);
+
+            return transactionLogs;
+          },
+
+          [SubstrateChain.UNIQUE]: async () => {
+            const indexer = new UniqueBlockchainIndexer();
+            const blockHeight = await indexer.getBlockHeight();
+            const toBlock =
+              wallet.lastLoggedBlock + wallet.blockParseSize < blockHeight
+                ? wallet.lastLoggedBlock + wallet.blockParseSize
+                : blockHeight;
+            const systems = await indexer.getAllSystemEvents(
+              wallet.address,
+              lastBlock,
+              toBlock,
+            );
+            console.log(`Got ${systems.length} Unique system events!`);
+            const { transfers } =
+              await indexer.getAccountBalanceTransfersForTxs(
+                wallet.address,
+                lastBlock,
+                toBlock,
+              );
+            console.log(`Got ${transfers.length} Unique transfers!`);
+            // prepare transfer data
+            const transactionLogs: TransactionLog[] = [];
+            // collect transfers without system events (deposits)
+            for (const transfer of transfers) {
+              const systemEvent = systems.find(
+                (s) =>
+                  transfer.blockNumber === s.blockNumber &&
+                  transfer.extrinsicHash === s.extrinsicHash,
+              );
+              if (systemEvent) {
+                continue;
+              }
+              transactionLogs.push(
+                new TransactionLog(
+                  {},
+                  this.context,
+                ).createFromSubstrateIndexerData(
+                  {
+                    system: null,
+                    transfer,
+                  },
+                  wallet,
+                ),
+              );
+            }
+            // collect transfers with system events
+            for (const s of systems) {
+              const transfer = transfers.find(
+                (t) =>
+                  t.blockNumber === s.blockNumber &&
+                  t.extrinsicHash === s.extrinsicHash,
+              );
+              transactionLogs.push(
+                new TransactionLog(
+                  {},
+                  this.context,
+                ).createFromSubstrateIndexerData(
+                  {
+                    system: s,
+                    transfer,
+                  },
+                  wallet,
+                ),
+              );
+            }
+
+            await wallet.updateLastLoggedBlock(toBlock);
+
+            return transactionLogs;
+          },
         };
         return (await subOptions[wallet.chain]()) || false;
       },
@@ -660,8 +804,8 @@ export class TransactionLogWorker extends BaseQueueWorker {
     await this.context.mysql.paramExecute(
       `
         UPDATE
-          transaction_log tl
-          LEFT JOIN transaction_queue tq
+          ${DbTables.TRANSACTION_LOG} tl
+            LEFT JOIN ${DbTables.TRANSACTION_QUEUE} tq
         ON tq.transactionHash = tl.hash
           SET
             tl.transactionQueue_id = tq.id,
@@ -678,7 +822,8 @@ export class TransactionLogWorker extends BaseQueueWorker {
     // find unlinked transactions
     const unlinked = await this.context.mysql.paramExecute(
       `
-        SELECT * FROM transaction_log
+        SELECT *
+        FROM ${DbTables.TRANSACTION_LOG}
         WHERE transactionQueue_id IS NULL
           AND direction = ${TxDirection.COST}
           AND hash IN (${transactions.map((x) => `'${x.hash}'`).join(',')})

@@ -9,9 +9,11 @@ import {
   BaseQueryFilter,
 } from '@apillon/lib';
 import { DevConsoleApiContext } from '../../context';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class ReferralService {
+  constructor(private userService: UserService) {}
   /**
    * Creates a new referral player.
    *
@@ -132,19 +134,5 @@ export class ReferralService {
    */
   async confirmRetweet(context: DevConsoleApiContext, body: ConfirmRetweetDto) {
     return (await new ReferralMicroservice(context).confirmRetweet(body)).data;
-  }
-
-  /**
-   * Get completed airdrop tasks and total points for a user
-   *
-   * @param {DevConsoleApiContext} context - Dev Console API context object.
-   * @returns {Promise<any>} - UserAirdropTask model from Referral MS
-   */
-  async getAirdropTasks(context: DevConsoleApiContext): Promise<any> {
-    return (
-      await new ReferralMicroservice(context).getAirdropTasks(
-        context.user.user_uuid,
-      )
-    ).data;
   }
 }

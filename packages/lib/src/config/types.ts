@@ -20,18 +20,38 @@ export enum SubstrateChain {
   SUBSOCIAL = 6,
   XSOCIAL = 7,
   ASTAR = 8,
+  ACURAST = 9,
+  UNIQUE = 11,
 }
 
 export enum EvmChain {
+  ETHEREUM = 1,
+  SEPOLIA = 11155111,
   MOONBEAM = 1284,
   MOONBASE = 1287,
   ASTAR_SHIBUYA = 81, // testnet
   ASTAR = 592,
+  OASIS_TESTNET = 42262,
+  OASIS_SAPPHIRE = 23294,
+  ALFAJORES = 44787, // Celo testnet
+  CELO = 42220,
 }
 
 export enum NFTCollectionType {
   GENERIC = 1,
   NESTABLE = 2,
+}
+
+export enum SmartContractType {
+  OTHER = 1,
+  ERC_20 = 2,
+  ERC_721 = 3,
+  ERC_1155 = 4,
+}
+
+export enum SmartContractVariant {
+  GENERIC_ERC_721_ = 1,
+  NESTABLE_ERC_721 = 2,
 }
 
 export enum ComputingContractType {
@@ -85,6 +105,9 @@ export enum LmasEventType {
   GET_TOTAL_REQUESTS = 'get-total-requests',
 
   SEND_MESSAGE_TO_SLACK = 'send-message-to-slack',
+
+  SAVE_CLOUD_FUNCTION_CALL = 'save-cloud-function-call',
+  GET_CLOUD_FUNCTION_USAGE = 'get-cloud-function-usage',
 }
 
 export enum BlockchainEventType {
@@ -102,6 +125,9 @@ export enum BlockchainEventType {
   UPDATE_TRANSACTION = 'update-transaction',
   LIST_WALLET_DEPOSITS = 'list-wallet-deposits',
   GET_TOTAL_WALLET_TRANSACTIONS = 'get-total-wallet-transactions',
+  CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
+  LIST_CONTRACTS = 'list-contracts',
+  GET_CONTRACT = 'get-contract',
 }
 
 export enum StorageEventType {
@@ -138,20 +164,26 @@ export enum StorageEventType {
   IPNS_DELETE = 'delete-ipns',
   IPNS_PUBLISH = 'publish-ipns',
   IPNS_GET = 'get-ipns',
+  IPNS_GET_BY_NAME = 'get-ipns-by-name',
   WEBSITE_LIST = 'list-websites',
   WEBSITE_CREATE = 'create-website',
   WEBSITE_UPDATE = 'update-website',
+  WEBSITE_ARCHIVE = 'archive-website',
+  WEBSITE_ACTIVATE = 'activate-website',
   WEBSITE_GET = 'get-website',
   WEBSITE_DEPLOY = 'deploy-website',
   WEBSITE_LIST_DOMAINS = 'list-website-domains',
   WEBSITE_GET_ALL_DOMAINS = 'get-all-domains',
   WEBSITE_QUOTA_REACHED = 'websites-quota-reached',
+  WEBSITE_CHECK_DOMAIN_DNS = 'website-check-domain-dns',
+  WEBSITE_REMOVE_DOMAIN = 'website-remove-domain',
   BUCKET_CLEAR_CONTENT = 'clear-bucket-content',
   DEPLOYMENT_GET = 'get-deployment',
   DEPLOYMENT_LIST = 'list-deployment',
   DEPLOYMENT_APPROVE = 'deployment-approve',
   DEPLOYMENT_REJECT = 'deployment-reject',
   PREPARE_COLLECTION_BASE_URI = 'prepare-collection-base-uri',
+  PREPARE_COLLECTION_BASE_URI_GENERIC = 'prepare-collection-base-uri-generic',
   COLLECTION_METADATA_LIST = 'list-collection-metadata',
   TEST_CRUST_PROVIDER = 'test-crust-provider',
   PROJECT_STORAGE_DETAILS = 'project-storage-details',
@@ -162,6 +194,8 @@ export enum StorageEventType {
   GET_PROJECT_IPFS_CLUSTER = 'get-project-ipfs-cluster',
   GET_IPFS_CLUSTER_INFO = 'get-ipfs-cluster-info',
   GET_LINK = 'get-link',
+  GENERATE_SHORT_URL = 'generate-short-url',
+  GET_TARGET_URL = 'get-target-url',
 }
 
 export enum AuthenticationEventType {
@@ -179,6 +213,15 @@ export enum AuthenticationEventType {
   SPORRAN_REQUEST_CREDENTIAL = 'sporran-request-credential',
   SPORRAN_VERIFY_CREDENTIAL = 'sporran-verify-credential',
   GET_TOTAL_DIDS = 'get-total-dids',
+  EW_INFO = 'get-embedded-wallets-info',
+  EW_INTEGRATION_CREATE = 'create-ew-integration',
+  EW_INTEGRATION_GET = 'get-ew-integration',
+  EW_INTEGRATION_LIST = 'list-ew-integration',
+  EW_INTEGRATION_UPDATE = 'update-ew-integration',
+  CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
+  LIST_OASIS_SIGNATURES = 'list-oasis-signatures',
+  GENERATE_OTP = 'generate-otp',
+  VALIDATE_OTP = 'validate-otp',
 }
 
 export enum MailEventType {
@@ -211,11 +254,13 @@ export enum ScsEventType {
   GET_PRODUCT_PRICELIST = 'get-product-pricelist',
   GET_PRODUCT_PRICE = 'get-product-price',
   GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION = 'get-projects-with-active-subscription',
+  HAS_ACTIVE_RPC_PLAN = 'has-active-rpc-plan',
 }
 
 export enum NftsEventType {
   HELLO = 'hello',
   CREATE_COLLECTION = 'create-collection',
+  CREATE_UNIQUE_COLLECTION = 'create-unique-collection',
   NFT_COLLECTIONS_LIST = 'list-nft-collections',
   GET_NFT_COLLECTION = 'get-nft-collection',
   GET_NFT_COLLECTION_BY_UUID = 'get-nft-collection-by-uuid',
@@ -231,6 +276,9 @@ export enum NftsEventType {
   EXECUTE_DEPLOY_COLLECTION_WORKER = 'execute-deploy-collection-worker',
   PROJECT_COLLECTION_DETAILS = 'project-collections-details',
   ADD_NFTS_METADATA = 'add-nfts-metadata',
+  ARCHIVE_COLLECTION = 'archive-collection',
+  ADD_IPNS_TO_COLLECTION = 'add-ipns-to-collection',
+  ACTIVATE_COLLECTION = 'activate-collection',
 }
 
 export enum ComputingEventType {
@@ -244,6 +292,24 @@ export enum ComputingEventType {
   ASSIGN_CID_TO_NFT = 'assign-cid-to-nft',
   LIST_CLUSTER_WALLETS = 'list-cluster-wallets',
   PROJECT_COMPUTING_DETAILS = 'project-computing-details',
+  ARCHIVE_CONTRACT = 'archive-contract',
+  ACTIVATE_CONTRACT = 'activate-contract',
+
+  CREATE_CLOUD_FUNCTION = 'create-cloud-function',
+  LIST_CLOUD_FUNCTIONS = 'list-cloud-functions',
+  UPDATE_CLOUD_FUNCTION = 'update-cloud-function',
+  EXECUTE_CLOUD_FUNCTION = 'execute-cloud-function',
+
+  GET_CLOUD_FUNCTION = 'get-cloud-function',
+  CREATE_JOB = 'create-job',
+  GET_JOB = 'get-job',
+  SET_CLOUD_FUNCTION_ENVIRONMENT = 'set-cloud-function-environment',
+  GET_CLOUD_FUNCTION_ENVIRONMENT = 'get-cloud-function-environment',
+  ARCHIVE_CLOUD_FUNCTION = 'archive-cloud-function',
+  ACTIVATE_CLOUD_FUNCTION = 'activate-cloud-function',
+
+  UPDATE_JOB = 'update-job',
+  DELETE_JOB = 'delete-job',
 }
 
 export enum ReferralEventType {
@@ -260,19 +326,64 @@ export enum ReferralEventType {
   CONFIRM_RETWEET = 'confirm-retweet',
 
   ADD_PROMO_CODE_CREDITS = 'add-promo-code-credits',
-
-  GET_AIRDROP_TASKS = 'get-airdrop-tasks',
 }
 
 export enum SocialEventType {
   CREATE_SPACE = 'create-space',
   LIST_SPACES = 'list-spaces',
   GET_SPACE = 'get-space',
+  ARCHIVE_SPACE = 'archive-space',
+  ACTIVATE_SPACE = 'activate-space',
   CREATE_POST = 'create-post',
   LIST_POSTS = 'list-posts',
   GET_POST = 'get-post',
+  ARCHIVE_POST = 'archive-post',
+  ACTIVATE_POST = 'activate-post',
   GET_WALLET_IDENTITY = 'get-wallet-identity',
   PROJECT_SOCIAL_DETAILS = 'project-social-details',
+}
+
+export enum ContractEventType {
+  CONTRACTS_LIST = 'contracts-list',
+  GET_CONTRACT = 'get-contract',
+  GET_CONTRACT_ABI = 'get-contract-abi',
+  DEPLOY_CONTRACT = 'deploy-contract',
+  CALL_DEPLOYED_CONTRACT = 'call-deployed-contract',
+  DEPLOYED_CONTRACTS_LIST = 'deployed-contracts-list',
+  GET_DEPLOYED_CONTRACT = 'get-deployed-contract',
+  PROJECT_DEPLOYED_CONTRACT_DETAILS = 'project-contracts-details',
+  GET_DEPLOYED_CONTRACT_ABI = 'get-deployed-contract-abi',
+  LIST_DEPLOYED_CONTRACT_TRANSACTIONS = 'list-deployed-contract-transactions',
+  ARCHIVE_DEPLOYED_CONTRACT = 'archive-deployed-contract',
+}
+
+export enum InfrastructureEventType {
+  LIST_RPC_API_KEYS = 'list-rpc-api-keys',
+  REVOKE_RPC_API_KEY = 'revoke-rpc-api-key',
+  UPDATE_RPC_API_KEY = 'update-rpc-api-key',
+  CREATE_RPC_API_KEY = 'create-rpc-api-key',
+  GET_RPC_API_KEY_USAGE = 'get-rpc-api-key-usage',
+  GET_RPC_API_KEY = 'get-rpc-api-key',
+  CHANGE_DWELLIR_SUBSCRIPTION = 'change-dwellir-subscription',
+  DOWNGRADE_DWELLIR_SUBSCRIPTIONS = 'downgrade-dwellir-subscriptions',
+  CREATE_RPC_URL = 'create-rpc-url',
+  DELETE_RPC_URL = 'delete-rpc-url',
+  LIST_RPC_URLS = 'list-rpc-urls',
+  LIST_ENDPOINTS = 'list-endpoints',
+  HAS_DWELLIR_ID = 'has-dwellir-id',
+  CREATE_USER = 'create-user',
+  IS_RPC_API_KEYS_QUOTA_REACHED = 'is-rpc-api-keys-quota-reached',
+
+  INDEXER_CREATE = 'create-indexer',
+  INDEXER_LIST = 'list-indexers',
+  INDEXER_GET = 'get-indexer',
+  INDEXER_GET_LOGS = 'get-indexer-logs',
+  INDEXER_GET_DEPLOYMENTS = 'get-indexer-deployments',
+  INDEXER_UPDATE = 'update-indexer',
+  INDEXER_GET_URL_FOR_SC_UPLOAD = 'get-url-for-indexer-source-code-upload',
+  INDEXER_DEPLOY = 'deploy-indexer',
+  INDEXER_DELETE = 'delete-indexer',
+  INDEXER_HIBERNATE = 'hibernate-indexer',
 }
 
 export enum ServiceName {
@@ -284,12 +395,15 @@ export enum ServiceName {
   STORAGE = 'STORAGE',
   APILLON_API = 'APILLON_API',
   AUTHENTICATION_API = 'AUTHENTICATION_API',
+  AUTH = 'AUTH',
   NFTS = 'NFTS',
   REFERRAL = 'REFERRAL',
   BLOCKCHAIN = 'BLOCKCHAIN',
   CONFIG = 'CONFIG',
   COMPUTING = 'COMPUTING',
   SOCIAL = 'SOCIAL',
+  CONTRACTS = 'CONTRACTS',
+  INFRASTRUCTURE = 'INFRASTRUCTURE',
 }
 
 export enum ServiceCode {
@@ -309,6 +423,7 @@ export enum ServiceCode {
   BLOCKCHAIN = '16',
   COMPUTING = '18',
   SOCIAL = '19',
+  INFRASTRUCTURE = '20',
 }
 
 export enum AppEnvironment {
@@ -343,7 +458,7 @@ export enum SqlModelStatus {
   INACTIVE = 3,
   ACTIVE = 5,
   BLOCKED = 7,
-  MARKED_FOR_DELETION = 8,
+  ARCHIVED = 8,
   DELETED = 9,
 }
 
@@ -357,6 +472,10 @@ export enum AttachedServiceType {
   HOSTING = 4,
   COMPUTING = 5,
   SOCIAL = 6,
+  WALLET = 7,
+  CONTRACTS = 8,
+  RPC = 9,
+  INDEXING = 10,
   SYSTEM = 999,
 }
 
@@ -443,6 +562,10 @@ export enum DefaultPermission {
   AUTHENTICATION = 4,
   COMPUTING = 5,
   SOCIAL = 6,
+  WALLET = 7,
+  CONTRACTS = 8,
+  INDEXING = 10,
+  RPC = 9,
 }
 
 //#endregion
@@ -609,7 +732,11 @@ export enum ValidatorErrorCode {
   ADD_NFT_REQUIRED_DATA_NOT_PRESENT = 42200162,
   DATA_NOT_VALID = 42200163,
   DATA_NOT_PRESENT = 42200164,
-
+  CREATE_OASIS_SIGNATURE_REQUIRED_DATA_NOT_PRESENT = 42200165,
+  GENERATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200166,
+  VALIDATE_OTP_REQUIRED_DATA_NOT_PRESENT = 42200167,
+  CREATE_EW_INTEGRATION_REQUIRED_DATA_NOT_PRESENT = 42200168,
+  CREATE_EW_INTEGRATION_INVALID_WHITELISTED_DOMAINS = 42200169,
   //#region Computing
   COMPUTING_PROJECT_UUID_NOT_PRESENT = 42200201,
   COMPUTING_CONTRACT_TYPE_NOT_PRESENT = 42200202,
@@ -623,6 +750,7 @@ export enum ValidatorErrorCode {
   COMPUTING_CONTRACT_DATA_NOT_VALID = 42200210,
   COMPUTING_NFT_CONTRACT_ADDRESS_NOT_VALID = 42200211,
   COMPUTING_FIELD_NOT_PRESENT = 42200212,
+  COMPUTING_FIELD_NOT_VALID = 42200213,
 
   //#region Authentication
   USER_EMAIL_ALREADY_TAKEN = 42200701,
@@ -645,6 +773,7 @@ export enum ValidatorErrorCode {
   AUTH_SESSION_TOKEN_NOT_PRESENT = 42200718,
   CAPTCHA_NOT_CONFIGURED = 42200719,
   CAPTCHA_INVALID = 42200720,
+  OTP_CODE_NOT_PRESENT = 42200721,
   //#endregion
 
   //#region Blockchain
@@ -675,6 +804,22 @@ export enum ValidatorErrorCode {
   CONFIGURE_CREDIT_REQUIRED_DATA_NOT_PRESENT = 422001005,
   CONFIGURE_CREDIT_REQUIRED_DATA_NOT_VALID = 422001006,
   //#endregion
+
+  //#region short url
+  TARGET_URL_NOT_PRESENT = 422001010,
+  TARGET_URL_NOT_VALID = 422001011,
+  //#endregion
+
+  //#region Infrastructure
+  RPC_API_KEY_NAME_NOT_PRESENT = 422001101,
+  RPC_API_KEY_PROJECT_ID_NOT_PRESENT = 422001102,
+  RPC_URL_API_KEY_ID_NOT_PRESENT = 422001104,
+  RPC_URL_NETWORK_NOT_PRESENT = 422001105,
+  RPC_URL_CHAIN_NAME_NOT_PRESENT = 422001106,
+  INDEXER_LOGS_REQUIRED_QUERY_DATA_NOT_PRESENT = 422001107,
+
+  INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001120,
+  DEPLOY_INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001121,
 }
 
 /**
@@ -709,6 +854,12 @@ export class RoleGroup {
     DefaultUserRole.PROJECT_USER,
     DefaultUserRole.ADMIN,
   ];
+
+  static ProjectOwnerAccess = [
+    DefaultUserRole.PROJECT_OWNER,
+    DefaultUserRole.ADMIN,
+    DefaultUserRole.PROJECT_ADMIN,
+  ];
 }
 
 //#endregion
@@ -733,6 +884,7 @@ export enum JwtTokenType {
   // Website review token
   WEBSITE_REVIEW_TOKEN = 'website-review',
   CRYPTO_PAYMENT_DATA = 'crypto-payment-data',
+  EMBEDDED_WALLET_SDK_TOKEN = 'embedded-wallet-sdk-token',
 }
 
 /**
@@ -751,6 +903,10 @@ export enum QuotaCode {
   MAX_NFT_COLLECTIONS = 9,
   MAX_STORAGE = 10,
   MAX_BANDWIDTH = 11,
+  MAX_ETHEREUM_NFT_COLLECTIONS = 12,
+  MAX_EMBEDDED_WALLET_INTEGRATIONS = 13,
+  MAX_EMBEDDED_WALLET_SIGNATURES = 14,
+  MAX_RPC_KEYS = 15,
 }
 
 /**
@@ -786,11 +942,16 @@ export enum CacheKeyPrefix {
   SOCIAL_POST_LIST = 'social-post-list',
   SOCIAL_SPACE_POST_LIST = 'social-space-post-list',
 
+  // CONTRACTS
+  CONTRACT_BY_UUID_WITH_LATEST_VERSION = 'contract-by-uuid-with-latest-version',
+  CONTRACT_VERSION_BY_CONTRACT_UUID = 'contract-version-by-contract-uuid',
+  CONTRACT_VERSION_BY_UUID_WITH_METHODS = 'contract-version-methods-by-version-contract-uuid',
+  CONTRACT_DEPLOY_BY_UUID_WITH_VERSION = 'get-contract-by-uuid-deploy-with-version',
+
+  // NFTS
   CONTRACT_VERSION = 'contract-version',
   CONTRACT_ABI = 'contract-abi',
   BLOCKCHAIN_ENDPOINT = 'blockchain-endpoint',
-
-  AIRDROP_TASKS = 'airdrop-tasks',
 
   PAYMENTS_SUBSCRIPTION_PACKAGES = 'payments-subscription-packages',
   PAYMENTS_CREDIT_PACKAGES = 'payments-credit-packages',
@@ -799,6 +960,14 @@ export enum CacheKeyPrefix {
 
   PLATFORM_STATISTICS = 'platform-statistics',
   PROJECT_OVERVIEW = 'project-overview',
+  SERVICE_STATUS = 'service-status',
+
+  URL_SHORTENER = 'url-shortener',
+
+  ACURAST_JOB = 'acurast-job',
+
+  // DWELLIR
+  DWELLIR_ACCESS_TOKEN = 'dwellir-access-token',
 }
 
 export enum CacheKeyTTL {
@@ -808,6 +977,7 @@ export enum CacheKeyTTL {
   EXTENDED = 10 * 60, // 10 min
   LONG = 30 * 60, // 30 min
   EXTRA_LONG = 60 * 60, // 60 min
+  THREE_HOURS = 3 * 60 * 60, // 3 hours
 }
 
 export enum MongoCollections {
@@ -817,6 +987,7 @@ export enum MongoCollections {
   REQUEST_LOGS = 'request_logs',
   API_REQUEST_LOGS = 'api_request_logs',
   IPFS_TRAFFIC_LOG = 'ipfs-traffic-log',
+  CLOUD_FUNCTION_CALL = 'cloud-function-call',
 }
 
 export enum ApiName {
@@ -869,6 +1040,48 @@ export enum ProductCode {
   NFT_ASTAR_WASM_BURN = 28,
   NFT_ASTAR_WASM_TRANSFER_COLLECTION = 29,
   NFT_ASTAR_WASM_SET_BASE_URI = 30,
+
+  OASIS_SIGNATURE = 31,
+
+  NFT_ETHEREUM_COLLECTION = 32,
+  NFT_ETHEREUM_MINT = 33,
+  NFT_ETHEREUM_BURN = 34,
+  NFT_ETHEREUM_TRANSFER_COLLECTION = 35,
+  NFT_ETHEREUM_SET_BASE_URI = 36,
+
+  NFT_SEPOLIA_COLLECTION = 37,
+  NFT_SEPOLIA_MINT = 38,
+  NFT_SEPOLIA_BURN = 39,
+  NFT_SEPOLIA_TRANSFER_COLLECTION = 40,
+  NFT_SEPOLIA_SET_BASE_URI = 41,
+
+  CONTRACT_MOONBEAM_CREATE = 42,
+  CONTRACT_MOONBASE_CREATE = 43,
+  CONTRACT_ASTAR_CREATE = 44,
+  CONTRACT_ETHEREUM_CREATE = 45,
+  CONTRACT_SEPOLIA_CREATE = 46,
+
+  CONTRACT_MOONBEAM_CALL = 47,
+  CONTRACT_MOONBASE_CALL = 48,
+  CONTRACT_ASTAR_CALL = 49,
+  CONTRACT_ETHEREUM_CALL = 50,
+  CONTRACT_SEPOLIA_CALL = 51,
+
+  COMPUTING_JOB_CREATE = 52,
+  // these 2 below are not used
+  COMPUTING_JOB_SET_ENVIRONMENT = 53,
+  COMPUTING_JOB_DELETE = 54,
+
+  IPNS = 55,
+
+  // UNIQUE NFTS
+  NFT_UNIQUE_COLLECTION = 56,
+  NFT_UNIQUE_MINT = 57,
+  NFT_UNIQUE_BURN = 58,
+  NFT_UNIQUE_TRANSFER_COLLECTION = 59,
+
+  // Indexing
+  INDEXER = 60,
 }
 
 export enum ProductService {
@@ -877,6 +1090,10 @@ export enum ProductService {
   IDENTITY = 'IDENTITY',
   SOCIAL = 'SOCIAL',
   COMPUTING = 'COMPUTING',
+  STORAGE = 'STORAGE',
+  CONTRACTS = 'CONTRACTS',
+  WALLET = 'WALLET',
+  INDEXING = 'INDEXING',
 }
 
 export enum ProductCategory {
@@ -888,6 +1105,18 @@ export enum ProductCategory {
   KILT_IDENTITY = 'KILT_IDENTITY',
   GRILLCHAT = 'GRILLCHAT',
   SCHRODINGER = 'SCHRODINGER',
+  ETHEREUM_NFT = 'ETHEREUM_NFT',
+  SEPOLIA_NFT = 'SEPOLIA_NFT',
+  ETHEREUM_CONTRACT = 'ETHEREUM_CONTRACT',
+  SEPOLIA_CONTRACT = 'SEPOLIA_CONTRACT',
+  MOONBASE_CONTRACT = 'MOONBASE_CONTRACT',
+  MOONBEAM_CONTRACT = 'MOONBEAM_CONTRACT',
+  ASTAR_CONTRACT = 'ASTAR_CONTRACT',
+  ACURAST = 'ACURAST',
+  IPNS = 'IPNS',
+  SIGNATURE = 'SIGNATURE',
+  UNIQUE_NFT = 'UNIQUE_NFT',
+  INDEXER = 'INDEXER',
 }
 
 export enum EmailTemplate {
@@ -895,6 +1124,7 @@ export enum EmailTemplate {
   RESET_PASSWORD = 'reset-password',
   NEW_USER_ADDED_TO_PROJECT = 'new-user-added-to-project',
   USER_ADDED_TO_PROJECT = 'user-added-to-project',
+  RPC_USAGE_EXCEEDED = 'rpc-usage-exceeded',
 
   CONTACT_US_FORM = 'contact-us-form',
 
@@ -912,11 +1142,23 @@ export enum EmailTemplate {
 
   IPFS_BANDWIDTH_NEAR_QUOTA = 'ipfs-bandwidth-near-quota',
   IPFS_BANDWIDTH_EXCEEDED_QUOTA = 'ipfs-bandwidth-exceeded-quota',
+
+  OTP_VERIFICATION = 'otp-verification',
 }
 
 export enum JwtExpireTime {
   ONE_DAY = '1d',
   ONE_HOUR = '1h',
+  TEN_MINUTES = '10m',
   TWENTY_MINUTES = '20m',
+  FIVE_MINUTES = '5m',
   NEVER = 'never',
+}
+
+export enum SubscriptionPackageId {
+  FREEMIUM = 1,
+  CATERPILLAR = 2,
+  COCOON = 3,
+  BUTTERFLY = 4,
+  RPC_PLAN = 5,
 }

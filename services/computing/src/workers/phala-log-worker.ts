@@ -2,7 +2,6 @@ import {
   ChainType,
   Context,
   env,
-  formatTokenWithDecimals,
   formatWalletAddress,
   getTokenPriceUsd,
   LogType,
@@ -10,6 +9,7 @@ import {
   ServiceName,
   SubstrateChain,
 } from '@apillon/lib';
+import { formatTokenWithDecimals } from '@apillon/blockchain-lib/evm';
 import {
   BaseQueueWorker,
   LogOutput,
@@ -30,7 +30,7 @@ import { ClusterTransactionLog } from '../modules/accounting/cluster-transaction
 import { Keyring } from '@polkadot/api';
 import { ClusterWallet } from '../modules/computing/models/cluster-wallet.model';
 import { Contract } from '../modules/computing/models/contract.model';
-import { PhalaClient } from '../modules/services/phala.client';
+import { PhalaClient } from '../modules/clients/phala.client';
 import { getPhalaEndpoint } from '../lib/utils/contract-utils';
 
 /**
@@ -64,7 +64,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
     }));
   }
 
-  public async runExecutor(data: { clusterWalletId: number }): Promise<any> {
+  public async runExecutor(data: { clusterWalletId: string }): Promise<any> {
     console.log('runExecutor data', data);
     const clusterWallet = await new ClusterWallet(
       {},
@@ -482,6 +482,7 @@ export class PhalaLogWorker extends BaseQueueWorker {
       SubstrateChain.PHALA,
       walletAddress,
     );
+    // TODO: this uses ethers and it probably shouldn't
     const balanceDecimal = formatTokenWithDecimals(
       clusterWallet.currentBalance,
       clusterWallet.decimals,

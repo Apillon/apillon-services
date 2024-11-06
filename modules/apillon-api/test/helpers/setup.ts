@@ -5,7 +5,7 @@ import {
   setupTestContextAndSql,
   Stage,
 } from '@apillon/tests-lib';
-import { HttpServer, INestApplication } from '@nestjs/common';
+import { HttpServer } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { ApillonApiResponseInterceptor } from '../../src/interceptors/response.interceptor';
@@ -18,7 +18,7 @@ export async function setupTest(
   apiPort = env.APILLON_API_PORT_TEST,
   apiHost = env.APILLON_API_HOST_TEST,
 ): Promise<Stage> {
-  let app: INestApplication = null;
+  let app = null;
   let http: HttpServer = null;
 
   env.APP_ENV = AppEnvironment.TEST;
@@ -54,6 +54,6 @@ export async function setupTest(
     return stage;
   } catch (e) {
     console.error(e);
-    throw new Error('Unable to set up env');
+    throw new Error(`Unable to set up env: ${e}`);
   }
 }

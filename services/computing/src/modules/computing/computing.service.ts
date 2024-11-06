@@ -6,7 +6,6 @@ import {
   ContractQueryFilter,
   CreateBucketDto,
   CreateContractDto,
-  DepositToClusterDto,
   EncryptContentDto,
   Lmas,
   LogType,
@@ -17,8 +16,11 @@ import {
   SpendCreditDto,
   SqlModelStatus,
   StorageMicroservice,
-  TransferOwnershipDto,
 } from '@apillon/lib';
+import {
+  DepositToClusterDto,
+  TransferOwnershipDto,
+} from '@apillon/blockchain-lib/common';
 import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
 import {
@@ -30,15 +32,14 @@ import {
 } from '../../config/types';
 import {
   ComputingCodeException,
+  ComputingModelValidationException,
   ComputingNotFoundException,
-  ComputingValidationException,
 } from '../../lib/exceptions';
 import {
   assignCidToNft,
   deployPhalaContract,
   depositToPhalaCluster,
   encryptContent,
-  getPhalaEndpoint,
   transferContractOwnership,
 } from '../../lib/utils/contract-utils';
 import { Contract } from './models/contract.model';
@@ -133,7 +134,7 @@ export class ComputingService {
       contract.data.restrictToOwner = true;
     }
 
-    await contract.validateOrThrow(ComputingValidationException);
+    await contract.validateOrThrow(ComputingModelValidationException);
 
     const spendCredit = new SpendCreditDto(
       {
@@ -218,12 +219,12 @@ export class ComputingService {
    * Gets a contract by UUID
    * @param {{ uuid: string }} event
    * @param {ServiceContext} context
-   * @returns {Contract}
+   * @returns {Promise<Contract>}
    */
   static async getContractByUuid(
     event: { uuid: string },
     context: ServiceContext,
-  ) {
+  ): Promise<Contract> {
     const contract = await new Contract({}, context).populateByUUID(event.uuid);
 
     if (!contract.exists()) {
@@ -231,7 +232,47 @@ export class ComputingService {
     }
     contract.canAccess(context);
 
-    return contract.serializeByContext();
+    return contract.serializeByContext() as Contract;
+  }
+
+  /**
+   * Set a contract's status to archived
+   * @param {{ uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Contract>}
+   */
+  static async archiveContract(
+    event: { uuid: string },
+    context: ServiceContext,
+  ): Promise<Contract> {
+    const contract = await new Contract({}, context).populateByUUID(event.uuid);
+
+    if (!contract.exists()) {
+      throw new ComputingNotFoundException();
+    }
+    contract.canModify(context);
+
+    return await contract.markArchived();
+  }
+
+  /**
+   * Set a contract's status to active
+   * @param {{ uuid: string }} event
+   * @param {ServiceContext} context
+   * @returns {Promise<Contract>}
+   */
+  static async activateContract(
+    event: { uuid: string },
+    context: ServiceContext,
+  ): Promise<Contract> {
+    const contract = await new Contract({}, context).populateByUUID(event.uuid);
+
+    if (!contract.exists()) {
+      throw new ComputingNotFoundException();
+    }
+    contract.canModify(context);
+
+    return await contract.markActive();
   }
 
   /**

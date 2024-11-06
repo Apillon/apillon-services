@@ -2,6 +2,8 @@ import { AuthenticationEventType, Context } from '@apillon/lib';
 import { VerificationService } from './modules/verification/verification.service';
 import { IdentityService } from './modules/identity/identity.service';
 import { SporranService } from './modules/sporran/sporran.service';
+import { OtpService } from './modules/otp/otp.service';
+import { EmbeddedWalletService } from './modules/embedded-wallet/embedded-wallet.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -36,8 +38,27 @@ export async function processEvent(event, context: Context): Promise<any> {
       SporranService.verifySession,
     [AuthenticationEventType.SPORRAN_VERIFY_CREDENTIAL]:
       SporranService.verifyCredential,
+    // GENERAL
     [AuthenticationEventType.GET_TOTAL_DIDS]:
       IdentityService.getTotalDidsCreated,
+    // Embedded wallet
+    [AuthenticationEventType.EW_INFO]:
+      EmbeddedWalletService.getEmbeddedWalletInfo,
+    [AuthenticationEventType.EW_INTEGRATION_CREATE]:
+      EmbeddedWalletService.createEmbeddedWalletIntegration,
+    [AuthenticationEventType.EW_INTEGRATION_LIST]:
+      EmbeddedWalletService.listEmbeddedWalletIntegrations,
+    [AuthenticationEventType.EW_INTEGRATION_GET]:
+      EmbeddedWalletService.getEmbeddedWalletIntegration,
+    [AuthenticationEventType.EW_INTEGRATION_UPDATE]:
+      EmbeddedWalletService.updateEmbeddedWalletIntegration,
+    [AuthenticationEventType.CREATE_OASIS_SIGNATURE]:
+      EmbeddedWalletService.createOasisSignature,
+    [AuthenticationEventType.LIST_OASIS_SIGNATURES]:
+      EmbeddedWalletService.listOasisSignatures,
+    // OTP
+    [AuthenticationEventType.GENERATE_OTP]: OtpService.generateOtp,
+    [AuthenticationEventType.VALIDATE_OTP]: OtpService.validateOtp,
   };
 
   return await processors[event.eventName](event, context);

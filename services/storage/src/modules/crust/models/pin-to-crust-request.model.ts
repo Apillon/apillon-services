@@ -4,6 +4,7 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  env,
   prop,
 } from '@apillon/lib';
 import {
@@ -125,13 +126,7 @@ export class PinToCrustRequest extends AdvancedSQLModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
     ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.SERVICE],
     validators: [],
   })
   public refId: string;
@@ -144,13 +139,7 @@ export class PinToCrustRequest extends AdvancedSQLModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
     ],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.INSERT_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.SERVICE],
     validators: [],
   })
   public refTable: string;
@@ -272,7 +261,8 @@ export class PinToCrustRequest extends AdvancedSQLModel {
       FROM \`${this.tableName}\`
       WHERE pinningStatus IN (${CrustPinningStatus.PENDING} , ${CrustPinningStatus.FAILED})
       AND numOfExecutions < 5
-      AND status <> ${SqlModelStatus.DELETED};
+      AND status <> ${SqlModelStatus.DELETED}
+      LIMIT ${env.STORAGE_MAX_FILE_BATCH_SIZE_FOR_CRUST};
       `,
       {},
     );
@@ -287,34 +277,20 @@ export class PinToCrustRequest extends AdvancedSQLModel {
     return pendingRequests;
   }
 
-  /**
-   * Get requests that need to be renewed
-   * @returns Array of PinToCrustRequest instances
-   */
-  public async getRequestForRenewal(): Promise<PinToCrustRequest[]> {
+  public async renewOldRequests(): Promise<void> {
     const context = this.getContext();
-    const data = await context.mysql.paramExecute(
-      `
-      SELECT *
-      FROM \`${this.tableName}\`
+    await context.mysql.paramExecute(
+      `UPDATE \`${this.tableName}\`
+      SET numOfExecutions = 0,
+      pinningStatus = ${CrustPinningStatus.PENDING},
+      renewalDate = NOW()
       WHERE pinningStatus = ${CrustPinningStatus.SUCCESSFULL}
       AND (
         (renewalDate IS NULL AND createTime < CURRENT_DATE() - INTERVAL 6 MONTH)
         OR
         (renewalDate IS NOT NULL AND renewalDate < CURRENT_DATE() - INTERVAL 6 MONTH)
       )
-      AND status <> ${SqlModelStatus.DELETED};
-      `,
-      {},
+      AND status <> ${SqlModelStatus.DELETED};`,
     );
-
-    const requests: PinToCrustRequest[] = [];
-    if (data?.length) {
-      for (const pinToCrustRequest of data) {
-        requests.push(new PinToCrustRequest(pinToCrustRequest, context));
-      }
-    }
-
-    return requests;
   }
 }

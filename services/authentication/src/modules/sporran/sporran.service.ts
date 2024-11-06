@@ -1,5 +1,6 @@
 import {
   CodeException,
+  Context,
   env,
   generateJwtToken,
   JwtExpireTime,
@@ -24,9 +25,7 @@ import {
   SporranMessageType,
 } from '../../config/types';
 import {
-  ConfigService,
   Did,
-  connect,
   DidResourceUri,
   Utils,
   Message,
@@ -37,6 +36,7 @@ import {
   IAttestation,
 } from '@kiltprotocol/sdk-js';
 import {
+  connectToKilt,
   encryptionSigner,
   generateKeypairs,
   getCtypeSchema,
@@ -52,12 +52,12 @@ import {
 import { Identity } from '../identity/models/identity.model';
 import { prepareSignResources } from '../../lib/sporran';
 import { AuthenticationCodeException } from '../../lib/exceptions';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class SporranService {
-  static async getSessionValues(_context): Promise<any> {
+  static async getSessionValues(context: ServiceContext): Promise<any> {
     // generate keypairs
-    await connect(env.KILT_NETWORK);
-    const api = ConfigService.get('api');
+    const api = await connectToKilt(context);
     const { authentication } = await generateKeypairs(
       env.KILT_ATTESTER_MNEMONIC,
     );
@@ -92,9 +92,9 @@ export class SporranService {
 
   static async verifySession(
     event: { body: SporranSessionVerifyDto },
-    _context,
+    context: ServiceContext,
   ): Promise<any> {
-    await connect(env.KILT_NETWORK);
+    await connectToKilt(context);
 
     const encryptionKeyUri = event.body.encryptionKeyUri as DidResourceUri;
     const { sessionId, encryptedChallenge, nonce } = event.body;
@@ -162,13 +162,16 @@ export class SporranService {
     return { success: true };
   }
 
-  static async submitTerms(event: { body: SubmitTermsDto }, _context) {
+  static async submitTerms(
+    event: { body: SubmitTermsDto },
+    context: ServiceContext,
+  ) {
     const {
       verifierDidUri,
       encryptionKeyUri,
       claimerSessionDidUri,
       // requestChallenge,
-    } = await prepareSignResources(event.body.encryptionKeyUri);
+    } = await prepareSignResources(event.body.encryptionKeyUri, context);
 
     const emailContents = {
       Email: event.body.email,
@@ -199,7 +202,8 @@ export class SporranService {
 
     const encryptedMessage = (await Message.encrypt(
       message,
-      encryptionSigner,
+      ({ data, peerPublicKey, did }) =>
+        encryptionSigner({ data, peerPublicKey, did }, context),
       encryptionKeyUri as DidResourceUri,
     )) as IEncryptedMessage;
 
@@ -208,12 +212,12 @@ export class SporranService {
 
   static async submitAttestation(
     event: { body: SubmitAttestationDto },
-    context,
+    context: ServiceContext,
   ) {
-    await connect(env.KILT_NETWORK);
+    await connectToKilt(context);
 
     const { verifierDidUri, encryptionKeyUri, claimerSessionDidUri } =
-      await prepareSignResources(event.body.encryptionKeyUri);
+      await prepareSignResources(event.body.encryptionKeyUri, context);
 
     const decryptionSenderKey = await Did.resolveKey(
       event.body.message.senderKeyUri as DidResourceUri,
@@ -307,7 +311,8 @@ export class SporranService {
 
     const encryptedMessage = await Message.encrypt(
       message,
-      encryptionSigner,
+      ({ data, peerPublicKey, did }) =>
+        encryptionSigner({ data, peerPublicKey, did }, context),
       encryptionKeyUri as DidResourceUri,
     );
 
@@ -316,14 +321,14 @@ export class SporranService {
 
   static async requestCredential(
     event: { body: RequestCredentialDto },
-    _context,
+    context: ServiceContext,
   ) {
     const {
       verifierDidUri,
       encryptionKeyUri,
       claimerSessionDidUri,
       requestChallenge,
-    } = await prepareSignResources(event.body.encryptionKeyUri);
+    } = await prepareSignResources(event.body.encryptionKeyUri, context);
 
     // We need to construct a message request for the sporran extension
     const message = Message.fromBody(
@@ -349,17 +354,20 @@ export class SporranService {
     Message.verifyMessageBody(message.body);
     const encryptedMessage = await Message.encrypt(
       message,
-      encryptionSigner,
+      ({ data, peerPublicKey, did }) =>
+        encryptionSigner({ data, peerPublicKey, did }, context),
       encryptionKeyUri as DidResourceUri,
     );
 
     return { message: encryptedMessage };
   }
 
-  static async verifyCredential(event: { body: VerifyCredentialDto }, context) {
+  static async verifyCredential(
+    event: { body: VerifyCredentialDto },
+    context: ServiceContext,
+  ) {
     console.log('Verifying Sporran credential ...');
-    await connect(env.KILT_NETWORK);
-    const api = ConfigService.get('api');
+    const api = await connectToKilt(context);
 
     const decryptionSenderKey = await Did.resolveKey(
       event.body.message.senderKeyUri as DidResourceUri,

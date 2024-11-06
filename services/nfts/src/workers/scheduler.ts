@@ -5,12 +5,9 @@ import {
   WorkerLogStatus,
 } from '@apillon/workers-lib';
 import { Job } from '@apillon/workers-lib';
-import { writeWorkerLog } from '@apillon/workers-lib';
 import { Context } from '@apillon/lib';
 
 export class Scheduler extends WorkerScheduler {
-  private context: Context;
-
   public constructor(serviceDefinition: ServiceDefinition, context: Context) {
     super(serviceDefinition);
     this.context = context;
@@ -55,38 +52,5 @@ export class Scheduler extends WorkerScheduler {
   }
   public onAutoRemove(): Promise<void> {
     throw new Error('Method not implemented.');
-  }
-
-  /**
-   * Write log to database
-   * @param status worker status
-   * @param message message
-   * @param data any data in JSON
-   * @param err Error object
-   */
-  protected async writeLogToDb(
-    status: WorkerLogStatus,
-    message: string,
-    data?: any,
-    err?: Error,
-  ) {
-    try {
-      if (err) {
-        message += ` (${err.message})`;
-        status = WorkerLogStatus.ERROR;
-      }
-      await writeWorkerLog(
-        this.context,
-        status,
-        'Scheduler',
-        null,
-        message,
-        data,
-      );
-      this.logFn(`Scheduler: ${message}`, err);
-    } catch (error) {
-      console.log('ERROR writing worker log to database!');
-      this.logFn(`Scheduler: ${error.message}`, error);
-    }
   }
 }

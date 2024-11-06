@@ -28,6 +28,7 @@ import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { StorageService } from './storage.service';
+import { ProjectAccessGuard } from '../../guards/project-access.guard';
 
 @Controller('storage')
 @Permissions({ permission: DefaultPermission.STORAGE })
@@ -37,7 +38,7 @@ export class StorageController {
   @Get('info')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: BaseProjectQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(AuthGuard, ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard, ProjectAccessGuard)
   async getStorageInfo(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseProjectQueryFilter,
@@ -173,15 +174,15 @@ export class StorageController {
     return await this.storageService.listFiles(context, bucket_uuid, query);
   }
 
-  @Get(':bucket_uuid/file/:id/detail')
+  @Get(':bucket_uuid/file/:uuid/detail')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async getFileDetailsByCID(
     @Ctx() context: DevConsoleApiContext,
     @Param('bucket_uuid') bucket_uuid: string,
-    @Param('id') id: string,
+    @Param('uuid') uuid: string,
   ) {
-    return await this.storageService.getFileDetails(context, bucket_uuid, id);
+    return await this.storageService.getFileDetails(context, bucket_uuid, uuid);
   }
 
   @Get(':bucket_uuid/trashed-files')
@@ -200,7 +201,7 @@ export class StorageController {
     );
   }
 
-  @Delete(':bucket_uuid/file/:id')
+  @Delete(':bucket_uuid/file/:uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -209,12 +210,12 @@ export class StorageController {
   @UseGuards(AuthGuard)
   async deleteFile(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id') id: string,
+    @Param('uuid') uuid: string,
   ) {
-    return await this.storageService.deleteFile(context, id);
+    return await this.storageService.deleteFile(context, uuid);
   }
 
-  @Patch(':bucket_uuid/file/:id/restore')
+  @Patch(':bucket_uuid/file/:uuid/restore')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -223,9 +224,9 @@ export class StorageController {
   @UseGuards(AuthGuard)
   async restoreFile(
     @Ctx() context: DevConsoleApiContext,
-    @Param('id') id: string,
+    @Param('uuid') uuid: string,
   ) {
-    return await this.storageService.restoreFile(context, id);
+    return await this.storageService.restoreFile(context, uuid);
   }
 
   @Post('test-crust-provider')

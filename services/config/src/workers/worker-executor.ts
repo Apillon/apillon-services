@@ -1,6 +1,5 @@
 import { AppEnvironment, getEnvSecrets, MySql } from '@apillon/lib';
 import {
-  QueueWorkerType,
   ServiceDefinition,
   ServiceDefinitionType,
   WorkerDefinition,
@@ -17,6 +16,7 @@ import { ExpiredSubscriptionsWorker } from './expired-subscriptions-worker';
 
 export enum WorkerName {
   SUBSCRIPTION_QUOTA_WORKER = 'ExpiredSubscriptionsWorker',
+  EXPIRED_RPC_SUBSCRIPTIONS_WORKER = 'ExpiredRpcSubscriptionsWorker',
   SCHEDULER = 'scheduler',
 }
 
@@ -106,6 +106,13 @@ export async function handleLambdaEvent(
         context,
       );
       await subscriptionQuotaWorker.run();
+      break;
+    case WorkerName.EXPIRED_RPC_SUBSCRIPTIONS_WORKER:
+      const expiredRpcSubscriptionsWorker = new ExpiredSubscriptionsWorker(
+        workerDefinition,
+        context,
+      );
+      await expiredRpcSubscriptionsWorker.run();
       break;
     case WorkerName.SCHEDULER:
       const scheduler = new Scheduler(serviceDef, context);

@@ -12,15 +12,15 @@ import {
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { Endpoint } from '../../common/models/endpoint';
 import { Transaction } from '../../common/models/transaction';
-import { Wallet } from '../wallet/wallet.model';
 import { BlockchainErrorCode } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { evmChainToWorkerName, WorkerType } from '../../lib/helpers';
 import { getWalletSeed } from '../../lib/seed';
 import { transmitAndProcessEvmTransaction } from '../../lib/transmit-and-process-evm-transaction';
+import { Wallet } from '../wallet/wallet.model';
 
 export async function getNextOnChainNonce(
   provider: ethers.providers.JsonRpcProvider,
@@ -100,35 +100,24 @@ export class EvmService {
     console.log('Endpoint: ', endpoint.url);
     const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
 
-    let maxPriorityFeePerGas;
-    let maxFeePerGas;
-    let type;
-    let gasPrice;
+    let maxPriorityFeePerGas: BigNumber;
+    let estimatedBaseFee: BigNumber;
     let data = null;
-    // eslint-disable-next-line sonarjs/no-small-switch
     switch (params.chain) {
       case EvmChain.MOONBASE:
       case EvmChain.MOONBEAM: {
-        maxPriorityFeePerGas = ethers.utils.parseUnits('3', 'gwei').toNumber();
-
-        const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
-        console.log(estimatedBaseFee);
-        // Ensuring that transaction is desirable for at least 6 blocks.
-        maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
-        type = 2;
-        gasPrice = null;
+        maxPriorityFeePerGas = ethers.utils.parseUnits('3', 'gwei');
+        estimatedBaseFee = await provider.getGasPrice();
         break;
       }
+      case EvmChain.SEPOLIA:
+      case EvmChain.ETHEREUM:
       case EvmChain.ASTAR:
-      case EvmChain.ASTAR_SHIBUYA: {
-        maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei').toNumber();
-
-        const estimatedBaseFee = (await provider.getGasPrice()).toNumber();
-        console.log(estimatedBaseFee);
-        // Ensuring that transaction is desirable for at least 6 blocks.
-        maxFeePerGas = estimatedBaseFee * 2 + maxPriorityFeePerGas;
-        type = 2;
-        gasPrice = null;
+      case EvmChain.ASTAR_SHIBUYA:
+      case EvmChain.CELO:
+      case EvmChain.ALFAJORES: {
+        maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei');
+        estimatedBaseFee = await provider.getGasPrice();
         break;
       }
       default: {
@@ -138,9 +127,15 @@ export class EvmService {
         });
       }
     }
+    // Ensuring that transaction is desirable for at least 6 blocks.
+    const maxFeePerGas = estimatedBaseFee.mul(2).add(maxPriorityFeePerGas);
+    console.log(
+      `maxPriorityFeePerGas=${maxPriorityFeePerGas.toNumber()}`,
+      `estimatedBaseFee=${estimatedBaseFee.toNumber()}`,
+      `maxFeePerGas=${maxFeePerGas.toNumber()}`,
+    );
 
     const conn = await context.mysql.start();
-
     try {
       let wallet = new Wallet({}, context);
 
@@ -175,11 +170,10 @@ export class EvmService {
       // TODO: add transaction checker to detect anomalies.
       // Reject transaction sending value etc.
       unsignedTx.from = wallet.address;
-      unsignedTx.maxPriorityFeePerGas =
-        ethers.BigNumber.from(maxPriorityFeePerGas);
-      unsignedTx.maxFeePerGas = ethers.BigNumber.from(maxFeePerGas);
-      unsignedTx.gasPrice = gasPrice;
-      unsignedTx.type = type;
+      unsignedTx.maxPriorityFeePerGas = maxPriorityFeePerGas;
+      unsignedTx.maxFeePerGas = maxFeePerGas;
+      unsignedTx.gasPrice = null;
+      unsignedTx.type = 2;
       unsignedTx.gasLimit = null;
       unsignedTx.chainId = wallet.chain;
       unsignedTx.nonce = wallet.nextNonce;
@@ -342,9 +336,13 @@ export class EvmService {
     const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (_event.chain) {
+      case EvmChain.ETHEREUM:
+      case EvmChain.SEPOLIA:
       case EvmChain.MOONBASE:
       case EvmChain.MOONBEAM:
-      case EvmChain.ASTAR: {
+      case EvmChain.ASTAR:
+      case EvmChain.CELO:
+      case EvmChain.ALFAJORES: {
         break;
       }
       default: {
@@ -403,6 +401,7 @@ export class EvmService {
           latestSuccess = transaction.nonce;
           transmitted++;
         } catch (err) {
+          const chainName = getEnumKey(EvmChain, _event.chain);
           if (
             err?.reason === 'nonce has already been used' ||
             err?.error?.message === 'already known'
@@ -417,7 +416,7 @@ export class EvmService {
               await eventLogger(
                 {
                   logType: LogType.INFO,
-                  message: `Last success nonce was repaired and set to ${selfRepairNonce}.`,
+                  message: `Last success nonce was repaired on chain ${chainName} for wallet address ${wallet.address} and set to ${selfRepairNonce} (hash=${transaction.transactionHash}).`,
                   service: ServiceName.BLOCKCHAIN,
                   data: {
                     selfRepairNonce,
@@ -430,10 +429,7 @@ export class EvmService {
               await eventLogger(
                 {
                   logType: LogType.ERROR,
-                  message: `Could not repair last success nonce for chain ${getEnumKey(
-                    EvmChain,
-                    _event.chain,
-                  )} and wallet address ${wallet.address}.`,
+                  message: `Could not repair last success nonce on chain ${chainName} for wallet address ${wallet.address} (nonce=${transaction.nonce}, hash=${transaction.transactionHash}).`,
                   service: ServiceName.BLOCKCHAIN,
                   data: {
                     wallet: wallet.address,
@@ -444,15 +440,14 @@ export class EvmService {
                 },
                 LogOutput.NOTIFY_WARN,
               );
+              // stop transmitting TX after first self repair
+              break;
             }
           } else {
             await eventLogger(
               {
                 logType: LogType.ERROR,
-                message: `Error transmitting transaction on chain ${getEnumKey(
-                  EvmChain,
-                  _event.chain,
-                )}! Hash: ${transaction.transactionHash}`,
+                message: `Error transmitting transaction on chain ${chainName}! Hash: ${transaction.transactionHash}`,
                 service: ServiceName.BLOCKCHAIN,
                 data: {
                   error: err,
@@ -462,6 +457,7 @@ export class EvmService {
               },
               LogOutput.NOTIFY_WARN,
             );
+            // stop transmitting TX after first exception
             if (
               env.APP_ENV === AppEnvironment.TEST ||
               env.APP_ENV === AppEnvironment.LOCAL_DEV
@@ -492,5 +488,95 @@ export class EvmService {
       );
     }
     // TODO: call transaction checker
+  }
+
+  /**
+   * Create signature for Evm Oasis chain
+   * @param params timestamp, chain and data to be signed
+   * @param context
+   * @returns
+   */
+  static async createOasisSignature(
+    params: { data: string; timestamp: number },
+    context: ServiceContext,
+  ) {
+    //validate data
+    try {
+      const abiCoder = ethers.utils.defaultAbiCoder;
+      const decodedFuncData = abiCoder.decode(
+        ['tuple(bytes funcData, uint8 txType)'],
+        params.data,
+        true,
+      );
+      const decodedData = abiCoder.decode(
+        [
+          'tuple(bytes32 hashedUsername, bytes credentialId, tuple(uint8 kty, int8 alg, uint8 crv, uint256 x, uint256 y) pubkey, bytes32 optionalPassword)',
+        ],
+        decodedFuncData[0][0],
+      );
+      if (
+        !decodedData[0].hashedUsername ||
+        !decodedData[0].credentialId ||
+        !decodedData[0].pubkey
+      ) {
+        throw new BlockchainCodeException({
+          code: BlockchainErrorCode.INVALID_DATA_FOR_OASIS_SIGNATURE,
+          status: 400,
+        });
+      }
+    } catch (err) {
+      if (err instanceof BlockchainCodeException) throw err;
+
+      console.error(err);
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.ERROR_DECODING_DATA_FOR_OASIS_SIGNATURE,
+        status: 500,
+        errorMessage: 'Error decoding and validating data to sign',
+      });
+    }
+
+    //wallet
+    const seed = await getWalletSeed(env.OASIS_SIGNING_WALLET);
+    const signingWallet = new ethers.Wallet(seed);
+
+    //provider
+    const endpoint = await new Endpoint({}, context).populateByChain(
+      [AppEnvironment.PROD, AppEnvironment.STG].includes(
+        env.APP_ENV as AppEnvironment,
+      )
+        ? EvmChain.OASIS_SAPPHIRE
+        : EvmChain.OASIS_TESTNET,
+      ChainType.EVM,
+    );
+
+    if (!endpoint.exists()) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.INVALID_CHAIN,
+        status: 400,
+      });
+    }
+    const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
+
+    const gasPrice = (await provider.getFeeData()).gasPrice;
+
+    const dataHash = ethers.utils.solidityKeccak256(
+      ['uint256', 'uint64', 'uint256', 'bytes32'],
+      [
+        gasPrice,
+        env.OASIS_MESSAGE_GAS_LIMIT,
+        params.timestamp,
+        ethers.utils.keccak256(params.data),
+      ],
+    );
+
+    const signature = await signingWallet.signMessage(
+      ethers.utils.arrayify(dataHash),
+    );
+
+    return {
+      dataHash,
+      signature,
+      gasPrice: gasPrice.toString(),
+    };
   }
 }

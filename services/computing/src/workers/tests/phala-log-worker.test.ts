@@ -27,7 +27,7 @@ import {
 import { expect } from '@jest/globals';
 import { ClusterTransactionLog } from '../../modules/accounting/cluster-transaction-log.model';
 import { ServiceContext } from '@apillon/service-lib';
-import { PhalaClient } from '../../modules/services/phala.client';
+import { PhalaClient } from '../../modules/clients/phala.client';
 
 const mockAxios = new MockAdapter(axios);
 
@@ -144,7 +144,8 @@ describe('Log worker tests', () => {
       transaction = await new Transaction(
         {
           walletAddress: WALLET_ADDRESS,
-          contract_id: contract.id,
+          refTable: DbTables.CONTRACT,
+          refId: contract.id,
           transactionType: TransactionType.DEPLOY_CONTRACT,
           transactionHash,
           transactionStatus: ComputingTransactionStatus.CONFIRMED,
@@ -208,7 +209,8 @@ describe('Log worker tests', () => {
       transaction = await new Transaction(
         {
           walletAddress: WALLET_ADDRESS,
-          contract_id: contract.id,
+          refTable: DbTables.CONTRACT,
+          refId: contract.id,
           transactionType: TransactionType.DEPLOY_CONTRACT,
           transactionHash,
           transactionStatus: ComputingTransactionStatus.CONFIRMED,
@@ -274,7 +276,8 @@ describe('Log worker tests', () => {
       transaction = await new Transaction(
         {
           walletAddress: WALLET_ADDRESS,
-          contract_id: contract.id,
+          refTable: DbTables.CONTRACT,
+          refId: contract.id,
           transactionType: TransactionType.ASSIGN_CID_TO_NFT,
           transactionHash,
           transactionStatus: ComputingTransactionStatus.CONFIRMED,
@@ -340,7 +343,8 @@ describe('Log worker tests', () => {
       transaction = await new Transaction(
         {
           walletAddress: WALLET_ADDRESS,
-          contract_id: contract.id,
+          refTable: DbTables.CONTRACT,
+          refId: contract.id,
           transactionType: TransactionType.ASSIGN_CID_TO_NFT,
           transactionHash,
           transactionStatus: ComputingTransactionStatus.CONFIRMED,

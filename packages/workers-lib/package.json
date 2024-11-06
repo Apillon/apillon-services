@@ -1,6 +1,6 @@
 {
   "name": "@apillon/workers-lib",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "description": "Apillon common worker code library",
   "main": "./dist/index.js",
   "source": "./src/index.ts",
@@ -18,7 +18,6 @@
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.6",
     "eslint-config-common": "*",
     "tsconfig": "*"
   },

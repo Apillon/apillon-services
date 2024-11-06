@@ -52,11 +52,14 @@ export * from './lib/at-services/storage/dtos/files-query-filter.dto';
 export * from './lib/at-services/storage/dtos/link-on-ipfs-query-filter.dto';
 export * from './lib/at-services/storage/dtos/file-upload-session-query-filter.dto';
 export * from './lib/at-services/storage/dtos/collection-metadata-query-filter.dto';
+export * from './lib/at-services/storage/dtos/short-url.dto';
 
 //#REGION Authentication API
 export * from './lib/at-services/authentication/authentication';
 export * from './lib/at-services/authentication/dtos/base-identity.dto';
 export * from './lib/at-services/authentication/dtos/identity-create.dto';
+export * from './lib/at-services/authentication/dtos/generate-otp.dto';
+export * from './lib/at-services/authentication/dtos/validate-otp.dto';
 export * from './lib/at-services/authentication/dtos/attestation.dto';
 export * from './lib/at-services/authentication/dtos/identity-did-revoke.dto';
 export * from './lib/at-services/authentication/dtos/identity-verification-email.dto';
@@ -68,6 +71,9 @@ export * from './lib/at-services/authentication/dtos/sporran/message/verify-cred
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-attestation.dto';
 export * from './lib/at-services/authentication/dtos/sporran/message/submit-terms.dto';
 export * from './lib/at-services/authentication/dtos/wallet-identity.dto';
+export * from './lib/at-services/authentication/dtos/create-oasis-signature.dto';
+export * from './lib/at-services/authentication/dtos/embedded-wallet-signatures-query-filter.dto';
+export * from './lib/at-services/authentication/dtos/create-embedded-wallet-integration.dto';
 
 //#REGION NTFS
 export * from './lib/at-services/nfts/nfts';
@@ -77,23 +83,38 @@ export * from './lib/at-services/nfts/dtos/transaction-query-filter.dto';
 export * from './lib/at-services/nfts/dtos/mint-nft.dto';
 export * from './lib/at-services/nfts/dtos/set-collection-base-uri.dto';
 export * from './lib/at-services/nfts/dtos/transfer-collection.dto';
-export * from './lib/at-services/nfts/dtos/create-collection.dto';
 export * from './lib/at-services/nfts/dtos/burn-nft.dto';
 export * from './lib/at-services/nfts/dtos/collections-quota-reached-query-filter.dto';
 export * from './lib/at-services/nfts/dtos/add-nfts-metadata.dto';
 export * from './lib/at-services/nfts/constants';
+export * from './lib/at-services/nfts/validators/create-collection-drop-reserve-validator';
+export * from './lib/at-services/nfts/validators/create-collection-drop-price-validator';
 
 //#REGION COMPUTING
 export * from './lib/at-services/computing/computing';
 export * from './lib/at-services/computing/dtos/create-contract.dto';
 export * from './lib/at-services/computing/dtos/contract-query-filter.dto';
-export * from './lib/at-services/computing/dtos/deposit-to-cluster.dto';
-export * from './lib/at-services/computing/dtos/transfer-ownership.dto';
 export * from './lib/at-services/computing/dtos/encrypt-content.dto';
 export * from './lib/at-services/computing/dtos/assign-cid-to-nft.dto';
 export * from './lib/at-services/computing/dtos/phala-cluster-deposit-transaction.dto';
 export * from './lib/at-services/computing/dtos/cluster-wallet-query-filter.dto';
 export * from './lib/at-services/computing/dtos/computing-transaction-query-filter.dto';
+export * from './lib/at-services/computing/dtos/create-job.dto';
+export * from './lib/at-services/computing/dtos/update-job.dto';
+export * from './lib/at-services/computing/dtos/set-cloud-function-environment.dto';
+export * from './lib/at-services/computing/dtos/job-query-filter.dto';
+export * from './lib/at-services/computing/dtos/create-or-update-cloud-function.dto';
+export * from './lib/at-services/computing/dtos/cloud-function-usage.dto';
+
+//#REGION CONTRACTS
+export * from './lib/at-services/contracts/eventTypes';
+export * from './lib/at-services/contracts/contracts';
+export * from './lib/at-services/contracts/dtos/create-contract.dto';
+export * from './lib/at-services/contracts/dtos/contract-query-filter.dto';
+export * from './lib/at-services/contracts/dtos/deployed-contract-query-filter.dto';
+export * from './lib/at-services/contracts/dtos/transaction-query-filter.dto';
+export * from './lib/at-services/contracts/dtos/call-contract.dto';
+export * from './lib/at-services/contracts/dtos/contract-abi-query.dto';
 
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';
@@ -105,16 +126,25 @@ export * from './lib/at-services/blockchain/dtos/transaction-webhook-data.dto';
 export * from './lib/at-services/blockchain/dtos/update-transaction.dto';
 export * from './lib/at-services/blockchain/dtos/wallet-transactions-query-filter';
 export * from './lib/at-services/blockchain/dtos/wallet-deposits-query-filter';
-export * from './lib/at-services/blockchain/validators/address-validator';
-
-//#REGION Substrate
-export * from './lib/at-services/substrate/types';
 
 //#REGION Social
 export * from './lib/at-services/social/social';
 export * from './lib/at-services/social/dtos/create-space.dto';
 export * from './lib/at-services/social/dtos/create-post.dto';
 export * from './lib/at-services/social/dtos/post-query-filter.dto';
+
+//#Region Infrastructure
+export * from './lib/at-services/infrastructure/infrastructure';
+export * from './lib/at-services/infrastructure/types';
+export * from './lib/at-services/infrastructure/dtos/create-rpc-api-key.dto';
+export * from './lib/at-services/infrastructure/dtos/apillon-api-create-rpc-api-key.dto';
+export * from './lib/at-services/infrastructure/dtos/create-rpc-url.dto';
+export * from './lib/at-services/infrastructure/dtos/list-rpc-urls-for-api-key-query-filter.dto';
+export * from './lib/at-services/infrastructure/dtos/update-rpc-api-key.dto';
+export * from './lib/at-services/infrastructure/dtos/rpc-api-key-base.dto';
+export * from './lib/at-services/infrastructure/dtos/create-indexer.dto';
+export * from './lib/at-services/infrastructure/dtos/update-indexer.dto';
+export * from './lib/at-services/infrastructure/dtos/indexer-logs-query-filter.dto';
 
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';
@@ -144,6 +174,7 @@ export * from './lib/context';
 export * from './lib/logger';
 export * from './lib/database/sql-utils';
 export * from './lib/aws/aws-s3';
+export * from './lib/aws/aws-kms';
 export * from './lib/validators';
 export * from './lib/utils';
 export * from './lib/at-services/ams/dtos/create-api-key.dto';
@@ -154,6 +185,7 @@ export * from './lib/at-services/lmas/dtos/request-log.dto';
 export * from './lib/at-services/lmas/dtos/base-logs-query-filter.dto';
 export * from './lib/at-services/lmas/dtos/logs-query-filter.dto';
 export * from './lib/at-services/lmas/dtos/request-logs-query-filter.dto';
+export * from './lib/at-services/lmas/dtos/cloud-function-call.dto';
 export * from './lib/exceptions/exceptions';
 export * from './lib/exceptions/http-exception';
 export * from './lib/base-models/base-query-filter.model';

@@ -1,5 +1,11 @@
 import { ApiKey } from '@apillon/access/src/modules/api-key/models/api-key.model';
-import { DefaultUserRole, generateRandomCode } from '@apillon/lib';
+import {
+  ApiKeyRoleBaseDto,
+  AttachedServiceType,
+  DefaultApiKeyRole,
+  DefaultUserRole,
+  generateRandomCode,
+} from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import { ProjectUser } from '@apillon/dev-console-api/src/modules/project/models/project-user.model';
 import { Project } from '@apillon/dev-console-api/src/modules/project/models/project.model';
@@ -66,9 +72,19 @@ export async function createTestProject(
   return project;
 }
 
+/**
+ * Create a test api key.
+ * @param amsContext
+ * @param project_uuid
+ * @param service_uuid If specified, the api key will be assigned roles for this service
+ * @param serviceType_id If specified, the api key will be assigned roles for this service type
+ * @returns
+ */
 export async function createTestApiKey(
   amsContext: TestContext,
   project_uuid: string,
+  service_uuid?: string,
+  serviceType_id?: AttachedServiceType,
 ): Promise<ApiKey> {
   const apiKeySecret = generateRandomCode(12);
 
@@ -81,6 +97,33 @@ export async function createTestApiKey(
   await key.insert();
 
   key.apiKeySecret = apiKeySecret;
+
+  if (service_uuid && serviceType_id) {
+    await key.assignRole(
+      new ApiKeyRoleBaseDto().populate({
+        role_id: DefaultApiKeyRole.KEY_EXECUTE,
+        project_uuid,
+        service_uuid,
+        serviceType_id: serviceType_id,
+      }),
+    );
+    await key.assignRole(
+      new ApiKeyRoleBaseDto().populate({
+        role_id: DefaultApiKeyRole.KEY_READ,
+        project_uuid,
+        service_uuid,
+        serviceType_id: serviceType_id,
+      }),
+    );
+    await key.assignRole(
+      new ApiKeyRoleBaseDto().populate({
+        role_id: DefaultApiKeyRole.KEY_WRITE,
+        project_uuid,
+        service_uuid,
+        serviceType_id: serviceType_id,
+      }),
+    );
+  }
 
   return key;
 }

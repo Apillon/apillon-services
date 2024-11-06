@@ -220,7 +220,12 @@ export class CreditService {
       });
     }
 
-    await product.populateCurrentPrice();
+    if (event.body.amount) {
+      product.currentPrice = event.body.amount;
+    } else {
+      await product.populateCurrentPrice();
+    }
+
     if (product.currentPrice == null) {
       throw await new ScsCodeException({
         code: ConfigErrorCode.PRODUCT_PRICE_DOES_NOT_EXISTS,
@@ -490,7 +495,7 @@ export class CreditService {
   static async getCreditPackages(
     event: any,
     context: ServiceContext,
-  ): Promise<string> {
+  ): Promise<any[]> {
     return await new CreditPackage({}, context).getAll();
   }
 

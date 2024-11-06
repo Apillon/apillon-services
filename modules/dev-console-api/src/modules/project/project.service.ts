@@ -20,7 +20,7 @@ import {
   ServiceName,
   SubscriptionsQueryFilter,
   InvoicesQueryFilter,
-  ValidationException,
+  ModelValidationException,
   ReferralMicroservice,
   writeLog,
   BaseQueryFilter,
@@ -28,11 +28,8 @@ import {
   EmailTemplate,
   ConfigureCreditDto,
   StorageMicroservice,
-  NftsMicroservice,
-  SocialMicroservice,
-  ComputingMicroservice,
-  AuthenticationMicroservice,
-  Context,
+  invalidateCacheMatch,
+  InfrastructureMicroservice,
 } from '@apillon/lib';
 import {
   BadRequestErrorCode,
@@ -41,8 +38,6 @@ import {
   ValidatorErrorCode,
 } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
-import { FileService } from '../file/file.service';
-import { File } from '../file/models/file.model';
 import { User } from '../user/models/user.model';
 import { ProjectUserInviteDto } from './dtos/project_user-invite.dto';
 import { ProjectUserUpdateRoleDto } from './dtos/project_user-update-role.dto';
@@ -51,11 +46,10 @@ import { ProjectUser } from './models/project-user.model';
 import { Project } from './models/project.model';
 import { v4 as uuidV4 } from 'uuid';
 import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
+import { RpcPlanType } from '@apillon/lib';
 
 @Injectable()
 export class ProjectService {
-  constructor(private readonly fileService: FileService) {}
-
   async createProject(
     context: DevConsoleApiContext,
     body: Project,
@@ -112,7 +106,7 @@ export class ProjectService {
 
       // Invalidate project list cache and auth user data cache
       invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]),
-      invalidateCacheKey(
+      invalidateCacheMatch(
         `${CacheKeyPrefix.AUTH_USER_DATA}:${context.user.user_uuid}`,
       ),
 
@@ -216,7 +210,7 @@ export class ProjectService {
 
     project.populate(data, PopulateFrom.PROFILE);
 
-    await project.validateOrThrow(ValidationException, ValidatorErrorCode);
+    await project.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     await project.update();
     await invalidateCachePrefixes([CacheKeyPrefix.ADMIN_PROJECT_LIST]);
@@ -596,7 +590,7 @@ export class ProjectService {
         role_id: project_user.role_id,
       };
       await new Ams(context).removeUserRole(params);
-      await invalidateCacheKey(
+      await invalidateCacheMatch(
         `${CacheKeyPrefix.AUTH_USER_DATA}:${removedUser.user_uuid}`,
       );
 
@@ -607,36 +601,6 @@ export class ProjectService {
     }
 
     return true;
-  }
-
-  async updateProjectImage(
-    context: DevConsoleApiContext,
-    project_uuid: string,
-    uploadedFile: File,
-  ) {
-    const project = await new Project({}, context).populateByUUID(project_uuid);
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-    project.canModify(context);
-    const createdFile = await this.fileService.createFile(
-      context,
-      uploadedFile,
-    );
-
-    const existingProjectImageID = project.imageFile_id;
-    project.imageFile_id = createdFile.id;
-    await project.update();
-
-    if (existingProjectImageID) {
-      await this.fileService.deleteFileById(context, existingProjectImageID);
-    }
-
-    return createdFile;
   }
 
   //#region credit
@@ -676,6 +640,37 @@ export class ProjectService {
 
     return (await new Scs(context).getProjectActiveSubscription(project_uuid))
       .data;
+  }
+
+  async getProjectRpcPlan(context: DevConsoleApiContext, project_uuid: string) {
+    const projectOwner = await new ProjectUser({}, context).getProjectOwner(
+      project_uuid,
+    );
+
+    if (!projectOwner) {
+      return RpcPlanType.DISABLED;
+    }
+
+    const ownerHasDwellirId = (
+      await new InfrastructureMicroservice(context).hasDwellirId(
+        projectOwner.user_uuid,
+      )
+    ).data;
+
+    if (!ownerHasDwellirId) {
+      return RpcPlanType.DISABLED;
+    }
+
+    const projectsUuids = await new ProjectUser(
+      {},
+      context,
+    ).getProjectUuidsByOwnerId(projectOwner.user_id);
+
+    const hasActiveRpcPlan = (
+      await new Scs(context).hasProjectActiveRpcPlan(projectsUuids)
+    ).data;
+
+    return hasActiveRpcPlan ? RpcPlanType.DEVELOPER : RpcPlanType.FREE;
   }
 
   async getProjectSubscriptions(

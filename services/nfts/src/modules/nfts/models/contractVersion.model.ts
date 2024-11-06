@@ -1,4 +1,4 @@
-import { NftsCodeException } from './../../../lib/exceptions';
+import { NftsCodeException } from '../../../lib/exceptions';
 import {
   AdvancedSQLModel,
   ChainType,
@@ -102,28 +102,23 @@ export class ContractVersion extends AdvancedSQLModel {
   public async getContractVersion(
     collectionType: NFTCollectionType,
     chainType: ChainType = ChainType.EVM,
-    version_id: number = null,
   ): Promise<ContractVersion> {
     try {
       const data = await runCachedFunction(
-        `${CacheKeyPrefix.CONTRACT_VERSION}:${[
-          collectionType,
-          version_id,
-          chainType,
-        ].join(':')}`,
+        `${CacheKeyPrefix.CONTRACT_VERSION}:${[collectionType, chainType].join(
+          ':',
+        )}`,
         async () => {
           const data = await this.getContext().mysql.paramExecute(
             `
-            SELECT ${this.generateSelectFields()}
-            FROM \`${DbTables.CONTRACT_VERSION}\`
-            WHERE collectionType = @collectionType
-            AND chainType = @chainType
-            ${version_id ? 'AND id = @version_id' : ''}
-            AND status = ${SqlModelStatus.ACTIVE}
-            ${version_id ? '' : 'ORDER BY version DESC LIMIT 1'}
-            ;
-        `,
-            { collectionType, chainType, version_id },
+              SELECT ${this.generateSelectFields()}
+              FROM \`${DbTables.CONTRACT_VERSION}\`
+              WHERE collectionType = @collectionType
+              AND chainType = @chainType
+              AND status = ${SqlModelStatus.ACTIVE}
+              ;
+            `,
+            { collectionType, chainType },
           );
           return data?.length
             ? this.populate(data[0], PopulateFrom.DB)
@@ -139,12 +134,12 @@ export class ContractVersion extends AdvancedSQLModel {
     } catch (err) {
       throw await new NftsCodeException({
         status: 500,
-        errorMessage: `Error getting NFT contract version for type ${collectionType} and version ${version_id}`,
+        errorMessage: `Error getting NFT contract version for type ${collectionType}`,
         code: NftsErrorCode.GENERAL_SERVER_ERROR,
       }).writeToMonitor({
         context: this.getContext(),
         logType: LogType.ERROR,
-        data: { err, collectionType, chainType, version: version_id },
+        data: { err, collectionType, chainType },
         sendAdminAlert: true,
       });
     }
@@ -164,7 +159,7 @@ export class ContractVersion extends AdvancedSQLModel {
     chainType: ChainType = ChainType.EVM,
   ): Promise<string> {
     try {
-      const abi = await runCachedFunction(
+      const abi = await runCachedFunction<string>(
         `${CacheKeyPrefix.CONTRACT_ABI}:${[
           collectionType,
           version_id,

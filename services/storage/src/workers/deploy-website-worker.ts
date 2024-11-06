@@ -1,12 +1,12 @@
 import {
   AppEnvironment,
+  checkProjectSubscription,
   Context,
   env,
   LogType,
   refundCredit,
   SerializeFor,
   ServiceName,
-  checkProjectSubscription,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -20,7 +20,6 @@ import {
   DeploymentEnvironment,
   DeploymentStatus,
   FileStatus,
-  StorageErrorCode,
 } from '../config/types';
 import { createCloudfrontInvalidationCommand } from '../lib/aws-cloudfront';
 import { generateDirectoriesFromPath } from '../lib/generate-directories-from-path';
@@ -133,38 +132,13 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         deployment.environment == DeploymentEnvironment.STAGING ||
         deployment.environment == DeploymentEnvironment.DIRECT_TO_PRODUCTION
       ) {
-        try {
-          ipfsRes = await ipfsService.uploadFilesToIPFSFromS3(
-            {
-              files: sourceFiles,
-              wrappingDirectoryPath: `Deployment_${deployment.id}`,
-            },
-            this.context,
-          );
-        } catch (uploadToIpfsErr) {
-          if (
-            uploadToIpfsErr?.options?.code !=
-              StorageErrorCode.STORAGE_IPFS_API_INITIALIZATION_ERROR &&
-            !ipfsService.usingBackupNode
-          ) {
-            //Force reinitialization of ipfs client and retry upload
-            await ipfsService.initializeIPFSClient(true);
-            ipfsRes = await ipfsService
-              .uploadFilesToIPFSFromS3(
-                {
-                  files: sourceFiles,
-                  wrappingDirectoryPath: `Deployment_${deployment.id}`,
-                },
-                this.context,
-              )
-              .catch((retryUploadToIpfsErr) => {
-                throw retryUploadToIpfsErr;
-              });
-          } else {
-            //ipfs service is already using backup node.
-            throw uploadToIpfsErr;
-          }
-        }
+        ipfsRes = await ipfsService.uploadFilesToIPFSFromS3(
+          {
+            files: sourceFiles,
+            wrappingDirectoryPath: `Deployment_${deployment.id}`,
+          },
+          this.context,
+        );
 
         //Set ipfsRes data to deployment
         deployment.cid = ipfsRes.parentDirCID;
@@ -217,38 +191,42 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           cidSize = stagingDeployment.size;
         }
       }
-      //publish IPNS and update target bucket
-      const ipns = await ipfsService.publishToIPNS(
-        targetBucket.CID,
-        targetBucket.bucket_uuid,
-      );
-      targetBucket.IPNS = ipns.name;
 
-      //create ipns record if it doesn't exists yet
-      const ipnsDbRecord: Ipns = await new Ipns({}, this.context).populateByKey(
-        targetBucket.bucket_uuid,
-      );
-      if (!ipnsDbRecord.exists()) {
-        ipnsDbRecord.populate({
-          project_uuid: targetBucket.project_uuid,
-          bucket_id: targetBucket.id,
-          name: targetBucket.name + ' IPNS',
-          ipnsName: ipns.name,
-          ipnsValue: ipns.value,
-          key: targetBucket.bucket_uuid,
-          cid: targetBucket.CID,
-        });
+      if (targetBucket.IPNS) {
+        //publish IPNS and update target bucket
+        const ipns = await ipfsService.publishToIPNS(
+          targetBucket.CID,
+          targetBucket.bucket_uuid,
+        );
+        targetBucket.IPNS = ipns.name;
 
-        await ipnsDbRecord.insert();
-      } else {
-        //Update db ipns record with new values
-        ipnsDbRecord.populate({
-          ipnsValue: ipns.value,
-          key: targetBucket.bucket_uuid,
-          cid: targetBucket.CID,
-        });
+        //create ipns record if it doesn't exists yet. When IPNS became payable, it should exists. But will keep this for backward compatibility
+        const ipnsDbRecord: Ipns = await new Ipns(
+          {},
+          this.context,
+        ).populateByKey(targetBucket.bucket_uuid);
+        if (!ipnsDbRecord.exists()) {
+          ipnsDbRecord.populate({
+            project_uuid: targetBucket.project_uuid,
+            bucket_id: targetBucket.id,
+            name: targetBucket.name + ' IPNS',
+            ipnsName: ipns.name,
+            ipnsValue: ipns.value,
+            key: targetBucket.bucket_uuid,
+            cid: targetBucket.CID,
+          });
 
-        await ipnsDbRecord.update();
+          await ipnsDbRecord.insert();
+        } else {
+          //Update db ipns record with new values
+          ipnsDbRecord.populate({
+            ipnsValue: ipns.value,
+            key: targetBucket.bucket_uuid,
+            cid: targetBucket.CID,
+          });
+
+          await ipnsDbRecord.update();
+        }
       }
 
       const conn = await this.context.mysql.start();

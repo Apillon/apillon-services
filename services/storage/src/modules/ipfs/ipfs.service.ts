@@ -47,13 +47,13 @@ export class IPFSService {
   private ipfsCluster: IpfsCluster;
   private project_uuid: string;
   private context: ServiceContext;
-  private canUseBackupNode = true;
+  private canUseBackupNode = false;
   public usingBackupNode = false;
 
   public constructor(
     context: ServiceContext,
     project_uuid: string,
-    canUseBackupNode = true,
+    canUseBackupNode = false,
   ) {
     this.project_uuid = project_uuid;
     this.context = context;
@@ -105,9 +105,15 @@ export class IPFSService {
           });
       }
 
+      let message = `Error initializing IPFS Client. Failed to get ipfs version (ipfs api health check failed).`;
+      message += ` Can use backup node: ${this.canUseBackupNode ? 'Yes' : 'No'}`;
+      if (this.canUseBackupNode) {
+        message += ` Backup api status: ${this.usingBackupNode ? 'OK' : 'ERROR'}`;
+      }
+
       await new Lmas().writeLog({
         logType: this.usingBackupNode ? LogType.WARN : LogType.ALERT,
-        message: `Error initializing IPFS Client. Failed to get ipfs version (ipfs api health check failed). Backup api status: ${this.usingBackupNode ? 'OK' : 'ERROR'}`,
+        message,
         location: 'IPFSService.initializeIPFSClient',
         service: ServiceName.STORAGE,
         data: {
@@ -167,9 +173,11 @@ export class IPFSService {
       event.fileUploadRequest.s3FileKey,
     );
 
-    console.info('Add file to IPFS, ...');
+    console.info(`Add file to IPFS. Pin: ${this.ipfsCluster.pinOnAdd}`);
     const filesOnIPFS = await this.kuboRpcApiClient.add({
       content: file.Body as ReadableStream,
+      pin: this.ipfsCluster.pinOnAdd,
+      rawLeaves: false,
     });
 
     await this.pinCidToCluster(filesOnIPFS.Hash);
@@ -199,7 +207,7 @@ export class IPFSService {
     return {
       cidV0: filesOnIPFS.Hash,
       cidV1: filesOnIPFS.Hash,
-      size: filesOnIPFS.Size,
+      size: filesOnIPFS.Size || 0,
     };
   }
 
@@ -241,6 +249,7 @@ export class IPFSService {
       50,
       context,
       async (fileUploadReq: FileUploadRequest) => {
+        fileUploadReq = new FileUploadRequest(fileUploadReq, context);
         console.info(
           'Adding file to IPFS, ...',
           (fileUploadReq.path || '') + fileUploadReq.fileName,
@@ -260,6 +269,7 @@ export class IPFSService {
               fileUploadReq.fileName,
             create: true,
             parents: true,
+            rawLeaves: false,
           });
 
           try {
@@ -271,14 +281,15 @@ export class IPFSService {
         } catch (error) {
           if (error.Code == 'NoSuchKey') {
             //File does not exists on S3 - update FUR status
-            try {
-              if (fileUploadReq.exists()) {
-                fileUploadReq.fileStatus =
-                  FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
-                await fileUploadReq.update();
-              }
-            } catch (err) {
-              console.error(err);
+            if (fileUploadReq.exists()) {
+              fileUploadReq.fileStatus =
+                FileUploadRequestFileStatus.ERROR_FILE_NOT_EXISTS_ON_S3;
+              await fileUploadReq.update().catch((upgErr) => {
+                console.error(
+                  'Error updating file upload request to status ERROR_FILE_NOT_EXISTS_ON_S3. ',
+                  upgErr,
+                );
+              });
             }
           } else {
             //Something else does not work - maybe IPFS node. Throw error.
@@ -501,11 +512,13 @@ export class IPFSService {
     await this.initializeIPFSClient();
 
     try {
-      await axios.post(
-        this.ipfsCluster.clusterServer + `pins/ipfs/${cid}`,
-        {},
-        {},
-      );
+      if (this.ipfsCluster.clusterServer) {
+        await axios.post(
+          this.ipfsCluster.clusterServer + `pins/ipfs/${cid}`,
+          {},
+          {},
+        );
+      }
     } catch (err) {
       writeLog(
         LogType.ERROR,
@@ -588,7 +601,7 @@ export class IPFSService {
   }
 
   /**
-   * Function, used for testing purposes. To upload fake file to IPFS
+   * Function, used for testing purposes AND in NFT flow. Uploads file to IPFS an pins it to cluster.
    * @param params file path and file content
    * @returns cidv0 & cidV1
    */
@@ -602,7 +615,11 @@ export class IPFSService {
     //Add to IPFS
     const fileOnIPFS = await this.kuboRpcApiClient.add({
       content: params.content,
+      pin: this.ipfsCluster?.pinOnAdd || false,
+      rawLeaves: false,
     });
+
+    await this.pinCidToCluster(fileOnIPFS.Hash);
 
     return {
       cidV0: fileOnIPFS.Hash,
@@ -719,5 +736,11 @@ export class IPFSService {
       }
     }
     return ipfsBandwidth;
+  }
+
+  public async cidToCidV1(cidV0: string) {
+    //Initialize IPFS client
+    await this.initializeIPFSClient();
+    return await this.kuboRpcApiClient.cidToCidV1(cidV0);
   }
 }
