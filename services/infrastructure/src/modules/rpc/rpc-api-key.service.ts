@@ -238,45 +238,6 @@ export class RpcApiKeyService {
     return keysCount >= maxApiKeysQuota.value;
   }
 
-  static async apillonApiCreateRpcApiKey(
-    { data }: { data: ApillonApiCreateRpcApiKeyDto },
-    context: ServiceContext,
-  ) {
-    const dwellirUser = await new DwellirUser({}, context).populateByUserUuid(
-      data.user_uuid,
-    );
-
-    if (!dwellirUser.exists()) {
-      throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.DWELLIR_ID_NOT_FOUND,
-        status: 404,
-      });
-    }
-
-    const dwellirId = dwellirUser.dwellir_id;
-
-    const maxApiKeysQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_RPC_KEYS,
-      object_uuid: data.user_uuid,
-    });
-
-    const keysCount = await new RpcApiKey({}, context).getNumberOfKeysPerUser(
-      data.user_id,
-    );
-
-    if (keysCount >= maxApiKeysQuota.value) {
-      throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.MAX_RPC_KEYS_REACHED,
-        status: 400,
-      });
-    }
-
-    const rpcApiKey = new RpcApiKey(data, context);
-    const apiKeyResponse = await Dwellir.createApiKey(dwellirId);
-    rpcApiKey.uuid = apiKeyResponse.api_key;
-    return await rpcApiKey.insert();
-  }
-
   static async createRpcApiKey(
     { data }: { data: CreateRpcApiKeyDto | ApillonApiCreateRpcApiKeyDto },
     context: ServiceContext,
@@ -310,7 +271,7 @@ export class RpcApiKeyService {
       ? await Dwellir.createApiKey(dwellirId)
       : await Dwellir.getInitialApiKey(dwellirId);
     rpcApiKey.uuid = apiKeyResponse.api_key;
-    return await rpcApiKey.insert();
+    return (await rpcApiKey.insert()).serialize(SerializeFor.SERVICE);
   }
 
   static async updateRpcApiKey(
