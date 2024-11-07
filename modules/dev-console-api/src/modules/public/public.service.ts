@@ -5,6 +5,8 @@ import {
   EmailDataDto,
   EmailTemplate,
   Mailing,
+  MintNftDTO,
+  NftsMicroservice,
   env,
 } from '@apillon/lib';
 import { User } from '../user/models/user.model';
@@ -54,5 +56,9 @@ export class PublicService {
     query: ServiceStatusQueryFilter,
   ) {
     return await new ServiceStatus({}, context).getList(context, query);
+  }
+
+  async mintNftTo(context: DevConsoleApiContext, body: MintNftDTO) {
+    return (await new NftsMicroservice(context).mintNft(body)).data;
   }
 }

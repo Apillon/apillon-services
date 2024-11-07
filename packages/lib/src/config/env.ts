@@ -716,6 +716,9 @@ export interface IEnv {
   DWELLIR_USERNAME: string;
   DWELLIR_PASSWORD: string;
   DWELLIR_URL: string;
+
+  /** Demo collection, used on landing page for embedded wallet demo */
+  DEMO_NFT_COLLECTION_UUID: string;
 }
 
 // dotenv.config();
@@ -1292,6 +1295,9 @@ export let env: IEnv = {
   DWELLIR_USERNAME: process.env['DWELLIR_USERNAME'],
   DWELLIR_PASSWORD: process.env['DWELLIR_PASSWORD'],
   DWELLIR_URL: process.env['DWELLIR_URL'],
+
+  /** Demo collection, used on landing page for embedded wallet demo */
+  DEMO_NFT_COLLECTION_UUID: process.env['DEMO_NFT_COLLECTION_UUID'],
 };
 
 export let isEnvReady = false;

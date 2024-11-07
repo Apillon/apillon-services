@@ -844,7 +844,7 @@ export class NftsService {
   ) {
     body.idsToMint ||= [];
     console.log(
-      `Minting NFT Collection to wallet address: ${body.receivingAddress}`,
+      `Minting NFT Collection ${body.collection_uuid} to wallet address: ${body.receivingAddress}`,
     );
 
     const collection: Collection = await new Collection(
@@ -1449,7 +1449,10 @@ export class NftsService {
         sourceFunction,
       });
     }
-    collection.canAccess(context);
+
+    // If not the collection which gets minted from landing page, check access
+    if (collection.collection_uuid !== env.DEMO_NFT_COLLECTION_UUID)
+      collection.canAccess(context);
   }
 
   private static async checkMintConditions(
