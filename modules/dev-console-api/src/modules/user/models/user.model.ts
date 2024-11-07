@@ -34,7 +34,7 @@ export class User extends AdvancedSQLModel {
     ],
     populatable: [PopulateFrom.DB],
   })
-  public id: number;
+  public id: number = undefined;
 
   /**
    * User's UUID used for synchronization with microservices

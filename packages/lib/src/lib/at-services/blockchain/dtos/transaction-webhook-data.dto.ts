@@ -27,14 +27,14 @@ export class TransactionWebhookDataDto extends BaseTransactionDto {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
-  public referenceTable: string;
+  public referenceTable: string = undefined;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
-  public referenceId: string;
+  public referenceId: string = undefined;
 
   @prop({
     parser: { resolver: integerParser() },

@@ -69,7 +69,7 @@ export class Deployment extends AdvancedSQLModel {
     ],
     populatable: [PopulateFrom.DB],
   })
-  public id: number;
+  public id: number = undefined;
 
   /**
    * status
@@ -94,7 +94,7 @@ export class Deployment extends AdvancedSQLModel {
       return SqlModelStatus.ACTIVE;
     },
   })
-  public status?: number;
+  public status?: number = undefined;
 
   /**
    * Created at property definition.
@@ -110,7 +110,7 @@ export class Deployment extends AdvancedSQLModel {
     populatable: [PopulateFrom.DB],
     defaultValue: new Date(),
   })
-  public createTime?: Date;
+  public createTime?: Date = undefined;
 
   /**
    * Updated at property definition.
@@ -125,7 +125,7 @@ export class Deployment extends AdvancedSQLModel {
     ],
     populatable: [PopulateFrom.DB],
   })
-  public updateTime?: Date;
+  public updateTime?: Date = undefined;
 
   //# endregion
 

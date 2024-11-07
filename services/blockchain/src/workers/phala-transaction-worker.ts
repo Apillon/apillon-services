@@ -8,7 +8,7 @@ import { SubstrateContractTransactionWorker } from './substrate-contract-transac
  * workers on successful instantiation)
  */
 export class PhalaTransactionWorker extends SubstrateContractTransactionWorker {
-  protected indexer: PhalaBlockchainIndexer;
+  protected indexer: PhalaBlockchainIndexer = undefined;
 
   protected async fetchAllResolvedTransactions(
     address: string,

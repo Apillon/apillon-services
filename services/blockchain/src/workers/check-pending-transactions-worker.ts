@@ -21,7 +21,7 @@ import { ethers } from 'ethers';
 import { getNextOnChainNonce } from '../modules/evm/evm.service';
 
 export class CheckPendingTransactionsWorker extends BaseWorker {
-  protected context: Context;
+  protected context: Context = undefined;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);

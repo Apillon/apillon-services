@@ -6,9 +6,9 @@ import { sendToWorkerQueue } from '../aws-sqs';
 import { BaseWorker } from './base-worker';
 
 export abstract class BaseQueueWorker extends BaseWorker {
-  protected context: Context;
+  protected context: Context = null;
   protected workerType: QueueWorkerType;
-  protected workerName: string;
+  protected workerName: string = undefined;
   protected workerQueueUrl: string;
 
   public constructor(

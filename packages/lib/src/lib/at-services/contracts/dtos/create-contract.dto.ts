@@ -98,5 +98,5 @@ export class ApillonApiCreateContractDTO extends CreateContractDTO {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public override project_uuid: string;
+  public override project_uuid: string = undefined;
 }

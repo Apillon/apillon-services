@@ -28,7 +28,7 @@ import { ConfigErrorCode, QuotaWarningLevel } from '../config/types';
  * @extends {BaseWorker}
  */
 export class ExpiredSubscriptionsWorker extends BaseWorker {
-  protected context: Context;
+  protected context: Context = undefined;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);

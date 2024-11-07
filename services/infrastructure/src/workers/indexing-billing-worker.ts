@@ -24,7 +24,7 @@ import { sqdApi } from '../modules/indexer/sqd/sqd.api';
 import { BillingReceipt } from '../modules/indexer/sqd/types/deploymentResponse';
 
 export class IndexingBillingWorker extends BaseSingleThreadWorker {
-  protected context: Context;
+  protected context: Context = null;
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
   }

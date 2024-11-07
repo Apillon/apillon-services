@@ -66,7 +66,7 @@ export class AcurastJob extends UuidSqlModel {
     ],
     populatable: [PopulateFrom.DB],
   })
-  public id: number;
+  public id: number = undefined;
 
   @prop({
     parser: { resolver: stringParser() },

@@ -26,5 +26,5 @@ export class ApillonApiDeployedContractsQueryFilterDTO extends DeployedContracts
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public override project_uuid: string;
+  public override project_uuid: string = undefined;
 }
