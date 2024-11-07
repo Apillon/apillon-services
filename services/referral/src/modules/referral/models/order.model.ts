@@ -171,5 +171,5 @@ export class Order extends AdvancedSQLModel {
       return OrderStatus.PENDING;
     },
   })
-  public status?: OrderStatus = undefined;
+  public status?: OrderStatus;
 }

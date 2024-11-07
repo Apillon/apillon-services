@@ -34,7 +34,7 @@ export class RpcUrl extends UuidSqlModel {
     ],
     populatable: [PopulateFrom.DB],
   })
-  public id: number = undefined;
+  public id: number;
 
   @prop({
     parser: { resolver: stringParser() },

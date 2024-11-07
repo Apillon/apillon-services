@@ -62,12 +62,12 @@ export class ApillonApiCreateBucketDto extends CreateBucketDto {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
-  public project_uuid: string = undefined;
+  public project_uuid: string;
 
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
-  public bucketType: number = undefined;
+  public bucketType: number;
 }

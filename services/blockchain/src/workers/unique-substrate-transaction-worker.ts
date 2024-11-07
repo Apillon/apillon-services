@@ -14,7 +14,7 @@ import { UniqueBlockchainIndexer } from '../modules/blockchain-indexers/substrat
  * events to retrieve collection id from TX.
  */
 export class UniqueJobTransactionWorker extends SubstrateTransactionWorker {
-  protected indexer: UniqueBlockchainIndexer = undefined;
+  protected indexer: UniqueBlockchainIndexer;
 
   protected async setTransactionsState(
     transactions: any[],

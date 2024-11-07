@@ -94,7 +94,7 @@ export class TransactionLog extends AdvancedSQLModel {
       },
     ],
   })
-  public status: TxStatus = undefined;
+  public status: TxStatus;
 
   @prop({
     parser: { resolver: integerParser() },

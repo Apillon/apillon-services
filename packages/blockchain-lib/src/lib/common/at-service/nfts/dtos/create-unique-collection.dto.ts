@@ -194,5 +194,5 @@ export class CreateUniqueCollectionDTO extends ApiCreateUniqueCollectionDTO {
       },
     ],
   })
-  public project_uuid: string = undefined;
+  public project_uuid: string;
 }

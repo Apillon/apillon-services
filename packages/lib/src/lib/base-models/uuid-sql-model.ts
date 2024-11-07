@@ -31,7 +31,7 @@ export abstract class UuidSqlModel extends ProjectAccessModel {
     ],
     populatable: [PopulateFrom.DB],
   })
-  public id: number = undefined;
+  public id: number;
 
   /**
    * status
@@ -56,7 +56,7 @@ export abstract class UuidSqlModel extends ProjectAccessModel {
       return SqlModelStatus.ACTIVE;
     },
   })
-  public status?: number = undefined;
+  public status?: number;
 
   /**
    * Created at property definition.
@@ -72,7 +72,7 @@ export abstract class UuidSqlModel extends ProjectAccessModel {
     populatable: [PopulateFrom.DB],
     defaultValue: new Date(),
   })
-  public createTime?: Date = undefined;
+  public createTime?: Date;
 
   /**
    * Updated at property definition.
@@ -87,5 +87,5 @@ export abstract class UuidSqlModel extends ProjectAccessModel {
     ],
     populatable: [PopulateFrom.DB],
   })
-  public updateTime?: Date = undefined;
+  public updateTime?: Date;
 }

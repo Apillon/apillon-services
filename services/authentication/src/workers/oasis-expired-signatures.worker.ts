@@ -23,7 +23,7 @@ import { OasisSignature } from '../modules/embedded-wallet/models/oasis-signatur
  * Worker updates oasis signatures status and refunds credit for signatures, which were not used for Oasis account creation (were not indexed and updated to status ACTIVE in 2 hours)
  */
 export class OasisExpiredSignaturesWorker extends BaseSingleThreadWorker {
-  protected context: Context = undefined;
+  protected context: Context;
 
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);

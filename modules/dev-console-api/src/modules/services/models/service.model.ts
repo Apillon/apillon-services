@@ -35,7 +35,7 @@ export class Service extends AdvancedSQLModel {
     serializable: [SerializeFor.ADMIN, SerializeFor.SERVICE],
     populatable: [PopulateFrom.DB],
   })
-  public id: number = undefined;
+  public id: number;
 
   /**
    * Service's UUID

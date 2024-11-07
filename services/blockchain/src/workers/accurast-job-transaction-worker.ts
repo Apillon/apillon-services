@@ -14,7 +14,7 @@ import { AcurastBlockchainIndexer } from '../modules/blockchain-indexers/substra
  * events to retrieve contract address from TX.
  */
 export class AcurastJobTransactionWorker extends SubstrateTransactionWorker {
-  protected indexer: AcurastBlockchainIndexer = undefined;
+  protected indexer: AcurastBlockchainIndexer;
 
   protected async setTransactionsState(
     transactions: any[],

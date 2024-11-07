@@ -18,7 +18,7 @@ import { PinToCrustRequest } from '../modules/crust/models/pin-to-crust-request.
 import { Bucket } from '../modules/bucket/models/bucket.model';
 
 export class PinToCrustWorker extends BaseSingleThreadWorker {
-  protected context: Context = null;
+  protected context: Context;
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
   }

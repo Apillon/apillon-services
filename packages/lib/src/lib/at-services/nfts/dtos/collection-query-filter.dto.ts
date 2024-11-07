@@ -25,5 +25,5 @@ export class ApillonApiNFTCollectionQueryFilter extends NFTCollectionQueryFilter
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [],
   })
-  public override project_uuid: string = undefined;
+  public override project_uuid: string;
 }

@@ -8,7 +8,7 @@ export class WalletTransactionsQueryFilter extends BaseQueryFilter {
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.ADMIN],
   })
-  public status: number = undefined;
+  public status: number;
 
   @prop({
     parser: { resolver: stringParser() },

@@ -27,14 +27,14 @@ export class Credit extends ProjectAccessModel {
     serializable: [SerializeFor.PROFILE, SerializeFor.SELECT_DB],
     populatable: [PopulateFrom.DB],
   })
-  public updateTime?: Date = undefined;
+  public updateTime?: Date;
 
   @prop({
     parser: { resolver: dateParser() },
     serializable: [SerializeFor.PROFILE, SerializeFor.SELECT_DB],
     populatable: [PopulateFrom.DB],
   })
-  public createTime?: Date = undefined;
+  public createTime?: Date;
 
   @prop({
     parser: { resolver: stringParser() },

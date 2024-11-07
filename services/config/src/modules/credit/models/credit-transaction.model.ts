@@ -30,7 +30,7 @@ export class CreditTransaction extends ProjectAccessModel {
     serializable: [SerializeFor.APILLON_API, SerializeFor.SELECT_DB],
     populatable: [PopulateFrom.DB],
   })
-  public createTime?: Date = undefined;
+  public createTime?: Date;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -255,10 +255,10 @@ export class CreditTransaction extends ProjectAccessModel {
           '',
           SerializeFor.SELECT_DB,
         )}, ${new Product({}, context).generateSelectFields(
-          'p',
-          '',
-          SerializeFor.SELECT_DB,
-        )}
+        'p',
+        '',
+        SerializeFor.SELECT_DB,
+      )}
         `,
       qFrom: `
         FROM \`${DbTables.CREDIT_TRANSACTION}\` ct

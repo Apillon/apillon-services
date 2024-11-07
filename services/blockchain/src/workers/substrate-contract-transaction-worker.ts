@@ -14,7 +14,7 @@ import { BaseBlockchainIndexer } from '../modules/blockchain-indexers/substrate/
  * to retrieve contract address from TX.
  */
 export class SubstrateContractTransactionWorker extends SubstrateTransactionWorker {
-  protected indexer: BaseBlockchainIndexer = undefined;
+  protected indexer: BaseBlockchainIndexer;
 
   protected async setTransactionsState(
     transactions: any[],

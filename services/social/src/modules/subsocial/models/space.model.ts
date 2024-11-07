@@ -77,7 +77,7 @@ export class Space extends UuidSqlModel {
       return SqlModelStatus.ACTIVE;
     },
   })
-  public status?: number = undefined;
+  public status?: number;
 
   @prop({
     parser: { resolver: stringParser() },
