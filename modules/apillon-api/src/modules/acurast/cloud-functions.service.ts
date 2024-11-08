@@ -55,4 +55,8 @@ export class CloudFunctionsService {
   async deleteJob(context: ApillonApiContext, job_uuid: string) {
     return (await new ComputingMicroservice(context).deleteJob(job_uuid)).data;
   }
+
+  async verifyRebel(context: ApillonApiContext, email: string) {
+    return (await new ComputingMicroservice(context).verifyRebel(email)).data;
+  }
 }

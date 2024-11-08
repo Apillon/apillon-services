@@ -53,6 +53,8 @@ export async function processEvent(event: any, context: Context): Promise<any> {
 
     [ComputingEventType.UPDATE_JOB]: AcurastService.updateJob,
     [ComputingEventType.DELETE_JOB]: AcurastService.deleteJob,
+
+    [ComputingEventType.VERIFY_REBEL]: AcurastService.verifyRebel,
   };
 
   return await processors[event.eventName](event, context);

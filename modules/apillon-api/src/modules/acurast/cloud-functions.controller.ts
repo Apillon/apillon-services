@@ -14,6 +14,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
+  HttpCode,
   Param,
   Post,
   Query,
@@ -23,6 +25,7 @@ import { ApillonApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { CloudFunctionsService } from './cloud-functions.service';
+import { BadRequestException } from '@nestjs/common';
 
 @Controller('cloud-functions')
 export class CloudFunctionsController {
@@ -118,5 +121,22 @@ export class CloudFunctionsController {
     @Param('job_uuid') job_uuid: string,
   ) {
     return await this.cloudFunctionsService.deleteJob(context, job_uuid);
+  }
+
+  @Post('acurast/verify-rebel')
+  @ApiKeyPermissions({
+    role: DefaultApiKeyRole.KEY_READ,
+    serviceType: AttachedServiceType.COMPUTING,
+  })
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard, ValidationGuard)
+  async verifyRebel(
+    @Ctx() context: ApillonApiContext,
+    @Body('email') email: string,
+  ) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new BadRequestException("Invalid 'email' body parameter");
+    }
+    return await this.cloudFunctionsService.verifyRebel(context, email);
   }
 }

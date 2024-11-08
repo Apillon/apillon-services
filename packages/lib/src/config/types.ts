@@ -318,6 +318,8 @@ export enum ComputingEventType {
 
   UPDATE_JOB = 'update-job',
   DELETE_JOB = 'delete-job',
+
+  VERIFY_REBEL = 'verify-rebel',
 }
 
 export enum ReferralEventType {

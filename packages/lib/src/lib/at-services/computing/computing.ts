@@ -235,4 +235,11 @@ export class ComputingMicroservice extends BaseService {
       job_uuid,
     });
   }
+
+  public async verifyRebel(email: string) {
+    return await this.callService({
+      eventName: ComputingEventType.VERIFY_REBEL,
+      email,
+    });
+  }
 }
