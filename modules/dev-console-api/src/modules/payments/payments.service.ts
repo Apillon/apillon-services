@@ -10,6 +10,7 @@ import {
   QuotaCode,
   QuotaOverrideDto,
   Scs,
+  ServiceName,
   SubscriptionPackageId,
   UpdateSubscriptionDto,
   env,
@@ -155,10 +156,14 @@ export class PaymentsService {
               }),
             );
           } else {
-            writeLog(
-              LogType.INFO,
-              `User UUID not found in metadata: ${JSON.stringify(event.data?.previous_attributes?.metadata)}`,
-            );
+            await new Lmas().writeLog({
+              sendAdminAlert: true,
+              logType: LogType.ERROR,
+              message: `User UUID not found in metadata`,
+              service: ServiceName.DEV_CONSOLE,
+              location: 'PaymentsService.stripeWebhookEventHandler',
+              data: { metadata: event.data?.previous_attributes?.metadata },
+            });
           }
         }
 
