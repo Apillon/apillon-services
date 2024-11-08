@@ -1,8 +1,8 @@
-import { verify } from 'hcaptcha';
-
-import { AppEnvironment, ValidatorErrorCode } from '../config/types';
+import { AppEnvironment, LogType, ValidatorErrorCode } from '../config/types';
 import { env, getEnvSecrets } from '../config/env';
 import { CodeException } from './exceptions/exceptions';
+import axios from 'axios';
+import { writeLog } from './logger';
 
 export type Captcha = { eKey: string; token: string };
 /**
@@ -41,11 +41,19 @@ async function verifyCaptcha(
   secret: string = env.CAPTCHA_SECRET,
 ): Promise<boolean> {
   try {
-    return (await verify(secret, token)).success;
+    const response = await axios.post('https://api.prosopo.io/siteverify', {
+      token,
+      secret,
+    });
+
+    if (!response.data.success)
+      throwCodeException(ValidatorErrorCode.CAPTCHA_INVALID);
   } catch (err) {
-    console.error('Error verifying captcha!', err);
-    throw err;
+    writeLog(LogType.ERROR, 'Error verifying captcha!', err);
+    throwCodeException(ValidatorErrorCode.CAPTCHA_INVALID);
   }
+
+  return true;
 }
 
 const throwCodeException = (code: ValidatorErrorCode) => {

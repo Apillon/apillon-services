@@ -34,7 +34,6 @@
     "axios": "^1.6.8",
     "colors": "^1.4.0",
     "dotenv": "^16.4.5",
-    "hcaptcha": "^0.1.1",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
