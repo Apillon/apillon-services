@@ -23,7 +23,7 @@ export class InfrastructureMicroservice extends BaseService {
       : env.INFRASTRUCTURE_SOCKET_PORT;
   serviceName: 'INFRASTRUCTURE';
 
-  constructor(context: Context) {
+  constructor(context?: Context) {
     super(context);
     this.isDefaultAsync = false;
   }
