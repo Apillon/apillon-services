@@ -6,6 +6,7 @@ import {
   SerializeFor,
   ValidatorErrorCode,
 } from '../../../../config/types';
+import { isNull, isUndefined } from '@rawmodel/utils';
 
 export class CallContractDTO extends ModelBase {
   @prop({
@@ -38,7 +39,7 @@ export class CallContractDTO extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
-        resolver: presenceValidator(),
+        resolver: arrayPresenceValidator(),
         code: ValidatorErrorCode.DATA_NOT_PRESENT,
       },
     ],
@@ -53,4 +54,17 @@ export class ApillonApiCallContractDTO extends CallContractDTO {
     validators: [],
   })
   public project_uuid: string;
+}
+
+export function arrayPresenceValidator(allowEmpty = false) {
+  return function (this: any, value: any): boolean {
+    if (isUndefined(value) || isNull(value)) {
+      return false;
+    }
+    if (allowEmpty && value.length === 0) {
+      return true;
+    }
+
+    return value.length > 0;
+  };
 }
