@@ -17,6 +17,7 @@ import {
   DwellirGetApiKeyResponse,
   DwellirGetEndpointsResponse,
   DwellirGetUsageResponse,
+  DwellirGetUsageV2Response,
 } from './types';
 export class Dwellir {
   static async makeRequest<T>(
@@ -29,6 +30,7 @@ export class Dwellir {
       const response = await axios({
         url,
         method,
+        params: method === 'get' ? data : undefined,
         data,
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -128,6 +130,17 @@ export class Dwellir {
     return this.makeRequest<DwellirGetUsageResponse>(
       `${env.DWELLIR_URL}/v1/user/${userId}/analytics/day`,
       'get',
+      {
+        start_of_month: true,
+      },
+    );
+  }
+
+  // Includes usage per chain
+  static async getUsageV2(userId: string) {
+    return this.makeRequest<DwellirGetUsageV2Response>(
+      `${env.DWELLIR_URL}/v2/user/${userId}/analytics/day?start_of_month=true`,
+      'post',
     );
   }
 

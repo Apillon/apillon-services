@@ -105,6 +105,84 @@ export class RpcApiKeyService {
     };
   }
 
+  static async getRpcApiKeyUsagePerChain(
+    { data: { id, userUuid } }: { data: { id: number; userUuid: string } },
+    context: ServiceContext,
+  ) {
+    const rpcApiKey = await new RpcApiKey({}, context).populateById(id);
+
+    if (!rpcApiKey.exists()) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.RPC_API_KEY_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    rpcApiKey.canAccess(context);
+
+    const dwellirUser = await new DwellirUser({}, context).populateByUserUuid(
+      userUuid,
+    );
+
+    if (!dwellirUser.exists()) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.DWELLIR_ID_NOT_FOUND,
+        status: 404,
+      });
+    }
+
+    const dwellirId = dwellirUser.dwellir_id;
+
+    const usages = await Dwellir.getUsageV2(dwellirId);
+
+    const usagePerDomain = usages.rows.reduce(
+      (acc, usage) => {
+        if (usage.api_key !== rpcApiKey.uuid) {
+          return acc;
+        }
+
+        if (!acc[usage.domain]) {
+          acc[usage.domain] = [
+            {
+              date: usage.datetime,
+              requests: usage.requests,
+              responses: usage.responses,
+            },
+          ];
+        } else {
+          const existingUsage = acc[usage.domain].find(
+            (u) => u.date === usage.datetime,
+          );
+          if (existingUsage) {
+            existingUsage.requests += usage.requests;
+            existingUsage.responses += usage.responses;
+          } else {
+            acc[usage.domain].push({
+              date: usage.datetime,
+              requests: usage.requests,
+              responses: usage.responses,
+            });
+          }
+        }
+
+        return acc;
+      },
+      {} as Record<
+        string,
+        { date: string; requests: number; responses: number }[]
+      >,
+    );
+
+    // Sort the usage per domain by date
+    Object.values(usagePerDomain).forEach((usages) => {
+      usages.sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+      );
+    });
+
+    return usagePerDomain;
+  }
+
   static async getRpcApiKey({ id }: { id: number }, context: ServiceContext) {
     const rpcApiKey = await new RpcApiKey({}, context).populateByIdWithUrls(id);
 
