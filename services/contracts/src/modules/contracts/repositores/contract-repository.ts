@@ -102,10 +102,10 @@ export class ContractRepository extends BaseRepository {
     );
     if (!contract.exists()) {
       throw new ContractsCodeException({
-        status: 500,
-        code: ContractsErrorCode.CONTRACT_OWNER_ERROR,
+        status: 404,
+        code: ContractsErrorCode.CONTRACT_NOT_FOUND,
         context: this.context,
-        sourceFunction: 'ContractRepository.getContractDeployByUUID',
+        sourceFunction: 'ContractRepository.getContractWithVersionAndMethods',
       });
     }
     if (!contractVersion.exists()) {
