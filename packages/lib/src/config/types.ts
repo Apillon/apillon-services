@@ -324,6 +324,8 @@ export enum ReferralEventType {
   GET_TWITTER_LINK = 'get-twitter-link',
   GET_TWEETS = 'get-tweets',
   CONFIRM_RETWEET = 'confirm-retweet',
+  GET_PRODUCT_HUNT_COMMENT = 'get-product-hunt-comment',
+  CREATE_PRODUCT_HUNT_COMMENT = 'create-product-hunt-comment',
 
   ADD_PROMO_CODE_CREDITS = 'add-promo-code-credits',
 }
@@ -784,6 +786,9 @@ export enum ValidatorErrorCode {
   EVM_CHAIN_NOT_PRESENT = 42200805,
   EVM_CHAIN_NOT_VALID = 42200806,
   //#endregion
+
+  PRODUCT_HUNT_COMMENT_USERNAME_NOT_PRESENT = 1,
+  PRODUCT_HUNT_COMMENT_URL_NOT_PRESENT = 2,
 
   //#region Caching
   INVALID_CACHE_KEY = 42200900,
