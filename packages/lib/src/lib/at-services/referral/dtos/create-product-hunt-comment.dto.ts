@@ -30,6 +30,16 @@ export class CreateProductHuntCommentDto extends ModelBase {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.PRODUCT_HUNT_COMMENT_URL_NOT_PRESENT,
       },
+      {
+        resolver: (value) => {
+          return (
+            value &&
+            typeof value === 'string' &&
+            value.includes('producthunt.com')
+          );
+        },
+        code: ValidatorErrorCode.PRODUCT_HUNT_COMMENT_URL_INVALID,
+      },
     ],
   })
   public url: string;
