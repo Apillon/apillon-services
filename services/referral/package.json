@@ -6,6 +6,7 @@
   "description": "Apillon referral service",
   "scripts": {
     "prebuild": "rimraf dist",
+    "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit --verbose",
     "test-service": "cross-env APP_ENV=testing LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit",
     "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60007",
     "build": "tsc",
@@ -37,7 +38,63 @@
     "@rawmodel/validators": "^3.3.4"
   },
   "devDependencies": {
+    "@apillon/tests-lib": "*",
     "eslint-config-common": "*",
     "tsconfig": "*"
+  },
+  "jest": {
+    "testTimeout": 1800000,
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "rootDir": "src",
+    "testPathIgnorePatterns": [
+      "dist/*"
+    ],
+    "testRegex": ".*\\.test\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "dependencies": {
+      "@apillon/lib": "*",
+      "@apillon/service-lib": "*",
+      "@apillon/workers-lib": "*",
+      "@middy/core": "^3.3.1",
+      "node-fetch": "^2.6.7",
+      "stripe": "^17.0.0"
+    },
+    "devDependencies": {
+      "@apillon/tests-lib": "*",
+      "eslint-config-common": "*",
+      "tsconfig": "*"
+    },
+    "jest": {
+      "testTimeout": 1800000,
+      "moduleFileExtensions": [
+        "ts",
+        "tsx",
+        "js",
+        "json"
+      ],
+      "rootDir": "src",
+      "testPathIgnorePatterns": [
+        "dist/*"
+      ],
+      "testRegex": ".*\\.test\\.ts$",
+      "transform": {
+        "^.+\\.(t|j)s$": "ts-jest"
+      },
+      "collectCoverage": false,
+      "collectCoverageFrom": [
+        "**/*.(t|j)s"
+      ],
+      "coverageDirectory": "../coverage",
+      "testEnvironment": "node",
+      "preset": "ts-jest",
+      "verbose": true
+    }
   }
 }
