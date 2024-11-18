@@ -227,8 +227,8 @@ export class ContractService {
     const rpcEndpoint = (
       await this.blockchainService.getChainEndpoint(chain, ChainType.EVM)
     ).data?.url;
-
-    const evmContractClient = EVMContractClient.getInstance(
+    console.log(`RPC initialization ${rpcEndpoint}`);
+    const evmContractClient = new EVMContractClient(
       rpcEndpoint,
       abi,
       contractAddress,
