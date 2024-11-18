@@ -8,8 +8,11 @@ import {
 @Injectable()
 export class ProductHuntService {
   async getComment(context: DevConsoleApiContext) {
-    return (await new ReferralMicroservice(context).getProductHuntComment())
-      .data;
+    const comment = (
+      await new ReferralMicroservice(context).getProductHuntComment()
+    ).data;
+
+    return comment.id ? comment : null;
   }
 
   async createComment(

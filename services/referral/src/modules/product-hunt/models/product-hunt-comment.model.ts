@@ -6,7 +6,7 @@ import {
   prop,
 } from '@apillon/lib';
 import { DbTables, ReferralErrorCode } from '../../../config/types';
-import { stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 
 export class ProductHuntComment extends AdvancedSQLModel {
   public readonly tableName = DbTables.PRODUCT_HUNT_COMMENT;
@@ -14,6 +14,20 @@ export class ProductHuntComment extends AdvancedSQLModel {
   public constructor(data: any, context: any) {
     super(data, context);
   }
+
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+      SerializeFor.LOGGER,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
+      SerializeFor.PROFILE,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -67,6 +81,7 @@ export class ProductHuntComment extends AdvancedSQLModel {
       SerializeFor.SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -85,7 +100,7 @@ export class ProductHuntComment extends AdvancedSQLModel {
     }
 
     const data = await context.mysql.paramExecute(`
-    SELECT ? FROM ${DbTables.PRODUCT_HUNT_COMMENT} WHERE user_uuid = "${userUuid}"`);
+    SELECT * FROM ${DbTables.PRODUCT_HUNT_COMMENT} WHERE user_uuid = "${userUuid}"`);
 
     return data?.length
       ? this.populate(data[0], PopulateFrom.DB)

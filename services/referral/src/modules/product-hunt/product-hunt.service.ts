@@ -1,4 +1,4 @@
-import { CreateProductHuntCommentDto } from '@apillon/lib';
+import { CreateProductHuntCommentDto, SerializeFor } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { ProductHuntComment } from './models/product-hunt-comment.model';
 
@@ -8,9 +8,8 @@ export class ProductHuntService {
       {},
       context,
     ).populateForUser();
-
     if (existingComment.exists()) {
-      return existingComment.serialize();
+      return existingComment.serialize(SerializeFor.PROFILE);
     }
 
     return {};
@@ -28,9 +27,8 @@ export class ProductHuntService {
     if (existingComment.exists()) {
       existingComment.username = event.body.username;
       existingComment.url = event.body.url;
-      existingComment.update();
-
-      return existingComment.serialize();
+      const updatedComment = await existingComment.update();
+      return updatedComment.serialize(SerializeFor.PROFILE);
     } else if (context.user.user_uuid) {
       const newComment = new ProductHuntComment({}, context).populate({
         username: event.body.username,
@@ -38,8 +36,8 @@ export class ProductHuntService {
         user_uuid: context.user.user_uuid,
       });
 
-      newComment.insert();
-      return newComment.serialize();
+      const insertedComment = await newComment.insert();
+      return insertedComment.serialize(SerializeFor.PROFILE);
     }
   }
 }

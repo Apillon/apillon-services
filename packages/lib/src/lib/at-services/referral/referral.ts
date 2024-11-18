@@ -132,8 +132,8 @@ export class ReferralMicroservice extends BaseService {
 
   public async createProductHuntComment(body: CreateProductHuntCommentDto) {
     return await this.callService({
-      eventName: ReferralEventType.GET_PRODUCT_HUNT_COMMENT,
-      body: body.serialize(),
+      eventName: ReferralEventType.CREATE_PRODUCT_HUNT_COMMENT,
+      body: body,
     });
   }
 }
