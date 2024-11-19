@@ -41,7 +41,7 @@ export class ContractRepository extends BaseRepository {
 
   async getContractWithLatestVersion(contract_uuid: string) {
     const data = await runCachedFunction<any>(
-      `${CacheKeyPrefix.CONTRACT_BY_UUID_WITH_LATEST_VERSION}:${[contract_uuid].join(':')}`,
+      `${CacheKeyPrefix.CONTRACT_BY_UUID_WITH_LATEST_VERSION}:${contract_uuid}`,
       async () =>
         await new Contract({}, this.context).getContractWithLatestVersion(
           contract_uuid,

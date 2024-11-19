@@ -50,11 +50,7 @@ export async function getEvmContractClient(
     )
   ).data?.url;
 
-  return EVMContractClient.getInstance(
-    rpcEndpoint,
-    contractAbi,
-    contractAddress,
-  );
+  return new EVMContractClient(rpcEndpoint, contractAbi, contractAddress);
 }
 
 export async function getSubstrateContractClient(
