@@ -32,7 +32,6 @@ describe('Product Hunt Comment e2e tests', () => {
     test('User can create & update a product hunt comment', async () => {
       const createDto = {
         url: 'https://www.producthunt.com/posts/1',
-        username: 'username',
       };
       const response = await request(stage.http)
         .post('/product-hunt')
@@ -43,12 +42,10 @@ describe('Product Hunt Comment e2e tests', () => {
       expect(response.body).toBeDefined();
       expect(response.body.data.id).toBeDefined();
       expect(response.body.data.url).toBe(createDto.url);
-      expect(response.body.data.username).toBe(createDto.username);
       expect(response.body.createTime).toBeUndefined();
 
       const updateDto = {
         url: 'https://www.producthunt.com/posts/2',
-        username: 'username2',
       };
 
       const updateResponse = await request(stage.http)
@@ -60,7 +57,6 @@ describe('Product Hunt Comment e2e tests', () => {
       expect(updateResponse.body).toBeDefined();
       expect(updateResponse.body.data.id).toBe(response.body.data.id);
       expect(updateResponse.body.data.url).toBe(updateDto.url);
-      expect(updateResponse.body.data.username).toBe(updateDto.username);
       expect(updateResponse.body.data.createTime).toBeUndefined();
     });
   });
@@ -78,7 +74,6 @@ describe('Product Hunt Comment e2e tests', () => {
     test('User can get a comment', async () => {
       const createDto = {
         url: 'https://www.producthunt.com/posts/1',
-        username: 'username',
       };
       const createResponse = await request(stage.http)
         .post('/product-hunt')
@@ -93,7 +88,6 @@ describe('Product Hunt Comment e2e tests', () => {
       expect(response.body).toBeDefined();
       expect(response.body.data.id).toBe(createResponse.body.data.id);
       expect(response.body.data.url).toBe(createDto.url);
-      expect(response.body.data.username).toBe(createDto.username);
       expect(response.body.data.createTime).toBeUndefined();
     });
   });

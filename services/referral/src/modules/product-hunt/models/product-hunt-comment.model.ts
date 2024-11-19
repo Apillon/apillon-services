@@ -45,28 +45,6 @@ export class ProductHuntComment extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ReferralErrorCode.PRODUCT_HUNT_COMMENT_USERNAME_NOT_PRESENT,
-      },
-    ],
-  })
-  username: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.PROFILE],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.ADMIN_SELECT_DB,
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-      SerializeFor.APILLON_API,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
         code: ReferralErrorCode.PRODUCT_HUNT_COMMENT_URL_NOT_PRESENT,
       },
     ],
