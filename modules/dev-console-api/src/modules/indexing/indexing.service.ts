@@ -2,6 +2,7 @@ import {
   BaseProjectQueryFilter,
   CreateIndexerDto,
   IndexerLogsQueryFilter,
+  IndexerUsageDataQueryFilter,
   InfrastructureMicroservice,
   UpdateIndexerDto,
 } from '@apillon/lib';
@@ -69,6 +70,15 @@ export class IndexingService {
       await new InfrastructureMicroservice(context).getIndexerDeployments(
         indexer_uuid,
       )
+    ).data;
+  }
+
+  async getIndexerUsageData(
+    context: DevConsoleApiContext,
+    query: IndexerUsageDataQueryFilter,
+  ) {
+    return (
+      await new InfrastructureMicroservice(context).getIndexerUsageData(query)
     ).data;
   }
 }

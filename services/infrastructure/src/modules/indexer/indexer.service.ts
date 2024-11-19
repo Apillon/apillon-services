@@ -1,10 +1,10 @@
 import {
   AWS_S3,
   BaseProjectQueryFilter,
-  checkProjectSubscription,
   CreateIndexerDto,
   env,
   IndexerLogsQueryFilter,
+  IndexerUsageDataQueryFilter,
   Lmas,
   LogType,
   Scs,
@@ -273,6 +273,39 @@ export class IndexerService {
     const { body } = await sqdApi<any>({
       method: 'GET',
       path: `/orgs/${env.SQD_ORGANIZATION_CODE}/deployments?squidId=${indexer.squidId}`,
+    });
+
+    return body;
+  }
+
+  /**
+   * Get indexer usage data (number of requests to indexer graphQL API) from squid API
+   * @param event
+   * @param context
+   * @returns
+   */
+  static async getIndexerUsageData(
+    event: { query: IndexerUsageDataQueryFilter },
+    context: ServiceContext,
+  ) {
+    const { indexer_uuid, from, to } = event.query;
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    const indexer = await new Indexer({}, context).populateByUUIDAndCheckAccess(
+      indexer_uuid,
+    );
+
+    if (!indexer.squidId) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.INDEXER_IS_NOT_DEPLOYED,
+        status: 400,
+      });
+    }
+
+    const { body } = await sqdApi<any>({
+      method: 'GET',
+      path: `/orgs/${env.SQD_ORGANIZATION_CODE}/metrics/ingress/${indexer.squidId}?from=${fromDate.toISOString()}&to=${toDate.toISOString()}`,
     });
 
     return body;

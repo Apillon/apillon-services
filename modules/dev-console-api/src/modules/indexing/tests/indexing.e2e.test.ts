@@ -41,13 +41,14 @@ describe('Indexing module tests', () => {
     testProject = await createTestProject(testUser, stage);
     testProject2 = await createTestProject(testUser2, stage);
 
+    //NOTE: Some tests will fail, if this indexer does not exists in subsquid cloud
     testIndexer = await new Indexer({}, stage.context.infrastructure)
       .populate({
         indexer_uuid: uuidV4(),
         project_uuid: testProject.project_uuid,
         name: 'Test indexer',
         description: 'Test indexer description',
-        squidId: 14071,
+        squidId: 14592,
         squidReference: 'test-indexer@v1',
       })
       .insert();
@@ -101,7 +102,7 @@ describe('Indexing module tests', () => {
       );
       expect(response.body.data.squid).toEqual(
         expect.objectContaining({
-          id: 14071,
+          id: 14592,
           reference: 'test-indexer@v1',
           name: 'test-indexer',
           slot: 'v1',
@@ -181,7 +182,7 @@ describe('Indexing module tests', () => {
       expect(i.name).toBe('Updated test indexer');
     });
   });
-  describe('Indexer logs & deployments tests', () => {
+  describe('Indexer logs, deployments and usage tests', () => {
     test('User should be able to get indexer logs', async () => {
       const response = await request(stage.http)
         .get(`/indexing/indexers/${testIndexer.indexer_uuid}/logs`)
@@ -248,6 +249,14 @@ describe('Indexing module tests', () => {
       expect(deployment.squid.id).toBeTruthy();
       expect(deployment.squid.name).toBe('test-indexer');
       expect(deployment.squid.reference).toBe(testIndexer.squidReference);
+    });
+
+    test('User should be able to get indexer usage data', async () => {
+      const response = await request(stage.http)
+        .get(`/indexing/indexers/${testIndexer.indexer_uuid}/usage-data`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.metrics).toBeDefined();
     });
   });
 });

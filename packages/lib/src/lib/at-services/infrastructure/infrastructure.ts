@@ -11,6 +11,7 @@ import { ListRpcUrlsForApiKeyQueryFilter } from './dtos/list-rpc-urls-for-api-ke
 import { UpdateRpcApiKeyDto } from './dtos/update-rpc-api-key.dto';
 import { DwellirSubscription } from './types';
 import { UpdateIndexerDto } from './dtos/update-indexer.dto';
+import { IndexerUsageDataQueryFilter } from './dtos/indexer-usage-data-query-filter.dto';
 
 export class InfrastructureMicroservice extends BaseService {
   lambdaFunctionName =
@@ -191,6 +192,13 @@ export class InfrastructureMicroservice extends BaseService {
     return await this.callService({
       eventName: InfrastructureEventType.INDEXER_GET_DEPLOYMENTS,
       indexer_uuid,
+    });
+  }
+
+  public async getIndexerUsageData(query: IndexerUsageDataQueryFilter) {
+    return await this.callService({
+      eventName: InfrastructureEventType.INDEXER_GET_USAGE_DATA,
+      query: query.serialize(),
     });
   }
 

@@ -4,6 +4,7 @@ import {
   DefaultPermission,
   DefaultUserRole,
   IndexerLogsQueryFilter,
+  IndexerUsageDataQueryFilter,
   RoleGroup,
   UpdateIndexerDto,
   ValidateFor,
@@ -134,5 +135,21 @@ export class IndexerController {
       context,
       indexer_uuid,
     );
+  }
+
+  @Get('indexers/:indexer_uuid/usage-data')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({
+    dto: IndexerUsageDataQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getIndexerUsageData(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('indexer_uuid') indexer_uuid: string,
+    @Query() query: IndexerUsageDataQueryFilter,
+  ) {
+    query.indexer_uuid = indexer_uuid;
+    return await this.indexingService.getIndexerUsageData(context, query);
   }
 }
