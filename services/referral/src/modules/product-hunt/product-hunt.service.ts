@@ -25,13 +25,11 @@ export class ProductHuntService {
     ).populateForUser();
 
     if (existingComment.exists()) {
-      existingComment.username = event.body.username;
       existingComment.url = event.body.url;
       const updatedComment = await existingComment.update();
       return updatedComment.serialize(SerializeFor.PROFILE);
     } else if (context.user.user_uuid) {
       const newComment = new ProductHuntComment({}, context).populate({
-        username: event.body.username,
         url: event.body.url,
         user_uuid: context.user.user_uuid,
       });

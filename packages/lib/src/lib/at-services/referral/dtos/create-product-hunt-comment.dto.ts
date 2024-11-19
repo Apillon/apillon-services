@@ -15,19 +15,6 @@ export class CreateProductHuntCommentDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.PRODUCT_HUNT_COMMENT_USERNAME_NOT_PRESENT,
-      },
-    ],
-  })
-  public username: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
         code: ValidatorErrorCode.PRODUCT_HUNT_COMMENT_URL_NOT_PRESENT,
       },
       {

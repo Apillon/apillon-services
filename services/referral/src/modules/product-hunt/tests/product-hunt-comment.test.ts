@@ -26,7 +26,6 @@ describe('Product Hunt Comment tests', () => {
     test('User can create & update a product hunt comment', async () => {
       const dto = new CreateProductHuntCommentDto({}, stage.context).populate({
         url: 'https://www.producthunt.com/posts/1',
-        username: 'username',
       });
 
       const createdProductHuntCommentResponse =
@@ -35,7 +34,6 @@ describe('Product Hunt Comment tests', () => {
       expect(createdProductHuntCommentResponse).toBeDefined();
       expect(createdProductHuntCommentResponse.id).toBeDefined();
       expect(createdProductHuntCommentResponse.url).toBe(dto.url);
-      expect(createdProductHuntCommentResponse.username).toBe(dto.username);
       expect(createdProductHuntCommentResponse.createTime).toBeUndefined();
 
       const updateDto = new CreateProductHuntCommentDto(
@@ -43,7 +41,6 @@ describe('Product Hunt Comment tests', () => {
         stage.context,
       ).populate({
         url: 'https://www.producthunt.com/posts/2',
-        username: 'username2',
       });
 
       const updatedProductHuntCommentResponse =
@@ -57,9 +54,6 @@ describe('Product Hunt Comment tests', () => {
         createdProductHuntCommentResponse.id,
       );
       expect(updatedProductHuntCommentResponse.url).toBe(updateDto.url);
-      expect(updatedProductHuntCommentResponse.username).toBe(
-        updateDto.username,
-      );
     });
   });
 
@@ -74,7 +68,6 @@ describe('Product Hunt Comment tests', () => {
     test('User can get a comment', async () => {
       const dto = new CreateProductHuntCommentDto({}, stage.context).populate({
         url: 'https://www.producthunt.com/posts/3',
-        username: 'username3',
       });
       const createdProductHuntCommentResponse =
         await ProductHuntService.createComment({ body: dto }, stage.context);
@@ -87,7 +80,6 @@ describe('Product Hunt Comment tests', () => {
       expect(getResponse).toBeDefined();
       expect(getResponse.id).toBe(createdProductHuntCommentResponse.id);
       expect(getResponse.url).toBe(dto.url);
-      expect(getResponse.username).toBe(dto.username);
       expect(getResponse.createTime).toBeDefined();
       expect(getResponse.updateTime).toBeDefined();
     });
