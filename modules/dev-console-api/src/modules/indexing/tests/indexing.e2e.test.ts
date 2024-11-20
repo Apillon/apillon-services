@@ -260,7 +260,7 @@ describe('Indexing module tests', () => {
       expect(response.body.data.metrics).toBeDefined();
     });
   });
-  describe.only('Indexer billing tests', () => {
+  describe('Indexer billing tests', () => {
     beforeAll(async () => {
       await new IndexerBilling({}, stage.context.infrastructure)
         .populate({

@@ -143,7 +143,7 @@ export class IndexerBilling extends AdvancedSQLModel {
         FROM ${DbTables.INDEXER_BILLING} b
         JOIN ${DbTables.INDEXER} i ON i.id = b.indexer_id
         WHERE b.status <> ${SqlModelStatus.DELETED} 
-        AND i.indexer_uuid = '${filter.indexer_uuid}'
+        AND i.indexer_uuid = @indexer_uuid
         AND (@year IS NULL OR b.year = @year)
         AND (@month IS NULL OR b.month = @month)`,
       qFilter: `
