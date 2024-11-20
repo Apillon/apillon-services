@@ -1,8 +1,9 @@
 import {
   BaseProjectQueryFilter,
   CreateIndexerDto,
+  IndexerBillingQueryFilter,
   IndexerLogsQueryFilter,
-  IndexerUsageDataQueryFilter,
+  IndexerUsageQueryFilter,
   InfrastructureMicroservice,
   UpdateIndexerDto,
 } from '@apillon/lib';
@@ -73,12 +74,21 @@ export class IndexingService {
     ).data;
   }
 
-  async getIndexerUsageData(
+  async getIndexerUsage(
     context: DevConsoleApiContext,
-    query: IndexerUsageDataQueryFilter,
+    query: IndexerUsageQueryFilter,
   ) {
     return (
-      await new InfrastructureMicroservice(context).getIndexerUsageData(query)
+      await new InfrastructureMicroservice(context).getIndexerUsage(query)
+    ).data;
+  }
+
+  async listIndexerBilling(
+    context: DevConsoleApiContext,
+    query: IndexerBillingQueryFilter,
+  ) {
+    return (
+      await new InfrastructureMicroservice(context).listIndexerBilling(query)
     ).data;
   }
 }

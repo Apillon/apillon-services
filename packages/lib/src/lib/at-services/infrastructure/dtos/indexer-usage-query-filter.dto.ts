@@ -2,7 +2,7 @@ import { dateParser, stringParser } from '@rawmodel/parsers';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
 import { presenceValidator } from '../../../validators';
-export class IndexerUsageDataQueryFilter extends ModelBase {
+export class IndexerUsageQueryFilter extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],

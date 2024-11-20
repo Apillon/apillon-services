@@ -3,8 +3,9 @@ import {
   BaseProjectQueryFilter,
   CreateIndexerDto,
   env,
+  IndexerBillingQueryFilter,
   IndexerLogsQueryFilter,
-  IndexerUsageDataQueryFilter,
+  IndexerUsageQueryFilter,
   Lmas,
   LogType,
   Scs,
@@ -22,6 +23,7 @@ import {
 import { Indexer } from './models/indexer.model';
 import { sqdApi } from './sqd/sqd.api';
 import { DeploymentResponse } from './sqd/types/deploymentResponse';
+import { IndexerBilling } from './models/indexer-billing.model';
 
 export class IndexerService {
   static async createIndexer(
@@ -284,8 +286,8 @@ export class IndexerService {
    * @param context
    * @returns
    */
-  static async getIndexerUsageData(
-    event: { query: IndexerUsageDataQueryFilter },
+  static async getIndexerUsage(
+    event: { query: IndexerUsageQueryFilter },
     context: ServiceContext,
   ) {
     const { indexer_uuid, from, to } = event.query;
@@ -309,6 +311,17 @@ export class IndexerService {
     });
 
     return body;
+  }
+
+  static async listIndexerBilling(
+    event: {
+      query: IndexerBillingQueryFilter;
+    },
+    context: ServiceContext,
+  ) {
+    return await new IndexerBilling({}, context).getList(
+      new IndexerBillingQueryFilter(event.query),
+    );
   }
 
   /**

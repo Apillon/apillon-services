@@ -1,12 +1,13 @@
 import { InfrastructureErrorCode } from '@apillon/Infrastructure/src/config/types';
+import { IndexerBilling } from '@apillon/Infrastructure/src/modules/indexer/models/indexer-billing.model';
 import { Indexer } from '@apillon/Infrastructure/src/modules/indexer/models/indexer.model';
-import { env, SqlModelStatus } from '@apillon/lib';
+import { SqlModelStatus } from '@apillon/lib';
 import {
-  Stage,
-  TestUser,
   createTestProject,
   createTestUser,
   releaseStage,
+  Stage,
+  TestUser,
 } from '@apillon/tests-lib';
 import * as request from 'supertest';
 import { v4 as uuidV4 } from 'uuid';
@@ -253,10 +254,70 @@ describe('Indexing module tests', () => {
 
     test('User should be able to get indexer usage data', async () => {
       const response = await request(stage.http)
-        .get(`/indexing/indexers/${testIndexer.indexer_uuid}/usage-data`)
+        .get(`/indexing/indexers/${testIndexer.indexer_uuid}/usage`)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(200);
       expect(response.body.data.metrics).toBeDefined();
+    });
+  });
+  describe.only('Indexer billing tests', () => {
+    beforeAll(async () => {
+      await new IndexerBilling({}, stage.context.infrastructure)
+        .populate({
+          indexer_id: testIndexer.id,
+          year: 2024,
+          month: 1,
+          billedAmount: 100,
+        })
+        .insert();
+      await new IndexerBilling({}, stage.context.infrastructure)
+        .populate({
+          indexer_id: testIndexer.id,
+          year: 2024,
+          month: 2,
+          billedAmount: 200,
+        })
+        .insert();
+      await new IndexerBilling({}, stage.context.infrastructure)
+        .populate({
+          indexer_id: testIndexer.id,
+          year: 2024,
+          month: 3,
+          billedAmount: 130,
+        })
+        .insert();
+    });
+
+    test('User should be able to get indexer billing list', async () => {
+      const response = await request(stage.http)
+        .get(`/indexing/indexers/${testIndexer.indexer_uuid}/billing`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBe(3);
+      expect(response.body.data.items[0]).toEqual(
+        expect.objectContaining({
+          year: 2024,
+          month: 3,
+          billedAmount: 130,
+        }),
+      );
+    });
+
+    test('User should be able to get indexer billing list for specific year and month', async () => {
+      const response = await request(stage.http)
+        .get(
+          `/indexing/indexers/${testIndexer.indexer_uuid}/billing?year=2024&month=2`,
+        )
+        .set('Authorization', `Bearer ${testUser.token}`);
+      expect(response.status).toBe(200);
+      expect(response.body.data.items.length).toBe(1);
+      expect(response.body.data.items[0]).toEqual(
+        expect.objectContaining({
+          year: 2024,
+          month: 2,
+          billedAmount: 200,
+        }),
+      );
     });
   });
 });
