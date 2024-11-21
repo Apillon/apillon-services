@@ -3,6 +3,7 @@ import { ReferralService } from './modules/referral/referral.service';
 import { OauthService } from './modules/oauth/oauth.service';
 import { PromoCodeService } from './modules/promo-code/promo-code.service';
 import { ServiceContext } from '@apillon/service-lib';
+import { ProductHuntService } from './modules/product-hunt/product-hunt.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -29,6 +30,9 @@ export async function processEvent(
     [ReferralEventType.CONFIRM_RETWEET]: ReferralService.confirmRetweet,
     [ReferralEventType.ADD_PROMO_CODE_CREDITS]:
       PromoCodeService.addPromoCodeCredits,
+    [ReferralEventType.CREATE_PRODUCT_HUNT_COMMENT]:
+      ProductHuntService.createComment,
+    [ReferralEventType.GET_PRODUCT_HUNT_COMMENT]: ProductHuntService.getComment,
   };
 
   return await processors[event.eventName](event, context);
