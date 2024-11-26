@@ -45,12 +45,14 @@ async function getTargetUrl(shortCode: string, additionalPath: string) {
     shortCode,
   );
 
+  const [baseUrl, queryParams] = fullUrl.split('?');
+  const Location = additionalPath
+    ? `${baseUrl}/${additionalPath}${queryParams ? `?${queryParams}` : ''}`
+    : fullUrl;
+
   return {
     statusCode: 302,
-    headers: {
-      Location: additionalPath ? `${fullUrl}/${additionalPath}` : fullUrl,
-      'Access-Control-Allow-Origin': '*',
-    },
+    headers: { Location, 'Access-Control-Allow-Origin': '*' },
     body: '',
   };
 }
