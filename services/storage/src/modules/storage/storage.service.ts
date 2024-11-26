@@ -56,6 +56,7 @@ import { File } from './models/file.model';
 import { IpfsBandwidth } from '../ipfs/models/ipfs-bandwidth';
 import { generateJwtSecret } from '../../lib/ipfs-utils';
 import { Directory } from '../directory/models/directory.model';
+import { GetLinksDto } from '@apillon/lib';
 
 export class StorageService {
   /**
@@ -833,6 +834,24 @@ export class StorageService {
         event.type.toLowerCase() == 'ipns',
         undefined,
         true,
+      ),
+    };
+  }
+
+  static async getLinks(
+    event: { body: GetLinksDto; project_uuid: string },
+    context: ServiceContext,
+  ) {
+    const ipfsCluster = await new ProjectConfig(
+      { project_uuid: event.project_uuid },
+      context,
+    ).getIpfsCluster();
+
+    return {
+      links: await ipfsCluster.generateLinks(
+        event.project_uuid,
+        event.body.cids,
+        event.body?.type.toLowerCase() === 'ipns',
       ),
     };
   }

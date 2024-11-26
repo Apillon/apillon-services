@@ -16,6 +16,7 @@ import {
   StorageMicroservice,
   ModelValidationException,
   ValidatorErrorCode,
+  GetLinksDto,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
@@ -48,6 +49,15 @@ export class StorageService {
         context.apiKey.project_uuid,
         cid,
         type,
+      )
+    ).data;
+  }
+
+  async getLinks(context: ApillonApiContext, body: GetLinksDto) {
+    return (
+      await new StorageMicroservice(context).getLinks(
+        context.apiKey.project_uuid,
+        body,
       )
     ).data;
   }
