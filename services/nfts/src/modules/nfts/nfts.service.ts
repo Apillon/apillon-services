@@ -833,6 +833,7 @@ export class NftsService {
 
     collection.baseUri = baseUri;
     collection.ipns_uuid = ipnsRes.ipns_uuid;
+    collection.useIpns = true;
     await collection.update();
 
     return collection.serializeByContext(context);
