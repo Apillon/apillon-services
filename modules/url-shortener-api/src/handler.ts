@@ -25,7 +25,7 @@ export const handler: (
   try {
     const [shortCode, ...additionalPath] = pathParameter.split('/');
     return await runCachedFunction<APIGatewayProxyResult>(
-      `${CacheKeyPrefix.URL_SHORTENER}:${shortCode}`,
+      `${CacheKeyPrefix.URL_SHORTENER}:${pathParameter}`,
       async () => getTargetUrl(shortCode, additionalPath.join('/')),
       CacheKeyTTL.EXTRA_LONG * 24, // one day
     );
