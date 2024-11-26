@@ -19,11 +19,15 @@ import {
   DwellirGetUsageResponse,
   DwellirGetUsageV2Response,
 } from './types';
+import { InfrastructureCodeException } from '../exceptions';
+import { InfrastructureErrorCode } from '../../config/types';
+
 export class Dwellir {
   static async makeRequest<T>(
     url: string,
     method: 'get' | 'post' | 'delete',
     data?: any,
+    errCallback?: (err: any) => void,
   ): Promise<T> {
     const accessToken = await this.getAccessToken();
     try {
@@ -38,14 +42,18 @@ export class Dwellir {
       });
       return response.data;
     } catch (err) {
-      console.log('err', err);
-      writeLog(
-        LogType.ERROR,
-        `Error making request to ${url} : ${JSON.stringify(err.response?.data || err)}`,
-        'services/infrastructure/src/lib/dwellir.ts',
-        method,
-      );
-      throw err;
+      if (errCallback) {
+        errCallback(err);
+      } else {
+        console.log('err', err);
+        writeLog(
+          LogType.ERROR,
+          `Error making request to ${url} : ${JSON.stringify(err.response?.data || err)}`,
+          'services/infrastructure/src/lib/dwellir.ts',
+          method,
+        );
+        throw err;
+      }
     }
   }
 
@@ -87,6 +95,22 @@ export class Dwellir {
       `${env.DWELLIR_URL}/v1/user`,
       'post',
       { email, name: email },
+      (err) => {
+        if (err.response?.status === 400) {
+          throw new InfrastructureCodeException({
+            code: InfrastructureErrorCode.DWELLIR_EMAIL_ALREADY_EXISTS,
+            status: 400,
+          });
+        }
+        writeLog(
+          LogType.ERROR,
+          `Error when creating Dwellir user: ${JSON.stringify(err.response?.data || err)}`,
+          'services/infrastructure/src/lib/dwellir.ts',
+          'createUser',
+        );
+
+        throw err;
+      },
     );
   }
 

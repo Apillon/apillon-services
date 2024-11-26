@@ -258,27 +258,20 @@ export class RpcApiKeyService {
       };
     }
 
-    try {
-      const responseBody = await Dwellir.createUser(userEmail);
+    const responseBody = await Dwellir.createUser(userEmail);
 
-      const createdDwellirUser = new DwellirUser({}, context).populate({
-        dwellir_id: responseBody.id,
-        user_uuid: userUuid,
-        email: userEmail,
-      });
+    const createdDwellirUser = new DwellirUser({}, context).populate({
+      dwellir_id: responseBody.id,
+      user_uuid: userUuid,
+      email: userEmail,
+    });
 
-      await createdDwellirUser.insert();
+    await createdDwellirUser.insert();
 
-      return {
-        dwellirId: responseBody.id,
-        created: true,
-      };
-    } catch (err) {
-      throw new InfrastructureCodeException({
-        code: InfrastructureErrorCode.DWELLIR_EMAIL_ALREADY_EXISTS,
-        status: 400,
-      });
-    }
+    return {
+      dwellirId: responseBody.id,
+      created: true,
+    };
   }
 
   static async hasDwellirId(
