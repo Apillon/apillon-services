@@ -394,15 +394,13 @@ export class IpfsCluster extends AdvancedSQLModel {
     isIpns = false,
     path?: string,
     convertToCidV1 = false,
+    service?: IPFSService,
   ): Promise<string> {
     let link = '';
 
     if (!isIpns && convertToCidV1) {
-      const ipfsService = new IPFSService(
-        this.getContext(),
-        project_uuid,
-        true,
-      );
+      const ipfsService =
+        service ?? new IPFSService(this.getContext(), project_uuid, true);
       cid = await ipfsService.cidToCidV1(cid);
     }
 
@@ -426,52 +424,5 @@ export class IpfsCluster extends AdvancedSQLModel {
     }
 
     return link;
-  }
-
-  public async generateLinks(
-    project_uuid: string,
-    cids: string[],
-    isIpns = false,
-    path?: string,
-    convertToCidV1 = false,
-  ): Promise<string[]> {
-    let links = [] as string[];
-
-    if (!isIpns && convertToCidV1) {
-      const ipfsService = new IPFSService(
-        this.getContext(),
-        project_uuid,
-        true,
-      );
-
-      cids = await Promise.all(cids.map((cid) => ipfsService.cidToCidV1(cid)));
-    }
-
-    if (this.subdomainGateway) {
-      links = cids.map((cid) =>
-        'https://' +
-        cid +
-        (isIpns ? '.ipns.' : '.ipfs.') +
-        this.subdomainGateway +
-        '/' +
-        path
-          ? path
-          : '',
-      );
-    } else {
-      links = cids.map((cid) =>
-        (isIpns ? this.ipnsGateway : this.ipfsGateway) + cid + '/' + path
-          ? path
-          : '',
-      );
-    }
-
-    if (this.private) {
-      links = links.map((link, i) =>
-        addJwtToIPFSUrl(link, project_uuid, cids[i], this),
-      );
-    }
-
-    return links;
   }
 }

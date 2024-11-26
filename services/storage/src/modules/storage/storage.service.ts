@@ -847,12 +847,24 @@ export class StorageService {
       context,
     ).getIpfsCluster();
 
-    return {
-      links: await ipfsCluster.generateLinks(
-        event.project_uuid,
-        event.body.cids,
-        event.body?.type.toLowerCase() === 'ipns',
+    const ipfsService = new IPFSService(context, event.project_uuid, true);
+
+    const links = await Promise.all(
+      event.body.cids.map(
+        async (cid) =>
+          await ipfsCluster.generateLink(
+            event.project_uuid,
+            cid,
+            event.body.type?.toLowerCase() === 'ipns',
+            undefined,
+            false,
+            ipfsService,
+          ),
       ),
+    );
+
+    return {
+      links,
     };
   }
 }
