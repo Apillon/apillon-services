@@ -423,8 +423,8 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             );
           } else {
             baseUri = ipnsDbRecord?.ipnsName
-              ? `ipns://${ipnsDbRecord.ipnsName}`
-              : `ipfs://${data.metadataCid}`;
+              ? `ipns://${ipnsDbRecord.ipnsName}/`
+              : `ipfs://${data.metadataCid}/`;
           }
 
           //Execute deploy collection worker
