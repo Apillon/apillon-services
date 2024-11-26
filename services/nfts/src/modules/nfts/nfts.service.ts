@@ -812,7 +812,7 @@ export class NftsService {
 
     const baseUri = collection.useApillonIpfsGateway
       ? ipnsRes.link.split('?token')[0]
-      : `ipns://${ipnsRes.ipnsName}`;
+      : `ipns://${ipnsRes.ipnsName}/`;
 
     console.info('baseUri', baseUri);
 
@@ -1422,11 +1422,7 @@ export class NftsService {
       context,
     ).populateByUUID(event.collection_uuid);
 
-    await NftsService.checkCollection(
-      collection,
-      'activateCollection()',
-      context,
-    );
+    collection.canAccess(context);
 
     return await collection.markActive();
   }
