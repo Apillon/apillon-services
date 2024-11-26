@@ -214,6 +214,7 @@ export class NftsService {
 
     return collection.serializeByContext();
   }
+
   static async createUniqueCollection(
     params: { body: CreateUniqueCollectionDTO },
     context: ServiceContext,
@@ -1399,11 +1400,7 @@ export class NftsService {
       context,
     ).populateByUUID(event.collection_uuid);
 
-    await NftsService.checkCollection(
-      collection,
-      'archiveCollection()',
-      context,
-    );
+    collection.canAccess(context);
 
     return await collection.markArchived();
   }
