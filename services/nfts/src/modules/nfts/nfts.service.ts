@@ -1336,9 +1336,14 @@ export class NftsService {
             }
             const client = new UniqueNftClient(env.UNIQUE_NETWORK_API_URL);
             try {
-              await client.getCollectionToken(
+              const token = await client.getCollectionToken(
                 collection.contractAddress,
                 body.tokenId,
+              );
+              txHash = await client.burnNft(
+                collection.contractAddress,
+                body.tokenId,
+                token.owner,
               );
             } catch (err: unknown) {
               throw new NftsCodeException({
@@ -1347,10 +1352,6 @@ export class NftsService {
                 errorMessage: `Token with id ${body.tokenId} doesn't exist on collection with id ${collection.contractAddress}: ${err}`,
               });
             }
-            txHash = await client.burnNft(
-              collection.contractAddress,
-              body.tokenId,
-            );
             break;
           }
           default: {

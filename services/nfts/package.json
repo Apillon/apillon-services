@@ -32,7 +32,7 @@
     "@apillon/workers-lib": "*",
     "@ethersproject/bignumber": "^5.7.0",
     "@middy/core": "^3.3.1",
-    "@unique-nft/sdk": "^1.0.0-alpha.25",
+    "@unique-nft/sdk": "^2.4.0",
     "node-fetch": "^2.6.7"
   },
   "peerDependencies": {
