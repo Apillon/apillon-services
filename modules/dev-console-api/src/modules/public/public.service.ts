@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpStatus } from '@nestjs/common';
 import { ContactFormDto } from './dtos/contact-form.dto';
 import {
+  AuthenticationMicroservice,
   BlockchainMicroservice,
+  CodeException,
   EmailDataDto,
   EmailTemplate,
   Mailing,
@@ -14,6 +16,7 @@ import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
 import { ServiceStatusQueryFilter } from '../service-status/dtos/service-status-query-filter.dto';
 import { ServiceStatus } from '../service-status/models/service_status.model';
+import { ForbiddenErrorCode } from '../../config/types';
 
 @Injectable()
 export class PublicService {
@@ -58,7 +61,22 @@ export class PublicService {
     return await new ServiceStatus({}, context).getList(context, query);
   }
 
-  async mintNftTo(context: DevConsoleApiContext, body: MintNftDTO) {
+  async mintNftToEmbeddedWallet(
+    context: DevConsoleApiContext,
+    body: MintNftDTO,
+  ) {
+    const oasisSignature = await new AuthenticationMicroservice(
+      context,
+    ).getOasisSignatureByPublicAddress(body.receivingAddress);
+
+    if (!oasisSignature.id) {
+      throw new CodeException({
+        code: ForbiddenErrorCode.NOT_EMBEDDED_WALLET,
+        status: HttpStatus.FORBIDDEN,
+        errorCodes: ForbiddenErrorCode,
+      });
+    }
+
     return (await new NftsMicroservice(context).mintNft(body)).data;
   }
 }
