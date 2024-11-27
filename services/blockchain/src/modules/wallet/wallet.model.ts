@@ -495,6 +495,9 @@ export class Wallet extends AdvancedSQLModel {
   }
 
   public calculateTokenBalance() {
+    console.log(
+      `calculateTokenBalance: decimals=${this.decimals}, min=${this.minBalance}, balance=${this.currentBalance}`,
+    );
     if (!this.decimals) {
       return this;
     }
