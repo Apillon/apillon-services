@@ -18,32 +18,32 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 Environment variables that have to be set:
 
 ```ts
- /************************************************************
-   * LMAS -  Apillon Logging, Monitoring & Alerting Service
-   ************************************************************/
-  /**
-   *  function name
-   */
-  MONITORING_FUNCTION_NAME: string;
-  MONITORING_FUNCTION_NAME_TEST: string;
-  /**
-   * LMAS dev server port
-   */
-  MONITORING_SOCKET_PORT: number;
-  MONITORING_SOCKET_PORT_TEST: number;
-  /**
-   * LMAS MongoDB connection string
-   */
-  MONITORING_MONGO_SRV: string;
-  MONITORING_MONGO_DATABASE: string;
-  MONITORING_MONGO_SRV_TEST: string;
-  MONITORING_MONGO_DATABASE_TEST: string;
+/************************************************************
+ * LMAS -  Apillon Logging, Monitoring & Alerting Service
+ ************************************************************/
+/**
+ *  function name
+ */
+MONITORING_FUNCTION_NAME: string;
+MONITORING_FUNCTION_NAME_TEST: string;
+/**
+ * LMAS dev server port
+ */
+MONITORING_SOCKET_PORT: number;
+MONITORING_SOCKET_PORT_TEST: number;
+/**
+ * LMAS MongoDB connection string
+ */
+MONITORING_MONGO_SRV: string;
+MONITORING_MONGO_DATABASE: string;
+MONITORING_MONGO_SRV_TEST: string;
+MONITORING_MONGO_DATABASE_TEST: string;
 
-  /**
-   * SLACK ALERTS
-   */
-  SLACK_TOKEN: string;
-  SLACK_CHANNEL: string;
+/**
+ * SLACK ALERTS
+ */
+SLACK_TOKEN: string;
+SLACK_CHANNEL: string;
 ```
 
 ## Deployment

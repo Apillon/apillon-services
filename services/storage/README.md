@@ -45,12 +45,34 @@ STORAGE_MYSQL_USER_TEST: string;
 STORAGE_MYSQL_PASSWORD_TEST: string;
 STORAGE_MYSQL_DATABASE_TEST: string;
 
+STORAGE_MAX_FILE_BATCH_SIZE_FOR_CRUST: number;
+
+STORAGE_AWS_IPFS_QUEUE_BUCKET: string;
+
+VALID_WEBSITE_DOMAIN_TARGETS: string[];
+
+DEFAULT_IPFS_CLUSTER_SECRET: string;
+
 /************************************************************
  * Serverless workers config - STORAGE MS
  ************************************************************/
 STORAGE_AWS_WORKER_SQS_URL: string;
 STORAGE_AWS_WORKER_SQS_ARN: string;
 STORAGE_AWS_WORKER_LAMBDA_NAME: string;
+
+/************************************************************
+ * AWS
+ ************************************************************/
+AWS_KEY: string;
+AWS_SECRET: string;
+AWS_REGION: string;
+
+/************************************************************
+ * URL Screenshot worker
+ ************************************************************/
+URL_SCREENSHOT_FUNCTION_NAME: string;
+URL_SCREENSHOT_API_URL: string;
+AWS_REGION: string;
 ```
 
 ## IPFS cluster, api and gateway

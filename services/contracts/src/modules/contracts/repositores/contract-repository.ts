@@ -41,7 +41,7 @@ export class ContractRepository extends BaseRepository {
 
   async getContractWithLatestVersion(contract_uuid: string) {
     const data = await runCachedFunction<any>(
-      `${CacheKeyPrefix.CONTRACT_BY_UUID_WITH_LATEST_VERSION}:${[contract_uuid].join(':')}`,
+      `${CacheKeyPrefix.CONTRACT_BY_UUID_WITH_LATEST_VERSION}:${contract_uuid}`,
       async () =>
         await new Contract({}, this.context).getContractWithLatestVersion(
           contract_uuid,
@@ -102,10 +102,10 @@ export class ContractRepository extends BaseRepository {
     );
     if (!contract.exists()) {
       throw new ContractsCodeException({
-        status: 500,
-        code: ContractsErrorCode.CONTRACT_OWNER_ERROR,
+        status: 404,
+        code: ContractsErrorCode.CONTRACT_NOT_FOUND,
         context: this.context,
-        sourceFunction: 'ContractRepository.getContractDeployByUUID',
+        sourceFunction: 'ContractRepository.getContractWithVersionAndMethods',
       });
     }
     if (!contractVersion.exists()) {

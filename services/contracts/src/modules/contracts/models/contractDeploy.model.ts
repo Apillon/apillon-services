@@ -390,10 +390,11 @@ export class ContractDeploy extends UuidSqlModel {
     );
     const sqlQuery = {
       qSelect: `
-        SELECT ${selectFields}
+        SELECT ${selectFields}, cv.version as contractVersion
         `,
       qFrom: `
         FROM \`${DbTables.CONTRACT_DEPLOY}\` c
+        LEFT JOIN \`${DbTables.CONTRACT_VERSION}\` cv ON (cv.id = c.version_id)
         WHERE c.project_uuid = IFNULL(@project_uuid, c.project_uuid)
         AND (@search IS null OR c.name LIKE CONCAT('%', @search, '%') OR c.contract_uuid = @search)
         AND (@chainType IS null OR c.chainType = @chainType)
@@ -411,21 +412,7 @@ export class ContractDeploy extends UuidSqlModel {
       `,
     };
 
-    const contractsResult = await selectAndCountQuery(
-      context.mysql,
-      sqlQuery,
-      params,
-      'c.id',
-    );
-
-    return {
-      ...contractsResult,
-      items: contractsResult.items.map((contract) =>
-        new ContractDeploy({}, context)
-          .populate(contract, PopulateFrom.DB)
-          .serialize(serializationStrategy),
-      ),
-    };
+    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'c.id');
   }
 
   public override async populateByUUID(contract_uuid: string): Promise<this> {

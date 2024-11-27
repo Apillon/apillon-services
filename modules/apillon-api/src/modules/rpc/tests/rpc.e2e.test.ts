@@ -22,8 +22,12 @@ describe('Apillon API RPC service tests', () => {
   let stage: Stage;
   let testUser: TestUser;
   let testProject: Project;
+  let testProjectWithoutRpcService: Project;
   let testService: Service;
   let apiServerClient: ApillonApiServerClient;
+  let apiServerClientWithoutRpcService: ApillonApiServerClient;
+
+  let apiKeyWithoutRpcService: ApiKey = undefined;
 
   let apiKey: ApiKey = undefined;
 
@@ -45,6 +49,28 @@ describe('Apillon API RPC service tests', () => {
     apiKey = await createTestApiKey(
       stage.context.access,
       testProject.project_uuid,
+    );
+
+    apiKeyWithoutRpcService = await createTestApiKey(
+      stage.context.access,
+      testProject.project_uuid,
+    );
+
+    await apiKey.assignRole(
+      new ApiKeyRoleBaseDto().populate({
+        role_id: DefaultApiKeyRole.KEY_READ,
+        project_uuid: testProject.project_uuid,
+        service_uuid: testService.service_uuid,
+        serviceType_id: AttachedServiceType.RPC,
+      }),
+    );
+    await apiKey.assignRole(
+      new ApiKeyRoleBaseDto().populate({
+        role_id: DefaultApiKeyRole.KEY_WRITE,
+        project_uuid: testProject.project_uuid,
+        service_uuid: testService.service_uuid,
+        serviceType_id: AttachedServiceType.RPC,
+      }),
     );
 
     await apiKey.assignRole(
@@ -70,6 +96,13 @@ describe('Apillon API RPC service tests', () => {
       apiKey.apiKeySecret,
       '/rpc',
     );
+
+    apiServerClientWithoutRpcService = new ApillonApiServerClient(
+      stage.http,
+      apiKeyWithoutRpcService.apiKey,
+      apiKeyWithoutRpcService.apiKeySecret,
+      '/rpc',
+    );
   });
 
   afterAll(async () => {
@@ -82,7 +115,7 @@ describe('Apillon API RPC service tests', () => {
       description: 'Test descriptions',
     };
 
-    afterAll(async () => {
+    afterEach(async () => {
       await stage.db.infrastructure.paramExecute('DELETE FROM rpc_api_key');
     });
 
@@ -104,6 +137,15 @@ describe('Apillon API RPC service tests', () => {
       );
       expect(dwellirUser.length).toBe(1);
       expect(dwellirUser[0].dwellir_id).toBeDefined();
+    });
+
+    test("User shouldn't be able to create RPC API key without RPC Service enabled", async () => {
+      const response = await apiServerClientWithoutRpcService.post(
+        '/api-key',
+        rpcApiKeyToCreate,
+      );
+
+      expect(response.status).toBe(403);
     });
   });
 

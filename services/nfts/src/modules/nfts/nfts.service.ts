@@ -214,6 +214,7 @@ export class NftsService {
 
     return collection.serializeByContext();
   }
+
   static async createUniqueCollection(
     params: { body: CreateUniqueCollectionDTO },
     context: ServiceContext,
@@ -812,7 +813,7 @@ export class NftsService {
 
     const baseUri = collection.useApillonIpfsGateway
       ? ipnsRes.link.split('?token')[0]
-      : `ipns://${ipnsRes.ipnsName}`;
+      : `ipns://${ipnsRes.ipnsName}/`;
 
     console.info('baseUri', baseUri);
 
@@ -833,6 +834,7 @@ export class NftsService {
 
     collection.baseUri = baseUri;
     collection.ipns_uuid = ipnsRes.ipns_uuid;
+    collection.useIpns = true;
     await collection.update();
 
     return collection.serializeByContext(context);
@@ -1398,11 +1400,7 @@ export class NftsService {
       context,
     ).populateByUUID(event.collection_uuid);
 
-    await NftsService.checkCollection(
-      collection,
-      'archiveCollection()',
-      context,
-    );
+    collection.canAccess(context);
 
     return await collection.markArchived();
   }
@@ -1422,11 +1420,7 @@ export class NftsService {
       context,
     ).populateByUUID(event.collection_uuid);
 
-    await NftsService.checkCollection(
-      collection,
-      'activateCollection()',
-      context,
-    );
+    collection.canAccess(context);
 
     return await collection.markActive();
   }

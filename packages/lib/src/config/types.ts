@@ -194,6 +194,7 @@ export enum StorageEventType {
   GET_PROJECT_IPFS_CLUSTER = 'get-project-ipfs-cluster',
   GET_IPFS_CLUSTER_INFO = 'get-ipfs-cluster-info',
   GET_LINK = 'get-link',
+  GET_LINKS = 'get-links',
   GENERATE_SHORT_URL = 'generate-short-url',
   GET_TARGET_URL = 'get-target-url',
 }
