@@ -66,6 +66,24 @@ export class TransactionLogWorker extends BaseQueueWorker {
     const wallet = await new Wallet({}, this.context).populateById(
       data.wallet.id,
     );
+    const formatedAddress = formatWalletAddress(
+      wallet.chainType,
+      wallet.chain,
+      wallet.address,
+    );
+    await this.writeEventLog(
+      {
+        logType: LogType.INFO,
+        message: `Processing transactions for ${formatedAddress}`,
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          chainType: wallet.chainType,
+          chain: wallet.chain,
+          wallet: wallet.address,
+        },
+      },
+      LogOutput.EVENT_INFO,
+    );
     const transactions = await this.getTransactionsForWallet(
       wallet,
       wallet.lastLoggedBlock || 1,
@@ -82,23 +100,19 @@ export class TransactionLogWorker extends BaseQueueWorker {
     // check wallet balance && alert if low
     await this.checkWalletBalance(wallet);
 
-    if (transactions.length) {
-      await this.writeEventLog(
-        {
-          logType: LogType.INFO,
-          message: `Logged ${transactions.length} transactions for ${
-            wallet.chainType === ChainType.EVM
-              ? EvmChain[wallet.chain]
-              : SubstrateChain[wallet.chain]
-          }:${wallet.address}`,
-          service: ServiceName.BLOCKCHAIN,
-          data: {
-            wallet: wallet.address,
-          },
+    await this.writeEventLog(
+      {
+        logType: LogType.INFO,
+        message: `Processed ${transactions.length} transactions for ${formatedAddress}`,
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          chainType: wallet.chainType,
+          chain: wallet.chain,
+          wallet: wallet.address,
         },
-        LogOutput.EVENT_INFO,
-      );
-    }
+      },
+      LogOutput.EVENT_INFO,
+    );
   }
 
   private async getTransactionsForWallet(
