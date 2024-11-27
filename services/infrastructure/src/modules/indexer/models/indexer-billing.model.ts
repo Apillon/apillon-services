@@ -1,12 +1,15 @@
 import {
   AdvancedSQLModel,
   Context,
+  IndexerBillingQueryFilter,
   PoolConnection,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  getQueryParams,
   presenceValidator,
   prop,
+  selectAndCountQuery,
 } from '@apillon/lib';
 import { floatParser, integerParser } from '@rawmodel/parsers';
 import { DbTables, InfrastructureErrorCode } from '../../../config/types';
@@ -122,5 +125,36 @@ export class IndexerBilling extends AdvancedSQLModel {
     return data?.length
       ? this.populate(data[0], PopulateFrom.DB)
       : this.reset();
+  }
+
+  public async getList(filter: IndexerBillingQueryFilter): Promise<any> {
+    const fieldMap = {
+      id: 'id',
+    };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'b',
+      fieldMap,
+      filter.serialize(),
+    );
+    const sqlQuery = {
+      qSelect: `SELECT ${this.generateSelectFields('b')}`,
+      qFrom: `
+        FROM ${DbTables.INDEXER_BILLING} b
+        JOIN ${DbTables.INDEXER} i ON i.id = b.indexer_id
+        WHERE b.status <> ${SqlModelStatus.DELETED} 
+        AND i.indexer_uuid = @indexer_uuid
+        AND (@year IS NULL OR b.year = @year)
+        AND (@month IS NULL OR b.month = @month)`,
+      qFilter: `
+         ORDER BY b.year DESC, b.month DESC
+         LIMIT ${filters.limit} OFFSET ${filters.offset}`,
+    };
+    return selectAndCountQuery(
+      this.getContext().mysql,
+      sqlQuery,
+      params,
+      'b.id',
+    );
   }
 }

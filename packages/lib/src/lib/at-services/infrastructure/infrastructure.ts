@@ -11,6 +11,8 @@ import { ListRpcUrlsForApiKeyQueryFilter } from './dtos/list-rpc-urls-for-api-ke
 import { UpdateRpcApiKeyDto } from './dtos/update-rpc-api-key.dto';
 import { DwellirSubscription } from './types';
 import { UpdateIndexerDto } from './dtos/update-indexer.dto';
+import { IndexerUsageQueryFilter } from './dtos/indexer-usage-query-filter.dto';
+import { IndexerBillingQueryFilter } from './dtos/indexer-billing-query-filter.dto';
 
 export class InfrastructureMicroservice extends BaseService {
   lambdaFunctionName =
@@ -23,7 +25,7 @@ export class InfrastructureMicroservice extends BaseService {
       : env.INFRASTRUCTURE_SOCKET_PORT;
   serviceName: 'INFRASTRUCTURE';
 
-  constructor(context: Context) {
+  constructor(context?: Context) {
     super(context);
     this.isDefaultAsync = false;
   }
@@ -51,6 +53,13 @@ export class InfrastructureMicroservice extends BaseService {
   public async getRpcApiKeyUsage(id: number, userUuid: string) {
     return await this.callService({
       eventName: InfrastructureEventType.GET_RPC_API_KEY_USAGE,
+      data: { id, userUuid },
+    });
+  }
+
+  public async getRpcApiKeyUsagePerChain(id: number, userUuid: string) {
+    return await this.callService({
+      eventName: InfrastructureEventType.GET_RPC_API_KEY_USAGE_PER_CHAIN,
       data: { id, userUuid },
     });
   }
@@ -184,6 +193,20 @@ export class InfrastructureMicroservice extends BaseService {
     return await this.callService({
       eventName: InfrastructureEventType.INDEXER_GET_DEPLOYMENTS,
       indexer_uuid,
+    });
+  }
+
+  public async getIndexerUsage(query: IndexerUsageQueryFilter) {
+    return await this.callService({
+      eventName: InfrastructureEventType.INDEXER_GET_USAGE,
+      query: query.serialize(),
+    });
+  }
+
+  public async listIndexerBilling(query: IndexerBillingQueryFilter) {
+    return await this.callService({
+      eventName: InfrastructureEventType.INDEXER_LIST_BILLING,
+      query,
     });
   }
 

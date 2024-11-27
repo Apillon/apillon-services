@@ -25,6 +25,7 @@ import { ContractsModule } from './modules/contracts/contracts.module';
 import { EmbeddedWalletModule } from './modules/wallet/embedded-wallet.module';
 import { RpcModule } from './modules/rpc/rpc.module';
 import { IndexingModule } from './modules/indexing/indexing.module';
+import { NotificationModule } from './modules/notification/notification.module';
 import { ProductHuntModule } from './modules/product-hunt/product-hunt.module';
 
 @Module({
@@ -40,6 +41,7 @@ import { ProductHuntModule } from './modules/product-hunt/product-hunt.module';
     IpnsModule,
     ReferralModule,
     NftsModule,
+    NotificationModule,
     ComputingModule,
     PaymentsModule,
     PublicModule,

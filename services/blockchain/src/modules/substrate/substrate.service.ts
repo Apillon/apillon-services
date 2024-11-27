@@ -492,7 +492,6 @@ export class SubstrateService {
           'transmitTransactions',
         );
         const dbWallet = new Wallet(wallet, context);
-
         await dbWallet.updateLastProcessedNonce(latestSuccess);
       }
       await eventLogger(

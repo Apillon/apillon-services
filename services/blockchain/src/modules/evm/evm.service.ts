@@ -9,6 +9,7 @@ import {
   SerializeFor,
   ServiceName,
   TransactionStatus,
+  writeLog,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
@@ -469,7 +470,13 @@ export class EvmService {
         }
       }
 
-      if (latestSuccess !== null) {
+      if (latestSuccess != null) {
+        writeLog(
+          LogType.INFO,
+          `Updating wallet with last success nonce ${latestSuccess} for wallet address ${wallet.address} & id ${wallet.id}. `,
+          'evm.service.ts',
+          'transmitTransactions',
+        );
         const dbWallet = new Wallet(wallet, context);
         await dbWallet.updateLastProcessedNonce(latestSuccess);
       }

@@ -6,6 +6,7 @@
   "description": "Apillon mailing service",
   "scripts": {
     "prebuild": "rimraf dist",
+    "test": "cross-env APP_ENV=test LOG_TARGET=none jest --detectOpenHandles --runInBand --forceExit --silent",
     "test-service": "jest --passWithNoTests",
     "test-server": "cross-env APP_ENV=test nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60003",
     "build": "tsc && copyfiles -f ./src/mailing/templates/*.html ./dist/mailing/templates",
@@ -25,7 +26,33 @@
     "nodemailer": "^6.9.13"
   },
   "devDependencies": {
+    "@apillon/tests-lib": "*",
     "eslint-config-common": "*",
     "tsconfig": "*"
+  },
+  "jest":{
+    "testTimeout": 1800000,
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "rootDir": "src",
+    "testPathIgnorePatterns": [
+      "dist/*"
+    ],
+    "testRegex": ".*\\.test\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "preset": "ts-jest",
+    "verbose": true
   }
 }

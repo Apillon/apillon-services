@@ -11,6 +11,7 @@ CREATE DATABASE IF NOT EXISTS `Apillon_computing_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_social_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_contracts_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_infrastructure_test`;
+CREATE DATABASE IF NOT EXISTS `Apillon_mailing_test`;
 
 -- create root user and grant rights
 GRANT ALL ON *.* TO 'root'@'localhost';

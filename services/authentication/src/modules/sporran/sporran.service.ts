@@ -3,6 +3,7 @@ import {
   Context,
   env,
   generateJwtToken,
+  HttpStatus,
   JwtExpireTime,
   JwtTokenType,
   Lmas,
@@ -21,7 +22,6 @@ import {
   ApillonSupportedCTypes,
   APILLON_DAPP_NAME,
   AuthenticationErrorCode,
-  HttpStatus,
   SporranMessageType,
 } from '../../config/types';
 import {
@@ -48,7 +48,6 @@ import {
   ISubmitTerms,
   PartialClaim,
 } from '@kiltprotocol/types';
-
 import { Identity } from '../identity/models/identity.model';
 import { prepareSignResources } from '../../lib/sporran';
 import { AuthenticationCodeException } from '../../lib/exceptions';

@@ -22,6 +22,8 @@ import {
   StorageMicroservice,
   CreateBucketDto,
   env,
+  DefaultUserRole,
+  MySql,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -506,5 +508,37 @@ export class AcurastService {
     }
 
     return job.serializeByContext() as AcurastJob;
+  }
+
+  static async verifyRebel(
+    { email }: { email: string },
+    context: ServiceContext,
+  ): Promise<boolean> {
+    const devConsoleSql = new MySql({
+      host: env.DEV_CONSOLE_API_MYSQL_HOST,
+      database: env.DEV_CONSOLE_API_MYSQL_DATABASE,
+      password: env.DEV_CONSOLE_API_MYSQL_PASSWORD,
+      user: env.DEV_CONSOLE_API_MYSQL_USER,
+      port: env.DEV_CONSOLE_API_MYSQL_PORT,
+    });
+    await devConsoleSql.connect();
+    const userProjects = await devConsoleSql.paramExecute(
+      `
+        SELECT p.project_uuid
+        FROM project_user pu
+        LEFT JOIN user u ON pu.user_id = u.id
+        LEFT JOIN project p ON pu.project_id = p.id
+        WHERE u.email = @email
+        AND pu.role_id = ${DefaultUserRole.PROJECT_OWNER}
+      `,
+      { email },
+    );
+    await devConsoleSql.close();
+
+    const project_uuids = userProjects.map((p) => p.project_uuid);
+    const jobs = await new AcurastJob({}, context).getActiveJobsForProjects(
+      project_uuids,
+    );
+    return jobs.length > 0;
   }
 }
