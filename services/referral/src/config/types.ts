@@ -13,7 +13,6 @@ export enum DbTables {
   USER_AIRDROP_TASK = 'user_airdrop_task',
   TOKEN_CLAIM = 'token_claim',
   GALXE_WALLET = 'galxe_wallet',
-  PRODUCT_HUNT_COMMENT = 'product_hunt_comment',
 }
 
 export enum ReferralErrorCode {
@@ -48,8 +47,6 @@ export enum ReferralErrorCode {
 
   PROMO_CODE_NOT_PRESENT = 42211010,
   PROMO_CODE_CREDIT_AMOUNT_NOT_PRESENT = 42211011,
-  PRODUCT_HUNT_COMMENT_URL_NOT_PRESENT = 42211012,
-  PRODUCT_HUNT_COMMENT_USER_UUID_NOT_PRESENT = 42211013,
   //403
   CLAIM_FORBIDDEN = 40311000,
   USER_NOT_ELIGIBLE = 40311001,
