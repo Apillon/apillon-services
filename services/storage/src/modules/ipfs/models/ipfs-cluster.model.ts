@@ -394,15 +394,13 @@ export class IpfsCluster extends AdvancedSQLModel {
     isIpns = false,
     path?: string,
     convertToCidV1 = false,
+    service?: IPFSService,
   ): Promise<string> {
     let link = '';
 
     if (!isIpns && convertToCidV1) {
-      const ipfsService = new IPFSService(
-        this.getContext(),
-        project_uuid,
-        true,
-      );
+      const ipfsService =
+        service ?? new IPFSService(this.getContext(), project_uuid, true);
       cid = await ipfsService.cidToCidV1(cid);
     }
 
