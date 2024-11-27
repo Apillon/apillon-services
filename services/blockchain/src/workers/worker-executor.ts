@@ -213,6 +213,7 @@ export async function handleLambdaEvent(
     case WorkerName.VERIFY_ETHEREUM_TRANSACTIONS:
     case WorkerName.VERIFY_SEPOLIA_TRANSACTIONS:
     case WorkerName.VERIFY_MOONBASE_TRANSACTIONS:
+    case WorkerName.VERIFY_MOONBEAM_TRANSACTIONS:
     case WorkerName.VERIFY_ASTAR_TRANSACTIONS:
     case WorkerName.VERIFY_CELO_TRANSACTIONS:
     case WorkerName.VERIFY_ALFAJORES_TRANSACTIONS:
@@ -332,6 +333,7 @@ export async function handleSqsMessages(
         //   break;
         case WorkerName.VERIFY_ETHEREUM_TRANSACTIONS:
         case WorkerName.VERIFY_SEPOLIA_TRANSACTIONS:
+        case WorkerName.VERIFY_CELO_TRANSACTIONS:
         case WorkerName.VERIFY_MOONBEAM_TRANSACTIONS:
         case WorkerName.VERIFY_MOONBASE_TRANSACTIONS:
         case WorkerName.VERIFY_ASTAR_TRANSACTIONS:
