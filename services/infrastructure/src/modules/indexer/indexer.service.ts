@@ -202,7 +202,7 @@ export class IndexerService {
     const creditBalance = (
       await new Scs(context).getProjectCredit(indexer.project_uuid)
     ).data.balance;
-    if (creditBalance < 20000) {
+    if (creditBalance < env.INDEXER_DEPLOY_MINIMUM_CREDIT_BALANCE) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.PROJECT_CREDIT_BALANCE_TOO_LOW,
         status: 400,
