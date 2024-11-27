@@ -26,6 +26,7 @@ export async function getTokenPriceUsd(token: string): Promise<number> {
     SUB: 'subsocial',
     ACU: 'acurast',
     UNQ: 'unq',
+    HDX: 'hydradx',
   };
   const networkName = networkTokenMap[token];
   try {
