@@ -28,6 +28,7 @@ import { FilesQueryFilter } from './dtos/files-query-filter.dto';
 import { FileUploadSessionQueryFilter } from './dtos/file-upload-session-query-filter.dto';
 import { CollectionMetadataQueryFilter } from './dtos/collection-metadata-query-filter.dto';
 import { ShortUrlDto } from './dtos/short-url.dto';
+import { GetLinksDto } from './dtos/get-links.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -157,6 +158,16 @@ export class StorageMicroservice extends BaseService {
       cid,
       type,
     };
+    return await this.callService(data);
+  }
+
+  public async getLinks(project_uuid: string, body: GetLinksDto) {
+    const data = {
+      eventName: StorageEventType.GET_LINKS,
+      project_uuid,
+      body: body.serialize(),
+    };
+
     return await this.callService(data);
   }
 

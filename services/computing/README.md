@@ -23,45 +23,58 @@ microservice locally.
 Environment variables that have to be set:
 
 ```ts
-  /************************************************************
-   * COMPUTING - Apillon Computing Service
-   ************************************************************/
-  /**
-   *  function name
-   */
-  COMPUTING_FUNCTION_NAME: string;
-  COMPUTING_FUNCTION_NAME_TEST: string;
+/************************************************************
+ * COMPUTING - Apillon Computing Service
+ ************************************************************/
+/**
+ *  function name
+ */
+COMPUTING_FUNCTION_NAME: string;
+COMPUTING_FUNCTION_NAME_TEST: string;
 
-  /**
-   * COMPUTING dev server port
-   */
-  COMPUTING_SOCKET_PORT: number;
-  COMPUTING_SOCKET_PORT_TEST: number;
+/**
+ * COMPUTING dev server port
+ */
+COMPUTING_SOCKET_PORT: number;
+COMPUTING_SOCKET_PORT_TEST: number;
 
-  /**
-   * COMPUTING Database config
-   */
+/**
+ * COMPUTING Database config
+ */
 
-  COMPUTING_MYSQL_HOST: string;
-  COMPUTING_MYSQL_PORT: number;
-  COMPUTING_MYSQL_USER: string;
-  COMPUTING_MYSQL_PASSWORD: string;
-  COMPUTING_MYSQL_DEPLOY_USER: string;
-  COMPUTING_MYSQL_DEPLOY_PASSWORD: string;
-  COMPUTING_MYSQL_DATABASE: string;
+COMPUTING_MYSQL_HOST: string;
+COMPUTING_MYSQL_PORT: number;
+COMPUTING_MYSQL_USER: string;
+COMPUTING_MYSQL_PASSWORD: string;
+COMPUTING_MYSQL_DEPLOY_USER: string;
+COMPUTING_MYSQL_DEPLOY_PASSWORD: string;
+COMPUTING_MYSQL_DATABASE: string;
 
-  // TEST
-  COMPUTING_MYSQL_HOST_TEST: string;
-  COMPUTING_MYSQL_PORT_TEST: number;
-  COMPUTING_MYSQL_USER_TEST: string;
-  COMPUTING_MYSQL_PASSWORD_TEST: string;
-  COMPUTING_MYSQL_DATABASE_TEST: string;
+// TEST
+COMPUTING_MYSQL_HOST_TEST: string;
+COMPUTING_MYSQL_PORT_TEST: number;
+COMPUTING_MYSQL_USER_TEST: string;
+COMPUTING_MYSQL_PASSWORD_TEST: string;
+COMPUTING_MYSQL_DATABASE_TEST: string;
 
-  /**
-   * NFT workers config
-   */
-  COMPUTING_AWS_WORKER_SQS_URL: string;
-  COMPUTING_AWS_WORKER_LAMBDA_NAME: string;
+/**
+ * NFT workers config
+ */
+COMPUTING_AWS_WORKER_SQS_URL: string;
+COMPUTING_AWS_WORKER_LAMBDA_NAME: string;
+
+BLOCKCHAIN_SECRETS: string;
+
+/**
+ * KMS
+ */
+COMPUTING_KMS_KEY_ID: string;
+
+/**
+ * Acurast
+ */
+ACURAST_IPFS_LAMBDA_URL: string;
+ACURAST_GATEWAY_URL: string;
 ```
 
 ## Schrodinger's NFT service

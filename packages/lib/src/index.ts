@@ -41,6 +41,7 @@ export * from './lib/at-services/storage/storage';
 export * from './lib/at-services/storage/dtos/create-bucket.dto';
 export * from './lib/at-services/storage/dtos/bucket-query-filter.dto';
 export * from './lib/at-services/storage/dtos/create-directory.dto';
+export * from './lib/at-services/storage/dtos/get-links.dto';
 export * from './lib/at-services/storage/dtos/create-s3-url-for-upload.dto';
 export * from './lib/at-services/storage/dtos/directory-content-query-filter.dto';
 export * from './lib/at-services/storage/dtos/file-details-query-filter.dto';
@@ -148,6 +149,8 @@ export * from './lib/at-services/infrastructure/dtos/rpc-api-key-base.dto';
 export * from './lib/at-services/infrastructure/dtos/create-indexer.dto';
 export * from './lib/at-services/infrastructure/dtos/update-indexer.dto';
 export * from './lib/at-services/infrastructure/dtos/indexer-logs-query-filter.dto';
+export * from './lib/at-services/infrastructure/dtos/indexer-usage-query-filter.dto';
+export * from './lib/at-services/infrastructure/dtos/indexer-billing-query-filter.dto';
 
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';

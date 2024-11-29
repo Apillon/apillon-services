@@ -669,6 +669,10 @@ export interface IEnv {
    */
   INDEXER_PROVISION_PERCENT: number;
   /**
+   * Minimum credit balance that user must have to deploy indexer
+   */
+  INDEXER_DEPLOY_MINIMUM_CREDIT_BALANCE: number;
+  /**
    * sqd (subsquid cloud) API data
    */
   SQD_API_TOKEN: string;
@@ -1213,6 +1217,8 @@ export let env: IEnv = {
     'apillon-indexer-source-code-local',
   INDEXER_PROVISION_PERCENT:
     parseInt(process.env['INDEXER_PROVISION_PERCENT']) || 5,
+  INDEXER_DEPLOY_MINIMUM_CREDIT_BALANCE:
+    parseInt(process.env['INDEXER_DEPLOY_MINIMUM_CREDIT_BALANCE']) || 5000,
   SQD_API_TOKEN: process.env['SQD_API_TOKEN'],
   SQD_API_URL: process.env['SQD_API_URL'] || 'https://app.subsquid.io/api',
   SQD_ORGANIZATION_CODE: process.env['SQD_ORGANIZATION_CODE'],

@@ -21,6 +21,7 @@ export enum SubstrateChain {
   XSOCIAL = 7,
   ASTAR = 8,
   ACURAST = 9,
+  HYDRATION = 10,
   UNIQUE = 11,
 }
 
@@ -194,6 +195,7 @@ export enum StorageEventType {
   GET_PROJECT_IPFS_CLUSTER = 'get-project-ipfs-cluster',
   GET_IPFS_CLUSTER_INFO = 'get-ipfs-cluster-info',
   GET_LINK = 'get-link',
+  GET_LINKS = 'get-links',
   GENERATE_SHORT_URL = 'generate-short-url',
   GET_TARGET_URL = 'get-target-url',
 }
@@ -373,6 +375,7 @@ export enum InfrastructureEventType {
   UPDATE_RPC_API_KEY = 'update-rpc-api-key',
   CREATE_RPC_API_KEY = 'create-rpc-api-key',
   GET_RPC_API_KEY_USAGE = 'get-rpc-api-key-usage',
+  GET_RPC_API_KEY_USAGE_PER_CHAIN = 'get-rpc-api-key-usage-per-chain',
   GET_RPC_API_KEY = 'get-rpc-api-key',
   CHANGE_DWELLIR_SUBSCRIPTION = 'change-dwellir-subscription',
   DOWNGRADE_DWELLIR_SUBSCRIPTIONS = 'downgrade-dwellir-subscriptions',
@@ -389,6 +392,8 @@ export enum InfrastructureEventType {
   INDEXER_GET = 'get-indexer',
   INDEXER_GET_LOGS = 'get-indexer-logs',
   INDEXER_GET_DEPLOYMENTS = 'get-indexer-deployments',
+  INDEXER_GET_USAGE = 'get-indexer-usage',
+  INDEXER_LIST_BILLING = 'list-indexer-billing',
   INDEXER_UPDATE = 'update-indexer',
   INDEXER_GET_URL_FOR_SC_UPLOAD = 'get-url-for-indexer-source-code-upload',
   INDEXER_DEPLOY = 'deploy-indexer',

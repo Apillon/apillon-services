@@ -319,7 +319,7 @@ export class HostingService {
     }
     website.canAccess(context);
 
-    if (website.domain) {
+    if (website.domain && website.domainStatus != WebsiteDomainStatus.HAS_CDN) {
       const lookupRes = await checkDomainDns(website.domain);
 
       website.domainLastCheckDate = new Date();

@@ -19,32 +19,38 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 Environment variables that have to be set:
 
 ```ts
-  /************************************************************
-   * MAIL - Apillon Mailing Service
-   ************************************************************/
+/************************************************************
+ * MAIL - Apillon Mailing Service
+ ************************************************************/
 
-  /**
-   *  function name
-   */
-  MAIL_FUNCTION_NAME: string;
-  MAIL_FUNCTION_NAME_TEST: string;
-  /**
-   * LMAS dev server port
-   */
-  MAIL_SOCKET_PORT: number;
-  MAIL_SOCKET_PORT_TEST: number;
-  /**/
+/**
+ *  function name
+ */
+MAIL_FUNCTION_NAME: string;
+MAIL_FUNCTION_NAME_TEST: string;
+/**
+ * LMAS dev server port
+ */
+MAIL_SOCKET_PORT: number;
+MAIL_SOCKET_PORT_TEST: number;
+/**/
 
-  /** MAILING */
-  MAIL_TEMPLATE_PATH: string;
-  SMTP_HOST: string;
-  SMTP_PORT: number;
-  SMTP_USE_SSL: boolean;
-  SMTP_USERNAME: string;
-  SMTP_PASSWORD: string;
-  SMTP_NAME_FROM: string;
-  SMTP_EMAIL_FROM: string;
-  ADMIN_EMAILS: string; // emails for admin notifications
+/** MAILING */
+MAIL_TEMPLATE_PATH: string;
+SMTP_HOST: string;
+SMTP_PORT: number;
+SMTP_USE_SSL: boolean;
+SMTP_USERNAME: string;
+SMTP_PASSWORD: string;
+SMTP_NAME_FROM: string;
+SMTP_EMAIL_FROM: string;
+ADMIN_EMAILS: string; // emails for admin notifications
+
+/** Mailerlite */
+MAILERLITE_API_KEY: string;
+
+/** Generate PDF */
+GENERATE_PDF_FUNCTION_NAME: string;
 ```
 
 ## Deployment

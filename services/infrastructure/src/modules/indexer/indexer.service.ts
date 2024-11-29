@@ -1,10 +1,11 @@
 import {
   AWS_S3,
   BaseProjectQueryFilter,
-  checkProjectSubscription,
   CreateIndexerDto,
   env,
+  IndexerBillingQueryFilter,
   IndexerLogsQueryFilter,
+  IndexerUsageQueryFilter,
   Lmas,
   LogType,
   Scs,
@@ -22,6 +23,7 @@ import {
 import { Indexer } from './models/indexer.model';
 import { sqdApi } from './sqd/sqd.api';
 import { DeploymentResponse } from './sqd/types/deploymentResponse';
+import { IndexerBilling } from './models/indexer-billing.model';
 
 export class IndexerService {
   static async createIndexer(
@@ -200,7 +202,7 @@ export class IndexerService {
     const creditBalance = (
       await new Scs(context).getProjectCredit(indexer.project_uuid)
     ).data.balance;
-    if (creditBalance < 20000) {
+    if (creditBalance < env.INDEXER_DEPLOY_MINIMUM_CREDIT_BALANCE) {
       throw new InfrastructureCodeException({
         code: InfrastructureErrorCode.PROJECT_CREDIT_BALANCE_TOO_LOW,
         status: 400,
@@ -276,6 +278,50 @@ export class IndexerService {
     });
 
     return body;
+  }
+
+  /**
+   * Get indexer usage data (number of requests to indexer graphQL API) from squid API
+   * @param event
+   * @param context
+   * @returns
+   */
+  static async getIndexerUsage(
+    event: { query: IndexerUsageQueryFilter },
+    context: ServiceContext,
+  ) {
+    const { indexer_uuid, from, to } = event.query;
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    const indexer = await new Indexer({}, context).populateByUUIDAndCheckAccess(
+      indexer_uuid,
+    );
+
+    if (!indexer.squidId) {
+      throw new InfrastructureCodeException({
+        code: InfrastructureErrorCode.INDEXER_IS_NOT_DEPLOYED,
+        status: 400,
+      });
+    }
+
+    const { body } = await sqdApi<any>({
+      method: 'GET',
+      path: `/orgs/${env.SQD_ORGANIZATION_CODE}/metrics/ingress/${indexer.squidId}?from=${fromDate.toISOString()}&to=${toDate.toISOString()}`,
+    });
+
+    return body;
+  }
+
+  static async listIndexerBilling(
+    event: {
+      query: IndexerBillingQueryFilter;
+    },
+    context: ServiceContext,
+  ) {
+    return await new IndexerBilling({}, context).getList(
+      new IndexerBillingQueryFilter(event.query),
+    );
   }
 
   /**

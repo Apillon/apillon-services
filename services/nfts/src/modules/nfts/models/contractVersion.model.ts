@@ -116,6 +116,8 @@ export class ContractVersion extends AdvancedSQLModel {
               WHERE collectionType = @collectionType
               AND chainType = @chainType
               AND status = ${SqlModelStatus.ACTIVE}
+              ORDER BY version DESC
+              LIMIT 1
               ;
             `,
             { collectionType, chainType },
