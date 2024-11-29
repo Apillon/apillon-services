@@ -7,6 +7,7 @@ import {
   EmailDataDto,
   EmailTemplate,
   Mailing,
+  MintEmbeddedWalletNftDTO,
   MintNftDTO,
   NftsMicroservice,
   env,
@@ -17,9 +18,12 @@ import { Project } from '../project/models/project.model';
 import { ServiceStatusQueryFilter } from '../service-status/dtos/service-status-query-filter.dto';
 import { ServiceStatus } from '../service-status/models/service_status.model';
 import { ForbiddenErrorCode } from '../../config/types';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class PublicService {
+  constructor(private userService: UserService) {}
+
   async sendContactUsEmail(data: ContactFormDto) {
     await new Mailing(null).sendMail(
       new EmailDataDto({
@@ -63,8 +67,17 @@ export class PublicService {
 
   async mintNftToEmbeddedWallet(
     context: DevConsoleApiContext,
-    body: MintNftDTO,
+    body: MintEmbeddedWalletNftDTO,
   ) {
+    body.isEvmWallet = true;
+    body.wallet = body.receivingAddress;
+    await this.userService.validateWalletSignature(
+      body,
+      'public.service/mintNftToEmbeddedWallet',
+      context,
+      body.message,
+    );
+
     const oasisSignature = await new AuthenticationMicroservice(
       context,
     ).getOasisSignatureByPublicAddress(body.receivingAddress);
@@ -77,6 +90,6 @@ export class PublicService {
       });
     }
 
-    return (await new NftsMicroservice(context).mintNft(body)).data;
+    return (await new NftsMicroservice(context).mintNft(body as any)).data;
   }
 }

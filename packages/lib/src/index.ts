@@ -85,6 +85,7 @@ export * from './lib/at-services/nfts/dtos/deploy-collection.dto';
 export * from './lib/at-services/nfts/dtos/collection-query-filter.dto';
 export * from './lib/at-services/nfts/dtos/transaction-query-filter.dto';
 export * from './lib/at-services/nfts/dtos/mint-nft.dto';
+export * from './lib/at-services/nfts/dtos/mint-embedded-wallet-nft.dto';
 export * from './lib/at-services/nfts/dtos/set-collection-base-uri.dto';
 export * from './lib/at-services/nfts/dtos/transfer-collection.dto';
 export * from './lib/at-services/nfts/dtos/burn-nft.dto';
