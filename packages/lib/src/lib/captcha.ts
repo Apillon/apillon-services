@@ -46,7 +46,7 @@ async function verifyCaptcha(
       secret,
     });
 
-    if (!response.data.success)
+    if (!response.data?.verified)
       throwCodeException(ValidatorErrorCode.CAPTCHA_INVALID);
   } catch (err) {
     writeLog(LogType.ERROR, 'Error verifying captcha!', err);
