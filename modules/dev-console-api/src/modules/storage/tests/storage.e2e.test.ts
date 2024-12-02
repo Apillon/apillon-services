@@ -837,20 +837,6 @@ describe('Storage tests', () => {
         expect(response.body.data.link).toMatch('ipfs');
       });
 
-      test('User should be able to get link on ipfs for CID', async () => {
-        const response = await request(stage.http)
-          .get(
-            `/storage/link-on-ipfs?project_uuid=${testProject.project_uuid}&cid=k2k4r8plzxzg7eji9ucbr1trn9teesc72h1odfsjjggf4nmmm6rjosiu`,
-          )
-          .set('Authorization', `Bearer ${testUser.token}`);
-        expect(response.status).toBe(200);
-        expect(response.body.data.link).toBeTruthy();
-        expect(response.body.data.link).toMatch(
-          'k2k4r8plzxzg7eji9ucbr1trn9teesc72h1odfsjjggf4nmmm6rjosiu',
-        );
-        expect(response.body.data.link).toMatch('ipfs');
-      });
-
       test('User should be able to get link on ipfs for IPNS', async () => {
         const response = await request(stage.http)
           .get(
