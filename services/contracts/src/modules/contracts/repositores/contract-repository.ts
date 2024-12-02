@@ -309,11 +309,15 @@ export class ContractRepository extends BaseRepository {
       this.context,
     ).getContractDeployWithVersionAndMethods(contract_uuid);
 
-    const { c: contractDeploy, cv: contractVersion } =
-      this.extractModelDataFromRow(data[0], {
-        c: ContractDeploy,
-        cv: ContractVersion,
-      });
+    const {
+      c: contractDeploy,
+      cv: contractVersion,
+      cc: contract,
+    } = this.extractModelDataFromRow(data[0], {
+      c: ContractDeploy,
+      cv: ContractVersion,
+      cc: Contract,
+    });
     if (!contractDeploy.exists()) {
       throw new ContractsCodeException({
         status: 500,
@@ -334,9 +338,22 @@ export class ContractRepository extends BaseRepository {
         sendAdminAlert: true,
       });
     }
+    if (!contract.exists()) {
+      throw await new ContractsCodeException({
+        status: 500,
+        errorMessage: `Error getting contract for contract deploy with uuid ${contract_uuid}.`,
+        code: ContractsErrorCode.GET_CONTRACT_VERSION_ERROR,
+      }).writeToMonitor({
+        context: this.context,
+        logType: LogType.ERROR,
+        data: { contract_uuid },
+        sendAdminAlert: true,
+      });
+    }
     contractDeploy.canAccess(this.context);
 
     // assemble nested contractDeploy->contractVersion->methods
+    contractVersion.contract = contract;
     contractVersion.methods = this.extractArrayOfModelFromRows(
       data,
       'cvm',
