@@ -14,14 +14,6 @@ import { BaseWorker, Job, WorkerDefinition } from '@apillon/workers-lib';
 import { Subscription } from '../modules/subscription/models/subscription.model';
 import { OverrideService } from '../modules/override/override.service';
 
-const devConsoleConfig = {
-  host: env.DEV_CONSOLE_API_MYSQL_HOST,
-  database: env.DEV_CONSOLE_API_MYSQL_DATABASE,
-  password: env.DEV_CONSOLE_API_MYSQL_PASSWORD,
-  user: env.DEV_CONSOLE_API_MYSQL_USER,
-  port: env.DEV_CONSOLE_API_MYSQL_PORT,
-};
-
 /**
  * Identifies projects with expired RPC subscriptions, sends downgrade request to dwellir API & deactivates expired subscriptions
  * @typedef {ExpiredRpcSubscriptionsWorker}
@@ -118,7 +110,13 @@ export class ExpiredRpcSubscriptionsWorker extends BaseWorker {
       (subscriptions) => subscriptions.project_uuid,
     );
 
-    const devConsoleSql = new MySql(devConsoleConfig);
+    const devConsoleSql = new MySql({
+      host: env.DEV_CONSOLE_API_MYSQL_HOST,
+      database: env.DEV_CONSOLE_API_MYSQL_DATABASE,
+      password: env.DEV_CONSOLE_API_MYSQL_PASSWORD,
+      user: env.DEV_CONSOLE_API_MYSQL_USER,
+      port: env.DEV_CONSOLE_API_MYSQL_PORT,
+    });
     await devConsoleSql.connect();
 
     const projectOwners = await devConsoleSql.paramExecute(`

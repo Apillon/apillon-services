@@ -6,6 +6,8 @@ import {
   FileUploadSessionQueryFilter,
   FileUploadsQueryFilter,
   FilesQueryFilter,
+  GetLinksDto,
+  GetProjectLinksDto,
   LinkOnIpfsQueryFilter,
   SqlModelStatus,
   StorageMicroservice,
@@ -41,6 +43,12 @@ export class StorageService {
         query.cid,
         query.type,
       )
+    ).data;
+  }
+
+  async getLinks(context: DevConsoleApiContext, body: GetProjectLinksDto) {
+    return (
+      await new StorageMicroservice(context).getLinks(body.project_uuid, body)
     ).data;
   }
 

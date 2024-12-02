@@ -7,6 +7,8 @@ import {
   FileUploadSessionQueryFilter,
   FileUploadsQueryFilter,
   FilesQueryFilter,
+  GetLinksDto,
+  GetProjectLinksDto,
   LinkOnIpfsQueryFilter,
   RoleGroup,
   ValidateFor,
@@ -66,6 +68,17 @@ export class StorageController {
     @Query() query: LinkOnIpfsQueryFilter,
   ) {
     return await this.storageService.getLink(context, query);
+  }
+
+  @Post('link-on-ipfs-multiple')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({ dto: GetProjectLinksDto })
+  @UseGuards(AuthGuard, ValidationGuard, ProjectAccessGuard)
+  async getLinksOnIpfsMultiple(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: GetProjectLinksDto,
+  ) {
+    return await this.storageService.getLinks(context, body);
   }
 
   @Get(':bucket_uuid/file-uploads')
