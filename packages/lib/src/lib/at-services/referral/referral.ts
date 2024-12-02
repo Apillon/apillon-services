@@ -4,7 +4,6 @@ import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { ConfirmRetweetDto } from './dtos/confirm-retweet.dto';
-import { CreateProductHuntCommentDto } from './dtos/create-product-hunt-comment.dto';
 import { CreateReferralDto } from './dtos/create-referral.dto';
 import { GithubOauthDto } from './dtos/github-oauth.dto';
 import { ProductOrderDto } from './dtos/product-order.dto';
@@ -121,19 +120,6 @@ export class ReferralMicroservice extends BaseService {
       eventName: ReferralEventType.ADD_PROMO_CODE_CREDITS,
       project_uuid,
       email,
-    });
-  }
-
-  public async getProductHuntComment() {
-    return await this.callService({
-      eventName: ReferralEventType.GET_PRODUCT_HUNT_COMMENT,
-    });
-  }
-
-  public async createProductHuntComment(body: CreateProductHuntCommentDto) {
-    return await this.callService({
-      eventName: ReferralEventType.CREATE_PRODUCT_HUNT_COMMENT,
-      body: body,
     });
   }
 }

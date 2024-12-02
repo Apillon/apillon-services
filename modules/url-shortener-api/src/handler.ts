@@ -23,9 +23,10 @@ export const handler: (
   }
 
   try {
+    const [shortCode, ...additionalPath] = pathParameter.split('/');
     return await runCachedFunction<APIGatewayProxyResult>(
       `${CacheKeyPrefix.URL_SHORTENER}:${pathParameter}`,
-      async () => getTargetUrl(pathParameter),
+      async () => getTargetUrl(shortCode, additionalPath.join('/')),
       CacheKeyTTL.EXTRA_LONG * 24, // one day
     );
   } catch (error) {
@@ -39,17 +40,19 @@ export const handler: (
   }
 };
 
-async function getTargetUrl(pathParameter: string) {
-  const serviceResponse = await new StorageMicroservice(null).getTargetUrl(
-    pathParameter,
+async function getTargetUrl(shortCode: string, additionalPath: string) {
+  const { data: fullUrl } = await new StorageMicroservice(null).getTargetUrl(
+    shortCode,
   );
+
+  const [baseUrl, queryParams] = fullUrl.split('?');
+  const Location = additionalPath
+    ? `${baseUrl}/${additionalPath}${queryParams ? `?${queryParams}` : ''}`
+    : fullUrl;
 
   return {
     statusCode: 302,
-    headers: {
-      Location: serviceResponse.data,
-      'Access-Control-Allow-Origin': '*',
-    },
+    headers: { Location, 'Access-Control-Allow-Origin': '*' },
     body: '',
   };
 }

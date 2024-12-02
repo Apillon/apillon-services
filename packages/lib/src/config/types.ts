@@ -21,6 +21,7 @@ export enum SubstrateChain {
   XSOCIAL = 7,
   ASTAR = 8,
   ACURAST = 9,
+  HYDRATION = 10,
   UNIQUE = 11,
 }
 
@@ -194,6 +195,7 @@ export enum StorageEventType {
   GET_PROJECT_IPFS_CLUSTER = 'get-project-ipfs-cluster',
   GET_IPFS_CLUSTER_INFO = 'get-ipfs-cluster-info',
   GET_LINK = 'get-link',
+  GET_LINKS = 'get-links',
   GENERATE_SHORT_URL = 'generate-short-url',
   GET_TARGET_URL = 'get-target-url',
 }
@@ -228,6 +230,10 @@ export enum MailEventType {
   SEND_MAIL = 'send-mail',
   SEND_CUSTOM_MAIL = 'send-custom-mail',
   SET_MAILERLITE_FIELD = 'set-mailerlite-field',
+  GET_NOTIFICATIONS = 'get-notifications',
+  CREATE_NOTIFICATION = 'create-notification',
+  UPDATE_NOTIFICATION = 'update-notification',
+  DELETE_NOTIFICATION = 'delete-notification',
 }
 
 export enum ScsEventType {
@@ -255,6 +261,10 @@ export enum ScsEventType {
   GET_PRODUCT_PRICE = 'get-product-price',
   GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION = 'get-projects-with-active-subscription',
   HAS_ACTIVE_RPC_PLAN = 'has-active-rpc-plan',
+  GET_NOTIFICATIONS = 'get-notifications',
+  CREATE_NOTIFICATION = 'create-notification',
+  UPDATE_NOTIFICATION = 'update-notification',
+  DELETE_NOTIFICATION = 'delete-notification',
 }
 
 export enum NftsEventType {
@@ -310,6 +320,8 @@ export enum ComputingEventType {
 
   UPDATE_JOB = 'update-job',
   DELETE_JOB = 'delete-job',
+
+  VERIFY_REBEL = 'verify-rebel',
 }
 
 export enum ReferralEventType {
@@ -324,8 +336,6 @@ export enum ReferralEventType {
   GET_TWITTER_LINK = 'get-twitter-link',
   GET_TWEETS = 'get-tweets',
   CONFIRM_RETWEET = 'confirm-retweet',
-  GET_PRODUCT_HUNT_COMMENT = 'get-product-hunt-comment',
-  CREATE_PRODUCT_HUNT_COMMENT = 'create-product-hunt-comment',
 
   ADD_PROMO_CODE_CREDITS = 'add-promo-code-credits',
 }
@@ -365,6 +375,7 @@ export enum InfrastructureEventType {
   UPDATE_RPC_API_KEY = 'update-rpc-api-key',
   CREATE_RPC_API_KEY = 'create-rpc-api-key',
   GET_RPC_API_KEY_USAGE = 'get-rpc-api-key-usage',
+  GET_RPC_API_KEY_USAGE_PER_CHAIN = 'get-rpc-api-key-usage-per-chain',
   GET_RPC_API_KEY = 'get-rpc-api-key',
   CHANGE_DWELLIR_SUBSCRIPTION = 'change-dwellir-subscription',
   DOWNGRADE_DWELLIR_SUBSCRIPTIONS = 'downgrade-dwellir-subscriptions',
@@ -381,6 +392,8 @@ export enum InfrastructureEventType {
   INDEXER_GET = 'get-indexer',
   INDEXER_GET_LOGS = 'get-indexer-logs',
   INDEXER_GET_DEPLOYMENTS = 'get-indexer-deployments',
+  INDEXER_GET_USAGE = 'get-indexer-usage',
+  INDEXER_LIST_BILLING = 'list-indexer-billing',
   INDEXER_UPDATE = 'update-indexer',
   INDEXER_GET_URL_FOR_SC_UPLOAD = 'get-url-for-indexer-source-code-upload',
   INDEXER_DEPLOY = 'deploy-indexer',
@@ -627,6 +640,8 @@ export enum BadRequestErrorCode {
   INVALID_AUTHORIZATION_HEADER = 40000004,
   THIRD_PARTY_SERVICE_CONNECTION_FAILED = 40000005,
   RESOURCE_DOES_NOT_EXISTS = 40000006,
+  INVALID_NOTIFICATION_TYPE = 40000007,
+  NOTIFICATION_TYPE_OR_MESSAGE_MISSING = 40000008,
 }
 
 export enum ValidatorErrorCode {
@@ -787,9 +802,6 @@ export enum ValidatorErrorCode {
   EVM_CHAIN_NOT_VALID = 42200806,
   //#endregion
 
-  PRODUCT_HUNT_COMMENT_URL_NOT_PRESENT = 422011001,
-  PRODUCT_HUNT_COMMENT_URL_INVALID = 422011002,
-
   //#region Caching
   INVALID_CACHE_KEY = 42200900,
   //#endregion
@@ -825,6 +837,9 @@ export enum ValidatorErrorCode {
 
   INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001120,
   DEPLOY_INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001121,
+
+  //#region Mailing MS
+  INVALID_NOTIFICATION_TYPE = 422001201,
 }
 
 /**
@@ -1166,4 +1181,13 @@ export enum SubscriptionPackageId {
   COCOON = 3,
   BUTTERFLY = 4,
   RPC_PLAN = 5,
+}
+
+export enum NotificationType {
+  UNKNOWN = 0,
+}
+
+export enum HttpStatus {
+  BAD_REQUEST = 400,
+  NOT_FOUND = 404,
 }

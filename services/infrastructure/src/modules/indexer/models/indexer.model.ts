@@ -255,7 +255,7 @@ export class Indexer extends UuidSqlModel {
       qFrom: `
         FROM ${DbTables.INDEXER} i
         WHERE i.status <> ${SqlModelStatus.DELETED} 
-        AND project_uuid = '${filter.project_uuid}'
+        AND project_uuid = @project_uuid
         AND (@search IS null OR i.name LIKE CONCAT('%', @search, '%'))`,
       qFilter: `
          ORDER BY ${filters.orderStr}

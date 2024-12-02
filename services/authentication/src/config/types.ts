@@ -73,9 +73,11 @@ export enum AuthenticationErrorCode {
   INVALID_OTP = 422130700,
 }
 
-export enum HttpStatus {
-  BAD_REQUEST = 400,
-  NOT_FOUND = 404,
+/**
+ * Resource not found error codes - 40413000.
+ */
+export enum ResourceNotFoundErrorCode {
+  DEFAULT_RESOURCE_NOT_FOUND_ERROR = 404130000,
 }
 
 // Well known did domain linkage Ctype required props

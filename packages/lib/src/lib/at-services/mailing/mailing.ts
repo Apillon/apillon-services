@@ -2,7 +2,9 @@ import { env } from '../../../config/env';
 import { AppEnvironment, MailEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
+import { CreateOrUpdateNotificationDto } from './dto/create-or-update-notification.dto';
 import { EmailDataDto } from './dto/email-data.dto';
+import { NotificationQueryFilter } from './dto/notification-query-filter.dto';
 
 /**
  * Access Management Service client
@@ -21,6 +23,10 @@ export class Mailing extends BaseService {
   constructor(context?: Context) {
     super(context);
     this.isDefaultAsync = true;
+  }
+
+  private async callSyncService(payload: any) {
+    return await this.callService(payload, { isAsync: false });
   }
 
   public async sendMail(emailData: EmailDataDto) {
@@ -56,4 +62,37 @@ export class Mailing extends BaseService {
       value,
     });
   }
+
+  //#region notifications
+  public async getNotificationList(query: NotificationQueryFilter) {
+    return this.callSyncService({
+      eventName: MailEventType.GET_NOTIFICATIONS,
+      query,
+    });
+  }
+
+  public async createNotification(data: CreateOrUpdateNotificationDto) {
+    return await this.callSyncService({
+      eventName: MailEventType.CREATE_NOTIFICATION,
+      data,
+    });
+  }
+
+  public async updateNotification(
+    id: number,
+    data: CreateOrUpdateNotificationDto,
+  ) {
+    return await this.callSyncService({
+      eventName: MailEventType.UPDATE_NOTIFICATION,
+      data: { id, data },
+    });
+  }
+  public async deleteNotification(id: number) {
+    return await this.callSyncService({
+      eventName: MailEventType.DELETE_NOTIFICATION,
+      id,
+    });
+  }
+
+  //#endregion
 }

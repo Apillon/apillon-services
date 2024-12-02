@@ -10,6 +10,7 @@ import { integerParser, stringParser } from '@rawmodel/parsers';
 import { ContractsErrorCode, DbTables } from '../../../config/types';
 import { Abi } from 'abitype/zod';
 import { ContractVersionMethod } from './contractVersionMethod.model';
+import { Contract } from './contract.model';
 
 export class ContractVersion extends UuidSqlModel {
   public readonly tableName = DbTables.CONTRACT_VERSION;
@@ -86,6 +87,17 @@ export class ContractVersion extends UuidSqlModel {
     ],
   })
   public methods: ContractVersionMethod[];
+
+  @prop({
+    populatable: [PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+  })
+  public contract: Contract;
 
   public constructor(data: any, context: Context) {
     super(data, context);

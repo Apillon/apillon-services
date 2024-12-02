@@ -108,6 +108,21 @@ export class RpcController {
     return await this.rpcService.getApiKeyUsage(context, id, projectUuid);
   }
 
+  @Get('/:project_uuid/api-key/:id/usage-per-chain')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard, ProjectAccessGuard)
+  async getApiKeyUsagePerChain(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('project_uuid') projectUuid: string,
+  ) {
+    return await this.rpcService.getApiKeyUsagePerChain(
+      context,
+      id,
+      projectUuid,
+    );
+  }
+
   @Get('api-key/:id/urls')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({

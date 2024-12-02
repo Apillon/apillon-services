@@ -33,7 +33,6 @@ import {
   ApillonSupportedCTypes,
   KILT_CREDENTIAL_IRI_PREFIX,
   AuthenticationErrorCode,
-  HttpStatus,
 } from '../config/types';
 import { EncryptResponseData } from '@kiltprotocol/types';
 import { Keypair } from '@polkadot/util-crypto/types';
@@ -41,6 +40,7 @@ import {
   BlockchainMicroservice,
   ChainType,
   env,
+  HttpStatus,
   Lmas,
   LogType,
   ServiceName,

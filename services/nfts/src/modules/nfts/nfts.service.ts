@@ -214,6 +214,7 @@ export class NftsService {
 
     return collection.serializeByContext();
   }
+
   static async createUniqueCollection(
     params: { body: CreateUniqueCollectionDTO },
     context: ServiceContext,
@@ -812,7 +813,7 @@ export class NftsService {
 
     const baseUri = collection.useApillonIpfsGateway
       ? ipnsRes.link.split('?token')[0]
-      : `ipns://${ipnsRes.ipnsName}`;
+      : `ipns://${ipnsRes.ipnsName}/`;
 
     console.info('baseUri', baseUri);
 
@@ -833,6 +834,7 @@ export class NftsService {
 
     collection.baseUri = baseUri;
     collection.ipns_uuid = ipnsRes.ipns_uuid;
+    collection.useIpns = true;
     await collection.update();
 
     return collection.serializeByContext(context);
@@ -844,7 +846,7 @@ export class NftsService {
   ) {
     body.idsToMint ||= [];
     console.log(
-      `Minting NFT Collection to wallet address: ${body.receivingAddress}`,
+      `Minting NFT Collection ${body.collection_uuid} to wallet address: ${body.receivingAddress}`,
     );
 
     const collection: Collection = await new Collection(
@@ -1399,11 +1401,7 @@ export class NftsService {
       context,
     ).populateByUUID(event.collection_uuid);
 
-    await NftsService.checkCollection(
-      collection,
-      'archiveCollection()',
-      context,
-    );
+    collection.canAccess(context);
 
     return await collection.markArchived();
   }
@@ -1423,11 +1421,7 @@ export class NftsService {
       context,
     ).populateByUUID(event.collection_uuid);
 
-    await NftsService.checkCollection(
-      collection,
-      'activateCollection()',
-      context,
-    );
+    collection.canAccess(context);
 
     return await collection.markActive();
   }
@@ -1450,7 +1444,10 @@ export class NftsService {
         sourceFunction,
       });
     }
-    collection.canAccess(context);
+
+    // If not the collection which gets minted from landing page, check access
+    if (collection.collection_uuid !== env.DEMO_NFT_COLLECTION_UUID)
+      collection.canAccess(context);
   }
 
   private static async checkMintConditions(

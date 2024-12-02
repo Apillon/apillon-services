@@ -16,13 +16,13 @@ import {
   EmailDataDto,
   EmailTemplate,
   JwtExpireTime,
+  HttpStatus,
 } from '@apillon/lib';
 import { Identity } from './models/identity.model';
 import {
   IdentityState,
   AuthenticationErrorCode,
   ApillonSupportedCTypes,
-  HttpStatus,
   DidCreateOp,
   Attester,
   KiltSignAlgorithm,

@@ -2,10 +2,13 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 import {
   ApillonApiCreateRpcApiKeyDto,
+  AttachedServiceType,
   BaseProjectQueryFilter,
   CodeException,
   DefaultUserRole,
+  ForbiddenErrorCodes,
   InfrastructureMicroservice,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { getConsoleApiMysql } from '../../lib/mysql-utils';
 import { ResourceNotFoundErrorCode } from '../../config/types';
@@ -25,7 +28,7 @@ export class RpcService {
     try {
       await mysql.connect();
       const owner = await mysql.paramExecute(
-        `SELECT u.user_uuid, pu.user_id,u.email FROM project_user pu
+        `SELECT u.user_uuid, pu.user_id,u.email, p.id as project_id FROM project_user pu
         LEFT JOIN project p on p.id = pu.project_id
         LEFT JOIN user u on u.id = pu.user_id
         WHERE p.project_uuid = @project_uuid AND pu.role_id = ${DefaultUserRole.PROJECT_OWNER}`,
@@ -36,6 +39,24 @@ export class RpcService {
         projectOwnerUuid = owner[0].user_uuid;
         projectOwnerId = owner[0].user_id;
         projectOwnerEmail = owner[0].email;
+      }
+
+      if (owner[0].project_id) {
+        const service = await mysql.paramExecute(
+          `SELECT id from service
+          WHERE project_id= @project_id
+          AND serviceType_id = ${AttachedServiceType.RPC}
+          AND status != ${SqlModelStatus.DELETED}`,
+          { project_id: owner[0].project_id },
+        );
+
+        if (!service?.length) {
+          throw new CodeException({
+            status: HttpStatus.FORBIDDEN,
+            code: ForbiddenErrorCodes.FORBIDDEN,
+            errorMessage: 'Project missing RPC service',
+          });
+        }
       }
 
       await mysql.close();

@@ -16,6 +16,8 @@ export async function processEvent(event, context: Context): Promise<any> {
       RpcApiKeyService.listRpcApiKeys,
     [InfrastructureEventType.GET_RPC_API_KEY_USAGE]:
       RpcApiKeyService.getRpcApiKeyUsage,
+    [InfrastructureEventType.GET_RPC_API_KEY_USAGE_PER_CHAIN]:
+      RpcApiKeyService.getRpcApiKeyUsagePerChain,
     [InfrastructureEventType.GET_RPC_API_KEY]: RpcApiKeyService.getRpcApiKey,
     [InfrastructureEventType.HAS_DWELLIR_ID]: RpcApiKeyService.hasDwellirId,
     [InfrastructureEventType.CREATE_USER]: RpcApiKeyService.createUser,
@@ -36,6 +38,9 @@ export async function processEvent(event, context: Context): Promise<any> {
     [InfrastructureEventType.INDEXER_GET_LOGS]: IndexerService.getIndexerLogs,
     [InfrastructureEventType.INDEXER_GET_DEPLOYMENTS]:
       IndexerService.getIndexerDeployments,
+    [InfrastructureEventType.INDEXER_GET_USAGE]: IndexerService.getIndexerUsage,
+    [InfrastructureEventType.INDEXER_LIST_BILLING]:
+      IndexerService.listIndexerBilling,
     [InfrastructureEventType.INDEXER_LIST]: IndexerService.listIndexers,
     [InfrastructureEventType.INDEXER_GET_URL_FOR_SC_UPLOAD]:
       IndexerService.getUrlForSourceCodeUpload,

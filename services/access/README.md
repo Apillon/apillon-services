@@ -18,38 +18,45 @@ Please read [Development](../../docs/development.md) and [Debug and Test](../../
 Environment variables that have to be set:
 
 ```ts
-  /*************************************************************
-   * AMS -Apillon Access Management Service
-   *************************************************************/
-  /**
-   *  function name
-   */
-  ACCESS_FUNCTION_NAME: string;
-  ACCESS_FUNCTION_NAME_TEST: string;
+/*************************************************************
+ * AMS -Apillon Access Management Service
+ *************************************************************/
+/**
+ *  function name
+ */
+ACCESS_FUNCTION_NAME: string;
+ACCESS_FUNCTION_NAME_TEST: string;
 
-  /**
-   * AMS dev server port
-   */
-  ACCESS_SOCKET_PORT: number;
-  ACCESS_SOCKET_PORT_TEST: number;
+/**
+ * AMS dev server port
+ */
+ACCESS_SOCKET_PORT: number;
+ACCESS_SOCKET_PORT_TEST: number;
 
-  /**
-   * AMS Database config
-   */
+/**
+ * AMS Database config
+ */
 
-  ACCESS_MYSQL_HOST: string;
-  ACCESS_MYSQL_PORT: number;
-  ACCESS_MYSQL_DATABASE: string;
-  ACCESS_MYSQL_USER: string;
-  ACCESS_MYSQL_PASSWORD: string;
-  ACCESS_MYSQL_DEPLOY_USER: string;
-  ACCESS_MYSQL_DEPLOY_PASSWORD: string;
+ACCESS_MYSQL_HOST: string;
+ACCESS_MYSQL_PORT: number;
+ACCESS_MYSQL_DATABASE: string;
+ACCESS_MYSQL_USER: string;
+ACCESS_MYSQL_PASSWORD: string;
+ACCESS_MYSQL_DEPLOY_USER: string;
+ACCESS_MYSQL_DEPLOY_PASSWORD: string;
 
-  ACCESS_MYSQL_HOST_TEST: string;
-  ACCESS_MYSQL_PORT_TEST: number;
-  ACCESS_MYSQL_DATABASE_TEST: string;
-  ACCESS_MYSQL_USER_TEST: string;
-  ACCESS_MYSQL_PASSWORD_TEST: string;
+ACCESS_MYSQL_HOST_TEST: string;
+ACCESS_MYSQL_PORT_TEST: number;
+ACCESS_MYSQL_DATABASE_TEST: string;
+ACCESS_MYSQL_USER_TEST: string;
+ACCESS_MYSQL_PASSWORD_TEST: string;
+
+/**
+ * Apillon API Integration config
+ */
+
+APILLON_API_INTEGRATION_API_KEY: string;
+APILLON_API_INTEGRATION_API_SECRET: string;
 ```
 
 ## Deployment

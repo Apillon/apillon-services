@@ -57,6 +57,22 @@ INFRASTRUCTURE_MYSQL_DATABASE_TEST: string;
  */
 INFRASTRUCTURE_AWS_WORKER_SQS_URL: string;
 INFRASTRUCTURE_AWS_WORKER_LAMBDA_NAME: string;
+INFRASTURCTURE_AWS_WORKER_SQS_ARN: string;
+
+/**
+ * Dwellir configuration
+ */
+DWELLIR_URL: string;
+DWELLIR_USERNAME: string;
+DWELLIR_PASSWORD: string;
+
+/**
+ * Indexer configuration
+ */
+SQD_ORGANIZATION_CODE: string;
+SQD_API_URL: string;
+SQD_API_TOKEN: string;
+INDEXER_BUCKET_FOR_SOURCE_CODE: string;
 ```
 
 ## Deployment

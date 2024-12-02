@@ -151,15 +151,15 @@ export class ServicesService {
       });
     }
 
-    const service = new Service(body, context);
-    service.populate({ service_uuid: uuidV4(), project_id: project.id });
-    await service.insert();
-
     if (body.serviceType_id === AttachedServiceType.RPC) {
       await new InfrastructureMicroservice(context).createUser(
         body.project_uuid,
       );
     }
+
+    const service = new Service(body, context);
+    service.populate({ service_uuid: uuidV4(), project_id: project.id });
+    await service.insert();
 
     await new Lmas().writeLog({
       context,

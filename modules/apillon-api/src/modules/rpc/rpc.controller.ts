@@ -14,14 +14,12 @@ import {
   ApillonApiCreateRpcApiKeyDto,
   AttachedServiceType,
   BaseProjectQueryFilter,
-  CreateRpcApiKeyDto,
   DefaultApiKeyRole,
   ValidateFor,
 } from '@apillon/lib';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ApillonApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
-import { DevConsoleApiContext } from '@apillon/dev-console-api/src/context';
 
 @Controller('rpc')
 export class RpcController {
@@ -35,7 +33,7 @@ export class RpcController {
   @Validation({ dto: ApillonApiCreateRpcApiKeyDto })
   @UseGuards(AuthGuard, ValidationGuard)
   async createApiKey(
-    @Ctx() context: DevConsoleApiContext,
+    @Ctx() context: ApillonApiContext,
     @Body() body: ApillonApiCreateRpcApiKeyDto,
   ) {
     return await this.rpcService.createApiKey(context, body);

@@ -25,6 +25,7 @@ export class RpcService {
     return (await new InfrastructureMicroservice(context).listRpcApiKeys(query))
       .data;
   }
+
   async getApiKeyUsage(
     context: DevConsoleApiContext,
     id: number,
@@ -44,6 +45,31 @@ export class RpcService {
 
     return (
       await new InfrastructureMicroservice(context).getRpcApiKeyUsage(
+        id,
+        projectOwner.user_uuid,
+      )
+    ).data;
+  }
+
+  async getApiKeyUsagePerChain(
+    context: DevConsoleApiContext,
+    id: number,
+    project_uuid: string,
+  ) {
+    const projectOwner = await new ProjectUser({}, context).getProjectOwner(
+      project_uuid,
+    );
+
+    if (!projectOwner) {
+      throw new CodeException({
+        status: HttpStatus.NOT_FOUND,
+        code: ResourceNotFoundErrorCode.USER_DOES_NOT_EXISTS,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    return (
+      await new InfrastructureMicroservice(context).getRpcApiKeyUsagePerChain(
         id,
         projectOwner.user_uuid,
       )

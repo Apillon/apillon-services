@@ -56,6 +56,9 @@ SOCIAL_MYSQL_USER_TEST: string;
 SOCIAL_MYSQL_PASSWORD_TEST: string;
 SOCIAL_MYSQL_DATABASE_TEST: string;
 
+// Subsocial
+SOCIAL_DEFAULT_SPACE: string;
+
 /**
  * Social workers config
  */
