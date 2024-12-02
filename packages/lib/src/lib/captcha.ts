@@ -1,4 +1,4 @@
-import { AppEnvironment, LogType, ValidatorErrorCode } from '../config/types';
+import { LogType, ValidatorErrorCode } from '../config/types';
 import { env, getEnvSecrets } from '../config/env';
 import { CodeException } from './exceptions/exceptions';
 import axios from 'axios';
@@ -11,13 +11,13 @@ export type Captcha = { eKey: string; token: string };
  * @returns {Promise<boolean>}
  */
 export async function checkCaptcha(captchaToken: string): Promise<boolean> {
-  if (
-    [AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
-      env.APP_ENV as AppEnvironment,
-    )
-  ) {
-    return true;
-  }
+  // if (
+  //   [AppEnvironment.LOCAL_DEV, AppEnvironment.TEST].includes(
+  //     env.APP_ENV as AppEnvironment,
+  //   )
+  // ) {
+  //   return true;
+  // }
 
   await getEnvSecrets();
 
