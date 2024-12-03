@@ -129,7 +129,7 @@ export class CloudFunctionsController {
     serviceType: AttachedServiceType.COMPUTING,
   })
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGuard, ValidationGuard)
+  @UseGuards(AuthGuard)
   async verifyRebel(
     @Ctx() context: ApillonApiContext,
     @Body('email') email: string,
