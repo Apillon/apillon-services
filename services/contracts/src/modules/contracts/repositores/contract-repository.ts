@@ -59,7 +59,7 @@ export class ContractRepository extends BaseRepository {
     if (!contract.exists()) {
       throw new ContractsCodeException({
         status: 500,
-        code: ContractsErrorCode.CONTRACT_DOES_NOT_EXIST,
+        code: ContractsErrorCode.CONTRACT_NOT_FOUND,
         context: this.context,
         sourceFunction: 'ContractRepository.getContractDeployByUUID',
       });
@@ -248,7 +248,7 @@ export class ContractRepository extends BaseRepository {
     if (!contractDeploy.exists()) {
       throw new ContractsCodeException({
         status: 500,
-        code: ContractsErrorCode.CONTRACT_DOES_NOT_EXIST,
+        code: ContractsErrorCode.DEPLOYED_CONTRACT_NOT_FOUND,
         context: this.context,
         sourceFunction: 'ContractRepository.getContractDeployByUUID',
       });
@@ -277,7 +277,7 @@ export class ContractRepository extends BaseRepository {
     if (!contractDeploy.exists()) {
       throw new ContractsCodeException({
         status: 500,
-        code: ContractsErrorCode.CONTRACT_DOES_NOT_EXIST,
+        code: ContractsErrorCode.DEPLOYED_CONTRACT_NOT_FOUND,
         context: this.context,
         sourceFunction: 'ContractRepository.getContractDeployByUUID',
       });
@@ -321,7 +321,7 @@ export class ContractRepository extends BaseRepository {
     if (!contractDeploy.exists()) {
       throw new ContractsCodeException({
         status: 500,
-        code: ContractsErrorCode.CONTRACT_DOES_NOT_EXIST,
+        code: ContractsErrorCode.DEPLOYED_CONTRACT_NOT_FOUND,
         context: this.context,
         sourceFunction: 'ContractRepository.getContractDeployByUUID',
       });

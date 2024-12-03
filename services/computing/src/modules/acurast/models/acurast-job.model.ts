@@ -413,11 +413,10 @@ export class AcurastJob extends UuidSqlModel {
       `
       SELECT ${this.generateSelectFields('j', '', SerializeFor.SELECT_DB)}
       FROM ${DbTables.ACURAST_JOB} j
-      WHERE j.project_uuid IN (@project_uuids)
+      WHERE j.project_uuid IN (${project_uuids.map((uuid) => `"${uuid}"`).join(',')})
       AND j.status = ${SqlModelStatus.ACTIVE}
       AND j.jobStatus = ${AcurastJobStatus.MATCHED}
       `,
-      { project_uuids },
     );
   }
 }

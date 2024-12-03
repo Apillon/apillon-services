@@ -99,6 +99,7 @@ export class ContractDeploy extends UuidSqlModel {
       SerializeFor.LOGGER,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
@@ -229,6 +230,7 @@ export class ContractDeploy extends UuidSqlModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.PROFILE,
       SerializeFor.ADMIN,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -321,6 +323,7 @@ export class ContractDeploy extends UuidSqlModel {
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
     ],
   })

@@ -536,6 +536,8 @@ export class AcurastService {
     await devConsoleSql.close();
 
     const project_uuids = userProjects.map((p) => p.project_uuid);
+    if (!project_uuids.length) return false;
+
     const jobs = await new AcurastJob({}, context).getActiveJobsForProjects(
       project_uuids,
     );
