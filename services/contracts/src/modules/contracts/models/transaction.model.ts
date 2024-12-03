@@ -133,7 +133,7 @@ export class Transaction extends AdvancedSQLModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB],
-    serializable: [SerializeFor.INSERT_DB],
+    serializable: [SerializeFor.INSERT_DB, SerializeFor.APILLON_API],
   })
   public transaction_uuid: string;
 
