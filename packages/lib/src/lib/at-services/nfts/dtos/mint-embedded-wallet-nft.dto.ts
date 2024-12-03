@@ -1,6 +1,6 @@
 import { UserWalletAuthDto } from '../../ams/dtos/user-wallet-auth.dto';
 import { prop } from '@rawmodel/core';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { arrayParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   ethAddressValidator,
   numberSizeValidator,
@@ -54,4 +54,11 @@ export class MintEmbeddedWalletNftDTO extends UserWalletAuthDto {
     validators: [],
   })
   public message: string;
+
+  @prop({
+    parser: { resolver: arrayParser() },
+    populatable: [],
+    defaultValue: [],
+  })
+  public idsToMint: number[];
 }

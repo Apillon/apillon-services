@@ -8,7 +8,6 @@ import {
   EmailTemplate,
   Mailing,
   MintEmbeddedWalletNftDTO,
-  MintNftDTO,
   NftsMicroservice,
   env,
 } from '@apillon/lib';
@@ -90,6 +89,6 @@ export class PublicService {
       });
     }
 
-    return (await new NftsMicroservice(context).mintNft(body as any)).data;
+    return (await new NftsMicroservice(context).mintNft(body)).data;
   }
 }
