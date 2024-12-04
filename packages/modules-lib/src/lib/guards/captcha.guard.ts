@@ -22,8 +22,8 @@ export class CaptchaGuard implements CanActivate {
       execCtx.getClass(),
     ]) as any as IValidationOptions;
     const request = execCtx.switchToHttp().getRequest<IRequest>();
-    const { captcha } = request[options.validateFor] || {};
+    const { procaptchaResponse } = request[options.validateFor] || {};
 
-    return await checkCaptcha(captcha?.token);
+    return await checkCaptcha(procaptchaResponse?.token);
   }
 }
