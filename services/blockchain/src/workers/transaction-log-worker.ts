@@ -964,10 +964,11 @@ export class TransactionLogWorker extends BaseQueueWorker {
     decimals: number,
     pricePerToken: number,
   ) {
-    const totalPriceBN = ethers.BigNumber.from(totalPrice);
     const divisor = ethers.BigNumber.from(10).pow(decimals);
-    const valueBN = totalPriceBN.mul(pricePerToken).div(divisor);
-    const value = parseFloat(ethers.utils.formatUnits(valueBN, decimals));
+    const tokensAmount = ethers.BigNumber.from(totalPrice)
+      .div(divisor)
+      .toNumber();
+    const value = tokensAmount * pricePerToken;
 
     return Math.round(value * 10_000) / 10_000; // Round value to 4 decimals
   }
