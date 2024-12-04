@@ -120,6 +120,17 @@ describe('Transaction Accounting unit tests', () => {
         },
         stage.context,
       ),
+      // 0 Kilt test
+      new TransactionLog(
+        {
+          action: TxAction.DEPOSIT,
+          direction: TxDirection.INCOME,
+          wallet: kiltAddress,
+          hash: '10',
+          amount: 0,
+        },
+        stage.context,
+      ),
       // 20 Kilt
       new TransactionLog(
         {
@@ -189,8 +200,8 @@ describe('Transaction Accounting unit tests', () => {
       `SELECT * FROM ${DbTables.WALLET_DEPOSIT}`,
     );
 
-    expect(walletDeposits).toHaveLength(4);
-    expect(walletDeposits.every((w) => !!w.pricePerToken)).toBeTruthy();
+    expect(walletDeposits).toHaveLength(5);
+    expect(walletDeposits.every((w) => w.pricePerToken >= 0)).toBeTruthy();
 
     const crustDeposits = walletDeposits.filter((d) => d.wallet_id === 1);
     expect(crustDeposits).toHaveLength(2);
@@ -202,8 +213,11 @@ describe('Transaction Accounting unit tests', () => {
     expect(kiltDeposits[0].depositAmount).toEqual(30_000_000_000_000_000);
     expect(kiltDeposits[0].currentAmount).toEqual(0);
 
-    expect(kiltDeposits[1].depositAmount).toEqual(20_000_000_000_000_000);
-    expect(kiltDeposits[1].currentAmount).toEqual(10_000_000_000_000_000);
+    expect(kiltDeposits[1].depositAmount).toEqual(0);
+    expect(kiltDeposits[1].currentAmount).toEqual(0);
+
+    expect(kiltDeposits[2].depositAmount).toEqual(20_000_000_000_000_000);
+    expect(kiltDeposits[2].currentAmount).toEqual(10_000_000_000_000_000);
   });
 
   test('Test wallet spends roll over to currentAmount of second deposit', async () => {
@@ -212,9 +226,9 @@ describe('Transaction Accounting unit tests', () => {
         {
           action: TxAction.TRANSACTION,
           direction: TxDirection.COST,
-          wallet: '4opuc6SYnkBoeT6R4iCjaReDUAmQoYmPgC3fTkECKQ6YSuHn',
-          hash: '1',
-          amount: 200_000_001,
+          wallet: kiltAddress,
+          hash: '11',
+          amount: 9_999_999_999_000_001,
         },
         stage.context,
       ).calculateTotalPrice(),
@@ -227,8 +241,9 @@ describe('Transaction Accounting unit tests', () => {
        WHERE wallet_id = 2`,
     );
 
-    expect(walletDeposits).toHaveLength(2);
+    expect(walletDeposits).toHaveLength(3);
     expect(walletDeposits[0].currentAmount).toEqual(0);
-    expect(walletDeposits[1].currentAmount).toEqual(149999999);
+    expect(walletDeposits[1].currentAmount).toEqual(0);
+    expect(walletDeposits[2].currentAmount).toEqual(1000000);
   });
 });
