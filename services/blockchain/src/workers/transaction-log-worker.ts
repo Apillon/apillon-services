@@ -964,16 +964,12 @@ export class TransactionLogWorker extends BaseQueueWorker {
     decimals: number,
     pricePerToken: number,
   ) {
-    const sliceAmount = Math.round(decimals / 2);
-    // remove half of decimal places to prevent number owerflows
-    const totalPriceShort = totalPrice.substring(
-      0,
-      totalPrice.length - sliceAmount,
-    );
-    const value =
-      ethers.FixedNumber.from(totalPriceShort)
-        .divUnsafe(ethers.FixedNumber.from(10 ** (decimals - sliceAmount))) // divide by 10 to the power of the remainder of the decimal places
-        .toUnsafeFloat() * pricePerToken;
+    const divisor = ethers.BigNumber.from(10).pow(decimals);
+    const tokensAmount = ethers.BigNumber.from(totalPrice)
+      .div(divisor)
+      .toNumber();
+    const value = tokensAmount * pricePerToken;
+
     return Math.round(value * 10_000) / 10_000; // Round value to 4 decimals
   }
 
