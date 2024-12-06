@@ -146,18 +146,17 @@ export class IpnsService {
     }
     ipns.canModify(context);
 
+    const key = ipns.key || `${ipns.project_uuid}_${ipns.bucket_id}_${ipns.id}`;
+
     try {
       const publishedIpns = await new IPFSService(
         context,
         ipns.project_uuid,
-      ).publishToIPNS(
-        event.cid,
-        `${ipns.project_uuid}_${ipns.bucket_id}_${ipns.id}`,
-      );
+      ).publishToIPNS(event.cid, key);
 
       ipns.ipnsName = publishedIpns.name;
       ipns.ipnsValue = publishedIpns.value;
-      ipns.key = `${ipns.project_uuid}_${ipns.bucket_id}_${ipns.id}`;
+      ipns.key = key;
       ipns.cid = event.cid;
       ipns.status = SqlModelStatus.ACTIVE;
 
