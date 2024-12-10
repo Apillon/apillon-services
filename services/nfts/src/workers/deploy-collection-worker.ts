@@ -38,7 +38,7 @@ export class DeployCollectionWorker extends BaseQueueWorker {
           logType: LogType.ERROR,
           message: 'Invalid data passed to DeployCollectionWorker.',
           service: ServiceName.NFTS,
-          data: data,
+          data,
         },
         LogOutput.SYS_ERROR,
       );
