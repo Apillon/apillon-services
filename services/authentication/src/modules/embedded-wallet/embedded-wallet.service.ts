@@ -264,11 +264,11 @@ export class EmbeddedWalletService {
   }
 
   static async getOasisSignatureByPublicAddress(
-    publicAddress: string,
+    event: { publicAddress: string },
     context: ServiceContext,
   ) {
     return await new OasisSignature({}, context).populateByPublicAddress(
-      publicAddress,
+      event.publicAddress,
     );
   }
 }
