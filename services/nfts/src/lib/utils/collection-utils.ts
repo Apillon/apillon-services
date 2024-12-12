@@ -96,7 +96,7 @@ export async function deployNFTCollectionContract(
         collection.royaltiesAddress ??
         '0x0000000000000000000000000000000000000000';
 
-      let contractArguments: any[] = [
+      const contractArguments: any[] = [
         collection.name,
         collection.symbol,
         collection.baseUri,
