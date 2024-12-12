@@ -498,14 +498,16 @@ export class UserService {
     walletAuthDto: UserWalletAuthDto,
     sourceFunction: string,
     context: ServiceContext,
+    message?: string,
   ) {
     const { isEvmWallet, wallet, signature, timestamp } = walletAuthDto;
-    const { message } = this.getAuthMessage(timestamp);
+    message ||= this.getAuthMessage(timestamp).message;
     const signatureValidityMinutes = 15;
 
     const getSignatureData = isEvmWallet
       ? new Identity(null).validateEvmWalletSignature
       : new Identity(null).validatePolkadotWalletSignature;
+
     try {
       const signatureData = getSignatureData({
         message,

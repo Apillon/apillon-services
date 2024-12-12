@@ -106,6 +106,14 @@ export enum BadRequestErrorCode {
 }
 
 /**
+ * Forbidden error codes - 40304000.
+ */
+export enum ForbiddenErrorCode {
+  DEFAULT_FORBIDDEN_ERROR = 40304000,
+  NOT_EMBEDDED_WALLET = 40304001,
+}
+
+/**
  * Server error codes - 50004000.
  */
 export enum ServerErrorCode {

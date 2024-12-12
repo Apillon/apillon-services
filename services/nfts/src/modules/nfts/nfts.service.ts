@@ -1438,8 +1438,8 @@ export class NftsService {
       collection.collectionStatus == CollectionStatus.TRANSFERED
     ) {
       throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
+        status: 400,
+        code: NftsErrorCode.NFT_CONTRACT_STATUS_ERROR,
         context,
         sourceFunction,
       });
