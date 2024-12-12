@@ -1,8 +1,8 @@
 import { Readable } from 'stream';
 import filetype from 'magic-bytes.js';
 
-const htmlCheckRegex =
-  /<(html|head|body|div|span|p|a|table|tr|td|img|ul|li|ol|form|input|button|script|style|link|meta)(\s.*?|)>(.*?)<\/\1>/is;
+const htmlTagStartRegex =
+  /<\s*(html|head|script|body|div|span|p|a|table|tr|td|img|ul|li|ol|form|input|button|style|link|meta)\b/i;
 
 export async function isStreamHtmlFile(fileStream: Readable) {
   return new Promise<boolean>((resolve, reject) => {
@@ -18,8 +18,8 @@ export async function isStreamHtmlFile(fileStream: Readable) {
         }
         isInitialChunk = false;
       }
-      // Regex that checks if data has <something> or <something/>
-      if (htmlCheckRegex.test(chunk)) {
+      // Regex that checks if data has <html or other html tags
+      if (htmlTagStartRegex.test(chunk)) {
         fileStream.destroy();
         resolve(true);
         return;
