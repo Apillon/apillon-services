@@ -25,7 +25,7 @@ import {
   CacheKeyPrefix,
   CacheKeyTTL,
   DefaultUserRole,
-  MintNftDTO,
+  MintEmbeddedWalletNftDTO,
 } from '@apillon/lib';
 import { ServiceStatusQueryFilter } from '../service-status/dtos/service-status-query-filter.dto';
 import { ValidateFor } from '@apillon/lib';
@@ -67,14 +67,14 @@ export class PublicController {
   }
 
   @Post('mint-nft/:collection_uuid')
-  @Validation({ dto: MintNftDTO })
+  @Validation({ dto: MintEmbeddedWalletNftDTO })
   @UseGuards(ValidationGuard)
-  async mintNft(
+  async mintNftToEmbeddedWallet(
     @Ctx() context: DevConsoleApiContext,
     @Param('collection_uuid') collection_uuid: string,
-    @Body() body: MintNftDTO,
+    @Body() body: MintEmbeddedWalletNftDTO,
   ) {
     body.collection_uuid = collection_uuid;
-    return await this.publicService.mintNftTo(context, body);
+    return await this.publicService.mintNftToEmbeddedWallet(context, body);
   }
 }

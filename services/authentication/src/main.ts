@@ -56,6 +56,8 @@ export async function processEvent(event, context: Context): Promise<any> {
       EmbeddedWalletService.createOasisSignature,
     [AuthenticationEventType.LIST_OASIS_SIGNATURES]:
       EmbeddedWalletService.listOasisSignatures,
+    [AuthenticationEventType.GET_OASIS_SIGNATURE_BY_PUBLIC_ADDRESS]:
+      EmbeddedWalletService.getOasisSignatureByPublicAddress,
     // OTP
     [AuthenticationEventType.GENERATE_OTP]: OtpService.generateOtp,
     [AuthenticationEventType.VALIDATE_OTP]: OtpService.validateOtp,

@@ -244,9 +244,31 @@ export class EmbeddedWalletService {
     },
     context: ServiceContext,
   ) {
+    const ewIntegration = await new EmbeddedWalletIntegration(
+      {},
+      context,
+    ).populateByUUID(event.query.integration_uuid, 'integration_uuid');
+
+    if (!ewIntegration.exists()) {
+      throw new AuthenticationCodeException({
+        status: 404,
+        code: AuthenticationErrorCode.EMBEDDED_WALLET_INTEGRATION_NOT_FOUND,
+      });
+    }
+    ewIntegration.canAccess(context);
+
     return await new OasisSignature({}, context).getList(
       context,
       new EmbeddedWalletSignaturesQueryFilter(event.query),
+    );
+  }
+
+  static async getOasisSignatureByPublicAddress(
+    event: { publicAddress: string },
+    context: ServiceContext,
+  ) {
+    return await new OasisSignature({}, context).populateByPublicAddress(
+      event.publicAddress,
     );
   }
 }

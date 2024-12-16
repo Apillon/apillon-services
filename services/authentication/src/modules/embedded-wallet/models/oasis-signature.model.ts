@@ -15,6 +15,7 @@ import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
 import { AuthenticationErrorCode, DbTables } from '../../../config/types';
 import { EmbeddedWalletIntegration } from './embedded-wallet-integration.model';
+import { AuthenticationCodeException } from '../../../lib/exceptions';
 
 export class OasisSignature extends ProjectAccessModel {
   public readonly tableName = DbTables.OASIS_SIGNATURE;
@@ -193,5 +194,22 @@ export class OasisSignature extends ProjectAccessModel {
     };
 
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'o.id');
+  }
+
+  public async populateByPublicAddress(publicAddress: string) {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+        SELECT ${this.generateSelectFields('o', '', SerializeFor.SELECT_DB)}
+        FROM \`${DbTables.OASIS_SIGNATURE}\` o
+        WHERE UPPER(o.publicAddress) = UPPER(@publicAddress)
+        AND o.status = ${SqlModelStatus.ACTIVE}
+        LIMIT 1;
+      `,
+      { publicAddress },
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
   }
 }

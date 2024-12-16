@@ -222,6 +222,7 @@ export enum AuthenticationEventType {
   EW_INTEGRATION_UPDATE = 'update-ew-integration',
   CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
   LIST_OASIS_SIGNATURES = 'list-oasis-signatures',
+  GET_OASIS_SIGNATURE_BY_PUBLIC_ADDRESS = 'get-oasis-signature-by-public-address',
   GENERATE_OTP = 'generate-otp',
   VALIDATE_OTP = 'validate-otp',
 }
@@ -1189,5 +1190,6 @@ export enum NotificationType {
 
 export enum HttpStatus {
   BAD_REQUEST = 400,
+  FORBIDDEN = 403,
   NOT_FOUND = 404,
 }
