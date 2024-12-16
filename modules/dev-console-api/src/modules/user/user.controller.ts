@@ -74,7 +74,7 @@ export class UserController {
 
   @Post('validate-email')
   @Validation({ dto: ValidateEmailDto })
-  @UseGuards(ValidationGuard, CaptchaGuard)
+  @UseGuards(ValidationGuard)
   async validateEmail(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: ValidateEmailDto,
