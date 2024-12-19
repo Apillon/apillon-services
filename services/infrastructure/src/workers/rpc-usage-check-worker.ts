@@ -97,7 +97,7 @@ export class RpcUsageCheckWorker extends BaseWorker {
               SELECT pu.project_id
               FROM project_user pu
               LEFT JOIN user u ON pu.user_id = u.id
-              WHERE u.uuid = @user_uuid 
+              WHERE u.user_uuid = @user_uuid 
               AND pu.role_id = ${DefaultUserRole.PROJECT_OWNER}
             `,
             { user_uuid: user.user_uuid },
