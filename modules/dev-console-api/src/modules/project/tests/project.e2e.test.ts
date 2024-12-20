@@ -518,7 +518,6 @@ describe('Project tests', () => {
         .get(`/projects/${testProject.project_uuid}/overview`)
         .set('Authorization', `Bearer ${testUser.token}`);
 
-      console.log(await stage.db.storage.paramExecute(`SELECT * FROM website`));
       expect(response.status).toBe(200);
       expect(response.body.data).toBeTruthy();
       expect(response.body.data.bucketCount).toBe(1);
