@@ -31,6 +31,7 @@ import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { SocialService } from './social.service';
+import { ProjectModifyGuard } from '../../guards/project-modify.guard';
 
 @Controller('social')
 @Permissions({ permission: DefaultPermission.SOCIAL })
@@ -94,7 +95,7 @@ export class SocialController {
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @UseGuards(ValidationGuard, AuthGuard)
+  @UseGuards(ValidationGuard, AuthGuard, ProjectModifyGuard)
   async createSpace(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateSpaceDto,

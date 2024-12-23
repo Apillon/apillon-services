@@ -21,14 +21,12 @@ import {
   CreateSubstrateCollectionDTO,
   CreateUniqueCollectionDTO,
 } from '@apillon/blockchain-lib/common';
-import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResourceNotFoundErrorCode } from '../../config/types';
 import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
 import { ServicesService } from '../services/services.service';
-import { Service } from '../services/models/service.model';
-import { ServiceQueryFilter } from '../services/dtos/services-query-filter.dto';
-import { ServiceDto } from '../services/dtos/service.dto';
+import { closeSync } from 'fs';
 
 @Injectable()
 export class NftsService {
@@ -39,19 +37,9 @@ export class NftsService {
     chainType: ChainType,
     body: CreateCollectionDTO | CreateSubstrateCollectionDTO,
   ) {
-    //check project
-    const project: Project = await new Project({}, context).populateByUUID(
+    const project = await new Project({}, context).populateByUUIDOrThrow(
       body.project_uuid,
     );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-
-    project.canModify(context);
 
     await this.serviceService.createServiceIfItDoesntExist(
       context,
@@ -70,19 +58,9 @@ export class NftsService {
     context: DevConsoleApiContext,
     body: CreateUniqueCollectionDTO,
   ) {
-    //check project
-    const project: Project = await new Project({}, context).populateByUUID(
+    const project = await new Project({}, context).populateByUUIDOrThrow(
       body.project_uuid,
     );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-
-    project.canModify(context);
 
     await this.serviceService.createServiceIfItDoesntExist(
       context,

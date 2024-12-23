@@ -38,6 +38,7 @@ import { AuthGuard } from '../../guards/auth.guard';
 import { DevEnvGuard } from '../../guards/dev-env.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { NftsService } from './nfts.service';
+import { ProjectModifyGuard } from '../../guards/project-modify.guard';
 
 @Controller('nfts')
 @Permissions({ permission: DefaultPermission.NFTS })
@@ -51,7 +52,7 @@ export class NftsController {
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ProjectModifyGuard)
   async createCollection(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateCollectionDTO,
@@ -70,7 +71,7 @@ export class NftsController {
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ProjectModifyGuard)
   async createSubstrateCollection(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateSubstrateCollectionDTO,
@@ -89,7 +90,7 @@ export class NftsController {
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ProjectModifyGuard)
   async createUniqueCollection(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateUniqueCollectionDTO,

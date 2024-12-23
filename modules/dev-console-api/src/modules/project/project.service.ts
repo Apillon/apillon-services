@@ -178,10 +178,7 @@ export class ProjectService {
     context: DevConsoleApiContext,
     uuid: string,
   ): Promise<Project> {
-    const project: Project = await new Project(
-      {},
-      context,
-    ).populateByUUIDAndCheckAccess(uuid, context);
+    const project = await new Project({}, context).populateByUUIDOrThrow(uuid);
 
     //Populate user role on this project
     await project.populateMyRoleOnProject(context);
@@ -194,19 +191,7 @@ export class ProjectService {
     uuid: string,
     data: any,
   ): Promise<Project> {
-    const project: Project = await new Project({}, context).populateByUUID(
-      uuid,
-    );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-
-    //Check permissions for specific DB record
-    project.canModify(context);
+    const project = await new Project({}, context).populateByUUIDOrThrow(uuid);
 
     project.populate(data, PopulateFrom.PROFILE);
 
@@ -239,17 +224,9 @@ export class ProjectService {
     project_uuid: string,
     data: ProjectUserInviteDto,
   ) {
-    const project: Project = await new Project({}, context).populateByUUID(
+    const project = await new Project({}, context).populateByUUIDOrThrow(
       project_uuid,
     );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-    project.canModify(context);
 
     //Check max users on project quota
     const numOfUsersOnProject = await project.getNumOfUsersOnProjects();
@@ -379,17 +356,9 @@ export class ProjectService {
     project_uuid: string,
     data: ProjectUserUninviteDto,
   ) {
-    const project: Project = await new Project({}, context).populateByUUID(
+    const project = await new Project({}, context).populateByUUIDOrThrow(
       project_uuid,
     );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-    project.canModify(context);
 
     const pupi = await new ProjectUserPendingInvitation(
       {},
@@ -406,10 +375,7 @@ export class ProjectService {
     context: DevConsoleApiContext,
     project_uuid: string,
   ) {
-    await new Project({}, context).populateByUUIDAndCheckAccess(
-      project_uuid,
-      context,
-    );
+    await new Project({}, context).populateByUUIDOrThrow(project_uuid);
 
     const results = await Promise.all([
       new StorageMicroservice(context)
@@ -633,10 +599,7 @@ export class ProjectService {
     context: DevConsoleApiContext,
     project_uuid: string,
   ) {
-    await new Project({}, context).populateByUUIDAndCheckAccess(
-      project_uuid,
-      context,
-    );
+    await new Project({}, context).populateByUUIDOrThrow(project_uuid);
 
     return (await new Scs(context).getProjectActiveSubscription(project_uuid))
       .data;
@@ -677,10 +640,7 @@ export class ProjectService {
     context: DevConsoleApiContext,
     query: SubscriptionsQueryFilter,
   ) {
-    await new Project({}, context).populateByUUIDAndCheckAccess(
-      query.project_uuid,
-      context,
-    );
+    await new Project({}, context).populateByUUIDOrThrow(query.project_uuid);
 
     return (await new Scs(context).listSubscriptions(query)).data;
   }
@@ -689,10 +649,7 @@ export class ProjectService {
     context: DevConsoleApiContext,
     query: InvoicesQueryFilter,
   ) {
-    await new Project({}, context).populateByUUIDAndCheckAccess(
-      query.project_uuid,
-      context,
-    );
+    await new Project({}, context).populateByUUIDOrThrow(query.project_uuid);
 
     return (await new Scs(context).listInvoices(query)).data;
   }
