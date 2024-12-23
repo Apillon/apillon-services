@@ -28,6 +28,8 @@ export class ContractsSpendService {
       [EvmChain.MOONBASE]: ProductCode.CONTRACT_MOONBASE_CREATE,
       [EvmChain.MOONBEAM]: ProductCode.CONTRACT_MOONBEAM_CREATE,
       [EvmChain.ASTAR]: ProductCode.CONTRACT_ASTAR_CREATE,
+      [EvmChain.BASE]: ProductCode.CONTRACT_BASE_CREATE,
+      [EvmChain.BASE_SEPOLIA]: ProductCode.CONTRACT_BASE_SEPOLIA_CREATE,
     }[chain];
     const spendCredit = new SpendCreditDto(
       {
@@ -61,6 +63,8 @@ export class ContractsSpendService {
       [EvmChain.MOONBASE]: ProductCode.CONTRACT_MOONBASE_CALL,
       [EvmChain.MOONBEAM]: ProductCode.CONTRACT_MOONBEAM_CALL,
       [EvmChain.ASTAR]: ProductCode.CONTRACT_ASTAR_CALL,
+      [EvmChain.BASE]: ProductCode.CONTRACT_BASE_CALL,
+      [EvmChain.BASE_SEPOLIA]: ProductCode.CONTRACT_BASE_SEPOLIA_CALL,
     }[chain];
     const spendCredit = new SpendCreditDto(
       {
