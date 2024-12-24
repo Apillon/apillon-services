@@ -3,7 +3,6 @@ import {
   AttachedServiceType,
   BurnNftDto,
   ChainType,
-  CodeException,
   CollectionMetadataQueryFilter,
   CollectionsQuotaReachedQueryFilter,
   DeployCollectionDTO,
@@ -21,12 +20,10 @@ import {
   CreateSubstrateCollectionDTO,
   CreateUniqueCollectionDTO,
 } from '@apillon/blockchain-lib/common';
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { ResourceNotFoundErrorCode } from '../../config/types';
+import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { Project } from '../project/models/project.model';
 import { ServicesService } from '../services/services.service';
-import { closeSync } from 'fs';
 
 @Injectable()
 export class NftsService {
