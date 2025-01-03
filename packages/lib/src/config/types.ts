@@ -40,6 +40,15 @@ export enum EvmChain {
   BASE_SEPOLIA = 84532,
 }
 
+export const ENTERPRISE_USER_EVM_CHAINS = [
+  EvmChain.ETHEREUM,
+  EvmChain.SEPOLIA,
+  EvmChain.CELO,
+  EvmChain.ALFAJORES,
+  EvmChain.BASE,
+  EvmChain.BASE_SEPOLIA,
+];
+
 export enum NFTCollectionType {
   GENERIC = 1,
   NESTABLE = 2,

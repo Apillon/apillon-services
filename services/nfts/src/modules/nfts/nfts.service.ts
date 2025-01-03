@@ -11,6 +11,7 @@ import {
   CreateIpnsDto,
   CreateSubstrateTransactionDto,
   DeployCollectionDTO,
+  ENTERPRISE_USER_EVM_CHAINS,
   env,
   EvmChain,
   getChainName,
@@ -1705,14 +1706,7 @@ export class NftsService {
   ) {
     if (
       chainType !== ChainType.EVM ||
-      ![
-        EvmChain.ETHEREUM,
-        EvmChain.SEPOLIA,
-        EvmChain.CELO,
-        EvmChain.ALFAJORES,
-        EvmChain.BASE,
-        EvmChain.BASE_SEPOLIA,
-      ].includes(chain as EvmChain)
+      !ENTERPRISE_USER_EVM_CHAINS.includes(chain as EvmChain)
     ) {
       return;
     }
