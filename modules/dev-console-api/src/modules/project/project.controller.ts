@@ -39,6 +39,7 @@ import { AuthGuard } from '../../guards/auth.guard';
 import { ProjectUserUninviteDto } from './dtos/project_user-uninvite.dto';
 import { InvoicesQueryFilter } from '@apillon/lib';
 import { ProjectAccessGuard } from '../../guards/project-access.guard';
+import { ProjectModifyGuard } from '../../guards/project-modify.guard';
 
 @Controller('projects')
 @UseInterceptors(CacheInterceptor)
@@ -59,16 +60,20 @@ export class ProjectController {
     return await this.projectService.isProjectsQuotaReached(context);
   }
 
-  @Get(':uuid/users')
+  @Get(':project_uuid/users')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({ dto: BaseQueryFilter, validateFor: ValidateFor.QUERY })
-  @UseGuards(AuthGuard, ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard, ProjectAccessGuard)
   async getProjectUsers(
     @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') uuid: string,
+    @Param('project_uuid') project_uuid: string,
     @Query() query: BaseQueryFilter,
   ) {
-    return await this.projectService.getProjectUsers(context, uuid, query);
+    return await this.projectService.getProjectUsers(
+      context,
+      project_uuid,
+      query,
+    );
   }
 
   @Post(':uuid/invite-user')
@@ -77,13 +82,17 @@ export class ProjectController {
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
   @Validation({ dto: ProjectUserInviteDto })
-  @UseGuards(AuthGuard, ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard, ProjectModifyGuard)
   async inviteUserProject(
     @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') uuid: string,
+    @Param('project_uuid') project_uuid: string,
     @Body() body: ProjectUserInviteDto,
   ) {
-    return await this.projectService.inviteUserProject(context, uuid, body);
+    return await this.projectService.inviteUserProject(
+      context,
+      project_uuid,
+      body,
+    );
   }
 
   @Post(':uuid/uninvite-user')
@@ -92,15 +101,15 @@ export class ProjectController {
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
   @Validation({ dto: ProjectUserUninviteDto })
-  @UseGuards(AuthGuard, ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard, ProjectModifyGuard)
   async uninviteUserFromProject(
     @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') uuid: string,
+    @Param('project_uuid') project_uuid: string,
     @Body() body: ProjectUserUninviteDto,
   ) {
     return await this.projectService.uninviteUserFromProject(
       context,
-      uuid,
+      project_uuid,
       body,
     );
   }
@@ -147,16 +156,16 @@ export class ProjectController {
     return await this.projectService.getProjectRpcPlan(context, project_uuid);
   }
 
-  @Get(':uuid')
+  @Get(':project_uuid')
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ProjectAccessGuard)
   async getProject(
     @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') uuid: string,
+    @Param('project_uuid') project_uuid: string,
   ) {
-    return (await this.projectService.getProject(context, uuid)).serialize(
-      SerializeFor.PROFILE,
-    );
+    return (
+      await this.projectService.getProject(context, project_uuid)
+    ).serialize(SerializeFor.PROFILE);
   }
 
   @Post()
@@ -173,31 +182,31 @@ export class ProjectController {
     );
   }
 
-  @Patch(':uuid')
+  @Patch(':project_uuid')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ProjectModifyGuard)
   async updateProject(
     @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') uuid: string,
+    @Param('project_uuid') project_uuid: string,
     @Body() body: any,
   ) {
     return (
-      await this.projectService.updateProject(context, uuid, body)
+      await this.projectService.updateProject(context, project_uuid, body)
     ).serialize(SerializeFor.PROFILE);
   }
 
-  @Get(':uuid/overview')
+  @Get(':project_uuid/overview')
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ProjectAccessGuard)
   @CacheByProject({ keyPrefix: CacheKeyPrefix.PROJECT_OVERVIEW })
   async getProjectOverview(
     @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') uuid: string,
+    @Param('project_uuid') project_uuid: string,
   ) {
-    return await this.projectService.getProjectOverview(context, uuid);
+    return await this.projectService.getProjectOverview(context, project_uuid);
   }
   //#region credits
 
@@ -250,12 +259,12 @@ export class ProjectController {
 
   //#region subscriptions
 
-  @Get(':uuid/active-subscription')
+  @Get(':project_uuid/active-subscription')
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ProjectAccessGuard)
   async getProjectActiveSubscription(
     @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') project_uuid: string,
+    @Param('project_uuid') project_uuid: string,
   ) {
     return await this.projectService.getProjectActiveSubscription(
       context,
@@ -263,32 +272,32 @@ export class ProjectController {
     );
   }
 
-  @Get(':uuid/subscriptions')
+  @Get(':project_uuid/subscriptions')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({
     dto: SubscriptionsQueryFilter,
     validateFor: ValidateFor.QUERY,
   })
-  @UseGuards(AuthGuard, ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard, ProjectAccessGuard)
   async getProjectSubscriptions(
     @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') project_uuid: string,
+    @Param('project_uuid') project_uuid: string,
     @Query() query: SubscriptionsQueryFilter,
   ) {
     query.project_uuid = project_uuid;
     return await this.projectService.getProjectSubscriptions(context, query);
   }
 
-  @Get(':uuid/invoices')
+  @Get(':project_uuid/invoices')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({
     dto: InvoicesQueryFilter,
     validateFor: ValidateFor.QUERY,
   })
-  @UseGuards(AuthGuard, ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard, ProjectAccessGuard)
   async getProjectInvoices(
     @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') project_uuid: string,
+    @Param('project_uuid') project_uuid: string,
     @Query() query: InvoicesQueryFilter,
   ) {
     query.project_uuid = project_uuid;

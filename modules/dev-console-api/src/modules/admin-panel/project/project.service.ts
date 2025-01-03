@@ -55,16 +55,9 @@ export class ProjectService {
     context: DevConsoleApiContext,
     project_uuid: UUID,
   ): Promise<any> {
-    const project: Project = await new Project({}, context).populateByUUID(
+    const project = await new Project({}, context).populateByUUIDOrThrow(
       project_uuid,
     );
-    if (!project?.exists()) {
-      throw new CodeException({
-        status: HttpStatus.NOT_FOUND,
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
 
     const { items: projectUsers } = await new ProjectUser(
       {},

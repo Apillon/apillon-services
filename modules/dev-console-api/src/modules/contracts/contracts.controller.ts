@@ -25,6 +25,7 @@ import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { ContractsService } from './contracts.service';
+import { ProjectModifyGuard } from '../../guards/project-modify.guard';
 
 @Controller('contracts')
 @Permissions({ permission: DefaultPermission.CONTRACTS })
@@ -138,7 +139,7 @@ export class ContractsController {
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ProjectModifyGuard)
   async createContract(
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') contract_uuid: string,

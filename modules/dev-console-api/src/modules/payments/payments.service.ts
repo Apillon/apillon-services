@@ -195,14 +195,7 @@ export class PaymentsService {
     context: DevConsoleApiContext,
     project_uuid: string,
   ) {
-    const project = await new Project({}, context).populateByUUID(project_uuid);
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
+    await new Project({}, context).populateByUUIDOrThrow(project_uuid);
 
     if (
       !context.hasRoleOnProject([DefaultUserRole.PROJECT_OWNER], project_uuid)

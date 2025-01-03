@@ -37,18 +37,9 @@ export class BucketService {
   }
 
   async createBucket(context: DevConsoleApiContext, body: CreateBucketDto) {
-    const project: Project = await new Project({}, context).populateByUUID(
+    const project = await new Project({}, context).populateByUUIDOrThrow(
       body.project_uuid,
     );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-
-    project.canModify(context);
 
     //Check if storage service for this project already exists
     const query: ServiceQueryFilter = new ServiceQueryFilter(
