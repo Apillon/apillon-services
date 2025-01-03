@@ -1,8 +1,10 @@
 import {
   AdvancedSQLModel,
   BaseQueryFilter,
+  CodeException,
   DefaultUserRole,
   getQueryParams,
+  HttpStatus,
   PopulateFrom,
   SerializeFor,
   unionSelectAndCountQuery,
@@ -10,7 +12,11 @@ import {
 import { prop } from '@rawmodel/core';
 import { integerParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import { DbTables, ValidatorErrorCode } from '../../../config/types';
+import {
+  DbTables,
+  ResourceNotFoundErrorCode,
+  ValidatorErrorCode,
+} from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 import { Project } from './project.model';
 
@@ -157,10 +163,9 @@ export class ProjectUser extends AdvancedSQLModel {
     project_uuid: string,
     filter: BaseQueryFilter,
   ) {
-    const project: Project = await new Project(
-      {},
-      context,
-    ).populateByUUIDAndCheckAccess(project_uuid, context);
+    const project = await new Project({}, context).populateByUUIDOrThrow(
+      project_uuid,
+    );
 
     const { params, filters } = getQueryParams(
       { ...filter.getDefaultValues(), project_id: project.id },

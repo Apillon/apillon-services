@@ -27,6 +27,7 @@ import { DevConsoleApiContext } from '../../../context';
 import { AuthGuard } from '../../../guards/auth.guard';
 import { ValidationGuard } from '../../../guards/validation.guard';
 import { HostingService } from './hosting.service';
+import { ProjectModifyGuard } from '../../../guards/project-modify.guard';
 
 @Controller('storage/hosting')
 @Permissions({ permission: DefaultPermission.HOSTING })
@@ -76,7 +77,7 @@ export class HostingController {
   )
   @UseGuards(AuthGuard)
   @Validation({ dto: CreateWebsiteDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, ProjectModifyGuard)
   async createWebsite(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateWebsiteDto,

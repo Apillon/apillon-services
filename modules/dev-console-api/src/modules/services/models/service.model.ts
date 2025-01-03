@@ -216,10 +216,7 @@ export class Service extends AdvancedSQLModel {
     context: DevConsoleApiContext,
     filter: ServiceQueryFilter,
   ) {
-    await new Project({}, context).populateByUUIDAndCheckAccess(
-      filter.project_uuid,
-      context,
-    );
+    await new Project({}, context).populateByUUIDOrThrow(filter.project_uuid);
 
     // Map url query with sql fields.
     const fieldMap = {
