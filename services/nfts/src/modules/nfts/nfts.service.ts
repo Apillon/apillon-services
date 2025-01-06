@@ -1726,6 +1726,11 @@ export class NftsService {
       });
     }
 
+    // check quota for Ethereum chain only
+    if (chain !== EvmChain.ETHEREUM) {
+      return;
+    }
+
     const chainCollectionsCount = await new Collection(
       {},
       context,
