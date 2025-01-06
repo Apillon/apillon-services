@@ -11,6 +11,7 @@ import {
   CreateIpnsDto,
   CreateSubstrateTransactionDto,
   DeployCollectionDTO,
+  ENTERPRISE_USER_EVM_CHAINS,
   env,
   EvmChain,
   getChainName,
@@ -110,6 +111,8 @@ export class NftsService {
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_COLLECTION,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_COLLECTION,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_COLLECTION,
+      [EvmChain.BASE]: ProductCode.NFT_BASE_COLLECTION,
+      [EvmChain.BASE_SEPOLIA]: ProductCode.NFT_BASE_SEPOLIA_COLLECTION,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_COLLECTION,
       [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_COLLECTION,
     }[params.body.chain];
@@ -495,6 +498,8 @@ export class NftsService {
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_TRANSFER_COLLECTION,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_TRANSFER_COLLECTION,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_TRANSFER_COLLECTION,
+      [EvmChain.BASE]: ProductCode.NFT_BASE_TRANSFER_COLLECTION,
+      [EvmChain.BASE_SEPOLIA]: ProductCode.NFT_BASE_SEPOLIA_TRANSFER_COLLECTION,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_TRANSFER_COLLECTION,
       [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_TRANSFER_COLLECTION,
     }[collection.chain];
@@ -640,6 +645,8 @@ export class NftsService {
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_SET_BASE_URI,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_SET_BASE_URI,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_SET_BASE_URI,
+      [EvmChain.BASE]: ProductCode.NFT_BASE_SET_BASE_URI,
+      [EvmChain.BASE_SEPOLIA]: ProductCode.NFT_BASE_SEPOLIA_SET_BASE_URI,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_SET_BASE_URI,
     }[collection.chain];
 
@@ -879,6 +886,8 @@ export class NftsService {
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_MINT,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_MINT,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_MINT,
+      [EvmChain.BASE]: ProductCode.NFT_BASE_MINT,
+      [EvmChain.BASE_SEPOLIA]: ProductCode.NFT_BASE_SEPOLIA_MINT,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_MINT,
       [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_MINT,
     }[collection.chain];
@@ -1218,6 +1227,8 @@ export class NftsService {
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_MINT,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_MINT,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_MINT,
+      [EvmChain.BASE]: ProductCode.NFT_BASE_MINT,
+      [EvmChain.BASE_SEPOLIA]: ProductCode.NFT_BASE_SEPOLIA_MINT,
       [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_MINT,
     }[childCollection.chain];
 
@@ -1281,6 +1292,8 @@ export class NftsService {
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_BURN,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_BURN,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_BURN,
+      [EvmChain.BASE]: ProductCode.NFT_BASE_BURN,
+      [EvmChain.BASE_SEPOLIA]: ProductCode.NFT_BASE_SEPOLIA_BURN,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_BURN,
       [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_BURN,
     }[collection.chain];
@@ -1693,7 +1706,7 @@ export class NftsService {
   ) {
     if (
       chainType !== ChainType.EVM ||
-      ![EvmChain.ETHEREUM, EvmChain.CELO].includes(chain as EvmChain)
+      !ENTERPRISE_USER_EVM_CHAINS.includes(chain as EvmChain)
     ) {
       return;
     }
