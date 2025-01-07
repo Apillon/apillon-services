@@ -1,4 +1,9 @@
-import { AppEnvironment, SqlModelStatus, env } from '@apillon/lib';
+import {
+  AppEnvironment,
+  SqlModelStatus,
+  TransactionStatus,
+  env,
+} from '@apillon/lib';
 
 export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
@@ -32,6 +37,10 @@ export async function upgrade(
       env.APP_ENV === AppEnvironment.TEST
         ? env.INFRASTRUCTURE_MYSQL_DATABASE_TEST
         : env.INFRASTRUCTURE_MYSQL_DATABASE,
+    contractsDb:
+      env.APP_ENV === AppEnvironment.TEST
+        ? env.CONTRACTS_MYSQL_DATABASE_TEST
+        : env.CONTRACTS_MYSQL_DATABASE,
   };
 
   await queryFn(`
@@ -120,7 +129,18 @@ export async function upgrade(
         SELECT COUNT(*) from ${databases.computeDb}.acurast_job acurastJob
         WHERE acurastJob.project_uuid = p.project_uuid
         AND acurastJob.status = ${SqlModelStatus.ACTIVE}
-    ) as cloudFunctionJobCount
+    ) as cloudFunctionJobCount,
+    (
+        SELECT COUNT(*) from ${databases.contractsDb}.contract_deploy cd
+        WHERE cd.project_uuid = p.project_uuid
+        AND cd.status = ${SqlModelStatus.ACTIVE}
+    ) as smartContractDeploymentCount,
+    (
+      SELECT COUNT(*) from ${databases.contractsDb}.transaction
+      JOIN ${databases.contractsDb}.contract_deploy cd ON cd.id = transaction.refId
+      WHERE cd.project_uuid = p.project_uuid
+      AND transaction.transactionStatus = ${TransactionStatus.CONFIRMED}
+    ) as smartContractTransactionCount
     FROM ${databases.consoleApiDb}.project p
   `);
 }
