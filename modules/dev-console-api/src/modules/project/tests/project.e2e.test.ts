@@ -511,6 +511,25 @@ describe('Project tests', () => {
           project_uuid: testProject.project_uuid,
         },
       );
+
+      await stage.db.contracts.paramExecute(
+        'INSERT INTO contract(contract_uuid, contractType, chainType,name ) VALUES ("00000000-0000-0000-0000-000000000000", 2, 2, "Test Contract")',
+      );
+
+      await stage.db.contracts.paramExecute(
+        'INSERT INTO contract_version(id, version, contract_id, abi, bytecode) VALUES (1, 1, 1, "{}", "0x0") ',
+      );
+
+      await stage.db.contracts.paramExecute(
+        'INSERT INTO contract_deploy(project_uuid, contract_uuid, status, chainType, chain, version_id,name, contractStatus) VALUES (@project_uuid, "00000000-0000-0000-0000-000000000000", 5, 2, 1287, 1, "Name", 3)',
+        {
+          project_uuid: testProject.project_uuid,
+        },
+      );
+
+      await stage.db.contracts.paramExecute(
+        'INSERT INTO transaction (refId, transactionStatus, transactionType,refTable, transactionHash,chain) VALUES (1, 2,1,"collection", "0x0",1287)',
+      );
     });
 
     test('User should be able to get project overview', async () => {
@@ -536,6 +555,8 @@ describe('Project tests', () => {
       expect(response.body.data.indexerCount).toBe(1);
       expect(response.body.data.cloudFunctionCount).toBe(1);
       expect(response.body.data.cloudFunctionJobCount).toBe(1);
+      expect(response.body.data.smartContractDeploymentCount).toBe(1);
+      expect(response.body.data.smartContractTransactionCount).toBe(1);
     });
   });
 

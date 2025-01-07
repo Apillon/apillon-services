@@ -112,13 +112,4 @@ export class SocialMicroservice extends BaseService {
     });
   }
   //#endregion
-
-  public async getProjectSocialDetails(
-    project_uuid: string,
-  ): Promise<{ data: { spaceCount: number; postCount: number } }> {
-    return await this.callService({
-      eventName: SocialEventType.PROJECT_SOCIAL_DETAILS,
-      project_uuid,
-    });
-  }
 }

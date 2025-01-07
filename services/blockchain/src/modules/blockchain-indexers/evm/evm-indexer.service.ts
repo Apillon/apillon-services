@@ -14,6 +14,8 @@ export class EvmBlockchainIndexer {
     [EvmChain.SEPOLIA, env.BLOCKCHAIN_SEPOLIA_GRAPHQL_SERVER],
     [EvmChain.ALFAJORES, env.BLOCKCHAIN_CELO_ALFAJORES_GRAPHQL_SERVER],
     [EvmChain.CELO, env.BLOCKCHAIN_CELO_GRAPHQL_SERVER],
+    [EvmChain.BASE, env.BLOCKCHAIN_BASE_GRAPHQL_SERVER],
+    [EvmChain.BASE_SEPOLIA, env.BLOCKCHAIN_BASE_SEPOLIA_GRAPHQL_SERVER],
   ]);
 
   constructor(chain: EvmChain) {

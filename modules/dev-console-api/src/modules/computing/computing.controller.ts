@@ -26,6 +26,7 @@ import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { ComputingService } from './computing.service';
+import { ProjectModifyGuard } from '../../guards/project-modify.guard';
 
 @Controller('computing')
 @Permissions({ permission: DefaultPermission.COMPUTING })
@@ -38,7 +39,7 @@ export class ComputingController {
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
-  @UseGuards(AuthGuard, ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard, ProjectModifyGuard)
   async createContract(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateContractDto,

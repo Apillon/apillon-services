@@ -37,18 +37,9 @@ export class ApiKeyService {
    * @throws {CodeException} - If the project or service does not exist or if the service is not part of the project.
    */
   async createApiKey(context: DevConsoleApiContext, body: CreateApiKeyDto) {
-    const project: Project = await new Project({}, context).populateByUUID(
+    const project = await new Project({}, context).populateByUUIDOrThrow(
       body.project_uuid,
     );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-
-    project.canModify(context);
 
     //roles - check if services exists & set serviceType
     if (body.roles && body.roles.length > 0) {
@@ -100,18 +91,8 @@ export class ApiKeyService {
    * @throws {CodeException} - If the project or service does not exist.
    */
   async assignRoleToApiKey(context: DevConsoleApiContext, body: ApiKeyRoleDto) {
-    //Check project
-    const project: Project = await new Project({}, context).populateByUUID(
-      body.project_uuid,
-    );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-    project.canModify(context);
+    await new Project({}, context).populateByUUIDOrThrow(body.project_uuid);
+
     //check service
     const service: Service = await new Service({}, context).populateByUUID(
       body.service_uuid,

@@ -119,18 +119,9 @@ export class ServicesService {
     context: DevConsoleApiContext,
     body: ServiceDto,
   ): Promise<Service> {
-    //Check if project exists & user has required role on it
-    const project: Project = await new Project({}, context).populateByUUID(
+    const project = await new Project({}, context).populateByUUIDOrThrow(
       body.project_uuid,
     );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-    project.canModify(context);
 
     // Check if user has permissions to use this service type - mapping with permissions need to be done
     const requiredPermission = {

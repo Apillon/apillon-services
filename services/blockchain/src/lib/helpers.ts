@@ -46,6 +46,16 @@ export function evmChainToWorkerName(
         ? WorkerName.TRANSMIT_ALFAJORES_TRANSACTIONS
         : WorkerName.VERIFY_ALFAJORES_TRANSACTIONS;
     }
+    case EvmChain.BASE: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_BASE_TRANSACTIONS
+        : WorkerName.VERIFY_BASE_TRANSACTIONS;
+    }
+    case EvmChain.BASE_SEPOLIA: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_BASE_SEPOLIA_TRANSACTIONS
+        : WorkerName.VERIFY_BASE_SEPOLIA_TRANSACTIONS;
+    }
     default: {
       throw new Error('Unsupported');
     }
