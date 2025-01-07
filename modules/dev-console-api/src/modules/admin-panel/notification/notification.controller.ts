@@ -1,7 +1,6 @@
 import {
   DefaultUserRole,
   NotificationAdminQueryFilter,
-  NotificationQueryFilter,
   ValidateFor,
 } from '@apillon/lib';
 import {

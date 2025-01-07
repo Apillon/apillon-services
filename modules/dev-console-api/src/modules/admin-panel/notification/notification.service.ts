@@ -4,7 +4,7 @@ import {
   Ams,
   CodeException,
   Mailing,
-  NotificationQueryFilter,
+  NotificationAdminQueryFilter,
 } from '@apillon/lib';
 import { CreateOrUpdateNotificationDto } from './dtos/create-or-update-notification.dto';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
@@ -54,7 +54,7 @@ export class NotificationService {
 
   async getNotifications(
     context: DevConsoleApiContext,
-    query: NotificationQueryFilter,
+    query: NotificationAdminQueryFilter,
   ) {
     return (await new Mailing(context).getNotifications(query)).data;
   }
