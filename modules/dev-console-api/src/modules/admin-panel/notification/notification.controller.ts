@@ -1,12 +1,19 @@
-import { DefaultUserRole } from '@apillon/lib';
+import {
+  DefaultUserRole,
+  NotificationAdminQueryFilter,
+  NotificationQueryFilter,
+  ValidateFor,
+} from '@apillon/lib';
 import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
@@ -16,7 +23,7 @@ import { ValidationGuard } from '../../../guards/validation.guard';
 import { NotificationService } from './notification.service';
 import { CreateOrUpdateNotificationDto } from './dtos/create-or-update-notification.dto';
 
-@Controller('notification')
+@Controller('admin-panel/notification')
 @Permissions({ role: DefaultUserRole.ADMIN })
 @UseGuards(AuthGuard)
 export class NotificationController {
@@ -49,5 +56,18 @@ export class NotificationController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return await this.notificationService.deleteNotification(id, context);
+  }
+
+  @Get()
+  @Validation({
+    dto: NotificationAdminQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async getNotifications(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: NotificationAdminQueryFilter,
+  ) {
+    return await this.notificationService.getNotifications(context, query);
   }
 }
