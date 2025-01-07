@@ -12,6 +12,7 @@
     "build": "tsc && copyfiles -f ./src/mailing/templates/*.html ./dist/mailing/templates",
     "dev": "nodemon ./src/scripts/dev/run-server.ts --inspect --inspect-brk=60003",
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "db-upgrade:ci": "node -r ts-node/register ./src/scripts/db/upgrade-db --F && node -r ts-node/register ./src/scripts/db/seed-db --F ",
     "deploy:prod": "serverless deploy --stage production",
     "deploy:staging": "serverless deploy --stage staging",
     "deploy:dev": "serverless deploy --stage dev",
