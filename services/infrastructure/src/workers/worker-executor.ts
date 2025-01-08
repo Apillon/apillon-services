@@ -118,6 +118,7 @@ export async function handleLambdaEvent(
         context,
       );
       await indexingBillingWorker.run();
+      break;
     case WorkerName.RPC_USAGE_CHECK:
       const rpcUsageCheckWorker = new RpcUsageCheckWorker(
         workerDefinition,

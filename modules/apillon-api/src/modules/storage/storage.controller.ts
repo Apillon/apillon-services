@@ -65,10 +65,16 @@ export class StorageController {
   }
 
   @Get('link-on-ipfs/:cid')
-  @ApiKeyPermissions({
-    role: DefaultApiKeyRole.KEY_EXECUTE,
-    serviceType: AttachedServiceType.STORAGE,
-  })
+  @ApiKeyPermissions(
+    {
+      role: DefaultApiKeyRole.KEY_READ,
+      serviceType: AttachedServiceType.STORAGE,
+    },
+    {
+      role: DefaultApiKeyRole.KEY_READ,
+      serviceType: AttachedServiceType.HOSTING,
+    },
+  )
   @UseGuards(AuthGuard)
   async getLinkOnIpfs(
     @Ctx() context: ApillonApiContext,
@@ -83,10 +89,16 @@ export class StorageController {
   }
 
   @Post('link-on-ipfs-multiple')
-  @ApiKeyPermissions({
-    role: DefaultApiKeyRole.KEY_EXECUTE,
-    serviceType: AttachedServiceType.STORAGE,
-  })
+  @ApiKeyPermissions(
+    {
+      role: DefaultApiKeyRole.KEY_READ,
+      serviceType: AttachedServiceType.STORAGE,
+    },
+    {
+      role: DefaultApiKeyRole.KEY_READ,
+      serviceType: AttachedServiceType.HOSTING,
+    },
+  )
   @Validation({ dto: GetLinksDto })
   @UseGuards(ValidationGuard, AuthGuard)
   async getLinksOnIpfsMultiple(
