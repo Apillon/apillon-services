@@ -6,6 +6,7 @@ import {
   NotificationType,
   PopulateFrom,
   SerializeFor,
+  SqlModelStatus,
   enumInclusionValidator,
   getQueryParams,
   prop,
@@ -74,8 +75,14 @@ export class Notification extends AdvancedSQLModel {
 
   @prop({
     parser: { resolver: dateParser() },
-    serializable: [SerializeFor.APILLON_API, SerializeFor.SELECT_DB],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+    ],
     populatable: [PopulateFrom.DB],
+    defaultValue: new Date(),
   })
   public createTime?: Date;
 
@@ -93,7 +100,8 @@ export class Notification extends AdvancedSQLModel {
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields('n', '', SerializeFor.SELECT_DB)}`,
       qFrom: `FROM \`${DbTables.NOTIFICATION}\` n
-                WHERE (@type IS NULL or n.type = @type) AND (n.userId = ${context.user.id} OR n.userId IS NULL) AND (@status IS NULL OR n.status = @status)`,
+                WHERE (@type IS NULL or n.type = @type) AND (n.userId = ${context.user.id} OR n.userId IS NULL)
+                AND (n.status = ${SqlModelStatus.ACTIVE})`,
       qFilter: `
                 ORDER BY ${filters.orderStr}
                 LIMIT ${filters.limit} OFFSET ${filters.offset};`,
@@ -115,7 +123,7 @@ export class Notification extends AdvancedSQLModel {
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields('n', '', SerializeFor.SELECT_DB)}`,
       qFrom: `FROM \`${DbTables.NOTIFICATION}\` n
-                WHERE (@type IS NULL or n.type = @type) AND (@status IS NULL OR n.status = @status)
+                WHERE (@type IS NULL or n.type = @type) AND (n.status = ${SqlModelStatus.ACTIVE})
                 AND (@userId IS NULL OR n.userId = @userId)`,
       qFilter: `
                 ORDER BY ${filters.orderStr}

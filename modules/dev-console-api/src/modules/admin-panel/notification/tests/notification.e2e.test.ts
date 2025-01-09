@@ -49,6 +49,9 @@ describe('Notification tests', () => {
       await stage.db.mailing.paramExecute(
         `INSERT INTO notification (type, userId) VALUES ('${createdNotification.type}', ${createdNotification.userId})`,
       );
+      await stage.db.mailing.paramExecute(
+        `INSERT INTO notification (type, userId, status) VALUES ('${createdNotification.type}', ${createdNotification.userId}, '${SqlModelStatus.DELETED}')`,
+      );
     });
 
     afterEach(async () => {
@@ -190,6 +193,7 @@ describe('Notification tests', () => {
       expect(responseNotification.id).toBeDefined();
       expect(responseNotification.type).toBe(requestBody.type);
       expect(responseNotification.status).toBe(SqlModelStatus.ACTIVE);
+      expect(responseNotification.createTime).toBeTruthy();
       expect(responseNotification.userId).toBeNull();
       expect(responseNotification.message).toBeNull();
 
