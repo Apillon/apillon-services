@@ -1,6 +1,7 @@
 import {
   AdvancedSQLModel,
   BadRequestErrorCode,
+  NotificationAdminQueryFilter,
   NotificationQueryFilter,
   NotificationType,
   PopulateFrom,
@@ -93,6 +94,29 @@ export class Notification extends AdvancedSQLModel {
       qSelect: `SELECT ${this.generateSelectFields('n', '', SerializeFor.SELECT_DB)}`,
       qFrom: `FROM \`${DbTables.NOTIFICATION}\` n
                 WHERE (@type IS NULL or n.type = @type) AND (n.userId = ${context.user.id} OR n.userId IS NULL) AND (@status IS NULL OR n.status = @status)`,
+      qFilter: `
+                ORDER BY ${filters.orderStr}
+                LIMIT ${filters.limit} OFFSET ${filters.offset};`,
+    };
+    return selectAndCountQuery(context.mysql, sqlQuery, params, 'n.id');
+  }
+
+  public async getList(filter: NotificationAdminQueryFilter) {
+    const context = this.getContext();
+    const fieldMap = {
+      id: 'n.id',
+    };
+    const { params, filters } = getQueryParams(
+      filter.getDefaultValues(),
+      'n',
+      fieldMap,
+      filter.serialize(),
+    );
+    const sqlQuery = {
+      qSelect: `SELECT ${this.generateSelectFields('n', '', SerializeFor.SELECT_DB)}`,
+      qFrom: `FROM \`${DbTables.NOTIFICATION}\` n
+                WHERE (@type IS NULL or n.type = @type) AND (@status IS NULL OR n.status = @status)
+                AND (@userId IS NULL OR n.userId = @userId)`,
       qFilter: `
                 ORDER BY ${filters.orderStr}
                 LIMIT ${filters.limit} OFFSET ${filters.offset};`,
