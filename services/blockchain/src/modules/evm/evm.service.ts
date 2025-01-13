@@ -118,7 +118,15 @@ export class EvmService {
       case EvmChain.CELO:
       case EvmChain.ALFAJORES:
       case EvmChain.BASE:
-      case EvmChain.BASE_SEPOLIA: {
+      case EvmChain.BASE_SEPOLIA:
+      case EvmChain.ARBITRUM_ONE:
+      case EvmChain.ARBITRUM_ONE_SEPOLIA:
+      case EvmChain.AVALANCHE:
+      case EvmChain.AVALANCHE_FUJI:
+      case EvmChain.OPTIMISM:
+      case EvmChain.OPTIMISM_SEPOLIA:
+      case EvmChain.POLYGON:
+      case EvmChain.POLYGON_AMOY: {
         maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei');
         estimatedBaseFee = await provider.getGasPrice();
         break;
@@ -325,39 +333,23 @@ export class EvmService {
     context: ServiceContext,
     eventLogger: (options: any, output: LogOutput) => Promise<void>,
   ) {
-    // console.log('transmitTransactions', _event);
+    if (!Object.values(EvmChain).includes(_event.chain)) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.INVALID_CHAIN,
+        status: 400,
+      });
+    }
+
+    const endpoint = await new Endpoint({}, context).populateByChain(
+      _event.chain,
+      ChainType.EVM,
+    );
+    const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
     const wallets = await new Wallet({}, context).getWallets(
       _event.chain,
       ChainType.EVM,
       _event.address,
     );
-    const endpoint = await new Endpoint({}, context).populateByChain(
-      _event.chain,
-      ChainType.EVM,
-    );
-
-    const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
-    // eslint-disable-next-line sonarjs/no-small-switch
-    switch (_event.chain) {
-      case EvmChain.ETHEREUM:
-      case EvmChain.SEPOLIA:
-      case EvmChain.MOONBASE:
-      case EvmChain.MOONBEAM:
-      case EvmChain.ASTAR:
-      case EvmChain.CELO:
-      case EvmChain.ALFAJORES:
-      case EvmChain.BASE:
-      case EvmChain.BASE_SEPOLIA: {
-        break;
-      }
-      default: {
-        throw new BlockchainCodeException({
-          code: BlockchainErrorCode.INVALID_CHAIN,
-          status: 400,
-        });
-      }
-    }
-
     for (const wallet of wallets) {
       const transactions = await new Transaction({}, context).getList(
         _event.chain,

@@ -56,6 +56,47 @@ export function evmChainToWorkerName(
         ? WorkerName.TRANSMIT_BASE_SEPOLIA_TRANSACTIONS
         : WorkerName.VERIFY_BASE_SEPOLIA_TRANSACTIONS;
     }
+
+    case EvmChain.ARBITRUM_ONE: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_ARBITRUM_ONE_TRANSACTIONS
+        : WorkerName.VERIFY_ARBITRUM_ONE_TRANSACTIONS;
+    }
+    case EvmChain.ARBITRUM_ONE_SEPOLIA: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_ARBITRUM_ONE_SEPOLIA_TRANSACTIONS
+        : WorkerName.VERIFY_ARBITRUM_ONE_SEPOLIA_TRANSACTIONS;
+    }
+    case EvmChain.AVALANCHE: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_AVALANCHE_TRANSACTIONS
+        : WorkerName.VERIFY_AVALANCHE_TRANSACTIONS;
+    }
+    case EvmChain.AVALANCHE_FUJI: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_AVALANCHE_FUJI_TRANSACTIONS
+        : WorkerName.VERIFY_AVALANCHE_FUJI_TRANSACTIONS;
+    }
+    case EvmChain.OPTIMISM: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_OPTIMISM_TRANSACTIONS
+        : WorkerName.VERIFY_OPTIMISM_TRANSACTIONS;
+    }
+    case EvmChain.OPTIMISM_SEPOLIA: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_OPTIMISM_SEPOLIA_TRANSACTIONS
+        : WorkerName.VERIFY_OPTIMISM_SEPOLIA_TRANSACTIONS;
+    }
+    case EvmChain.POLYGON: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_POLYGON_TRANSACTIONS
+        : WorkerName.VERIFY_POLYGON_TRANSACTIONS;
+    }
+    case EvmChain.POLYGON_AMOY: {
+      return type == WorkerType.TRANSMIT
+        ? WorkerName.TRANSMIT_POLYGON_AMOY_TRANSACTIONS
+        : WorkerName.VERIFY_POLYGON_AMOY_TRANSACTIONS;
+    }
     default: {
       throw new Error('Unsupported');
     }
