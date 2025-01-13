@@ -84,6 +84,12 @@ export class EvmService {
     context: ServiceContext,
   ) {
     console.log('Params: ', params);
+    if (!Object.values(EvmChain).includes(params.chain)) {
+      throw new BlockchainCodeException({
+        code: BlockchainErrorCode.INVALID_CHAIN,
+        status: 400,
+      });
+    }
     // connect to chain
     // TODO: Add logic if endpoint is unavailable to fetch the backup one.
     const endpoint = await new Endpoint({}, context).populateByChain(
@@ -103,40 +109,12 @@ export class EvmService {
 
     let maxPriorityFeePerGas: BigNumber;
     let estimatedBaseFee: BigNumber;
-    let data = null;
-    switch (params.chain) {
-      case EvmChain.MOONBASE:
-      case EvmChain.MOONBEAM: {
-        maxPriorityFeePerGas = ethers.utils.parseUnits('3', 'gwei');
-        estimatedBaseFee = await provider.getGasPrice();
-        break;
-      }
-      case EvmChain.SEPOLIA:
-      case EvmChain.ETHEREUM:
-      case EvmChain.ASTAR:
-      case EvmChain.ASTAR_SHIBUYA:
-      case EvmChain.CELO:
-      case EvmChain.ALFAJORES:
-      case EvmChain.BASE:
-      case EvmChain.BASE_SEPOLIA:
-      case EvmChain.ARBITRUM_ONE:
-      case EvmChain.ARBITRUM_ONE_SEPOLIA:
-      case EvmChain.AVALANCHE:
-      case EvmChain.AVALANCHE_FUJI:
-      case EvmChain.OPTIMISM:
-      case EvmChain.OPTIMISM_SEPOLIA:
-      case EvmChain.POLYGON:
-      case EvmChain.POLYGON_AMOY: {
-        maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei');
-        estimatedBaseFee = await provider.getGasPrice();
-        break;
-      }
-      default: {
-        throw new BlockchainCodeException({
-          code: BlockchainErrorCode.INVALID_CHAIN,
-          status: 400,
-        });
-      }
+    if ([EvmChain.MOONBASE, EvmChain.MOONBEAM].includes(params.chain)) {
+      maxPriorityFeePerGas = ethers.utils.parseUnits('3', 'gwei');
+      estimatedBaseFee = await provider.getGasPrice();
+    } else {
+      maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei');
+      estimatedBaseFee = await provider.getGasPrice();
     }
     // Ensuring that transaction is desirable for at least 6 blocks.
     const maxFeePerGas = estimatedBaseFee.mul(2).add(maxPriorityFeePerGas);
@@ -212,6 +190,7 @@ export class EvmService {
       console.log(unsignedTx);
       const rawTransaction = await signingWallet.signTransaction(unsignedTx);
 
+      let data = null;
       if (!unsignedTx.to) {
         data = ethers.utils.getContractAddress({
           from: wallet.address,
