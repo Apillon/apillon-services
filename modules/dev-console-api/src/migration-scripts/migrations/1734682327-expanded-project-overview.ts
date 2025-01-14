@@ -103,6 +103,11 @@ export async function upgrade(
         SELECT COUNT(*) from ${databases.authDb}.\`embedded-wallet-integration\` ewi
         WHERE ewi.project_uuid = p.project_uuid
         AND ewi.status = ${SqlModelStatus.ACTIVE}
+    ) as integrationCount,
+    (
+      SELECT COUNT(*) from ${databases.authDb}.\`oasis_signature\` os
+      WHERE os.project_uuid = p.project_uuid
+      AND os.status = ${SqlModelStatus.ACTIVE}
     ) as embeddedWalletCount,
     (
         SELECT COUNT(*) from ${databases.infrastructureDb}.rpc_api_key rpcApiKey
@@ -114,7 +119,7 @@ export async function upgrade(
         LEFT JOIN ${databases.infrastructureDb}.rpc_api_key rpcApiKey ON rpcUrl.apiKeyId = rpcApiKey.id
         WHERE rpcApiKey.project_uuid = p.project_uuid
         AND rpcUrl.status = ${SqlModelStatus.ACTIVE}
-    ) as favoriteRpcUrlCount,
+    ) as selectedRpcUrlCount,
     (
         SELECT COUNT(*) from ${databases.infrastructureDb}.indexer indexer
         WHERE indexer.project_uuid = p.project_uuid
