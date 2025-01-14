@@ -111,7 +111,7 @@ export class ContractsController {
     );
   }
 
-  @Patch('cloud-functions/:function_uuid/activate')
+  @Patch('deployed/:uuid/activate')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @UseGuards(AuthGuard)
   async activateContract(
