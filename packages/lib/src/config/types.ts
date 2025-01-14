@@ -376,6 +376,7 @@ export enum ContractEventType {
   GET_DEPLOYED_CONTRACT_ABI = 'get-deployed-contract-abi',
   LIST_DEPLOYED_CONTRACT_TRANSACTIONS = 'list-deployed-contract-transactions',
   ARCHIVE_DEPLOYED_CONTRACT = 'archive-deployed-contract',
+  ACTIVATE_DEPLOYED_CONTRACT = 'activate-deployed-contract',
 }
 
 export enum InfrastructureEventType {
