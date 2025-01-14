@@ -135,4 +135,15 @@ export class ContractsService {
       )
     ).data;
   }
+
+  async activateDeployedContract(
+    context: DevConsoleApiContext,
+    contract_uuid: string,
+  ) {
+    return (
+      await new ContractsMicroservice(context).activateDeployedContract(
+        contract_uuid,
+      )
+    ).data;
+  }
 }

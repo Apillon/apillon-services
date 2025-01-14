@@ -17,6 +17,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -105,6 +106,19 @@ export class ContractsController {
     @Param('uuid') contract_uuid: string,
   ) {
     return await this.contractsService.archiveDeployedContract(
+      context,
+      contract_uuid,
+    );
+  }
+
+  @Patch('deployed/:uuid/activate')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async activateContract(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') contract_uuid: string,
+  ) {
+    return await this.contractsService.activateDeployedContract(
       context,
       contract_uuid,
     );
