@@ -36,7 +36,18 @@ export enum EvmChain {
   OASIS_SAPPHIRE = 23294,
   ALFAJORES = 44787, // Celo testnet
   CELO = 42220,
+  BASE = 8453,
+  BASE_SEPOLIA = 84532,
 }
+
+export const ENTERPRISE_USER_EVM_CHAINS = [
+  EvmChain.ETHEREUM,
+  EvmChain.SEPOLIA,
+  EvmChain.CELO,
+  EvmChain.ALFAJORES,
+  EvmChain.BASE,
+  EvmChain.BASE_SEPOLIA,
+];
 
 export enum NFTCollectionType {
   GENERIC = 1,
@@ -232,6 +243,7 @@ export enum MailEventType {
   SEND_CUSTOM_MAIL = 'send-custom-mail',
   SET_MAILERLITE_FIELD = 'set-mailerlite-field',
   GET_NOTIFICATIONS = 'get-notifications',
+  GET_NOTIFICATIONS_FOR_USER = 'get-notifications-for-user',
   CREATE_NOTIFICATION = 'create-notification',
   UPDATE_NOTIFICATION = 'update-notification',
   DELETE_NOTIFICATION = 'delete-notification',
@@ -262,10 +274,6 @@ export enum ScsEventType {
   GET_PRODUCT_PRICE = 'get-product-price',
   GET_PROJECTS_WITH_ACTIVE_SUBSCRIPTION = 'get-projects-with-active-subscription',
   HAS_ACTIVE_RPC_PLAN = 'has-active-rpc-plan',
-  GET_NOTIFICATIONS = 'get-notifications',
-  CREATE_NOTIFICATION = 'create-notification',
-  UPDATE_NOTIFICATION = 'update-notification',
-  DELETE_NOTIFICATION = 'delete-notification',
 }
 
 export enum NftsEventType {
@@ -1103,6 +1111,23 @@ export enum ProductCode {
 
   // Indexing
   INDEXER = 60,
+
+  CONTRACT_BASE_CREATE = 61,
+  CONTRACT_BASE_CALL = 62,
+  CONTRACT_BASE_SEPOLIA_CREATE = 63,
+  CONTRACT_BASE_SEPOLIA_CALL = 64,
+
+  NFT_BASE_COLLECTION = 65,
+  NFT_BASE_MINT = 66,
+  NFT_BASE_BURN = 67,
+  NFT_BASE_TRANSFER_COLLECTION = 68,
+  NFT_BASE_SET_BASE_URI = 69,
+
+  NFT_BASE_SEPOLIA_COLLECTION = 70,
+  NFT_BASE_SEPOLIA_MINT = 71,
+  NFT_BASE_SEPOLIA_BURN = 72,
+  NFT_BASE_SEPOLIA_TRANSFER_COLLECTION = 73,
+  NFT_BASE_SEPOLIA_SET_BASE_URI = 74,
 }
 
 export enum ProductService {
@@ -1128,6 +1153,8 @@ export enum ProductCategory {
   SCHRODINGER = 'SCHRODINGER',
   ETHEREUM_NFT = 'ETHEREUM_NFT',
   SEPOLIA_NFT = 'SEPOLIA_NFT',
+  BASE_NFT = 'BASE_NFT',
+  BASE_SEPOLIA_NFT = 'BASE_SEPOLIA_NFT',
   ETHEREUM_CONTRACT = 'ETHEREUM_CONTRACT',
   SEPOLIA_CONTRACT = 'SEPOLIA_CONTRACT',
   MOONBASE_CONTRACT = 'MOONBASE_CONTRACT',

@@ -345,28 +345,4 @@ export class Post extends UuidSqlModel {
       }).writeToMonitor({ sendAdminAlert: true });
     }
   }
-
-  /**
-   * Get total post count within a project
-   * @param project_uuid
-   * @returns count of posts
-   */
-  public async getPostCountOnProject(project_uuid: string): Promise<number> {
-    if (!project_uuid) {
-      throw new Error('project_uuid should not be null');
-    }
-    this.canAccess(this.getContext());
-
-    const data = await this.getContext().mysql.paramExecute(
-      `
-      SELECT COUNT(*) as postCount
-      FROM \`${DbTables.POST}\` t
-      WHERE project_uuid = @project_uuid
-      AND status <> ${SqlModelStatus.DELETED};
-      `,
-      { project_uuid },
-    );
-
-    return data?.length ? data[0].postCount : 0;
-  }
 }

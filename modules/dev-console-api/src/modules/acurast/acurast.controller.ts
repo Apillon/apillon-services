@@ -29,6 +29,7 @@ import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { AcurastService } from './acurast.service';
+import { ProjectModifyGuard } from '../../guards/project-modify.guard';
 
 @Controller('acurast')
 @Permissions({ permission: DefaultPermission.COMPUTING })
@@ -38,7 +39,7 @@ export class AcurastController {
   @Post('cloud-functions')
   @Validation({ dto: CreateCloudFunctionDto })
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(AuthGuard, ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard, ProjectModifyGuard)
   async createCloudFunction(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateCloudFunctionDto,

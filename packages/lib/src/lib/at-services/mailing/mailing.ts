@@ -64,7 +64,14 @@ export class Mailing extends BaseService {
   }
 
   //#region notifications
-  public async getNotificationList(query: NotificationQueryFilter) {
+  public async getNotificationListForUser(query: NotificationQueryFilter) {
+    return this.callSyncService({
+      eventName: MailEventType.GET_NOTIFICATIONS_FOR_USER,
+      query,
+    });
+  }
+
+  public async getNotifications(query: NotificationQueryFilter) {
     return this.callSyncService({
       eventName: MailEventType.GET_NOTIFICATIONS,
       query,

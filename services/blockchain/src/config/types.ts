@@ -163,6 +163,8 @@ export enum TxToken {
   USDC = 'USDC',
   USDT = 'USDT',
   SUBSOCIAL_TOKEN = 'SUB',
+  BASE_TOKEN = 'BASE',
+  BASE_SEPOLIA_TOKEN = 'SepoliaETH',
 }
 
 export enum TxAction {

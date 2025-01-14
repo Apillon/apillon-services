@@ -69,6 +69,10 @@ export enum WorkerName {
   TRANSACTION_LOG = 'TransactionLog',
   CHECK_PENDING_TRANSACTIONS = 'CheckPendingTransactions',
   OASIS_CONTRACT_EVENTS_WORKER = 'OasisContractEventsWorker',
+  TRANSMIT_BASE_TRANSACTIONS = 'TransmitBaseTransactions',
+  VERIFY_BASE_TRANSACTIONS = 'VerifyBaseTransactions',
+  TRANSMIT_BASE_SEPOLIA_TRANSACTIONS = 'TransmitBaseSepoliaTransactions',
+  VERIFY_BASE_SEPOLIA_TRANSACTIONS = 'VerifyBaseSepoliaTransactions',
 }
 
 export async function handler(event: any) {
@@ -165,6 +169,8 @@ export async function handleLambdaEvent(
     case WorkerName.TRANSMIT_ASTAR_TRANSACTIONS:
     case WorkerName.TRANSMIT_CELO_TRANSACTIONS:
     case WorkerName.TRANSMIT_ALFAJORES_TRANSACTIONS:
+    case WorkerName.TRANSMIT_BASE_TRANSACTIONS:
+    case WorkerName.TRANSMIT_BASE_SEPOLIA_TRANSACTIONS:
       await new TransmitEvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
@@ -217,6 +223,8 @@ export async function handleLambdaEvent(
     case WorkerName.VERIFY_ASTAR_TRANSACTIONS:
     case WorkerName.VERIFY_CELO_TRANSACTIONS:
     case WorkerName.VERIFY_ALFAJORES_TRANSACTIONS:
+    case WorkerName.VERIFY_BASE_TRANSACTIONS:
+    case WorkerName.VERIFY_BASE_SEPOLIA_TRANSACTIONS:
       await new EvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });

@@ -171,10 +171,14 @@ export class Project extends ProjectAccessModel {
     return super.populateByUUID(uuid, 'project_uuid');
   }
 
-  public async populateByUUIDAndCheckAccess(
-    uuid: string,
-    context: DevConsoleApiContext,
-  ): Promise<this> {
+  /**
+   * Populates the project instance by its UUID or throws an exception if the project does not exist.
+   *
+   * @param {string} uuid - The UUID of the project to populate.
+   * @returns {Promise<this>} - A promise that resolves to the populated project instance.
+   * @throws {CodeException} - Throws an exception if the project does not exist.
+   */
+  public async populateByUUIDOrThrow(uuid: string): Promise<this> {
     const project = await this.populateByUUID(uuid);
 
     if (!project.exists()) {
@@ -184,6 +188,15 @@ export class Project extends ProjectAccessModel {
         errorCodes: ResourceNotFoundErrorCode,
       });
     }
+
+    return project;
+  }
+
+  public async populateByUUIDAndCheckAccess(
+    uuid: string,
+    context: DevConsoleApiContext,
+  ): Promise<this> {
+    const project = await this.populateByUUIDOrThrow(uuid);
 
     project.canAccess(context);
 
