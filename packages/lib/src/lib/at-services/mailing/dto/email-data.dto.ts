@@ -33,7 +33,7 @@ export class EmailDataDto extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     defaultValue: {},
   })
-  public templateData: any;
+  public templateData: Record<string, any>;
 
   @prop({
     parser: { resolver: stringParser() },

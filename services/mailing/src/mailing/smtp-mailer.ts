@@ -17,6 +17,7 @@ import { MailCodeException } from '../lib/exceptions';
 import { MailErrorCode } from '../config/types';
 import { GeneratePdfMicroservice } from '../lib/generate-pdf';
 import axios from 'axios';
+import { stripHtmlFromObject } from './utils';
 
 /**
  * Send email via SMTP server
@@ -103,7 +104,7 @@ export async function SMTPsendTemplate(
   const { senderName, mailAddresses, subject } = emailData;
   const templateData = {
     APP_URL: env.APP_URL,
-    ...emailData.templateData,
+    ...stripHtmlFromObject(emailData.templateData),
   };
 
   const mail = {
@@ -143,11 +144,12 @@ export async function SMTPsendDefaultTemplate(
     });
   }
 
+  const escapedData = stripHtmlFromObject(emailData.templateData);
   const { templateName, senderName, mailAddresses } = emailData;
   const templateData = {
     APP_URL: env.APP_URL,
-    ...generateTemplateData(templateName, emailData.templateData),
-    ...emailData.templateData,
+    ...generateTemplateData(templateName, escapedData),
+    ...escapedData,
   };
 
   const mail = {
@@ -202,11 +204,11 @@ export async function SMTPverify(): Promise<boolean> {
 
 async function generatePdfFromTemplate(
   emailData: EmailDataDto,
-  templateData: any,
+  templateData: Record<string, any>,
 ): Promise<{ filename: string; content: Buffer }> {
   const attachmentTemplate = MailTemplates.getTemplate(
     emailData.attachmentTemplate,
-  )(templateData);
+  )(stripHtmlFromObject(templateData));
 
   try {
     const pdfUrl = await new GeneratePdfMicroservice(null).generatePdf(
