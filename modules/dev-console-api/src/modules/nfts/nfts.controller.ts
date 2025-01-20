@@ -1,24 +1,27 @@
 import {
+  AddNftsMetadataDto,
+  BurnNftDto,
+  ChainType,
+  CollectionMetadataQueryFilter,
+  CollectionsQuotaReachedQueryFilter,
+  DefaultPermission,
   DefaultUserRole,
+  DeployCollectionDTO,
   MintNftDTO,
   NestMintNftDTO,
   NFTCollectionQueryFilter,
-  DeployCollectionDTO,
+  RoleGroup,
   SetCollectionBaseUriDTO,
   TransactionQueryFilter,
   TransferCollectionDTO,
   ValidateFor,
-  BurnNftDto,
-  CollectionsQuotaReachedQueryFilter,
-  DefaultPermission,
-  RoleGroup,
-  AddNftsMetadataDto,
-  CollectionMetadataQueryFilter,
-  ChainType,
+  ValidationException,
+  ValidatorErrorCode,
 } from '@apillon/lib';
 import {
   CreateCollectionDTO,
   CreateSubstrateCollectionDTO,
+  CreateUniqueCollectionBodyDTO,
   CreateUniqueCollectionDTO,
 } from '@apillon/blockchain-lib/common';
 import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
@@ -31,6 +34,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
@@ -84,7 +88,7 @@ export class NftsController {
   }
 
   @Post('collections/unique')
-  @Validation({ dto: CreateUniqueCollectionDTO })
+  @Validation({ dto: CreateUniqueCollectionBodyDTO })
   @UseGuards(ValidationGuard)
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
@@ -93,9 +97,41 @@ export class NftsController {
   @UseGuards(AuthGuard, ProjectModifyGuard)
   async createUniqueCollection(
     @Ctx() context: DevConsoleApiContext,
-    @Body() body: CreateUniqueCollectionDTO,
+    @Body() body: CreateUniqueCollectionBodyDTO,
+    @Req() req: any,
   ) {
-    return await this.nftsService.createUniqueCollection(context, body);
+    // multer is executed in global middleware for this endpoint, meaning
+    // multi-part form data is converted to body and files keys of request
+    // automatically (no need for file interceptor here)
+    const file = req.files.find((f) => f.fieldname === 'metadata');
+    if (!file) {
+      throw new ValidationException({
+        code: ValidatorErrorCode.DATA_NOT_PRESENT,
+        property: 'metadata',
+        message: 'Metadata file not present.',
+      });
+    }
+    const maxFileSizeBytes = 10485760; // 10MB
+    if (file.size > maxFileSizeBytes) {
+      throw new ValidationException({
+        code: ValidatorErrorCode.DATA_NOT_VALID,
+        property: 'metadata',
+        message: `File is too large. Maximal size is ${maxFileSizeBytes} bytes (current size is ${file.size} bytes).`,
+      });
+    }
+    try {
+      body.metadata = JSON.parse(file.buffer.toString('utf-8'));
+    } catch (error) {
+      throw new ValidationException({
+        code: ValidatorErrorCode.DATA_NOT_VALID,
+        property: 'metadata',
+        message: 'Failed to parse metadata JSON: ' + error.message,
+      });
+    }
+    const dto = new CreateUniqueCollectionDTO(body);
+    await dto.validate();
+
+    return await this.nftsService.createUniqueCollection(context, dto);
   }
 
   @Get('collections')
