@@ -421,6 +421,13 @@ export class ContractService {
     return await contractDeploy.markArchived();
   }
 
+  async activateDeployedContract(contract_uuid: string) {
+    const contractDeploy =
+      await this.contractRepository.getContractDeployByUUID(contract_uuid);
+
+    return await contractDeploy.markActive();
+  }
+
   async getContractAbi(contract_uuid: string, solidityJson: boolean) {
     const contractVersion =
       await this.contractRepository.getContractVersionByContractUuid(

@@ -39,17 +39,9 @@ export class HostingService {
   }
 
   async createWebsite(context: DevConsoleApiContext, body: CreateWebsiteDto) {
-    const project: Project = await new Project({}, context).populateByUUID(
+    const project = await new Project({}, context).populateByUUIDOrThrow(
       body.project_uuid,
     );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-    project.canModify(context);
 
     //Check if hosting service for this project already exists
     const query: ServiceQueryFilter = new ServiceQueryFilter(

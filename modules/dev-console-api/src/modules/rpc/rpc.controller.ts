@@ -27,6 +27,7 @@ import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ProjectAccessGuard } from '../../guards/project-access.guard';
+import { ProjectModifyGuard } from '../../guards/project-modify.guard';
 
 @Controller('rpc')
 @Permissions({ permission: DefaultPermission.RPC })
@@ -36,7 +37,7 @@ export class RpcController {
   @Post('api-key')
   @Validation({ dto: CreateRpcApiKeyDto })
   @Permissions({ role: RoleGroup.ProjectOwnerAccess })
-  @UseGuards(ValidationGuard, ProjectAccessGuard, AuthGuard)
+  @UseGuards(ValidationGuard, ProjectModifyGuard, AuthGuard)
   async createApiKey(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateRpcApiKeyDto,

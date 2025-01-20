@@ -8,6 +8,8 @@ export function getTokenFromChain(chainType: ChainType, chain: Chain) {
       [EvmChain.MOONBASE]: TxToken.MOONBASE_TOKEN,
       [EvmChain.ASTAR]: TxToken.ASTAR_TOKEN,
       [EvmChain.ASTAR_SHIBUYA]: TxToken.SHIBUYA_TOKEN,
+      [EvmChain.BASE]: TxToken.BASE_TOKEN,
+      [EvmChain.BASE_SEPOLIA]: TxToken.BASE_SEPOLIA_TOKEN,
     },
     [ChainType.SUBSTRATE]: {
       [SubstrateChain.CRUST]: TxToken.CRUST_TOKEN,

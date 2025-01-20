@@ -2,6 +2,7 @@ import { Context, Lmas, LogType, ServiceName } from '@apillon/lib';
 import { LogOutput, ServerlessWorker, WorkerDefinition } from '.';
 import { writeWorkerLog } from '../logger';
 import { WorkerLogStatus } from '../../config/types';
+import { inspect } from 'util';
 export abstract class BaseWorker extends ServerlessWorker {
   protected context: Context;
   protected workerName: string;
@@ -30,19 +31,19 @@ export abstract class BaseWorker extends ServerlessWorker {
       case LogOutput.EVENT_WARN:
       case LogOutput.SYS_WARN:
         console.warn(
-          `${options.message} ${JSON.stringify(options.data)}`,
+          `${options.message} ${inspect(options.data)}`,
           options.err,
         );
         break;
       case LogOutput.EVENT_ERROR:
       case LogOutput.SYS_ERROR:
         console.error(
-          `${options.message} ${JSON.stringify(options.data)}`,
+          `${options.message} ${inspect(options.data)}`,
           options.err,
         );
         break;
       default:
-        console.log(`${options.message} ${JSON.stringify(options.data)}`);
+        console.log(`${options.message} ${inspect(options.data)}`);
     }
 
     const workerStatusDict = {

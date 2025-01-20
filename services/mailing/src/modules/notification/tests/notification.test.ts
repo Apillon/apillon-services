@@ -23,7 +23,8 @@ describe('Notification unit tests', () => {
   afterAll(async () => {
     await releaseStage(stage);
   });
-  describe('getNotificationList', () => {
+
+  describe('getNotificationListForUser', () => {
     test('Get notifications by user', async () => {
       const notificationToCreate = {
         type: NotificationType.UNKNOWN,
@@ -31,7 +32,7 @@ describe('Notification unit tests', () => {
       await stage.db.paramExecute(
         `INSERT INTO notification (type, userId) VALUES ('${notificationToCreate.type}', ${userId})`,
       );
-      const result = await NotificationService.getNotificationList(
+      const result = await NotificationService.getNotificationListForUser(
         { query: new NotificationQueryFilter() },
         context,
       );
@@ -45,7 +46,7 @@ describe('Notification unit tests', () => {
       expect(returnedNotification.createTime).toBeDefined();
     });
     test('Notification filtering', async () => {
-      const result = await NotificationService.getNotificationList(
+      const result = await NotificationService.getNotificationListForUser(
         {
           query: new NotificationQueryFilter({
             type: NotificationType.UNKNOWN,
@@ -59,14 +60,16 @@ describe('Notification unit tests', () => {
       expect(returnedNotification.id).toBeDefined();
       expect(returnedNotification.type).toBe(NotificationType.UNKNOWN);
       expect(returnedNotification.status).toBe(SqlModelStatus.ACTIVE);
-      const readNotifications = await NotificationService.getNotificationList(
-        { query: new NotificationQueryFilter({ type: 4 }) },
-        stage.context,
-      );
+      const readNotifications =
+        await NotificationService.getNotificationListForUser(
+          { query: new NotificationQueryFilter({ type: 4 }) },
+          stage.context,
+        );
       expect(readNotifications.items).toHaveLength(0);
       expect(readNotifications.total).toBe(0);
     });
   });
+
   describe('createNotification', () => {
     test('Successfully create notification', async () => {
       const notificationToCreate = {

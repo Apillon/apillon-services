@@ -48,6 +48,7 @@ describe('Notification controller tests', () => {
       expect(responseNotification.id).toBeDefined();
       expect(responseNotification.type).toBe(createdNotification.type);
       expect(responseNotification.status).toBe(SqlModelStatus.ACTIVE);
+      expect(responseNotification.createTime).toBeDefined();
     });
 
     test('Authorized user should only get his notifications', async () => {

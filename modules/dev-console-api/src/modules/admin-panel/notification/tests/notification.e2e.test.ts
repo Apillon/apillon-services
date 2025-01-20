@@ -39,6 +39,95 @@ describe('Notification tests', () => {
     await releaseStage(stage);
   });
 
+  describe('Get notifications', () => {
+    const createdNotification = {
+      type: NotificationType.UNKNOWN,
+      userId: 5,
+    };
+
+    beforeEach(async () => {
+      await stage.db.mailing.paramExecute(
+        `INSERT INTO notification (type, userId) VALUES ('${createdNotification.type}', ${createdNotification.userId})`,
+      );
+      await stage.db.mailing.paramExecute(
+        `INSERT INTO notification (type, userId, status) VALUES ('${createdNotification.type}', ${createdNotification.userId}, '${SqlModelStatus.DELETED}')`,
+      );
+    });
+
+    afterEach(async () => {
+      await stage.db.mailing.paramExecute('DELETE FROM notification');
+    });
+
+    test('Admin can get notifications', async () => {
+      const response = await request(stage.http)
+        .get('/admin-panel/notification')
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.items).toHaveLength(1);
+      const responseNotification = response.body.data.items[0];
+      expect(responseNotification.id).toBeDefined();
+      expect(responseNotification.type).toBe(createdNotification.type);
+      expect(responseNotification.status).toBe(SqlModelStatus.ACTIVE);
+      expect(responseNotification.userId).toBe(createdNotification.userId);
+    });
+
+    test('Admin can filter notifications', async () => {
+      const response = await request(stage.http)
+        .get('/admin-panel/notification')
+        .query({ type: NotificationType.UNKNOWN })
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.items).toHaveLength(1);
+      const responseNotification = response.body.data.items[0];
+      expect(responseNotification.id).toBeDefined();
+      expect(responseNotification.type).toBe(createdNotification.type);
+      expect(responseNotification.status).toBe(SqlModelStatus.ACTIVE);
+      expect(responseNotification.userId).toBe(createdNotification.userId);
+
+      const responseForUserIdFilter = await request(stage.http)
+        .get('/admin-panel/notification')
+        .query({ userId: createdNotification.userId })
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+
+      expect(responseForUserIdFilter.status).toBe(200);
+      expect(responseForUserIdFilter.body.data.items).toHaveLength(1);
+      const filteredNotificationByUserId =
+        responseForUserIdFilter.body.data.items[0];
+      expect(filteredNotificationByUserId.id).toBeDefined();
+      expect(filteredNotificationByUserId.type).toBe(createdNotification.type);
+      expect(filteredNotificationByUserId.status).toBe(SqlModelStatus.ACTIVE);
+      expect(filteredNotificationByUserId.userId).toBe(
+        createdNotification.userId,
+      );
+
+      const responseWithNoResults = await request(stage.http)
+        .get('/admin-panel/notification')
+        .query({ userId: 6 })
+        .set('Authorization', `Bearer ${adminTestUser.token}`);
+
+      expect(responseWithNoResults.status).toBe(200);
+      expect(responseWithNoResults.body.data.items).toHaveLength(0);
+    });
+
+    test('User cannot get notifications', async () => {
+      const response = await request(stage.http)
+        .get('/admin-panel/notification')
+        .set('Authorization', `Bearer ${testUser.token}`);
+
+      expect(response.status).toBe(403);
+    });
+
+    test('Unauthorized user cannot get notifications', async () => {
+      const response = await request(stage.http).get(
+        '/admin-panel/notification',
+      );
+
+      expect(response.status).toBe(401);
+    });
+  });
+
   describe('Create notification', () => {
     test('Admin can create a user notification using user id', async () => {
       const requestBody = {
@@ -46,7 +135,7 @@ describe('Notification tests', () => {
         userId: testUser.user.id,
       };
       const response = await request(stage.http)
-        .post('/notification')
+        .post('/admin-panel/notification')
         .send(requestBody)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
 
@@ -71,7 +160,7 @@ describe('Notification tests', () => {
         userEmail: testUser.user.email,
       };
       const response = await request(stage.http)
-        .post('/notification')
+        .post('/admin-panel/notification')
         .send(requestBody)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
 
@@ -95,7 +184,7 @@ describe('Notification tests', () => {
         type: NotificationType.UNKNOWN,
       };
       const response = await request(stage.http)
-        .post('/notification')
+        .post('/admin-panel/notification')
         .send(requestBody)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
 
@@ -104,6 +193,7 @@ describe('Notification tests', () => {
       expect(responseNotification.id).toBeDefined();
       expect(responseNotification.type).toBe(requestBody.type);
       expect(responseNotification.status).toBe(SqlModelStatus.ACTIVE);
+      expect(responseNotification.createTime).toBeTruthy();
       expect(responseNotification.userId).toBeNull();
       expect(responseNotification.message).toBeNull();
 
@@ -119,7 +209,7 @@ describe('Notification tests', () => {
         userEmail: 'invalid_email@apillon.io',
       };
       const response = await request(stage.http)
-        .post('/notification')
+        .post('/admin-panel/notification')
         .send(requestBody)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
 
@@ -131,7 +221,7 @@ describe('Notification tests', () => {
         userId: testUser.user.id,
       };
       const response = await request(stage.http)
-        .post('/notification')
+        .post('/admin-panel/notification')
         .send(requestBody)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
 
@@ -145,7 +235,7 @@ describe('Notification tests', () => {
         type: NotificationType.UNKNOWN,
       };
       const response = await request(stage.http)
-        .post('/notification')
+        .post('/admin-panel/notification')
         .send(requestBody)
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(403);
@@ -158,7 +248,7 @@ describe('Notification tests', () => {
         type: NotificationType.UNKNOWN,
       };
       const response = await request(stage.http)
-        .post('/notification')
+        .post('/admin-panel/notification')
         .send(requestBody);
       expect(response.status).toBe(401);
     });
@@ -180,7 +270,7 @@ describe('Notification tests', () => {
       };
 
       const response = await request(stage.http)
-        .patch(`/notification/${notificationId}`)
+        .patch(`/admin-panel/notification/${notificationId}`)
         .send(requestBody)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
 
@@ -206,7 +296,7 @@ describe('Notification tests', () => {
       };
 
       const response = await request(stage.http)
-        .patch(`/notification/${notificationId}`)
+        .patch(`/admin-panel/notification/${notificationId}`)
         .send(requestBody)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
 
@@ -232,7 +322,7 @@ describe('Notification tests', () => {
       };
 
       const response = await request(stage.http)
-        .patch(`/notification/${notificationId}`)
+        .patch(`/admin-panel/notification/${notificationId}`)
         .send(requestBody)
         .set('Authorization', `Bearer ${testUser.token}`);
 
@@ -252,7 +342,7 @@ describe('Notification tests', () => {
       const notificationId = lastInsertId[0].id;
 
       const response = await request(stage.http)
-        .delete(`/notification/${notificationId}`)
+        .delete(`/admin-panel/notification/${notificationId}`)
         .set('Authorization', `Bearer ${adminTestUser.token}`);
 
       expect(response.status).toBe(200);

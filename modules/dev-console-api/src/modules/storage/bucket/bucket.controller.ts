@@ -34,6 +34,7 @@ import {
 import { ValidationGuard } from '../../../guards/validation.guard';
 import { BucketService } from './bucket.service';
 import { AuthGuard } from '../../../guards/auth.guard';
+import { ProjectModifyGuard } from '../../../guards/project-modify.guard';
 
 @Controller('buckets')
 @Permissions({ permission: DefaultPermission.STORAGE })
@@ -154,7 +155,7 @@ export class BucketController {
   )
   @UseGuards(AuthGuard)
   @Validation({ dto: CreateBucketDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, ProjectModifyGuard)
   async createBucket(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateBucketDto,

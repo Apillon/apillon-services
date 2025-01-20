@@ -45,17 +45,10 @@ export class ContractsService {
   // DEPLOYED CONTRACTS
   async deployContract(context: DevConsoleApiContext, body: CreateContractDTO) {
     // TODO: we read DB twice, once here and once inside ServicesService.createService
-    const project: Project = await new Project({}, context).populateByUUID(
+
+    const project = await new Project({}, context).populateByUUIDOrThrow(
       body.project_uuid,
     );
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
-    project.canModify(context);
 
     // Check if contracts service for this project already exists
     const { total } = await new Service({}).getServices(
@@ -138,6 +131,17 @@ export class ContractsService {
   ) {
     return (
       await new ContractsMicroservice(context).archiveDeployedContract(
+        contract_uuid,
+      )
+    ).data;
+  }
+
+  async activateDeployedContract(
+    context: DevConsoleApiContext,
+    contract_uuid: string,
+  ) {
+    return (
+      await new ContractsMicroservice(context).activateDeployedContract(
         contract_uuid,
       )
     ).data;

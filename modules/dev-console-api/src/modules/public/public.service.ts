@@ -77,17 +77,17 @@ export class PublicService {
       body.message,
     );
 
-    const { data: oasisSignature } = await new AuthenticationMicroservice(
-      context,
-    ).getOasisSignatureByPublicAddress(body.receivingAddress);
+    // const { data: oasisSignature } = await new AuthenticationMicroservice(
+    //   context,
+    // ).getOasisSignatureByPublicAddress(body.receivingAddress);
 
-    if (!oasisSignature?.publicAddress) {
-      throw new CodeException({
-        code: ForbiddenErrorCode.NOT_EMBEDDED_WALLET,
-        status: HttpStatus.FORBIDDEN,
-        errorCodes: ForbiddenErrorCode,
-      });
-    }
+    // if (!oasisSignature?.publicAddress) {
+    //   throw new CodeException({
+    //     code: ForbiddenErrorCode.NOT_EMBEDDED_WALLET,
+    //     status: HttpStatus.FORBIDDEN,
+    //     errorCodes: ForbiddenErrorCode,
+    //   });
+    // }
 
     return (await new NftsMicroservice(context).mintNft(body)).data;
   }

@@ -3,6 +3,7 @@ import {
   Context,
   PopulateFrom,
   SerializeFor,
+  SqlModelStatus,
   presenceValidator,
   prop,
 } from '@apillon/lib';
@@ -424,5 +425,15 @@ export class IpfsCluster extends AdvancedSQLModel {
     }
 
     return link;
+  }
+
+  public async findActive(): Promise<IpfsCluster[]> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * FROM ${DbTables.IPFS_CLUSTER}
+      WHERE status = ${SqlModelStatus.ACTIVE}`,
+    );
+
+    return data.map((d) => new IpfsCluster(d, this.getContext()));
   }
 }

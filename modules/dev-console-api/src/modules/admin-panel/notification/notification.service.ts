@@ -1,6 +1,11 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../../context';
-import { Ams, CodeException, Mailing } from '@apillon/lib';
+import {
+  Ams,
+  CodeException,
+  Mailing,
+  NotificationAdminQueryFilter,
+} from '@apillon/lib';
 import { CreateOrUpdateNotificationDto } from './dtos/create-or-update-notification.dto';
 import { ResourceNotFoundErrorCode } from '../../../config/types';
 
@@ -45,5 +50,12 @@ export class NotificationService {
 
   async deleteNotification(id: number, context: DevConsoleApiContext) {
     return (await new Mailing(context).deleteNotification(id)).data;
+  }
+
+  async getNotifications(
+    context: DevConsoleApiContext,
+    query: NotificationAdminQueryFilter,
+  ) {
+    return (await new Mailing(context).getNotifications(query)).data;
   }
 }
