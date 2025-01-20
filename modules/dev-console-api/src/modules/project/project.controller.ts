@@ -76,7 +76,7 @@ export class ProjectController {
     );
   }
 
-  @Post(':uuid/invite-user')
+  @Post(':project_uuid/invite-user')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -95,7 +95,7 @@ export class ProjectController {
     );
   }
 
-  @Post(':uuid/uninvite-user')
+  @Post(':project_uuid/uninvite-user')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -210,47 +210,47 @@ export class ProjectController {
   }
   //#region credits
 
-  @Get(':uuid/credit')
+  @Get(':project_uuid/credit')
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, ProjectAccessGuard)
   async getProjectCredit(
     @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') uuid: string,
+    @Param('project_uuid') project_uuid: string,
   ) {
-    return await this.projectService.getProjectCredit(context, uuid);
+    return await this.projectService.getProjectCredit(context, project_uuid);
   }
 
-  @Patch(':uuid/credit-settings')
+  @Patch(':project_uuid/credit-settings')
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
   @Validation({ dto: ConfigureCreditDto })
-  @UseGuards(AuthGuard, ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard, ProjectModifyGuard)
   async configureCreditSettings(
     @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') uuid: string,
+    @Param('project_uuid') project_uuid: string,
     @Body() body: ConfigureCreditDto,
   ) {
-    body.project_uuid = uuid;
+    body.project_uuid = project_uuid;
     return await this.projectService.configureCreditSettings(context, body);
   }
 
-  @Get(':uuid/credit/transactions')
+  @Get(':project_uuid/credit/transactions')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({
     dto: CreditTransactionQueryFilter,
     validateFor: ValidateFor.QUERY,
   })
-  @UseGuards(AuthGuard, ValidationGuard)
+  @UseGuards(AuthGuard, ValidationGuard, ProjectAccessGuard)
   async getCreditTransactions(
     @Ctx() context: DevConsoleApiContext,
-    @Param('uuid') uuid: string,
+    @Param('project_uuid') project_uuid: string,
     @Query() query: CreditTransactionQueryFilter,
   ) {
     return await this.projectService.getCreditTransactions(
       context,
-      uuid,
+      project_uuid,
       query,
     );
   }

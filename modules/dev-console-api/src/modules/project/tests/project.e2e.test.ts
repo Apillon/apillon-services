@@ -465,6 +465,13 @@ describe('Project tests', () => {
         },
       );
 
+      await stage.db.authentication.paramExecute(
+        'INSERT INTO `oasis_signature` (status, project_uuid, dataHash) VALUES (5, @project_uuid, "0x0")',
+        {
+          project_uuid: testProject.project_uuid,
+        },
+      );
+
       await stage.db.infrastructure.paramExecute(
         'INSERT INTO rpc_api_key (name, description, project_uuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
         {
@@ -549,9 +556,10 @@ describe('Project tests', () => {
       expect(response.body.data.computingTransactionCount).toBe(1);
       expect(response.body.data.spaceCount).toBe(1);
       expect(response.body.data.postCount).toBe(1);
+      expect(response.body.data.integrationCount).toBe(1);
       expect(response.body.data.embeddedWalletCount).toBe(1);
       expect(response.body.data.rpcApiKeyCount).toBe(1);
-      expect(response.body.data.favoriteRpcUrlCount).toBe(1);
+      expect(response.body.data.selectedRpcUrlCount).toBe(1);
       expect(response.body.data.indexerCount).toBe(1);
       expect(response.body.data.cloudFunctionCount).toBe(1);
       expect(response.body.data.cloudFunctionJobCount).toBe(1);

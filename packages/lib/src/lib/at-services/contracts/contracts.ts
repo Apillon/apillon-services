@@ -120,4 +120,11 @@ export class ContractsMicroservice extends BaseService {
       body: { contract_uuid },
     });
   }
+
+  public async activateDeployedContract(contract_uuid: string) {
+    return await this.emitEvent({
+      eventName: ContractEventType.ACTIVATE_DEPLOYED_CONTRACT,
+      body: { contract_uuid },
+    });
+  }
 }

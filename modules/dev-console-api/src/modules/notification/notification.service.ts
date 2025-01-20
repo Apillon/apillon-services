@@ -4,10 +4,10 @@ import { Mailing, NotificationQueryFilter } from '@apillon/lib';
 
 @Injectable()
 export class NotificationService {
-  async getNotificationList(
+  async getNotificationListForUser(
     context: DevConsoleApiContext,
     query: NotificationQueryFilter,
   ) {
-    return (await new Mailing(context).getNotificationList(query)).data;
+    return (await new Mailing(context).getNotificationListForUser(query)).data;
   }
 }

@@ -83,7 +83,7 @@ export class UserService {
     loginInfo: LoginUserDto,
     context: DevConsoleApiContext,
   ): Promise<any> {
-    // const captchaJwt = await this.getCaptchaJwt(loginInfo);
+    const captchaJwt = await this.getCaptchaJwt(loginInfo);
 
     try {
       const { data: authUser } = await new Ams(context).login({
@@ -109,7 +109,7 @@ export class UserService {
       return {
         ...user.serialize(SerializeFor.PROFILE),
         token: authUser.token,
-        // captchaJwt,
+        captchaJwt,
       };
     } catch (error) {
       throw new CodeException({

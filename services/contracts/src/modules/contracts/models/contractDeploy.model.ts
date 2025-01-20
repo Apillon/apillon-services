@@ -40,6 +40,7 @@ export class ContractDeploy extends UuidSqlModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.APILLON_API,

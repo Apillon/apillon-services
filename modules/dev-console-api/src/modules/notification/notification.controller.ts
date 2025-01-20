@@ -22,6 +22,9 @@ export class NotificationController {
     @Ctx() context: DevConsoleApiContext,
     @Query() query: NotificationQueryFilter,
   ) {
-    return await this.notificationService.getNotificationList(context, query);
+    return await this.notificationService.getNotificationListForUser(
+      context,
+      query,
+    );
   }
 }
