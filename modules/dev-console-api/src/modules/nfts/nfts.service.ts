@@ -65,11 +65,8 @@ export class NftsService {
       AttachedServiceType.NFT,
     );
 
-    return (
-      await new NftsMicroservice(context).createUniqueCollection(
-        new CreateUniqueCollectionDTO({ ...body.serialize() }),
-      )
-    ).data;
+    return (await new NftsMicroservice(context).createUniqueCollection(body))
+      .data;
   }
 
   async listNftCollections(

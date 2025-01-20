@@ -196,3 +196,11 @@ export class CreateUniqueCollectionDTO extends ApiCreateUniqueCollectionDTO {
   })
   public project_uuid: string;
 }
+
+export class CreateUniqueCollectionBodyDTO extends CreateUniqueCollectionDTO {
+  @prop({
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  public metadata: { [tokenId: string]: Metadata };
+}
