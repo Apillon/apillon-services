@@ -34,6 +34,7 @@ export class Mailer {
       new EmailDataDto(event.emailData),
     );
   }
+
   /**
    * Send an email using a custom template.
    * @param {{ emailData: EmailDataDto }} event - The email data containing recipients, subject, template, and template data.
