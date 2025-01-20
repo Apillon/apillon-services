@@ -94,10 +94,11 @@ export class UniqueNftClient {
     return Address.nesting.idsToAddress(parseInt(collectionId), tokenId);
   }
 
-  async burnNft(collectionId: string, tokenId: number) {
+  async burnNft(collectionId: string, tokenId: number, from: string) {
     const result = await this.client.token.burn.encode({
       collectionId,
       tokenId,
+      from,
     });
 
     return result.compactExtrinsic;

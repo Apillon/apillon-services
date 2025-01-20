@@ -27,6 +27,7 @@ import { DevConsoleApiContext } from '../../context';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ProjectAccessGuard } from '../../guards/project-access.guard';
+import { ProjectModifyGuard } from '../../guards/project-modify.guard';
 
 @Controller('rpc')
 @Permissions({ permission: DefaultPermission.RPC })
@@ -36,7 +37,7 @@ export class RpcController {
   @Post('api-key')
   @Validation({ dto: CreateRpcApiKeyDto })
   @Permissions({ role: RoleGroup.ProjectOwnerAccess })
-  @UseGuards(ValidationGuard, ProjectAccessGuard, AuthGuard)
+  @UseGuards(ValidationGuard, ProjectModifyGuard, AuthGuard)
   async createApiKey(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateRpcApiKeyDto,
@@ -106,6 +107,21 @@ export class RpcController {
     @Param('project_uuid') projectUuid: string,
   ) {
     return await this.rpcService.getApiKeyUsage(context, id, projectUuid);
+  }
+
+  @Get('/:project_uuid/api-key/:id/usage-per-chain')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard, ProjectAccessGuard)
+  async getApiKeyUsagePerChain(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('project_uuid') projectUuid: string,
+  ) {
+    return await this.rpcService.getApiKeyUsagePerChain(
+      context,
+      id,
+      projectUuid,
+    );
   }
 
   @Get('api-key/:id/urls')

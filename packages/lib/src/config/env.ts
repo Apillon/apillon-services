@@ -108,6 +108,20 @@ export interface IEnv {
   MAIL_FUNCTION_NAME_TEST: string;
   GENERATE_PDF_FUNCTION_NAME: string;
 
+  MAILING_MYSQL_HOST: string;
+  MAILING_MYSQL_PORT: number;
+  MAILING_MYSQL_DATABASE: string;
+  MAILING_MYSQL_USER: string;
+  MAILING_MYSQL_PASSWORD: string;
+  MAILING_MYSQL_DEPLOY_USER: string;
+  MAILING_MYSQL_DEPLOY_PASSWORD: string;
+
+  MAILING_MYSQL_HOST_TEST: string;
+  MAILING_MYSQL_PORT_TEST: number;
+  MAILING_MYSQL_DATABASE_TEST: string;
+  MAILING_MYSQL_USER_TEST: string;
+  MAILING_MYSQL_PASSWORD_TEST: string;
+
   /**
    * LMAS dev server port
    */
@@ -254,6 +268,8 @@ export interface IEnv {
   BLOCKCHAIN_UNIQUE_GRAPHQL_SERVER: string;
   BLOCKCHAIN_CELO_ALFAJORES_GRAPHQL_SERVER: string;
   BLOCKCHAIN_CELO_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_BASE_GRAPHQL_SERVER: string;
+  BLOCKCHAIN_BASE_SEPOLIA_GRAPHQL_SERVER: string;
   BLOCKCHAIN_SECRETS: string;
 
   /**
@@ -655,6 +671,10 @@ export interface IEnv {
    */
   INDEXER_PROVISION_PERCENT: number;
   /**
+   * Minimum credit balance that user must have to deploy indexer
+   */
+  INDEXER_DEPLOY_MINIMUM_CREDIT_BALANCE: number;
+  /**
    * sqd (subsquid cloud) API data
    */
   SQD_API_TOKEN: string;
@@ -702,6 +722,9 @@ export interface IEnv {
   DWELLIR_USERNAME: string;
   DWELLIR_PASSWORD: string;
   DWELLIR_URL: string;
+
+  /** Demo collection, used on landing page for embedded wallet demo */
+  DEMO_NFT_COLLECTION_UUID: string;
 }
 
 // dotenv.config();
@@ -898,6 +921,9 @@ export let env: IEnv = {
   BLOCKCHAIN_CELO_ALFAJORES_GRAPHQL_SERVER:
     process.env['BLOCKCHAIN_CELO_ALFAJORES_GRAPHQL_SERVER'],
   BLOCKCHAIN_CELO_GRAPHQL_SERVER: process.env['BLOCKCHAIN_CELO_GRAPHQL_SERVER'],
+  BLOCKCHAIN_BASE_GRAPHQL_SERVER: process.env['BLOCKCHAIN_BASE_GRAPHQL_SERVER'],
+  BLOCKCHAIN_BASE_SEPOLIA_GRAPHQL_SERVER:
+    process.env['BLOCKCHAIN_BASE_SEPOLIA_GRAPHQL_SERVER'],
 
   BLOCKCHAIN_SECRETS: process.env['BLOCKCHAIN_SECRETS'],
 
@@ -912,6 +938,22 @@ export let env: IEnv = {
   /** MAILING */
   MAIL_FUNCTION_NAME: process.env['MAIL_FUNCTION_NAME'],
   MAIL_FUNCTION_NAME_TEST: process.env['MAIL_FUNCTION_NAME_TEST'],
+
+  MAILING_MYSQL_HOST: process.env['MAILING_MYSQL_HOST'],
+  MAILING_MYSQL_PORT: parseInt(process.env['MAILING_MYSQL_PORT']) || 3306,
+  MAILING_MYSQL_DATABASE: process.env['MAILING_MYSQL_DATABASE'],
+  MAILING_MYSQL_USER: process.env['MAILING_MYSQL_USER'],
+  MAILING_MYSQL_PASSWORD: process.env['MAILING_MYSQL_PASSWORD'],
+  MAILING_MYSQL_DEPLOY_USER: process.env['MAILING_MYSQL_DEPLOY_USER'],
+  MAILING_MYSQL_DEPLOY_PASSWORD: process.env['MAILING_MYSQL_DEPLOY_PASSWORD'],
+
+  MAILING_MYSQL_HOST_TEST: process.env['MAILING_MYSQL_HOST_TEST'],
+  MAILING_MYSQL_PORT_TEST:
+    parseInt(process.env['MAILING_MYSQL_PORT_TEST']) || 3306,
+  MAILING_MYSQL_DATABASE_TEST: process.env['MAILING_MYSQL_DATABASE_TEST'],
+  MAILING_MYSQL_USER_TEST: process.env['MAILING_MYSQL_USER_TEST'],
+  MAILING_MYSQL_PASSWORD_TEST: process.env['MAILING_MYSQL_PASSWORD_TEST'],
+
   GENERATE_PDF_FUNCTION_NAME: process.env['GENERATE_PDF_FUNCTION_NAME'],
 
   MAIL_SOCKET_PORT: parseInt(process.env['MAIL_SOCKET_PORT_TEST']) || 6401,
@@ -1180,6 +1222,8 @@ export let env: IEnv = {
     'apillon-indexer-source-code-local',
   INDEXER_PROVISION_PERCENT:
     parseInt(process.env['INDEXER_PROVISION_PERCENT']) || 5,
+  INDEXER_DEPLOY_MINIMUM_CREDIT_BALANCE:
+    parseInt(process.env['INDEXER_DEPLOY_MINIMUM_CREDIT_BALANCE']) || 5000,
   SQD_API_TOKEN: process.env['SQD_API_TOKEN'],
   SQD_API_URL: process.env['SQD_API_URL'] || 'https://app.subsquid.io/api',
   SQD_ORGANIZATION_CODE: process.env['SQD_ORGANIZATION_CODE'],
@@ -1262,6 +1306,9 @@ export let env: IEnv = {
   DWELLIR_USERNAME: process.env['DWELLIR_USERNAME'],
   DWELLIR_PASSWORD: process.env['DWELLIR_PASSWORD'],
   DWELLIR_URL: process.env['DWELLIR_URL'],
+
+  /** Demo collection, used on landing page for embedded wallet demo */
+  DEMO_NFT_COLLECTION_UUID: process.env['DEMO_NFT_COLLECTION_UUID'],
 };
 
 export let isEnvReady = false;

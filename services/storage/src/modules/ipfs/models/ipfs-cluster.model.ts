@@ -3,6 +3,7 @@ import {
   Context,
   PopulateFrom,
   SerializeFor,
+  SqlModelStatus,
   presenceValidator,
   prop,
 } from '@apillon/lib';
@@ -394,15 +395,13 @@ export class IpfsCluster extends AdvancedSQLModel {
     isIpns = false,
     path?: string,
     convertToCidV1 = false,
+    service?: IPFSService,
   ): Promise<string> {
     let link = '';
 
     if (!isIpns && convertToCidV1) {
-      const ipfsService = new IPFSService(
-        this.getContext(),
-        project_uuid,
-        true,
-      );
+      const ipfsService =
+        service ?? new IPFSService(this.getContext(), project_uuid, true);
       cid = await ipfsService.cidToCidV1(cid);
     }
 
@@ -426,5 +425,15 @@ export class IpfsCluster extends AdvancedSQLModel {
     }
 
     return link;
+  }
+
+  public async findActive(): Promise<IpfsCluster[]> {
+    const data = await this.getContext().mysql.paramExecute(
+      `
+      SELECT * FROM ${DbTables.IPFS_CLUSTER}
+      WHERE status = ${SqlModelStatus.ACTIVE}`,
+    );
+
+    return data.map((d) => new IpfsCluster(d, this.getContext()));
   }
 }

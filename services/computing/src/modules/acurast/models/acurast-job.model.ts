@@ -404,4 +404,19 @@ export class AcurastJob extends UuidSqlModel {
       conn,
     );
   }
+
+  public async getActiveJobsForProjects(
+    project_uuids: string[],
+  ): Promise<AcurastJob[]> {
+    const context = this.getContext();
+    return await context.mysql.paramExecute(
+      `
+      SELECT ${this.generateSelectFields('j', '', SerializeFor.SELECT_DB)}
+      FROM ${DbTables.ACURAST_JOB} j
+      WHERE j.project_uuid IN (${project_uuids.map((uuid) => `"${uuid}"`).join(',')})
+      AND j.status = ${SqlModelStatus.ACTIVE}
+      AND j.jobStatus = ${AcurastJobStatus.MATCHED}
+      `,
+    );
+  }
 }

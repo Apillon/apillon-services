@@ -60,6 +60,8 @@ export async function processEvent(
       );
     case ContractEventType.ARCHIVE_DEPLOYED_CONTRACT:
       return controller.archiveDeployedContract(event.body.contract_uuid);
+    case ContractEventType.ACTIVATE_DEPLOYED_CONTRACT:
+      return controller.activateDeployedContract(event.body.contract_uuid);
     case ContractEventType.LIST_DEPLOYED_CONTRACT_TRANSACTIONS:
       return controller.listDeployedContractTransactions(event.body.query);
     default:

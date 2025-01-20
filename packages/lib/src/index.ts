@@ -3,6 +3,8 @@ export * from './lib/at-services/config/scs';
 export * from './lib/at-services/config/dtos/quota.dto';
 export * from './lib/at-services/config/dtos/get-quota.dto';
 export * from './lib/at-services/config/dtos/create-quota-override.dto';
+export * from './lib/at-services/mailing/dto/create-or-update-notification.dto';
+
 export * from './lib/at-services/config/dtos/quota-override.dto';
 export * from './lib/at-services/config/dtos/create-subscription.dto';
 export * from './lib/at-services/config/dtos/update-subscription.dto';
@@ -15,6 +17,8 @@ export * from './lib/at-services/config/dtos/spend-credit.dto';
 export * from './lib/at-services/config/dtos/add-credit.dto';
 export * from './lib/at-services/config/dtos/credit-transaction-query-filter.dto';
 export * from './lib/at-services/config/dtos/pricelist-query-filter.dto';
+export * from './lib/at-services/mailing/dto/notification-query-filter.dto';
+export * from './lib/at-services/mailing/dto/notification-admin-query-filter.dto';
 export * from './lib/at-services/base-service';
 export * from './lib/at-services/config/dtos/configure-credit.dto';
 
@@ -38,6 +42,8 @@ export * from './lib/at-services/storage/storage';
 export * from './lib/at-services/storage/dtos/create-bucket.dto';
 export * from './lib/at-services/storage/dtos/bucket-query-filter.dto';
 export * from './lib/at-services/storage/dtos/create-directory.dto';
+export * from './lib/at-services/storage/dtos/get-links.dto';
+export * from './lib/at-services/storage/dtos/get-project-links.dto';
 export * from './lib/at-services/storage/dtos/create-s3-url-for-upload.dto';
 export * from './lib/at-services/storage/dtos/directory-content-query-filter.dto';
 export * from './lib/at-services/storage/dtos/file-details-query-filter.dto';
@@ -81,6 +87,7 @@ export * from './lib/at-services/nfts/dtos/deploy-collection.dto';
 export * from './lib/at-services/nfts/dtos/collection-query-filter.dto';
 export * from './lib/at-services/nfts/dtos/transaction-query-filter.dto';
 export * from './lib/at-services/nfts/dtos/mint-nft.dto';
+export * from './lib/at-services/nfts/dtos/mint-embedded-wallet-nft.dto';
 export * from './lib/at-services/nfts/dtos/set-collection-base-uri.dto';
 export * from './lib/at-services/nfts/dtos/transfer-collection.dto';
 export * from './lib/at-services/nfts/dtos/burn-nft.dto';
@@ -145,6 +152,8 @@ export * from './lib/at-services/infrastructure/dtos/rpc-api-key-base.dto';
 export * from './lib/at-services/infrastructure/dtos/create-indexer.dto';
 export * from './lib/at-services/infrastructure/dtos/update-indexer.dto';
 export * from './lib/at-services/infrastructure/dtos/indexer-logs-query-filter.dto';
+export * from './lib/at-services/infrastructure/dtos/indexer-usage-query-filter.dto';
+export * from './lib/at-services/infrastructure/dtos/indexer-billing-query-filter.dto';
 
 //#REGION Mix
 export * from './lib/at-services/ams/dtos/create-oauth-link.dto';

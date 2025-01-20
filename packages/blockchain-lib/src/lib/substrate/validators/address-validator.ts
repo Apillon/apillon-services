@@ -1,7 +1,6 @@
 import { SubstrateChainPrefix } from '../types';
 import { checkAddress } from '@polkadot/util-crypto';
-import { isUndefined } from '@rawmodel/utils/dist/helpers/is-undefined';
-import { isNull } from '@rawmodel/utils/dist/helpers/is-null';
+import { isNull, isUndefined } from '@rawmodel/utils';
 
 export function substrateAddressValidator(
   chainPrefix: SubstrateChainPrefix,

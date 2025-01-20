@@ -10,6 +10,6 @@ export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<any[]>,
 ): Promise<void> {
   await queryFn(`
-    DELETE FROM job WHERE name = 'IpfsBandwidthWorker';
+    DELETE FROM job WHERE name = 'CheckWebsiteDomainWorker';
   `);
 }

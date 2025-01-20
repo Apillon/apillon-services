@@ -21,6 +21,7 @@ export enum SubstrateChain {
   XSOCIAL = 7,
   ASTAR = 8,
   ACURAST = 9,
+  HYDRATION = 10,
   UNIQUE = 11,
 }
 
@@ -35,7 +36,18 @@ export enum EvmChain {
   OASIS_SAPPHIRE = 23294,
   ALFAJORES = 44787, // Celo testnet
   CELO = 42220,
+  BASE = 8453,
+  BASE_SEPOLIA = 84532,
 }
+
+export const ENTERPRISE_USER_EVM_CHAINS = [
+  EvmChain.ETHEREUM,
+  EvmChain.SEPOLIA,
+  EvmChain.CELO,
+  EvmChain.ALFAJORES,
+  EvmChain.BASE,
+  EvmChain.BASE_SEPOLIA,
+];
 
 export enum NFTCollectionType {
   GENERIC = 1,
@@ -194,6 +206,7 @@ export enum StorageEventType {
   GET_PROJECT_IPFS_CLUSTER = 'get-project-ipfs-cluster',
   GET_IPFS_CLUSTER_INFO = 'get-ipfs-cluster-info',
   GET_LINK = 'get-link',
+  GET_LINKS = 'get-links',
   GENERATE_SHORT_URL = 'generate-short-url',
   GET_TARGET_URL = 'get-target-url',
 }
@@ -220,6 +233,7 @@ export enum AuthenticationEventType {
   EW_INTEGRATION_UPDATE = 'update-ew-integration',
   CREATE_OASIS_SIGNATURE = 'create-oasis-signature',
   LIST_OASIS_SIGNATURES = 'list-oasis-signatures',
+  GET_OASIS_SIGNATURE_BY_PUBLIC_ADDRESS = 'get-oasis-signature-by-public-address',
   GENERATE_OTP = 'generate-otp',
   VALIDATE_OTP = 'validate-otp',
 }
@@ -228,6 +242,11 @@ export enum MailEventType {
   SEND_MAIL = 'send-mail',
   SEND_CUSTOM_MAIL = 'send-custom-mail',
   SET_MAILERLITE_FIELD = 'set-mailerlite-field',
+  GET_NOTIFICATIONS = 'get-notifications',
+  GET_NOTIFICATIONS_FOR_USER = 'get-notifications-for-user',
+  CREATE_NOTIFICATION = 'create-notification',
+  UPDATE_NOTIFICATION = 'update-notification',
+  DELETE_NOTIFICATION = 'delete-notification',
 }
 
 export enum ScsEventType {
@@ -310,6 +329,8 @@ export enum ComputingEventType {
 
   UPDATE_JOB = 'update-job',
   DELETE_JOB = 'delete-job',
+
+  VERIFY_REBEL = 'verify-rebel',
 }
 
 export enum ReferralEventType {
@@ -355,6 +376,7 @@ export enum ContractEventType {
   GET_DEPLOYED_CONTRACT_ABI = 'get-deployed-contract-abi',
   LIST_DEPLOYED_CONTRACT_TRANSACTIONS = 'list-deployed-contract-transactions',
   ARCHIVE_DEPLOYED_CONTRACT = 'archive-deployed-contract',
+  ACTIVATE_DEPLOYED_CONTRACT = 'activate-deployed-contract',
 }
 
 export enum InfrastructureEventType {
@@ -363,6 +385,7 @@ export enum InfrastructureEventType {
   UPDATE_RPC_API_KEY = 'update-rpc-api-key',
   CREATE_RPC_API_KEY = 'create-rpc-api-key',
   GET_RPC_API_KEY_USAGE = 'get-rpc-api-key-usage',
+  GET_RPC_API_KEY_USAGE_PER_CHAIN = 'get-rpc-api-key-usage-per-chain',
   GET_RPC_API_KEY = 'get-rpc-api-key',
   CHANGE_DWELLIR_SUBSCRIPTION = 'change-dwellir-subscription',
   DOWNGRADE_DWELLIR_SUBSCRIPTIONS = 'downgrade-dwellir-subscriptions',
@@ -379,6 +402,8 @@ export enum InfrastructureEventType {
   INDEXER_GET = 'get-indexer',
   INDEXER_GET_LOGS = 'get-indexer-logs',
   INDEXER_GET_DEPLOYMENTS = 'get-indexer-deployments',
+  INDEXER_GET_USAGE = 'get-indexer-usage',
+  INDEXER_LIST_BILLING = 'list-indexer-billing',
   INDEXER_UPDATE = 'update-indexer',
   INDEXER_GET_URL_FOR_SC_UPLOAD = 'get-url-for-indexer-source-code-upload',
   INDEXER_DEPLOY = 'deploy-indexer',
@@ -625,6 +650,8 @@ export enum BadRequestErrorCode {
   INVALID_AUTHORIZATION_HEADER = 40000004,
   THIRD_PARTY_SERVICE_CONNECTION_FAILED = 40000005,
   RESOURCE_DOES_NOT_EXISTS = 40000006,
+  INVALID_NOTIFICATION_TYPE = 40000007,
+  NOTIFICATION_TYPE_OR_MESSAGE_MISSING = 40000008,
 }
 
 export enum ValidatorErrorCode {
@@ -820,6 +847,9 @@ export enum ValidatorErrorCode {
 
   INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001120,
   DEPLOY_INDEXER_REQUIRED_DATA_NOT_PRESENT = 422001121,
+
+  //#region Mailing MS
+  INVALID_NOTIFICATION_TYPE = 422001201,
 }
 
 /**
@@ -1082,6 +1112,23 @@ export enum ProductCode {
 
   // Indexing
   INDEXER = 60,
+
+  CONTRACT_BASE_CREATE = 61,
+  CONTRACT_BASE_CALL = 62,
+  CONTRACT_BASE_SEPOLIA_CREATE = 63,
+  CONTRACT_BASE_SEPOLIA_CALL = 64,
+
+  NFT_BASE_COLLECTION = 65,
+  NFT_BASE_MINT = 66,
+  NFT_BASE_BURN = 67,
+  NFT_BASE_TRANSFER_COLLECTION = 68,
+  NFT_BASE_SET_BASE_URI = 69,
+
+  NFT_BASE_SEPOLIA_COLLECTION = 70,
+  NFT_BASE_SEPOLIA_MINT = 71,
+  NFT_BASE_SEPOLIA_BURN = 72,
+  NFT_BASE_SEPOLIA_TRANSFER_COLLECTION = 73,
+  NFT_BASE_SEPOLIA_SET_BASE_URI = 74,
 }
 
 export enum ProductService {
@@ -1107,6 +1154,8 @@ export enum ProductCategory {
   SCHRODINGER = 'SCHRODINGER',
   ETHEREUM_NFT = 'ETHEREUM_NFT',
   SEPOLIA_NFT = 'SEPOLIA_NFT',
+  BASE_NFT = 'BASE_NFT',
+  BASE_SEPOLIA_NFT = 'BASE_SEPOLIA_NFT',
   ETHEREUM_CONTRACT = 'ETHEREUM_CONTRACT',
   SEPOLIA_CONTRACT = 'SEPOLIA_CONTRACT',
   MOONBASE_CONTRACT = 'MOONBASE_CONTRACT',
@@ -1161,4 +1210,14 @@ export enum SubscriptionPackageId {
   COCOON = 3,
   BUTTERFLY = 4,
   RPC_PLAN = 5,
+}
+
+export enum NotificationType {
+  UNKNOWN = 0,
+}
+
+export enum HttpStatus {
+  BAD_REQUEST = 400,
+  FORBIDDEN = 403,
+  NOT_FOUND = 404,
 }

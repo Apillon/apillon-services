@@ -28,7 +28,8 @@ export type ContractMSEventType =
       ContractTransactionQueryFilter
     >
   | IProjectUuidEvent<ContractEventType.PROJECT_DEPLOYED_CONTRACT_DETAILS>
-  | IContractUuidEvent<ContractEventType.ARCHIVE_DEPLOYED_CONTRACT>;
+  | IContractUuidEvent<ContractEventType.ARCHIVE_DEPLOYED_CONTRACT>
+  | IContractUuidEvent<ContractEventType.ACTIVATE_DEPLOYED_CONTRACT>;
 
 interface IContractMSEventBase {
   eventName: ContractEventType;

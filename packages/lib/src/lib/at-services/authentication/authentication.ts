@@ -205,6 +205,13 @@ export class AuthenticationMicroservice extends BaseService {
     });
   }
 
+  public async getOasisSignatureByPublicAddress(publicAddress: string) {
+    return await this.callService({
+      eventName: AuthenticationEventType.GET_OASIS_SIGNATURE_BY_PUBLIC_ADDRESS,
+      publicAddress,
+    });
+  }
+
   //#endregion
 
   //#region OTP

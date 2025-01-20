@@ -53,10 +53,25 @@ NFTS_MYSQL_PASSWORD_TEST: string;
 NFTS_MYSQL_DATABASE_TEST: string;
 
 /**
+ * Landing page collection
+ */
+DEMO_NFT_COLLECTION_UUID: string;
+
+/**
+ * Storage worker
+ */
+STORAGE_AWS_WORKER_SQS_URL: string;
+
+/**
  * NFT workers config
  */
 NFTS_AWS_WORKER_SQS_URL: string;
 NFTS_AWS_WORKER_LAMBDA_NAME: string;
+
+/**
+ * Unique
+ */
+UNIQUE_NETWORK_API_URL: string;
 ```
 
 ## NFT Collection Contract versioning

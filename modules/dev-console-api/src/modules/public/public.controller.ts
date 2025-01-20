@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Query,
   UseGuards,
@@ -20,7 +21,12 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { ContactFormDto } from './dtos/contact-form.dto';
 import { AuthGuard } from '../../guards/auth.guard';
 import { DevConsoleApiContext } from '../../context';
-import { CacheKeyPrefix, CacheKeyTTL, DefaultUserRole } from '@apillon/lib';
+import {
+  CacheKeyPrefix,
+  CacheKeyTTL,
+  DefaultUserRole,
+  MintEmbeddedWalletNftDTO,
+} from '@apillon/lib';
 import { ServiceStatusQueryFilter } from '../service-status/dtos/service-status-query-filter.dto';
 import { ValidateFor } from '@apillon/lib';
 
@@ -58,5 +64,17 @@ export class PublicController {
     @Query() query: ServiceStatusQueryFilter,
   ) {
     return await this.publicService.getServiceStatusList(context, query);
+  }
+
+  @Post('mint-nft/:collection_uuid')
+  @Validation({ dto: MintEmbeddedWalletNftDTO })
+  @UseGuards(ValidationGuard)
+  async mintNftToEmbeddedWallet(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('collection_uuid') collection_uuid: string,
+    @Body() body: MintEmbeddedWalletNftDTO,
+  ) {
+    body.collection_uuid = collection_uuid;
+    return await this.publicService.mintNftToEmbeddedWallet(context, body);
   }
 }

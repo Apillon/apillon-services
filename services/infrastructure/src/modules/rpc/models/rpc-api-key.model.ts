@@ -12,7 +12,7 @@ import {
   selectAndCountQuery,
 } from '@apillon/lib';
 import { InfrastructureErrorCode, DbTables } from '../../../config/types';
-import { stringParser } from '@rawmodel/parsers';
+import { stringParser, integerParser } from '@rawmodel/parsers';
 import { RpcUrl } from './rpc-url.model';
 export class RpcApiKey extends UuidSqlModel {
   public readonly tableName = DbTables.RPC_API_KEY;
@@ -20,6 +20,22 @@ export class RpcApiKey extends UuidSqlModel {
   public constructor(data: any, context: Context) {
     super(data, context);
   }
+
+  /**
+   * id
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    serializable: [
+      SerializeFor.SERVICE,
+      SerializeFor.WORKER,
+      SerializeFor.LOGGER,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public id: number;
 
   @prop({
     parser: { resolver: stringParser() },

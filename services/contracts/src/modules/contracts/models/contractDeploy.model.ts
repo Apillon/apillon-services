@@ -21,6 +21,7 @@ import {
 } from '../../../config/types';
 import { ContractVersion } from './contractVersion.model';
 import { ContractVersionMethod } from './contractVersionMethod.model';
+import { Contract } from './contract.model';
 
 export class ContractDeploy extends UuidSqlModel {
   public readonly tableName = DbTables.CONTRACT_DEPLOY;
@@ -39,6 +40,7 @@ export class ContractDeploy extends UuidSqlModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.APILLON_API,
@@ -98,6 +100,7 @@ export class ContractDeploy extends UuidSqlModel {
       SerializeFor.LOGGER,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
     validators: [
       {
@@ -228,6 +231,7 @@ export class ContractDeploy extends UuidSqlModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.PROFILE,
       SerializeFor.ADMIN,
+      SerializeFor.APILLON_API,
     ],
     validators: [],
   })
@@ -320,6 +324,7 @@ export class ContractDeploy extends UuidSqlModel {
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
     ],
   })
@@ -390,10 +395,17 @@ export class ContractDeploy extends UuidSqlModel {
     );
     const sqlQuery = {
       qSelect: `
-        SELECT ${selectFields}
+        SELECT
+          ${selectFields},
+          cv.version as contractVersion,
+          cc.contractType AS contractType,
+          cc.name AS contractName,
+          cc.description AS contractDescription
         `,
       qFrom: `
         FROM \`${DbTables.CONTRACT_DEPLOY}\` c
+        LEFT JOIN \`${DbTables.CONTRACT_VERSION}\` cv ON (cv.id = c.version_id)
+        LEFT JOIN \`${DbTables.CONTRACT}\` cc ON (cc.id = cv.contract_id)
         WHERE c.project_uuid = IFNULL(@project_uuid, c.project_uuid)
         AND (@search IS null OR c.name LIKE CONCAT('%', @search, '%') OR c.contract_uuid = @search)
         AND (@chainType IS null OR c.chainType = @chainType)
@@ -411,21 +423,7 @@ export class ContractDeploy extends UuidSqlModel {
       `,
     };
 
-    const contractsResult = await selectAndCountQuery(
-      context.mysql,
-      sqlQuery,
-      params,
-      'c.id',
-    );
-
-    return {
-      ...contractsResult,
-      items: contractsResult.items.map((contract) =>
-        new ContractDeploy({}, context)
-          .populate(contract, PopulateFrom.DB)
-          .serialize(serializationStrategy),
-      ),
-    };
+    return await selectAndCountQuery(context.mysql, sqlQuery, params, 'c.id');
   }
 
   public override async populateByUUID(contract_uuid: string): Promise<this> {
@@ -457,14 +455,17 @@ export class ContractDeploy extends UuidSqlModel {
       {},
       this.getContext(),
     );
+    const contract = new Contract({}, this.getContext());
     const query = `
       SELECT ${contractVersion.generateSelectFields('cv', 'cv')},
              ${this.generateSelectFields('c', 'c')},
-             ${contractVersionMethod.generateSelectFields('cvm', 'cvm')}
+             ${contractVersionMethod.generateSelectFields('cvm', 'cvm')},
+             ${contract.generateSelectFields('cc', 'cc')}
       FROM \`${DbTables.CONTRACT_DEPLOY}\` AS c
              LEFT JOIN \`${DbTables.CONTRACT_VERSION}\` AS cv ON (cv.id = c.version_id)
              LEFT JOIN \`${DbTables.CONTRACT_VERSION_METHOD}\` AS cvm
                        ON (cvm.contract_version_id = cv.id)
+             LEFT JOIN \`${DbTables.CONTRACT}\` AS cc ON (cc.id = cv.contract_id)
       WHERE c.contract_uuid = @contract_deploy_uuid
         AND c.status <> ${SqlModelStatus.DELETED};
     `;

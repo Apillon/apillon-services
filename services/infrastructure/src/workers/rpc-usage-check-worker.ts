@@ -20,14 +20,6 @@ import Stripe from 'stripe';
 
 const FREE_RPC_API_LIMIT = 400000;
 
-const devConsoleConfig = {
-  host: env.DEV_CONSOLE_API_MYSQL_HOST,
-  database: env.DEV_CONSOLE_API_MYSQL_DATABASE,
-  password: env.DEV_CONSOLE_API_MYSQL_PASSWORD,
-  user: env.DEV_CONSOLE_API_MYSQL_USER,
-  port: env.DEV_CONSOLE_API_MYSQL_PORT,
-};
-
 export class RpcUsageCheckWorker extends BaseWorker {
   protected context: Context;
 
@@ -88,7 +80,13 @@ export class RpcUsageCheckWorker extends BaseWorker {
 
     if (newlyExceededUsers.length) {
       const scs = new Scs(this.context);
-      const devConsoleSql = new MySql(devConsoleConfig);
+      const devConsoleSql = new MySql({
+        host: env.DEV_CONSOLE_API_MYSQL_HOST,
+        database: env.DEV_CONSOLE_API_MYSQL_DATABASE,
+        password: env.DEV_CONSOLE_API_MYSQL_PASSWORD,
+        user: env.DEV_CONSOLE_API_MYSQL_USER,
+        port: env.DEV_CONSOLE_API_MYSQL_PORT,
+      });
       await devConsoleSql.connect();
 
       // Use Promise.all to handle asynchronous operations
@@ -99,7 +97,7 @@ export class RpcUsageCheckWorker extends BaseWorker {
               SELECT pu.project_id
               FROM project_user pu
               LEFT JOIN user u ON pu.user_id = u.id
-              WHERE u.uuid = @user_uuid 
+              WHERE u.user_uuid = @user_uuid 
               AND pu.role_id = ${DefaultUserRole.PROJECT_OWNER}
             `,
             { user_uuid: user.user_uuid },

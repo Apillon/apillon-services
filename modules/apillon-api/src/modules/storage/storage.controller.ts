@@ -9,6 +9,7 @@ import {
   CreateIpnsDto,
   DefaultApiKeyRole,
   EndFileUploadSessionDto,
+  GetLinksDto,
   IpnsQueryFilter,
   PublishIpnsDto,
   ValidateFor,
@@ -64,10 +65,16 @@ export class StorageController {
   }
 
   @Get('link-on-ipfs/:cid')
-  @ApiKeyPermissions({
-    role: DefaultApiKeyRole.KEY_EXECUTE,
-    serviceType: AttachedServiceType.STORAGE,
-  })
+  @ApiKeyPermissions(
+    {
+      role: DefaultApiKeyRole.KEY_READ,
+      serviceType: AttachedServiceType.STORAGE,
+    },
+    {
+      role: DefaultApiKeyRole.KEY_READ,
+      serviceType: AttachedServiceType.HOSTING,
+    },
+  )
   @UseGuards(AuthGuard)
   async getLinkOnIpfs(
     @Ctx() context: ApillonApiContext,
@@ -79,6 +86,26 @@ export class StorageController {
       cid,
       type ? type.toLowerCase() : 'cid',
     );
+  }
+
+  @Post('link-on-ipfs-multiple')
+  @ApiKeyPermissions(
+    {
+      role: DefaultApiKeyRole.KEY_READ,
+      serviceType: AttachedServiceType.STORAGE,
+    },
+    {
+      role: DefaultApiKeyRole.KEY_READ,
+      serviceType: AttachedServiceType.HOSTING,
+    },
+  )
+  @Validation({ dto: GetLinksDto })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async getLinksOnIpfsMultiple(
+    @Ctx() context: ApillonApiContext,
+    @Body() body: GetLinksDto,
+  ) {
+    return await this.storageService.getLinks(context, body);
   }
 
   @Get('buckets')

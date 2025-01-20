@@ -376,6 +376,198 @@ describe('Project tests', () => {
     });
   });
 
+  describe('Project overview', () => {
+    let testProject: Project = undefined;
+
+    beforeAll(async () => {
+      testProject = await createTestProject(testUser, stage);
+      const bucketUuid = '00000000-0000-0000-0000-000000000000';
+      await stage.db.storage.paramExecute(
+        'INSERT INTO bucket (name,project_uuid, bucketType, bucket_uuid,status) VALUES ("Test Bucket",@project_uuid, 1, @bucket_uuid, 5)',
+        {
+          project_uuid: testProject.project_uuid,
+          bucket_uuid: bucketUuid,
+        },
+      );
+
+      const bucketId = (
+        await stage.db.storage.paramExecute(`SELECT LAST_INSERT_ID() as id`)
+      )[0].id;
+
+      await stage.db.storage.paramExecute(
+        'INSERT INTO file (project_uuid, file_uuid, name, bucket_id, size, status) VALUES (@project_uuid,"00000000-0000-0000-0000-000000000000", @name, @bucket_id, 0, 5)',
+        {
+          project_uuid: testProject.project_uuid,
+          name: 'Test File',
+          bucket_id: bucketId,
+        },
+      );
+
+      await stage.db.storage.paramExecute(
+        'INSERT INTO website (project_uuid, bucket_id, stagingBucket_id,productionBucket_id, name, status ) VALUES (@project_uuid, @bucket_id, @bucket_id, @bucket_id, @name, 5)',
+        {
+          project_uuid: testProject.project_uuid,
+          bucket_id: bucketId,
+          name: 'Test Website',
+        },
+      );
+
+      await stage.db.nfts.paramExecute(
+        'INSERT INTO collection (project_uuid, collection_uuid, collectionStatus, name, symbol, bucket_uuid, maxSupply, baseExtension, dropStart, dropReserve, royaltiesFees, royaltiesAddress,chainType,chain) VALUES (@project_uuid,@collection_uuid, 1, "Test Collection", "TST", @bucket_uuid, 1,".json", 0, 0,0.00,"0x0",2,1287)',
+        {
+          project_uuid: testProject.project_uuid,
+          collection_uuid: '00000000-0000-0000-0000-000000000000',
+          bucket_uuid: bucketUuid,
+        },
+      );
+
+      await stage.db.nfts.paramExecute(
+        'INSERT INTO transaction (refId, transactionStatus, chainId, transactionType,refTable, transactionHash) VALUES (1, 2, 1287,1,"collection", "0x0")',
+      );
+
+      await stage.db.authentication.paramExecute(
+        'INSERT INTO identity (project_uuid, state, email,didUri,token) VALUES (@project_uuid, "attested","test@apillon.io","did:apillon","token")',
+        {
+          project_uuid: testProject.project_uuid,
+        },
+      );
+
+      await stage.db.computing.paramExecute(
+        'INSERT INTO contract (project_uuid, contractStatus, contract_uuid,name, contractType, bucket_uuid, contractAbi_id) VALUES (@project_uuid, 1, "00000000-0000-0000-0000-000000000000", "Test Contract", 1, @bucket_uuid, 1)',
+        {
+          project_uuid: testProject.project_uuid,
+          bucket_uuid: bucketUuid,
+        },
+      );
+
+      await stage.db.computing.paramExecute(
+        'INSERT INTO transaction (refId, transactionStatus, transactionType,refTable, transactionHash, walletAddress) VALUES (1, 5,1,"collection", "0x0", "0x0")',
+      );
+
+      await stage.db.social.paramExecute(
+        'INSERT INTO space (project_uuid, space_uuid, name, status) VALUES (@project_uuid, "00000000-0000-0000-0000-000000000000", "Test Space", 5)',
+        {
+          project_uuid: testProject.project_uuid,
+        },
+      );
+
+      await stage.db.social.paramExecute(
+        'INSERT INTO post (project_uuid, post_uuid, space_id, postType,title,body, status ) VALUES (@project_uuid, "00000000-0000-0000-0000-000000000000", 1, 1, "Test Post", "Test Body", 5)',
+        {
+          project_uuid: testProject.project_uuid,
+        },
+      );
+
+      await stage.db.authentication.paramExecute(
+        'INSERT INTO `embedded-wallet-integration` (project_uuid, integration_uuid, title) VALUES (@project_uuid, "00000000-0000-0000-0000-000000000000", "Test Integration")',
+        {
+          project_uuid: testProject.project_uuid,
+        },
+      );
+
+      await stage.db.authentication.paramExecute(
+        'INSERT INTO `oasis_signature` (status, project_uuid, dataHash) VALUES (5, @project_uuid, "0x0")',
+        {
+          project_uuid: testProject.project_uuid,
+        },
+      );
+
+      await stage.db.infrastructure.paramExecute(
+        'INSERT INTO rpc_api_key (name, description, project_uuid, uuid) VALUES (@name, @description, @projectUuid, @uuid)',
+        {
+          name: 'Test Api Key',
+          description: 'Test Description',
+          projectUuid: testProject.project_uuid,
+          uuid: 'xyz',
+        },
+      );
+      const testApiKeyId = (
+        await stage.db.infrastructure.paramExecute(
+          `SELECT LAST_INSERT_ID() as id`,
+        )
+      )[0].id;
+      await stage.db.infrastructure.paramExecute(
+        'INSERT INTO rpc_url (chainName, network, apiKeyId,httpsUrl, wssUrl) VALUES (@chain, @network, @apiKeyId, @httpsUrl, @wssUrl)',
+        {
+          chain: 'CHAIN',
+          network: 'Network',
+          apiKeyId: testApiKeyId,
+          httpsUrl: 'https://example.com',
+          wssUrl: 'wss://example.com',
+        },
+      );
+
+      await stage.db.infrastructure.paramExecute(
+        'INSERT INTO indexer (project_uuid, indexer_uuid, name, status) VALUES (@project_uuid, "00000000-0000-0000-0000-000000000000", "Test Indexer", 5)',
+        {
+          project_uuid: testProject.project_uuid,
+        },
+      );
+
+      await stage.db.computing.paramExecute(
+        'INSERT INTO cloud_function (project_uuid, function_uuid, bucket_uuid, name, status) VALUES (@project_uuid, "00000000-0000-0000-0000-000000000000", @bucket_uuid, "Test Cloud Function",5)',
+        {
+          project_uuid: testProject.project_uuid,
+          bucket_uuid: bucketUuid,
+        },
+      );
+
+      await stage.db.computing.paramExecute(
+        'INSERT INTO acurast_job (project_uuid, job_uuid, function_uuid, name, scriptCid, slots, jobStatus, endTime, status) VALUES (@project_uuid, "00000000-0000-0000-0000-000000000000", "00000000-0000-0000-0000-000000000000", "Test Cloud Function Job", "baf", 2, 4, "2022-01-01 00:00:00", 5)',
+        {
+          project_uuid: testProject.project_uuid,
+        },
+      );
+
+      await stage.db.contracts.paramExecute(
+        'INSERT INTO contract(contract_uuid, contractType, chainType,name ) VALUES ("00000000-0000-0000-0000-000000000000", 2, 2, "Test Contract")',
+      );
+
+      await stage.db.contracts.paramExecute(
+        'INSERT INTO contract_version(id, version, contract_id, abi, bytecode) VALUES (1, 1, 1, "{}", "0x0") ',
+      );
+
+      await stage.db.contracts.paramExecute(
+        'INSERT INTO contract_deploy(project_uuid, contract_uuid, status, chainType, chain, version_id,name, contractStatus) VALUES (@project_uuid, "00000000-0000-0000-0000-000000000000", 5, 2, 1287, 1, "Name", 3)',
+        {
+          project_uuid: testProject.project_uuid,
+        },
+      );
+
+      await stage.db.contracts.paramExecute(
+        'INSERT INTO transaction (refId, transactionStatus, transactionType,refTable, transactionHash,chain) VALUES (1, 2,1,"collection", "0x0",1287)',
+      );
+    });
+
+    test('User should be able to get project overview', async () => {
+      const response = await request(stage.http)
+        .get(`/projects/${testProject.project_uuid}/overview`)
+        .set('Authorization', `Bearer ${testUser.token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toBeTruthy();
+      expect(response.body.data.bucketCount).toBe(1);
+      expect(response.body.data.fileCount).toBe(1);
+      expect(response.body.data.websiteCount).toBe(1);
+      expect(response.body.data.collectionCount).toBe(1);
+      expect(response.body.data.nftTransactionCount).toBe(1);
+      expect(response.body.data.didCount).toBe(1);
+      expect(response.body.data.contractCount).toBe(1);
+      expect(response.body.data.computingTransactionCount).toBe(1);
+      expect(response.body.data.spaceCount).toBe(1);
+      expect(response.body.data.postCount).toBe(1);
+      expect(response.body.data.integrationCount).toBe(1);
+      expect(response.body.data.embeddedWalletCount).toBe(1);
+      expect(response.body.data.rpcApiKeyCount).toBe(1);
+      expect(response.body.data.selectedRpcUrlCount).toBe(1);
+      expect(response.body.data.indexerCount).toBe(1);
+      expect(response.body.data.cloudFunctionCount).toBe(1);
+      expect(response.body.data.cloudFunctionJobCount).toBe(1);
+      expect(response.body.data.smartContractDeploymentCount).toBe(1);
+      expect(response.body.data.smartContractTransactionCount).toBe(1);
+    });
+  });
+
   describe('Project quotas tests', () => {
     let quotaTestsUser: TestUser = undefined;
     let quotaTestProject: Project = undefined;

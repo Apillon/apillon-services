@@ -326,6 +326,12 @@ export class Ipns extends UuidSqlModel {
 
       //If cid is specified, publish ipns to point to cid - other nodes will be able to resolve it
       if (this.cid) {
+        //For hosting IPNSs, IPNS key is actually the bucket_uuid
+        this.key =
+          bucket.bucketType == BucketType.HOSTING
+            ? bucket.bucket_uuid
+            : this.key;
+
         const ipnsRes = await IpnsService.publishIpns(
           {
             ipns_uuid: this.ipns_uuid,

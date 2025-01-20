@@ -20,6 +20,7 @@ import { RepublishIpnsWorker } from './republish-ipns-worker';
 import { IpfsBandwidthWorker } from './ipfs-bandwidth-worker';
 import { FreeProjectResourcesWorker } from './free-project-resources-worker';
 import { CheckWebsiteDomainWorker } from './check-website-domain-worker';
+import { IpfsMonitorWorker } from './ipfs-monitor-worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -35,6 +36,7 @@ export enum WorkerName {
   PIN_TO_CRUST_WORKER = 'PinToCrustWorker',
   REPUBLISH_IPNS_WORKER = 'RepublishIpnsWorker',
   IPFS_BANDWIDTH_WORKER = 'IpfsBandwidthWorker',
+  IPFS_MONITOR_WORKER = 'IpfsMonitorWorker',
   FREE_PROJECT_RESOURCES_WORKER = 'FreeProjectResourcesWorker',
   CHECK_WEBSITE_DOMAIN_WORKER = 'CheckWebsiteDomainWorker',
 }
@@ -144,6 +146,13 @@ export async function handleLambdaEvent(
         context,
       );
       await ipfsBandwidthWorker.run();
+      break;
+    case WorkerName.IPFS_MONITOR_WORKER:
+      const ipfsMonitorWorker = new IpfsMonitorWorker(
+        workerDefinition,
+        context,
+      );
+      await ipfsMonitorWorker.run();
       break;
     case WorkerName.CHECK_WEBSITE_DOMAIN_WORKER:
       await new CheckWebsiteDomainWorker(

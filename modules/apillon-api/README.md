@@ -29,9 +29,9 @@ Public API uses configuration of other services in the system on the current env
 
 List of URLs the API is available at:
 
-| Environment | URL                               |
-| ----------- | --------------------------------- |
-| Production  | <https://api.apillon.io/>         |
+| Environment | URL                       |
+| ----------- | ------------------------- |
+| Production  | <https://api.apillon.io/> |
 
 ## Requests
 

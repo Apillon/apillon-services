@@ -11,6 +11,7 @@ import {
   CreateIpnsDto,
   CreateSubstrateTransactionDto,
   DeployCollectionDTO,
+  ENTERPRISE_USER_EVM_CHAINS,
   env,
   EvmChain,
   getChainName,
@@ -110,6 +111,8 @@ export class NftsService {
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_COLLECTION,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_COLLECTION,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_COLLECTION,
+      [EvmChain.BASE]: ProductCode.NFT_BASE_COLLECTION,
+      [EvmChain.BASE_SEPOLIA]: ProductCode.NFT_BASE_SEPOLIA_COLLECTION,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_COLLECTION,
       [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_COLLECTION,
     }[params.body.chain];
@@ -214,6 +217,7 @@ export class NftsService {
 
     return collection.serializeByContext();
   }
+
   static async createUniqueCollection(
     params: { body: CreateUniqueCollectionDTO },
     context: ServiceContext,
@@ -494,6 +498,8 @@ export class NftsService {
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_TRANSFER_COLLECTION,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_TRANSFER_COLLECTION,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_TRANSFER_COLLECTION,
+      [EvmChain.BASE]: ProductCode.NFT_BASE_TRANSFER_COLLECTION,
+      [EvmChain.BASE_SEPOLIA]: ProductCode.NFT_BASE_SEPOLIA_TRANSFER_COLLECTION,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_TRANSFER_COLLECTION,
       [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_TRANSFER_COLLECTION,
     }[collection.chain];
@@ -639,6 +645,8 @@ export class NftsService {
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_SET_BASE_URI,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_SET_BASE_URI,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_SET_BASE_URI,
+      [EvmChain.BASE]: ProductCode.NFT_BASE_SET_BASE_URI,
+      [EvmChain.BASE_SEPOLIA]: ProductCode.NFT_BASE_SEPOLIA_SET_BASE_URI,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_SET_BASE_URI,
     }[collection.chain];
 
@@ -812,7 +820,7 @@ export class NftsService {
 
     const baseUri = collection.useApillonIpfsGateway
       ? ipnsRes.link.split('?token')[0]
-      : `ipns://${ipnsRes.ipnsName}`;
+      : `ipns://${ipnsRes.ipnsName}/`;
 
     console.info('baseUri', baseUri);
 
@@ -833,6 +841,7 @@ export class NftsService {
 
     collection.baseUri = baseUri;
     collection.ipns_uuid = ipnsRes.ipns_uuid;
+    collection.useIpns = true;
     await collection.update();
 
     return collection.serializeByContext(context);
@@ -844,7 +853,7 @@ export class NftsService {
   ) {
     body.idsToMint ||= [];
     console.log(
-      `Minting NFT Collection to wallet address: ${body.receivingAddress}`,
+      `Minting NFT Collection ${body.collection_uuid} to wallet address: ${body.receivingAddress}`,
     );
 
     const collection: Collection = await new Collection(
@@ -877,6 +886,8 @@ export class NftsService {
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_MINT,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_MINT,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_MINT,
+      [EvmChain.BASE]: ProductCode.NFT_BASE_MINT,
+      [EvmChain.BASE_SEPOLIA]: ProductCode.NFT_BASE_SEPOLIA_MINT,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_MINT,
       [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_MINT,
     }[collection.chain];
@@ -1216,6 +1227,8 @@ export class NftsService {
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_MINT,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_MINT,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_MINT,
+      [EvmChain.BASE]: ProductCode.NFT_BASE_MINT,
+      [EvmChain.BASE_SEPOLIA]: ProductCode.NFT_BASE_SEPOLIA_MINT,
       [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_MINT,
     }[childCollection.chain];
 
@@ -1279,6 +1292,8 @@ export class NftsService {
       [EvmChain.MOONBASE]: ProductCode.NFT_MOONBASE_BURN,
       [EvmChain.MOONBEAM]: ProductCode.NFT_MOONBEAM_BURN,
       [EvmChain.ASTAR]: ProductCode.NFT_ASTAR_BURN,
+      [EvmChain.BASE]: ProductCode.NFT_BASE_BURN,
+      [EvmChain.BASE_SEPOLIA]: ProductCode.NFT_BASE_SEPOLIA_BURN,
       [SubstrateChain.ASTAR]: ProductCode.NFT_ASTAR_WASM_BURN,
       [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_BURN,
     }[collection.chain];
@@ -1334,9 +1349,14 @@ export class NftsService {
             }
             const client = new UniqueNftClient(env.UNIQUE_NETWORK_API_URL);
             try {
-              await client.getCollectionToken(
+              const token = await client.getCollectionToken(
                 collection.contractAddress,
                 body.tokenId,
+              );
+              txHash = await client.burnNft(
+                collection.contractAddress,
+                body.tokenId,
+                token.owner,
               );
             } catch (err: unknown) {
               throw new NftsCodeException({
@@ -1345,10 +1365,6 @@ export class NftsService {
                 errorMessage: `Token with id ${body.tokenId} doesn't exist on collection with id ${collection.contractAddress}: ${err}`,
               });
             }
-            txHash = await client.burnNft(
-              collection.contractAddress,
-              body.tokenId,
-            );
             break;
           }
           default: {
@@ -1398,11 +1414,7 @@ export class NftsService {
       context,
     ).populateByUUID(event.collection_uuid);
 
-    await NftsService.checkCollection(
-      collection,
-      'archiveCollection()',
-      context,
-    );
+    collection.canAccess(context);
 
     return await collection.markArchived();
   }
@@ -1422,11 +1434,7 @@ export class NftsService {
       context,
     ).populateByUUID(event.collection_uuid);
 
-    await NftsService.checkCollection(
-      collection,
-      'activateCollection()',
-      context,
-    );
+    collection.canAccess(context);
 
     return await collection.markActive();
   }
@@ -1443,13 +1451,16 @@ export class NftsService {
       collection.collectionStatus == CollectionStatus.TRANSFERED
     ) {
       throw new NftsCodeException({
-        status: 500,
-        code: NftsErrorCode.NFT_CONTRACT_OWNER_ERROR,
+        status: 400,
+        code: NftsErrorCode.NFT_CONTRACT_STATUS_ERROR,
         context,
         sourceFunction,
       });
     }
-    collection.canAccess(context);
+
+    // If not the collection which gets minted from landing page, check access
+    if (collection.collection_uuid !== env.DEMO_NFT_COLLECTION_UUID)
+      collection.canAccess(context);
   }
 
   private static async checkMintConditions(
@@ -1695,7 +1706,7 @@ export class NftsService {
   ) {
     if (
       chainType !== ChainType.EVM ||
-      ![EvmChain.ETHEREUM, EvmChain.CELO].includes(chain as EvmChain)
+      !ENTERPRISE_USER_EVM_CHAINS.includes(chain as EvmChain)
     ) {
       return;
     }
@@ -1713,6 +1724,11 @@ export class NftsService {
         code: NftsErrorCode.REQUIRES_BUTTERFLY_PLAN,
         context,
       });
+    }
+
+    // check quota for Ethereum chain only
+    if (chain !== EvmChain.ETHEREUM) {
+      return;
     }
 
     const chainCollectionsCount = await new Collection(

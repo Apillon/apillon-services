@@ -1,6 +1,6 @@
-import { env } from '@apillon/lib';
+import { HttpStatus, env } from '@apillon/lib';
 import { Did, DidUri } from '@kiltprotocol/sdk-js';
-import { AuthenticationErrorCode, HttpStatus } from '../config/types';
+import { AuthenticationErrorCode } from '../config/types';
 import { AuthenticationCodeException } from './exceptions';
 import { connectToKilt, generateKeypairs } from './kilt';
 import { randomChallenge } from './utils/crypto-utils';

@@ -7,14 +7,9 @@ import {
 } from 'ethers';
 
 export class EVMContractClient {
-  private static instance: EVMContractClient;
   private readonly contract: Contract;
 
-  private constructor(contract: Contract) {
-    this.contract = contract;
-  }
-
-  static getInstance(
+  public constructor(
     rpcEndpoint: string,
     contractAbi: ContractInterface,
     contractAddress: string,
@@ -22,14 +17,9 @@ export class EVMContractClient {
     if (!rpcEndpoint) {
       throw new Error('RPC endpoint is not defined for EVM contract client');
     }
-
-    if (!EVMContractClient.instance) {
-      console.log(`RPC initialization ${rpcEndpoint}`);
-      const provider = new providers.JsonRpcProvider(rpcEndpoint);
-      const contract = new Contract(contractAddress, contractAbi, provider);
-      EVMContractClient.instance = new EVMContractClient(contract);
-    }
-    return EVMContractClient.instance;
+    console.log(`RPC initialization ${rpcEndpoint}`);
+    const provider = new providers.JsonRpcProvider(rpcEndpoint);
+    this.contract = new Contract(contractAddress, contractAbi, provider);
   }
 
   static createDeployTransaction(

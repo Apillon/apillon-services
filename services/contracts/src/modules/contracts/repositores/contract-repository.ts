@@ -41,7 +41,7 @@ export class ContractRepository extends BaseRepository {
 
   async getContractWithLatestVersion(contract_uuid: string) {
     const data = await runCachedFunction<any>(
-      `${CacheKeyPrefix.CONTRACT_BY_UUID_WITH_LATEST_VERSION}:${[contract_uuid].join(':')}`,
+      `${CacheKeyPrefix.CONTRACT_BY_UUID_WITH_LATEST_VERSION}:${contract_uuid}`,
       async () =>
         await new Contract({}, this.context).getContractWithLatestVersion(
           contract_uuid,
@@ -59,7 +59,7 @@ export class ContractRepository extends BaseRepository {
     if (!contract.exists()) {
       throw new ContractsCodeException({
         status: 500,
-        code: ContractsErrorCode.CONTRACT_DOES_NOT_EXIST,
+        code: ContractsErrorCode.CONTRACT_NOT_FOUND,
         context: this.context,
         sourceFunction: 'ContractRepository.getContractDeployByUUID',
       });
@@ -102,10 +102,10 @@ export class ContractRepository extends BaseRepository {
     );
     if (!contract.exists()) {
       throw new ContractsCodeException({
-        status: 500,
-        code: ContractsErrorCode.CONTRACT_OWNER_ERROR,
+        status: 404,
+        code: ContractsErrorCode.CONTRACT_NOT_FOUND,
         context: this.context,
-        sourceFunction: 'ContractRepository.getContractDeployByUUID',
+        sourceFunction: 'ContractRepository.getContractWithVersionAndMethods',
       });
     }
     if (!contractVersion.exists()) {
@@ -248,7 +248,7 @@ export class ContractRepository extends BaseRepository {
     if (!contractDeploy.exists()) {
       throw new ContractsCodeException({
         status: 500,
-        code: ContractsErrorCode.CONTRACT_DOES_NOT_EXIST,
+        code: ContractsErrorCode.DEPLOYED_CONTRACT_NOT_FOUND,
         context: this.context,
         sourceFunction: 'ContractRepository.getContractDeployByUUID',
       });
@@ -277,7 +277,7 @@ export class ContractRepository extends BaseRepository {
     if (!contractDeploy.exists()) {
       throw new ContractsCodeException({
         status: 500,
-        code: ContractsErrorCode.CONTRACT_DOES_NOT_EXIST,
+        code: ContractsErrorCode.DEPLOYED_CONTRACT_NOT_FOUND,
         context: this.context,
         sourceFunction: 'ContractRepository.getContractDeployByUUID',
       });
@@ -309,15 +309,19 @@ export class ContractRepository extends BaseRepository {
       this.context,
     ).getContractDeployWithVersionAndMethods(contract_uuid);
 
-    const { c: contractDeploy, cv: contractVersion } =
-      this.extractModelDataFromRow(data[0], {
-        c: ContractDeploy,
-        cv: ContractVersion,
-      });
+    const {
+      c: contractDeploy,
+      cv: contractVersion,
+      cc: contract,
+    } = this.extractModelDataFromRow(data[0], {
+      c: ContractDeploy,
+      cv: ContractVersion,
+      cc: Contract,
+    });
     if (!contractDeploy.exists()) {
       throw new ContractsCodeException({
         status: 500,
-        code: ContractsErrorCode.CONTRACT_DOES_NOT_EXIST,
+        code: ContractsErrorCode.DEPLOYED_CONTRACT_NOT_FOUND,
         context: this.context,
         sourceFunction: 'ContractRepository.getContractDeployByUUID',
       });
@@ -334,9 +338,22 @@ export class ContractRepository extends BaseRepository {
         sendAdminAlert: true,
       });
     }
+    if (!contract.exists()) {
+      throw await new ContractsCodeException({
+        status: 500,
+        errorMessage: `Error getting contract for contract deploy with uuid ${contract_uuid}.`,
+        code: ContractsErrorCode.GET_CONTRACT_VERSION_ERROR,
+      }).writeToMonitor({
+        context: this.context,
+        logType: LogType.ERROR,
+        data: { contract_uuid },
+        sendAdminAlert: true,
+      });
+    }
     contractDeploy.canAccess(this.context);
 
     // assemble nested contractDeploy->contractVersion->methods
+    contractVersion.contract = contract;
     contractVersion.methods = this.extractArrayOfModelFromRows(
       data,
       'cvm',

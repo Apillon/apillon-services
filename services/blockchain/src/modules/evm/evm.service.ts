@@ -9,6 +9,7 @@ import {
   SerializeFor,
   ServiceName,
   TransactionStatus,
+  writeLog,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
@@ -115,7 +116,9 @@ export class EvmService {
       case EvmChain.ASTAR:
       case EvmChain.ASTAR_SHIBUYA:
       case EvmChain.CELO:
-      case EvmChain.ALFAJORES: {
+      case EvmChain.ALFAJORES:
+      case EvmChain.BASE:
+      case EvmChain.BASE_SEPOLIA: {
         maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei');
         estimatedBaseFee = await provider.getGasPrice();
         break;
@@ -342,7 +345,9 @@ export class EvmService {
       case EvmChain.MOONBEAM:
       case EvmChain.ASTAR:
       case EvmChain.CELO:
-      case EvmChain.ALFAJORES: {
+      case EvmChain.ALFAJORES:
+      case EvmChain.BASE:
+      case EvmChain.BASE_SEPOLIA: {
         break;
       }
       default: {
@@ -469,7 +474,13 @@ export class EvmService {
         }
       }
 
-      if (latestSuccess !== null) {
+      if (latestSuccess != null) {
+        writeLog(
+          LogType.INFO,
+          `Updating wallet with last success nonce ${latestSuccess} for wallet address ${wallet.address} & id ${wallet.id}. `,
+          'evm.service.ts',
+          'transmitTransactions',
+        );
         const dbWallet = new Wallet(wallet, context);
         await dbWallet.updateLastProcessedNonce(latestSuccess);
       }

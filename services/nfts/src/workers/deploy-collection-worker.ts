@@ -38,7 +38,7 @@ export class DeployCollectionWorker extends BaseQueueWorker {
           logType: LogType.ERROR,
           message: 'Invalid data passed to DeployCollectionWorker.',
           service: ServiceName.NFTS,
-          data: data,
+          data,
         },
         LogOutput.SYS_ERROR,
       );
@@ -105,7 +105,10 @@ export class DeployCollectionWorker extends BaseQueueWorker {
           sourceFunction: 'DeployCollectionWorker.runExecutor()',
           errorMessage: 'Error deploying Nft contract',
           details: err,
-        }).writeToMonitor({ project_uuid: collection.project_uuid });
+        }).writeToMonitor({
+          project_uuid: collection.project_uuid,
+          sendAdminAlert: true,
+        });
       }
     } catch (err) {
       //Update collection status to error

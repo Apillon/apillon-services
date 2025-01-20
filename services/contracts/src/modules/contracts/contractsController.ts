@@ -101,6 +101,12 @@ export class ContractsController {
     return contractDeploy.serializeByContext(this.context);
   }
 
+  async activateDeployedContract(contract_uuid: string) {
+    const contractDeploy =
+      await this.contractService.activateDeployedContract(contract_uuid);
+    return contractDeploy.serializeByContext(this.context);
+  }
+
   async listContractDeploys(query: DeployedContractsQueryFilter) {
     return await this.contractService.listContractDeploys(
       new DeployedContractsQueryFilter(query),

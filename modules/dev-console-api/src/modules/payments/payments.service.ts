@@ -1,11 +1,20 @@
 import {
   CodeException,
   DefaultUserRole,
+  DwellirSubscription,
   ForbiddenErrorCodes,
+  InfrastructureMicroservice,
+  Lmas,
+  LogType,
   PricelistQueryFilter,
+  QuotaCode,
+  QuotaOverrideDto,
   Scs,
+  ServiceName,
+  SubscriptionPackageId,
   UpdateSubscriptionDto,
   env,
+  writeLog,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
@@ -124,11 +133,42 @@ export class PaymentsService {
         break;
       }
       case 'customer.subscription.updated': {
+        const scs = new Scs();
         if (event.data?.previous_attributes?.status === 'incomplete') {
           return; // If update is only for a new subscription
         }
+        if (
+          payment.canceled_at &&
+          Number(payment.plan.id) === SubscriptionPackageId.RPC_PLAN
+        ) {
+          const user_uuid =
+            event.data?.previous_attributes?.metadata?.user_uuid;
+          if (user_uuid) {
+            await new InfrastructureMicroservice().changeDwellirSubscription(
+              user_uuid,
+              DwellirSubscription.FREE,
+            );
+
+            await scs.deleteOverride(
+              new QuotaOverrideDto().populate({
+                object_uuid: user_uuid,
+                quota_id: QuotaCode.MAX_RPC_KEYS,
+              }),
+            );
+          } else {
+            await new Lmas().writeLog({
+              sendAdminAlert: true,
+              logType: LogType.ERROR,
+              message: `User UUID not found in metadata`,
+              service: ServiceName.DEV_CONSOLE,
+              location: 'PaymentsService.stripeWebhookEventHandler',
+              data: { metadata: event.data?.previous_attributes?.metadata },
+            });
+          }
+        }
+
         // In case subscription is renewed or canceled
-        await new Scs().updateSubscription(
+        await scs.updateSubscription(
           new UpdateSubscriptionDto({
             subscriptionStripeId: payment.id,
             cancelDate: payment.canceled_at
@@ -155,14 +195,7 @@ export class PaymentsService {
     context: DevConsoleApiContext,
     project_uuid: string,
   ) {
-    const project = await new Project({}, context).populateByUUID(project_uuid);
-    if (!project.exists()) {
-      throw new CodeException({
-        code: ResourceNotFoundErrorCode.PROJECT_DOES_NOT_EXISTS,
-        status: HttpStatus.NOT_FOUND,
-        errorCodes: ResourceNotFoundErrorCode,
-      });
-    }
+    await new Project({}, context).populateByUUIDOrThrow(project_uuid);
 
     if (
       !context.hasRoleOnProject([DefaultUserRole.PROJECT_OWNER], project_uuid)

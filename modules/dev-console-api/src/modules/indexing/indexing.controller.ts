@@ -3,7 +3,9 @@ import {
   CreateIndexerDto,
   DefaultPermission,
   DefaultUserRole,
+  IndexerBillingQueryFilter,
   IndexerLogsQueryFilter,
+  IndexerUsageQueryFilter,
   RoleGroup,
   UpdateIndexerDto,
   ValidateFor,
@@ -134,5 +136,37 @@ export class IndexerController {
       context,
       indexer_uuid,
     );
+  }
+
+  @Get('indexers/:indexer_uuid/usage')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({
+    dto: IndexerUsageQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async getIndexerUsage(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('indexer_uuid') indexer_uuid: string,
+    @Query() query: IndexerUsageQueryFilter,
+  ) {
+    query.indexer_uuid = indexer_uuid;
+    return await this.indexingService.getIndexerUsage(context, query);
+  }
+
+  @Get('indexers/:indexer_uuid/billing')
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @Validation({
+    dto: IndexerBillingQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(AuthGuard, ValidationGuard)
+  async listIndexerBilling(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('indexer_uuid') indexer_uuid: string,
+    @Query() query: IndexerBillingQueryFilter,
+  ) {
+    query.indexer_uuid = indexer_uuid;
+    return await this.indexingService.listIndexerBilling(context, query);
   }
 }

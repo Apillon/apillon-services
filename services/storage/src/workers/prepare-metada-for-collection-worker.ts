@@ -52,7 +52,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
       data,
     );
 
-    let collectionMetadata;
+    let collectionMetadata: CollectionMetadata;
 
     if (data.collectionMetadataId) {
       collectionMetadata = await new CollectionMetadata(
@@ -108,7 +108,7 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           this.context,
         ).populateFileUploadRequestsInSession(imagesSession.id, this.context);
 
-        /*Upload nft images to IPFS. If remaining files to upload exceeds DEFAULT_FILE_BATCH_SIZE_FOR_IPFS, 
+        /*Upload nft images to IPFS. If remaining files to upload exceeds DEFAULT_FILE_BATCH_SIZE_FOR_IPFS,
       worker uploads first batch and sends message to sqs to execute another iteration, until all images are uploaded */
         const remainingImageFURs = imageFURs.filter(
           (x) =>
@@ -242,14 +242,12 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
                 .pop();
 
               if (imageFile) {
-                if (collectionMetadata.useApillonIpfsGateway) {
-                  fileContent.image = await ipfsCluster.generateLink(
-                    bucket.project_uuid,
-                    imageFile.CIDv1,
-                  );
-                } else {
-                  fileContent.image = 'ipfs://' + imageFile.CID;
-                }
+                fileContent.image = data.useApillonIpfsGateway
+                  ? await ipfsCluster.generateLink(
+                      bucket.project_uuid,
+                      imageFile.CIDv1,
+                    )
+                  : `ipfs://${imageFile.CID}/`;
               }
             }
 
@@ -350,36 +348,35 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           );
 
           return true;
-        } else {
-          metadataSession.sessionStatus = FileUploadSessionStatus.FINISHED;
-          collectionMetadata.currentStep =
-            PrepareCollectionMetadataStep.PUBLISH_TO_IPNS;
-
-          await Promise.all([
-            metadataSession.update(),
-            collectionMetadata.update(),
-          ]);
-
-          if (
-            env.APP_ENV != AppEnvironment.TEST &&
-            env.APP_ENV != AppEnvironment.LOCAL_DEV
-          ) {
-            await sendToWorkerQueue(
-              env.STORAGE_AWS_WORKER_SQS_URL,
-              WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
-              [
-                {
-                  ...data,
-                  collectionMetadataId: collectionMetadata.id,
-                  metadataCid: metadataFiles.wrappedDirCid,
-                },
-              ],
-              null,
-              null,
-            );
-          }
-          return true;
         }
+        metadataSession.sessionStatus = FileUploadSessionStatus.FINISHED;
+        collectionMetadata.currentStep =
+          PrepareCollectionMetadataStep.PUBLISH_TO_IPNS;
+
+        await Promise.all([
+          metadataSession.update(),
+          collectionMetadata.update(),
+        ]);
+
+        if (
+          env.APP_ENV != AppEnvironment.TEST &&
+          env.APP_ENV != AppEnvironment.LOCAL_DEV
+        ) {
+          await sendToWorkerQueue(
+            env.STORAGE_AWS_WORKER_SQS_URL,
+            WorkerName.PREPARE_METADATA_FOR_COLLECTION_WORKER,
+            [
+              {
+                ...data,
+                collectionMetadataId: collectionMetadata.id,
+                metadataCid: metadataFiles.wrappedDirCid,
+              },
+            ],
+            null,
+            null,
+          );
+        }
+        return true;
       }
 
       //Publish to IPNS, Pin to IPFS, Remove from S3, ...
@@ -425,8 +422,8 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
             );
           } else {
             baseUri = ipnsDbRecord?.ipnsName
-              ? `ipns://${ipnsDbRecord.ipnsName}`
-              : `ipfs://${data.metadataCid}`;
+              ? `ipns://${ipnsDbRecord.ipnsName}/`
+              : `ipfs://${data.metadataCid}/`;
           }
 
           //Execute deploy collection worker

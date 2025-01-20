@@ -23,6 +23,7 @@ import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { ApiKeyService } from './api-key.service';
+import { ProjectModifyGuard } from '../../guards/project-modify.guard';
 
 @Controller('api-keys')
 export class ApiKeyController {
@@ -35,7 +36,7 @@ export class ApiKeyController {
   )
   @UseGuards(AuthGuard)
   @Validation({ dto: ApiKeyRoleBaseDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, ProjectModifyGuard)
   async assignRoleToApiKey(
     @Ctx() context: DevConsoleApiContext,
     @Param('id', ParseIntPipe) id: number,
@@ -117,7 +118,7 @@ export class ApiKeyController {
   )
   @UseGuards(AuthGuard)
   @Validation({ dto: CreateApiKeyDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, ProjectModifyGuard)
   async createApiKey(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateApiKeyDto,

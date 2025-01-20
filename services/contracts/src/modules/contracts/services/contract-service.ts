@@ -227,8 +227,8 @@ export class ContractService {
     const rpcEndpoint = (
       await this.blockchainService.getChainEndpoint(chain, ChainType.EVM)
     ).data?.url;
-
-    const evmContractClient = EVMContractClient.getInstance(
+    console.log(`RPC initialization ${rpcEndpoint}`);
+    const evmContractClient = new EVMContractClient(
       rpcEndpoint,
       abi,
       contractAddress,
@@ -419,6 +419,13 @@ export class ContractService {
       await this.contractRepository.getContractDeployByUUID(contract_uuid);
 
     return await contractDeploy.markArchived();
+  }
+
+  async activateDeployedContract(contract_uuid: string) {
+    const contractDeploy =
+      await this.contractRepository.getContractDeployByUUID(contract_uuid);
+
+    return await contractDeploy.markActive();
   }
 
   async getContractAbi(contract_uuid: string, solidityJson: boolean) {

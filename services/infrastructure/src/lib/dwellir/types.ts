@@ -51,6 +51,18 @@ export type DwellirGetUsageResponse = {
   >;
 };
 
+export type DwellirGetUsageV2Response = {
+  rows: {
+    // Example value: "2024-11-11T00:00:00Z"
+    datetime: string;
+    api_key: string;
+    rpc_method: string;
+    requests: number;
+    responses: number;
+    domain: string;
+  }[];
+};
+
 export type DwellirGetAllUsagesResponse = Record<
   string,
   DwellirGetUsageResponse
