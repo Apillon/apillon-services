@@ -45,10 +45,24 @@ async function getTargetUrl(shortCode: string, additionalPath: string) {
     shortCode,
   );
 
-  const [baseUrl, queryParams] = fullUrl.split('?');
-  const Location = additionalPath
-    ? `${baseUrl}/${additionalPath}${queryParams ? `?${queryParams}` : ''}`
-    : fullUrl;
+  const [baseUrl, targetQueryParams] = fullUrl.split('?');
+  const additionalPathWithQuery = additionalPath.split('?');
+  const additionalPathOnly = additionalPathWithQuery[0];
+  const shortUrlQueryParams = additionalPathWithQuery[1];
+
+  let Location = baseUrl;
+
+  if (additionalPathOnly) {
+    Location += `/${additionalPathOnly}`;
+  }
+
+  const combinedQueryParams = [targetQueryParams, shortUrlQueryParams]
+    .filter(Boolean)
+    .join('&');
+
+  if (combinedQueryParams) {
+    Location += `?${combinedQueryParams}`;
+  }
 
   return {
     statusCode: 302,
