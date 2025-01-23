@@ -67,7 +67,7 @@ export class EmbeddedWalletController {
   @Get('evm-token-prices')
   @Cache({
     keyPrefix: CacheKeyPrefix.EVM_TOKEN_PRICES,
-    ttl: CacheKeyTTL.SHORT,
+    ttl: CacheKeyTTL.EXTENDED,
   })
   async getTopEvmTokenPrices() {
     return await this.ewalletService.getEvmTokenPrices();
