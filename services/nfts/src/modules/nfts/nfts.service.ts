@@ -524,7 +524,8 @@ export class NftsService {
           collection.deployerAddress
         }, parameters=${JSON.stringify(collection)}`,
       );
-      let txHash: string;
+      let txHash: string, callMethod: string;
+      const callArguments = [body.address];
       switch (collection.chainType) {
         case ChainType.EVM: {
           const { abi } = await new ContractVersion(
@@ -537,9 +538,10 @@ export class NftsService {
             abi,
             collection.contractAddress,
           );
+          callMethod = 'transferOwnership';
           txHash = await evmContractClient.createTransaction(
-            'transferOwnership',
-            [body.address],
+            callMethod,
+            callArguments,
           );
           break;
         }
@@ -565,9 +567,10 @@ export class NftsService {
               collection.contractAddress,
             );
             try {
+              callMethod = 'ownable::transferOwnership';
               const tx = await substrateContractClient.createTransaction(
-                'ownable::transferOwnership',
-                [body.address],
+                callMethod,
+                callArguments,
                 collection.deployerAddress,
               );
               txHash = tx.toHex();
@@ -587,6 +590,8 @@ export class NftsService {
         context,
         collection,
         TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
+        callMethod,
+        callArguments,
         txHash,
         spendCredit.referenceId,
         46000,
@@ -673,7 +678,8 @@ export class NftsService {
           collection.deployerAddress
         }, parameters=${JSON.stringify(collection)}`,
       );
-      let txHash: string;
+      let txHash: string, callMethod: string;
+      const callArguments = [body.uri];
       switch (collection.chainType) {
         case ChainType.EVM: {
           const evmContractClient = await getEvmContractClient(
@@ -682,9 +688,11 @@ export class NftsService {
             abi,
             collection.contractAddress,
           );
-          txHash = await evmContractClient.createTransaction('setBaseURI', [
-            body.uri,
-          ]);
+          callMethod = 'setBaseURI';
+          txHash = await evmContractClient.createTransaction(
+            callMethod,
+            callArguments,
+          );
           break;
         }
         case ChainType.SUBSTRATE: {
@@ -695,9 +703,10 @@ export class NftsService {
             collection.contractAddress,
           );
           try {
+            callMethod = 'psp34Traits::setBaseUri';
             const tx = await substrateContractClient.createTransaction(
-              'psp34Traits::setBaseUri',
-              [body.uri],
+              callMethod,
+              callArguments,
               collection.deployerAddress,
             );
             txHash = tx.toHex();
@@ -716,6 +725,8 @@ export class NftsService {
         context,
         collection,
         TransactionType.SET_COLLECTION_BASE_URI,
+        callMethod,
+        callArguments,
         txHash,
         spendCredit.referenceId,
       );
@@ -914,7 +925,9 @@ export class NftsService {
         }, parameters=${JSON.stringify(collection)}`,
       );
       let minimumGas = null;
-      let serializedTransaction: string;
+      let serializedTransaction: string,
+        callMethod: string,
+        callArguments: unknown[];
       switch (collection.chainType) {
         case ChainType.EVM: {
           const { abi } = await new ContractVersion(
@@ -941,16 +954,13 @@ export class NftsService {
             minted,
           );
 
-          serializedTransaction = collection.isAutoIncrement
-            ? await evmContractClient.createTransaction('ownerMint', [
-                body.receivingAddress,
-                body.quantity,
-              ])
-            : await evmContractClient.createTransaction('ownerMintIds', [
-                body.receivingAddress,
-                body.quantity,
-                body.idsToMint,
-              ]);
+          callMethod = collection.isAutoIncrement
+            ? 'ownerMint'
+            : 'ownerMintIds';
+          callArguments = collection.isAutoIncrement
+            ? [body.receivingAddress, body.quantity]
+            : [body.receivingAddress, body.quantity, body.idsToMint];
+          await evmContractClient.createTransaction(callMethod, callArguments);
           minimumGas =
             260000 *
             (collection.isAutoIncrement
@@ -987,6 +997,8 @@ export class NftsService {
               metadata,
             );
             tokenIds = metadata.map((m) => m.tokenId);
+            callMethod = 'mintNFTs';
+            callArguments = [collection.contractAddress, mintTokens];
             serializedTransaction = await client.mintNft(
               collection.contractAddress,
               mintTokens,
@@ -1016,9 +1028,11 @@ export class NftsService {
                 collection,
                 minted,
               );
+              callMethod = 'launchpad::mintProject';
+              callArguments = [body.receivingAddress, body.quantity];
               const tx = await substrateContractClient.createTransaction(
-                'launchpad::mintProject',
-                [body.receivingAddress, body.quantity],
+                callMethod,
+                callArguments,
                 collection.deployerAddress,
               );
               serializedTransaction = tx.toHex();
@@ -1038,6 +1052,8 @@ export class NftsService {
         context,
         collection,
         TransactionType.MINT_NFT,
+        callMethod,
+        callArguments,
         serializedTransaction,
         spendCredit.referenceId,
         minimumGas,
@@ -1126,7 +1142,7 @@ export class NftsService {
     // checks if we can mint child collection
     await NftsService.checkCollection(childCollection, sourceFunction, context);
 
-    let txData: string;
+    let txData: string, callMethod: string, callArguments: unknown[];
     switch (parentCollection.chainType) {
       case ChainType.EVM: {
         // on-chain checks for child collection
@@ -1170,10 +1186,15 @@ export class NftsService {
           childCollection,
           minted,
         );
-
+        callMethod = 'ownerNestMint';
+        callArguments = [
+          parentCollection.contractAddress,
+          body.quantity,
+          body.parentNftId,
+        ];
         txData = await childEvmContractClient.createTransaction(
-          'ownerNestMint',
-          [parentCollection.contractAddress, body.quantity, body.parentNftId],
+          callMethod,
+          callArguments,
         );
         break;
       }
@@ -1202,6 +1223,8 @@ export class NftsService {
           metadata,
         );
 
+        callMethod = 'mintNFTs';
+        callArguments = [childCollection.contractAddress, mintTokens];
         txData = await client.mintNft(
           childCollection.contractAddress,
           mintTokens,
@@ -1252,6 +1275,8 @@ export class NftsService {
           context,
           childCollection,
           TransactionType.NEST_MINT_NFT,
+          callMethod,
+          callArguments,
           txData,
           spendCredit.referenceId,
         ),
@@ -1318,7 +1343,7 @@ export class NftsService {
             collection.deployerAddress
           }, parameters=${JSON.stringify(collection)}`,
         );
-        let txHash: string;
+        let txHash: string, callMethod: string, callArguments: unknown[];
         switch (collection.chainType) {
           case ChainType.EVM: {
             const { abi } = await new ContractVersion({}, context).populateById(
@@ -1330,13 +1355,14 @@ export class NftsService {
               abi,
               collection.contractAddress,
             );
-            const burnArguments: any[] = [body.tokenId];
+            callArguments = [body.tokenId];
             if (collection.collectionType === NFTCollectionType.NESTABLE) {
-              burnArguments.push(EVM_MAX_INT);
+              callArguments.push(EVM_MAX_INT);
             }
+            callMethod = 'burn';
             txHash = await evmContractClient.createTransaction(
-              'burn',
-              burnArguments,
+              callMethod,
+              callArguments,
             );
             break;
           }
@@ -1353,6 +1379,12 @@ export class NftsService {
                 collection.contractAddress,
                 body.tokenId,
               );
+              callMethod = 'burn';
+              callArguments = [
+                collection.contractAddress,
+                body.tokenId,
+                token.owner,
+              ];
               txHash = await client.burnNft(
                 collection.contractAddress,
                 body.tokenId,
@@ -1377,6 +1409,8 @@ export class NftsService {
           context,
           collection,
           TransactionType.BURN_NFT,
+          callMethod,
+          callArguments,
           txHash,
           spendCredit.referenceId,
         );
@@ -1618,6 +1652,8 @@ export class NftsService {
     context: ServiceContext,
     collection: Collection,
     transactionType: TransactionType,
+    callMethod: string,
+    callArguments: unknown[],
     txHash: string,
     transaction_uuid: string,
     minimumGas?: number,
@@ -1666,6 +1702,8 @@ export class NftsService {
             transactionHash: response.data.transactionHash,
             transactionStatus: TransactionStatus.PENDING,
             transaction_uuid,
+            callMethod,
+            callArguments,
           },
           context,
         ),
