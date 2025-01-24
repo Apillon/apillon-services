@@ -55,12 +55,21 @@ export class Mailing extends BaseService {
     };
   }
 
-  public async setMailerliteField(field: string, value: any) {
-    return await this.callService({
-      eventName: MailEventType.SET_MAILERLITE_FIELD,
-      field,
-      value,
-    });
+  public async setMailerliteField(
+    field: string,
+    value: any = true,
+    email: string = null,
+  ) {
+    try {
+      return await this.callService({
+        eventName: MailEventType.SET_MAILERLITE_FIELD,
+        field,
+        value,
+        email,
+      });
+    } catch (err) {
+      console.error(`Error setting mailerlite field ${field}: ${err}`);
+    }
   }
 
   //#region notifications

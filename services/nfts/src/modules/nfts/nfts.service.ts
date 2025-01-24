@@ -209,7 +209,7 @@ export class NftsService {
       }),
 
       // Set mailerlite field indicating the user has an nft collection
-      new Mailing(context).setMailerliteField('has_nft', true),
+      new Mailing(context).setMailerliteField('has_nft'),
     ]);
 
     collection.updateTime = new Date();
@@ -303,7 +303,7 @@ export class NftsService {
       }),
 
       // Set mailerlite field indicating the user has an nft collection
-      new Mailing(context).setMailerliteField('has_nft', true),
+      new Mailing(context).setMailerliteField('has_nft'),
     ]);
 
     collection.updateTime = new Date();
