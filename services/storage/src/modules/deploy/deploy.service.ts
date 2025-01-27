@@ -1,0 +1,135 @@
+import { ServiceContext } from '@apillon/service-lib';
+import { DeploymentConfig } from './models/deployment-config.model';
+import {
+  StorageNotFoundException,
+  StorageValidationException,
+} from '../../lib/exceptions';
+import { StorageErrorCode } from '../../config/types';
+import {
+  QueueWorkerType,
+  ServiceDefinition,
+  ServiceDefinitionType,
+  WorkerDefinition,
+  sendToWorkerQueue,
+} from '@apillon/workers-lib';
+import { AppEnvironment, env } from '@apillon/lib';
+import { BuildProjectWorker } from '../../workers/build-project-worker';
+import { WorkerName } from '../../workers/builder-executor';
+import { CreateDeploymentConfigDto } from '@apillon/lib/src';
+import { Website } from '../hosting/models/website.model';
+import { encrypt } from '../../lib/encrypt-secret';
+
+export class DeployService {
+  static async create(
+    event: { body: CreateDeploymentConfigDto },
+    context: ServiceContext,
+  ) {
+    const config = await new DeploymentConfig({}, context).findByRepoId(
+      event.body.repoId,
+    );
+
+    if (config.exists()) {
+      throw new StorageNotFoundException(
+        StorageErrorCode.DEPLOYMENT_CONFIG_ALREADY_EXISTS,
+      );
+    }
+
+    const website: Website = await new Website({}, context).populateById(
+      event.body.websiteUuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+
+    website.canModify(context);
+
+    const deploymentConfig = new DeploymentConfig({}, context).populate({
+      ...event.body,
+      apiSecret: encrypt(
+        event.body.apiSecret,
+        env.BUILDER_API_SECRET_ENCRYPTION_KEY,
+      ),
+    });
+
+    await deploymentConfig.validateOrThrow(StorageValidationException);
+
+    await deploymentConfig.insert();
+
+    return deploymentConfig.serializeByContext();
+  }
+
+  static async getConfigByRepoId(
+    event: { repoId: number },
+    context: ServiceContext,
+  ) {
+    const config = await new DeploymentConfig({}, context).findByRepoId(
+      event.repoId,
+    );
+
+    if (!config.exists()) {
+      throw new StorageNotFoundException(
+        StorageErrorCode.GITHUB_DEPLOYMENT_CONFIG_NOT_FOUND,
+      );
+    }
+
+    return config.serializeByContext();
+  }
+
+  static async triggerGithubDeploy(
+    event: {
+      urlWithToken: string;
+      websiteUuid: string;
+      buildCommand: string | null;
+      installCommand: string | null;
+      buildDirectory: string;
+      apiKey: string;
+      apiSecret: string;
+    },
+    context: ServiceContext,
+  ) {
+    {
+      const parameters = {
+        url: event.urlWithToken,
+        websiteUuid: event.websiteUuid,
+        buildCommand: event.buildCommand,
+        installCommand: event.installCommand,
+        buildDirectory: event.buildDirectory,
+        apiKey: event.apiKey,
+        apiSecret: event.apiSecret,
+      };
+      if (
+        env.APP_ENV === AppEnvironment.LOCAL_DEV ||
+        env.APP_ENV === AppEnvironment.DEV
+      ) {
+        const serviceDef: ServiceDefinition = {
+          type: ServiceDefinitionType.SQS,
+          config: { region: 'test' },
+          params: { FunctionName: 'test' },
+        };
+        const wd = new WorkerDefinition(
+          serviceDef,
+          WorkerName.BUILD_PROJECT_WORKER,
+          {
+            parameters,
+          },
+        );
+
+        const builderWorker = new BuildProjectWorker(
+          wd,
+          context,
+          QueueWorkerType.EXECUTOR,
+        );
+        await builderWorker.runExecutor(parameters);
+      } else {
+        await sendToWorkerQueue(
+          env.BUILDER_SQS_URL,
+          WorkerName.BUILD_PROJECT_WORKER,
+          [parameters],
+          null,
+          null,
+        );
+      }
+    }
+  }
+}

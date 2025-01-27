@@ -29,6 +29,7 @@ import { FileUploadSessionQueryFilter } from './dtos/file-upload-session-query-f
 import { CollectionMetadataQueryFilter } from './dtos/collection-metadata-query-filter.dto';
 import { ShortUrlDto } from './dtos/short-url.dto';
 import { GetLinksDto } from './dtos/get-links.dto';
+import { CreateDeploymentConfigDto } from './dtos/create-deployment-config.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -598,6 +599,39 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.IPNS_GET_BY_NAME,
       ipnsName,
+    };
+    return await this.callService(data);
+  }
+
+  public async triggerGithubDeploy(payload: {
+    urlWithToken: string;
+    websiteUuid: string;
+    buildCommand: string | null;
+    installCommand: string | null;
+    buildDirectory: string;
+    apiKey: string;
+    apiSecret: string;
+  }) {
+    const data = {
+      eventName: StorageEventType.TRIGGER_GITHUB_DEPLOY,
+      ...payload,
+    };
+    return await this.callService(data);
+  }
+
+  public async getDeployConfigByRepoId(repoId: number) {
+    const data = {
+      eventName: StorageEventType.GET_DEPLOY_CONFIG_BY_REPO_ID,
+      repoId,
+    };
+
+    return await this.callService(data);
+  }
+
+  public async createDeploymentConfig(params: CreateDeploymentConfigDto) {
+    const data = {
+      eventName: StorageEventType.CREATE_DEPLOY_CONFIG,
+      body: params.serialize(),
     };
     return await this.callService(data);
   }

@@ -8,6 +8,7 @@ import { NftStorageService } from './modules/nfts/nft-storage.service';
 import { StorageService } from './modules/storage/storage.service';
 import { CrustService } from './modules/crust/crust.service';
 import { UrlShortenerService } from './modules/url-shortener/url-shortener.service';
+import { DeployService } from './modules/deploy/deploy.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -104,6 +105,11 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [StorageEventType.GENERATE_SHORT_URL]: UrlShortenerService.generateShortUrl,
     [StorageEventType.GET_TARGET_URL]: UrlShortenerService.getTargetUrl,
+
+    [StorageEventType.TRIGGER_GITHUB_DEPLOY]: DeployService.triggerGithubDeploy,
+    [StorageEventType.GET_DEPLOY_CONFIG_BY_REPO_ID]:
+      DeployService.getConfigByRepoId,
+    [StorageEventType.CREATE_DEPLOY_CONFIG]: DeployService.create,
   };
 
   return await processors[event.eventName](event, context);
