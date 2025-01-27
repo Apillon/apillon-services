@@ -14,7 +14,7 @@ export async function upgrade(
       \`buildDirectory\` VARCHAR(500) NOT NULL,
       \`installCommand\` VARCHAR(500)  NULL,
       \`apiKey\` VARCHAR(36) NOT NULL,
-      \`apiSecret\` VARCHAR(12) NOT NULL,
+      \`apiSecret\` VARCHAR(90) NOT NULL,
       \`status\` INT NULL,
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` INT NULL,
