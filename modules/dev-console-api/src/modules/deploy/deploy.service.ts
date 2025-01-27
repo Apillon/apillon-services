@@ -27,7 +27,22 @@ export class DeployService {
 
     const config = await storageMS.getDeployConfigByRepoId(repoId);
 
+    new Lmas().writeLog({
+      data: event,
+      logType: LogType.INFO,
+      message: `Config found ${event.ref} ${config.branchName} ${event.ref === `refs/heads/${config.branchName}`} `,
+      service: ServiceName.DEV_CONSOLE,
+      location: 'DeployService.handleGithubWebhook',
+    });
+
     if (event.ref === `refs/heads/${config.branchName}`) {
+      new Lmas().writeLog({
+        data: event,
+        logType: LogType.INFO,
+        message: `Deploying ${config.websiteUuid}`,
+        service: ServiceName.DEV_CONSOLE,
+        location: 'DeployService.handleGithubWebhook',
+      });
       const url = event.repository.clone_url;
       const urlWithToken = url.replace(
         'https://',

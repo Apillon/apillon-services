@@ -612,6 +612,7 @@ export class StorageMicroservice extends BaseService {
     apiKey: string;
     apiSecret: string;
   }) {
+    console.log('triggerGithubDeploy', payload);
     const data = {
       eventName: StorageEventType.TRIGGER_GITHUB_DEPLOY,
       ...payload,
