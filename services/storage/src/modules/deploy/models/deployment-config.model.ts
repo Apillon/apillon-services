@@ -23,6 +23,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
   })
   public repoId: number;
@@ -39,6 +40,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
   })
   public branchName: string;
@@ -57,6 +59,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
   })
   public websiteUuid: string;
@@ -75,6 +78,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
   })
   public accessToken: string;
@@ -111,6 +115,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
   })
   public buildDirectory: string;
@@ -129,6 +134,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
   })
   public installCommand: string | null;
@@ -147,6 +153,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
   })
   public apiKey: string;
@@ -165,6 +172,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
     ],
   })
   public apiSecret: string;
