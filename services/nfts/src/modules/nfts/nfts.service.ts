@@ -991,6 +991,13 @@ export class NftsService {
               collection.contractAddress,
               mintTokens,
             );
+            // mark token with on-chain metadata as used
+            if (tokenIds.length > 0) {
+              await new CollectionMetadata({}, context).markTokensAsMinted(
+                collection.id,
+                tokenIds,
+              );
+            }
           } else {
             const { abi } = await new ContractVersion(
               {},
@@ -1043,14 +1050,6 @@ export class NftsService {
         minimumGas,
       );
     });
-
-    // mark token with on-chain metadata as used
-    if (tokenIds.length > 0) {
-      await new CollectionMetadata({}, context).markTokensAsMinted(
-        collection.id,
-        tokenIds,
-      );
-    }
 
     await new Lmas().writeLog({
       context,
