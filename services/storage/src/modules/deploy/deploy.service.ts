@@ -49,6 +49,7 @@ export class DeployService {
       apiSecret: encrypt(
         event.body.apiSecret,
         env.BUILDER_API_SECRET_ENCRYPTION_KEY,
+        env.BUILDER_API_SECRET_INITIALIZATION_VECTOR,
       ),
     });
 

@@ -37,6 +37,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
     const decryptedSecret = decrypt(
       data.apiSecret,
       env.BUILDER_API_SECRET_ENCRYPTION_KEY,
+      env.BUILDER_API_SECRET_INITIALIZATION_VECTOR,
     );
 
     const child = spawn(scriptPath, [

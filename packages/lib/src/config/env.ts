@@ -741,6 +741,7 @@ export interface IEnv {
   BUILDER_SQS_URL: string;
   GITHUB_WEBHOOK_SECRET: string;
   BUILDER_API_SECRET_ENCRYPTION_KEY: string;
+  BUILDER_API_SECRET_INITIALIZATION_VECTOR: string;
 }
 
 // dotenv.config();
@@ -1348,6 +1349,8 @@ export let env: IEnv = {
   GITHUB_WEBHOOK_SECRET: process.env['GITHUB_WEBHOOK_SECRET'],
   BUILDER_API_SECRET_ENCRYPTION_KEY:
     process.env['BUILDER_API_SECRET_ENCRYPTION_KEY'],
+  BUILDER_API_SECRET_INITIALIZATION_VECTOR:
+    process.env['BUILDER_API_SECRET_INITIALIZATION_VECTOR'],
 };
 
 export let isEnvReady = false;

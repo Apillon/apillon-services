@@ -1,24 +1,32 @@
 import * as crypto from 'crypto';
 
-export function encrypt(valueToEncrypt: string, encryptionKey: string): string {
-  const keyBuffer = Buffer.from(encryptionKey, 'hex');
-  const iv = crypto.randomBytes(12); // Change IV length to 12 bytes
-  const cipher = crypto.createCipheriv('aes-256-ccm', keyBuffer, iv, {
-    authTagLength: 16,
-  });
-  let encrypted = cipher.update(valueToEncrypt, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  const authTag = cipher.getAuthTag().toString('hex');
-  const combined = `${iv.toString('hex')}:${encrypted}:${authTag}`;
-  return combined;
+// NOTE: Encryption key must be 32 bytes long & Initialization vector must be 16 bytes long
+export function encrypt(
+  valueToEncrypt: string,
+  encryptionKey: string,
+  initializationVector: string,
+): string {
+  const cipher = crypto.createCipheriv(
+    'aes-256-cbc',
+    Buffer.from(encryptionKey),
+    Buffer.from(initializationVector),
+  );
+  let crypted = cipher.update(valueToEncrypt, 'utf8', 'hex');
+  crypted += cipher.final('hex');
+  return crypted;
 }
 
-export function decrypt(valueToDecrypt: string, encryptionKey: string): string {
-  const keyBuffer = Buffer.from(encryptionKey, 'hex');
-  const [ivHex, encryptedData] = valueToDecrypt.split(':');
-  const ivBuffer = Buffer.from(ivHex, 'hex');
-  const decipher = crypto.createDecipheriv('aes-256-ccm', keyBuffer, ivBuffer);
-  let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
-  return decrypted;
+export function decrypt(
+  valueToEncrypt: string,
+  encryptionKey: string,
+  initializationVector: string,
+): string {
+  const decipher = crypto.createDecipheriv(
+    'aes-256-cbc',
+    Buffer.from(encryptionKey),
+    Buffer.from(initializationVector),
+  );
+  let dec = decipher.update(valueToEncrypt, 'hex', 'utf8');
+  dec += decipher.final('utf8');
+  return dec;
 }
