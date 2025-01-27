@@ -12,12 +12,13 @@ import {
   WorkerDefinition,
   sendToWorkerQueue,
 } from '@apillon/workers-lib';
-import { AppEnvironment, env } from '@apillon/lib';
+import { AppEnvironment, LogType, env, writeLog } from '@apillon/lib';
 import { BuildProjectWorker } from '../../workers/build-project-worker';
 import { WorkerName } from '../../workers/builder-executor';
 import { CreateDeploymentConfigDto } from '@apillon/lib/src';
 import { Website } from '../hosting/models/website.model';
 import { encrypt } from '../../lib/encrypt-secret';
+import { inspect } from 'node:util';
 
 export class DeployService {
   static async create(
@@ -99,6 +100,12 @@ export class DeployService {
         apiKey: event.apiKey,
         apiSecret: event.apiSecret,
       };
+
+      writeLog(
+        LogType.INFO,
+        `Parameters for build project worker ${inspect(parameters)}`,
+      );
+
       if (
         env.APP_ENV === AppEnvironment.LOCAL_DEV ||
         env.APP_ENV === AppEnvironment.DEV

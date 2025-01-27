@@ -1,6 +1,9 @@
 import {
   CreateDeploymentConfigDto,
   GitHubWebhookPayload,
+  Lmas,
+  LogType,
+  ServiceName,
   StorageMicroservice,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
@@ -13,7 +16,13 @@ export class DeployService {
     event: GitHubWebhookPayload,
   ) {
     const repoId = event.repository.id;
-
+    new Lmas().writeLog({
+      data: event,
+      logType: LogType.INFO,
+      message: `Received webhook for repo ${repoId}`,
+      service: ServiceName.DEV_CONSOLE,
+      location: 'DeployService.handleGithubWebhook',
+    });
     const storageMS = new StorageMicroservice(context);
 
     const config = await storageMS.getDeployConfigByRepoId(repoId);
