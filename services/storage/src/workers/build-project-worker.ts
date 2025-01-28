@@ -13,13 +13,13 @@ const script = `#!/bin/bash
 set -e
 
 # Variables
-REPO_URL=$1
-WEBSITE_UUID=$2
-BUILD_COMMAND=$3
-INSTALL_COMMAND=$4
-BUILD_DIR=$5
-APILLON_API_KEY=$6
-APILLON_API_SECRET=$7
+REPO_URL=$0
+WEBSITE_UUID=$1
+BUILD_COMMAND=$2
+INSTALL_COMMAND=$3
+BUILD_DIR=$4
+APILLON_API_KEY=$5
+APILLON_API_SECRET=$6
 
 APP_DIR=/tmp/github-app
 
@@ -43,13 +43,13 @@ echo "WEBSITE_UUID: $WEBSITE_UUID"
 echo "APILLON_API_KEY: $APILLON_API_KEY"
 echo "APILLON_API_SECRET: $APILLON_API_SECRET"
 
-ls /opt
-
-ls /opt/bin
+ls /opt/git-layer
 
 
 
-/opt/bin/git clone --progress $1 $APP_DIR > /dev/null 2>&1
+
+
+/opt/git-layer/bin/git clone --progress $1 $APP_DIR
 
 echo "Repository cloned successfully."
 
@@ -82,7 +82,7 @@ fi
 # SET values for Apillon
 
 echo "Uploading the website to Apillon..."
-apillon hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"`;
+/opt/apillon-layer/node_modules/.bin/apillon hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"`;
 
 export class BuildProjectWorker extends BaseQueueWorker {
   public constructor(
