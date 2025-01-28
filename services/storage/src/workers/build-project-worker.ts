@@ -30,7 +30,19 @@ echo "Cloning repository $REPO_URL..."
 
 mkdir -p $APP_DIR
 
+echo $REPO_URL
+echo $BUILD_COMMAND
+echo $INSTALL_COMMAND
+echo $APILLON_API_URL
+echo $BUILD_DIR
+echo $WEBSITE_UUID
+echo $APILLON_API_KEY
+echo $APILLON_API_SECRET
+
+
 git clone --progress $1 $APP_DIR > /dev/null 2>&1
+
+echo "Repository cloned successfully."
 
 # Navigate to the app directory
 cd $APP_DIR
@@ -56,11 +68,7 @@ else
   echo "Build command not set"
 fi
 
-echo $APILLON_API_URL
-echo $BUILD_DIR
-echo $WEBSITE_UUID
-echo $APILLON_API_KEY
-echo $APILLON_API_SECRET
+
 
 # SET values for Apillon
 
@@ -131,8 +139,14 @@ export class BuildProjectWorker extends BaseQueueWorker {
 
     // Wait for the child process to finish
     await new Promise((resolve, reject) => {
-      child.on('close', resolve);
-      child.on('error', reject);
+      child.on('close', (data) => {
+        console.log(`child process exited with code ${data}`);
+        resolve(data);
+      });
+      child.on('error', (data) => {
+        console.log(`child process exited with code ${data}`);
+        reject(data);
+      });
     });
   }
 }
