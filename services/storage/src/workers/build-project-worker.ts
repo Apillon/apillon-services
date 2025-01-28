@@ -5,9 +5,9 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { spawn } from 'child_process';
-import { resolve } from 'path';
 import { decrypt } from '../lib/encrypt-secret';
 
+// TO-DO - Move script to runtime
 const script = `#!/bin/bash
 
 set -e
@@ -94,7 +94,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
     );
 
     const child = spawn(
-      'bash',
+      '/bin/bash',
       [
         '-c',
         script,

@@ -144,6 +144,8 @@ export class DeployService {
           null,
         );
       }
+
+      return true;
     }
   }
 }
