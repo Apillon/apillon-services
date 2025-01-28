@@ -12,7 +12,13 @@ import {
   WorkerDefinition,
   sendToWorkerQueue,
 } from '@apillon/workers-lib';
-import { AppEnvironment, LogType, env, writeLog } from '@apillon/lib';
+import {
+  AppEnvironment,
+  LogType,
+  SerializeFor,
+  env,
+  writeLog,
+} from '@apillon/lib';
 import { BuildProjectWorker } from '../../workers/build-project-worker';
 import { WorkerName } from '../../workers/builder-executor';
 import { CreateDeploymentConfigDto } from '@apillon/lib/src';
@@ -58,7 +64,7 @@ export class DeployService {
 
     await deploymentConfig.insert();
 
-    return deploymentConfig.serializeByContext();
+    return deploymentConfig.serialize(SerializeFor.PROFILE);
   }
 
   static async getConfigByRepoId(
@@ -75,7 +81,7 @@ export class DeployService {
       );
     }
 
-    return config.serializeByContext();
+    return config.serialize(SerializeFor.SERVICE);
   }
 
   static async triggerGithubDeploy(
