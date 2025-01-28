@@ -114,7 +114,7 @@ export class DeployService {
 
       if (
         env.APP_ENV === AppEnvironment.LOCAL_DEV ||
-        env.APP_ENV === AppEnvironment.DEV
+        env.APP_ENV === AppEnvironment.TEST
       ) {
         const serviceDef: ServiceDefinition = {
           type: ServiceDefinitionType.SQS,

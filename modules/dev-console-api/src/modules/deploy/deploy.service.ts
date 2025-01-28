@@ -8,7 +8,6 @@ import {
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
-import { inspect } from 'util';
 
 @Injectable()
 export class DeployService {
