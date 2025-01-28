@@ -72,7 +72,7 @@ functions:
     environment:
       APILLON_API_URL: ${env:BUILDER_APILLON_API_URL}
       AWS_WORKER_LAMBDA_NAME: ${self:functions.storage-service-builder.name}
-      PATH: '/opt/git-layer/bin:/opt/apillon-layer/node_modules/.bin:/bin:/usr/bin:${PATH}'
+      PATH: '/opt/bin:/opt/apillon-layer/node_modules/.bin:/bin:/usr/bin:${PATH}'
     events:
       - sqs:
           arn: ${env:BUILDER_SQS_ARN}
