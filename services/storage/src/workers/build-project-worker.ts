@@ -30,17 +30,26 @@ echo "Cloning repository $REPO_URL..."
 
 mkdir -p $APP_DIR
 
-echo $REPO_URL
-echo $BUILD_COMMAND
-echo $INSTALL_COMMAND
-echo $APILLON_API_URL
-echo $BUILD_DIR
-echo $WEBSITE_UUID
-echo $APILLON_API_KEY
-echo $APILLON_API_SECRET
 
 
-git clone --progress $1 $APP_DIR > /dev/null 2>&1
+
+
+echo "REPO_URL: $REPO_URL"
+echo "BUILD_COMMAND: $BUILD_COMMAND"
+echo "INSTALL_COMMAND: $INSTALL_COMMAND"
+echo "APILLON_API_URL: $APILLON_API_URL"
+echo "BUILD_DIR: $BUILD_DIR"
+echo "WEBSITE_UUID: $WEBSITE_UUID"
+echo "APILLON_API_KEY: $APILLON_API_KEY"
+echo "APILLON_API_SECRET: $APILLON_API_SECRET"
+
+ls /opt
+
+ls /opt/bin
+
+
+
+/opt/bin/git clone --progress $1 $APP_DIR > /dev/null 2>&1
 
 echo "Repository cloned successfully."
 
