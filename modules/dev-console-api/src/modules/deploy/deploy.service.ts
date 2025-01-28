@@ -28,36 +28,35 @@ export class DeployService {
 
     const config = await storageMS.getDeployConfigByRepoId(repoId);
 
-    console.log(inspect(config));
     new Lmas().writeLog({
       data: event,
       logType: LogType.INFO,
-      message: `Config found ${event.ref} ${config.branchName} ${event.ref === `refs/heads/${config.branchName}`} `,
+      message: `Config found ${event.ref} ${config.data.branchName} ${event.ref === `refs/heads/${config.branchName}`} `,
       service: ServiceName.DEV_CONSOLE,
       location: 'DeployService.handleGithubWebhook',
     });
 
-    if (event.ref === `refs/heads/${config.branchName}`) {
+    if (event.ref === `refs/heads/${config.data.branchName}`) {
       new Lmas().writeLog({
         data: event,
         logType: LogType.INFO,
-        message: `Deploying ${config.websiteUuid}`,
+        message: `Deploying ${config.data.websiteUuid}`,
         service: ServiceName.DEV_CONSOLE,
         location: 'DeployService.handleGithubWebhook',
       });
       const url = event.repository.clone_url;
       const urlWithToken = url.replace(
         'https://',
-        `https://${config.accessToken}@`,
+        `https://${config.data.accessToken}@`,
       );
       await storageMS.triggerGithubDeploy({
         urlWithToken,
-        websiteUuid: config.websiteUuid,
-        buildCommand: config.buildCommand,
-        installCommand: config.installCommand,
-        buildDirectory: config.buildDirectory,
-        apiKey: config.apiKey,
-        apiSecret: config.apiSecret,
+        websiteUuid: config.data.websiteUuid,
+        buildCommand: config.data.buildCommand,
+        installCommand: config.data.installCommand,
+        buildDirectory: config.data.buildDirectory,
+        apiKey: config.data.apiKey,
+        apiSecret: config.data.apiSecret,
       });
     }
   }
