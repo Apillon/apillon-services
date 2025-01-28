@@ -107,15 +107,22 @@ export class EvmService {
     console.log('Endpoint: ', endpoint.url);
     const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
 
+    const estimatedBaseFee = await provider.getGasPrice();
     let maxPriorityFeePerGas: BigNumber;
-    let estimatedBaseFee: BigNumber;
-    if ([EvmChain.MOONBASE, EvmChain.MOONBEAM].includes(params.chain)) {
-      maxPriorityFeePerGas = ethers.utils.parseUnits('3', 'gwei');
-      estimatedBaseFee = await provider.getGasPrice();
-    } else {
-      maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei');
-      estimatedBaseFee = await provider.getGasPrice();
+    switch (params.chain) {
+      case EvmChain.POLYGON_AMOY: {
+        maxPriorityFeePerGas = ethers.utils.parseUnits('30', 'gwei');
+        break;
+      }
+      case EvmChain.MOONBASE:
+      case EvmChain.MOONBEAM: {
+        maxPriorityFeePerGas = ethers.utils.parseUnits('3', 'gwei');
+        break;
+      }
+      default:
+        maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei');
     }
+
     // Ensuring that transaction is desirable for at least 6 blocks.
     const maxFeePerGas = estimatedBaseFee.mul(2).add(maxPriorityFeePerGas);
     console.log(
