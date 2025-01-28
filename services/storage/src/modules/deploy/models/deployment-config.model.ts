@@ -18,12 +18,15 @@ export class DeploymentConfig extends AdvancedSQLModel {
       PopulateFrom.SERVICE,
       PopulateFrom.PROFILE,
       PopulateFrom.ADMIN,
+      PopulateFrom.AUTH,
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
   })
   public repoId: number;
@@ -38,9 +41,11 @@ export class DeploymentConfig extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
   })
   public branchName: string;
@@ -57,9 +62,11 @@ export class DeploymentConfig extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
   })
   public websiteUuid: string;
@@ -76,9 +83,11 @@ export class DeploymentConfig extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
   })
   public accessToken: string;
@@ -95,8 +104,11 @@ export class DeploymentConfig extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
   })
   public buildCommand: string | null;
@@ -113,9 +125,11 @@ export class DeploymentConfig extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
   })
   public buildDirectory: string;
@@ -132,9 +146,11 @@ export class DeploymentConfig extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
   })
   public installCommand: string | null;
@@ -151,9 +167,11 @@ export class DeploymentConfig extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
   })
   public apiKey: string;
@@ -170,9 +188,11 @@ export class DeploymentConfig extends AdvancedSQLModel {
     ],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
     ],
   })
   public apiSecret: string;

@@ -8,6 +8,7 @@ import {
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
+import { inspect } from 'util';
 
 @Injectable()
 export class DeployService {
@@ -27,6 +28,7 @@ export class DeployService {
 
     const config = await storageMS.getDeployConfigByRepoId(repoId);
 
+    console.log(inspect(config));
     new Lmas().writeLog({
       data: event,
       logType: LogType.INFO,
