@@ -43,13 +43,7 @@ echo "WEBSITE_UUID: $WEBSITE_UUID"
 echo "APILLON_API_KEY: $APILLON_API_KEY"
 echo "APILLON_API_SECRET: $APILLON_API_SECRET"
 
-ls /opt/git-layer
-
-
-
-
-
-/opt/git-layer/bin/git clone --progress $1 $APP_DIR
+git clone --progress $1 $APP_DIR
 
 echo "Repository cloned successfully."
 
@@ -82,7 +76,7 @@ fi
 # SET values for Apillon
 
 echo "Uploading the website to Apillon..."
-/opt/apillon-layer/node_modules/.bin/apillon hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"`;
+apillon hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"`;
 
 export class BuildProjectWorker extends BaseQueueWorker {
   public constructor(
