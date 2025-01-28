@@ -64,7 +64,7 @@ export class DeployService {
 
     await deploymentConfig.insert();
 
-    return deploymentConfig.serialize(SerializeFor.PROFILE);
+    return deploymentConfig;
   }
 
   static async getConfigByRepoId(
@@ -81,7 +81,7 @@ export class DeployService {
       );
     }
 
-    return config.serialize(SerializeFor.SERVICE);
+    return config;
   }
 
   static async triggerGithubDeploy(
