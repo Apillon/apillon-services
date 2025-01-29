@@ -1739,7 +1739,7 @@ export class NftsService {
 
       return response;
     } catch (err) {
-      if (connIn) {
+      if (!connIn) {
         await context.mysql.rollback(conn);
       }
       if (TYPE_ERROR_MAP[transactionType]) {
