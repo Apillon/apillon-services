@@ -4,7 +4,6 @@ import {
   BurnNftDto,
   Chain,
   ChainType,
-  CodeException,
   CollectionsQuotaReachedQueryFilter,
   Context,
   CreateBucketDto,
@@ -36,7 +35,6 @@ import {
   StorageMicroservice,
   SubscriptionPackageId,
   SubstrateChain,
-  SystemErrorCode,
   TransactionDto,
   TransactionStatus,
   TransferCollectionDTO,
@@ -84,7 +82,6 @@ import { EVM_MAX_INT } from '@apillon/blockchain-lib/evm';
 import { UniqueNftClient } from './clients/unique-nft-client';
 import { SubstrateChainPrefix } from '@apillon/blockchain-lib/substrate';
 import { CollectionMetadata } from './models/collectionMetadata.model';
-import { HttpStatus } from '@nestjs/common';
 
 export class NftsService {
   //#region collection functions
@@ -1015,11 +1012,11 @@ export class NftsService {
               return result;
             } catch (e) {
               await context.mysql.rollback(conn);
-              throw new CodeException({
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-                code: SystemErrorCode.UNHANDLED_SYSTEM_ERROR,
-                errorCodes: SystemErrorCode,
-                details: e,
+              throw new NftsCodeException({
+                status: 500,
+                code: NftsErrorCode.MINT_NFT_ERROR,
+                context,
+                errorMessage: `Failed to mint NFT(s) via unique: ${e.message}`,
               });
             }
           } else {
@@ -1279,11 +1276,11 @@ export class NftsService {
             return result;
           } catch (e) {
             await context.mysql.rollback(conn);
-            throw new CodeException({
-              status: HttpStatus.INTERNAL_SERVER_ERROR,
-              code: SystemErrorCode.UNHANDLED_SYSTEM_ERROR,
-              errorCodes: SystemErrorCode,
-              details: e,
+            throw new NftsCodeException({
+              status: 500,
+              code: NftsErrorCode.NEST_MINT_NFT_ERROR,
+              context,
+              errorMessage: `Failed to nest mint NFT(s) via unique: ${e.message}`,
             });
           }
         }
