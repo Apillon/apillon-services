@@ -4,6 +4,7 @@ import {
   BurnNftDto,
   Chain,
   ChainType,
+  CodeException,
   CollectionsQuotaReachedQueryFilter,
   Context,
   CreateBucketDto,
@@ -22,6 +23,7 @@ import {
   NestMintNftDTO,
   NFTCollectionQueryFilter,
   NFTCollectionType,
+  PoolConnection,
   ProductCode,
   QuotaCode,
   Scs,
@@ -34,6 +36,7 @@ import {
   StorageMicroservice,
   SubscriptionPackageId,
   SubstrateChain,
+  SystemErrorCode,
   TransactionDto,
   TransactionStatus,
   TransferCollectionDTO,
@@ -81,6 +84,7 @@ import { EVM_MAX_INT } from '@apillon/blockchain-lib/evm';
 import { UniqueNftClient } from './clients/unique-nft-client';
 import { SubstrateChainPrefix } from '@apillon/blockchain-lib/substrate';
 import { CollectionMetadata } from './models/collectionMetadata.model';
+import { HttpStatus } from '@nestjs/common';
 
 export class NftsService {
   //#region collection functions
@@ -960,43 +964,63 @@ export class NftsService {
         }
         case ChainType.SUBSTRATE: {
           if (collection.chain === SubstrateChain.UNIQUE) {
-            const client = new UniqueNftClient(env.UNIQUE_NETWORK_API_URL);
-            const onChainCollection = await client.getCollection(
-              collection.contractAddress,
-            );
-            await NftsService.checkMintConditions(
-              body,
-              context,
-              collection,
-              onChainCollection.lastTokenId,
-            );
-            const metadata = await new CollectionMetadata(
-              {},
-              context,
-            ).getNextTokens(collection.id, body.quantity);
-            if (metadata.length !== body.quantity) {
-              throw new NftsValidationException({
-                code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
-                property: 'quantity',
-                message: `Can't mint ${body.quantity} NFTs since only ${metadata.length} metadata rows left.`,
-              });
-            }
-            const mintTokens = await getMintPayload(
-              collection,
-              body.receivingAddress,
-              metadata,
-            );
-            tokenIds = metadata.map((m) => m.tokenId);
-            serializedTransaction = await client.mintNft(
-              collection.contractAddress,
-              mintTokens,
-            );
-            // mark token with on-chain metadata as used
-            if (tokenIds.length > 0) {
+            const conn = await context.mysql.start();
+            try {
+              const client = new UniqueNftClient(env.UNIQUE_NETWORK_API_URL);
+              const onChainCollection = await client.getCollection(
+                collection.contractAddress,
+              );
+              await NftsService.checkMintConditions(
+                body,
+                context,
+                collection,
+                onChainCollection.lastTokenId,
+              );
+              const metadata = await new CollectionMetadata(
+                {},
+                context,
+              ).getNextTokens(collection.id, body.quantity, conn);
+              if (metadata.length !== body.quantity) {
+                throw new NftsValidationException({
+                  code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
+                  property: 'quantity',
+                  message: `Can't mint ${body.quantity} NFTs since only ${metadata.length} metadata rows left.`,
+                });
+              }
+              const mintTokens = await getMintPayload(
+                collection,
+                body.receivingAddress,
+                metadata,
+              );
+              tokenIds = metadata.map((m) => m.tokenId);
+              serializedTransaction = await client.mintNft(
+                collection.contractAddress,
+                mintTokens,
+              );
               await new CollectionMetadata({}, context).markTokensAsMinted(
                 collection.id,
                 tokenIds,
+                conn,
               );
+              const result = await NftsService.sendTransaction(
+                context,
+                collection,
+                TransactionType.MINT_NFT,
+                serializedTransaction,
+                spendCredit.referenceId,
+                minimumGas,
+                conn,
+              );
+              await context.mysql.commit(conn);
+              return result;
+            } catch (e) {
+              await context.mysql.rollback(conn);
+              throw new CodeException({
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                code: SystemErrorCode.UNHANDLED_SYSTEM_ERROR,
+                errorCodes: SystemErrorCode,
+                details: e,
+              });
             }
           } else {
             const { abi } = await new ContractVersion(
@@ -1125,101 +1149,6 @@ export class NftsService {
     // checks if we can mint child collection
     await NftsService.checkCollection(childCollection, sourceFunction, context);
 
-    let txData: string;
-    switch (parentCollection.chainType) {
-      case ChainType.EVM: {
-        // on-chain checks for child collection
-        const childAbi = await new ContractVersion({}, context).getContractAbi(
-          childCollection.collectionType,
-          childCollection.contractVersion_id,
-        );
-        const childEvmContractClient = await getEvmContractClient(
-          context,
-          childCollection.chain as EvmChain,
-          childAbi,
-          childCollection.contractAddress,
-        );
-        const isChildNestable = await childEvmContractClient.query<boolean>(
-          'supportsInterface',
-          ['0x42b0e56f'],
-        );
-        if (!isChildNestable) {
-          throw new NftsCodeException({
-            status: 500,
-            code: NftsErrorCode.COLLECTION_NOT_NESTABLE,
-            context,
-            sourceFunction: 'nestMintNftTo()',
-          });
-        }
-        let minted: number;
-        if (
-          (childCollection.collectionStatus != CollectionStatus.DEPLOYED &&
-            childCollection.collectionStatus != CollectionStatus.TRANSFERED) ||
-          !childCollection.contractAddress
-        ) {
-          minted = 0;
-        } else {
-          const totalSupply =
-            await childEvmContractClient.query<BigNumber>('totalSupply');
-          minted = parseInt(totalSupply._hex, 16);
-        }
-        await NftsService.checkNestMintConditions(
-          body,
-          context,
-          childCollection,
-          minted,
-        );
-
-        txData = await childEvmContractClient.createTransaction(
-          'ownerNestMint',
-          [parentCollection.contractAddress, body.quantity, body.parentNftId],
-        );
-        break;
-      }
-      case ChainType.SUBSTRATE: {
-        const client = new UniqueNftClient(env.UNIQUE_NETWORK_API_URL);
-        const receivingAddress = client.getTokenAddress(
-          parentCollection.contractAddress,
-          body.parentNftId,
-        );
-        const onChainChildCollection = await client.getCollection(
-          childCollection.contractAddress,
-        );
-        await NftsService.checkNestMintConditions(
-          body,
-          context,
-          childCollection,
-          onChainChildCollection.lastTokenId,
-        );
-        const metadata = await new CollectionMetadata(
-          {},
-          context,
-        ).getNextTokens(childCollection.id, body.quantity);
-        const mintTokens = await getMintPayload(
-          childCollection,
-          receivingAddress,
-          metadata,
-        );
-
-        txData = await client.mintNft(
-          childCollection.contractAddress,
-          mintTokens,
-        );
-        await new CollectionMetadata({}, context).markTokensAsMinted(
-          childCollection.id,
-          metadata.map((m) => m.tokenId),
-        );
-        break;
-      }
-      default: {
-        throw new NftsCodeException({
-          status: 501,
-          code: NftsErrorCode.ACTION_NOT_SUPPORTED,
-          context,
-        });
-      }
-    }
-
     const product_id = {
       [EvmChain.ETHEREUM]: ProductCode.NFT_ETHEREUM_MINT,
       [EvmChain.SEPOLIA]: ProductCode.NFT_SEPOLIA_MINT,
@@ -1230,9 +1159,7 @@ export class NftsService {
       [EvmChain.BASE_SEPOLIA]: ProductCode.NFT_BASE_SEPOLIA_MINT,
       [SubstrateChain.UNIQUE]: ProductCode.NFT_UNIQUE_MINT,
     }[childCollection.chain];
-
-    //Spend credit
-    const spendCredit: SpendCreditDto = new SpendCreditDto(
+    const spendCredit = new SpendCreditDto(
       {
         project_uuid: parentCollection.project_uuid,
         product_id,
@@ -1243,18 +1170,139 @@ export class NftsService {
       },
       context,
     );
-    const { data } = await spendCreditAction(
-      context,
-      spendCredit,
-      async () =>
-        await NftsService.sendTransaction(
-          context,
-          childCollection,
-          TransactionType.NEST_MINT_NFT,
-          txData,
-          spendCredit.referenceId,
-        ),
-    );
+
+    const { data } = await spendCreditAction(context, spendCredit, async () => {
+      let txData: string;
+      switch (parentCollection.chainType) {
+        case ChainType.EVM: {
+          // on-chain checks for child collection
+          const childAbi = await new ContractVersion(
+            {},
+            context,
+          ).getContractAbi(
+            childCollection.collectionType,
+            childCollection.contractVersion_id,
+          );
+          const childEvmContractClient = await getEvmContractClient(
+            context,
+            childCollection.chain as EvmChain,
+            childAbi,
+            childCollection.contractAddress,
+          );
+          const isChildNestable = await childEvmContractClient.query<boolean>(
+            'supportsInterface',
+            ['0x42b0e56f'],
+          );
+          if (!isChildNestable) {
+            throw new NftsCodeException({
+              status: 500,
+              code: NftsErrorCode.COLLECTION_NOT_NESTABLE,
+              context,
+              sourceFunction: 'nestMintNftTo()',
+            });
+          }
+          let minted: number;
+          if (
+            (childCollection.collectionStatus != CollectionStatus.DEPLOYED &&
+              childCollection.collectionStatus !=
+                CollectionStatus.TRANSFERED) ||
+            !childCollection.contractAddress
+          ) {
+            minted = 0;
+          } else {
+            const totalSupply =
+              await childEvmContractClient.query<BigNumber>('totalSupply');
+            minted = parseInt(totalSupply._hex, 16);
+          }
+          await NftsService.checkNestMintConditions(
+            body,
+            context,
+            childCollection,
+            minted,
+          );
+
+          txData = await childEvmContractClient.createTransaction(
+            'ownerNestMint',
+            [parentCollection.contractAddress, body.quantity, body.parentNftId],
+          );
+          break;
+        }
+        case ChainType.SUBSTRATE: {
+          // transaction to revert metadata used in case of failed mint
+          const conn = await context.mysql.start();
+          try {
+            const client = new UniqueNftClient(env.UNIQUE_NETWORK_API_URL);
+            const receivingAddress = client.getTokenAddress(
+              parentCollection.contractAddress,
+              body.parentNftId,
+            );
+            const onChainChildCollection = await client.getCollection(
+              childCollection.contractAddress,
+            );
+            await NftsService.checkNestMintConditions(
+              body,
+              context,
+              childCollection,
+              onChainChildCollection.lastTokenId,
+            );
+            const metadata = await new CollectionMetadata(
+              {},
+              context,
+            ).getNextTokens(childCollection.id, body.quantity, conn);
+            const mintTokens = await getMintPayload(
+              childCollection,
+              receivingAddress,
+              metadata,
+            );
+
+            txData = await client.mintNft(
+              childCollection.contractAddress,
+              mintTokens,
+            );
+            await new CollectionMetadata({}, context).markTokensAsMinted(
+              childCollection.id,
+              metadata.map((m) => m.tokenId),
+              conn,
+            );
+            // Code bellow is a copy of code that is bellow switch statement.
+            // We do it here since we need to wrap metadata usage in transaction.
+            const result = await NftsService.sendTransaction(
+              context,
+              childCollection,
+              TransactionType.NEST_MINT_NFT,
+              txData,
+              spendCredit.referenceId,
+              null,
+              conn,
+            );
+            await context.mysql.commit(conn);
+            return result;
+          } catch (e) {
+            await context.mysql.rollback(conn);
+            throw new CodeException({
+              status: HttpStatus.INTERNAL_SERVER_ERROR,
+              code: SystemErrorCode.UNHANDLED_SYSTEM_ERROR,
+              errorCodes: SystemErrorCode,
+              details: e,
+            });
+          }
+        }
+        default: {
+          throw new NftsCodeException({
+            status: 501,
+            code: NftsErrorCode.ACTION_NOT_SUPPORTED,
+            context,
+          });
+        }
+      }
+      return await NftsService.sendTransaction(
+        context,
+        childCollection,
+        TransactionType.NEST_MINT_NFT,
+        txData,
+        spendCredit.referenceId,
+      );
+    });
 
     await new Lmas().writeLog({
       context,
@@ -1613,6 +1661,18 @@ export class NftsService {
     };
   }
 
+  /**
+   * Sends a transaction through a blockchain service based on the chain type of the collection.
+   *
+   * @param context - The service context used for managing backend services and database transactions.
+   * @param collection - The collection data containing details such as chain, deployerAddress, and chainType.
+   * @param transactionType - The type of transaction to be performed, such as minting or transferring.
+   * @param txHash - The transaction hash representing the blockchain transaction identifier.
+   * @param transaction_uuid - The unique identifier for the transaction in the system.
+   * @param [minimumGas] - Optional parameter representing the minimum gas required for the transaction.
+   * @param [connIn] - Optional database connection passed to manage transactional integrity.
+   * @return A promise that resolves to an object containing the transaction details.
+   */
   private static async sendTransaction(
     context: ServiceContext,
     collection: Collection,
@@ -1620,8 +1680,11 @@ export class NftsService {
     txHash: string,
     transaction_uuid: string,
     minimumGas?: number,
+    connIn?: PoolConnection,
   ): Promise<{ data: TransactionDto }> {
-    const conn = await context.mysql.start();
+    // reuse old connection if present and skip commit and rollback (they are
+    // called after this function is called) if that is the case
+    const conn = connIn ?? (await context.mysql.start());
     try {
       const data = {
         chain: collection.chain,
@@ -1630,7 +1693,7 @@ export class NftsService {
         referenceTable: DbTables.COLLECTION,
         referenceId: collection.id,
         project_uuid: collection.project_uuid,
-        minimumGas,
+        minimumGas: minimumGas ?? undefined,
       };
       const blockchainService = new BlockchainMicroservice(context);
       let response: { data: TransactionDto };
@@ -1670,11 +1733,15 @@ export class NftsService {
         ),
         conn,
       );
-      await context.mysql.commit(conn);
+      if (!connIn) {
+        await context.mysql.commit(conn);
+      }
 
       return response;
     } catch (err) {
-      await context.mysql.rollback(conn);
+      if (!connIn) {
+        await context.mysql.rollback(conn);
+      }
       if (TYPE_ERROR_MAP[transactionType]) {
         throw await new NftsContractException(
           TYPE_ERROR_MAP[transactionType] ?? NftsErrorCode.GENERAL_SERVER_ERROR,
