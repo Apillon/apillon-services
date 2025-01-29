@@ -31,9 +31,11 @@ rm -rf "$APP_DIR"
 echo "Cloning repository $REPO_URL..."
 
 mkdir -p $APP_DIR
-
+which node
 npm -v
 npx -v
+
+echo "npm & npx found"
 
 
 

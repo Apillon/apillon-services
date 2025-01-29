@@ -72,7 +72,7 @@ functions:
     environment:
       APILLON_API_URL: ${env:BUILDER_APILLON_API_URL}
       AWS_WORKER_LAMBDA_NAME: ${self:functions.storage-service-builder.name}
-      PATH: '/opt/bin:/opt/node_modules/.bin:/bin:/usr/bin:/opt/apillon_cli/bin:/opt/apillon_cli/node_modules/.bin:${PATH}'
+      PATH: '/opt/bin:/opt/node_modules/.bin:/bin:/usr/bin:/opt/apillon_cli/bin:/opt/apillon_cli/node_modules/.bin:/var/lang/bin:${PATH}'
     events:
       - sqs:
           arn: ${env:BUILDER_SQS_ARN}
@@ -81,4 +81,4 @@ functions:
           functionResponseType: ReportBatchItemFailures
     layers:
       - arn:aws:lambda:eu-west-1:018021943180:layer:git-layer:3
-      - arn:aws:lambda:eu-west-1:018021943180:layer:npm-layer:1
+      - arn:aws:lambda:eu-west-1:018021943180:layer:npm-layer:2
