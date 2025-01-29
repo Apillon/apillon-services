@@ -76,7 +76,7 @@ fi
 # SET values for Apillon
 
 echo "Uploading the website to Apillon..."
-apillon hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"`;
+npx @apillon/cli hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"`;
 
 export class BuildProjectWorker extends BaseQueueWorker {
   public constructor(
