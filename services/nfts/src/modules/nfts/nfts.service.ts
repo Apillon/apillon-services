@@ -15,6 +15,7 @@ import {
   env,
   EvmChain,
   getChainName,
+  HttpException,
   Lmas,
   LogType,
   Mailing,
@@ -961,18 +962,19 @@ export class NftsService {
         }
         case ChainType.SUBSTRATE: {
           if (collection.chain === SubstrateChain.UNIQUE) {
+            const client = new UniqueNftClient(env.UNIQUE_NETWORK_API_URL);
+            const onChainCollection = await client.getCollection(
+              collection.contractAddress,
+            );
+            await NftsService.checkMintConditions(
+              body,
+              context,
+              collection,
+              onChainCollection.lastTokenId,
+            );
+
             const conn = await context.mysql.start();
             try {
-              const client = new UniqueNftClient(env.UNIQUE_NETWORK_API_URL);
-              const onChainCollection = await client.getCollection(
-                collection.contractAddress,
-              );
-              await NftsService.checkMintConditions(
-                body,
-                context,
-                collection,
-                onChainCollection.lastTokenId,
-              );
               const metadata = await new CollectionMetadata(
                 {},
                 context,
@@ -990,14 +992,9 @@ export class NftsService {
                 metadata,
               );
               tokenIds = metadata.map((m) => m.tokenId);
-              serializedTransaction = await client.mintNft(
+              const serializedTransaction = await client.mintNft(
                 collection.contractAddress,
                 mintTokens,
-              );
-              await new CollectionMetadata({}, context).markTokensAsMinted(
-                collection.id,
-                tokenIds,
-                conn,
               );
               const result = await NftsService.sendTransaction(
                 context,
@@ -1008,10 +1005,18 @@ export class NftsService {
                 minimumGas,
                 conn,
               );
+              await new CollectionMetadata({}, context).markTokensAsMinted(
+                collection.id,
+                tokenIds,
+                conn,
+              );
               await context.mysql.commit(conn);
               return result;
             } catch (e) {
               await context.mysql.rollback(conn);
+              if (e instanceof HttpException) {
+                throw e;
+              }
               throw new NftsCodeException({
                 status: 500,
                 code: NftsErrorCode.MINT_NFT_ERROR,
@@ -1225,23 +1230,24 @@ export class NftsService {
           break;
         }
         case ChainType.SUBSTRATE: {
+          const client = new UniqueNftClient(env.UNIQUE_NETWORK_API_URL);
+          const receivingAddress = client.getTokenAddress(
+            parentCollection.contractAddress,
+            body.parentNftId,
+          );
+          const onChainChildCollection = await client.getCollection(
+            childCollection.contractAddress,
+          );
+          await NftsService.checkNestMintConditions(
+            body,
+            context,
+            childCollection,
+            onChainChildCollection.lastTokenId,
+          );
+
           // transaction to revert metadata used in case of failed mint
           const conn = await context.mysql.start();
           try {
-            const client = new UniqueNftClient(env.UNIQUE_NETWORK_API_URL);
-            const receivingAddress = client.getTokenAddress(
-              parentCollection.contractAddress,
-              body.parentNftId,
-            );
-            const onChainChildCollection = await client.getCollection(
-              childCollection.contractAddress,
-            );
-            await NftsService.checkNestMintConditions(
-              body,
-              context,
-              childCollection,
-              onChainChildCollection.lastTokenId,
-            );
             const metadata = await new CollectionMetadata(
               {},
               context,
@@ -1251,25 +1257,22 @@ export class NftsService {
               receivingAddress,
               metadata,
             );
-
-            txData = await client.mintNft(
+            const serializedTransaction = await client.mintNft(
               childCollection.contractAddress,
               mintTokens,
             );
-            await new CollectionMetadata({}, context).markTokensAsMinted(
-              childCollection.id,
-              metadata.map((m) => m.tokenId),
-              conn,
-            );
-            // Code bellow is a copy of code that is bellow switch statement.
-            // We do it here since we need to wrap metadata usage in transaction.
             const result = await NftsService.sendTransaction(
               context,
               childCollection,
               TransactionType.NEST_MINT_NFT,
-              txData,
+              serializedTransaction,
               spendCredit.referenceId,
               null,
+              conn,
+            );
+            await new CollectionMetadata({}, context).markTokensAsMinted(
+              childCollection.id,
+              metadata.map((m) => m.tokenId),
               conn,
             );
             await context.mysql.commit(conn);
