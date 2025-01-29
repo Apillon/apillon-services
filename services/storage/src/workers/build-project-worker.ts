@@ -12,6 +12,8 @@ const script = `#!/bin/bash
 
 set -e
 
+ls /opt
+
 # Variables
 REPO_URL=$0
 WEBSITE_UUID=$1
@@ -30,7 +32,8 @@ echo "Cloning repository $REPO_URL..."
 
 mkdir -p $APP_DIR
 
-
+npm -v
+npx -v
 
 
 
