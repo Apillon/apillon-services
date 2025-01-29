@@ -7,7 +7,7 @@ import {
   SerializeFor,
   UuidSqlModel,
 } from '@apillon/lib';
-import { stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, NftsErrorCode } from '../../../config/types';
 import { Metadata } from '@apillon/blockchain-lib/common';
 
@@ -44,7 +44,7 @@ export class CollectionMetadata extends UuidSqlModel {
   public collection_id: number;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [
       PopulateFrom.DB,
       PopulateFrom.SERVICE,
@@ -131,16 +131,18 @@ export class CollectionMetadata extends UuidSqlModel {
     if (tokenIds.length <= 0) {
       throw new Error('tokenIds should contain at least one token id');
     }
+    const tokenIdsString = tokenIds
+      .map((tokenId) => parseInt(`${tokenId}`))
+      .join(',');
     await this.getContext().mysql.paramExecute(
       `
         UPDATE \`${DbTables.COLLECTION_METADATA}\`
         SET minted=true
         WHERE
-          collection_id = @collection_id AND
-          tokenId IN (@tokenIds)
+          collection_id = @collection_id AND tokenId IN (${tokenIdsString})
         ;
       `,
-      { collection_id, tokenIds: tokenIds.join(',') },
+      { collection_id },
       conn,
     );
   }
