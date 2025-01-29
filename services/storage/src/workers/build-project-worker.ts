@@ -43,7 +43,7 @@ echo "WEBSITE_UUID: $WEBSITE_UUID"
 echo "APILLON_API_KEY: $APILLON_API_KEY"
 echo "APILLON_API_SECRET: $APILLON_API_SECRET"
 
-git clone --progress $1 $APP_DIR
+git clone --progress $REPO_URL $APP_DIR
 
 echo "Repository cloned successfully."
 
