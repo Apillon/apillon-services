@@ -135,7 +135,7 @@ export class HostingService {
         data: website.serialize(),
       }),
       // Set mailerlite field indicating the user has a website
-      new Mailing(context).setMailerliteField('has_website', true),
+      new Mailing(context).setMailerliteField('has_website'),
     ]);
 
     return website.serializeByContext();

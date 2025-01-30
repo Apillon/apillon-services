@@ -111,7 +111,7 @@ export class ProjectService {
       ),
 
       // Set mailerlite field indicating the user owns a project
-      new Mailing(context).setMailerliteField('project_owner', true),
+      new Mailing(context).setMailerliteField('project_owner'),
 
       // If it's the user's first project, add credits if using promo code
       projects.length === 0 &&

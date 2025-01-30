@@ -138,6 +138,8 @@ export class ContractService {
       ),
     );
 
+    this.mailingClient.setMailerliteField('has_smart_contract');
+
     return contractDeploy;
   }
 
