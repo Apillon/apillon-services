@@ -876,7 +876,7 @@ export class NftsService {
           collection.chainType === ChainType.EVM
             ? NftsErrorCode.INVALID_EVM_ADDRESS
             : NftsErrorCode.INVALID_SUBSTRATE_ADDRESS,
-        property: 'address',
+        property: 'receivingAddress',
       });
     }
 
