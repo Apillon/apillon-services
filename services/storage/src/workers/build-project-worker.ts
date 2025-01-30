@@ -32,9 +32,9 @@ echo "Cloning repository $REPO_URL..."
 
 mkdir -p $APP_DIR
 
-node -v
-npm -v
-npx -v
+/var/lang/bin/node -v
+/var/lang/bin/npm -v
+/var/lang/bin/npx -v
 
 echo "npm & npx found"
 
@@ -67,7 +67,8 @@ if [ -n "$INSTALL_COMMAND" ]; then
   mkdir -p /tmp/.npm /tmp/npm-global
 
   echo "Running install command: $INSTALL_COMMAND"
-  $INSTALL_COMMAND --cache /tmp/.npm
+  #$INSTALL_COMMAND --cache /tmp/.npm
+  /var/lang/bin/npm install --cache /tmp/.npm
   echo "Install completed successfully."
 else
   echo "Install command not set"
@@ -76,7 +77,8 @@ fi
 # Check if a build command is provided and run it
 if [ -n "$BUILD_COMMAND" ]; then
   echo "Running custom build command: $BUILD_COMMAND"
-  $BUILD_COMMAND
+  #$BUILD_COMMAND
+  /var/lang/bin/npm run build
   echo "Build completed successfully."
 else
   echo "Build command not set"
@@ -87,8 +89,12 @@ fi
 # SET values for Apillon
 
 echo "Uploading the website to Apillon..."
-npm install -g @apillon/cli
-npx @apillon/cli hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"`;
+#npm install -g @apillon/cli
+/var/lang/bin/npm install -g @apillon/cli
+
+#npx @apillon/cli hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"
+
+/var/lang/bin/npx @apillon/cli hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"`;
 
 export class BuildProjectWorker extends BaseQueueWorker {
   public constructor(
