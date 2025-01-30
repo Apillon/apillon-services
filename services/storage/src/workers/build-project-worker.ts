@@ -61,8 +61,13 @@ echo "Installing dependencies..."
 
 # Check if install command is provided and run it
 if [ -n "$INSTALL_COMMAND" ]; then
+  export HOME=/tmp
+  export npm_config_cache=/tmp/.npm
+  export npm_config_prefix=/tmp/npm-global
+  mkdir -p /tmp/.npm /tmp/npm-global
+
   echo "Running install command: $INSTALL_COMMAND"
-  $INSTALL_COMMAND
+  $INSTALL_COMMAND --cache /tmp/.npm
   echo "Install completed successfully."
 else
   echo "Install command not set"
