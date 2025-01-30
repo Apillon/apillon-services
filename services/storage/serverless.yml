@@ -69,6 +69,7 @@ functions:
     memorySize: 512
     timeout: 900
     reservedConcurrency: 10
+    ephemeralStorageSize: 3072
     environment:
       APILLON_API_URL: ${env:BUILDER_APILLON_API_URL}
       AWS_WORKER_LAMBDA_NAME: ${self:functions.storage-service-builder.name}
