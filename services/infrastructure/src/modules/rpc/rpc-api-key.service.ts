@@ -5,6 +5,7 @@ import {
   BaseProjectQueryFilter,
   CreateRpcApiKeyDto,
   DwellirSubscription,
+  Mailing,
   ModelValidationException,
   QuotaCode,
   Scs,
@@ -320,10 +321,11 @@ export class RpcApiKeyService {
     { data }: { data: CreateRpcApiKeyDto | ApillonApiCreateRpcApiKeyDto },
     context: ServiceContext,
   ) {
+    const userEmail = data['email'];
     const { dwellirId, created } = await RpcApiKeyService.getOrCreateDwellirId(
       context,
       data['user_uuid'],
-      data['email'],
+      userEmail,
     );
 
     if (!created) {
@@ -349,7 +351,14 @@ export class RpcApiKeyService {
       ? await Dwellir.createApiKey(dwellirId)
       : await Dwellir.getInitialApiKey(dwellirId);
     rpcApiKey.uuid = apiKeyResponse.api_key;
-    return (await rpcApiKey.insert()).serialize(SerializeFor.SERVICE);
+    const newRpcApiKey = (await rpcApiKey.insert()).serialize(
+      SerializeFor.SERVICE,
+    );
+
+    // Set mailerlite field indicating the user created an RPC key
+    new Mailing(context).setMailerliteField('has_rpc', true, userEmail);
+
+    return newRpcApiKey;
   }
 
   static async updateRpcApiKey(
