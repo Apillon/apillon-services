@@ -101,13 +101,15 @@ export class CollectionMetadata extends UuidSqlModel {
     }
     const rows = await this.getContext().mysql.paramExecute(
       `
-        SELECT FOR UPDATE *
+        SELECT *
         FROM \`${DbTables.COLLECTION_METADATA}\`
         WHERE
           collection_id = @collection_id AND
           minted = false
         ORDER BY tokenId
         LIMIT ${tokenCount}
+          FOR
+        UPDATE
         ;
       `,
       { collection_id },
