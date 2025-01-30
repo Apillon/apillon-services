@@ -81,4 +81,4 @@ functions:
           functionResponseType: ReportBatchItemFailures
     layers:
       - arn:aws:lambda:eu-west-1:018021943180:layer:git-layer:3
-      - arn:aws:lambda:eu-west-1:018021943180:layer:npm-layer:2
+      - arn:aws:lambda:eu-west-1:018021943180:layer:npm-layer:3
