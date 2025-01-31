@@ -6,13 +6,15 @@ import {
 } from '@apillon/workers-lib';
 import { spawn } from 'child_process';
 import { decrypt } from '../lib/encrypt-secret';
+import { DeploymentBuild } from '../modules/deploy/models/deployment-build.model';
+import { DeploymentBuildStatus } from '@apillon/lib';
+import { Deployment } from '../modules/hosting/models/deployment.model';
 
 // TO-DO - Move script to runtime
 const script = `#!/bin/bash
 
 set -e
 
-ls /opt
 
 # Variables
 REPO_URL=$0
@@ -32,23 +34,6 @@ echo "Cloning repository $REPO_URL..."
 
 mkdir -p $APP_DIR
 
-/var/lang/bin/node -v
-/var/lang/bin/npm -v
-/var/lang/bin/npx -v
-
-echo "npm & npx found"
-
-
-
-echo "REPO_URL: $REPO_URL"
-echo "BUILD_COMMAND: $BUILD_COMMAND"
-echo "INSTALL_COMMAND: $INSTALL_COMMAND"
-echo "APILLON_API_URL: $APILLON_API_URL"
-echo "BUILD_DIR: $BUILD_DIR"
-echo "WEBSITE_UUID: $WEBSITE_UUID"
-echo "APILLON_API_KEY: $APILLON_API_KEY"
-echo "APILLON_API_SECRET: $APILLON_API_SECRET"
-
 git clone --progress $REPO_URL $APP_DIR
 
 echo "Repository cloned successfully."
@@ -67,8 +52,7 @@ if [ -n "$INSTALL_COMMAND" ]; then
   mkdir -p /tmp/.npm /tmp/npm-global
 
   echo "Running install command: $INSTALL_COMMAND"
-  #$INSTALL_COMMAND --cache /tmp/.npm
-  /var/lang/bin/npm install --cache /tmp/.npm
+  $INSTALL_COMMAND --cache /tmp/.npm
   echo "Install completed successfully."
 else
   echo "Install command not set"
@@ -77,8 +61,7 @@ fi
 # Check if a build command is provided and run it
 if [ -n "$BUILD_COMMAND" ]; then
   echo "Running custom build command: $BUILD_COMMAND"
-  #$BUILD_COMMAND
-  /var/lang/bin/npm run build
+  $BUILD_COMMAND
   echo "Build completed successfully."
 else
   echo "Build command not set"
@@ -110,6 +93,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
   }
 
   public async runExecutor(data: {
+    deploymentBuildId: number;
     url: string;
     websiteUuid: string;
     buildCommand: string;
@@ -119,6 +103,20 @@ export class BuildProjectWorker extends BaseQueueWorker {
     apiSecret: string;
   }): Promise<any> {
     console.info('RUN EXECUTOR (BuildProjectWorker). data: ', data);
+
+    const deploymentBuild = await new DeploymentBuild(
+      {},
+      this.context,
+    ).populateById(data.deploymentBuildId);
+
+    if (deploymentBuild.exists()) {
+      console.info('Deployment build does not exist');
+      return;
+    }
+
+    deploymentBuild.buildStatus = DeploymentBuildStatus.IN_PROGRESS;
+
+    await deploymentBuild.update();
 
     const decryptedSecret = decrypt(
       data.apiSecret,
@@ -146,26 +144,42 @@ export class BuildProjectWorker extends BaseQueueWorker {
       },
     );
 
-    child.stdout.on('data', (data) => {
+    let lastLog = '';
+    child.stdout.on('data', async (data) => {
+      await deploymentBuild.addLog(data);
       console.log(`stdout: ${data}`);
     });
 
-    child.stderr.on('data', (data) => {
+    child.stderr.on('data', async (data) => {
+      lastLog = data;
+      await deploymentBuild.addLog(data);
       console.error(`stderr: ${data}`);
     });
 
-    child.on('error', (error) => {
+    child.on('error', async (error) => {
+      await deploymentBuild.addLog(error.message);
       console.error(`error: ${error.message}`);
     });
 
     // Wait for the child process to finish
     await new Promise((resolve, reject) => {
-      child.on('close', (data) => {
-        console.log(`child process exited with code ${data}`);
-        resolve(data);
+      child.on('close', async (data) => {
+        try {
+          const deployInfo = JSON.parse(lastLog) as {
+            uuid: string;
+          };
+          await deploymentBuild.handleSuccess(deployInfo.uuid);
+          console.log(`Success, child process exited with code ${data}`);
+          resolve(data);
+        } catch (error) {
+          console.log('Error parsing deployment information', error);
+          await deploymentBuild.handleFailure();
+          reject(data);
+        }
       });
-      child.on('error', (data) => {
-        console.log(`child process exited with code ${data}`);
+      child.on('error', async (data) => {
+        await deploymentBuild.handleFailure();
+        console.log(`Failure, child process exited with code ${data}`);
         reject(data);
       });
     });

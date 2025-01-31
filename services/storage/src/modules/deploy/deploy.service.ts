@@ -14,6 +14,7 @@ import {
 } from '@apillon/workers-lib';
 import {
   AppEnvironment,
+  DeploymentBuildStatus,
   LogType,
   SerializeFor,
   env,
@@ -25,6 +26,7 @@ import { CreateDeploymentConfigDto } from '@apillon/lib/src';
 import { Website } from '../hosting/models/website.model';
 import { encrypt } from '../../lib/encrypt-secret';
 import { inspect } from 'node:util';
+import { DeploymentBuild } from './models/deployment-build.model';
 
 export class DeployService {
   static async create(
@@ -96,56 +98,62 @@ export class DeployService {
     },
     context: ServiceContext,
   ) {
-    {
-      const parameters = {
-        url: event.urlWithToken,
-        websiteUuid: event.websiteUuid,
-        buildCommand: event.buildCommand,
-        installCommand: event.installCommand,
-        buildDirectory: event.buildDirectory,
-        apiKey: event.apiKey,
-        apiSecret: event.apiSecret,
-      };
+    const deploymentBuild = new DeploymentBuild({}, context).populate({
+      buildStatus: DeploymentBuildStatus.PENDING,
+      websiteUuid: event.websiteUuid,
+    });
 
-      writeLog(
-        LogType.INFO,
-        `Parameters for build project worker ${inspect(parameters)}`,
+    await deploymentBuild.insert();
+
+    const parameters = {
+      url: event.urlWithToken,
+      websiteUuid: event.websiteUuid,
+      buildCommand: event.buildCommand,
+      installCommand: event.installCommand,
+      buildDirectory: event.buildDirectory,
+      apiKey: event.apiKey,
+      apiSecret: event.apiSecret,
+      deploymentBuildId: deploymentBuild.id,
+    };
+
+    writeLog(
+      LogType.INFO,
+      `Parameters for build project worker ${inspect(parameters)}`,
+    );
+
+    if (
+      env.APP_ENV === AppEnvironment.LOCAL_DEV ||
+      env.APP_ENV === AppEnvironment.TEST
+    ) {
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
+      const wd = new WorkerDefinition(
+        serviceDef,
+        WorkerName.BUILD_PROJECT_WORKER,
+        {
+          parameters,
+        },
       );
 
-      if (
-        env.APP_ENV === AppEnvironment.LOCAL_DEV ||
-        env.APP_ENV === AppEnvironment.TEST
-      ) {
-        const serviceDef: ServiceDefinition = {
-          type: ServiceDefinitionType.SQS,
-          config: { region: 'test' },
-          params: { FunctionName: 'test' },
-        };
-        const wd = new WorkerDefinition(
-          serviceDef,
-          WorkerName.BUILD_PROJECT_WORKER,
-          {
-            parameters,
-          },
-        );
-
-        const builderWorker = new BuildProjectWorker(
-          wd,
-          context,
-          QueueWorkerType.EXECUTOR,
-        );
-        await builderWorker.runExecutor(parameters);
-      } else {
-        await sendToWorkerQueue(
-          env.BUILDER_SQS_URL,
-          WorkerName.BUILD_PROJECT_WORKER,
-          [parameters],
-          null,
-          null,
-        );
-      }
-
-      return true;
+      const builderWorker = new BuildProjectWorker(
+        wd,
+        context,
+        QueueWorkerType.EXECUTOR,
+      );
+      await builderWorker.runExecutor(parameters);
+    } else {
+      await sendToWorkerQueue(
+        env.BUILDER_SQS_URL,
+        WorkerName.BUILD_PROJECT_WORKER,
+        [parameters],
+        null,
+        null,
+      );
     }
+
+    return true;
   }
 }
