@@ -176,19 +176,6 @@ export async function deployNFTCollectionContract(
             ? SUBSTRATE_NFTS_MAX_SUPPLY
             : collection.maxSupply,
         ];
-        callArguments = [
-          collection.name,
-          collection.symbol,
-          collection.description ?? '', // unique requires an empty string instead of null
-          [], // we can implement admins
-          false, // unique suggested to avoid using AllowList since they will redesign it
-          collection.collectionType === NFTCollectionType.NESTABLE,
-          collection.isRevokable,
-          collection.isSoulbound,
-          collection.maxSupply <= 0
-            ? SUBSTRATE_NFTS_MAX_SUPPLY
-            : collection.maxSupply,
-        ];
         transactionHex = await client.createCollection(
           ...(callArguments as [
             string,
