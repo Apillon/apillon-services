@@ -2,38 +2,31 @@ import {
   CreateOasisSignatureDto,
   GenerateOtpDto,
   ValidateOtpDto,
+  CacheKeyPrefix,
+  CacheKeyTTL,
 } from '@apillon/lib';
-import { Ctx, Validation } from '@apillon/modules-lib';
+import { Cache, CacheInterceptor, Ctx, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   Post,
   Req,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 import { EmbeddedWalletService } from './embedded-wallet.service';
 import { ValidationGuard } from '../../guards/validation.guard';
 
 @Controller('embedded-wallet')
+@UseInterceptors(CacheInterceptor)
 export class EmbeddedWalletController {
   constructor(private ewalletService: EmbeddedWalletService) {}
 
-  // Note: Session tokens are getting replaced by only using whitelisted domains
-  // @Get('session-token')
-  // @ApiKeyPermissions({
-  //   role: DefaultApiKeyRole.KEY_EXECUTE,
-  //   serviceType: AttachedServiceType.WALLET,
-  // })
-  // @UseGuards(AuthGuard)
-  // async generateSessionToken(@Ctx() context: ApillonApiContext) {
-  //   return await this.ewalletService.generateSessionToken(context);
-  // }
-
   @Post('signature')
   @Validation({ dto: CreateOasisSignatureDto })
-  // @UseGuards(JwtGuard(JwtTokenType.EMBEDDED_WALLET_SDK_TOKEN), ValidationGuard)
   @UseGuards(ValidationGuard)
   @HttpCode(200)
   async createOasisSignature(
@@ -69,5 +62,14 @@ export class EmbeddedWalletController {
     @Body() body: ValidateOtpDto,
   ) {
     return await this.ewalletService.validateOtp(context, body);
+  }
+
+  @Get('evm-token-prices')
+  @Cache({
+    keyPrefix: CacheKeyPrefix.EVM_TOKEN_PRICES,
+    ttl: CacheKeyTTL.EXTENDED,
+  })
+  async getTopEvmTokenPrices() {
+    return await this.ewalletService.getEvmTokenPrices();
   }
 }
