@@ -104,6 +104,8 @@ export class DeployService {
       (await new DeploymentConfig({}, context).markDeletedByIds(
         configs.map((config) => config.id),
       ));
+
+    return true;
   }
 
   static async createDeploymentConfig(

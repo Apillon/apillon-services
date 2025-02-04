@@ -30,14 +30,6 @@ export class DeployService {
 
     const config = await storageMS.getDeployConfigByRepoId(repoId);
 
-    new Lmas().writeLog({
-      data: event,
-      logType: LogType.INFO,
-      message: `Config found ${event.ref} ${config.data.branchName} ${event.ref === `refs/heads/${config.branchName}`} `,
-      service: ServiceName.DEV_CONSOLE,
-      location: 'DeployService.handleGithubWebhook',
-    });
-
     if (event.ref === `refs/heads/${config.data.branchName}`) {
       new Lmas().writeLog({
         data: event,
