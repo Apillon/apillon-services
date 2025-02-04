@@ -108,8 +108,16 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [StorageEventType.TRIGGER_GITHUB_DEPLOY]: DeployService.triggerGithubDeploy,
     [StorageEventType.GET_DEPLOY_CONFIG_BY_REPO_ID]:
-      DeployService.getConfigByRepoId,
-    [StorageEventType.CREATE_DEPLOY_CONFIG]: DeployService.create,
+      DeployService.getDeploymentConfigByRepoId,
+    [StorageEventType.GET_PROJECT_GITHUB_CONFIG]:
+      DeployService.getProjectConfigByProjectUuid,
+    [StorageEventType.CREATE_DEPLOY_CONFIG]:
+      DeployService.createDeploymentConfig,
+    [StorageEventType.LINK_GITHUB]: DeployService.linkGithub,
+    [StorageEventType.UNLINK_GITHUB]: DeployService.unlinkGithub,
+    [StorageEventType.LIST_REPOS]: DeployService.listRepos,
+    [StorageEventType.LIST_DEPLOYMENT_BUILDS]:
+      DeployService.listDeploymentBuildsForWebsite,
   };
 
   return await processors[event.eventName](event, context);

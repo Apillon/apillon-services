@@ -1,3 +1,4 @@
+import { SqlModelStatus } from '@apillon/lib';
 import { DbTables } from '../../config/types';
 
 export async function upgrade(
@@ -7,7 +8,8 @@ export async function upgrade(
     CREATE TABLE IF NOT EXISTS \`${DbTables.DEPLOYMENT_BUILD}\` (
       \`id\` INT AUTO_INCREMENT PRIMARY KEY,
       \`deploymentUuid\` VARCHAR(36) NULL,
-      \`status\` INT NULL,
+      \`deploymentConfigId\` INT NOT NULL,
+      \`status\` INT NOT NULL DEFAULT ${SqlModelStatus.ACTIVE},
       \`buildStatus\` INT NOT NULL,
       \`logs\` TEXT NULL,
       \`websiteUuid\` VARCHAR(36) NOT NULL,
@@ -15,7 +17,8 @@ export async function upgrade(
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` INT NULL,
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      \`updateUser\` INT NULL
+      \`updateUser\` INT NULL,
+      FOREIGN KEY (\`deploymentConfigId\`) REFERENCES \`${DbTables.DEPLOYMENT_CONFIG}\` (\`id\`)
 
     )`);
 }

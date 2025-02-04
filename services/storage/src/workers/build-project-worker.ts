@@ -8,7 +8,8 @@ import { spawn } from 'child_process';
 import { decrypt } from '../lib/encrypt-secret';
 import { DeploymentBuild } from '../modules/deploy/models/deployment-build.model';
 import { DeploymentBuildStatus } from '@apillon/lib';
-import { Deployment } from '../modules/hosting/models/deployment.model';
+import { GithubProjectConfig } from '../modules/deploy/models/github-project-config.model';
+import { refreshAccessToken } from '../lib/github';
 
 // TO-DO - Move script to runtime
 const script = `#!/bin/bash
@@ -94,13 +95,13 @@ export class BuildProjectWorker extends BaseQueueWorker {
 
   public async runExecutor(data: {
     deploymentBuildId: number;
-    url: string;
     websiteUuid: string;
     buildCommand: string;
     installCommand: string;
     buildDirectory: string;
     apiKey: string;
     apiSecret: string;
+    url: string;
   }): Promise<any> {
     console.info('RUN EXECUTOR (BuildProjectWorker). data: ', data);
 
@@ -109,8 +110,19 @@ export class BuildProjectWorker extends BaseQueueWorker {
       this.context,
     ).populateById(data.deploymentBuildId);
 
-    if (deploymentBuild.exists()) {
-      console.info('Deployment build does not exist');
+    if (!deploymentBuild.exists()) {
+      console.error('Deployment build does not exist');
+      return;
+    }
+
+    const githubProjectConfig = await new GithubProjectConfig(
+      {},
+      this.context,
+    ).populateByWebsiteUuid(data.websiteUuid);
+
+    if (!githubProjectConfig.exists()) {
+      console.error('Github project config not found');
+      await deploymentBuild.handleFailure('Github project config not found');
       return;
     }
 
@@ -124,12 +136,19 @@ export class BuildProjectWorker extends BaseQueueWorker {
       env.BUILDER_API_SECRET_INITIALIZATION_VECTOR,
     );
 
+    const accessToken = refreshAccessToken(githubProjectConfig);
+
+    const urlWithToken = data.url.replace(
+      'https://',
+      `https://oauth2:${accessToken}@`,
+    );
+
     const child = spawn(
       '/bin/bash',
       [
         '-c',
         script,
-        data.url,
+        urlWithToken,
         data.websiteUuid,
         data.buildCommand,
         data.installCommand,

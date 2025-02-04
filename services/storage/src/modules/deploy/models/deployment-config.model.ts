@@ -8,6 +8,8 @@ import {
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, StorageErrorCode } from '../../../config/types';
+import { deleteWebhook } from '../../../lib/github';
+import { GithubProjectConfig } from './github-project-config.model';
 
 export class DeploymentConfig extends AdvancedSQLModel {
   public readonly tableName = DbTables.DEPLOYMENT_CONFIG;
@@ -37,6 +39,83 @@ export class DeploymentConfig extends AdvancedSQLModel {
     ],
   })
   public repoId: number;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.PROFILE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.AUTH,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.DEPLOYMENT_CONFIG_REPO_NAME_NOT_PRESENT,
+      },
+    ],
+  })
+  public repoName: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.PROFILE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.AUTH,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.DEPLOYMENT_CONFIG_REPO_OWNER_NAME_NOT_PRESENT,
+      },
+    ],
+  })
+  public repoOwnerName: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.PROFILE,
+      PopulateFrom.ADMIN,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: StorageErrorCode.DEPLOYMENT_CONFIG_HOOK_ID_NOT_PRESENT,
+      },
+    ],
+  })
+  public hookId: number;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -92,7 +171,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
 
   @prop({
     parser: {
-      resolver: stringParser(),
+      resolver: integerParser(),
     },
     populatable: [
       PopulateFrom.DB,
@@ -108,14 +187,8 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_CONFIG_ACCESS_TOKEN_NOT_PRESENT,
-      },
-    ],
   })
-  public accessToken: string;
+  public projectConfigId: number;
 
   @prop({
     parser: {
@@ -254,5 +327,38 @@ export class DeploymentConfig extends AdvancedSQLModel {
     return data?.length
       ? this.populate(data[0], PopulateFrom.DB)
       : this.reset();
+  }
+
+  public async findActiveByProjectConfig(
+    projectConfigId: number,
+  ): Promise<DeploymentConfig[]> {
+    return (
+      await this.getContext().mysql.paramExecute(
+        `SELECT *
+      FROM \`${DbTables.DEPLOYMENT_CONFIG}\`
+      WHERE projectConfigId = @projectConfigId
+      AND status = ${SqlModelStatus.ACTIVE}`,
+        {
+          projectConfigId,
+        },
+      )
+    ).map((data) => this.populate(data, PopulateFrom.DB));
+  }
+
+  public async markDeletedByIds(ids: number[]) {
+    await this.getContext().mysql.paramExecute(
+      `UPDATE \`${DbTables.DEPLOYMENT_CONFIG}\`
+      SET status = ${SqlModelStatus.DELETED}
+      WHERE id IN (${ids.join(',')})`,
+    );
+  }
+
+  public async deleteConfigWebhook(projectConfig: GithubProjectConfig) {
+    await deleteWebhook(
+      projectConfig,
+      this.repoOwnerName,
+      this.repoName,
+      this.hookId,
+    );
   }
 }

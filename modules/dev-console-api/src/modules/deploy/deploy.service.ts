@@ -1,6 +1,8 @@
 import {
   CreateDeploymentConfigDto,
+  DeploymentBuildQueryFilter,
   GitHubWebhookPayload,
+  GithubLinkDto,
   Lmas,
   LogType,
   ServiceName,
@@ -8,6 +10,7 @@ import {
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
+import { GithubUnlinkDto } from '@apillon/lib';
 
 @Injectable()
 export class DeployService {
@@ -43,21 +46,23 @@ export class DeployService {
         service: ServiceName.DEV_CONSOLE,
         location: 'DeployService.handleGithubWebhook',
       });
-      const url = event.repository.clone_url;
-      const urlWithToken = url.replace(
-        'https://',
-        `https://${config.data.accessToken}@`,
-      );
       await storageMS.triggerGithubDeploy({
-        urlWithToken,
+        url: event.repository.clone_url,
         websiteUuid: config.data.websiteUuid,
         buildCommand: config.data.buildCommand,
         installCommand: config.data.installCommand,
         buildDirectory: config.data.buildDirectory,
         apiKey: config.data.apiKey,
         apiSecret: config.data.apiSecret,
+        configId: config.data.id,
       });
     }
+  }
+
+  async getProjectConfig(context: DevConsoleApiContext, projectUuid: string) {
+    return (
+      await new StorageMicroservice(context).getProjectConfig(projectUuid)
+    ).data;
   }
 
   async createDeploymentConfig(
@@ -65,6 +70,27 @@ export class DeployService {
     body: CreateDeploymentConfigDto,
   ) {
     return (await new StorageMicroservice(context).createDeploymentConfig(body))
+      .data;
+  }
+
+  async linkGithub(context: DevConsoleApiContext, body: GithubLinkDto) {
+    return (await new StorageMicroservice(context).linkGithub(body)).data;
+  }
+
+  async unlinkGithub(context: DevConsoleApiContext, body: GithubUnlinkDto) {
+    return (await new StorageMicroservice(context).unlinkGithub(body)).data;
+  }
+
+  async listRepos(context: DevConsoleApiContext, project_uuid: string) {
+    return (await new StorageMicroservice(context).listRepos(project_uuid))
+      .data;
+  }
+
+  async listDeploymentBuilds(
+    context: DevConsoleApiContext,
+    filter: DeploymentBuildQueryFilter,
+  ) {
+    return (await new StorageMicroservice(context).listDeploymentBuilds(filter))
       .data;
   }
 }

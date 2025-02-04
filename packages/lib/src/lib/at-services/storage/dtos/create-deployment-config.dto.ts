@@ -15,7 +15,7 @@ export class CreateDeploymentConfigDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.REPO_ID_NOT_FOUND,
+        code: ValidatorErrorCode.REPO_ID_NOT_PRESENT,
       },
     ],
   })
@@ -28,11 +28,11 @@ export class CreateDeploymentConfigDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.BRANCH_NAME_NOT_FOUND,
+        code: ValidatorErrorCode.REPO_NAME_NOT_PRESENT,
       },
     ],
   })
-  public branchName: number;
+  public repoName: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -41,24 +41,37 @@ export class CreateDeploymentConfigDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.WEBSITE_UUID_NOT_FOUND,
+        code: ValidatorErrorCode.REPO_OWNER_NAME_NOT_PRESENT,
+      },
+    ],
+  })
+  public repoOwnerName: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.BRANCH_NAME_NOT_PRESENT,
+      },
+    ],
+  })
+  public branchName: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.WEBSITE_UUID_NOT_PRESENT,
       },
     ],
   })
   public websiteUuid: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.ACCESS_TOKEN_NOT_FOUND,
-      },
-    ],
-  })
-  public accessToken: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -74,7 +87,7 @@ export class CreateDeploymentConfigDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.BUILD_DIRECTORY_NOT_FOUND,
+        code: ValidatorErrorCode.BUILD_DIRECTORY_NOT_PRESENT,
       },
     ],
   })
@@ -94,7 +107,7 @@ export class CreateDeploymentConfigDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.DEPLOYMENT_API_KEY_NOT_FOUND,
+        code: ValidatorErrorCode.DEPLOYMENT_API_KEY_NOT_PRESENT,
       },
     ],
   })
@@ -107,7 +120,7 @@ export class CreateDeploymentConfigDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.DEPLOYMENT_API_SECRET_NOT_FOUND,
+        code: ValidatorErrorCode.DEPLOYMENT_API_SECRET_NOT_PRESENT,
       },
     ],
   })

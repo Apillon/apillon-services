@@ -1,0 +1,36 @@
+import { stringParser } from '@rawmodel/parsers';
+import { ModelBase, prop } from '../../../base-models/base';
+import {
+  PopulateFrom,
+  SerializeFor,
+  ValidatorErrorCode,
+} from '../../../../config/types';
+import { presenceValidator } from '@rawmodel/validators';
+
+export class GithubLinkDto extends ModelBase {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.USER_OAUTH_TOKEN_NOT_PRESENT,
+      },
+    ],
+  })
+  public code: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.PROJECT_UUID_NOT_PRESENT,
+      },
+    ],
+  })
+  public project_uuid: string;
+}
