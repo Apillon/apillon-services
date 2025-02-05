@@ -192,13 +192,13 @@ export class DeployService {
   }
 
   static async getProjectConfigByProjectUuid(
-    event: { projectUuid: string },
+    event: { project_uuid: string },
     context: ServiceContext,
   ) {
     const projectConfig = await new GithubProjectConfig(
       {},
       context,
-    ).populateByProjectUuid(event.projectUuid);
+    ).populateByProjectUuid(event.project_uuid);
 
     if (!projectConfig.exists()) {
       throw new StorageNotFoundException(
