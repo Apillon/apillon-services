@@ -1012,6 +1012,8 @@ export class NftsService {
                 context,
                 collection,
                 TransactionType.MINT_NFT,
+                callMethod,
+                callArguments,
                 serializedTransaction,
                 spendCredit.referenceId,
                 minimumGas,
@@ -1704,6 +1706,8 @@ export class NftsService {
    * @param context - The service context used for managing backend services and database transactions.
    * @param collection - The collection data containing details such as chain, deployerAddress, and chainType.
    * @param transactionType - The type of transaction to be performed, such as minting or transferring.
+   * @param callMethod
+   * @param callArguments
    * @param txHash - The transaction hash representing the blockchain transaction identifier.
    * @param transaction_uuid - The unique identifier for the transaction in the system.
    * @param [minimumGas] - Optional parameter representing the minimum gas required for the transaction.
