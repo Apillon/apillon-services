@@ -208,6 +208,10 @@ async function getReposRequest(accessToken: string) {
     headers: {
       Authorization: `token ${accessToken}`,
     },
+    params: {
+      sort: 'pushed',
+      per_page: 100,
+    },
   });
 
   return repos.data;

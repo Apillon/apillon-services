@@ -288,7 +288,7 @@ describe('DeployService tests', () => {
       );
 
       const response = await DeployService.getProjectConfigByProjectUuid(
-        { projectUuid: expectedProjectConfig.projectUuid },
+        { project_uuid: expectedProjectConfig.projectUuid },
         stage.context,
       );
 
