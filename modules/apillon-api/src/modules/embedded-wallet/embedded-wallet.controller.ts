@@ -4,6 +4,9 @@ import {
   ValidateOtpDto,
   CacheKeyPrefix,
   CacheKeyTTL,
+  CodeException,
+  UnauthorizedErrorCodes,
+  ForbiddenErrorCodes,
 } from '@apillon/lib';
 import { Cache, CacheInterceptor, Ctx, Validation } from '@apillon/modules-lib';
 import {
@@ -11,6 +14,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  HttpStatus,
   Post,
   Req,
   UseGuards,
@@ -38,6 +42,18 @@ export class EmbeddedWalletController {
       request.headers[
         ['origin', 'referer', 'host'].find((h) => !!request.headers[h])
       ];
+
+    if (body.referrerDomain) {
+      if (!body.origin?.endsWith('passkey.apillon.io')) {
+        throw new CodeException({
+          status: HttpStatus.FORBIDDEN,
+          code: ForbiddenErrorCodes.INVALID_ORIGIN,
+          errorCodes: ForbiddenErrorCodes,
+        });
+      }
+      body.origin = body.referrerDomain;
+    }
+
     return await this.ewalletService.createOasisSignature(context, body);
   }
 

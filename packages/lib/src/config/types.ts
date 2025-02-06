@@ -879,6 +879,7 @@ export enum UnauthorizedErrorCodes {
 
 export enum ForbiddenErrorCodes {
   FORBIDDEN = 40300000,
+  INVALID_ORIGIN = 40300001,
 }
 
 //#endregion
