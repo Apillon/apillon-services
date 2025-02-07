@@ -7,6 +7,7 @@ import {
   CodeException,
   UnauthorizedErrorCodes,
   ForbiddenErrorCodes,
+  env,
 } from '@apillon/lib';
 import { Cache, CacheInterceptor, Ctx, Validation } from '@apillon/modules-lib';
 import {
@@ -43,15 +44,21 @@ export class EmbeddedWalletController {
         ['origin', 'referer', 'host'].find((h) => !!request.headers[h])
       ];
 
+    console.log('Origin: ', body.origin);
+    console.log('ReferrerDomain: ', body.referrerDomain);
+
+    // If body referrer domain is present, check that domain for embedded wallet whitelist
     if (body.referrerDomain) {
-      if (!body.origin?.endsWith('passkey.apillon.io')) {
+      // Request origin must match with the passkey gateway URL
+      if (!body.origin?.endsWith(env.PASSKEY_GATEWAY_URL)) {
         throw new CodeException({
           status: HttpStatus.FORBIDDEN,
           code: ForbiddenErrorCodes.INVALID_ORIGIN,
           errorCodes: ForbiddenErrorCodes,
         });
       }
-      body.origin = body.referrerDomain;
+      const url = new URL(body.referrerDomain);
+      body.origin = url.port ? `${url.hostname}:${url.port}` : url.hostname;
     }
 
     return await this.ewalletService.createOasisSignature(context, body);
