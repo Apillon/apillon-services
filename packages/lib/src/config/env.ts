@@ -698,6 +698,7 @@ export interface IEnv {
    */
   OASIS_SIGNING_WALLET: string;
   OASIS_MESSAGE_GAS_LIMIT: number;
+  PASSKEY_GATEWAY_URL: string;
 
   /*
    * URL SHORTENER
@@ -1288,6 +1289,7 @@ export let env: IEnv = {
   OASIS_SIGNING_WALLET: process.env['OASIS_SIGNING_WALLET'],
   OASIS_MESSAGE_GAS_LIMIT:
     parseInt(process.env['OASIS_MESSAGE_GAS_LIMIT']) || 1000000,
+  PASSKEY_GATEWAY_URL: process.env['PASSKEY_GATEWAY_URL'],
   /** URL SHORTENER */
   SHORTENER_VALID_DOMAINS: process.env['SHORTENER_VALID_DOMAINS']?.split(
     ',',

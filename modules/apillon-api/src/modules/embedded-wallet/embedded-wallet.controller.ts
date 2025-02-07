@@ -2,11 +2,9 @@ import {
   CreateOasisSignatureDto,
   GenerateOtpDto,
   ValidateOtpDto,
-  CacheKeyPrefix,
-  CacheKeyTTL,
   CodeException,
-  UnauthorizedErrorCodes,
   ForbiddenErrorCodes,
+  env,
 } from '@apillon/lib';
 import { Ctx, Validation } from '@apillon/modules-lib';
 import {
@@ -26,20 +24,8 @@ import { ValidationGuard } from '../../guards/validation.guard';
 export class EmbeddedWalletController {
   constructor(private ewalletService: EmbeddedWalletService) {}
 
-  // Note: Session tokens are getting replaced by only using whitelisted domains
-  // @Get('session-token')
-  // @ApiKeyPermissions({
-  //   role: DefaultApiKeyRole.KEY_EXECUTE,
-  //   serviceType: AttachedServiceType.WALLET,
-  // })
-  // @UseGuards(AuthGuard)
-  // async generateSessionToken(@Ctx() context: ApillonApiContext) {
-  //   return await this.ewalletService.generateSessionToken(context);
-  // }
-
   @Post('signature')
   @Validation({ dto: CreateOasisSignatureDto })
-  // @UseGuards(JwtGuard(JwtTokenType.EMBEDDED_WALLET_SDK_TOKEN), ValidationGuard)
   @UseGuards(ValidationGuard)
   @HttpCode(200)
   async createOasisSignature(
@@ -52,21 +38,23 @@ export class EmbeddedWalletController {
         ['origin', 'referer', 'host'].find((h) => !!request.headers[h])
       ];
 
+    // If body referrer domain is present, check that domain for embedded wallet whitelist
     if (body.referrerDomain) {
-      if (!body.origin?.endsWith('passkey.apillon.io')) {
+      // Request origin must match with the passkey gateway URL
+      if (!body.origin?.endsWith(env.PASSKEY_GATEWAY_URL)) {
         throw new CodeException({
           status: HttpStatus.FORBIDDEN,
           code: ForbiddenErrorCodes.INVALID_ORIGIN,
           errorCodes: ForbiddenErrorCodes,
         });
       }
-      body.origin = body.referrerDomain;
+      const url = new URL(body.referrerDomain);
+      body.origin = url.port ? `${url.hostname}:${url.port}` : url.hostname;
     }
 
     return await this.ewalletService.createOasisSignature(context, body);
   }
 
-  // TODO: Need to add some kind of auth/validation, for example captcha
   @Post('otp/generate')
   @Validation({ dto: GenerateOtpDto })
   @UseGuards(ValidationGuard)
