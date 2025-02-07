@@ -1,26 +1,27 @@
 import {
   ApiName,
   BaseProjectQueryFilter,
+  BlockchainMicroservice,
+  ChainType,
   Context,
+  env,
   ErrorCode,
-  LogType,
+  getQueryParams,
   Lmas,
+  LogType,
   PopulateFrom,
+  presenceValidator,
+  prop,
+  selectAndCountQuery,
   SerializeFor,
   ServiceName,
   SqlModelStatus,
   SubstrateChain,
   UuidSqlModel,
-  getQueryParams,
-  presenceValidator,
-  prop,
-  selectAndCountQuery,
-  BlockchainMicroservice,
-  env,
 } from '@apillon/lib';
 import { DbTables, SocialErrorCode } from '../../../config/types';
 
-import { stringParser, integerParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   SocialCodeException,
   SocialValidationException,
@@ -288,10 +289,10 @@ export class Space extends UuidSqlModel {
     //Get subsocial wallets, and pick least used
     const wallets = await new BlockchainMicroservice(context).getWallets(
       SubstrateChain.SUBSOCIAL,
+      ChainType.SUBSTRATE,
     );
 
     console.info('Retrieving wallet address used to create space');
-
     const queries = [];
     for (const wallet of wallets.data.map((x) => x.address)) {
       queries.push(`

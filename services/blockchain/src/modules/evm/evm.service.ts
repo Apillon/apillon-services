@@ -13,7 +13,7 @@ import {
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { LogOutput, sendToWorkerQueue } from '@apillon/workers-lib';
-import { BigNumber, ethers } from 'ethers';
+import { ethers } from 'ethers';
 import { Endpoint } from '../../common/models/endpoint';
 import { Transaction } from '../../common/models/transaction';
 import { BlockchainErrorCode } from '../../config/types';
@@ -106,23 +106,8 @@ export class EvmService {
 
     console.log('Endpoint: ', endpoint.url);
     const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
-
     const estimatedBaseFee = await provider.getGasPrice();
-    let maxPriorityFeePerGas: BigNumber;
-    switch (params.chain) {
-      case EvmChain.POLYGON_AMOY: {
-        maxPriorityFeePerGas = ethers.utils.parseUnits('30', 'gwei');
-        break;
-      }
-      case EvmChain.MOONBASE:
-      case EvmChain.MOONBEAM: {
-        maxPriorityFeePerGas = ethers.utils.parseUnits('3', 'gwei');
-        break;
-      }
-      default:
-        maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei');
-    }
-
+    const maxPriorityFeePerGas = await getMaxPriorityFee(provider);
     // Ensuring that transaction is desirable for at least 6 blocks.
     const maxFeePerGas = estimatedBaseFee.mul(2).add(maxPriorityFeePerGas);
     console.log(
@@ -134,7 +119,6 @@ export class EvmService {
     const conn = await context.mysql.start();
     try {
       let wallet = new Wallet({}, context);
-
       // if specific address is specified to be used for this transaction fetch the wallet
       if (params.fromAddress) {
         wallet = await wallet.populateByAddress(
@@ -144,7 +128,6 @@ export class EvmService {
           conn,
         );
       }
-
       // if address is not specified or not found then get the least used wallet
       if (!wallet.exists()) {
         wallet = await wallet.populateByLeastUsed(
@@ -153,7 +136,6 @@ export class EvmService {
           conn,
         );
       }
-
       if (!wallet.exists()) {
         throw new BlockchainCodeException({
           code: BlockchainErrorCode.WALLET_DOES_NOT_EXISTS,
@@ -168,6 +150,7 @@ export class EvmService {
       unsignedTx.from = wallet.address;
       unsignedTx.maxPriorityFeePerGas = maxPriorityFeePerGas;
       unsignedTx.maxFeePerGas = maxFeePerGas;
+      // Indicates that TX follows EIP-1559 (Ethereum upgrade introducing "dynamic gas fees")
       unsignedTx.gasPrice = null;
       unsignedTx.type = 2;
       unsignedTx.gasLimit = null;
@@ -175,7 +158,6 @@ export class EvmService {
       unsignedTx.nonce = wallet.nextNonce;
 
       const gas = await provider.estimateGas(unsignedTx);
-
       console.log(`Estimated gas=${gas}`);
       // Increasing gas limit by 10% of current gas price to be on the safe side
       let gasLimit = Math.floor(gas.toNumber() * 1.1);
@@ -567,5 +549,26 @@ export class EvmService {
       signature,
       gasPrice: gasPrice.toString(),
     };
+  }
+}
+
+const defaultPriorityFee = ethers.utils.parseUnits('1', 'gwei');
+const maxPriorityFee = ethers.utils.parseUnits('100', 'gwei');
+
+async function getMaxPriorityFee(provider: ethers.providers.JsonRpcProvider) {
+  try {
+    const feeData = await provider.getFeeData();
+    if (!feeData.maxPriorityFeePerGas) {
+      return defaultPriorityFee;
+    }
+    // limit priority fee to prevent spending too much
+    if (feeData.maxPriorityFeePerGas.gt(maxPriorityFee)) {
+      return maxPriorityFee;
+    }
+    return feeData.maxPriorityFeePerGas;
+  } catch (error) {
+    console.warn('Failed fetching fee data:', error);
+    // Use fallback value in case fetching fee data fails
+    return defaultPriorityFee;
   }
 }
