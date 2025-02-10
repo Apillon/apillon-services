@@ -182,6 +182,7 @@ async function deleteWebhookRequest(
 export async function refreshAccessToken(projectConfig: GithubProjectConfig) {
   const refreshData = await axios.post<{
     access_token: string;
+    refresh_token?: string;
   }>('https://github.com/login/oauth/access_token', undefined, {
     params: {
       client_id: env.GITHUB_AUTH_CLIENT_ID,
@@ -190,6 +191,10 @@ export async function refreshAccessToken(projectConfig: GithubProjectConfig) {
       refresh_token: projectConfig.refresh_token,
     },
   });
+
+  if (refreshData.data.refresh_token) {
+    projectConfig.refresh_token = refreshData.data.refresh_token;
+  }
 
   projectConfig.access_token = refreshData.data.access_token;
   await projectConfig.update();
