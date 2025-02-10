@@ -13,6 +13,7 @@ import {
   sendToWorkerQueue,
 } from '@apillon/workers-lib';
 import {
+  AWS_KMS,
   AppEnvironment,
   CreateDeploymentConfigDto,
   DeploymentBuildQueryFilter,
@@ -26,7 +27,6 @@ import { BuildProjectWorker } from '../../workers/build-project-worker';
 import { WorkerName } from '../../workers/builder-executor';
 
 import { Website } from '../hosting/models/website.model';
-import { encrypt } from '../../lib/encrypt-secret';
 import { inspect } from 'node:util';
 import { DeploymentBuild } from './models/deployment-build.model';
 import { GithubProjectConfig } from './models/github-project-config.model';
@@ -148,6 +148,8 @@ export class DeployService {
       event.body.repoName,
     );
 
+    const kmsClient = new AWS_KMS();
+
     const deploymentConfig = new DeploymentConfig({}, context).populate({
       repoId: event.body.repoId,
       repoName: event.body.repoName,
@@ -160,10 +162,9 @@ export class DeployService {
       buildDirectory: event.body.buildDirectory,
       installCommand: event.body.installCommand,
       apiKey: event.body.apiKey,
-      apiSecret: encrypt(
+      apiSecret: await kmsClient.encrypt(
         event.body.apiSecret,
-        env.BUILDER_API_SECRET_ENCRYPTION_KEY,
-        env.BUILDER_API_SECRET_INITIALIZATION_VECTOR,
+        env.DEPLOY_KMS_KEY_ID,
       ),
     });
 

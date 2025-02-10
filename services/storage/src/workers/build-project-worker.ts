@@ -1,11 +1,10 @@
-import { Context, env } from '@apillon/lib';
+import { AWS_KMS, Context, env } from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { spawn } from 'child_process';
-import { decrypt } from '../lib/encrypt-secret';
 import { DeploymentBuild } from '../modules/deploy/models/deployment-build.model';
 import { DeploymentBuildStatus } from '@apillon/lib';
 import { GithubProjectConfig } from '../modules/deploy/models/github-project-config.model';
@@ -130,10 +129,11 @@ export class BuildProjectWorker extends BaseQueueWorker {
 
     await deploymentBuild.update();
 
-    const decryptedSecret = decrypt(
+    const kmsClient = new AWS_KMS();
+
+    const decryptedSecret = await kmsClient.decrypt(
       data.apiSecret,
-      env.BUILDER_API_SECRET_ENCRYPTION_KEY,
-      env.BUILDER_API_SECRET_INITIALIZATION_VECTOR,
+      env.DEPLOY_KMS_KEY_ID,
     );
 
     const accessToken = refreshAccessToken(githubProjectConfig);
