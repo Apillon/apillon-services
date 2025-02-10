@@ -1,4 +1,5 @@
 import {
+  AWS_KMS,
   CreateDeploymentConfigDto,
   DefaultUserRole,
   DeploymentBuildQueryFilter,
@@ -29,6 +30,14 @@ jest.mock('../../../lib/github', () => ({
   getRepos: jest.fn(),
   createWebhook: jest.fn(),
 }));
+
+// Mock the encrypt method of AWS_KMS
+jest
+  .spyOn(AWS_KMS.prototype, 'encrypt')
+  .mockImplementation(async (data, keyId) => {
+    // Your mock implementation here
+    return `encrypted-${data}`;
+  });
 
 describe('DeployService tests', () => {
   let stage: Stage;
@@ -135,7 +144,7 @@ describe('DeployService tests', () => {
     });
   });
 
-  describe('createDeploymentConfig', () => {
+  describe.only('createDeploymentConfig', () => {
     afterEach(async () => {
       await stage.db.paramExecute(`DELETE FROM ${DbTables.DEPLOYMENT_CONFIG}`);
 
