@@ -20,6 +20,7 @@ import {
   DeploymentBuildStatus,
   GithubLinkDto,
   LogType,
+  SetEnvironmentVariablesDto,
   env,
   writeLog,
 } from '@apillon/lib';
@@ -286,6 +287,72 @@ export class DeployService {
     return await new DeploymentBuild({}, context).listForWebsite(filter);
   }
 
+  static async setEnvironmentVariables(
+    event: {
+      body: SetEnvironmentVariablesDto;
+    },
+    context: ServiceContext,
+  ) {
+    const deploymentConfig = await new DeploymentConfig(
+      {},
+      context,
+    ).populateById(event.body.deploymentConfigId);
+
+    if (!deploymentConfig.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.DEPLOYMENT_NOT_FOUND);
+    }
+
+    const website = await new Website({}, context).populateByUUID(
+      deploymentConfig.websiteUuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+
+    website.canModify(context);
+
+    if (event.body.variables?.length) {
+      const kmsClient = new AWS_KMS();
+      deploymentConfig.encryptedVariables = await kmsClient.encrypt(
+        JSON.stringify(event.body.variables),
+        env.DEPLOY_KMS_KEY_ID,
+      );
+    } else {
+      deploymentConfig.encryptedVariables = null;
+    }
+
+    await deploymentConfig.validateOrThrow(StorageValidationException);
+
+    return await deploymentConfig.update();
+  }
+
+  static async getEnvironmentVariables(
+    event: { deploymentConfigId: number },
+    context: ServiceContext,
+  ) {
+    const deploymentConfig = await new DeploymentConfig(
+      {},
+      context,
+    ).populateById(event.deploymentConfigId);
+
+    if (!deploymentConfig.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.DEPLOYMENT_NOT_FOUND);
+    }
+
+    const website = await new Website({}, context).populateByUUID(
+      deploymentConfig.websiteUuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+
+    website.canAccess(context);
+
+    return await deploymentConfig.getEnvironmentVariables();
+  }
+
   static async triggerGithubDeploy(
     event: {
       url: string;
@@ -296,6 +363,10 @@ export class DeployService {
       apiKey: string;
       apiSecret: string;
       configId: number;
+      variables: {
+        key: string;
+        value: string;
+      }[];
     },
     context: ServiceContext,
   ) {
@@ -310,6 +381,8 @@ export class DeployService {
     const parameters = {
       ...event,
       deploymentBuildId: deploymentBuild.id,
+      configId: event.configId,
+      variables: event.variables,
     };
 
     writeLog(

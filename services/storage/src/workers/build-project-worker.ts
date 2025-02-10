@@ -103,6 +103,10 @@ export class BuildProjectWorker extends BaseQueueWorker {
     apiKey: string;
     apiSecret: string;
     url: string;
+    variables: {
+      key: string;
+      value: string;
+    }[];
   }): Promise<any> {
     console.info('RUN EXECUTOR (BuildProjectWorker). data: ', data);
 
@@ -164,6 +168,10 @@ export class BuildProjectWorker extends BaseQueueWorker {
       {
         env: {
           ...process.env,
+          ...data.variables.reduce((vars, variable) => {
+            vars[variable.key] = variable.value;
+            return vars;
+          }, {}),
         },
       },
     );

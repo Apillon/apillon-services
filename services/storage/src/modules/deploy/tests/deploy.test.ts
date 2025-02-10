@@ -5,6 +5,7 @@ import {
   DeploymentBuildQueryFilter,
   DeploymentBuildStatus,
   GithubLinkDto,
+  SetEnvironmentVariablesDto,
   SqlModelStatus,
 } from '@apillon/lib';
 import { Stage, releaseStage, setupTest } from '../../../../test/setup';
@@ -37,6 +38,14 @@ jest
   .mockImplementation(async (data, keyId) => {
     // Your mock implementation here
     return `encrypted-${data}`;
+  });
+
+// Mock the encrypt method of AWS_KMS
+jest
+  .spyOn(AWS_KMS.prototype, 'decrypt')
+  .mockImplementation(async (data, keyId) => {
+    // Your mock implementation here
+    return '[{"key":"key","value":"value"}]';
   });
 
 describe('DeployService tests', () => {
@@ -144,7 +153,7 @@ describe('DeployService tests', () => {
     });
   });
 
-  describe.only('createDeploymentConfig', () => {
+  describe('createDeploymentConfig', () => {
     afterEach(async () => {
       await stage.db.paramExecute(`DELETE FROM ${DbTables.DEPLOYMENT_CONFIG}`);
 
@@ -411,6 +420,8 @@ describe('DeployService tests', () => {
       await stage.db.paramExecute(`DELETE FROM ${DbTables.DEPLOYMENT_CONFIG}`);
 
       await stage.db.paramExecute(`DELETE FROM ${DbTables.WEBSITE}`);
+
+      await stage.db.paramExecute(`DELETE FROM ${DbTables.BUCKET}`);
     });
 
     test('User can list deployment builds for a website', async () => {
@@ -483,6 +494,142 @@ describe('DeployService tests', () => {
       expect(response.items[0].buildStatus).toBe(buildExample.buildStatus);
       expect(response.items[0].logs).toBe(buildExample.logs);
       expect(response.items[0].websiteUuid).toBe(buildExample.websiteUuid);
+    });
+  });
+
+  describe('setEnvironmentVariables', () => {
+    afterEach(async () => {
+      await stage.db.paramExecute(`DELETE FROM ${DbTables.DEPLOYMENT_CONFIG}`);
+
+      await stage.db.paramExecute(
+        `DELETE FROM ${DbTables.GITHUB_PROJECT_CONFIG}`,
+      );
+
+      await stage.db.paramExecute(`DELETE FROM ${DbTables.WEBSITE}`);
+
+      await stage.db.paramExecute(`DELETE FROM ${DbTables.BUCKET}`);
+    });
+
+    test('User can set environment variables', async () => {
+      stage.context.user = {
+        authUser: {
+          authUserRoles: [
+            {
+              project_uuid: 'uuid',
+              role: {
+                id: DefaultUserRole.PROJECT_ADMIN,
+              },
+            },
+          ],
+        },
+      };
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
+        VALUES (1, 'uuid', 'uuid', 1, 'name')`,
+      );
+
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
+        VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
+      );
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.GITHUB_PROJECT_CONFIG} (project_uuid, access_token, refresh_token, username)
+        VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', '${expectedProjectConfig.refreshToken}', '${expectedProjectConfig.login}')`,
+      );
+
+      const lastInsertIdProjectConfig = await stage.db.paramExecute(
+        `SELECT LAST_INSERT_ID() as id`,
+      );
+
+      const githubProjectConfigId = lastInsertIdProjectConfig[0].id;
+
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.DEPLOYMENT_CONFIG} (repoId, repoName, repoOwnerName, hookId, branchName, websiteUuid, projectConfigId, buildDirectory, apiKey, apiSecret)
+        VALUES (1, 'repo-name', 'owner', 1, 'main', 'uuid', ${githubProjectConfigId}, 'dist', 'key', 'secret')`,
+      );
+
+      const lastInsertId = await stage.db.paramExecute(
+        `SELECT LAST_INSERT_ID() as id`,
+      );
+
+      const deploymentConfigId = lastInsertId[0].id;
+
+      const variables = [
+        {
+          key: 'key',
+          value: 'value',
+        },
+      ];
+
+      const response = await DeployService.setEnvironmentVariables(
+        {
+          body: new SetEnvironmentVariablesDto({}, stage.context).populate({
+            variables,
+            deploymentConfigId,
+          }),
+        },
+        stage.context,
+      );
+
+      expect(response).toBeDefined();
+      expect(response.encryptedVariables).toBeDefined();
+    });
+  });
+
+  describe('getEnvironmentVariables', () => {
+    test('User can get environment variables', async () => {
+      stage.context.user = {
+        authUser: {
+          authUserRoles: [
+            {
+              project_uuid: 'uuid',
+              role: {
+                id: DefaultUserRole.PROJECT_ADMIN,
+              },
+            },
+          ],
+        },
+      };
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
+        VALUES (1, 'uuid', 'uuid', 1, 'name')`,
+      );
+
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.WEBSITE} (website_uuid, project_uuid, bucket_id, stagingBucket_id,productionBucket_id,name, status)
+        VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
+      );
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.GITHUB_PROJECT_CONFIG} (project_uuid, access_token, refresh_token, username)
+        VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', '${expectedProjectConfig.refreshToken}', '${expectedProjectConfig.login}')`,
+      );
+
+      const lastInsertIdProjectConfig = await stage.db.paramExecute(
+        `SELECT LAST_INSERT_ID() as id`,
+      );
+
+      const githubProjectConfigId = lastInsertIdProjectConfig[0].id;
+
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.DEPLOYMENT_CONFIG} (repoId, repoName, repoOwnerName, hookId, branchName, websiteUuid, projectConfigId, buildDirectory, apiKey, apiSecret, encryptedVariables)
+        VALUES (1, 'repo-name', 'owner', 1, 'main', 'uuid', ${githubProjectConfigId}, 'dist', 'key', 'secret','variables')`,
+      );
+
+      const lastInsertId = await stage.db.paramExecute(
+        `SELECT LAST_INSERT_ID() as id`,
+      );
+
+      const deploymentConfigId = lastInsertId[0].id;
+
+      const response = await DeployService.getEnvironmentVariables(
+        {
+          deploymentConfigId,
+        },
+        stage.context,
+      );
+
+      expect(response).toBeDefined();
+      expect(response.length).toBe(1);
     });
   });
 });

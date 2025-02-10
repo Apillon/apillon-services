@@ -25,6 +25,7 @@ export async function upgrade(
       \`repoName\` VARCHAR(500) NOT NULL,
       \`repoOwnerName\` VARCHAR(500) NOT NULL,
       \`hookId\` INT NOT NULL,
+      \`encryptedVariables\` TEXT NULL,
       \`projectConfigId\` INT NOT NULL,
       \`branchName\` VARCHAR(500) NOT NULL,
       \`websiteUuid\` VARCHAR(36) NOT NULL,

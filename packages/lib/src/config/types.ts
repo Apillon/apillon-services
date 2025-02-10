@@ -241,6 +241,8 @@ export enum StorageEventType {
   GET_PROJECT_GITHUB_CONFIG = 'get-project-github-config',
   LIST_DEPLOYMENT_BUILDS = 'list-deployment-builds',
   DELETE_DEPLOYMENT_CONFIG = 'delete-deployment-config',
+  SET_ENVIRONMENT_VARIABLES = 'set-environment-variables',
+  GET_ENVIRONMENT_VARIABLES = 'get-environment-variables',
 }
 
 export enum AuthenticationEventType {

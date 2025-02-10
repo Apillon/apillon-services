@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { DeployService } from './deploy.service';
 import {
@@ -15,6 +16,7 @@ import {
   DefaultUserRole,
   DeploymentBuildQueryFilter,
   GithubLinkDto,
+  SetEnvironmentVariablesDto,
   ValidateFor,
 } from '@apillon/lib';
 import { GithubWebhookGuard } from '../../guards/github-webhook.guard';
@@ -111,6 +113,36 @@ export class DeployController {
       context,
       websiteUuid,
     );
+  }
+
+  @Get('config/variables/:deploymentConfigId')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.USER },
+  )
+  @UseGuards(AuthGuard)
+  async getEnvironmentVariables(
+    @Ctx() context: DevConsoleApiContext,
+    @Query('deploymentConfigId', ParseIntPipe) deploymentConfigId: number,
+  ) {
+    return await this.deployService.getEnvironmentVariables(
+      context,
+      deploymentConfigId,
+    );
+  }
+
+  @Post('config/variables')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async setEnvironmentVariables(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: SetEnvironmentVariablesDto,
+  ) {
+    return await this.deployService.setEnvironmentVariables(context, body);
   }
 
   @Get('deploy-build')

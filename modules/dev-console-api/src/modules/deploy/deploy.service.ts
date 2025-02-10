@@ -5,6 +5,7 @@ import {
   Lmas,
   LogType,
   ServiceName,
+  SetEnvironmentVariablesDto,
   StorageMicroservice,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
@@ -90,5 +91,25 @@ export class DeployService {
   ) {
     return (await new StorageMicroservice(context).listDeploymentBuilds(filter))
       .data;
+  }
+
+  async setEnvironmentVariables(
+    context: DevConsoleApiContext,
+    body: SetEnvironmentVariablesDto,
+  ) {
+    return (
+      await new StorageMicroservice(context).setEnvironmentVariables(body)
+    ).data;
+  }
+
+  async getEnvironmentVariables(
+    context: DevConsoleApiContext,
+    deploymentConfigId: number,
+  ) {
+    return (
+      await new StorageMicroservice(context).getEnvironmentVariables(
+        deploymentConfigId,
+      )
+    ).data;
   }
 }

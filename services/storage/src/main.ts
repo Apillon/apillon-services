@@ -120,6 +120,10 @@ export async function processEvent(event, context: Context): Promise<any> {
       DeployService.listDeploymentBuildsForWebsite,
     [StorageEventType.DELETE_DEPLOYMENT_CONFIG]:
       DeployService.deleteDeploymentConfig,
+    [StorageEventType.SET_ENVIRONMENT_VARIABLES]:
+      DeployService.setEnvironmentVariables,
+    [StorageEventType.GET_ENVIRONMENT_VARIABLES]:
+      DeployService.getEnvironmentVariables,
   };
 
   return await processors[event.eventName](event, context);

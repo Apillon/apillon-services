@@ -1,10 +1,13 @@
 import {
+  AWS_KMS,
   AdvancedSQLModel,
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  env,
   presenceValidator,
   prop,
+  safeJsonParse,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, StorageErrorCode } from '../../../config/types';
@@ -313,6 +316,25 @@ export class DeploymentConfig extends AdvancedSQLModel {
   })
   public apiSecret: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.PROFILE,
+      PopulateFrom.ADMIN,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+  })
+  public encryptedVariables: string | null;
+
   public async findByRepoId(repoId: number) {
     const data = await this.getContext().mysql.paramExecute(
       `SELECT ${this.generateSelectFields()}
@@ -374,5 +396,18 @@ export class DeploymentConfig extends AdvancedSQLModel {
       this.repoName,
       this.hookId,
     );
+  }
+
+  public async getEnvironmentVariables() {
+    if (!this.encryptedVariables) {
+      return [];
+    }
+
+    const decryptedVariables = await new AWS_KMS().decrypt(
+      this.encryptedVariables,
+      env.DEPLOY_KMS_KEY_ID,
+    );
+
+    return safeJsonParse(decryptedVariables, []);
   }
 }
