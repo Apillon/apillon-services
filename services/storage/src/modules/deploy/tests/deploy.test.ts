@@ -9,7 +9,6 @@ import {
 import { Stage, releaseStage, setupTest } from '../../../../test/setup';
 import { DeployService } from '../deploy.service';
 import { DbTables } from '../../../config/types';
-import { after } from 'node:test';
 
 const expectedProjectConfig = {
   accessToken: 'access_token',
