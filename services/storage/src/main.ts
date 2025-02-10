@@ -118,6 +118,8 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.LIST_REPOS]: DeployService.listRepos,
     [StorageEventType.LIST_DEPLOYMENT_BUILDS]:
       DeployService.listDeploymentBuildsForWebsite,
+    [StorageEventType.DELETE_DEPLOYMENT_CONFIG]:
+      DeployService.deleteDeploymentConfig,
   };
 
   return await processors[event.eventName](event, context);

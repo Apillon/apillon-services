@@ -174,6 +174,50 @@ export class DeployService {
     return deploymentConfig;
   }
 
+  static async deleteDeploymentConfig(
+    event: { websiteUuid: string },
+    context: ServiceContext,
+  ) {
+    const website = await new Website({}, context).populateByUUID(
+      event.websiteUuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+
+    website.canModify(context);
+
+    const githubProjectConfig = await new GithubProjectConfig(
+      {},
+      context,
+    ).populateByProjectUuid(website.project_uuid);
+
+    if (!githubProjectConfig.exists()) {
+      throw new StorageNotFoundException(
+        StorageErrorCode.GITHUB_PROJECT_CONFIG_NOT_FOUND,
+      );
+    }
+
+    const deploymentConfigs = await new DeploymentConfig(
+      {},
+      context,
+    ).findActiveByWebsiteUuid(event.websiteUuid);
+
+    await Promise.all(
+      deploymentConfigs.map((config) =>
+        config.deleteConfigWebhook(githubProjectConfig),
+      ),
+    );
+
+    deploymentConfigs.length &&
+      (await new DeploymentConfig({}, context).markDeletedByIds(
+        deploymentConfigs.map((config) => config.id),
+      ));
+
+    return true;
+  }
+
   static async getDeploymentConfigByRepoId(
     event: { repoId: number },
     context: ServiceContext,

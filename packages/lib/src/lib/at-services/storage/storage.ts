@@ -679,4 +679,12 @@ export class StorageMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async deleteDeploymentConfig(websiteUuid: string) {
+    const data = {
+      eventName: StorageEventType.DELETE_DEPLOYMENT_CONFIG,
+      websiteUuid,
+    };
+    return await this.callService(data);
+  }
 }

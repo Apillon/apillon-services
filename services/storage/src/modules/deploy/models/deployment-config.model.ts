@@ -345,6 +345,20 @@ export class DeploymentConfig extends AdvancedSQLModel {
     ).map((data) => this.populate(data, PopulateFrom.DB));
   }
 
+  public async findActiveByWebsiteUuid(websiteUuid: string) {
+    return (
+      await this.getContext().mysql.paramExecute(
+        `SELECT *
+      FROM \`${DbTables.DEPLOYMENT_CONFIG}\`
+      WHERE websiteUuid = @websiteUuid
+      AND status = ${SqlModelStatus.ACTIVE}`,
+        {
+          websiteUuid,
+        },
+      )
+    ).map((data) => this.populate(data, PopulateFrom.DB));
+  }
+
   public async markDeletedByIds(ids: number[]) {
     await this.getContext().mysql.paramExecute(
       `UPDATE \`${DbTables.DEPLOYMENT_CONFIG}\`

@@ -7,6 +7,7 @@ import {
   Req,
   Param,
   Query,
+  Delete,
 } from '@nestjs/common';
 import { DeployService } from './deploy.service';
 import {
@@ -85,7 +86,6 @@ export class DeployController {
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
   )
   @UseGuards(AuthGuard)
   @Validation({ dto: CreateDeploymentConfigDto })
@@ -95,6 +95,22 @@ export class DeployController {
     @Body() body: CreateDeploymentConfigDto,
   ) {
     return await this.deployService.createDeploymentConfig(context, body);
+  }
+
+  @Delete('config/:website_uuid')
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async deleteDeploymentConfig(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('website_uuid') websiteUuid: string,
+  ) {
+    return await this.deployService.deleteDeploymentConfig(
+      context,
+      websiteUuid,
+    );
   }
 
   @Get('deploy-build')

@@ -240,6 +240,7 @@ export enum StorageEventType {
   LIST_REPOS = 'list-repos',
   GET_PROJECT_GITHUB_CONFIG = 'get-project-github-config',
   LIST_DEPLOYMENT_BUILDS = 'list-deployment-builds',
+  DELETE_DEPLOYMENT_CONFIG = 'delete-deployment-config',
 }
 
 export enum AuthenticationEventType {

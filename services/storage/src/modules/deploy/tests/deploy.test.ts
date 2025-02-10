@@ -220,6 +220,81 @@ describe('DeployService tests', () => {
     });
   });
 
+  describe('deleteDeploymentConfig', () => {
+    afterEach(async () => {
+      await stage.db.paramExecute(`DELETE FROM ${DbTables.DEPLOYMENT_CONFIG}`);
+      await stage.db.paramExecute(
+        `DELETE FROM ${DbTables.GITHUB_PROJECT_CONFIG}`,
+      );
+    });
+
+    test('User can delete deployment config', async () => {
+      stage.context.user = {
+        authUser: {
+          authUserRoles: [
+            {
+              project_uuid: 'uuid',
+              role: {
+                id: DefaultUserRole.PROJECT_ADMIN,
+              },
+            },
+          ],
+        },
+      };
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
+        VALUES (1, 'uuid', 'uuid', 1, 'name')`,
+      );
+
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
+        VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
+      );
+
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.GITHUB_PROJECT_CONFIG} (project_uuid, access_token, refresh_token, username)
+        VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', '${expectedProjectConfig.refreshToken}', '${expectedProjectConfig.login}')`,
+      );
+
+      const lastInsertId = await stage.db.paramExecute(
+        `SELECT LAST_INSERT_ID() as id`,
+      );
+
+      const githubProjectConfigId = lastInsertId[0].id;
+      const testConfig = {
+        repoId: 123,
+        repoName: 'repo-name',
+        repoOwnerName: 'owner',
+        hookId: 1,
+        branchName: 'main',
+        websiteUuid: 'uuid',
+        projectConfigId: githubProjectConfigId,
+        buildDirectory: 'dist',
+        apiKey: 'key',
+        apiSecret: 'secret',
+      };
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.DEPLOYMENT_CONFIG} (repoId, repoName, repoOwnerName, hookId, branchName, websiteUuid, projectConfigId, buildDirectory, apiKey, apiSecret)
+        VALUES (${testConfig.repoId}, '${testConfig.repoName}', '${testConfig.repoOwnerName}', ${testConfig.hookId}, '${testConfig.branchName}', '${testConfig.websiteUuid}', ${testConfig.projectConfigId}, '${testConfig.buildDirectory}', '${testConfig.apiKey}', '${testConfig.apiSecret}')`,
+      );
+
+      const response = await DeployService.deleteDeploymentConfig(
+        {
+          websiteUuid: testConfig.websiteUuid,
+        },
+        stage.context,
+      );
+
+      expect(response).toBeDefined();
+      expect(response).toBe(true);
+
+      const deploymentConfigs = await stage.db.paramExecute(
+        `SELECT * FROM ${DbTables.DEPLOYMENT_CONFIG} WHERE websiteUuid = '${testConfig.websiteUuid}' AND status <> ${SqlModelStatus.DELETED}`,
+      );
+
+      expect(deploymentConfigs).toHaveLength(0);
+    });
+  });
   describe('getDeploymentConfigByRepoId', () => {
     afterEach(async () => {
       await stage.db.paramExecute(`DELETE FROM ${DbTables.DEPLOYMENT_CONFIG}`);

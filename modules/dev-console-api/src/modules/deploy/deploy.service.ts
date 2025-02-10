@@ -73,6 +73,15 @@ export class DeployService {
     return (await new StorageMicroservice(context).unlinkGithub(body)).data;
   }
 
+  async deleteDeploymentConfig(
+    context: DevConsoleApiContext,
+    websiteUuid: string,
+  ) {
+    return (
+      await new StorageMicroservice(context).deleteDeploymentConfig(websiteUuid)
+    ).data;
+  }
+
   async listRepos(context: DevConsoleApiContext, project_uuid: string) {
     return (await new StorageMicroservice(context).listRepos(project_uuid))
       .data;
