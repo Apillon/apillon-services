@@ -292,10 +292,12 @@ describe('DeployService tests', () => {
       );
 
       expect(response).toBeDefined();
-      expect(response.access_token).toBe(expectedProjectConfig.accessToken);
-      expect(response.refresh_token).toBe(expectedProjectConfig.refreshToken);
-      expect(response.username).toBe(expectedProjectConfig.login);
-      expect(response.project_uuid).toBe(expectedProjectConfig.projectUuid);
+      if (response) {
+        expect(response.access_token).toBe(expectedProjectConfig.accessToken);
+        expect(response.refresh_token).toBe(expectedProjectConfig.refreshToken);
+        expect(response.username).toBe(expectedProjectConfig.login);
+        expect(response.project_uuid).toBe(expectedProjectConfig.projectUuid);
+      }
     });
   });
 

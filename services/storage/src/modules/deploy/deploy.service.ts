@@ -201,9 +201,7 @@ export class DeployService {
     ).populateByProjectUuid(event.project_uuid);
 
     if (!projectConfig.exists()) {
-      throw new StorageNotFoundException(
-        StorageErrorCode.GITHUB_PROJECT_CONFIG_NOT_FOUND,
-      );
+      return false;
     }
 
     return projectConfig.serialize();
