@@ -5,11 +5,9 @@ import {
   CacheKeyPrefix,
   CacheKeyTTL,
   CodeException,
-  UnauthorizedErrorCodes,
   ForbiddenErrorCodes,
   env,
 } from '@apillon/lib';
-import { Cache, CacheInterceptor, Ctx, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
@@ -21,6 +19,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { Cache, CacheInterceptor, Ctx, Validation } from '@apillon/modules-lib';
 import { ApillonApiContext } from '../../context';
 import { EmbeddedWalletService } from './embedded-wallet.service';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -44,9 +43,6 @@ export class EmbeddedWalletController {
         ['origin', 'referer', 'host'].find((h) => !!request.headers[h])
       ];
 
-    console.log('Origin: ', body.origin);
-    console.log('ReferrerDomain: ', body.referrerDomain);
-
     // If body referrer domain is present, check that domain for embedded wallet whitelist
     if (body.referrerDomain) {
       // Request origin must match with the passkey gateway URL
@@ -64,7 +60,6 @@ export class EmbeddedWalletController {
     return await this.ewalletService.createOasisSignature(context, body);
   }
 
-  // TODO: Need to add some kind of auth/validation, for example captcha
   @Post('otp/generate')
   @Validation({ dto: GenerateOtpDto })
   @UseGuards(ValidationGuard)
