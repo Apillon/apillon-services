@@ -1,6 +1,7 @@
 import { ServiceContext } from '@apillon/service-lib';
 import { DeploymentConfig } from './models/deployment-config.model';
 import {
+  StorageCodeException,
   StorageNotFoundException,
   StorageValidationException,
 } from '../../lib/exceptions';
@@ -293,6 +294,14 @@ export class DeployService {
     },
     context: ServiceContext,
   ) {
+    const keys = event.body.variables.map((variable) => variable.key);
+    if (new Set(keys).size !== keys.length) {
+      throw new StorageCodeException({
+        status: 400,
+        code: StorageErrorCode.DEPLOYMENT_CONFIG_VARIABLES_DUPLICATE,
+      });
+    }
+
     const deploymentConfig = await new DeploymentConfig(
       {},
       context,

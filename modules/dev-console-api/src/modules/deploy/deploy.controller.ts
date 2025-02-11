@@ -124,7 +124,7 @@ export class DeployController {
   @UseGuards(AuthGuard)
   async getEnvironmentVariables(
     @Ctx() context: DevConsoleApiContext,
-    @Query('deploymentConfigId', ParseIntPipe) deploymentConfigId: number,
+    @Param('deploymentConfigId', ParseIntPipe) deploymentConfigId: number,
   ) {
     return await this.deployService.getEnvironmentVariables(
       context,
