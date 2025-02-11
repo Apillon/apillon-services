@@ -7,6 +7,7 @@ import {
   CodeException,
   ForbiddenErrorCodes,
   env,
+  AppEnvironment,
 } from '@apillon/lib';
 import {
   Body,
@@ -46,7 +47,12 @@ export class EmbeddedWalletController {
     // If body referrer domain is present, check that domain for embedded wallet whitelist
     if (body.referrerDomain) {
       // Request origin must match with the passkey gateway URL
-      if (!body.origin?.endsWith(env.PASSKEY_GATEWAY_URL)) {
+      if (
+        !body.origin?.endsWith(env.PASSKEY_GATEWAY_URL) &&
+        [AppEnvironment.STG, AppEnvironment.PROD].includes(
+          env.APP_ENV as AppEnvironment,
+        )
+      ) {
         throw new CodeException({
           status: HttpStatus.FORBIDDEN,
           code: ForbiddenErrorCodes.INVALID_ORIGIN,
