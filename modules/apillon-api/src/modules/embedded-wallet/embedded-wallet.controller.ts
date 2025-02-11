@@ -2,25 +2,30 @@ import {
   CreateOasisSignatureDto,
   GenerateOtpDto,
   ValidateOtpDto,
+  CacheKeyPrefix,
+  CacheKeyTTL,
   CodeException,
   ForbiddenErrorCodes,
   env,
 } from '@apillon/lib';
-import { Ctx, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
   Req,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { Cache, CacheInterceptor, Ctx, Validation } from '@apillon/modules-lib';
 import { ApillonApiContext } from '../../context';
 import { EmbeddedWalletService } from './embedded-wallet.service';
 import { ValidationGuard } from '../../guards/validation.guard';
 
 @Controller('embedded-wallet')
+@UseInterceptors(CacheInterceptor)
 export class EmbeddedWalletController {
   constructor(private ewalletService: EmbeddedWalletService) {}
 
@@ -75,5 +80,14 @@ export class EmbeddedWalletController {
     @Body() body: ValidateOtpDto,
   ) {
     return await this.ewalletService.validateOtp(context, body);
+  }
+
+  @Get('evm-token-prices')
+  @Cache({
+    keyPrefix: CacheKeyPrefix.EVM_TOKEN_PRICES,
+    ttl: CacheKeyTTL.EXTENDED,
+  })
+  async getTopEvmTokenPrices() {
+    return await this.ewalletService.getEvmTokenPrices();
   }
 }

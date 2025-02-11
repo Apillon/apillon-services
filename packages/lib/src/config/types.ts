@@ -999,6 +999,8 @@ export enum CacheKeyPrefix {
 
   // DWELLIR
   DWELLIR_ACCESS_TOKEN = 'dwellir-access-token',
+
+  EVM_TOKEN_PRICES = 'evm-token-prices',
 }
 
 export enum CacheKeyTTL {
