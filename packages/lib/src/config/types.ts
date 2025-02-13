@@ -863,6 +863,7 @@ export enum UnauthorizedErrorCodes {
 
 export enum ForbiddenErrorCodes {
   FORBIDDEN = 40300000,
+  INVALID_ORIGIN = 40300001,
 }
 
 //#endregion
@@ -998,6 +999,8 @@ export enum CacheKeyPrefix {
 
   // DWELLIR
   DWELLIR_ACCESS_TOKEN = 'dwellir-access-token',
+
+  EVM_TOKEN_PRICES = 'evm-token-prices',
 }
 
 export enum CacheKeyTTL {
