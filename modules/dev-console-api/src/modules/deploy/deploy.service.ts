@@ -1,7 +1,6 @@
 import {
   CreateDeploymentConfigDto,
   DeploymentBuildQueryFilter,
-  GitHubWebhookPayload,
   GithubLinkDto,
   Lmas,
   LogType,
@@ -11,6 +10,7 @@ import {
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { GithubUnlinkDto } from '@apillon/lib';
+import { GitHubWebhookPayload } from '../../config/types';
 
 @Injectable()
 export class DeployService {
@@ -30,25 +30,22 @@ export class DeployService {
 
     const config = await storageMS.getDeployConfigByRepoId(repoId);
 
-    if (event.ref === `refs/heads/${config.data.branchName}`) {
-      new Lmas().writeLog({
-        data: event,
-        logType: LogType.INFO,
-        message: `Deploying ${config.data.websiteUuid}`,
-        service: ServiceName.DEV_CONSOLE,
-        location: 'DeployService.handleGithubWebhook',
-      });
-      await storageMS.triggerGithubDeploy({
-        url: event.repository.clone_url,
-        websiteUuid: config.data.websiteUuid,
-        buildCommand: config.data.buildCommand,
-        installCommand: config.data.installCommand,
-        buildDirectory: config.data.buildDirectory,
-        apiKey: config.data.apiKey,
-        apiSecret: config.data.apiSecret,
-        configId: config.data.id,
-      });
+    if (event.ref !== `refs/heads/${config.data.branchName}`) {
+      return;
     }
+
+    new Lmas().writeLog({
+      data: event,
+      logType: LogType.INFO,
+      message: `Deploying ${config.data.websiteUuid}`,
+      service: ServiceName.DEV_CONSOLE,
+      location: 'DeployService.handleGithubWebhook',
+    });
+    await storageMS.triggerGithubDeploy({
+      url: event.repository.clone_url,
+      configId: config.data.id,
+      ...config.data,
+    });
   }
 
   async getProjectConfig(context: DevConsoleApiContext, projectUuid: string) {

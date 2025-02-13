@@ -84,7 +84,7 @@ export async function deleteWebhook(
 
 export async function getTokens(code: string) {
   try {
-    const res = await axios.post<{
+    const { data } = await axios.post<{
       access_token: string;
       refresh_token: string;
       scope: string;
@@ -97,7 +97,7 @@ export async function getTokens(code: string) {
         },
       },
     );
-    return res.data;
+    return data;
   } catch (e) {
     await new Lmas().writeLog({
       logType: LogType.ERROR,
@@ -112,17 +112,21 @@ export async function getTokens(code: string) {
   }
 }
 
+const githubAPIClient = (accessToken: string) =>
+  axios.create({
+    baseURL: 'https://api.github.com',
+    headers: {
+      Authorization: `token ${accessToken}`,
+    },
+  });
+
 export async function getUser(token: string) {
   try {
-    const res = await axios.get<{
+    const { data } = await githubAPIClient(token).get<{
       id: number;
       login: string;
-    }>('https://api.github.com/user', {
-      headers: {
-        Authorization: `token ${token}`,
-      },
-    });
-    return res.data;
+    }>('/user');
+    return data;
   } catch (e) {
     await new Lmas().writeLog({
       logType: LogType.ERROR,
@@ -142,25 +146,17 @@ async function createWebhookRequest(
   repoName: string,
   accessToken: string,
 ) {
-  return await axios.post<{
+  return await githubAPIClient(accessToken).post<{
     id: string;
-  }>(
-    `https://api.github.com/repos/${projectConfig.username}/${repoName}/hooks`,
-    {
-      name: 'web',
-      events: ['push'],
-      active: true,
-      config: {
-        url: `${env.CONSOLE_API_URL}/deploy/webhook`,
-        secret: env.GITHUB_WEBHOOK_SECRET,
-      },
+  }>(`/repos/${projectConfig.username}/${repoName}/hooks`, {
+    name: 'web',
+    events: ['push'],
+    active: true,
+    config: {
+      url: `${env.CONSOLE_API_URL}/deploy/webhook`,
+      secret: env.GITHUB_WEBHOOK_SECRET,
     },
-    {
-      headers: {
-        Authorization: `token ${accessToken}`,
-      },
-    },
-  );
+  });
 }
 
 async function deleteWebhookRequest(
@@ -169,18 +165,15 @@ async function deleteWebhookRequest(
   hookId: number,
   accessToken: string,
 ) {
-  await axios.delete(
-    `https://api.github.com/repos/${repoOwnerName}/${repoName}/hooks/${hookId}`,
-    {
-      headers: {
-        Authorization: `token ${accessToken}`,
-      },
-    },
+  await githubAPIClient(accessToken).delete(
+    `/repos/${repoOwnerName}/${repoName}/hooks/${hookId}`,
   );
 }
 
 export async function refreshAccessToken(projectConfig: GithubProjectConfig) {
-  const refreshData = await axios.post<{
+  const {
+    data: { refresh_token, access_token },
+  } = await axios.post<{
     access_token: string;
     refresh_token?: string;
   }>('https://github.com/login/oauth/access_token', undefined, {
@@ -192,32 +185,29 @@ export async function refreshAccessToken(projectConfig: GithubProjectConfig) {
     },
   });
 
-  if (refreshData.data.refresh_token) {
-    projectConfig.refresh_token = refreshData.data.refresh_token;
+  if (refresh_token) {
+    projectConfig.refresh_token = refresh_token;
   }
 
-  projectConfig.access_token = refreshData.data.access_token;
+  projectConfig.access_token = access_token;
   await projectConfig.update();
 
-  return refreshData.data.access_token;
+  return access_token;
 }
 
 async function getReposRequest(accessToken: string) {
-  const repos = await axios.get<
+  const { data } = await githubAPIClient(accessToken).get<
     {
       id: number;
       name: string;
       clone_url: string;
     }[]
-  >('https://api.github.com/user/repos', {
-    headers: {
-      Authorization: `token ${accessToken}`,
-    },
+  >('/user/repos', {
     params: {
       sort: 'pushed',
       per_page: 100,
     },
   });
 
-  return repos.data;
+  return data;
 }

@@ -15,7 +15,7 @@ export class GithubLinkDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.USER_OAUTH_TOKEN_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -28,7 +28,7 @@ export class GithubLinkDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.PROJECT_UUID_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })

@@ -15,7 +15,7 @@ export class GithubUnlinkDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.PROJECT_UUID_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })

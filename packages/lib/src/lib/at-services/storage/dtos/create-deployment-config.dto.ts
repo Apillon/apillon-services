@@ -15,7 +15,7 @@ export class CreateDeploymentConfigDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.REPO_ID_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -28,7 +28,7 @@ export class CreateDeploymentConfigDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.REPO_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -41,7 +41,7 @@ export class CreateDeploymentConfigDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.REPO_OWNER_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -54,7 +54,7 @@ export class CreateDeploymentConfigDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.BRANCH_NAME_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -67,7 +67,7 @@ export class CreateDeploymentConfigDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.WEBSITE_UUID_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -87,7 +87,7 @@ export class CreateDeploymentConfigDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.BUILD_DIRECTORY_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -107,7 +107,7 @@ export class CreateDeploymentConfigDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.DEPLOYMENT_API_KEY_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })
@@ -120,7 +120,7 @@ export class CreateDeploymentConfigDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.DEPLOYMENT_API_SECRET_NOT_PRESENT,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })

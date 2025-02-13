@@ -11,7 +11,7 @@ export class DeploymentBuildQueryFilter extends BaseQueryFilter {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.WEBSITE_UUID_NOT_PRESENT_IN_QUERY,
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
       },
     ],
   })

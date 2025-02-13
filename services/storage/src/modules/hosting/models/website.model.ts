@@ -374,6 +374,13 @@ export class Website extends UuidSqlModel {
   })
   public lastDeploymentStatus: number;
 
+  /**
+   * Deployment config properties
+   */
+
+  /**
+   * ID of github repository for deployment if one exists
+   */
   @prop({
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -384,8 +391,11 @@ export class Website extends UuidSqlModel {
     ],
     validators: [],
   })
-  public repoId: number;
+  public repoId: number | null;
 
+  /**
+   * Name of github branch used for deployment if one exists
+   */
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -396,8 +406,11 @@ export class Website extends UuidSqlModel {
     ],
     validators: [],
   })
-  public branchName: string;
+  public branchName: string | null;
 
+  /**
+   * Build command for deployment if one exists
+   */
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -410,6 +423,9 @@ export class Website extends UuidSqlModel {
   })
   public buildCommand: string | null;
 
+  /**
+   * Install command for deployment if one exists
+   */
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -422,6 +438,9 @@ export class Website extends UuidSqlModel {
   })
   public installCommand: string | null;
 
+  /**
+   * Directory where website is built for deployment if one exists
+   */
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -431,8 +450,11 @@ export class Website extends UuidSqlModel {
       SerializeFor.PROFILE,
     ],
   })
-  public buildDirectory: string;
+  public buildDirectory: string | null;
 
+  /**
+   * API key for deployment if one exists
+   */
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
@@ -444,18 +466,6 @@ export class Website extends UuidSqlModel {
     validators: [],
   })
   public apiKey: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
-    serializable: [
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
-    validators: [],
-  })
-  public deploymentConfig_websiteUuid: string;
 
   /**
    * Populate by id or by uuid

@@ -60,10 +60,14 @@ export class DeployService {
         );
       }
 
-      githubProjectConfig.project_uuid = event.body.project_uuid;
-      githubProjectConfig.access_token = access_token;
-      githubProjectConfig.refresh_token = refresh_token;
-      githubProjectConfig.username = gitUser.login;
+      githubProjectConfig.populate({
+        project_uuid: event.body.project_uuid,
+        access_token,
+        refresh_token,
+        username: gitUser.login,
+      });
+
+      githubProjectConfig.validateOrThrow(StorageValidationException);
 
       await githubProjectConfig.insert();
       return githubProjectConfig.serialize();
@@ -151,17 +155,9 @@ export class DeployService {
     const kmsClient = new AWS_KMS();
 
     const deploymentConfig = new DeploymentConfig({}, context).populate({
-      repoId: event.body.repoId,
-      repoName: event.body.repoName,
-      repoOwnerName: event.body.repoOwnerName,
+      ...event.body,
       hookId: createdWebhook.id,
-      branchName: event.body.branchName,
-      websiteUuid: event.body.websiteUuid,
       projectConfigId: githubProjectConfig.id,
-      buildCommand: event.body.buildCommand,
-      buildDirectory: event.body.buildDirectory,
-      installCommand: event.body.installCommand,
-      apiKey: event.body.apiKey,
       apiSecret: await kmsClient.encrypt(
         event.body.apiSecret,
         env.DEPLOY_KMS_KEY_ID,
@@ -311,15 +307,8 @@ export class DeployService {
     await deploymentBuild.insert();
 
     const parameters = {
-      url: event.url,
-      websiteUuid: event.websiteUuid,
-      buildCommand: event.buildCommand,
-      installCommand: event.installCommand,
-      buildDirectory: event.buildDirectory,
-      apiKey: event.apiKey,
-      apiSecret: event.apiSecret,
+      ...event,
       deploymentBuildId: deploymentBuild.id,
-      configId: event.configId,
     };
 
     writeLog(

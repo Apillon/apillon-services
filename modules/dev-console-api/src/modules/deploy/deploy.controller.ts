@@ -14,7 +14,6 @@ import {
   CreateDeploymentConfigDto,
   DefaultUserRole,
   DeploymentBuildQueryFilter,
-  GitHubWebhookPayload,
   GithubLinkDto,
   ValidateFor,
 } from '@apillon/lib';
@@ -26,6 +25,7 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { ProjectAccessGuard } from '../../guards/project-access.guard';
 import { GithubUnlinkDto } from '@apillon/lib';
 import { ProjectModifyGuard } from '../../guards/project-modify.guard';
+import { GitHubWebhookPayload } from '../../config/types';
 
 @Controller('deploy')
 export class DeployController {
