@@ -375,6 +375,99 @@ export class Website extends UuidSqlModel {
   public lastDeploymentStatus: number;
 
   /**
+   * Deployment config properties
+   */
+
+  /**
+   * ID of github repository for deployment if one exists
+   */
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public repoId: number | null;
+
+  /**
+   * Name of github branch used for deployment if one exists
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public branchName: string | null;
+
+  /**
+   * Build command for deployment if one exists
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public buildCommand: string | null;
+
+  /**
+   * Install command for deployment if one exists
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public installCommand: string | null;
+
+  /**
+   * Directory where website is built for deployment if one exists
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public buildDirectory: string | null;
+
+  /**
+   * API key for deployment if one exists
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public apiKey: string;
+
+  /**
    * Populate by id or by uuid
    * @param id id or uuid.
    * @param conn
@@ -396,7 +489,7 @@ export class Website extends UuidSqlModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `
-      SELECT w.*,
+      SELECT w.*,dc.repoId, dc.branchName, dc.buildCommand,dc.buildDirectory, dc.installCommand, dc.apiKey, dc.repoName,
       lastDeployment.deployment_uuid as lastDeployment_uuid,
       lastDeployment.deploymentStatus as lastDeploymentStatus
       FROM \`${DbTables.WEBSITE}\` w
@@ -404,6 +497,7 @@ export class Website extends UuidSqlModel {
         SELECT  website_id, deployment_uuid, deploymentStatus from \`${DbTables.DEPLOYMENT}\` d
         ORDER BY d.createTime DESC
       ) as lastDeployment ON lastDeployment.website_id = w.id
+      LEFT JOIN \`${DbTables.DEPLOYMENT_CONFIG}\` dc ON dc.websiteUuid = w.website_uuid AND dc.status <> ${SqlModelStatus.DELETED}
       WHERE ( w.id LIKE @id OR w.website_uuid LIKE @id)
       AND w.status <> ${SqlModelStatus.DELETED}
       LIMIT 1;

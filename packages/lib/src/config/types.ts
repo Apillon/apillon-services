@@ -12,6 +12,13 @@ export enum TransactionStatus {
   ERROR = 4,
 }
 
+export enum DeploymentBuildStatus {
+  PENDING = 1,
+  IN_PROGRESS = 2,
+  SUCCESS = 3,
+  FAILED = 4,
+}
+
 export enum SubstrateChain {
   CRUST = 1,
   KILT = 2,
@@ -225,6 +232,15 @@ export enum StorageEventType {
   GET_LINKS = 'get-links',
   GENERATE_SHORT_URL = 'generate-short-url',
   GET_TARGET_URL = 'get-target-url',
+  TRIGGER_GITHUB_DEPLOY = 'trigger-github-deploy',
+  GET_DEPLOY_CONFIG_BY_REPO_ID = 'get-deploy-config-by-repo-id',
+  CREATE_DEPLOY_CONFIG = 'create-deploy-config',
+  LINK_GITHUB = 'link-github',
+  UNLINK_GITHUB = 'unlink-github',
+  LIST_REPOS = 'list-repos',
+  GET_PROJECT_GITHUB_CONFIG = 'get-project-github-config',
+  LIST_DEPLOYMENT_BUILDS = 'list-deployment-builds',
+  DELETE_DEPLOYMENT_CONFIG = 'delete-deployment-config',
 }
 
 export enum AuthenticationEventType {

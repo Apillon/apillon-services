@@ -735,6 +735,16 @@ export interface IEnv {
 
   /** Demo collection, used on landing page for embedded wallet demo */
   DEMO_NFT_COLLECTION_UUID: string;
+
+  /**
+   * Deploy
+   */
+  BUILDER_SQS_URL: string;
+  GITHUB_WEBHOOK_SECRET: string;
+  DEPLOY_KMS_KEY_ID: string;
+  GITHUB_AUTH_CLIENT_ID: string;
+  GITHUB_AUTH_CLIENT_SECRET: string;
+  GITHUB_AUTH_CALLBACK_URL: string;
 }
 
 // dotenv.config();
@@ -1337,6 +1347,14 @@ export let env: IEnv = {
 
   /** Demo collection, used on landing page for embedded wallet demo */
   DEMO_NFT_COLLECTION_UUID: process.env['DEMO_NFT_COLLECTION_UUID'],
+
+  /** Deploy */
+  BUILDER_SQS_URL: process.env['BUILDER_SQS_URL'],
+  GITHUB_WEBHOOK_SECRET: process.env['GITHUB_WEBHOOK_SECRET'],
+  DEPLOY_KMS_KEY_ID: process.env['DEPLOY_KMS_KEY_ID'],
+  GITHUB_AUTH_CLIENT_ID: process.env['GITHUB_AUTH_CLIENT_ID'],
+  GITHUB_AUTH_CLIENT_SECRET: process.env['GITHUB_AUTH_CLIENT_SECRET'],
+  GITHUB_AUTH_CALLBACK_URL: process.env['GITHUB_AUTH_CALLBACK_URL'],
 };
 
 export let isEnvReady = false;

@@ -29,6 +29,10 @@ import { FileUploadSessionQueryFilter } from './dtos/file-upload-session-query-f
 import { CollectionMetadataQueryFilter } from './dtos/collection-metadata-query-filter.dto';
 import { ShortUrlDto } from './dtos/short-url.dto';
 import { GetLinksDto } from './dtos/get-links.dto';
+import { CreateDeploymentConfigDto } from './dtos/create-deployment-config.dto';
+import { GithubLinkDto } from './dtos/github-link.dto';
+import { DeploymentBuildQueryFilter } from './dtos/deployment-build-query-filter.dto';
+import { GithubUnlinkDto } from './dtos/github-unlink.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -598,6 +602,88 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.IPNS_GET_BY_NAME,
       ipnsName,
+    };
+    return await this.callService(data);
+  }
+
+  public async triggerGithubDeploy(payload: {
+    url: string;
+    websiteUuid: string;
+    buildCommand: string | null;
+    installCommand: string | null;
+    buildDirectory: string;
+    apiKey: string;
+    apiSecret: string;
+    configId: number;
+  }) {
+    const data = {
+      eventName: StorageEventType.TRIGGER_GITHUB_DEPLOY,
+      ...payload,
+    };
+    return await this.callService(data);
+  }
+
+  public async getDeployConfigByRepoId(repoId: number) {
+    const data = {
+      eventName: StorageEventType.GET_DEPLOY_CONFIG_BY_REPO_ID,
+      repoId,
+    };
+
+    return await this.callService(data);
+  }
+
+  public async createDeploymentConfig(params: CreateDeploymentConfigDto) {
+    const data = {
+      eventName: StorageEventType.CREATE_DEPLOY_CONFIG,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async linkGithub(params: GithubLinkDto) {
+    const data = {
+      eventName: StorageEventType.LINK_GITHUB,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async unlinkGithub(params: GithubUnlinkDto) {
+    const data = {
+      eventName: StorageEventType.UNLINK_GITHUB,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async listRepos(project_uuid: string) {
+    const data = {
+      eventName: StorageEventType.LIST_REPOS,
+      project_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async getProjectConfig(project_uuid: string) {
+    const data = {
+      eventName: StorageEventType.GET_PROJECT_GITHUB_CONFIG,
+      project_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async listDeploymentBuilds(filter: DeploymentBuildQueryFilter) {
+    const data = {
+      eventName: StorageEventType.LIST_DEPLOYMENT_BUILDS,
+      filter: filter.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async deleteDeploymentConfig(websiteUuid: string) {
+    const data = {
+      eventName: StorageEventType.DELETE_DEPLOYMENT_CONFIG,
+      websiteUuid,
     };
     return await this.callService(data);
   }
