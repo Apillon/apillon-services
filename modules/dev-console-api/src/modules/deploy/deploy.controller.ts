@@ -63,7 +63,7 @@ export class DeployController {
     return this.deployService.unlinkGithub(context, body);
   }
 
-  @Post('github/list-repos/:project_uuid')
+  @Get('github/list-repos/:project_uuid')
   @Permissions({ role: DefaultUserRole.USER })
   @UseGuards(AuthGuard)
   async listRepos(
