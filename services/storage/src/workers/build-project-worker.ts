@@ -51,8 +51,10 @@ if [ -n "$INSTALL_COMMAND" ]; then
   export npm_config_prefix=/tmp/npm-global
   mkdir -p /tmp/.npm /tmp/npm-global
 
+  npm config set cache /tmp/.npm
+
   echo "Running install command: $INSTALL_COMMAND"
-  $INSTALL_COMMAND --cache /tmp/.npm
+  $INSTALL_COMMAND
   echo "Install completed successfully."
 else
   echo "Install command not set"
