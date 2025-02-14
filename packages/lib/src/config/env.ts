@@ -743,7 +743,6 @@ export interface IEnv {
   DEPLOY_KMS_KEY_ID: string;
   GITHUB_AUTH_CLIENT_ID: string;
   GITHUB_AUTH_CLIENT_SECRET: string;
-  GITHUB_AUTH_CALLBACK_URL: string;
 }
 
 // dotenv.config();
@@ -1352,7 +1351,6 @@ export let env: IEnv = {
   DEPLOY_KMS_KEY_ID: process.env['DEPLOY_KMS_KEY_ID'],
   GITHUB_AUTH_CLIENT_ID: process.env['GITHUB_AUTH_CLIENT_ID'],
   GITHUB_AUTH_CLIENT_SECRET: process.env['GITHUB_AUTH_CLIENT_SECRET'],
-  GITHUB_AUTH_CALLBACK_URL: process.env['GITHUB_AUTH_CALLBACK_URL'],
 };
 
 export let isEnvReady = false;

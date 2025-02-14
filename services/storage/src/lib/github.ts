@@ -97,6 +97,7 @@ export async function getTokens(code: string) {
         },
       },
     );
+    console.log(data);
     return data;
   } catch (e) {
     await new Lmas().writeLog({
