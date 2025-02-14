@@ -250,14 +250,14 @@ export class DeployService {
 
   static async listRepos(
     event: {
-      projectUuid: string;
+      project_uuid: string;
     },
     context: ServiceContext,
   ) {
     const projectConfig = await new GithubProjectConfig(
       {},
       context,
-    ).populateByProjectUuid(event.projectUuid);
+    ).populateByProjectUuid(event.project_uuid);
 
     if (!projectConfig.exists()) {
       throw new StorageNotFoundException(
