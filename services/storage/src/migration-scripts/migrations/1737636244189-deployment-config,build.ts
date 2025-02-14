@@ -8,7 +8,7 @@ export async function upgrade(
   CREATE TABLE IF NOT EXISTS \`${DbTables.GITHUB_PROJECT_CONFIG}\` (
     \`id\` INT AUTO_INCREMENT PRIMARY KEY,
     \`project_uuid\` VARCHAR(36) NOT NULL,
-    \`refresh_token\` VARCHAR(100) NOT NULL,
+    \`refresh_token\` VARCHAR(100) NULL,
     \`access_token\` VARCHAR(100) NOT NULL,
     \`username\` VARCHAR(50) NOT NULL,
     \`status\` INT NOT NULL DEFAULT ${SqlModelStatus.ACTIVE},

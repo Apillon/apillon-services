@@ -86,7 +86,7 @@ export async function getTokens(code: string) {
   try {
     const { data } = await axios.post<{
       access_token: string;
-      refresh_token: string;
+      refresh_token?: string;
       scope: string;
     }>(
       `https://github.com/login/oauth/access_token?client_id=${env.GITHUB_AUTH_CLIENT_ID}&client_secret=${env.GITHUB_AUTH_CLIENT_SECRET}&code=${code}`,
@@ -97,7 +97,6 @@ export async function getTokens(code: string) {
         },
       },
     );
-    console.log(data);
     return data;
   } catch (e) {
     await new Lmas().writeLog({
