@@ -109,7 +109,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
     const deploymentBuild = await new DeploymentBuild(
       {},
       this.context,
-    ).populateById(data.deploymentBuildId);
+    ).populateById(data.deploymentBuildId, undefined, undefined, true);
 
     if (!deploymentBuild.exists()) {
       console.error('Deployment build does not exist');
@@ -176,6 +176,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
       const log = data.toString();
       await deploymentBuild.addLog(log);
       console.log(`stdout: ${log}`);
+      lastLog = log;
     });
 
     child.stderr.on('data', async (data) => {
@@ -196,20 +197,21 @@ export class BuildProjectWorker extends BaseQueueWorker {
         if (!lastLog) {
           await deploymentBuild.handleFailure();
           reject(data);
-        }
-        try {
-          console.log('Last log:', lastLog);
-          console.log(typeof lastLog);
-          const deployInfo = JSON.parse(lastLog) as {
-            uuid: string;
-          };
-          await deploymentBuild.handleSuccess(deployInfo.uuid);
-          console.log(`Success, child process exited with code ${data}`);
-          resolve(data);
-        } catch (error) {
-          console.log('Error parsing deployment information', error);
-          await deploymentBuild.handleSuccess();
-          reject(data);
+        } else {
+          try {
+            console.log('Last log:', lastLog);
+            console.log(typeof lastLog);
+            const deployInfo = JSON.parse(lastLog) as {
+              uuid: string;
+            };
+            await deploymentBuild.handleSuccess(deployInfo.uuid);
+            console.log(`Success, child process exited with code ${data}`);
+            resolve(data);
+          } catch (error) {
+            console.log('Error parsing deployment information', error);
+            await deploymentBuild.handleSuccess();
+            resolve(data);
+          }
         }
       });
       child.on('error', async (data) => {
