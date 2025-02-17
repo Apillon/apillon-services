@@ -105,7 +105,7 @@ export class DeploymentBuild extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
     ],
   })
-  public finishedTime: string;
+  public finishedTime: string | null;
 
   @prop({
     parser: { resolver: stringParser() },
