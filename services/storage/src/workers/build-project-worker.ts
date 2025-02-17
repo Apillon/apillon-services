@@ -133,6 +133,9 @@ export class BuildProjectWorker extends BaseQueueWorker {
 
     const kmsClient = new AWS_KMS();
 
+    console.log(data.apiSecret);
+    console.log(env.DEPLOY_KMS_KEY_ID);
+
     const decryptedSecret = await kmsClient.decrypt(
       data.apiSecret,
       env.DEPLOY_KMS_KEY_ID,
