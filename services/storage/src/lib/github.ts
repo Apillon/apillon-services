@@ -155,6 +155,7 @@ async function createWebhookRequest(
     config: {
       url: `${env.CONSOLE_API_URL}/deploy/webhook`,
       secret: env.GITHUB_WEBHOOK_SECRET,
+      content_type: 'json',
     },
   });
 }

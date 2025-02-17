@@ -19,7 +19,6 @@ export class DeployService {
     context: DevConsoleApiContext,
     event: GitHubWebhookPayload,
   ) {
-    console.log('In service', inspect(event));
     const repoId = event.repository.id;
     new Lmas().writeLog({
       data: event,
