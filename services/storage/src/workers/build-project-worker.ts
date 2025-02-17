@@ -128,6 +128,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
     }
 
     deploymentBuild.buildStatus = DeploymentBuildStatus.IN_PROGRESS;
+    deploymentBuild.logs = '';
 
     await deploymentBuild.update();
 
@@ -197,6 +198,8 @@ export class BuildProjectWorker extends BaseQueueWorker {
           reject(data);
         }
         try {
+          console.log('Last log:', lastLog);
+          console.log(typeof lastLog);
           const deployInfo = JSON.parse(lastLog) as {
             uuid: string;
           };
@@ -205,7 +208,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
           resolve(data);
         } catch (error) {
           console.log('Error parsing deployment information', error);
-          await deploymentBuild.handleFailure();
+          await deploymentBuild.handleSuccess();
           reject(data);
         }
       });
