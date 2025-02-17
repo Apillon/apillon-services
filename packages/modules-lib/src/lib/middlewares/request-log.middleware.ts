@@ -45,6 +45,7 @@ export function createRequestLogMiddleware(
 
       res.end = async function (...args) {
         try {
+          console.log('RequestLogMiddleware');
           const argsArray = Array.prototype.slice.apply(args);
           end.apply(res, argsArray);
           const bodyMap = mapBody(body);

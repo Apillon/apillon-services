@@ -11,6 +11,7 @@ import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { GithubUnlinkDto } from '@apillon/lib';
 import { GitHubWebhookPayload } from '../../config/types';
+import { inspect } from 'util';
 
 @Injectable()
 export class DeployService {
@@ -18,7 +19,7 @@ export class DeployService {
     context: DevConsoleApiContext,
     event: GitHubWebhookPayload,
   ) {
-    console.log(event);
+    console.log('In service', inspect(event));
     const repoId = event.repository.id;
     new Lmas().writeLog({
       data: event,

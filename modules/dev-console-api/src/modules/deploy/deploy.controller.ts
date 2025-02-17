@@ -74,11 +74,12 @@ export class DeployController {
   }
 
   @Post('webhook')
-  @UseGuards(GithubWebhookGuard)
+  //@UseGuards(GithubWebhookGuard)
   async handleGithubWebhook(
     @Body() body: GitHubWebhookPayload,
     @Ctx() context: DevConsoleApiContext,
   ) {
+    console.log('In controller', body);
     return await this.deployService.handleGithubWebhook(context, body);
   }
 
