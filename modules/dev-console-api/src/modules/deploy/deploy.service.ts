@@ -11,7 +11,6 @@ import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { GithubUnlinkDto } from '@apillon/lib';
 import { GitHubWebhookPayload } from '../../config/types';
-import { inspect } from 'util';
 
 @Injectable()
 export class DeployService {

@@ -134,9 +134,6 @@ export class BuildProjectWorker extends BaseQueueWorker {
 
     const kmsClient = new AWS_KMS();
 
-    console.log(data.apiSecret);
-    console.log(env.DEPLOY_KMS_KEY_ID);
-
     const decryptedSecret = await kmsClient.decrypt(
       data.apiSecret,
       env.DEPLOY_KMS_KEY_ID,
@@ -199,8 +196,6 @@ export class BuildProjectWorker extends BaseQueueWorker {
           reject(data);
         } else {
           try {
-            console.log('Last log:', lastLog);
-            console.log(typeof lastLog);
             const deployInfo = JSON.parse(lastLog) as {
               uuid: string;
             };
