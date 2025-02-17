@@ -302,6 +302,7 @@ export class DeployService {
     const deploymentBuild = new DeploymentBuild({}, context).populate({
       buildStatus: DeploymentBuildStatus.PENDING,
       websiteUuid: event.websiteUuid,
+      deploymentConfigId: event.configId,
     });
 
     await deploymentBuild.insert();
