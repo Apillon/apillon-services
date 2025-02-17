@@ -86,7 +86,7 @@ export async function getTokens(code: string) {
   try {
     const { data } = await axios.post<{
       access_token: string;
-      refresh_token: string;
+      refresh_token?: string;
       scope: string;
     }>(
       `https://github.com/login/oauth/access_token?client_id=${env.GITHUB_AUTH_CLIENT_ID}&client_secret=${env.GITHUB_AUTH_CLIENT_SECRET}&code=${code}`,
@@ -155,6 +155,7 @@ async function createWebhookRequest(
     config: {
       url: `${env.CONSOLE_API_URL}/deploy/webhook`,
       secret: env.GITHUB_WEBHOOK_SECRET,
+      content_type: 'json',
     },
   });
 }

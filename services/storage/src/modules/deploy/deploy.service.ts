@@ -250,14 +250,14 @@ export class DeployService {
 
   static async listRepos(
     event: {
-      projectUuid: string;
+      project_uuid: string;
     },
     context: ServiceContext,
   ) {
     const projectConfig = await new GithubProjectConfig(
       {},
       context,
-    ).populateByProjectUuid(event.projectUuid);
+    ).populateByProjectUuid(event.project_uuid);
 
     if (!projectConfig.exists()) {
       throw new StorageNotFoundException(
@@ -302,6 +302,7 @@ export class DeployService {
     const deploymentBuild = new DeploymentBuild({}, context).populate({
       buildStatus: DeploymentBuildStatus.PENDING,
       websiteUuid: event.websiteUuid,
+      deploymentConfigId: event.configId,
     });
 
     await deploymentBuild.insert();

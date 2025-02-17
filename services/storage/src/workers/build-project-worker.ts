@@ -109,7 +109,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
     const deploymentBuild = await new DeploymentBuild(
       {},
       this.context,
-    ).populateById(data.deploymentBuildId);
+    ).populateById(data.deploymentBuildId, undefined, undefined, true);
 
     if (!deploymentBuild.exists()) {
       console.error('Deployment build does not exist');
@@ -128,6 +128,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
     }
 
     deploymentBuild.buildStatus = DeploymentBuildStatus.IN_PROGRESS;
+    deploymentBuild.logs = '';
 
     await deploymentBuild.update();
 
@@ -138,7 +139,9 @@ export class BuildProjectWorker extends BaseQueueWorker {
       env.DEPLOY_KMS_KEY_ID,
     );
 
-    const accessToken = refreshAccessToken(githubProjectConfig);
+    const accessToken = githubProjectConfig.refresh_token
+      ? await refreshAccessToken(githubProjectConfig)
+      : githubProjectConfig.access_token;
 
     const urlWithToken = data.url.replace(
       'https://',
@@ -167,35 +170,43 @@ export class BuildProjectWorker extends BaseQueueWorker {
 
     let lastLog = '';
     child.stdout.on('data', async (data) => {
-      await deploymentBuild.addLog(data);
-      console.log(`stdout: ${data}`);
+      const log = data.toString();
+      await deploymentBuild.addLog(log);
+      console.log(`stdout: ${log}`);
+      lastLog = log;
     });
 
     child.stderr.on('data', async (data) => {
-      lastLog = data;
-      await deploymentBuild.addLog(data);
+      const log = data.toString();
+      await deploymentBuild.addLog(log);
       console.error(`stderr: ${data}`);
     });
 
     child.on('error', async (error) => {
       await deploymentBuild.addLog(error.message);
       console.error(`error: ${error.message}`);
+      lastLog = '';
     });
 
     // Wait for the child process to finish
     await new Promise((resolve, reject) => {
       child.on('close', async (data) => {
-        try {
-          const deployInfo = JSON.parse(lastLog) as {
-            uuid: string;
-          };
-          await deploymentBuild.handleSuccess(deployInfo.uuid);
-          console.log(`Success, child process exited with code ${data}`);
-          resolve(data);
-        } catch (error) {
-          console.log('Error parsing deployment information', error);
+        if (!lastLog) {
           await deploymentBuild.handleFailure();
           reject(data);
+        } else {
+          try {
+            const deployInfo = JSON.parse(lastLog) as {
+              uuid: string;
+            };
+            await deploymentBuild.handleSuccess(deployInfo.uuid);
+            console.log(`Success, child process exited with code ${data}`);
+            resolve(data);
+          } catch (error) {
+            console.log('Error parsing deployment information', error);
+            await deploymentBuild.handleSuccess();
+            resolve(data);
+          }
         }
       });
       child.on('error', async (data) => {

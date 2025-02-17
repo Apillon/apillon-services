@@ -172,5 +172,6 @@ export async function handleSqsMessages(
       response.batchItemFailures.push({ itemIdentifier: message.messageId });
     }
   }
+  console.log('Finished with response: ', response);
   return response;
 }

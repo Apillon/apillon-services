@@ -105,7 +105,7 @@ export class DeploymentBuild extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
     ],
   })
-  public finishedTime: string;
+  public finishedTime: string | null;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -208,7 +208,7 @@ export class DeploymentBuild extends AdvancedSQLModel {
     return true;
   }
 
-  public async handleSuccess(deploymentUuid: string) {
+  public async handleSuccess(deploymentUuid?: string) {
     await this.getContext().mysql.paramExecute(
       `
         UPDATE \`${this.tableName}\`

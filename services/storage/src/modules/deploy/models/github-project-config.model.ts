@@ -57,7 +57,7 @@ export class GithubProjectConfig extends AdvancedSQLModel {
     ],
     validators: [],
   })
-  public refresh_token: string;
+  public refresh_token: string | null;
 
   @prop({
     parser: { resolver: stringParser() },
