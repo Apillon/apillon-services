@@ -208,19 +208,17 @@ export class DeploymentBuild extends AdvancedSQLModel {
     return true;
   }
 
-  public async handleSuccess(deploymentUuid?: string) {
+  public async handleSuccess() {
     await this.getContext().mysql.paramExecute(
       `
         UPDATE \`${this.tableName}\`
         SET logs = CONCAT(COALESCE(logs, ''), '\n', 'Deployment completed successfully'),
         buildStatus = ${DeploymentBuildStatus.SUCCESS},
-        finishedTime = NOW(),
-        deploymentUuid = @deploymentUuid
+        finishedTime = NOW()
         WHERE id = @id
         `,
       {
         id: this.id,
-        deploymentUuid,
       },
     );
 
