@@ -13,7 +13,6 @@ import {
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
-import { Project } from '../project/models/project.model';
 import { ServicesService } from '../services/services.service';
 
 @Injectable()

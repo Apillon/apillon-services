@@ -82,28 +82,26 @@ export class ServicesService {
     project_uuid: string,
     serviceType_id: AttachedServiceType,
   ): Promise<boolean> {
-    const { total } = await new Service({}).getServices(
+    const { items, total } = await new Service({}).getServices(
       context,
-      new ServiceQueryFilter(
-        {
-          project_uuid,
-          serviceType_id,
-        },
-        context,
-      ),
+      new ServiceQueryFilter({ project_uuid }, context),
     );
 
-    if (total == 0) {
-      const service = new ServiceDto(
+    const filteredServices = items.filter(
+      (service) => service.serviceType_id === serviceType_id,
+    );
+
+    if (filteredServices.length === 0) {
+      const newService = new ServiceDto(
         {
           project_uuid,
-          name: `${serviceType_id} service`,
+          name: `Service ${serviceType_id}`,
           serviceType_id,
         },
         context,
       );
 
-      await this.createService(context, service, total);
+      await this.createService(context, newService, total);
       return true;
     }
 

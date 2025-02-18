@@ -1,14 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import {
+  AttachedServiceType,
   AuthenticationMicroservice,
   BaseProjectQueryFilter,
   CreateEWIntegrationDto,
   EmbeddedWalletSignaturesQueryFilter,
 } from '@apillon/lib';
+import { ServicesService } from '../services/services.service';
 
 @Injectable()
 export class EmbeddedWalletService {
+  constructor(private readonly serviceService: ServicesService) {}
+
   async getEmbeddedWalletInfo(
     context: DevConsoleApiContext,
     query: BaseProjectQueryFilter,
@@ -46,6 +50,12 @@ export class EmbeddedWalletService {
     context: DevConsoleApiContext,
     body: CreateEWIntegrationDto,
   ) {
+    await this.serviceService.createServiceIfNotExists(
+      context,
+      body.project_uuid,
+      AttachedServiceType.WALLET,
+    );
+
     return (
       await new AuthenticationMicroservice(
         context,

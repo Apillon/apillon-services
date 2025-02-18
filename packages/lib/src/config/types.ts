@@ -621,8 +621,8 @@ export enum DefaultPermission {
   SOCIAL = 6,
   WALLET = 7,
   CONTRACTS = 8,
-  INDEXING = 10,
   RPC = 9,
+  INDEXING = 10,
 }
 
 //#endregion
