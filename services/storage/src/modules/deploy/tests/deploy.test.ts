@@ -397,7 +397,7 @@ describe('DeployService tests', () => {
         VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', '${expectedProjectConfig.refreshToken}', '${expectedProjectConfig.login}')`,
       );
       const response = await DeployService.listRepos(
-        { projectUuid: expectedProjectConfig.projectUuid },
+        { project_uuid: expectedProjectConfig.projectUuid },
         stage.context,
       );
       expect(response).toBeDefined();

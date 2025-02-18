@@ -1,20 +1,14 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   CreateBucketDto,
   StorageMicroservice,
   BucketQueryFilter,
-  CodeException,
   CreateBucketWebhookDto,
   AttachedServiceType,
   BucketQuotaReachedQueryFilter,
 } from '@apillon/lib';
-import { ResourceNotFoundErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
-import { Project } from '../../project/models/project.model';
-import { Service } from '../../services/models/service.model';
-import { ServiceQueryFilter } from '../../services/dtos/services-query-filter.dto';
 import { ServicesService } from '../../services/services.service';
-import { ServiceDto } from '../../services/dtos/service.dto';
 
 @Injectable()
 export class BucketService {
@@ -37,29 +31,11 @@ export class BucketService {
   }
 
   async createBucket(context: DevConsoleApiContext, body: CreateBucketDto) {
-    const project = await new Project({}, context).populateByUUIDOrThrow(
-      body.project_uuid,
-    );
-
-    //Check if storage service for this project already exists
-    const query: ServiceQueryFilter = new ServiceQueryFilter(
-      {},
+    await this.serviceService.createServiceIfNotExists(
       context,
-    ).populate({
-      project_uuid: project.project_uuid,
-      serviceType_id: AttachedServiceType.STORAGE,
-    });
-    const storageServices = await new Service({}).getServices(context, query);
-    if (storageServices.total == 0) {
-      //Create storage service - "Attach"
-      const storageService: ServiceDto = new ServiceDto({}, context).populate({
-        project_uuid: project.project_uuid,
-        name: 'Storage service',
-        serviceType_id: AttachedServiceType.STORAGE,
-      });
-
-      await this.serviceService.createService(context, storageService);
-    }
+      body.project_uuid,
+      AttachedServiceType.STORAGE,
+    );
 
     //Call Storage microservice, to create bucket
     return (await new StorageMicroservice(context).createBucket(body)).data;
@@ -116,16 +92,15 @@ export class BucketService {
   ) {
     return (
       await new StorageMicroservice(context).updateBucketWebhook({
-        id: id,
+        id,
         data: body,
       })
     ).data;
   }
 
   async deleteBucketWebhook(context: DevConsoleApiContext, id: number) {
-    return (
-      await new StorageMicroservice(context).deleteBucketWebhook({ id: id })
-    ).data;
+    return (await new StorageMicroservice(context).deleteBucketWebhook({ id }))
+      .data;
   }
 
   //#endregion

@@ -22,7 +22,6 @@ import {
 } from '@apillon/blockchain-lib/common';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
-import { Project } from '../project/models/project.model';
 import { ServicesService } from '../services/services.service';
 
 @Injectable()
@@ -34,13 +33,9 @@ export class NftsService {
     chainType: ChainType,
     body: CreateCollectionDTO | CreateSubstrateCollectionDTO,
   ) {
-    const project = await new Project({}, context).populateByUUIDOrThrow(
-      body.project_uuid,
-    );
-
-    await this.serviceService.createServiceIfItDoesntExist(
+    await this.serviceService.createServiceIfNotExists(
       context,
-      project.project_uuid,
+      body.project_uuid,
       AttachedServiceType.NFT,
     );
 
@@ -55,13 +50,9 @@ export class NftsService {
     context: DevConsoleApiContext,
     body: CreateUniqueCollectionDTO,
   ) {
-    const project = await new Project({}, context).populateByUUIDOrThrow(
-      body.project_uuid,
-    );
-
-    await this.serviceService.createServiceIfItDoesntExist(
+    await this.serviceService.createServiceIfNotExists(
       context,
-      project.project_uuid,
+      body.project_uuid,
       AttachedServiceType.NFT,
     );
 
