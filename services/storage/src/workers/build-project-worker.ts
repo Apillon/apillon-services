@@ -168,12 +168,10 @@ export class BuildProjectWorker extends BaseQueueWorker {
       },
     );
 
-    let lastLog = '';
     child.stdout.on('data', async (data) => {
       const log = data.toString();
       await deploymentBuild.addLog(log);
       console.log(`stdout: ${log}`);
-      lastLog = log;
     });
 
     child.stderr.on('data', async (data) => {
@@ -185,29 +183,14 @@ export class BuildProjectWorker extends BaseQueueWorker {
     child.on('error', async (error) => {
       await deploymentBuild.addLog(error.message);
       console.error(`error: ${error.message}`);
-      lastLog = '';
     });
 
     // Wait for the child process to finish
     await new Promise((resolve, reject) => {
       child.on('close', async (data) => {
-        if (!lastLog) {
-          await deploymentBuild.handleFailure();
-          reject(data);
-        } else {
-          try {
-            const deployInfo = JSON.parse(lastLog) as {
-              uuid: string;
-            };
-            await deploymentBuild.handleSuccess(deployInfo.uuid);
-            console.log(`Success, child process exited with code ${data}`);
-            resolve(data);
-          } catch (error) {
-            console.log('Error parsing deployment information', error);
-            await deploymentBuild.handleSuccess();
-            resolve(data);
-          }
-        }
+        await deploymentBuild.handleSuccess();
+        console.log(`Success, child process exited with code ${data}`);
+        resolve(data);
       });
       child.on('error', async (data) => {
         await deploymentBuild.handleFailure();
