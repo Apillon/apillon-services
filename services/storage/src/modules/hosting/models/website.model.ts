@@ -393,6 +393,18 @@ export class Website extends UuidSqlModel {
   })
   public repoId: number | null;
 
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+    ],
+    validators: [],
+  })
+  public deploymentConfig_id: number | null;
+
   /**
    * Name of github branch used for deployment if one exists
    */
@@ -490,6 +502,7 @@ export class Website extends UuidSqlModel {
     const data = await this.getContext().mysql.paramExecute(
       `
       SELECT w.*,dc.repoId, dc.branchName, dc.buildCommand,dc.buildDirectory, dc.installCommand, dc.apiKey, dc.repoName,
+      dc.id as deploymentConfig_id,
       lastDeployment.deployment_uuid as lastDeployment_uuid,
       lastDeployment.deploymentStatus as lastDeploymentStatus
       FROM \`${DbTables.WEBSITE}\` w

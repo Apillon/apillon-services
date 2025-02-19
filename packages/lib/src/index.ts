@@ -39,6 +39,7 @@ export * from './lib/at-services/storage/dtos/create-ipns.dto';
 export * from './lib/at-services/storage/dtos/ipns-query-filter.dto';
 export * from './lib/at-services/storage/dtos/publish-ipns.dto';
 export * from './lib/at-services/storage/dtos/create-deployment-config.dto';
+export * from './lib/at-services/storage/dtos/set-environment-variables.dto';
 export * from './lib/at-services/storage/storage';
 export * from './lib/at-services/storage/dtos/create-bucket.dto';
 export * from './lib/at-services/storage/dtos/bucket-query-filter.dto';

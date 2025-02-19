@@ -33,6 +33,7 @@ import { CreateDeploymentConfigDto } from './dtos/create-deployment-config.dto';
 import { GithubLinkDto } from './dtos/github-link.dto';
 import { DeploymentBuildQueryFilter } from './dtos/deployment-build-query-filter.dto';
 import { GithubUnlinkDto } from './dtos/github-unlink.dto';
+import { SetEnvironmentVariablesDto } from './dtos/set-environment-variables.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -684,6 +685,22 @@ export class StorageMicroservice extends BaseService {
     const data = {
       eventName: StorageEventType.DELETE_DEPLOYMENT_CONFIG,
       websiteUuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async setEnvironmentVariables(params: SetEnvironmentVariablesDto) {
+    const data = {
+      eventName: StorageEventType.SET_ENVIRONMENT_VARIABLES,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
+
+  public async getEnvironmentVariables(deploymentConfigId: number) {
+    const data = {
+      eventName: StorageEventType.GET_ENVIRONMENT_VARIABLES,
+      deploymentConfigId,
     };
     return await this.callService(data);
   }
