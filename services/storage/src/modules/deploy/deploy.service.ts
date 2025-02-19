@@ -390,7 +390,6 @@ export class DeployService {
     const parameters = {
       ...event,
       deploymentBuildId: deploymentBuild.id,
-      configId: event.configId,
       variables: event.variables,
     };
 
