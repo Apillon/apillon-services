@@ -540,7 +540,12 @@ export class NftsService {
             abi,
             collection.contractAddress,
           );
-          callMethod = 'transferOwnership';
+          callMethod =
+            collection.collectionType === NFTCollectionType.GENERIC &&
+            // this is here for backward compatibility with older contracts
+            collection.contractVersion_id >= 3
+              ? 'transferAdmin'
+              : 'transferOwnership';
           txHash = await evmContractClient.createTransaction(
             callMethod,
             callArguments,

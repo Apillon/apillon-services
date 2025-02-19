@@ -1,12 +1,13 @@
 import {
   BaseQueryFilter,
+  Chain,
+  ChainType,
   PopulateFrom,
   SerializeFor,
-  UpdateTransactionDto,
-  WalletTransactionsQueryFilter,
   SqlModelStatus,
+  UpdateTransactionDto,
   WalletDepositsQueryFilter,
-  Chain,
+  WalletTransactionsQueryFilter,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import {
@@ -28,10 +29,10 @@ export class WalletService {
   }
 
   static async getWallets(
-    { chain }: { chain: Chain },
+    { chain, chainType }: { chain: Chain; chainType: ChainType },
     context: ServiceContext,
   ): Promise<any[]> {
-    return await new Wallet({}, context).getWallets(chain);
+    return await new Wallet({}, context).getWallets(chain, chainType);
   }
 
   static async getWallet(

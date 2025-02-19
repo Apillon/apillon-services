@@ -109,15 +109,37 @@ export async function deployNFTCollectionContract(
           collection.isAutoIncrement,
         ],
       ];
+      let deployerAddress: string | null = null;
       switch (collection.collectionType) {
         case NFTCollectionType.GENERIC: {
+          let adminAddress = collection.adminAddress;
+          // if admin wallet is not set use one of our wallets
+          if (!adminAddress) {
+            const wallets = await blockchainService.getWallets(
+              collection.chain,
+              collection.chainType,
+            );
+            if (!wallets.success || wallets.data.length <= 0) {
+              throw new NftsCodeException({
+                status: 500,
+                code: NftsErrorCode.GENERAL_SERVER_ERROR,
+              });
+            }
+            const randomIndex = Math.floor(Math.random() * wallets.data.length);
+            adminAddress = wallets.data[randomIndex].address;
+            // we need to set deployer so that our wallet has admin access
+            deployerAddress = adminAddress;
+          }
           callArguments.push(
-            TransactionUtils.convertBaseToGwei(collection.dropPrice),
-            collection.dropStart,
-            maxSupply,
-            collection.dropReserve,
+            [
+              TransactionUtils.convertBaseToGwei(collection.dropPrice),
+              collection.dropStart,
+              maxSupply,
+              collection.dropReserve,
+              royaltiesFees,
+            ],
             royaltiesAddress,
-            royaltiesFees,
+            adminAddress,
           );
           break;
         }
@@ -151,6 +173,7 @@ export async function deployNFTCollectionContract(
             referenceTable: DbTables.COLLECTION,
             referenceId: collection.id,
             project_uuid: collection.project_uuid,
+            ...(deployerAddress ? { fromAddress: deployerAddress } : {}),
           },
           context,
         ),
