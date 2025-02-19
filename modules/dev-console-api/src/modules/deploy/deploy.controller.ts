@@ -137,6 +137,7 @@ export class DeployController {
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
+  @Validation({ dto: SetEnvironmentVariablesDto })
   @UseGuards(AuthGuard, ValidationGuard)
   async setEnvironmentVariables(
     @Ctx() context: DevConsoleApiContext,
