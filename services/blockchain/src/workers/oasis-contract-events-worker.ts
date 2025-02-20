@@ -12,32 +12,55 @@ export class OasisContractEventsWorker extends EvmContractEventsWorker {
 
   public async processEvents(events: ethers.Event[]) {
     console.info('Events recieved in OasisContractEventsWorker', events);
-    //Parse data from events and send webhook to Authentication MS worker
-    const txTopics: any = events.map((x) => ({
-      dataHash: x.args[0],
-      hashedUsername: x.args[1],
-      publicAddress: x.args[2],
-    }));
+
+    if (
+      env.APP_ENV != AppEnvironment.LOCAL_DEV &&
+      env.APP_ENV != AppEnvironment.TEST
+    ) {
+      return;
+    }
+
+    // Parse data from events and send webhook to Authentication MS worker
+    const txTopics: any = await Promise.all(
+      events.map(async (event) => {
+        const receipt = await event.getTransactionReceipt();
+        const walletCreatedEvent = receipt.logs.find(
+          (log) =>
+            log.topics[0] ===
+            ethers.utils.id('WalletCreated(bytes32 indexed publicAddress)'),
+        );
+
+        let publicAddress = null;
+        if (walletCreatedEvent) {
+          const decodedLog = ethers.utils.defaultAbiCoder.decode(
+            ['bytes32'],
+            walletCreatedEvent.topics[1],
+          );
+          publicAddress = decodedLog[0];
+        }
+
+        return {
+          dataHash: event.args[0],
+          contractAddress: event.args[1],
+          publicAddress,
+        };
+      }),
+    );
+
+    if (txTopics.length === 0) {
+      return;
+    }
 
     const chunks = splitArray(txTopics, 20);
 
     for (const chunk of chunks) {
-      if (
-        env.APP_ENV != AppEnvironment.LOCAL_DEV &&
-        env.APP_ENV != AppEnvironment.TEST
-      ) {
-        await sendToWorkerQueue(
-          env.AUTH_AWS_WORKER_SQS_URL,
-          'OasisContractEventWorker',
-          [
-            {
-              data: chunk,
-            },
-          ],
-          null,
-          null,
-        );
-      }
+      await sendToWorkerQueue(
+        env.AUTH_AWS_WORKER_SQS_URL,
+        'OasisContractEventWorker',
+        [{ data: chunk }],
+        null,
+        null,
+      );
     }
   }
 }

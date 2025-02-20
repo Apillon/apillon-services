@@ -27,7 +27,7 @@ describe('Oasis contract events tests', () => {
     //Insert test contract
     contract = await new Contract({}, stage.context)
       .populate({
-        address: '0xDc9e8B6894E4754631887486BcF583B6B3158c4E',
+        address: '0x510518EBe8266fDF6858d2852ADA3bfE50988DAB',
         chain: EvmChain.OASIS_TESTNET,
         chainType: ChainType.EVM,
         abi: `[
@@ -59,7 +59,7 @@ describe('Oasis contract events tests', () => {
           "function userExists(bytes32 in_username) view returns (bool)",
           "function validateSignature(uint256 _gasPrice, uint256 _timestamp, bytes32 _dataKeccak, bytes _signature) view returns (bytes32, bool)"
         ]`,
-        lastParsedBlock: 6577810,
+        lastParsedBlock: 10458732,
         lastParsedBlockUpdateTime: new Date().setDate(
           new Date().getDate() - 10,
         ),
