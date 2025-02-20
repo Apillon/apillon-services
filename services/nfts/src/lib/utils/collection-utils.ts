@@ -89,14 +89,6 @@ export async function deployNFTCollectionContract(
         {},
         context,
       ).getContractVersion(collection.collectionType, collection.chainType);
-      if (!id) {
-        throw new NftsCodeException({
-          status: 500,
-          code: NftsErrorCode.NO_CONTRACT_VERSION_FOUND,
-          errorMessage:
-            'Contract version not found. Please check the collection configuration.',
-        });
-      }
       contractVersion_id = id;
       const royaltiesFees = Math.round(collection.royaltiesFees * 100);
       const maxSupply =
@@ -130,7 +122,7 @@ export async function deployNFTCollectionContract(
             if (!wallets.success || wallets.data.length <= 0) {
               throw new NftsCodeException({
                 status: 500,
-                code: NftsErrorCode.GENERAL_SERVER_ERROR,
+                code: NftsErrorCode.WALLET_NOT_FOUND,
               });
             }
             const randomIndex = Math.floor(Math.random() * wallets.data.length);
@@ -168,6 +160,18 @@ export async function deployNFTCollectionContract(
             code: NftsErrorCode.GENERAL_SERVER_ERROR,
           });
       }
+
+      console.log(
+        `[EVM Deployment] Sending transaction for creation of NFT collection:`,
+        {
+          Name: `${collection.name}`,
+          Symbol: `${collection.symbol}`,
+          Chain: `${collection.chain}`,
+          ChainType: `${collection.chainType}`,
+          AdminAddress: `${collection.adminAddress || deployerAddress}`,
+          CallArguments: `${JSON.stringify(callArguments)}`,
+        },
+      );
       const serializedTransaction = EVMContractClient.createDeployTransaction(
         abi,
         bytecode,
