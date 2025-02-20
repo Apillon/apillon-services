@@ -89,6 +89,14 @@ export async function deployNFTCollectionContract(
         {},
         context,
       ).getContractVersion(collection.collectionType, collection.chainType);
+      if (!id) {
+        throw new NftsCodeException({
+          status: 500,
+          code: NftsErrorCode.NO_CONTRACT_VERSION_FOUND,
+          errorMessage:
+            'Contract version not found. Please check the collection configuration.',
+        });
+      }
       contractVersion_id = id;
       const royaltiesFees = Math.round(collection.royaltiesFees * 100);
       const maxSupply =
