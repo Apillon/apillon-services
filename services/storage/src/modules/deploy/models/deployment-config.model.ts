@@ -331,6 +331,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
+      SerializeFor.UPDATE_DB,
     ],
   })
   public encryptedVariables: string | null;
