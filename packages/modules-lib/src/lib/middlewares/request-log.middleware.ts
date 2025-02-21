@@ -19,6 +19,10 @@ export function createRequestLogMiddleware(
   @Injectable()
   class RequestLogMiddleware implements NestMiddleware {
     async use(req: any, res: any, next: (error?: any) => void) {
+      if (req.method === 'HEAD') {
+        return next();
+      }
+
       const { body } = req;
       const startTime = Date.now();
       const end = res.end;

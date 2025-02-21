@@ -7,6 +7,10 @@ export const systemRoutes = [
   '/storage/blacklist',
   '/system',
   '/auth/session-token',
+  '/embedded-wallet/evm-token-prices',
+  '/embedded-wallet/evm-token-prices',
+  '/embedded-wallet/otp/generate',
+  '/embedded-wallet/otp/validate',
 ];
 
 export async function generateMongoLogsQuery(
