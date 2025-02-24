@@ -967,7 +967,10 @@ export class NftsService {
           callArguments = collection.isAutoIncrement
             ? [body.receivingAddress, body.quantity]
             : [body.receivingAddress, body.quantity, body.idsToMint];
-          await evmContractClient.createTransaction(callMethod, callArguments);
+          serializedTransaction = await evmContractClient.createTransaction(
+            callMethod,
+            callArguments,
+          );
           minimumGas =
             260000 *
             (collection.isAutoIncrement
