@@ -763,7 +763,6 @@ export class NftsService {
 
     return { numOfCollections, nftTransactionCount };
   }
-
   //#endregion
 
   //#region NFT functions
@@ -863,6 +862,31 @@ export class NftsService {
     await collection.update();
 
     return collection.serializeByContext(context);
+  }
+
+  static async setWebsiteUuid(
+    {
+      collectionUuid,
+      websiteUuid,
+    }: { collectionUuid: string; websiteUuid: string },
+    context: ServiceContext,
+  ) {
+    const collection: Collection = await new Collection(
+      {},
+      context,
+    ).populateByUUID(collectionUuid);
+
+    if (!collection.exists()) {
+      throw new NftsNotFoundException();
+    }
+
+    collection.canModify(context);
+
+    collection.websiteUuid = websiteUuid;
+
+    await collection.update();
+
+    return collection.serializeByContext();
   }
 
   static async mintNftTo(

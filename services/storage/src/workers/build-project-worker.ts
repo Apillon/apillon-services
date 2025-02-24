@@ -97,8 +97,8 @@ export class BuildProjectWorker extends BaseQueueWorker {
   public async runExecutor(data: {
     deploymentBuildId: number;
     websiteUuid: string;
-    buildCommand: string;
-    installCommand: string;
+    buildCommand?: string;
+    installCommand?: string;
     buildDirectory: string;
     apiKey: string;
     apiSecret: string;
@@ -107,6 +107,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
       key: string;
       value: string;
     }[];
+    isTriggeredByWebhook?: boolean;
   }): Promise<any> {
     console.info('RUN EXECUTOR (BuildProjectWorker). data: ', data);
 
@@ -120,50 +121,49 @@ export class BuildProjectWorker extends BaseQueueWorker {
       return;
     }
 
-    const githubProjectConfig = await new GithubProjectConfig(
-      {},
-      this.context,
-    ).populateByWebsiteUuid(data.websiteUuid);
-
-    if (!githubProjectConfig.exists()) {
-      console.error('Github project config not found');
-      await deploymentBuild.handleFailure('Github project config not found');
-      return;
-    }
-
     deploymentBuild.buildStatus = DeploymentBuildStatus.IN_PROGRESS;
     deploymentBuild.logs = '';
 
     await deploymentBuild.update();
 
-    const kmsClient = new AWS_KMS();
+    let url = data.url;
+    let secret = data.apiSecret;
 
-    const decryptedSecret = await kmsClient.decrypt(
-      data.apiSecret,
-      env.DEPLOY_KMS_KEY_ID,
-    );
+    if (data.isTriggeredByWebhook) {
+      const githubProjectConfig = await new GithubProjectConfig(
+        {},
+        this.context,
+      ).populateByWebsiteUuid(data.websiteUuid);
 
-    const accessToken = githubProjectConfig.refresh_token
-      ? await refreshAccessToken(githubProjectConfig)
-      : githubProjectConfig.access_token;
+      if (!githubProjectConfig.exists()) {
+        console.error('Github project config not found');
+        await deploymentBuild.handleFailure('Github project config not found');
+        return;
+      }
 
-    const urlWithToken = data.url.replace(
-      'https://',
-      `https://oauth2:${accessToken}@`,
-    );
+      const kmsClient = new AWS_KMS();
+
+      secret = await kmsClient.decrypt(data.apiSecret, env.DEPLOY_KMS_KEY_ID);
+
+      const accessToken = githubProjectConfig.refresh_token
+        ? await refreshAccessToken(githubProjectConfig)
+        : githubProjectConfig.access_token;
+
+      url = url.replace('https://', `https://oauth2:${accessToken}@`);
+    }
 
     const child = spawn(
       '/bin/bash',
       [
         '-c',
         script,
-        urlWithToken,
+        url,
         data.websiteUuid,
         data.buildCommand,
         data.installCommand,
         data.buildDirectory,
         data.apiKey,
-        decryptedSecret,
+        secret,
       ],
       {
         env: {

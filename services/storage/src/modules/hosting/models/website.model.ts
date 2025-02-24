@@ -374,6 +374,20 @@ export class Website extends UuidSqlModel {
   })
   public lastDeploymentStatus: number;
 
+  @prop({
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [],
+  })
+  public nftCollectionUuid: string | null;
+
   /**
    * Deployment config properties
    */

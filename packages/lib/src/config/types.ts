@@ -243,6 +243,7 @@ export enum StorageEventType {
   DELETE_DEPLOYMENT_CONFIG = 'delete-deployment-config',
   SET_ENVIRONMENT_VARIABLES = 'set-environment-variables',
   GET_ENVIRONMENT_VARIABLES = 'get-environment-variables',
+  TRIGGER_NFT_WEBSITE_DEPLOY = 'trigger-nft-website-deploy',
 }
 
 export enum AuthenticationEventType {
@@ -332,6 +333,7 @@ export enum NftsEventType {
   ARCHIVE_COLLECTION = 'archive-collection',
   ADD_IPNS_TO_COLLECTION = 'add-ipns-to-collection',
   ACTIVATE_COLLECTION = 'activate-collection',
+  SET_WEBSITE_UUID = 'set-website-uuid',
 }
 
 export enum ComputingEventType {
@@ -686,6 +688,7 @@ export enum BadRequestErrorCode {
   RESOURCE_DOES_NOT_EXISTS = 40000006,
   INVALID_NOTIFICATION_TYPE = 40000007,
   NOTIFICATION_TYPE_OR_MESSAGE_MISSING = 40000008,
+  INVALID_NFT_WEBSITE_TYPE = 40000009,
 }
 
 export enum ValidatorErrorCode {
@@ -1349,4 +1352,10 @@ export enum HttpStatus {
   BAD_REQUEST = 400,
   FORBIDDEN = 403,
   NOT_FOUND = 404,
+}
+
+export enum NftWebsiteType {
+  JS = 1,
+  REACT = 2,
+  VUE = 3,
 }

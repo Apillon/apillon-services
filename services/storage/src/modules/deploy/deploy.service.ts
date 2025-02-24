@@ -21,6 +21,7 @@ import {
   DeploymentBuildStatus,
   GithubLinkDto,
   LogType,
+  NftWebsiteType,
   SetEnvironmentVariablesDto,
   env,
   writeLog,
@@ -33,6 +34,7 @@ import { inspect } from 'node:util';
 import { DeploymentBuild } from './models/deployment-build.model';
 import { GithubProjectConfig } from './models/github-project-config.model';
 import { createWebhook, getRepos, getTokens, getUser } from '../../lib/github';
+import { getNftWebsiteConfig } from '../../lib/get-nft-website-config';
 
 export class DeployService {
   static async linkGithub(
@@ -391,6 +393,78 @@ export class DeployService {
       ...event,
       deploymentBuildId: deploymentBuild.id,
       variables: event.variables,
+      isTriggeredByWebhook: true,
+    };
+
+    writeLog(
+      LogType.INFO,
+      `Parameters for build project worker ${inspect(parameters)}`,
+    );
+
+    if (
+      env.APP_ENV === AppEnvironment.LOCAL_DEV ||
+      env.APP_ENV === AppEnvironment.TEST
+    ) {
+      const serviceDef: ServiceDefinition = {
+        type: ServiceDefinitionType.SQS,
+        config: { region: 'test' },
+        params: { FunctionName: 'test' },
+      };
+      const wd = new WorkerDefinition(
+        serviceDef,
+        WorkerName.BUILD_PROJECT_WORKER,
+        {
+          parameters,
+        },
+      );
+
+      const builderWorker = new BuildProjectWorker(
+        wd,
+        context,
+        QueueWorkerType.EXECUTOR,
+      );
+      await builderWorker.runExecutor(parameters);
+    } else {
+      await sendToWorkerQueue(
+        env.BUILDER_SQS_URL,
+        WorkerName.BUILD_PROJECT_WORKER,
+        [parameters],
+        null,
+        null,
+      );
+    }
+
+    return true;
+  }
+
+  static async triggerNftWebsiteDeploy(
+    event: {
+      websiteUuid: string;
+      type: NftWebsiteType;
+      apiKey: string;
+      apiSecret: string;
+      contractAddress: string;
+      chainId: number;
+    },
+    context: ServiceContext,
+  ) {
+    const deploymentBuild = new DeploymentBuild({}, context).populate({
+      buildStatus: DeploymentBuildStatus.PENDING,
+      websiteUuid: event.websiteUuid,
+    });
+
+    await deploymentBuild.insert();
+
+    const nftWebsiteConfig = getNftWebsiteConfig(
+      event.type,
+      event.contractAddress,
+      event.chainId,
+    );
+
+    const parameters = {
+      ...event,
+      ...nftWebsiteConfig,
+      deploymentBuildId: deploymentBuild.id,
     };
 
     writeLog(
