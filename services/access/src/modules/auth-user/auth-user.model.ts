@@ -102,7 +102,7 @@ export class AuthUser extends AdvancedSQLModel {
       SerializeFor.SERVICE,
     ],
   })
-  public googleId: string;
+  public googleId: string | null;
 
   /**
    * User's password hash property
@@ -226,7 +226,7 @@ export class AuthUser extends AdvancedSQLModel {
       `
       SELECT * FROM authUser
       WHERE email = @email AND status = @status
-      AND (@showCreatedWithGoogle IS NULL OR googleId IS NOT NULL)
+      AND (@showCreatedWithGoogle = FALSE OR googleId IS NOT NULL)
     `,
       {
         email,
