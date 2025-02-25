@@ -24,7 +24,7 @@ import {
   JwtExpireTime,
 } from '@apillon/lib';
 import { getDiscordProfile } from '@apillon/modules-lib';
-import { HttpStatus, Injectable, HttpRedirectResponse } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { v4 as uuidV4 } from 'uuid';
 import {
   ResourceNotFoundErrorCode,
