@@ -55,6 +55,7 @@ export class Ams extends BaseService {
     project_uuid?: string;
     wallet?: string;
     evmWallet?: string;
+    googleId?: string;
   }) {
     const data = {
       eventName: AmsEventType.USER_REGISTER,
@@ -139,10 +140,11 @@ export class Ams extends BaseService {
     };
   }
 
-  public async getAuthUserByEmail(email: string) {
+  public async getAuthUserByEmail(email: string, isGoogle?: boolean) {
     const data = {
       eventName: AmsEventType.GET_AUTH_USER_BY_EMAIL,
       email,
+      isGoogle,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return

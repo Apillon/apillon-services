@@ -93,6 +93,17 @@ export class AuthUser extends AdvancedSQLModel {
   })
   public email: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public googleId: string;
+
   /**
    * User's password hash property
    */
@@ -206,13 +217,22 @@ export class AuthUser extends AdvancedSQLModel {
     return this.reset();
   }
 
-  public async populateByEmail(email: string, conn?: PoolConnection) {
+  public async populateByEmail(
+    email: string,
+    showCreatedWithGoogle?: boolean,
+    conn?: PoolConnection,
+  ) {
     const res = await this.db().paramExecute(
       `
       SELECT * FROM authUser
       WHERE email = @email AND status = @status
+      AND (@showCreatedWithGoogle IS NULL OR googleId IS NOT NULL)
     `,
-      { email, status: SqlModelStatus.ACTIVE },
+      {
+        email,
+        status: SqlModelStatus.ACTIVE,
+        showCreatedWithGoogle: !!showCreatedWithGoogle,
+      },
       conn,
     );
 

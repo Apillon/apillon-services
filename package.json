@@ -45,6 +45,7 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/multer": "^1.4.12",
     "@types/node": "^20.12.7",
+    "@types/passport-google-oauth20": "^2.0.16",
     "@types/supertest": "^2.0.11",
     "@types/uuid": "^9.0.8",
     "axios-mock-adapter": "^1.22.0",
@@ -77,5 +78,9 @@
     "npm": ">=10.0.0",
     "node": ">=20.0.0"
   },
-  "packageManager": "npm@8.4.0"
+  "packageManager": "npm@8.4.0",
+  "dependencies": {
+    "@nestjs/passport": "^11.0.5",
+    "passport-google-oauth20": "^2.0.0"
+  }
 }
