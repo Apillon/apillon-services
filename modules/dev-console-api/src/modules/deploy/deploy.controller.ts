@@ -28,6 +28,7 @@ import { ProjectAccessGuard } from '../../guards/project-access.guard';
 import { GithubUnlinkDto } from '@apillon/lib';
 import { ProjectModifyGuard } from '../../guards/project-modify.guard';
 import { GitHubWebhookPayload } from '../../config/types';
+import { DeployNftWebsiteDto } from './dtos/deploy-nft-website.dto';
 
 @Controller('deploy')
 export class DeployController {
@@ -157,5 +158,17 @@ export class DeployController {
     @Query() query: DeploymentBuildQueryFilter,
   ) {
     return await this.deployService.listDeploymentBuilds(context, query);
+  }
+
+  @Post('nft')
+  @Validation({
+    dto: DeployNftWebsiteDto,
+  })
+  @UseGuards(ValidationGuard, AuthGuard, ProjectModifyGuard)
+  async deployNftWebsite(
+    @Ctx() context: DevConsoleApiContext,
+    @Body() body: DeployNftWebsiteDto,
+  ) {
+    return await this.deployService.deployNftWebsite(context, body);
   }
 }

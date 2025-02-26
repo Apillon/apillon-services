@@ -704,4 +704,12 @@ export class StorageMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async triggerNftWebsiteDeploy(params: any) {
+    const data = {
+      eventName: StorageEventType.TRIGGER_NFT_WEBSITE_DEPLOY,
+      body: params.serialize(),
+    };
+    return await this.callService(data);
+  }
 }

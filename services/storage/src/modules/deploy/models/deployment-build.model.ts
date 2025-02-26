@@ -147,7 +147,7 @@ export class DeploymentBuild extends AdvancedSQLModel {
       SerializeFor.UPDATE_DB,
     ],
   })
-  public deploymentConfigId: number;
+  public deploymentConfigId: number | null;
 
   @prop({
     parser: { resolver: dateParser() },

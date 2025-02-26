@@ -1,9 +1,11 @@
 import {
   CreateDeploymentConfigDto,
+  CreateWebsiteDto,
   DeploymentBuildQueryFilter,
   GithubLinkDto,
   Lmas,
   LogType,
+  NftsMicroservice,
   ServiceName,
   SetEnvironmentVariablesDto,
   StorageMicroservice,
@@ -12,6 +14,7 @@ import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { GithubUnlinkDto } from '@apillon/lib';
 import { GitHubWebhookPayload } from '../../config/types';
+import { DeployNftWebsiteDto } from './dtos/deploy-nft-website.dto';
 
 @Injectable()
 export class DeployService {
@@ -111,5 +114,41 @@ export class DeployService {
         deploymentConfigId,
       )
     ).data;
+  }
+
+  async deployNftWebsite(
+    context: DevConsoleApiContext,
+    body: DeployNftWebsiteDto,
+  ) {
+    const nftsMS = new NftsMicroservice(context);
+    const collection = (await nftsMS.getNftCollection(body.collectionUuid))
+      .data;
+
+    const storageMS = new StorageMicroservice(context);
+    const website = (
+      await storageMS.createWebsite(
+        new CreateWebsiteDto({}, context).populate({
+          project_uuid: collection.project_uuid,
+          name: `${collection.name} - Website`,
+          nftCollectionUuid: collection.collection_uuid,
+        }),
+      )
+    ).data;
+
+    await storageMS.triggerNftWebsiteDeploy({
+      websiteUuid: website.website_uuid,
+      apiKey: body.apiKey,
+      apiSecret: body.apiSecret,
+      contractAddress: collection.contractAddress,
+      chainId: collection.chain,
+      type: body.type,
+    });
+
+    await nftsMS.setWebsiteUuid(
+      collection.collection_uuid,
+      website.website_uuid,
+    );
+
+    return website;
   }
 }

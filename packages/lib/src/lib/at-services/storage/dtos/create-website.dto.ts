@@ -49,4 +49,12 @@ export class CreateWebsiteDto extends ModelBase {
     validators: [],
   })
   public domain: string;
+
+  @prop({
+    parser: { resolver: stringParser },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public nftCollectionUuid: string | null;
 }
