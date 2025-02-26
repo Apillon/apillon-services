@@ -16,7 +16,6 @@ import { DevConsoleApiContext } from '../../context';
 import { GithubUnlinkDto } from '@apillon/lib';
 import { GitHubWebhookPayload } from '../../config/types';
 import { DeployNftWebsiteDto } from './dtos/deploy-nft-website.dto';
-import { inspect } from 'util';
 
 @Injectable()
 export class DeployService {
@@ -127,17 +126,6 @@ export class DeployService {
       .data;
 
     const storageMS = new StorageMicroservice(context);
-
-    console.log(
-      'Creating website',
-      inspect(collection),
-      collection.collection_uuid,
-      new CreateWebsiteDto({}, context).populate({
-        project_uuid: collection.project_uuid,
-        name: `${collection.name} - Website`,
-        nftCollectionUuid: collection.collection_uuid,
-      }).nftCollectionUuid,
-    );
 
     const website = (
       await storageMS.createWebsite(
