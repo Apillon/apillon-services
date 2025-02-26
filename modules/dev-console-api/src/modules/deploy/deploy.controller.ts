@@ -164,7 +164,7 @@ export class DeployController {
   @Validation({
     dto: DeployNftWebsiteDto,
   })
-  @UseGuards(ValidationGuard, AuthGuard, ProjectModifyGuard)
+  @UseGuards(ValidationGuard, AuthGuard)
   async deployNftWebsite(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: DeployNftWebsiteDto,
