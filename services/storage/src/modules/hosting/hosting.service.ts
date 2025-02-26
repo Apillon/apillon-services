@@ -92,7 +92,11 @@ export class HostingService {
     event: { body: CreateWebsiteDto },
     context: ServiceContext,
   ): Promise<any> {
+    console.log('createWebsite', event.body);
+
     const website: Website = new Website(event.body, context);
+
+    console.log('website', website);
 
     if (website.domain) {
       //Check if domain already exists

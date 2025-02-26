@@ -378,10 +378,12 @@ export class Website extends UuidSqlModel {
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.ADMIN_SELECT_DB,
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
       SerializeFor.APILLON_API,
     ],
     validators: [],
