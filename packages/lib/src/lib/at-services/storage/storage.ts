@@ -34,6 +34,7 @@ import { GithubLinkDto } from './dtos/github-link.dto';
 import { DeploymentBuildQueryFilter } from './dtos/deployment-build-query-filter.dto';
 import { GithubUnlinkDto } from './dtos/github-unlink.dto';
 import { SetEnvironmentVariablesDto } from './dtos/set-environment-variables.dto';
+import { TriggerNftWebsiteDeployDto } from './dtos/trigger-nft-website-deploy.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -705,7 +706,7 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
-  public async triggerNftWebsiteDeploy(params: any) {
+  public async triggerNftWebsiteDeploy(params: TriggerNftWebsiteDeployDto) {
     const data = {
       eventName: StorageEventType.TRIGGER_NFT_WEBSITE_DEPLOY,
       body: params.serialize(),
