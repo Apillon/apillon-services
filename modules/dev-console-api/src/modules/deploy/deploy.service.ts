@@ -131,6 +131,7 @@ export class DeployService {
     console.log(
       'Creating website',
       inspect(collection),
+      collection.collection_uuid,
       new CreateWebsiteDto({}, context).populate({
         project_uuid: collection.project_uuid,
         name: `${collection.name} - Website`,

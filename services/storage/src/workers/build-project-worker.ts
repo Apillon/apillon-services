@@ -203,7 +203,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
       child.on('error', async (data) => {
         await deploymentBuild.handleFailure();
         console.log(`Failure, child process exited with code ${data}`);
-        reject(data);
+        resolve(data);
       });
     });
   }
