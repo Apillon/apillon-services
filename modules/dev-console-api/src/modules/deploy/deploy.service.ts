@@ -9,6 +9,7 @@ import {
   ServiceName,
   SetEnvironmentVariablesDto,
   StorageMicroservice,
+  TriggerNftWebsiteDeployDto,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
@@ -135,14 +136,16 @@ export class DeployService {
       )
     ).data;
 
-    await storageMS.triggerNftWebsiteDeploy({
-      websiteUuid: website.website_uuid,
-      apiKey: body.apiKey,
-      apiSecret: body.apiSecret,
-      contractAddress: collection.contractAddress,
-      chainId: collection.chain,
-      type: body.type,
-    });
+    await storageMS.triggerNftWebsiteDeploy(
+      new TriggerNftWebsiteDeployDto({}, context).populate({
+        websiteUuid: website.website_uuid,
+        apiKey: body.apiKey,
+        apiSecret: body.apiSecret,
+        contractAddress: collection.contractAddress,
+        chainId: collection.chain,
+        type: body.type,
+      }),
+    );
 
     await nftsMS.setWebsiteUuid(
       collection.collection_uuid,

@@ -439,30 +439,32 @@ export class DeployService {
 
   static async triggerNftWebsiteDeploy(
     event: {
-      websiteUuid: string;
-      type: NftWebsiteType;
-      apiKey: string;
-      apiSecret: string;
-      contractAddress: string;
-      chainId: number;
+      body: {
+        websiteUuid: string;
+        type: NftWebsiteType;
+        apiKey: string;
+        apiSecret: string;
+        contractAddress: string;
+        chainId: number;
+      };
     },
     context: ServiceContext,
   ) {
     const deploymentBuild = new DeploymentBuild({}, context).populate({
       buildStatus: DeploymentBuildStatus.PENDING,
-      websiteUuid: event.websiteUuid,
+      websiteUuid: event.body.websiteUuid,
     });
 
     await deploymentBuild.insert();
 
     const nftWebsiteConfig = getNftWebsiteConfig(
-      event.type,
-      event.contractAddress,
-      event.chainId,
+      event.body.type,
+      event.body.contractAddress,
+      event.body.chainId,
     );
 
     const parameters = {
-      ...event,
+      ...event.body,
       ...nftWebsiteConfig,
       deploymentBuildId: deploymentBuild.id,
     };
