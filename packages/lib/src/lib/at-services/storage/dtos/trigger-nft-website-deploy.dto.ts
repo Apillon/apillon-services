@@ -28,10 +28,10 @@ export class TriggerNftWebsiteDeployDto extends ModelBase {
   contractAddress: string;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
   })
-  chainId: string;
+  chainId: number;
 
   @prop({
     parser: { resolver: integerParser() },
