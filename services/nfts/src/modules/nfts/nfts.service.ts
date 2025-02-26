@@ -984,9 +984,11 @@ export class NftsService {
             minted,
           );
 
-          callMethod = collection.isAutoIncrement
-            ? 'ownerMint'
-            : 'ownerMintIds';
+          callMethod =
+            collection.collectionType === NFTCollectionType.NESTABLE ||
+            collection.isAutoIncrement
+              ? 'ownerMint'
+              : 'ownerMintIds';
           callArguments = collection.isAutoIncrement
             ? [body.receivingAddress, body.quantity]
             : [body.receivingAddress, body.quantity, body.idsToMint];
