@@ -1355,7 +1355,7 @@ export enum HttpStatus {
 }
 
 export enum NftWebsiteType {
-  JS = 1,
+  PLAIN_JS = 1,
   REACT = 2,
   VUE = 3,
 }

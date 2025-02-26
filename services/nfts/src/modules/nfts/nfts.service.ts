@@ -871,10 +871,9 @@ export class NftsService {
     }: { collectionUuid: string; websiteUuid: string },
     context: ServiceContext,
   ) {
-    const collection: Collection = await new Collection(
-      {},
-      context,
-    ).populateByUUID(collectionUuid);
+    const collection = await new Collection({}, context).populateByUUID(
+      collectionUuid,
+    );
 
     if (!collection.exists()) {
       throw new NftsNotFoundException();

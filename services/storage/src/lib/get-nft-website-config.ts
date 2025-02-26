@@ -18,7 +18,7 @@ export const getNftWebsiteConfig = (
 } => {
   const hexChainId = chainId.toString(16);
   switch (type) {
-    case NftWebsiteType.JS:
+    case NftWebsiteType.PLAIN_JS:
       return {
         installCommand: './generate-config.sh',
         buildDirectory: '.',
