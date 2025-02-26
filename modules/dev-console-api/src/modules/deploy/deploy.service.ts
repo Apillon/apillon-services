@@ -131,7 +131,11 @@ export class DeployService {
     console.log(
       'Creating website',
       inspect(collection),
-      collection.collecton_uuid,
+      new CreateWebsiteDto({}, context).populate({
+        project_uuid: collection.project_uuid,
+        name: `${collection.name} - Website`,
+        nftCollectionUuid: collection.collection_uuid,
+      }).nftCollectionUuid,
     );
 
     const website = (
