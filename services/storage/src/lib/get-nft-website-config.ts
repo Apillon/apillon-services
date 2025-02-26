@@ -22,7 +22,7 @@ export const getNftWebsiteConfig = (
       return {
         installCommand: './generate-config.sh',
         buildDirectory: '.',
-        url: 'git@github.com:Apillon/nft-template.git',
+        url: 'https://github.com/Apillon/nft-template.git',
         variables: [
           {
             key: 'CONTRACT_ADDRESS',
@@ -39,7 +39,7 @@ export const getNftWebsiteConfig = (
         installCommand: 'npm install',
         buildCommand: 'npm run build',
         buildDirectory: './dist',
-        url: 'git@github.com:Apillon/nft-template-react.git',
+        url: 'https://github.com/Apillon/nft-template-react.git',
         variables: [
           {
             key: 'VITE_CONTRACT_ADDRESS',
@@ -56,7 +56,7 @@ export const getNftWebsiteConfig = (
         installCommand: 'npm install',
         buildCommand: 'npm run generate',
         buildDirectory: './dist',
-        url: 'git@github.com:Apillon/nft-template-vue.git',
+        url: 'https://github.com/Apillon/nft-template-vue.git',
         variables: [
           {
             key: 'CONTRACT_ADDRESS',
