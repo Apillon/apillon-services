@@ -16,7 +16,7 @@ export const getNftWebsiteConfig = (
   buildDirectory: string;
   url: string;
 } => {
-  const hexChainId = chainId.toString(16);
+  const hexChainId = `0x${chainId.toString(16).padStart(3, '0')}`;
   switch (type) {
     case NftWebsiteType.PLAIN_JS:
       return {
