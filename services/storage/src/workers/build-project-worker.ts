@@ -113,7 +113,6 @@ export class BuildProjectWorker extends BaseQueueWorker {
   }): Promise<any> {
     console.info('RUN EXECUTOR (BuildProjectWorker). data: ', data);
 
-    return;
     const deploymentBuild = await new DeploymentBuild(
       {},
       this.context,
@@ -206,7 +205,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
       child.on('error', async (data) => {
         await deploymentBuild.handleFailure();
         console.log(`Failure, child process exited with code ${data}`);
-        resolve(data);
+        reject(data);
       });
     });
 
