@@ -66,9 +66,9 @@ functions:
     handler: ./src/workers/builder-executor.handler
     name: apillon-storage-service-builder-${self:provider.stage}
     description: Worker for building projects on Apillon
-    memorySize: 512
+    memorySize: 2048
     timeout: 900
-    reservedConcurrency: 10
+    reservedConcurrency: 20
     ephemeralStorageSize: 3072
     environment:
       APILLON_API_URL: ${env:BUILDER_APILLON_API_URL}
@@ -77,7 +77,7 @@ functions:
     events:
       - sqs:
           arn: ${env:BUILDER_SQS_ARN}
-          batchSize: 4
+          batchSize: 2
           maximumBatchingWindow: 5
           functionResponseType: ReportBatchItemFailures
     layers:

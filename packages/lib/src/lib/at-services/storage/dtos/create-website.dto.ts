@@ -51,7 +51,7 @@ export class CreateWebsiteDto extends ModelBase {
   public domain: string;
 
   @prop({
-    parser: { resolver: stringParser },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
