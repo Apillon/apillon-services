@@ -79,7 +79,9 @@ echo "Uploading the website to Apillon..."
 
 #npx @apillon/cli hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"
 
-/var/lang/bin/npx @apillon/cli hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"`;
+/var/lang/bin/npx @apillon/cli hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"
+
+exit 0`;
 
 export class BuildProjectWorker extends BaseQueueWorker {
   public constructor(
@@ -111,6 +113,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
   }): Promise<any> {
     console.info('RUN EXECUTOR (BuildProjectWorker). data: ', data);
 
+    return;
     const deploymentBuild = await new DeploymentBuild(
       {},
       this.context,
@@ -206,5 +209,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
         resolve(data);
       });
     });
+
+    console.log('Promise resolved');
   }
 }
