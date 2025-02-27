@@ -23,6 +23,11 @@ import { getWalletSeed } from '../../lib/seed';
 import { transmitAndProcessEvmTransaction } from '../../lib/transmit-and-process-evm-transaction';
 import { Wallet } from '../wallet/wallet.model';
 
+const defaultPriorityFee = ethers.utils.parseUnits('1', 'gwei');
+const maxPriorityFee = ethers.utils.parseUnits('100', 'gwei');
+
+// const minPolygonAmoyTip = ethers.utils.parseUnits('25', 'gwei');
+
 export async function getNextOnChainNonce(
   provider: ethers.providers.JsonRpcProvider,
   walletAddress: string,
@@ -108,12 +113,23 @@ export class EvmService {
     const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
     const estimatedBaseFee = await provider.getGasPrice();
     const maxPriorityFeePerGas = await getMaxPriorityFee(provider);
+    // tip overrides per chain
+    // switch (params.chain) {
+    //   case EvmChain.POLYGON_AMOY: {
+    //     if (maxPriorityFeePerGas.lt(minPolygonAmoyTip)) {
+    //       maxPriorityFeePerGas = minPolygonAmoyTip.add(
+    //         ethers.utils.parseUnits('1', 'gwei'),
+    //       );
+    //     }
+    //     break;
+    //   }
+    // }
     // Ensuring that transaction is desirable for at least 6 blocks.
     const maxFeePerGas = estimatedBaseFee.mul(2).add(maxPriorityFeePerGas);
     console.log(
-      `maxPriorityFeePerGas=${maxPriorityFeePerGas.toNumber()}`,
-      `estimatedBaseFee=${estimatedBaseFee.toNumber()}`,
-      `maxFeePerGas=${maxFeePerGas.toNumber()}`,
+      `maxPriorityFeePerGas=${ethers.utils.formatUnits(maxPriorityFeePerGas, 'gwei')} Gwei`,
+      `estimatedBaseFee=${ethers.utils.formatUnits(estimatedBaseFee, 'gwei')} Gwei`,
+      `maxFeePerGas=${ethers.utils.formatUnits(maxFeePerGas, 'gwei')} Gwei`,
     );
 
     const conn = await context.mysql.start();
@@ -146,7 +162,6 @@ export class EvmService {
       // parse and set transaction information
       const unsignedTx = ethers.utils.parseTransaction(params.transaction);
       // TODO: add transaction checker to detect anomalies.
-      // Reject transaction sending value etc.
       unsignedTx.from = wallet.address;
       unsignedTx.maxPriorityFeePerGas = maxPriorityFeePerGas;
       unsignedTx.maxFeePerGas = maxFeePerGas;
@@ -156,10 +171,11 @@ export class EvmService {
       unsignedTx.gasLimit = null;
       unsignedTx.chainId = wallet.chain;
       unsignedTx.nonce = wallet.nextNonce;
+      // override value to null since we shouldn't be sending tokens from wallets
+      unsignedTx.value = null;
 
+      // estimate gas and set gas limit
       const gas = await provider.estimateGas(unsignedTx);
-      console.log(`Estimated gas=${gas}`);
-      // Increasing gas limit by 10% of current gas price to be on the safe side
       let gasLimit = Math.floor(gas.toNumber() * 1.1);
       // Override gas limit in transaction with minimum.
       // This is useful for transactions like minting before contract is deployed on chain where
@@ -172,13 +188,21 @@ export class EvmService {
         gasLimit = params.minimumGas;
       }
       unsignedTx.gasLimit = ethers.BigNumber.from(gasLimit);
+      console.log(
+        `Unsigned Transaction Details:\n`,
+        `from=${unsignedTx.from}\n`,
+        `estimated gas=${ethers.utils.formatUnits(gas, 'gwei')}Gwei\n`,
+        `maxPriorityFeePerGas=${ethers.utils.formatUnits(unsignedTx.maxPriorityFeePerGas || 0, 'gwei')}Gwei\n`,
+        `maxFeePerGas=${ethers.utils.formatUnits(unsignedTx.maxFeePerGas || 0, 'gwei')}Gwei\n`,
+        `gasLimit=${unsignedTx.gasLimit ? ethers.utils.formatUnits(unsignedTx.gasLimit, 'gwei') : '0'}Gwei\n`,
+        `nonce=${unsignedTx.nonce}\n`,
+        `chainId=${unsignedTx.chainId}\n`,
+      );
 
       // sign transaction
       const seed = await getWalletSeed(wallet.seed);
       const signingWallet = new ethers.Wallet(seed);
-      console.log(unsignedTx);
       const rawTransaction = await signingWallet.signTransaction(unsignedTx);
-
       let data = null;
       if (!unsignedTx.to) {
         data = ethers.utils.getContractAddress({
@@ -551,9 +575,6 @@ export class EvmService {
     };
   }
 }
-
-const defaultPriorityFee = ethers.utils.parseUnits('1', 'gwei');
-const maxPriorityFee = ethers.utils.parseUnits('100', 'gwei');
 
 async function getMaxPriorityFee(provider: ethers.providers.JsonRpcProvider) {
   try {
