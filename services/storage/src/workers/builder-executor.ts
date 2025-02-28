@@ -66,7 +66,6 @@ export async function handler(event: any) {
     }
     await context.mysql.close();
     console.log(resp);
-    return { batchItemFailures: [] };
     return resp;
   } catch (e) {
     console.error('ERROR HANDLING LAMBDA!');
