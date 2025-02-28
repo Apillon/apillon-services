@@ -138,6 +138,14 @@ export class UserService {
     const authUser = await new Ams(context).getAuthUserByEmail(email);
 
     if (authUser.data?.user_uuid) {
+      if (!authUser.data.googleId) {
+        throw new CodeException({
+          status: HttpStatus.UNAUTHORIZED,
+          code: ValidatorErrorCode.USER_INVALID_LOGIN,
+          errorCodes: ValidatorErrorCode,
+        });
+      }
+
       const user = await new User({}, context).populateByUUID(
         authUser.data.user_uuid,
       );

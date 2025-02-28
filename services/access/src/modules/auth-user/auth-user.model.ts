@@ -217,21 +217,15 @@ export class AuthUser extends AdvancedSQLModel {
     return this.reset();
   }
 
-  public async populateByEmail(
-    email: string,
-    showCreatedWithGoogle?: boolean,
-    conn?: PoolConnection,
-  ) {
+  public async populateByEmail(email: string, conn?: PoolConnection) {
     const res = await this.db().paramExecute(
       `
       SELECT * FROM authUser
       WHERE email = @email AND status = @status
-      AND (@showCreatedWithGoogle = FALSE OR googleId IS NOT NULL)
     `,
       {
         email,
         status: SqlModelStatus.ACTIVE,
-        showCreatedWithGoogle: !!showCreatedWithGoogle,
       },
       conn,
     );

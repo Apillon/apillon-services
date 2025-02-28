@@ -488,7 +488,6 @@ export class AuthUserService {
 
     const authUser = await new AuthUser({}, context).populateByEmail(
       event.email,
-      event.isGoogle,
     );
 
     return authUser.serialize(SerializeFor.SERVICE);

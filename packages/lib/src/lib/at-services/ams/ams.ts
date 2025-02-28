@@ -140,11 +140,10 @@ export class Ams extends BaseService {
     };
   }
 
-  public async getAuthUserByEmail(email: string, isGoogle?: boolean) {
+  public async getAuthUserByEmail(email: string) {
     const data = {
       eventName: AmsEventType.GET_AUTH_USER_BY_EMAIL,
       email,
-      isGoogle,
     };
 
     // eslint-disable-next-line sonarjs/prefer-immediate-return
