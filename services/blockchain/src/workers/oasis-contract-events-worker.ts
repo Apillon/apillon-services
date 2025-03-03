@@ -24,19 +24,12 @@ export class OasisContractEventsWorker extends EvmContractEventsWorker {
     const txTopics: any = await Promise.all(
       events.map(async (event) => {
         const receipt = await event.getTransactionReceipt();
-        const walletCreatedEvent = receipt.logs.find(
-          (log) =>
-            log.topics[0] ===
-            ethers.utils.id('WalletCreated(bytes32 indexed publicAddress)'),
-        );
+        const log = receipt.logs[0];
+        let publicAddress = log.topics.at(-1);
 
-        let publicAddress = null;
-        if (walletCreatedEvent) {
-          const decodedLog = ethers.utils.defaultAbiCoder.decode(
-            ['bytes32'],
-            walletCreatedEvent.topics[1],
-          );
-          publicAddress = decodedLog[0];
+        // Check if it's a full 32-byte hex string
+        if (publicAddress.length === 66) {
+          publicAddress = `0x${publicAddress.slice(-40)}`; // Extract the last 40 characters for the EVM address
         }
 
         return {
