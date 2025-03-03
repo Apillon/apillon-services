@@ -47,15 +47,15 @@ export class OasisContractEventWorker extends BaseQueueWorker {
       this.context,
       async (data: {
         dataHash: string;
-        hashedUsername: string;
+        contractAddress: string;
         publicAddress: string;
       }) => {
         await this.context.mysql.paramExecute(
           `
           UPDATE \`${DbTables.OASIS_SIGNATURE}\`
-          SET 
+          SET
             status = ${SqlModelStatus.ACTIVE},
-            hashedUsername = '${data.hashedUsername}',
+            contractAddress = '${data.contractAddress}',
             publicAddress = '${data.publicAddress}'
           WHERE dataHash LIKE '${data.dataHash}'
         `,
