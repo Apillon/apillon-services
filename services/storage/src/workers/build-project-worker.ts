@@ -45,7 +45,7 @@ cd $APP_DIR
 echo "Installing dependencies..."
 
 # Check if install command is provided and run it
-if [ -n "$INSTALL_COMMAND" ]; then
+if [ -n "$INSTALL_COMMAND" ] && [ "$INSTALL_COMMAND" != "undefined" ]; then
   export HOME=/tmp
   export npm_config_cache=/tmp/.npm
   export npm_config_prefix=/tmp/npm-global
@@ -61,7 +61,7 @@ else
 fi
 
 # Check if a build command is provided and run it
-if [ -n "$BUILD_COMMAND" ]; then
+if [ -n "$BUILD_COMMAND" ] && [ "$BUILD_COMMAND" != "undefined" ]; then
   echo "Running custom build command: $BUILD_COMMAND"
   $BUILD_COMMAND
   echo "Build completed successfully."
@@ -200,10 +200,16 @@ export class BuildProjectWorker extends BaseQueueWorker {
 
     // Wait for the child process to finish
     await new Promise((resolve, reject) => {
-      child.on('close', async (data) => {
-        await deploymentBuild.handleSuccess();
-        console.log(`Success, child process exited with code ${data}`);
-        resolve(data);
+      child.on('close', async (exitCode) => {
+        if (exitCode !== 0) {
+          await deploymentBuild.handleFailure();
+          console.log(`Failure, child process exited with code ${exitCode}`);
+          reject(exitCode);
+        } else {
+          await deploymentBuild.handleSuccess();
+          console.log(`Success, child process exited with code ${data}`);
+          resolve(data);
+        }
       });
       child.on('error', async (data) => {
         await deploymentBuild.handleFailure();
