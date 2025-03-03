@@ -87,7 +87,7 @@ export class RpcUrlService {
     }
 
     // To-DO check if we need to pick specific node type
-    const node = rpcNetwork.nodes.find((node) => node.https && node.wss);
+    const node = rpcNetwork.nodes.find((node) => node.https || node.wss);
 
     if (!node) {
       throw new InfrastructureCodeException({
@@ -97,8 +97,8 @@ export class RpcUrlService {
     }
 
     // Dwellir returns the URL with <key> placeholder
-    rpcUrl.httpsUrl = node.https.replace('<key>', rpcApiKey.uuid);
-    rpcUrl.wssUrl = node.wss.replace('<key>', rpcApiKey.uuid);
+    rpcUrl.httpsUrl = node.https?.replace('<key>', rpcApiKey.uuid);
+    rpcUrl.wssUrl = node.wss?.replace('<key>', rpcApiKey.uuid);
     return (await rpcUrl.insert()).serializeByContext();
   }
 

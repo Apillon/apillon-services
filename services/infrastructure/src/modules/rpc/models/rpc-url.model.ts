@@ -93,12 +93,6 @@ export class RpcUrl extends UuidSqlModel {
       SerializeFor.SELECT_DB,
       SerializeFor.APILLON_API,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: InfrastructureErrorCode.RPC_URL_HTTPS_URL_NOT_PRESENT,
-      },
-    ],
   })
   httpsUrl: string;
 
@@ -114,12 +108,6 @@ export class RpcUrl extends UuidSqlModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
       SerializeFor.APILLON_API,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: InfrastructureErrorCode.RPC_URL_WSS_URL_NOT_PRESENT,
-      },
     ],
   })
   wssUrl: string;
