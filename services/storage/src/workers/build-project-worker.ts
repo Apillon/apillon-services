@@ -172,6 +172,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
           LD_LIBRARY_PATH: process.env.LD_LIBRARY_PATH,
           NODE_PATH: process.env.NODE_PATH,
           PATH: process.env.PATH,
+          APILLON_API_URL: process.env.APILLON_API_URL,
           ...data.variables.reduce((vars, variable) => {
             vars[variable.key] = variable.value;
             return vars;
