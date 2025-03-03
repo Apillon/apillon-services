@@ -154,7 +154,6 @@ export class BuildProjectWorker extends BaseQueueWorker {
       url = url.replace('https://', `https://oauth2:${accessToken}@`);
     }
 
-    console.log(process.env);
     const child = spawn(
       '/bin/bash',
       [
@@ -170,7 +169,9 @@ export class BuildProjectWorker extends BaseQueueWorker {
       ],
       {
         env: {
-          ...process.env,
+          LD_LIBRARY_PATH: process.env.LD_LIBRARY_PATH,
+          NODE_PATH: process.env.NODE_PATH,
+          PATH: process.env.PATH,
           ...data.variables.reduce((vars, variable) => {
             vars[variable.key] = variable.value;
             return vars;
