@@ -12,32 +12,47 @@ export class OasisContractEventsWorker extends EvmContractEventsWorker {
 
   public async processEvents(events: ethers.Event[]) {
     console.info('Events recieved in OasisContractEventsWorker', events);
-    //Parse data from events and send webhook to Authentication MS worker
-    const txTopics: any = events.map((x) => ({
-      dataHash: x.args[0],
-      hashedUsername: x.args[1],
-      publicAddress: x.args[2],
-    }));
 
-    const chunks = splitArray(txTopics, 20);
+    // Parse data from events and send webhook to Authentication MS worker
+    const txTopics: any = await Promise.all(
+      events.map(async (event) => {
+        const receipt = await event.getTransactionReceipt();
+        const log = receipt.logs[0];
+        let publicAddress = log.topics.at(-1);
 
-    for (const chunk of chunks) {
-      if (
-        env.APP_ENV != AppEnvironment.LOCAL_DEV &&
-        env.APP_ENV != AppEnvironment.TEST
-      ) {
-        await sendToWorkerQueue(
-          env.AUTH_AWS_WORKER_SQS_URL,
-          'OasisContractEventWorker',
-          [
-            {
-              data: chunk,
-            },
-          ],
-          null,
-          null,
-        );
-      }
+        // Check if it's a full 32-byte hex string
+        if (publicAddress.length === 66) {
+          publicAddress = `0x${publicAddress.slice(-40)}`; // Extract the last 40 characters for the EVM address
+        }
+
+        return {
+          dataHash: event.args[0],
+          contractAddress: event.args[1],
+          publicAddress,
+        };
+      }),
+    );
+
+    if (txTopics.length === 0) {
+      console.info('No events to process in OasisContractEventsWorker');
+      return;
+    }
+
+    if (
+      env.APP_ENV === AppEnvironment.LOCAL_DEV ||
+      env.APP_ENV === AppEnvironment.TEST
+    ) {
+      return;
+    }
+
+    for (const chunk of splitArray(txTopics, 20)) {
+      await sendToWorkerQueue(
+        env.AUTH_AWS_WORKER_SQS_URL,
+        'OasisContractEventWorker',
+        [{ data: chunk }],
+        null,
+        null,
+      );
     }
   }
 }
