@@ -212,7 +212,7 @@ export class Indexer extends UuidSqlModel {
         SELECT *
         FROM \`${DbTables.INDEXER}\`
         WHERE squidId = @squidId
-        AND status <> ${SqlModelStatus.DELETED};
+        AND status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.INACTIVE});
       `,
       { squidId },
       conn,
