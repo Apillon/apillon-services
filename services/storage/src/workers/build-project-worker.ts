@@ -154,6 +154,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
       url = url.replace('https://', `https://oauth2:${accessToken}@`);
     }
 
+    console.log(process.env);
     const child = spawn(
       '/bin/bash',
       [
@@ -169,7 +170,8 @@ export class BuildProjectWorker extends BaseQueueWorker {
       ],
       {
         env: {
-          ...process.env,
+          APILLON_API_URL: process.env.APILLON_API_URL,
+          PATH: process.env.PATH,
           ...data.variables.reduce((vars, variable) => {
             vars[variable.key] = variable.value;
             return vars;
