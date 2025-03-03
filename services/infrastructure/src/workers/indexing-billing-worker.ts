@@ -154,21 +154,22 @@ export class IndexingBillingWorker extends BaseSingleThreadWorker {
             await indexer.update();
 
             //Note: Price for hibernated indexers is currently unknown. Maybe we will have to implement indexer deletion in the future, if indexer is hibernated for too long.
-          }
-
-          await this.writeEventLog(
-            {
-              logType: LogType.ERROR,
-              project_uuid: indexer.project_uuid,
-              message: 'Bill for indexer - failed',
-              service: ServiceName.INFRASTRUCTURE,
-              data: {
-                indexer: indexer.serialize(),
-                error,
+          } else {
+            // Log unexpected error.
+            await this.writeEventLog(
+              {
+                logType: LogType.ERROR,
+                project_uuid: indexer.project_uuid,
+                message: 'Bill for indexer - failed',
+                service: ServiceName.INFRASTRUCTURE,
+                data: {
+                  indexer: indexer.serialize(),
+                  error,
+                },
               },
-            },
-            LogOutput.SYS_ERROR,
-          );
+              LogOutput.SYS_ERROR,
+            );
+          }
         }
       },
     );
