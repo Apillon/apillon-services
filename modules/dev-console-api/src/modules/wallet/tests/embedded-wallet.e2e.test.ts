@@ -58,9 +58,8 @@ describe('Embedded wallet tests', () => {
         project_uuid: testProject.project_uuid,
         dataHash:
           '0xf4688cf1bce1a2b84753ac4f7dd8b0f044ba06666bdf0b379203c3551d569736',
-        contractAddress: '0x510518EBe8266fDF6858d2852ADA3bfE50988DAB',
-        publicAddress:
-          '0x0000000000000000000000008036c0f2e8f93c5e95168be3fd05e2d2743bbe07',
+        contractAddress: '0xb1C945890247f9901d66eDa025B00dB7A08FEb72',
+        publicAddress: '0x8036c0f2e8f93c5e95168be3fd05e2d2743bbe07',
         status: SqlModelStatus.ACTIVE,
       })
       .insert();

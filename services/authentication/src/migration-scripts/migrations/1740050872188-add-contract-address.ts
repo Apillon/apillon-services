@@ -15,7 +15,7 @@ export async function downgrade(
 ) {
   await queryFn(`
     ALTER TABLE \`${DbTables.OASIS_SIGNATURE}\`
-    ADD COLUMN \`hashedUsername\` VARCHAR(50) NOT NULL,
+    ADD COLUMN \`hashedUsername\` VARCHAR(50) NULL,
     DROP COLUMN \`contractAddress\`;
   `);
 }
