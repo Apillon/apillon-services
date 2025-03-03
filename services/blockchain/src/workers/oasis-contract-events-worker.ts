@@ -13,13 +13,6 @@ export class OasisContractEventsWorker extends EvmContractEventsWorker {
   public async processEvents(events: ethers.Event[]) {
     console.info('Events recieved in OasisContractEventsWorker', events);
 
-    if (
-      env.APP_ENV != AppEnvironment.LOCAL_DEV &&
-      env.APP_ENV != AppEnvironment.TEST
-    ) {
-      return;
-    }
-
     // Parse data from events and send webhook to Authentication MS worker
     const txTopics: any = await Promise.all(
       events.map(async (event) => {
@@ -41,12 +34,18 @@ export class OasisContractEventsWorker extends EvmContractEventsWorker {
     );
 
     if (txTopics.length === 0) {
+      console.info('No events to process in OasisContractEventsWorker');
       return;
     }
 
-    const chunks = splitArray(txTopics, 20);
+    if (
+      env.APP_ENV === AppEnvironment.LOCAL_DEV ||
+      env.APP_ENV === AppEnvironment.TEST
+    ) {
+      return;
+    }
 
-    for (const chunk of chunks) {
+    for (const chunk of splitArray(txTopics, 20)) {
       await sendToWorkerQueue(
         env.AUTH_AWS_WORKER_SQS_URL,
         'OasisContractEventWorker',
