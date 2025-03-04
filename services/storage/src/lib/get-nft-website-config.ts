@@ -21,7 +21,8 @@ export const getNftWebsiteConfig = (
     case NftWebsiteType.PLAIN_JS:
       return {
         installCommand: './generate-config.sh',
-        buildDirectory: './',
+        buildCommand: './build.sh',
+        buildDirectory: './dist',
         url: 'https://github.com/Apillon/nft-template.git',
         variables: [
           {
