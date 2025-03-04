@@ -169,7 +169,7 @@ export async function handleSqsMessages(
           );
       }
     } catch (error) {
-      console.log(error);
+      console.log('Worker Error:', error);
       response.batchItemFailures.push({ itemIdentifier: message.messageId });
     }
   }
