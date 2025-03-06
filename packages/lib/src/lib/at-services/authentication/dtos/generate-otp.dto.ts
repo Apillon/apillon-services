@@ -1,9 +1,11 @@
-import { Captcha, JSONParser } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
 import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
+import { Captcha } from '../../../captcha';
+import { JSONParser } from '../../../parsers';
+
 export class GenerateOtpDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
