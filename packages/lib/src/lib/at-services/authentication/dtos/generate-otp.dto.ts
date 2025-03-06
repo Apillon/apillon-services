@@ -1,9 +1,9 @@
+import { Captcha, JSONParser } from '@apillon/lib';
 import { prop } from '@rawmodel/core';
 import { stringParser } from '@rawmodel/parsers';
-import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { emailValidator, presenceValidator } from '@rawmodel/validators';
+import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { ModelBase } from '../../../base-models/base';
-
 export class GenerateOtpDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
@@ -21,16 +21,12 @@ export class GenerateOtpDto extends ModelBase {
   })
   public email: string;
 
-  // @prop({
-  //   parser: { resolver: stringParser() },
-  //   populatable: [PopulateFrom.PROFILE],
-  //   serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-  //   validators: [
-  //     {
-  //       resolver: presenceValidator(),
-  //       code: ValidatorErrorCode.GENERATE_OTP_REQUIRED_DATA_NOT_PRESENT,
-  //     },
-  //   ],
-  // })
-  // public token: string;
+  /**
+   * Captcha token, passed if the user has successfully solved the captcha form
+   */
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [PopulateFrom.PROFILE],
+  })
+  public captcha?: Captcha;
 }
