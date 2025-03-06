@@ -116,10 +116,7 @@ export class IPFSService {
         message,
         location: 'IPFSService.initializeIPFSClient',
         service: ServiceName.STORAGE,
-        data: {
-          usingBackupNode: this.usingBackupNode,
-          error: err,
-        },
+        data: { usingBackupNode: this.usingBackupNode, error: err },
         sendAdminAlert: !this.usingBackupNode,
       });
 
@@ -197,10 +194,7 @@ export class IPFSService {
       service: ServiceName.STORAGE,
       data: {
         fileUploadRequest: event.fileUploadRequest.serialize(),
-        ipfsResponse: {
-          cidV0: filesOnIPFS.Hash,
-          filesOnIPFS,
-        },
+        ipfsResponse: { cidV0: filesOnIPFS.Hash, filesOnIPFS },
       },
     });
 
@@ -270,6 +264,7 @@ export class IPFSService {
             create: true,
             parents: true,
             rawLeaves: false,
+            truncate: true,
           });
 
           try {
@@ -399,17 +394,12 @@ export class IPFSService {
    * @returns
    */
   public async uploadFilesToIPFSFromS3(
-    event: {
-      files: File[];
-      wrappingDirectoryPath: string;
-    },
+    event: { files: File[]; wrappingDirectoryPath: string },
     context: Context,
   ): Promise<uploadItemsToIPFSRes> {
     //Create array of fileUploadRequests - some properties does not match, so they have to be populated
     const fileUploadRequests = event.files.map((file) =>
-      new FileUploadRequest(file, context).populate({
-        fileName: file.name,
-      }),
+      new FileUploadRequest(file, context).populate({ fileName: file.name }),
     );
 
     const syncToIpfsRes = await this.uploadFURsToIPFSFromS3(
@@ -621,10 +611,7 @@ export class IPFSService {
 
     await this.pinCidToCluster(fileOnIPFS.Hash);
 
-    return {
-      cidV0: fileOnIPFS.Hash,
-      cidV1: fileOnIPFS.Hash,
-    };
+    return { cidV0: fileOnIPFS.Hash, cidV1: fileOnIPFS.Hash };
   }
 
   /**
@@ -653,12 +640,7 @@ export class IPFSService {
       await ipfsBandwidth.update(SerializeFor.UPDATE_DB, conn);
     } else {
       ipfsBandwidth = new IpfsBandwidth(
-        {
-          project_uuid: this.project_uuid,
-          month,
-          year,
-          bandwidth: bytes,
-        },
+        { project_uuid: this.project_uuid, month, year, bandwidth: bytes },
         this.context,
       );
 
