@@ -603,6 +603,9 @@ export class NftsService {
         spendCredit.referenceId,
         46000,
       );
+
+      collection.adminAddress = body.address;
+      await collection.update();
     });
 
     await new Lmas().writeLog({
