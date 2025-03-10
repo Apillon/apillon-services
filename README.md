@@ -1,6 +1,7 @@
 # Apillon - A Web3 development platform
 
-In this repository you will find source and documentation for microservices, APIs and libraries that form Apillon services.
+In this repository you will find source and documentation for microservices,
+APIs and libraries that form Apillon services.
 
 ## Table of Contents
 
@@ -14,7 +15,7 @@ In this repository you will find source and documentation for microservices, API
 ### Index of services
 
 | Code | Short     | Service name                             | Package name                                          | path                      |
-| ---- | --------- | ---------------------------------------- | ----------------------------------------------------- | ------------------------- |
+|------|-----------|------------------------------------------|-------------------------------------------------------|---------------------------|
 | 00   | #         | Source repository root                   | [@apillon](/)                                         | /                         |
 | 01   | LIB       | Common Code Library                      | [@apillon/lib](/packages/lib/)                        | /packages/lib/            |
 | 02   | AMS       | Access Management Service                | [@apillon/access](/services/access/)                  | /services/access/         |
@@ -37,11 +38,12 @@ In this repository you will find source and documentation for microservices, API
 | 19   | SUBS      | Social service                           | [@apillon/social](/services/social/)                  | /services/social/         |
 | 20   | INFRA     | Infrastructure service                   | [@apillon/infrastructure](/services/infrastructure)   | /services/infrastructure/ |
 | 21   | CONTRACTS | Contracts service                        | [@apillon/contracts](/services/contracts/)            | /services/contracts/      |
+| 21   | HOSTING   | Hosting service                          | [@apillon/hosting](/services/hosting/)                | /services/hosting/        |
 
 ## Documentation
 
 | Resource                                        | Description                                              |
-| ----------------------------------------------- | -------------------------------------------------------- |
+|-------------------------------------------------|----------------------------------------------------------|
 | [Development](docs/development.md)              | A must read for all first-time contributors to this code |
 | [Rest API](docs/rest-API-specs.md)              | Basic information about request, response ...            |
 | [DB migrations](docs/db-migrations.md)          | How to handle changes to database                        |

@@ -131,6 +131,21 @@ export * from './lib/at-services/contracts/dtos/transaction-query-filter.dto';
 export * from './lib/at-services/contracts/dtos/call-contract.dto';
 export * from './lib/at-services/contracts/dtos/contract-abi-query.dto';
 
+//#REGION HOSTING
+export * from './lib/at-services/hosting/eventTypes';
+export * from './lib/at-services/hosting/hosting';
+export * from './lib/at-services/hosting/dtos/deploy-instance.dto';
+export * from './lib/at-services/hosting/dtos/generic-hosting-request.dto';
+export * from './lib/at-services/hosting/dtos/resize-instance.dto';
+export * from './lib/at-services/hosting/dtos/virtual-machine.dto';
+export * from './lib/at-services/hosting/dtos/backends-query-filter.dto';
+
+//#REGION SIMPLETS
+export * from './lib/at-services/simplets/eventTypes';
+export * from './lib/at-services/simplets/simplets';
+export * from './lib/at-services/simplets/dtos/simplet-deploy.dto';
+export * from './lib/at-services/simplets/dtos/simplets-query-filter.dto';
+
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';
 export * from './lib/at-services/blockchain/utils';

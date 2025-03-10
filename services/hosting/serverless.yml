@@ -1,0 +1,65 @@
+# console: true
+# org: apillonadmin
+# app: apillon-v2
+service: apillon-hosting-service-${opt:stage, 'dev'}
+frameworkVersion: '3'
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    packager: "npm"
+    includeModules: true
+    packagerOptions:
+      lockFile: '../../package-lock.json'
+    excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*'
+
+plugins:
+  - serverless-webpack
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: eu-west-1
+  stage: ${opt:stage, 'dev'}
+  iam:
+    role: arn:aws:iam::018021943180:role/serverless-workers-executor
+  vpc:
+    securityGroupIds:
+      - sg-091bc1ce7424a7921
+    subnetIds:
+      - subnet-0bea6dd0c2a5ecc61
+      - subnet-085447b898128fc92
+      - subnet-0ed148d48e931f5fa
+
+  environment:
+    ${file(../../bin/deploy/env/env.yml)}
+
+package:
+  individually: true
+  patterns:
+    - '!dist/**'
+  excludeDevDependencies: true
+
+functions:
+  hosting-service:
+    handler: ./src/handler.handler
+    name: 'apillon-hosting-service-${self:provider.stage}'
+    description: Apillon hosting Service
+    memorySize: 512
+    timeout: 30
+#  hosting-service-worker:
+#    handler: ./src/workers/worker-executor.handler
+#    name: apillon-hosting-service-worker-${self:provider.stage}
+#    description: Serverless workers for Apillon hosting microservice
+#    memorySize: 512
+#    timeout: 900
+#    reservedConcurrency: 30
+#    environment:
+#      AWS_WORKER_LAMBDA_NAME: ${self:functions.hosting-service-worker.name}
+#    events:
+#      - schedule: cron(${env:CRON_SCHEDULE, '0/1 * * * ? *'})
+#      - sqs:
+#          arn: ${env:WORKER_SQS_ARN}
+#          batchSize: 4
+#          maximumBatchingWindow: 5
+#          functionResponseType: ReportBatchItemFailures

@@ -416,6 +416,31 @@ export enum ContractEventType {
   ACTIVATE_DEPLOYED_CONTRACT = 'activate-deployed-contract',
 }
 
+export enum HostingEventType {
+  BE_DEPLOY_DOCKER_COMPOSE = 'be-deploy-docker-compose',
+  BE_LIST_BACKENDS = 'be-list-backends',
+  BE_GET_INSTANCE = 'be-get-instance',
+  BE_GET_INSTANCE_DETAILS = 'be-get-instance-details',
+  BE_START_INSTANCE = 'be-start-instance',
+  BE_SHUTDOWN_INSTANCE = 'be-shutdown-instance',
+  BE_STOP_INSTANCE = 'be-stop-instance',
+  BE_RESTART_INSTANCE = 'be-restart-instance',
+  BE_DESTROY_INSTANCE = 'be-destroy-instance',
+  BE_GET_INSTANCE_STATE = 'be-get-instance-state',
+  BE_GET_INSTANCE_ATTESTATION = 'be-get-instance-attestation',
+  // BE_GET_INSTANCE_BILLING = 'be-get-instance-billing',
+  BE_RESIZE_INSTANCE = 'be-resize-instance',
+}
+
+export enum SimpletsEventType {
+  SIMPLETS_LIST = 'simplets-list',
+  SIMPLETS_DEPLOY = 'deploy',
+  GET_SIMPLET = 'get-simplet',
+  // deployed
+  GET_DEPLOYED_SIMPLET = 'get-deployed-simplet',
+  LIST_DEPLOYED_SIMPLETS = 'list-deployed-simplets',
+}
+
 export enum InfrastructureEventType {
   LIST_RPC_API_KEYS = 'list-rpc-api-keys',
   REVOKE_RPC_API_KEY = 'revoke-rpc-api-key',
@@ -466,6 +491,8 @@ export enum ServiceName {
   SOCIAL = 'SOCIAL',
   CONTRACTS = 'CONTRACTS',
   INFRASTRUCTURE = 'INFRASTRUCTURE',
+  HOSTING = 'HOSTING',
+  SIMPLETS = 'SIMPLETS',
 }
 
 export enum ServiceCode {
@@ -538,6 +565,7 @@ export enum AttachedServiceType {
   CONTRACTS = 8,
   RPC = 9,
   INDEXING = 10,
+  SIMPLETS = 11,
   SYSTEM = 999,
 }
 
@@ -628,6 +656,7 @@ export enum DefaultPermission {
   CONTRACTS = 8,
   RPC = 9,
   INDEXING = 10,
+  SIMPLETS = 11,
 }
 
 //#endregion
