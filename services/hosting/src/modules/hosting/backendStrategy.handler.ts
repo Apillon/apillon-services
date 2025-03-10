@@ -60,6 +60,8 @@ export class BackendStrategyHandler {
       };
       const backend = new Backend({}, this.context).populate({
         backend_uuid: uuidV4(),
+        name: `${body.name} (Backend)`,
+        description: `${body.description} (Backend)`,
         instanceId: appId,
         url: `https://${appId}-80.dstack-prod4.phala.network`,
         data,

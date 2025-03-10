@@ -9,6 +9,7 @@ import {
   SerializeFor,
   SqlModelStatus,
   UuidSqlModel,
+  ValidatorErrorCode,
 } from '@apillon/lib';
 import { stringParser } from '@rawmodel/parsers';
 import { DbTables, HostingErrorCode } from '../../../config/types';
@@ -45,6 +46,52 @@ export class Backend extends UuidSqlModel {
     ],
   })
   public backend_uuid: string;
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
+      SerializeFor.LOGGER,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public name: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.APILLON_API,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public description: string;
 
   @prop({
     parser: { resolver: stringParser() },
