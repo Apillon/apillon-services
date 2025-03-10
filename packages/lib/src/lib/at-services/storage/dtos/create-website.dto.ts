@@ -6,6 +6,21 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
+import { CreateDeploymentConfigDto } from './create-deployment-config.dto';
+
+export class CreateWebsiteDeploymentConfigDto extends CreateDeploymentConfigDto {
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.UPDATE_DB,
+    ],
+    validators: [],
+  })
+  public websiteUuid: string;
+}
 
 export class CreateWebsiteDto extends ModelBase {
   @prop({
@@ -57,4 +72,12 @@ export class CreateWebsiteDto extends ModelBase {
     validators: [],
   })
   public nftCollectionUuid: string | null;
+
+  @prop({
+    parser: { resolver: CreateWebsiteDeploymentConfigDto },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public deploymentConfig?: CreateWebsiteDeploymentConfigDto;
 }

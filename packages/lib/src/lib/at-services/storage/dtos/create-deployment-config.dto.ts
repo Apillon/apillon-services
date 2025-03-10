@@ -167,4 +167,10 @@ export class CreateDeploymentConfigDto extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
   public apiSecret?: string;
+
+  @prop({
+    populatable: [],
+    serializable: [],
+  })
+  public skipWebsiteCheck?: boolean;
 }

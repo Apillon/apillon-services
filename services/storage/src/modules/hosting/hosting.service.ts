@@ -2,6 +2,7 @@ import {
   Ams,
   ApillonHostingApiCreateS3UrlsForUploadDto,
   AWS_S3,
+  CreateDeploymentConfigDto,
   CreateS3UrlsForUploadDto,
   CreateWebsiteDto,
   DeploymentQueryFilter,
@@ -48,6 +49,7 @@ import { StorageService } from '../storage/storage.service';
 import { Deployment } from './models/deployment.model';
 import { Website } from './models/website.model';
 import { checkDomainDns } from '../../lib/domains';
+import { DeployService } from '../deploy/deploy.service';
 
 export class HostingService {
   //#region web page CRUD
@@ -137,6 +139,23 @@ export class HostingService {
       // Set mailerlite field indicating the user has a website
       new Mailing(context).setMailerliteField('has_website'),
     ]);
+
+    if (event.body.deploymentConfig) {
+      const payload = new CreateDeploymentConfigDto({}, context).populate({
+        ...event.body.deploymentConfig.serialize(),
+        websiteUuid: website_uuid,
+      });
+
+      // Should not be populated as we reuse the same DTO on endpoint
+      payload.skipWebsiteCheck = true;
+
+      await DeployService.createDeploymentConfig(
+        {
+          body: payload,
+        },
+        context,
+      );
+    }
 
     return website.serializeByContext();
   }

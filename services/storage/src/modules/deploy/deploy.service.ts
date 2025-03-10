@@ -120,7 +120,9 @@ export class DeployService {
   }
 
   static async createDeploymentConfig(
-    event: { body: CreateDeploymentConfigDto },
+    event: {
+      body: CreateDeploymentConfigDto;
+    },
     context: ServiceContext,
   ) {
     const config = await new DeploymentConfig({}, context).findByRepoId(
@@ -133,20 +135,23 @@ export class DeployService {
       );
     }
 
-    const website: Website = await new Website({}, context).populateById(
-      event.body.websiteUuid,
-    );
+    if (!event.body.skipWebsiteCheck) {
+      // If skipWebsiteCheck is not set, we need to check if the website exists & user has access to it
+      const website: Website = await new Website({}, context).populateById(
+        event.body.websiteUuid,
+      );
 
-    if (!website.exists()) {
-      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+      if (!website.exists()) {
+        throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+      }
+
+      website.canModify(context);
     }
-
-    website.canModify(context);
 
     const githubProjectConfig = await new GithubProjectConfig(
       {},
       context,
-    ).populateByProjectUuid(website.project_uuid);
+    ).populateByProjectUuid(event.body.projectUuid);
 
     if (!githubProjectConfig.exists()) {
       throw new StorageNotFoundException(
