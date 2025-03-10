@@ -9,6 +9,7 @@ import {
   Query,
   Delete,
   ParseIntPipe,
+  Patch,
 } from '@nestjs/common';
 import { DeployService } from './deploy.service';
 import {
@@ -29,6 +30,7 @@ import { GithubUnlinkDto } from '@apillon/lib';
 import { ProjectModifyGuard } from '../../guards/project-modify.guard';
 import { GitHubWebhookPayload } from '../../config/types';
 import { DeployNftWebsiteDto } from './dtos/deploy-nft-website.dto';
+import { UpdateDeploymentConfigDto } from '@apillon/lib';
 
 @Controller('deploy')
 export class DeployController {
@@ -67,7 +69,7 @@ export class DeployController {
   }
 
   @Get('github/list-repos/:project_uuid')
-  @Permissions({ role: DefaultUserRole.USER })
+  @Permissions({ role: DefaultUserRole.USER }, { role: DefaultUserRole.ADMIN })
   @UseGuards(AuthGuard, ProjectAccessGuard)
   async listRepos(
     @Ctx() context: DevConsoleApiContext,
@@ -87,12 +89,13 @@ export class DeployController {
 
   @Post('config')
   @Permissions(
+    { role: DefaultUserRole.ADMIN },
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
   @UseGuards(AuthGuard)
   @Validation({ dto: CreateDeploymentConfigDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, ProjectModifyGuard)
   async createDeploymentConfig(
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateDeploymentConfigDto,
@@ -100,8 +103,25 @@ export class DeployController {
     return await this.deployService.createDeploymentConfig(context, body);
   }
 
+  @Patch('config/:id')
+  @Permissions(
+    { role: DefaultUserRole.ADMIN },
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard, ValidationGuard)
+  @Validation({ dto: UpdateDeploymentConfigDto })
+  async updateDeploymentConfig(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateDeploymentConfigDto,
+  ) {
+    return await this.deployService.updateDeploymentConfig(context, id, body);
+  }
+
   @Delete('config/:website_uuid')
   @Permissions(
+    { role: DefaultUserRole.ADMIN },
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
@@ -118,6 +138,7 @@ export class DeployController {
 
   @Get('config/variables/:deploymentConfigId')
   @Permissions(
+    { role: DefaultUserRole.ADMIN },
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
     { role: DefaultUserRole.USER },
@@ -135,6 +156,7 @@ export class DeployController {
 
   @Post('config/variables')
   @Permissions(
+    { role: DefaultUserRole.ADMIN },
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
   )

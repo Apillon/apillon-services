@@ -107,14 +107,15 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.GET_TARGET_URL]: UrlShortenerService.getTargetUrl,
 
     [StorageEventType.TRIGGER_GITHUB_DEPLOY]: DeployService.triggerGithubDeploy,
-    [StorageEventType.TRIGGER_NFT_WEBSITE_DEPLOY]:
-      DeployService.triggerNftWebsiteDeploy,
+    [StorageEventType.TRIGGER_WEB_DEPLOY]: DeployService.triggerWebDeploy,
     [StorageEventType.GET_DEPLOY_CONFIG_BY_REPO_ID]:
       DeployService.getDeploymentConfigByRepoId,
     [StorageEventType.GET_PROJECT_GITHUB_CONFIG]:
       DeployService.getProjectConfigByProjectUuid,
     [StorageEventType.CREATE_DEPLOY_CONFIG]:
       DeployService.createDeploymentConfig,
+    [StorageEventType.UPDATE_DEPLOY_CONFIG]:
+      DeployService.updateDeploymentConfig,
     [StorageEventType.LINK_GITHUB]: DeployService.linkGithub,
     [StorageEventType.UNLINK_GITHUB]: DeployService.unlinkGithub,
     [StorageEventType.LIST_REPOS]: DeployService.listRepos,

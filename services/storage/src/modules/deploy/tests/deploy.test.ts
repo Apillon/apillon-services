@@ -7,14 +7,16 @@ import {
   GithubLinkDto,
   SetEnvironmentVariablesDto,
   SqlModelStatus,
+  UpdateDeploymentConfigDto,
 } from '@apillon/lib';
 import { Stage, releaseStage, setupTest } from '../../../../test/setup';
 import { DeployService } from '../deploy.service';
 import { DbTables } from '../../../config/types';
+import { BuildProjectWorker } from '../../../workers/build-project-worker';
 
 const expectedProjectConfig = {
   accessToken: 'access_token',
-  refreshToken: 'refresh_token',
+  refreshToken: null,
   id: 123,
   login: 'apillon_user',
   projectUuid: 'uuid',
@@ -46,6 +48,12 @@ jest
   .mockImplementation(async (data, keyId) => {
     // Your mock implementation here
     return '[{"key":"key","value":"value"}]';
+  });
+
+jest
+  .spyOn(BuildProjectWorker.prototype, 'runExecutor')
+  .mockImplementation(async (data) => {
+    return {};
   });
 
 describe('DeployService tests', () => {
@@ -155,6 +163,8 @@ describe('DeployService tests', () => {
 
   describe('createDeploymentConfig', () => {
     afterEach(async () => {
+      await stage.db.paramExecute(`DELETE FROM ${DbTables.DEPLOYMENT_BUILD}`);
+
       await stage.db.paramExecute(`DELETE FROM ${DbTables.DEPLOYMENT_CONFIG}`);
 
       await stage.db.paramExecute(
@@ -238,12 +248,123 @@ describe('DeployService tests', () => {
     });
   });
 
+  describe('updateDeploymentConfig', () => {
+    afterEach(async () => {
+      await stage.db.paramExecute(`DELETE FROM ${DbTables.DEPLOYMENT_BUILD}`);
+      await stage.db.paramExecute(`DELETE FROM ${DbTables.DEPLOYMENT_CONFIG}`);
+
+      await stage.db.paramExecute(
+        `DELETE FROM ${DbTables.GITHUB_PROJECT_CONFIG}`,
+      );
+
+      await stage.db.paramExecute(`DELETE FROM ${DbTables.WEBSITE}`);
+
+      await stage.db.paramExecute(`DELETE FROM ${DbTables.BUCKET}`);
+    });
+
+    test('User can update deployment config', async () => {
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
+        VALUES (1, 'uuid', 'uuid', 1, 'name')`,
+      );
+
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
+        VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
+      );
+
+      await stage.db.paramExecute(
+        `INSERT INTO ${DbTables.GITHUB_PROJECT_CONFIG} (project_uuid, access_token, refresh_token, username)
+        VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', '${expectedProjectConfig.refreshToken}', '${expectedProjectConfig.login}')`,
+      );
+
+      const lastInsertId = await stage.db.paramExecute(
+        `SELECT LAST_INSERT_ID() as id`,
+      );
+
+      const githubProjectConfigId = lastInsertId[0].id;
+
+      stage.context.user = {
+        authUser: {
+          authUserRoles: [
+            {
+              project_uuid: 'uuid',
+              role: {
+                id: DefaultUserRole.PROJECT_ADMIN,
+              },
+            },
+          ],
+        },
+      };
+      const newConfigData = {
+        apiKey: '1234',
+        apiSecret: '4N49445GFTyv',
+        branchName: 'main',
+        buildCommand: 'npm run build',
+        buildDirectory: 'dist',
+        repoName: 'repo-name',
+        repoOwnerName: 'owner',
+        installCommand: 'npm install',
+        repoId: 123,
+        websiteUuid: 'uuid',
+        project_uuid: 'uuid',
+      } as Partial<CreateDeploymentConfigDto>;
+
+      const createResponse = await DeployService.createDeploymentConfig(
+        {
+          body: new CreateDeploymentConfigDto({}, stage.context).populate(
+            newConfigData,
+          ),
+        },
+        stage.context,
+      );
+
+      const updatedConfigData = {
+        apiKey: '234',
+        apiSecret: '5M9445GFTyv',
+        branchName: 'main',
+        buildCommand: 'npm run build',
+        buildDirectory: './out',
+        repoName: 'new-repo',
+        repoOwnerName: 'new-owner',
+        installCommand: 'npm install',
+        repoId: 234,
+        websiteUuid: 'uuid',
+        project_uuid: 'uuid',
+      };
+      const response = await DeployService.updateDeploymentConfig(
+        {
+          id: createResponse.id,
+          body: new UpdateDeploymentConfigDto({}, stage.context).populate(
+            updatedConfigData,
+          ),
+        },
+        stage.context,
+      );
+
+      expect(response).toBeDefined();
+      expect(response.apiKey).toBe(updatedConfigData.apiKey);
+      expect(response.apiSecret).toBeDefined();
+      expect(response.apiSecret).not.toBe(updatedConfigData.apiSecret);
+      expect(response.branchName).toBe(updatedConfigData.branchName);
+      expect(response.buildCommand).toBe(updatedConfigData.buildCommand);
+      expect(response.buildDirectory).toBe(updatedConfigData.buildDirectory);
+      expect(response.installCommand).toBe(updatedConfigData.installCommand);
+      expect(response.repoId).toBe(updatedConfigData.repoId);
+      expect(response.websiteUuid).toBe(updatedConfigData.websiteUuid);
+      expect(response.hookId).toBe(expectedCreatedWebhook.id);
+      expect(response.projectConfigId).toBe(githubProjectConfigId);
+    });
+  });
+
   describe('deleteDeploymentConfig', () => {
     afterEach(async () => {
       await stage.db.paramExecute(`DELETE FROM ${DbTables.DEPLOYMENT_CONFIG}`);
       await stage.db.paramExecute(
         `DELETE FROM ${DbTables.GITHUB_PROJECT_CONFIG}`,
       );
+      await stage.db.paramExecute(`DELETE FROM ${DbTables.BUCKET}`);
+      await stage.db.paramExecute(`DELETE FROM ${DbTables.WEBSITE}`);
     });
 
     test('User can delete deployment config', async () => {
@@ -376,7 +497,7 @@ describe('DeployService tests', () => {
     test('User can retrieve project config by project UUID', async () => {
       await stage.db.paramExecute(
         `INSERT INTO ${DbTables.GITHUB_PROJECT_CONFIG} (project_uuid, access_token, refresh_token, username)
-        VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', '${expectedProjectConfig.refreshToken}', '${expectedProjectConfig.login}')`,
+        VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', ${expectedProjectConfig.refreshToken}, '${expectedProjectConfig.login}')`,
       );
 
       const response = await DeployService.getProjectConfigByProjectUuid(

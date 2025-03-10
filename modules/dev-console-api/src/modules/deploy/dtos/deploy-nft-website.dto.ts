@@ -36,20 +36,21 @@ export class DeployNftWebsiteDto extends ModelBase {
       },
     ],
   })
-  public apiKey: string;
+  public projectUuid: string;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
   })
-  public apiSecret: string;
+  public apiKey?: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public apiSecret?: string;
 
   @prop({
     parser: { resolver: integerParser() },

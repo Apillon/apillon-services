@@ -1,24 +1,75 @@
 import {
+  Ams,
+  ApiKeyRoleBaseDto,
+  AttachedServiceType,
+  CreateApiKeyDto,
   CreateDeploymentConfigDto,
   CreateWebsiteDto,
+  DefaultApiKeyRole,
   DeploymentBuildQueryFilter,
   GithubLinkDto,
+  GithubUnlinkDto,
   Lmas,
   LogType,
+  NftWebsiteDeployDto,
   NftsMicroservice,
   ServiceName,
   SetEnvironmentVariablesDto,
   StorageMicroservice,
-  TriggerNftWebsiteDeployDto,
+  UpdateDeploymentConfigDto,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
-import { GithubUnlinkDto } from '@apillon/lib';
 import { GitHubWebhookPayload } from '../../config/types';
 import { DeployNftWebsiteDto } from './dtos/deploy-nft-website.dto';
+import { ServicesService } from '../services/services.service';
+import { ServiceQueryFilter } from '../services/dtos/services-query-filter.dto';
 
 @Injectable()
 export class DeployService {
+  constructor(private readonly servicesService: ServicesService) {}
+
+  private async createAndPopulateApiKeyForDeploy(
+    body: CreateDeploymentConfigDto | DeployNftWebsiteDto,
+    context: DevConsoleApiContext,
+  ) {
+    const accessMS = new Ams(context);
+    await this.servicesService.createServiceIfNotExists(
+      context,
+      body.projectUuid,
+      AttachedServiceType.HOSTING,
+    );
+
+    const serviceList = await this.servicesService.getServiceList(
+      context,
+      new ServiceQueryFilter({}, context).populate({
+        project_uuid: body.projectUuid,
+        serviceType_id: AttachedServiceType.HOSTING,
+      }),
+    );
+
+    const createdApiKey = await accessMS.createApiKey(
+      new CreateApiKeyDto({}, context).populate({
+        project_uuid: body.projectUuid,
+        name:
+          'Deployment API Key - ' + body['websiteUuid'] ??
+          body['collectionUuid'],
+        testNetwork: false,
+        roles: [
+          new ApiKeyRoleBaseDto({}, context).populate({
+            role_id: DefaultApiKeyRole.KEY_EXECUTE,
+            project_uuid: body.projectUuid,
+            service_uuid: serviceList.items[0].service_uuid,
+            serviceType_id: AttachedServiceType.HOSTING,
+          }),
+        ],
+      }),
+    );
+
+    body.apiKey = createdApiKey.data.apiKey;
+    body.apiSecret = createdApiKey.data.apiKeySecret;
+  }
+
   async handleGithubWebhook(
     context: DevConsoleApiContext,
     event: GitHubWebhookPayload,
@@ -63,8 +114,22 @@ export class DeployService {
     context: DevConsoleApiContext,
     body: CreateDeploymentConfigDto,
   ) {
+    if (!body.apiKey || !body.apiSecret) {
+      await this.createAndPopulateApiKeyForDeploy(body, context);
+    }
+
     return (await new StorageMicroservice(context).createDeploymentConfig(body))
       .data;
+  }
+
+  async updateDeploymentConfig(
+    context: DevConsoleApiContext,
+    id: number,
+    body: UpdateDeploymentConfigDto,
+  ) {
+    return (
+      await new StorageMicroservice(context).updateDeploymentConfig(id, body)
+    ).data;
   }
 
   async linkGithub(context: DevConsoleApiContext, body: GithubLinkDto) {
@@ -137,8 +202,12 @@ export class DeployService {
       )
     ).data;
 
-    await storageMS.triggerNftWebsiteDeploy(
-      new TriggerNftWebsiteDeployDto({}, context).populate({
+    if (!body.apiKey || !body.apiSecret) {
+      await this.createAndPopulateApiKeyForDeploy(body, context);
+    }
+
+    await storageMS.triggerWebDeploy(
+      new NftWebsiteDeployDto({}, context).populate({
         websiteUuid: website.website_uuid,
         apiKey: body.apiKey,
         apiSecret: body.apiSecret,

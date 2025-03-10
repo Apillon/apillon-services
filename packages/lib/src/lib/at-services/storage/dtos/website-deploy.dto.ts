@@ -6,93 +6,9 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { presenceValidator } from '@rawmodel/validators';
+import { JSONParser } from '../../../parsers';
 
-export class CreateDeploymentConfigDto extends ModelBase {
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.UPDATE_DB,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-  })
-  public repoId: number;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.UPDATE_DB,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-  })
-  public repoUrl: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.UPDATE_DB,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-  })
-  public repoName: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.UPDATE_DB,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-  })
-  public repoOwnerName: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.UPDATE_DB,
-    ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
-  })
-  public branchName: string;
-
+export class WebsiteDeployDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -109,7 +25,6 @@ export class CreateDeploymentConfigDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
@@ -117,18 +32,43 @@ export class CreateDeploymentConfigDto extends ModelBase {
       },
     ],
   })
-  public projectUuid: string;
+  apiKey: string;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [
-      SerializeFor.PROFILE,
-      SerializeFor.ADMIN,
-      SerializeFor.UPDATE_DB,
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
     ],
   })
-  public buildCommand?: string | null;
+  apiSecret: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  installCommand?: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  buildCommand?: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -150,21 +90,24 @@ export class CreateDeploymentConfigDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.ADMIN,
+      SerializeFor.UPDATE_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
   })
-  public installCommand?: string | null;
+  public url: string;
 
   @prop({
-    parser: { resolver: stringParser() },
+    parser: { resolver: JSONParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
-  public apiKey?: string;
-
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-  })
-  public apiSecret?: string;
+  public variables: { key: string; value: string }[];
 }

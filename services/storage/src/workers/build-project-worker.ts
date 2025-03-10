@@ -9,6 +9,7 @@ import { DeploymentBuild } from '../modules/deploy/models/deployment-build.model
 import { DeploymentBuildStatus } from '@apillon/lib';
 import { GithubProjectConfig } from '../modules/deploy/models/github-project-config.model';
 import { refreshAccessToken } from '../lib/github';
+import { BuildProjectWorkerInterface } from '../lib/interfaces/build-project-worker.interface';
 
 // TO-DO - Move script to runtime
 const script = `#!/bin/bash
@@ -96,21 +97,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
     return [];
   }
 
-  public async runExecutor(data: {
-    deploymentBuildId: number;
-    websiteUuid: string;
-    buildCommand?: string;
-    installCommand?: string;
-    buildDirectory: string;
-    apiKey: string;
-    apiSecret: string;
-    url: string;
-    variables: {
-      key: string;
-      value: string;
-    }[];
-    isTriggeredByWebhook?: boolean;
-  }): Promise<any> {
+  public async runExecutor(data: BuildProjectWorkerInterface): Promise<any> {
     console.info('RUN EXECUTOR (BuildProjectWorker). data: ', data);
 
     const deploymentBuild = await new DeploymentBuild(

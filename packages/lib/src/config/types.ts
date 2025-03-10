@@ -235,6 +235,7 @@ export enum StorageEventType {
   TRIGGER_GITHUB_DEPLOY = 'trigger-github-deploy',
   GET_DEPLOY_CONFIG_BY_REPO_ID = 'get-deploy-config-by-repo-id',
   CREATE_DEPLOY_CONFIG = 'create-deploy-config',
+  UPDATE_DEPLOY_CONFIG = 'update-deploy-config',
   LINK_GITHUB = 'link-github',
   UNLINK_GITHUB = 'unlink-github',
   LIST_REPOS = 'list-repos',
@@ -243,7 +244,7 @@ export enum StorageEventType {
   DELETE_DEPLOYMENT_CONFIG = 'delete-deployment-config',
   SET_ENVIRONMENT_VARIABLES = 'set-environment-variables',
   GET_ENVIRONMENT_VARIABLES = 'get-environment-variables',
-  TRIGGER_NFT_WEBSITE_DEPLOY = 'trigger-nft-website-deploy',
+  TRIGGER_WEB_DEPLOY = 'trigger-web-deploy',
 }
 
 export enum AuthenticationEventType {
