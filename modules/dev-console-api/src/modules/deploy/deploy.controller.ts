@@ -5,10 +5,10 @@ import {
   Get,
   Param,
   ParseIntPipe,
-  Patch,
   Post,
   Query,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import { DeployService } from './deploy.service';
 import {
