@@ -67,7 +67,9 @@ export class DeployService {
     );
 
     body.apiKey = createdApiKey.data.apiKey;
-    body.apiSecret = createdApiKey.data.apiKeySecret;
+    body.apiSecret = createdApiKey.data.apiKeySecretHashed;
+
+    return createdApiKey.data;
   }
 
   async handleGithubWebhook(
@@ -114,12 +116,23 @@ export class DeployService {
     context: DevConsoleApiContext,
     body: CreateDeploymentConfigDto,
   ) {
+    let apiSecretRaw: string;
     if (!body.apiKey || !body.apiSecret) {
-      await this.createAndPopulateApiKeyForDeploy(body, context);
+      const createdApiKey = await this.createAndPopulateApiKeyForDeploy(
+        body,
+        context,
+      );
+      apiSecretRaw = createdApiKey.apiKeySecret;
     }
 
-    return (await new StorageMicroservice(context).createDeploymentConfig(body))
-      .data;
+    const createdDeploymentConfig = (
+      await new StorageMicroservice(context).createDeploymentConfig(body)
+    ).data;
+
+    return {
+      ...createdDeploymentConfig,
+      apiSecretRaw,
+    };
   }
 
   async updateDeploymentConfig(
@@ -202,8 +215,14 @@ export class DeployService {
       )
     ).data;
 
+    let apiSecretRaw: string;
     if (!body.apiKey || !body.apiSecret) {
-      await this.createAndPopulateApiKeyForDeploy(body, context);
+      const createdApiKey = await this.createAndPopulateApiKeyForDeploy(
+        body,
+        context,
+      );
+
+      apiSecretRaw = createdApiKey.apiKeySecret;
     }
 
     await storageMS.triggerWebDeploy(
@@ -222,6 +241,9 @@ export class DeployService {
       website.website_uuid,
     );
 
-    return website;
+    return {
+      ...website,
+      apiSecretRaw,
+    };
   }
 }
