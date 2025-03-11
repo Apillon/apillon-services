@@ -11,7 +11,7 @@ import {
   arrayPresenceValidator,
   enumInclusionValidator,
 } from '../../../validators';
-import { HostingSecretDto } from '../../hosting/dtos/hosting-secret.dto';
+import { DeploySecretDto } from '../../deploy/dtos/deploy-secret.dto';
 
 export class SimpletDeployDto extends ModelBase {
   @prop({
@@ -79,7 +79,7 @@ export class SimpletDeployDto extends ModelBase {
   public contractConstructorArguments: any[];
 
   @prop({
-    parser: { array: true, resolver: HostingSecretDto },
+    parser: { array: true, resolver: DeploySecretDto },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
@@ -89,5 +89,18 @@ export class SimpletDeployDto extends ModelBase {
       },
     ],
   })
-  public secrets: HostingSecretDto[];
+  public backendVariables: DeploySecretDto[];
+
+  @prop({
+    parser: { array: true, resolver: DeploySecretDto },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [
+      {
+        resolver: arrayPresenceValidator(),
+        code: ValidatorErrorCode.DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public frontendVariables: DeploySecretDto[];
 }

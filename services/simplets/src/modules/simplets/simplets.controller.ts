@@ -1,6 +1,7 @@
 import {
   CreateWebsiteDto,
   DeployedSimpletsQueryFilterDto,
+  DeployWebsiteDto,
   Lmas,
   SimpletDeployDto,
   SimpletsQueryFilterDto,
@@ -91,7 +92,7 @@ export class SimpletsController {
       // BACKEND DEPLOY
       const backendDeploy = await this.simpletsService.deployBackend(
         simplet,
-        body.secrets,
+        body.backendVariables,
       );
       if (backendDeploy.status !== 200 || !backendDeploy.success) {
         throw new SimpletsCodeException({
@@ -116,12 +117,21 @@ export class SimpletsController {
           name: `${body.name} - Website`,
         }),
       );
-
       const { website_uuid } = websiteResponse.data;
       simpletDeploy.frontend_uuid = website_uuid;
       simpletDeploy.frontendStatus = ResourceStatus.DEPLOYING;
-      // TODO: add deploy when StorageMicroservice is ready
-      // await new StorageMicroservice().triggerGithubDeploy();
+      await new StorageMicroservice(this.context).triggerWebDeploy(
+        new DeployWebsiteDto({}, this.context).populate({
+          url: simplet.frontendRepo,
+          buildDirectory: './dist',
+          websiteUuid: website_uuid,
+          installCommand: `cd ${simplet.frontendPath} && ${simplet.frontendInstallCommand}`,
+          buildCommand: simplet.frontendBuildCommand,
+          variables: body.frontendVariables,
+        }),
+      );
+    } catch (e: unknown) {
+      throw e;
     } finally {
       await simpletDeploy.insert();
     }

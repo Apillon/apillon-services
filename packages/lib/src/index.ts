@@ -131,14 +131,14 @@ export * from './lib/at-services/contracts/dtos/transaction-query-filter.dto';
 export * from './lib/at-services/contracts/dtos/call-contract.dto';
 export * from './lib/at-services/contracts/dtos/contract-abi-query.dto';
 
-//#REGION HOSTING
-export * from './lib/at-services/hosting/eventTypes';
-export * from './lib/at-services/hosting/hosting';
-export * from './lib/at-services/hosting/dtos/deploy-instance.dto';
-export * from './lib/at-services/hosting/dtos/generic-deploy-request.dto';
-export * from './lib/at-services/hosting/dtos/resize-instance.dto';
-export * from './lib/at-services/hosting/dtos/virtual-machine.dto';
-export * from './lib/at-services/hosting/dtos/backends-query-filter.dto';
+//#REGION DEPLOY
+export * from './lib/at-services/deploy/eventTypes';
+export * from './lib/at-services/deploy/deploy';
+export * from './lib/at-services/deploy/dtos/deploy-instance.dto';
+export * from './lib/at-services/deploy/dtos/generic-deploy-request.dto';
+export * from './lib/at-services/deploy/dtos/resize-instance.dto';
+export * from './lib/at-services/deploy/dtos/virtual-machine.dto';
+export * from './lib/at-services/deploy/dtos/backends-query-filter.dto';
 
 //#REGION SIMPLETS
 export * from './lib/at-services/simplets/eventTypes';

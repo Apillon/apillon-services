@@ -71,7 +71,6 @@ export class AppModule {
         { path: '/favicon.ico', method: RequestMethod.GET },
         // Auth routes:
         { path: 'deploy/webhook', method: RequestMethod.POST },
-        { path: 'hosting/webhook', method: RequestMethod.POST },
         { path: 'users/login', method: RequestMethod.POST },
         { path: 'users/login/wallet', method: RequestMethod.POST },
         { path: 'users/login-kilt', method: RequestMethod.POST },

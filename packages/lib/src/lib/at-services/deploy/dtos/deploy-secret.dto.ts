@@ -6,7 +6,7 @@ import {
   ValidatorErrorCode,
 } from '../../../../config/types';
 
-export class HostingSecretDto extends ModelBase {
+export class DeploySecretDto extends ModelBase {
   @prop({
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],

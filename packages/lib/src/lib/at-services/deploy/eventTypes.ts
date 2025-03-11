@@ -21,20 +21,20 @@ export type DeployMSEventType =
       GenericDeployRequestDto
     >;
 // | IBodyEvent<
-//     HostingEventType.BE_GET_INSTANCE_BILLING,
-//     GenericHostingRequestDto
+//     DeployEventType.BE_GET_INSTANCE_BILLING,
+//     GenericDeployRequestDto
 //   >
 
-interface IHostingMSEventBase {
+interface IDeployMSEventBase {
   eventName: DeployEventType;
 }
 
-interface IBodyEvent<T extends DeployEventType, U> extends IHostingMSEventBase {
+interface IBodyEvent<T extends DeployEventType, U> extends IDeployMSEventBase {
   eventName: T;
   body: U;
 }
 
-// interface IQueryEvent<T extends HostingEventType, U>
+// interface IQueryEvent<T extends DeployEventType, U>
 //   extends IBodyEvent<
 //     T,
 //     {
@@ -44,15 +44,15 @@ interface IBodyEvent<T extends DeployEventType, U> extends IHostingMSEventBase {
 //   eventName: T;
 // }
 
-// interface IHostingUuidEvent<T extends HostingEventType>
+// interface IDeployUuidEvent<T extends DeployEventType>
 //   extends IBodyEvent<
 //     T,
 //     {
-//       hosting_uuid: string;
+//       deploy_uuid: string;
 //     }
 //   > {}
 
-// interface IProjectUuidEvent<T extends HostingEventType>
+// interface IProjectUuidEvent<T extends DeployEventType>
 //   extends IBodyEvent<T, { project_uuid: string }> {
 //   eventName: T;
 // }

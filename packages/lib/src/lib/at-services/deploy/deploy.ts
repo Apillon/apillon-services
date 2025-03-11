@@ -8,7 +8,7 @@ import { BackendsQueryFilter } from './dtos/backends-query-filter.dto';
 import { GenericDeployRequestDto } from './dtos/generic-deploy-request.dto';
 import { ResizeInstanceDto } from './dtos/resize-instance.dto';
 
-export class HostingMicroservice extends BaseService {
+export class DeployMicroservice extends BaseService {
   lambdaFunctionName =
     env.APP_ENV === AppEnvironment.TEST
       ? env.DEPLOY_FUNCTION_NAME_TEST
@@ -17,7 +17,7 @@ export class HostingMicroservice extends BaseService {
     env.APP_ENV === AppEnvironment.TEST
       ? env.DEPLOY_SOCKET_PORT_TEST
       : env.DEPLOY_SOCKET_PORT;
-  serviceName = 'HOSTING';
+  serviceName = 'DEPLOY';
 
   constructor(context: Context) {
     super(context);
@@ -112,9 +112,9 @@ export class HostingMicroservice extends BaseService {
     });
   }
 
-  // public async getInstanceBilling(body: GenericHostingRequestDto) {
+  // public async getInstanceBilling(body: GenericDeployRequestDto) {
   //   return await this.emitEvent({
-  //     eventName: HostingEventType.BE_GET_INSTANCE_BILLING,
+  //     eventName: DeployEventType.BE_GET_INSTANCE_BILLING,
   //     body,
   //   });
   // }

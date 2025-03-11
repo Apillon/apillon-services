@@ -1,4 +1,5 @@
 import {
+  DeployMicroservice,
   Lmas,
   Mailing,
   SimpletsEventType,
@@ -23,6 +24,7 @@ export async function processEvent(
   const contractsService = new SimpletsService(
     context,
     new SimpletsRepository(context),
+    new DeployMicroservice(context),
     new SimpletsSpendService(context),
     new Mailing(context),
     new Lmas(),

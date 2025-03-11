@@ -4,8 +4,8 @@ import {
   CreateContractDTO,
   DeployedSimpletsQueryFilterDto,
   DeployInstanceDto,
+  DeployMicroservice,
   EvmChain,
-  HostingMicroservice,
   Lmas,
   Mailing,
   ModelValidationException,
@@ -22,16 +22,19 @@ export class SimpletsService {
   private spendService: SimpletsSpendService;
   private mailingClient: Mailing;
   private logging: Lmas;
+  private deployService: DeployMicroservice;
 
   constructor(
     context: ServiceContext,
     simpletRepository: SimpletsRepository,
+    deployService: DeployMicroservice,
     spendService: SimpletsSpendService,
     mailingClient: Mailing,
     logging: Lmas,
   ) {
     this.simpletRepository = simpletRepository;
     this.spendService = spendService;
+    this.deployService = deployService;
     this.mailingClient = mailingClient;
     this.logging = logging;
     this.context = context;
@@ -92,9 +95,7 @@ export class SimpletsService {
       ModelValidationException,
       ValidatorErrorCode,
     );
-    return await new HostingMicroservice(this.context).deployDockerCompose(
-      deployDto,
-    );
+    return await this.deployService.deployDockerCompose(deployDto);
   }
 
   async listDeployedSimplets(query: DeployedSimpletsQueryFilterDto) {

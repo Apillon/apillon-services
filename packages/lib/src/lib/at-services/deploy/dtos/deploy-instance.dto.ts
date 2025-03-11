@@ -8,7 +8,7 @@ import {
 } from '../../../../config/types';
 import { arrayPresenceValidator } from '../../../validators';
 import yaml from 'js-yaml';
-import { HostingSecretDto } from './hosting-secret.dto';
+import { DeploySecretDto } from './deploy-secret.dto';
 import { VirtualMachineDto } from './virtual-machine.dto';
 
 export class DeployInstanceDto extends ModelBase {
@@ -64,7 +64,7 @@ export class DeployInstanceDto extends ModelBase {
   //   populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
   //   validators: [],
   // })
-  // public hosting_uuid: string;
+  // public deploy_uuid: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -89,7 +89,7 @@ export class DeployInstanceDto extends ModelBase {
   public dockerCompose: string;
 
   @prop({
-    parser: { array: true, resolver: HostingSecretDto },
+    parser: { array: true, resolver: DeploySecretDto },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
@@ -99,7 +99,7 @@ export class DeployInstanceDto extends ModelBase {
       },
     ],
   })
-  public secrets: HostingSecretDto[];
+  public secrets: DeploySecretDto[];
 
   @prop({
     parser: { resolver: VirtualMachineDto },
@@ -115,7 +115,7 @@ export class DeployInstanceDto extends ModelBase {
   public virtualMachine: VirtualMachineDto;
 }
 
-export class ApillonApiCallHostingDto extends DeployInstanceDto {
+export class ApillonApiCallDeployDto extends DeployInstanceDto {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],

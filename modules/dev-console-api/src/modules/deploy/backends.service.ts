@@ -1,7 +1,7 @@
 import {
   BackendsQueryFilter,
+  DeployMicroservice,
   GenericDeployRequestDto,
-  HostingMicroservice,
   ResizeInstanceDto,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
@@ -18,21 +18,21 @@ export class BackendsService {
   // }
 
   async listBackends(context: DevConsoleApiContext, body: BackendsQueryFilter) {
-    return (await new HostingMicroservice(context).listBackends(body)).data;
+    return (await new DeployMicroservice(context).listBackends(body)).data;
   }
 
   async getInstance(
     context: DevConsoleApiContext,
     body: GenericDeployRequestDto,
   ) {
-    return (await new HostingMicroservice(context).getInstance(body)).data;
+    return (await new DeployMicroservice(context).getInstance(body)).data;
   }
 
   async getInstanceDetails(
     context: DevConsoleApiContext,
     body: GenericDeployRequestDto,
   ) {
-    return (await new HostingMicroservice(context).getInstanceDetails(body))
+    return (await new DeployMicroservice(context).getInstanceDetails(body))
       .data;
   }
 
@@ -40,53 +40,53 @@ export class BackendsService {
     context: DevConsoleApiContext,
     body: GenericDeployRequestDto,
   ) {
-    return (await new HostingMicroservice(context).startInstance(body)).data;
+    return (await new DeployMicroservice(context).startInstance(body)).data;
   }
 
   async shutdownInstance(
     context: DevConsoleApiContext,
     body: GenericDeployRequestDto,
   ) {
-    return (await new HostingMicroservice(context).shutdownInstance(body)).data;
+    return (await new DeployMicroservice(context).shutdownInstance(body)).data;
   }
 
   async stopInstance(
     context: DevConsoleApiContext,
     body: GenericDeployRequestDto,
   ) {
-    return (await new HostingMicroservice(context).stopInstance(body)).data;
+    return (await new DeployMicroservice(context).stopInstance(body)).data;
   }
 
   async restartInstance(
     context: DevConsoleApiContext,
     body: GenericDeployRequestDto,
   ) {
-    return (await new HostingMicroservice(context).restartInstance(body)).data;
+    return (await new DeployMicroservice(context).restartInstance(body)).data;
   }
 
   async destroyInstance(
     context: DevConsoleApiContext,
     body: GenericDeployRequestDto,
   ) {
-    return (await new HostingMicroservice(context).destroyInstance(body)).data;
+    return (await new DeployMicroservice(context).destroyInstance(body)).data;
   }
 
   async resizeInstance(context: DevConsoleApiContext, body: ResizeInstanceDto) {
-    return (await new HostingMicroservice(context).resizeInstance(body)).data;
+    return (await new DeployMicroservice(context).resizeInstance(body)).data;
   }
 
   async getInstanceState(
     context: DevConsoleApiContext,
     body: GenericDeployRequestDto,
   ) {
-    return (await new HostingMicroservice(context).getInstanceState(body)).data;
+    return (await new DeployMicroservice(context).getInstanceState(body)).data;
   }
 
   async getInstanceAttestation(
     context: DevConsoleApiContext,
     body: GenericDeployRequestDto,
   ) {
-    return (await new HostingMicroservice(context).getInstanceAttestation(body))
+    return (await new DeployMicroservice(context).getInstanceAttestation(body))
       .data;
   }
 
