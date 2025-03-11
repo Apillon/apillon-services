@@ -51,9 +51,7 @@ export class DeployService {
     const createdApiKey = await accessMS.createApiKey(
       new CreateApiKeyDto({}, context).populate({
         project_uuid: body.projectUuid,
-        name:
-          'Deployment API Key - ' + body['websiteUuid'] ??
-          body['collectionUuid'],
+        name: `Deployment API Key - ${body['websiteUuid'] ?? body['collectionUuid']}`,
         testNetwork: false,
         roles: [
           new ApiKeyRoleBaseDto({}, context).populate({
