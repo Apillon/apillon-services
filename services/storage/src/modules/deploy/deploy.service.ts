@@ -508,6 +508,10 @@ export class DeployService {
     return true;
   }
 
+  static isNftWebsiteDeployDto(body: any): body is NftWebsiteDeployDto {
+    return 'contractAddress' in body && 'chainId' in body;
+  }
+
   static async triggerWebDeploy(
     event: {
       body: NftWebsiteDeployDto | WebsiteDeployDto;
@@ -526,9 +530,7 @@ export class DeployService {
     const parameters = {
       deploymentBuildId: deploymentBuild.id,
       ...body,
-      ...(body instanceof NftWebsiteDeployDto
-        ? this.prepareNftConfig(body)
-        : {}),
+      ...(this.isNftWebsiteDeployDto(body) ? this.prepareNftConfig(body) : {}),
     } as BuildProjectWorkerInterface;
 
     writeLog(
