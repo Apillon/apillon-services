@@ -1,11 +1,11 @@
 import {
   CreateWebsiteDto,
   DeployedSimpletsQueryFilterDto,
-  DeployWebsiteDto,
   Lmas,
   SimpletDeployDto,
   SimpletsQueryFilterDto,
   StorageMicroservice,
+  WebsiteDeployDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { SimpletsCodeException } from '../../lib/exceptions';
@@ -14,6 +14,7 @@ import { ResourceStatus, SimpletsErrorCode } from '../../config/types';
 import { Simplet } from './models/simplet.model';
 import { SimpletDeploy } from './models/simpletDeploy.model';
 import { v4 as uuidV4 } from 'uuid';
+import * as path from 'node:path';
 
 export class SimpletsController {
   private readonly context: ServiceContext;
@@ -63,15 +64,20 @@ export class SimpletsController {
       description: body.description,
     });
     try {
-      // CONTRACT DEPLOY
-      const contractDeploy = await this.simpletsService.deployContract(
-        simplet,
-        body.project_uuid,
-        body.name,
-        body.description,
-        body.chain,
-        body.contractConstructorArguments,
-      );
+      // CONTRACT AND BACKEND DEPLOY IN PARALLEL
+      const [contractDeploy, backendDeploy] = await Promise.all([
+        this.simpletsService.deployContract(
+          simplet,
+          body.project_uuid,
+          body.name,
+          body.description,
+          body.chain,
+          body.contractConstructorArguments,
+        ),
+        this.simpletsService.deployBackend(simplet, body.backendVariables),
+      ]);
+
+      // CHECK CONTRACT DEPLOYMENT STATUS
       if (contractDeploy.status !== 200 || !contractDeploy.success) {
         throw new SimpletsCodeException({
           status: contractDeploy.status,
@@ -81,6 +87,8 @@ export class SimpletsController {
           errorMessage: `Contract deployment failed with status code ${contractDeploy.status}`,
         });
       }
+
+      // Update contract details
       const { contract_uuid, contractAddress, chain, chainType } =
         contractDeploy.data;
       simpletDeploy.contract_uuid = contract_uuid;
@@ -89,11 +97,7 @@ export class SimpletsController {
       simpletDeploy.contractChain = chain;
       simpletDeploy.contractAddress = contractAddress;
 
-      // BACKEND DEPLOY
-      const backendDeploy = await this.simpletsService.deployBackend(
-        simplet,
-        body.backendVariables,
-      );
+      // CHECK BACKEND DEPLOYMENT STATUS
       if (backendDeploy.status !== 200 || !backendDeploy.success) {
         throw new SimpletsCodeException({
           status: backendDeploy.status,
@@ -103,6 +107,8 @@ export class SimpletsController {
           errorMessage: `Backend deployment failed with status code ${backendDeploy.status}`,
         });
       }
+
+      // Update backend details
       const { backend_uuid, backendUrl } = backendDeploy.data;
       simpletDeploy.backend_uuid = backend_uuid;
       simpletDeploy.backendStatus = ResourceStatus.DEPLOYED;
@@ -121,13 +127,21 @@ export class SimpletsController {
       simpletDeploy.frontend_uuid = website_uuid;
       simpletDeploy.frontendStatus = ResourceStatus.DEPLOYING;
       await new StorageMicroservice(this.context).triggerWebDeploy(
-        new DeployWebsiteDto({}, this.context).populate({
+        new WebsiteDeployDto({}, this.context).populate({
           url: simplet.frontendRepo,
-          buildDirectory: './dist',
+          buildDirectory: path.join(
+            simplet.frontendPath,
+            simplet.frontendBuildDirectory,
+          ),
           websiteUuid: website_uuid,
           installCommand: `cd ${simplet.frontendPath} && ${simplet.frontendInstallCommand}`,
-          buildCommand: simplet.frontendBuildCommand,
-          variables: body.frontendVariables,
+          buildCommand: `cd ${simplet.frontendPath} && ${simplet.frontendBuildCommand}`,
+          variables: [
+            ...body.frontendVariables,
+            { key: 'APP_URL', value: backendUrl },
+          ],
+          apiKey: body.apiKey,
+          apiSecret: body.apiSecret,
         }),
       );
     } catch (e: unknown) {

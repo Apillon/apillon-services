@@ -1,4 +1,4 @@
-import { AWS_KMS, Context, env } from '@apillon/lib';
+import { AWS_KMS, Context, DeploymentBuildStatus, env } from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -6,7 +6,6 @@ import {
 } from '@apillon/workers-lib';
 import { spawn } from 'child_process';
 import { DeploymentBuild } from '../modules/deploy/models/deployment-build.model';
-import { DeploymentBuildStatus } from '@apillon/lib';
 import { GithubProjectConfig } from '../modules/deploy/models/github-project-config.model';
 import { refreshAccessToken } from '../lib/github';
 import { BuildProjectWorkerInterface } from '../lib/interfaces/build-project-worker.interface';
@@ -76,11 +75,11 @@ fi
 
 echo "Uploading the website to Apillon..."
 #npm install -g @apillon/cli
-/var/lang/bin/npm install -g @apillon/cli
+npm install -g @apillon/cli
 
 #npx @apillon/cli hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"
 
-/var/lang/bin/npx @apillon/cli hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"
+npx @apillon/cli hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key "$APILLON_API_KEY" --secret "$APILLON_API_SECRET"
 
 exit 0`;
 

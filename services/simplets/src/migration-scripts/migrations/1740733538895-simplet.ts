@@ -19,6 +19,10 @@ export async function upgrade(
       \`frontendPath\` VARCHAR(255) NULL,
       \`frontendInstallCommand\` VARCHAR(255) NULL,
       \`frontendBuildCommand\` VARCHAR(255) NULL,
+      \`frontendBuildDirectory\` VARCHAR
+     (
+       255
+     ) NULL,
 
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` INT NULL,
