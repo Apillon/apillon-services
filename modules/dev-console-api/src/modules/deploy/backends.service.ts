@@ -13,7 +13,7 @@ export class BackendsService {
   //   context: DevConsoleApiContext,
   //   body: DeployInstanceDto,
   // ) {
-  //   return (await new HostingMicroservice(context).deployDockerCompose(body))
+  //   return (await new DeployMicroservice(context).deployDockerCompose(body))
   //     .data;
   // }
 
@@ -92,9 +92,9 @@ export class BackendsService {
 
   // async getInstanceBilling(
   //   context: DevConsoleApiContext,
-  //   body: GenericHostingRequestDto,
+  //   body: GenericDeployRequestDto,
   // ) {
-  //   return (await new HostingMicroservice(context).getInstanceBilling(body))
+  //   return (await new DeployMicroservice(context).getInstanceBilling(body))
   //     .data;
   // }
 }

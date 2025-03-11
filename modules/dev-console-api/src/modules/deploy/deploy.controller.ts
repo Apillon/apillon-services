@@ -5,10 +5,10 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
-  Patch,
 } from '@nestjs/common';
 import { DeployService } from './deploy.service';
 import {
@@ -22,6 +22,7 @@ import {
   ResizeInstanceDto,
   RoleGroup,
   SetEnvironmentVariablesDto,
+  UpdateDeploymentConfigDto,
   ValidateFor,
 } from '@apillon/lib';
 import { GithubWebhookGuard } from '../../guards/github-webhook.guard';
@@ -33,7 +34,6 @@ import { ProjectAccessGuard } from '../../guards/project-access.guard';
 import { ProjectModifyGuard } from '../../guards/project-modify.guard';
 import { GitHubWebhookPayload } from '../../config/types';
 import { DeployNftWebsiteDto } from './dtos/deploy-nft-website.dto';
-import { UpdateDeploymentConfigDto } from '@apillon/lib';
 import { BackendsService } from './backends.service';
 
 const ROUTE_BACKENDS = '/backends';
@@ -223,11 +223,11 @@ export class DeployController {
   async getInstance(
     @Ctx()
     context: DevConsoleApiContext,
-    @Param('uuid') hosting_uuid: string,
+    @Param('uuid') deploy_uuid: string,
   ) {
     return await this.backendsService.getInstance(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
     );
   }
 
@@ -237,11 +237,11 @@ export class DeployController {
   async getInstanceDetails(
     @Ctx()
     context: DevConsoleApiContext,
-    @Param('uuid') hosting_uuid: string,
+    @Param('uuid') deploy_uuid: string,
   ) {
     return await this.backendsService.getInstanceDetails(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
     );
   }
 
@@ -251,11 +251,11 @@ export class DeployController {
   async getInstanceStats(
     @Ctx()
     context: DevConsoleApiContext,
-    @Param('uuid') hosting_uuid: string,
+    @Param('uuid') deploy_uuid: string,
   ) {
     return await this.backendsService.getInstanceState(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
     );
   }
 
@@ -265,11 +265,11 @@ export class DeployController {
   async getInstanceAttestation(
     @Ctx()
     context: DevConsoleApiContext,
-    @Param('uuid') hosting_uuid: string,
+    @Param('uuid') deploy_uuid: string,
   ) {
     return await this.backendsService.getInstanceAttestation(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
     );
   }
 
@@ -279,11 +279,11 @@ export class DeployController {
   // async getInstanceBilling(
   //   @Ctx()
   //   context: DevConsoleApiContext,
-  //   @Param('uuid') hosting_uuid: string,
+  //   @Param('uuid') deploy_uuid: string,
   // ) {
   //   return await this.backendsService.getInstanceBilling(
   //     context,
-  //     new GenericHostingRequestDto().populate({ hosting_uuid }),
+  //     new GenericDeployRequestDto().populate({ deploy_uuid }),
   //   );
   // }
 
@@ -293,11 +293,11 @@ export class DeployController {
   async startInstance(
     @Ctx()
     context: DevConsoleApiContext,
-    @Param('uuid') hosting_uuid: string,
+    @Param('uuid') deploy_uuid: string,
   ) {
     return await this.backendsService.startInstance(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
     );
   }
 
@@ -307,11 +307,11 @@ export class DeployController {
   async shutdownInstance(
     @Ctx()
     context: DevConsoleApiContext,
-    @Param('uuid') hosting_uuid: string,
+    @Param('uuid') deploy_uuid: string,
   ) {
     return await this.backendsService.shutdownInstance(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
     );
   }
 
@@ -321,11 +321,11 @@ export class DeployController {
   async stopInstance(
     @Ctx()
     context: DevConsoleApiContext,
-    @Param('uuid') hosting_uuid: string,
+    @Param('uuid') deploy_uuid: string,
   ) {
     return await this.backendsService.stopInstance(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
     );
   }
 
@@ -335,11 +335,11 @@ export class DeployController {
   async restartInstance(
     @Ctx()
     context: DevConsoleApiContext,
-    @Param('uuid') hosting_uuid: string,
+    @Param('uuid') deploy_uuid: string,
   ) {
     return await this.backendsService.restartInstance(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
     );
   }
 
@@ -349,11 +349,11 @@ export class DeployController {
   async destroyInstance(
     @Ctx()
     context: DevConsoleApiContext,
-    @Param('uuid') hosting_uuid: string,
+    @Param('uuid') deploy_uuid: string,
   ) {
     return await this.backendsService.destroyInstance(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
     );
   }
 
@@ -363,11 +363,11 @@ export class DeployController {
   async resizeInstance(
     @Ctx()
     context: DevConsoleApiContext,
-    @Param('uuid') hosting_uuid: string,
+    @Param('uuid') deploy_uuid: string,
     @Body()
     body: ResizeInstanceDto,
   ) {
-    body.deploy_uuid = hosting_uuid;
+    body.deploy_uuid = deploy_uuid;
     return await this.backendsService.resizeInstance(context, body);
   }
 
