@@ -64,7 +64,7 @@ export class SimpletsController {
       description: body.description,
     });
     try {
-      // CONTRACT AND BACKEND DEPLOY IN PARALLEL
+      // CONTRACT AND BACKEND DEPLOY
       const [contractDeploy, backendDeploy] = await Promise.all([
         this.simpletsService.deployContract(
           simplet,
@@ -109,7 +109,7 @@ export class SimpletsController {
       }
 
       // Update backend details
-      const { backend_uuid, backendUrl } = backendDeploy.data;
+      const { backend_uuid, url: backendUrl } = backendDeploy.data;
       simpletDeploy.backend_uuid = backend_uuid;
       simpletDeploy.backendStatus = ResourceStatus.DEPLOYED;
       simpletDeploy.backendUrl = backendUrl;
@@ -120,7 +120,7 @@ export class SimpletsController {
       ).createWebsite(
         new CreateWebsiteDto({}, this.context).populate({
           project_uuid: body.project_uuid,
-          name: `${body.name} - Website`,
+          name: `${body.name} (Website)`,
         }),
       );
       const { website_uuid } = websiteResponse.data;
