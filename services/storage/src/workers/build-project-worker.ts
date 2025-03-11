@@ -55,7 +55,7 @@ if [ -n "$INSTALL_COMMAND" ] && [ "$INSTALL_COMMAND" != "undefined" ]; then
   npm config set cache /tmp/.npm
 
   echo "Running install command: $INSTALL_COMMAND"
-  sh -c $INSTALL_COMMAND
+  sh -c "$INSTALL_COMMAND"
   echo "Install completed successfully."
 else
   echo "Install command not set"
@@ -64,7 +64,7 @@ fi
 # Check if a build command is provided and run it
 if [ -n "$BUILD_COMMAND" ] && [ "$BUILD_COMMAND" != "undefined" ]; then
   echo "Running custom build command: $BUILD_COMMAND"
-  sh -c $BUILD_COMMAND
+  sh -c "$BUILD_COMMAND"
   echo "Build completed successfully."
 else
   echo "Build command not set"
