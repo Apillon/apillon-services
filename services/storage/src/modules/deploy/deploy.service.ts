@@ -530,7 +530,9 @@ export class DeployService {
     const parameters = {
       deploymentBuildId: deploymentBuild.id,
       ...body,
-      ...(this.isNftWebsiteDeployDto(body) ? this.prepareNftConfig(body) : {}),
+      ...(DeployService.isNftWebsiteDeployDto(body)
+        ? getNftWebsiteConfig(body.type, body.contractAddress, body.chainId)
+        : {}),
     } as BuildProjectWorkerInterface;
 
     writeLog(
@@ -572,15 +574,5 @@ export class DeployService {
     }
 
     return true;
-  }
-
-  static prepareNftConfig(body: NftWebsiteDeployDto) {
-    const nftWebsiteConfig = getNftWebsiteConfig(
-      body.type,
-      body.contractAddress,
-      body.chainId,
-    );
-
-    return nftWebsiteConfig;
   }
 }
