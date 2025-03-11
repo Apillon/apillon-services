@@ -19,7 +19,13 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { Cache, CacheInterceptor, Ctx, Validation } from '@apillon/modules-lib';
+import {
+  Cache,
+  CacheInterceptor,
+  CaptchaGuard,
+  Ctx,
+  Validation,
+} from '@apillon/modules-lib';
 import { ApillonApiContext } from '../../context';
 import { EmbeddedWalletService } from './embedded-wallet.service';
 import { ValidationGuard } from '../../guards/validation.guard';
@@ -62,7 +68,7 @@ export class EmbeddedWalletController {
 
   @Post('otp/generate')
   @Validation({ dto: GenerateOtpDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, CaptchaGuard)
   @HttpCode(200)
   async generateOtp(
     @Ctx() context: ApillonApiContext,
