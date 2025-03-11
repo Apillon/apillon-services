@@ -2,7 +2,7 @@ import { Readable } from 'stream';
 import filetype from 'magic-bytes.js';
 
 const htmlTagStartRegex =
-  /<\s*(html|head|script|body|div|span|p|a|table|tr|td|img|ul|li|ol|form|input|button|style|link|meta)\s/i;
+  /<\s*(html|head|script|body|div|span|p|a|table|tr|td|img|ul|li|ol|form|input|button|style|link|meta)\b/i;
 
 export async function isStreamHtmlFile(fileStream: Readable) {
   return new Promise<boolean>((resolve, reject) => {
