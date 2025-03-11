@@ -15,7 +15,7 @@ export class ResizeInstanceDto extends VirtualMachineDto {
   @prop({
     parser: { resolver: stringParser() },
   })
-  public hosting_uuid: string;
+  public deploy_uuid: string;
 
   @prop({
     validators: [

@@ -38,7 +38,7 @@ APIs and libraries that form Apillon services.
 | 19   | SUBS      | Social service                           | [@apillon/social](/services/social/)                  | /services/social/         |
 | 20   | INFRA     | Infrastructure service                   | [@apillon/infrastructure](/services/infrastructure)   | /services/infrastructure/ |
 | 21   | CONTRACTS | Contracts service                        | [@apillon/contracts](/services/contracts/)            | /services/contracts/      |
-| 21   | HOSTING   | Hosting service                          | [@apillon/hosting](/services/hosting/)                | /services/hosting/        |
+| 21   | DEPLOY    | Deploy service                           | [@apillon/deploy](/services/deploy/)                  | /services/deploy/         |
 
 ## Documentation
 

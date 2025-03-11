@@ -1,22 +1,22 @@
 import { env } from '../../../config/env';
-import { AppEnvironment, HostingEventType } from '../../../config/types';
+import { AppEnvironment, DeployEventType } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { DeployInstanceDto } from './dtos/deploy-instance.dto';
-import { HostingMSEventType } from './eventTypes';
+import { DeployMSEventType } from './eventTypes';
 import { BackendsQueryFilter } from './dtos/backends-query-filter.dto';
-import { GenericHostingRequestDto } from './dtos/generic-hosting-request.dto';
+import { GenericDeployRequestDto } from './dtos/generic-deploy-request.dto';
 import { ResizeInstanceDto } from './dtos/resize-instance.dto';
 
 export class HostingMicroservice extends BaseService {
   lambdaFunctionName =
     env.APP_ENV === AppEnvironment.TEST
-      ? env.HOSTING_FUNCTION_NAME_TEST
-      : env.HOSTING_FUNCTION_NAME;
+      ? env.DEPLOY_FUNCTION_NAME_TEST
+      : env.DEPLOY_FUNCTION_NAME;
   devPort =
     env.APP_ENV === AppEnvironment.TEST
-      ? env.HOSTING_SOCKET_PORT_TEST
-      : env.HOSTING_SOCKET_PORT;
+      ? env.DEPLOY_SOCKET_PORT_TEST
+      : env.DEPLOY_SOCKET_PORT;
   serviceName = 'HOSTING';
 
   constructor(context: Context) {
@@ -24,90 +24,90 @@ export class HostingMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
-  async emitEvent(event: HostingMSEventType) {
+  async emitEvent(event: DeployMSEventType) {
     return await this.callService(event);
   }
 
   public async deployDockerCompose(body: DeployInstanceDto) {
     return await this.emitEvent({
-      eventName: HostingEventType.BE_DEPLOY_DOCKER_COMPOSE,
+      eventName: DeployEventType.BE_DEPLOY_DOCKER_COMPOSE,
       body,
     });
   }
 
   public async listBackends(body: BackendsQueryFilter) {
     return await this.emitEvent({
-      eventName: HostingEventType.BE_LIST_BACKENDS,
+      eventName: DeployEventType.BE_LIST_BACKENDS,
       body,
     });
   }
 
-  public async getInstance(body: GenericHostingRequestDto) {
+  public async getInstance(body: GenericDeployRequestDto) {
     return await this.emitEvent({
-      eventName: HostingEventType.BE_GET_INSTANCE,
+      eventName: DeployEventType.BE_GET_INSTANCE,
       body,
     });
   }
 
-  public async getInstanceDetails(body: GenericHostingRequestDto) {
+  public async getInstanceDetails(body: GenericDeployRequestDto) {
     return await this.emitEvent({
-      eventName: HostingEventType.BE_GET_INSTANCE_DETAILS,
+      eventName: DeployEventType.BE_GET_INSTANCE_DETAILS,
       body,
     });
   }
 
-  public async startInstance(body: GenericHostingRequestDto) {
+  public async startInstance(body: GenericDeployRequestDto) {
     return await this.emitEvent({
-      eventName: HostingEventType.BE_START_INSTANCE,
+      eventName: DeployEventType.BE_START_INSTANCE,
       body,
     });
   }
 
-  public async shutdownInstance(body: GenericHostingRequestDto) {
+  public async shutdownInstance(body: GenericDeployRequestDto) {
     return await this.emitEvent({
-      eventName: HostingEventType.BE_SHUTDOWN_INSTANCE,
+      eventName: DeployEventType.BE_SHUTDOWN_INSTANCE,
       body,
     });
   }
 
-  public async stopInstance(body: GenericHostingRequestDto) {
+  public async stopInstance(body: GenericDeployRequestDto) {
     return await this.emitEvent({
-      eventName: HostingEventType.BE_STOP_INSTANCE,
+      eventName: DeployEventType.BE_STOP_INSTANCE,
       body,
     });
   }
 
-  public async restartInstance(body: GenericHostingRequestDto) {
+  public async restartInstance(body: GenericDeployRequestDto) {
     return await this.emitEvent({
-      eventName: HostingEventType.BE_RESTART_INSTANCE,
+      eventName: DeployEventType.BE_RESTART_INSTANCE,
       body,
     });
   }
 
-  public async destroyInstance(body: GenericHostingRequestDto) {
+  public async destroyInstance(body: GenericDeployRequestDto) {
     return await this.emitEvent({
-      eventName: HostingEventType.BE_DESTROY_INSTANCE,
+      eventName: DeployEventType.BE_DESTROY_INSTANCE,
       body,
     });
   }
 
   public async resizeInstance(body: ResizeInstanceDto) {
     return await this.emitEvent({
-      eventName: HostingEventType.BE_RESIZE_INSTANCE,
+      eventName: DeployEventType.BE_RESIZE_INSTANCE,
       body,
     });
   }
 
-  public async getInstanceState(body: GenericHostingRequestDto) {
+  public async getInstanceState(body: GenericDeployRequestDto) {
     return await this.emitEvent({
-      eventName: HostingEventType.BE_GET_INSTANCE_STATE,
+      eventName: DeployEventType.BE_GET_INSTANCE_STATE,
       body,
     });
   }
 
-  public async getInstanceAttestation(body: GenericHostingRequestDto) {
+  public async getInstanceAttestation(body: GenericDeployRequestDto) {
     return await this.emitEvent({
-      eventName: HostingEventType.BE_GET_INSTANCE_ATTESTATION,
+      eventName: DeployEventType.BE_GET_INSTANCE_ATTESTATION,
       body,
     });
   }

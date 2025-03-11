@@ -135,7 +135,7 @@ export * from './lib/at-services/contracts/dtos/contract-abi-query.dto';
 export * from './lib/at-services/hosting/eventTypes';
 export * from './lib/at-services/hosting/hosting';
 export * from './lib/at-services/hosting/dtos/deploy-instance.dto';
-export * from './lib/at-services/hosting/dtos/generic-hosting-request.dto';
+export * from './lib/at-services/hosting/dtos/generic-deploy-request.dto';
 export * from './lib/at-services/hosting/dtos/resize-instance.dto';
 export * from './lib/at-services/hosting/dtos/virtual-machine.dto';
 export * from './lib/at-services/hosting/dtos/backends-query-filter.dto';

@@ -416,7 +416,7 @@ export enum ContractEventType {
   ACTIVATE_DEPLOYED_CONTRACT = 'activate-deployed-contract',
 }
 
-export enum HostingEventType {
+export enum DeployEventType {
   BE_DEPLOY_DOCKER_COMPOSE = 'be-deploy-docker-compose',
   BE_LIST_BACKENDS = 'be-list-backends',
   BE_GET_INSTANCE = 'be-get-instance',
@@ -491,8 +491,8 @@ export enum ServiceName {
   SOCIAL = 'SOCIAL',
   CONTRACTS = 'CONTRACTS',
   INFRASTRUCTURE = 'INFRASTRUCTURE',
-  HOSTING = 'HOSTING',
   SIMPLETS = 'SIMPLETS',
+  DEPLOY = 'DEPLOY',
 }
 
 export enum ServiceCode {

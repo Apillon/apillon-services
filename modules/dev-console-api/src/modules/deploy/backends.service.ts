@@ -1,6 +1,6 @@
 import {
   BackendsQueryFilter,
-  GenericHostingRequestDto,
+  GenericDeployRequestDto,
   HostingMicroservice,
   ResizeInstanceDto,
 } from '@apillon/lib';
@@ -23,14 +23,14 @@ export class BackendsService {
 
   async getInstance(
     context: DevConsoleApiContext,
-    body: GenericHostingRequestDto,
+    body: GenericDeployRequestDto,
   ) {
     return (await new HostingMicroservice(context).getInstance(body)).data;
   }
 
   async getInstanceDetails(
     context: DevConsoleApiContext,
-    body: GenericHostingRequestDto,
+    body: GenericDeployRequestDto,
   ) {
     return (await new HostingMicroservice(context).getInstanceDetails(body))
       .data;
@@ -38,35 +38,35 @@ export class BackendsService {
 
   async startInstance(
     context: DevConsoleApiContext,
-    body: GenericHostingRequestDto,
+    body: GenericDeployRequestDto,
   ) {
     return (await new HostingMicroservice(context).startInstance(body)).data;
   }
 
   async shutdownInstance(
     context: DevConsoleApiContext,
-    body: GenericHostingRequestDto,
+    body: GenericDeployRequestDto,
   ) {
     return (await new HostingMicroservice(context).shutdownInstance(body)).data;
   }
 
   async stopInstance(
     context: DevConsoleApiContext,
-    body: GenericHostingRequestDto,
+    body: GenericDeployRequestDto,
   ) {
     return (await new HostingMicroservice(context).stopInstance(body)).data;
   }
 
   async restartInstance(
     context: DevConsoleApiContext,
-    body: GenericHostingRequestDto,
+    body: GenericDeployRequestDto,
   ) {
     return (await new HostingMicroservice(context).restartInstance(body)).data;
   }
 
   async destroyInstance(
     context: DevConsoleApiContext,
-    body: GenericHostingRequestDto,
+    body: GenericDeployRequestDto,
   ) {
     return (await new HostingMicroservice(context).destroyInstance(body)).data;
   }
@@ -77,14 +77,14 @@ export class BackendsService {
 
   async getInstanceState(
     context: DevConsoleApiContext,
-    body: GenericHostingRequestDto,
+    body: GenericDeployRequestDto,
   ) {
     return (await new HostingMicroservice(context).getInstanceState(body)).data;
   }
 
   async getInstanceAttestation(
     context: DevConsoleApiContext,
-    body: GenericHostingRequestDto,
+    body: GenericDeployRequestDto,
   ) {
     return (await new HostingMicroservice(context).getInstanceAttestation(body))
       .data;

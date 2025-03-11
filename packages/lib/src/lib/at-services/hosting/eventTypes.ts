@@ -1,27 +1,24 @@
-import { HostingEventType } from '../../../config/types';
+import { DeployEventType } from '../../../config/types';
 import { DeployInstanceDto } from './dtos/deploy-instance.dto';
-import { GenericHostingRequestDto } from './dtos/generic-hosting-request.dto';
+import { GenericDeployRequestDto } from './dtos/generic-deploy-request.dto';
 import { ResizeInstanceDto } from './dtos/resize-instance.dto';
 import { BackendsQueryFilter } from './dtos/backends-query-filter.dto';
 
-export type HostingMSEventType =
-  | IBodyEvent<HostingEventType.BE_DEPLOY_DOCKER_COMPOSE, DeployInstanceDto>
-  | IBodyEvent<HostingEventType.BE_LIST_BACKENDS, BackendsQueryFilter>
-  | IBodyEvent<HostingEventType.BE_GET_INSTANCE, GenericHostingRequestDto>
+export type DeployMSEventType =
+  | IBodyEvent<DeployEventType.BE_DEPLOY_DOCKER_COMPOSE, DeployInstanceDto>
+  | IBodyEvent<DeployEventType.BE_LIST_BACKENDS, BackendsQueryFilter>
+  | IBodyEvent<DeployEventType.BE_GET_INSTANCE, GenericDeployRequestDto>
+  | IBodyEvent<DeployEventType.BE_GET_INSTANCE_DETAILS, GenericDeployRequestDto>
+  | IBodyEvent<DeployEventType.BE_START_INSTANCE, GenericDeployRequestDto>
+  | IBodyEvent<DeployEventType.BE_SHUTDOWN_INSTANCE, GenericDeployRequestDto>
+  | IBodyEvent<DeployEventType.BE_STOP_INSTANCE, GenericDeployRequestDto>
+  | IBodyEvent<DeployEventType.BE_RESTART_INSTANCE, GenericDeployRequestDto>
+  | IBodyEvent<DeployEventType.BE_DESTROY_INSTANCE, GenericDeployRequestDto>
+  | IBodyEvent<DeployEventType.BE_RESIZE_INSTANCE, ResizeInstanceDto>
+  | IBodyEvent<DeployEventType.BE_GET_INSTANCE_STATE, GenericDeployRequestDto>
   | IBodyEvent<
-      HostingEventType.BE_GET_INSTANCE_DETAILS,
-      GenericHostingRequestDto
-    >
-  | IBodyEvent<HostingEventType.BE_START_INSTANCE, GenericHostingRequestDto>
-  | IBodyEvent<HostingEventType.BE_SHUTDOWN_INSTANCE, GenericHostingRequestDto>
-  | IBodyEvent<HostingEventType.BE_STOP_INSTANCE, GenericHostingRequestDto>
-  | IBodyEvent<HostingEventType.BE_RESTART_INSTANCE, GenericHostingRequestDto>
-  | IBodyEvent<HostingEventType.BE_DESTROY_INSTANCE, GenericHostingRequestDto>
-  | IBodyEvent<HostingEventType.BE_RESIZE_INSTANCE, ResizeInstanceDto>
-  | IBodyEvent<HostingEventType.BE_GET_INSTANCE_STATE, GenericHostingRequestDto>
-  | IBodyEvent<
-      HostingEventType.BE_GET_INSTANCE_ATTESTATION,
-      GenericHostingRequestDto
+      DeployEventType.BE_GET_INSTANCE_ATTESTATION,
+      GenericDeployRequestDto
     >;
 // | IBodyEvent<
 //     HostingEventType.BE_GET_INSTANCE_BILLING,
@@ -29,11 +26,10 @@ export type HostingMSEventType =
 //   >
 
 interface IHostingMSEventBase {
-  eventName: HostingEventType;
+  eventName: DeployEventType;
 }
 
-interface IBodyEvent<T extends HostingEventType, U>
-  extends IHostingMSEventBase {
+interface IBodyEvent<T extends DeployEventType, U> extends IHostingMSEventBase {
   eventName: T;
   body: U;
 }

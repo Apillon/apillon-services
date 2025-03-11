@@ -16,7 +16,7 @@ import {
   CreateDeploymentConfigDto,
   DefaultUserRole,
   DeploymentBuildQueryFilter,
-  GenericHostingRequestDto,
+  GenericDeployRequestDto,
   GithubLinkDto,
   GithubUnlinkDto,
   ResizeInstanceDto,
@@ -227,7 +227,7 @@ export class DeployController {
   ) {
     return await this.backendsService.getInstance(
       context,
-      new GenericHostingRequestDto().populate({ hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
     );
   }
 
@@ -241,7 +241,7 @@ export class DeployController {
   ) {
     return await this.backendsService.getInstanceDetails(
       context,
-      new GenericHostingRequestDto().populate({ hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
     );
   }
 
@@ -255,7 +255,7 @@ export class DeployController {
   ) {
     return await this.backendsService.getInstanceState(
       context,
-      new GenericHostingRequestDto().populate({ hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
     );
   }
 
@@ -269,7 +269,7 @@ export class DeployController {
   ) {
     return await this.backendsService.getInstanceAttestation(
       context,
-      new GenericHostingRequestDto().populate({ hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
     );
   }
 
@@ -297,7 +297,7 @@ export class DeployController {
   ) {
     return await this.backendsService.startInstance(
       context,
-      new GenericHostingRequestDto().populate({ hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
     );
   }
 
@@ -311,7 +311,7 @@ export class DeployController {
   ) {
     return await this.backendsService.shutdownInstance(
       context,
-      new GenericHostingRequestDto().populate({ hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
     );
   }
 
@@ -325,7 +325,7 @@ export class DeployController {
   ) {
     return await this.backendsService.stopInstance(
       context,
-      new GenericHostingRequestDto().populate({ hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
     );
   }
 
@@ -339,7 +339,7 @@ export class DeployController {
   ) {
     return await this.backendsService.restartInstance(
       context,
-      new GenericHostingRequestDto().populate({ hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
     );
   }
 
@@ -353,7 +353,7 @@ export class DeployController {
   ) {
     return await this.backendsService.destroyInstance(
       context,
-      new GenericHostingRequestDto().populate({ hosting_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid: hosting_uuid }),
     );
   }
 
@@ -367,7 +367,7 @@ export class DeployController {
     @Body()
     body: ResizeInstanceDto,
   ) {
-    body.hosting_uuid = hosting_uuid;
+    body.deploy_uuid = hosting_uuid;
     return await this.backendsService.resizeInstance(context, body);
   }
 
