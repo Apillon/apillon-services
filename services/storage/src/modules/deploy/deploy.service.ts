@@ -526,10 +526,16 @@ export class DeployService {
     const parameters = {
       deploymentBuildId: deploymentBuild.id,
       ...body,
-      ...(body instanceof NftWebsiteDeployDto
-        ? this.prepareNftConfig(body)
-        : {}),
     } as BuildProjectWorkerInterface;
+
+    if (body instanceof NftWebsiteDeployDto) {
+      const params = this.prepareNftConfig(body);
+      parameters.variables = params.variables;
+      parameters.buildCommand = params.buildCommand;
+      parameters.installCommand = params.installCommand;
+      parameters.buildDirectory = params.buildDirectory;
+      parameters.url = params.url;
+    }
 
     writeLog(
       LogType.INFO,
