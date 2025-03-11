@@ -21,10 +21,12 @@ import {
   DeploymentBuildStatus,
   GithubLinkDto,
   LogType,
-  NftWebsiteType,
   SetEnvironmentVariablesDto,
   env,
   writeLog,
+  UpdateDeploymentConfigDto,
+  NftWebsiteDeployDto,
+  WebsiteDeployDto,
 } from '@apillon/lib';
 import { BuildProjectWorker } from '../../workers/build-project-worker';
 import { WorkerName } from '../../workers/builder-executor';
@@ -35,6 +37,7 @@ import { DeploymentBuild } from './models/deployment-build.model';
 import { GithubProjectConfig } from './models/github-project-config.model';
 import { createWebhook, getRepos, getTokens, getUser } from '../../lib/github';
 import { getNftWebsiteConfig } from '../../lib/get-nft-website-config';
+import { BuildProjectWorkerInterface } from '../../lib/interfaces/build-project-worker.interface';
 
 export class DeployService {
   static async linkGithub(
@@ -117,7 +120,9 @@ export class DeployService {
   }
 
   static async createDeploymentConfig(
-    event: { body: CreateDeploymentConfigDto },
+    event: {
+      body: CreateDeploymentConfigDto;
+    },
     context: ServiceContext,
   ) {
     const config = await new DeploymentConfig({}, context).findByRepoId(
@@ -130,20 +135,23 @@ export class DeployService {
       );
     }
 
-    const website: Website = await new Website({}, context).populateById(
-      event.body.websiteUuid,
-    );
+    if (!event.body.skipWebsiteCheck) {
+      // If skipWebsiteCheck is not set, we need to check if the website exists & user has access to it
+      const website: Website = await new Website({}, context).populateById(
+        event.body.websiteUuid,
+      );
 
-    if (!website.exists()) {
-      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+      if (!website.exists()) {
+        throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+      }
+
+      website.canModify(context);
     }
-
-    website.canModify(context);
 
     const githubProjectConfig = await new GithubProjectConfig(
       {},
       context,
-    ).populateByProjectUuid(website.project_uuid);
+    ).populateByProjectUuid(event.body.projectUuid);
 
     if (!githubProjectConfig.exists()) {
       throw new StorageNotFoundException(
@@ -172,7 +180,63 @@ export class DeployService {
 
     await deploymentConfig.insert();
 
+    const serializedConfig = deploymentConfig.serialize() as DeploymentConfig;
+
+    await this.triggerGithubDeploy(
+      {
+        ...serializedConfig,
+        configId: serializedConfig.id,
+        url: event.body.repoUrl,
+      },
+      context,
+    );
+
     return deploymentConfig;
+  }
+
+  static async updateDeploymentConfig(
+    event: {
+      id: number;
+      body: UpdateDeploymentConfigDto;
+    },
+    context: ServiceContext,
+  ) {
+    const config = await new DeploymentConfig({}, context).populateById(
+      event.id,
+    );
+
+    if (!config.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.DEPLOYMENT_NOT_FOUND);
+    }
+
+    const website = await new Website({}, context).populateByUUID(
+      config.websiteUuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+
+    website.canModify(context);
+
+    const { apiSecret, apiKey, ...updatedFields } = event.body;
+
+    const apiKeyToSet = apiKey ?? config.apiKey;
+    const apiSecretToSet = apiSecret
+      ? await new AWS_KMS().encrypt(apiSecret, env.DEPLOY_KMS_KEY_ID)
+      : config.apiSecret;
+
+    config.populate({
+      ...updatedFields,
+      apiKey: apiKeyToSet,
+      apiSecret: apiSecretToSet,
+    });
+
+    await config.validateOrThrow(StorageValidationException);
+
+    await config.update();
+
+    return config.serialize();
   }
 
   static async deleteDeploymentConfig(
@@ -374,10 +438,7 @@ export class DeployService {
       apiKey: string;
       apiSecret: string;
       configId: number;
-      variables: {
-        key: string;
-        value: string;
-      }[];
+      encryptedVariables: string | null;
     },
     context: ServiceContext,
   ) {
@@ -392,9 +453,19 @@ export class DeployService {
     const parameters = {
       ...event,
       deploymentBuildId: deploymentBuild.id,
-      variables: event.variables,
+      variables: [],
       isTriggeredByWebhook: true,
-    };
+    } as BuildProjectWorkerInterface;
+
+    if (event.encryptedVariables) {
+      const kmsClient = new AWS_KMS();
+      parameters.variables = JSON.parse(
+        await kmsClient.decrypt(
+          event.encryptedVariables,
+          env.DEPLOY_KMS_KEY_ID,
+        ),
+      );
+    }
 
     writeLog(
       LogType.INFO,
@@ -437,37 +508,28 @@ export class DeployService {
     return true;
   }
 
-  static async triggerNftWebsiteDeploy(
+  static async triggerWebDeploy(
     event: {
-      body: {
-        websiteUuid: string;
-        type: NftWebsiteType;
-        apiKey: string;
-        apiSecret: string;
-        contractAddress: string;
-        chainId: number;
-      };
+      body: NftWebsiteDeployDto | WebsiteDeployDto;
     },
     context: ServiceContext,
   ) {
+    const { body } = event;
+
     const deploymentBuild = new DeploymentBuild({}, context).populate({
       buildStatus: DeploymentBuildStatus.PENDING,
-      websiteUuid: event.body.websiteUuid,
+      websiteUuid: body.websiteUuid,
     });
 
     await deploymentBuild.insert();
 
-    const nftWebsiteConfig = getNftWebsiteConfig(
-      event.body.type,
-      event.body.contractAddress,
-      event.body.chainId,
-    );
-
     const parameters = {
-      ...event.body,
-      ...nftWebsiteConfig,
       deploymentBuildId: deploymentBuild.id,
-    };
+      ...body,
+      ...(body instanceof NftWebsiteDeployDto
+        ? this.prepareNftConfig(body)
+        : {}),
+    } as BuildProjectWorkerInterface;
 
     writeLog(
       LogType.INFO,
@@ -508,5 +570,15 @@ export class DeployService {
     }
 
     return true;
+  }
+
+  static prepareNftConfig(body: NftWebsiteDeployDto) {
+    const nftWebsiteConfig = getNftWebsiteConfig(
+      body.type,
+      body.contractAddress,
+      body.chainId,
+    );
+
+    return nftWebsiteConfig;
   }
 }
