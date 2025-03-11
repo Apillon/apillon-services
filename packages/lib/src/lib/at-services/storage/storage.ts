@@ -36,6 +36,7 @@ import { GithubUnlinkDto } from './dtos/github-unlink.dto';
 import { SetEnvironmentVariablesDto } from './dtos/set-environment-variables.dto';
 import { UpdateDeploymentConfigDto } from './dtos/update-deployment-config.dto';
 import { NftWebsiteDeployDto } from './dtos/nft-website-deploy.dto';
+import { WebsiteDeployDto } from './dtos/website-deploy.dto';
 
 export class StorageMicroservice extends BaseService {
   lambdaFunctionName =
@@ -720,7 +721,7 @@ export class StorageMicroservice extends BaseService {
   }
 
   public async triggerWebDeploy(
-    params: NftWebsiteDeployDto | DeployWebsiteDto,
+    params: NftWebsiteDeployDto | WebsiteDeployDto,
   ) {
     const data = {
       eventName: StorageEventType.TRIGGER_WEB_DEPLOY,
