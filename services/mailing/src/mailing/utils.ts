@@ -1,5 +1,10 @@
 export function stripHtmlElements(input: string): string {
-  return input.replace(/<[^>]*>/g, '');
+  return input
+    .replace(/<[^>]*>/g, '')
+    .replace(/<!--.*?-->/g, '')
+    .replace(/https?:\/\/[^\s]+/g, '')
+    .replace(/\bwww\.[^\s]+/g, '')
+    .replace(/\b[^\s]+\.[^\s]{2,}/g, '');
 }
 
 export function stripHtmlFromObject(obj: any): any {
