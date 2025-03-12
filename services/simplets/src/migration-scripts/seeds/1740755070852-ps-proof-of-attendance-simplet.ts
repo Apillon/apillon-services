@@ -2,14 +2,18 @@ import { DbTables } from '../../config/types';
 import { SqlModelStatus } from '@apillon/lib';
 
 const SIMPLET_NAME = 'ps-proof-of-attendance';
-const SIMPLET_BACKEND_REPOSITORY_URL = `https://github.com/Apillon/${SIMPLET_NAME}`;
-const SIMPLET_BACKEND_PATH = 'backend/docker-compose.yml';
+const SIMPLET_BACKEND_REPOSITORY_URL = `https://raw.githubusercontent.com/Apillon/${SIMPLET_NAME}`;
+const SIMPLET_BACKEND_PATH =
+  'refs/heads/feature/phala-docker-deploy/backend/docker-compose.yml';
 const SIMPLET_FRONTEND_REPOSITORY_URL = `https://github.com/Apillon/${SIMPLET_NAME}`;
 const SIMPLET_FRONTEND_PATH = 'frontend';
+const SIMPLET_FRONTEND_INSTALL_COMMAND = 'npm install';
+const SIMPLET_FRONTEND_BUILD_COMMAND = 'npm run generate';
+const SIMPLET_FRONTEND_BUILD_DIRECTORY = 'dist';
 const SIMPLET_MACHINE = {
   cpuCount: 1,
-  memory: 8192,
-  diskSize: 40,
+  memory: 4096,
+  diskSize: 20,
 };
 
 export async function upgrade(
@@ -25,7 +29,10 @@ export async function upgrade(
                                          \`backendPath\`,
                                          \`backendMachine\`,
                                          \`frontendRepo\`,
-                                         \`frontendPath\`)
+                                         \`frontendPath\`,
+                                         \`frontendInstallCommand\`,
+                                         \`frontendBuildCommand\`,
+                                         \`frontendBuildDirectory\`)
      VALUES (${SqlModelStatus.ACTIVE},
              UUID(),
              '${SIMPLET_NAME}',
@@ -35,7 +42,10 @@ export async function upgrade(
              '${SIMPLET_BACKEND_PATH}',
              '${JSON.stringify(SIMPLET_MACHINE)}',
              '${SIMPLET_FRONTEND_REPOSITORY_URL}',
-             '${SIMPLET_FRONTEND_PATH}');`,
+             '${SIMPLET_FRONTEND_PATH}',
+             '${SIMPLET_FRONTEND_INSTALL_COMMAND}',
+             '${SIMPLET_FRONTEND_BUILD_COMMAND}',
+             '${SIMPLET_FRONTEND_BUILD_DIRECTORY}');`,
   );
 }
 
