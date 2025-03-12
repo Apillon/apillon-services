@@ -47,12 +47,13 @@ export class SimpletsController {
     const simplet = await new Simplet({}, this.context).populateByUUID(
       body.simplet_uuid,
     );
+    const sourceFunction = 'deploySimplet';
     if (!simplet || !simplet.exists()) {
       throw new SimpletsCodeException({
         status: 404,
         code: SimpletsErrorCode.SIMPLET_NOT_FOUND,
         context: this.context,
-        sourceFunction: 'deploySimplet',
+        sourceFunction,
       });
     }
 
@@ -76,43 +77,39 @@ export class SimpletsController {
         ),
         this.simpletsService.deployBackend(simplet, body.backendVariables),
       ]);
-
-      // CHECK CONTRACT DEPLOYMENT STATUS
-      if (contractDeploy.status !== 200 || !contractDeploy.success) {
-        throw new SimpletsCodeException({
-          status: contractDeploy.status,
-          code: SimpletsErrorCode.CONTRACT_DEPLOYMENT_FAILED,
-          context: this.context,
-          sourceFunction: 'deploySimplet',
-          errorMessage: `Contract deployment failed with status code ${contractDeploy.status}`,
-        });
-      }
-
       // Update contract details
-      const { contract_uuid, contractAddress, chain, chainType } =
-        contractDeploy.data;
-      simpletDeploy.contract_uuid = contract_uuid;
-      simpletDeploy.contractStatus = ResourceStatus.DEPLOYING;
-      simpletDeploy.contractChainType = chainType;
-      simpletDeploy.contractChain = chain;
-      simpletDeploy.contractAddress = contractAddress;
-
-      // CHECK BACKEND DEPLOYMENT STATUS
-      if (backendDeploy.status !== 200 || !backendDeploy.success) {
+      if (contractDeploy.success) {
+        const { contract_uuid, contractAddress, chain, chainType } =
+          contractDeploy.data;
+        simpletDeploy.contract_uuid = contract_uuid;
+        simpletDeploy.contractStatus = ResourceStatus.DEPLOYING;
+        simpletDeploy.contractChainType = chainType;
+        simpletDeploy.contractChain = chain;
+        simpletDeploy.contractAddress = contractAddress;
+      }
+      // Update backend details
+      if (backendDeploy.success) {
+        const { backend_uuid, url: backendUrl } = backendDeploy.data;
+        simpletDeploy.backend_uuid = backend_uuid;
+        simpletDeploy.backendStatus = ResourceStatus.DEPLOYED;
+        simpletDeploy.backendUrl = backendUrl;
+      }
+      if (!contractDeploy.success) {
         throw new SimpletsCodeException({
-          status: backendDeploy.status,
-          code: SimpletsErrorCode.BACKEND_DEPLOYMENT_FAILED,
-          context: this.context,
-          sourceFunction: 'deploySimplet',
-          errorMessage: `Backend deployment failed with status code ${backendDeploy.status}`,
+          status: 500,
+          code: SimpletsErrorCode.CONTRACT_DEPLOYMENT_FAILED,
+          sourceFunction,
+          errorMessage: 'Contract deployment failed',
         });
       }
-
-      // Update backend details
-      const { backend_uuid, url: backendUrl } = backendDeploy.data;
-      simpletDeploy.backend_uuid = backend_uuid;
-      simpletDeploy.backendStatus = ResourceStatus.DEPLOYED;
-      simpletDeploy.backendUrl = backendUrl;
+      if (!backendDeploy.success) {
+        throw new SimpletsCodeException({
+          status: 500,
+          code: SimpletsErrorCode.BACKEND_DEPLOYMENT_FAILED,
+          sourceFunction,
+          errorMessage: 'Backend deployment failed',
+        });
+      }
 
       // FRONTEND DEPLOY
       const websiteResponse = await new StorageMicroservice(
@@ -123,10 +120,20 @@ export class SimpletsController {
           name: `${body.name} (Website)`,
         }),
       );
+      if (!websiteResponse.success) {
+        throw new SimpletsCodeException({
+          status: 500,
+          code: SimpletsErrorCode.WEBSITE_CREATION_FAILED,
+          sourceFunction,
+          errorMessage: 'Website creation failed',
+        });
+      }
       const { website_uuid } = websiteResponse.data;
       simpletDeploy.frontend_uuid = website_uuid;
       simpletDeploy.frontendStatus = ResourceStatus.DEPLOYING;
-      await new StorageMicroservice(this.context).triggerWebDeploy(
+      const storageResponse = await new StorageMicroservice(
+        this.context,
+      ).triggerWebDeploy(
         new WebsiteDeployDto({}, this.context).populate({
           url: simplet.frontendRepo,
           buildDirectory: path.join(
@@ -138,14 +145,30 @@ export class SimpletsController {
           buildCommand: `cd ${simplet.frontendPath} && ${simplet.frontendBuildCommand}`,
           variables: [
             ...body.frontendVariables,
-            { key: 'APP_URL', value: backendUrl },
+            { key: 'APP_URL', value: backendDeploy.data.url },
           ],
           apiKey: body.apiKey,
           apiSecret: body.apiSecret,
         }),
       );
+      if (!storageResponse.success) {
+        throw new SimpletsCodeException({
+          status: 500,
+          code: SimpletsErrorCode.FRONTEND_DEPLOYMENT_FAILED,
+          sourceFunction,
+          errorMessage: 'Frontend deployment failed',
+        });
+      }
+      simpletDeploy.frontendStatus = ResourceStatus.DEPLOYED;
     } catch (e: unknown) {
-      throw e;
+      throw e instanceof SimpletsCodeException
+        ? e
+        : new SimpletsCodeException({
+            status: 500,
+            code: SimpletsErrorCode.GENERAL_SERVER_ERROR,
+            sourceFunction,
+            errorMessage: 'An unexpected error occurred during deployment',
+          });
     } finally {
       await simpletDeploy.insert();
     }
