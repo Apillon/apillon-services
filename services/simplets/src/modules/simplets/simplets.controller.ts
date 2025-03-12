@@ -1,38 +1,28 @@
 import {
-  CreateWebsiteDto,
   DeployedSimpletsQueryFilterDto,
   Lmas,
   LogType,
   ServiceName,
   SimpletDeployDto,
   SimpletsQueryFilterDto,
-  StorageMicroservice,
-  WebsiteDeployDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { SimpletsCodeException } from '../../lib/exceptions';
 import { SimpletsService } from './services/simplets.service';
 import { ResourceStatus, SimpletsErrorCode } from '../../config/types';
-import { Simplet } from './models/simplet.model';
-import { SimpletDeploy } from './models/simpletDeploy.model';
-import { v4 as uuidV4 } from 'uuid';
-import * as path from 'node:path';
 
 export class SimpletsController {
   private readonly context: ServiceContext;
   private readonly simpletsService: SimpletsService;
   private logging: Lmas;
-  private storageService: StorageMicroservice;
 
   constructor(
     context: ServiceContext,
     simpletService: SimpletsService,
-    storageService: StorageMicroservice,
     logging: Lmas,
   ) {
     this.context = context;
     this.simpletsService = simpletService;
-    this.storageService = storageService;
     this.logging = logging;
   }
 
@@ -52,31 +42,12 @@ export class SimpletsController {
       location: 'SimpletsController.deploySimplet',
       data: body,
     });
-    const simplet = await new Simplet({}, this.context).populateByUUID(
+    const { simplet, simpletDeploy } = await this.simpletsService.newSimplet(
+      body.project_uuid,
       body.simplet_uuid,
+      body.name,
+      body.description,
     );
-    if (!simplet || !simplet.exists()) {
-      await this.logging.writeLog({
-        sendAdminAlert: true,
-        logType: LogType.ERROR,
-        message: `Simplet with uuid ${body.simplet_uuid} not found.`,
-        service: ServiceName.SIMPLETS,
-        location: 'SimpletsController.deploySimplet',
-      });
-      throw new SimpletsCodeException({
-        status: 404,
-        code: SimpletsErrorCode.SIMPLET_NOT_FOUND,
-        context: this.context,
-      });
-    }
-
-    const simpletDeploy = new SimpletDeploy({}, this.context).populate({
-      project_uuid: body.project_uuid,
-      simpletDeployed_uuid: uuidV4(),
-      simplet_uuid: simplet.simplet_uuid,
-      name: body.name,
-      description: body.description,
-    });
     try {
       await this.logging.writeLog({
         logType: LogType.INFO,
@@ -84,8 +55,9 @@ export class SimpletsController {
         service: ServiceName.SIMPLETS,
         location: 'SimpletsController.deploySimplet',
       });
-
       // CONTRACT AND BACKEND DEPLOY
+      simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
+      simpletDeploy.contractStatus = ResourceStatus.DEPLOYING;
       const [contractDeploy, backendDeploy] = await Promise.all([
         this.simpletsService.deployContract(
           simplet,
@@ -97,7 +69,6 @@ export class SimpletsController {
         ),
         this.simpletsService.deployBackend(simplet, body.backendVariables),
       ]);
-
       // Update contract details
       if (contractDeploy.success) {
         await this.logging.writeLog({
@@ -110,12 +81,11 @@ export class SimpletsController {
         const { contract_uuid, contractAddress, chain, chainType } =
           contractDeploy.data;
         simpletDeploy.contract_uuid = contract_uuid;
-        simpletDeploy.contractStatus = ResourceStatus.DEPLOYING;
+        simpletDeploy.contractStatus = ResourceStatus.DEPLOYED;
         simpletDeploy.contractChainType = chainType;
         simpletDeploy.contractChain = chain;
         simpletDeploy.contractAddress = contractAddress;
       }
-
       // Update backend details
       if (backendDeploy.success) {
         await this.logging.writeLog({
@@ -130,7 +100,6 @@ export class SimpletsController {
         simpletDeploy.backendStatus = ResourceStatus.DEPLOYED;
         simpletDeploy.backendUrl = backendUrl;
       }
-
       if (!contractDeploy.success) {
         await this.logging.writeLog({
           sendAdminAlert: true,
@@ -145,7 +114,6 @@ export class SimpletsController {
           errorMessage: 'Contract deployment failed',
         });
       }
-
       if (!backendDeploy.success) {
         await this.logging.writeLog({
           sendAdminAlert: true,
@@ -162,112 +130,44 @@ export class SimpletsController {
       }
 
       // FRONTEND DEPLOY
-      await this.logging.writeLog({
-        logType: LogType.INFO,
-        message: `Starting frontend deployment for simplet uuid ${body.simplet_uuid}.`,
-        service: ServiceName.SIMPLETS,
-        location: 'SimpletsController.deploySimplet',
-      });
-
-      const websiteResponse = await this.storageService.createWebsite(
-        new CreateWebsiteDto({}, this.context).populate({
-          project_uuid: body.project_uuid,
-          name: `${body.name} (Website)`,
-        }),
-      );
-      if (!websiteResponse.success) {
-        await this.logging.writeLog({
-          sendAdminAlert: true,
-          logType: LogType.ERROR,
-          message: `Website creation failed for simplet uuid ${body.simplet_uuid}.`,
-          service: ServiceName.SIMPLETS,
-          location: 'SimpletsController.deploySimplet',
-        });
-        throw new SimpletsCodeException({
-          status: 500,
-          code: SimpletsErrorCode.WEBSITE_CREATION_FAILED,
-          errorMessage: 'Website creation failed',
-        });
-      }
-
-      const { website_uuid } = websiteResponse.data;
-      simpletDeploy.frontend_uuid = website_uuid;
       simpletDeploy.frontendStatus = ResourceStatus.DEPLOYING;
-
-      const storageResponse = await this.storageService.triggerWebDeploy(
-        new WebsiteDeployDto({}, this.context).populate({
-          url: simplet.frontendRepo,
-          buildDirectory: path.join(
-            simplet.frontendPath,
-            simplet.frontendBuildDirectory,
-          ),
-          websiteUuid: website_uuid,
-          installCommand: `cd ${simplet.frontendPath} && ${simplet.frontendInstallCommand}`,
-          buildCommand: `cd ${simplet.frontendPath} && ${simplet.frontendBuildCommand}`,
-          variables: [
-            ...body.frontendVariables,
-            { key: 'APP_URL', value: simpletDeploy.backendUrl },
-          ],
-          apiKey: body.apiKey,
-          apiSecret: body.apiSecret,
-        }),
+      const { website_uuid } = await this.simpletsService.deployFrontend(
+        simplet,
+        body.project_uuid,
+        body.name,
+        backendDeploy.data.url,
+        body.apiKey,
+        body.apiSecret,
+        body.frontendVariables,
       );
-      if (!storageResponse.success) {
-        await this.logging.writeLog({
-          sendAdminAlert: true,
-          logType: LogType.ERROR,
-          message: `Frontend deployment failed for simplet uuid ${body.simplet_uuid}.`,
-          service: ServiceName.SIMPLETS,
-          location: 'SimpletsController.deploySimplet',
-        });
-        throw new SimpletsCodeException({
-          status: 500,
-          code: SimpletsErrorCode.FRONTEND_DEPLOYMENT_FAILED,
-          errorMessage: 'Frontend deployment failed',
-        });
-      }
-
+      simpletDeploy.frontend_uuid = website_uuid;
       await this.logging.writeLog({
         logType: LogType.INFO,
-        message: `Frontend successfully deployed for simplet uuid ${body.simplet_uuid}.`,
+        message: `Successfully completed deployment of simplet with uuid ${body.simplet_uuid}.`,
         service: ServiceName.SIMPLETS,
         location: 'SimpletsController.deploySimplet',
       });
-
-      simpletDeploy.frontendStatus = ResourceStatus.DEPLOYED;
     } catch (e: unknown) {
+      if (e instanceof SimpletsCodeException) {
+        throw e;
+      }
+      const message = `An unexpected error occurred while deploying simplet with uuid ${body.simplet_uuid}.`;
       await this.logging.writeLog({
         sendAdminAlert: true,
         logType: LogType.ERROR,
-        message: `Error occurred while deploying simplet with uuid ${body.simplet_uuid}.`,
+        message,
         service: ServiceName.SIMPLETS,
         location: 'SimpletsController.deploySimplet',
         data: e,
       });
-      throw e instanceof SimpletsCodeException
-        ? e
-        : new SimpletsCodeException({
-            status: 500,
-            code: SimpletsErrorCode.GENERAL_SERVER_ERROR,
-
-            errorMessage: 'An unexpected error occurred during deployment',
-          });
-    } finally {
-      await this.logging.writeLog({
-        logType: LogType.INFO,
-        message: `Inserting simplet deployment record for simplet uuid ${body.simplet_uuid}.`,
-        service: ServiceName.SIMPLETS,
-        location: 'SimpletsController.deploySimplet',
+      throw new SimpletsCodeException({
+        status: 500,
+        code: SimpletsErrorCode.GENERAL_SERVER_ERROR,
+        errorMessage: message,
       });
+    } finally {
       await simpletDeploy.insert();
     }
-
-    await this.logging.writeLog({
-      logType: LogType.INFO,
-      message: `Successfully completed deployment of simplet with uuid ${body.simplet_uuid}.`,
-      service: ServiceName.SIMPLETS,
-      location: 'SimpletsController.deploySimplet',
-    });
     return simpletDeploy.serializeByContext(this.context);
   }
 

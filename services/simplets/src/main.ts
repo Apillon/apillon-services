@@ -22,21 +22,17 @@ export async function processEvent(
   event: SimpletsMSEventType,
   context: ServiceContext,
 ): Promise<any> {
-  const contractsService = new SimpletsService(
+  const logging = new Lmas();
+  const simpletsService = new SimpletsService(
     context,
     new SimpletsRepository(context),
     new DeployMicroservice(context),
+    new StorageMicroservice(context),
     new SimpletsSpendService(context),
     new Mailing(context),
-    new Lmas(),
+    logging,
   );
-  const controller = new SimpletsController(
-    context,
-    contractsService,
-    new StorageMicroservice(this.context),
-    new Lmas(),
-  );
-
+  const controller = new SimpletsController(context, simpletsService, logging);
   switch (event.eventName) {
     case SimpletsEventType.SIMPLETS_LIST:
       return controller.listSimplets(event.body);
