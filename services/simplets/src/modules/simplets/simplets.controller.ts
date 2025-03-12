@@ -136,8 +136,8 @@ export class SimpletsController {
         body.project_uuid,
         body.name,
         backendDeploy.data.url,
-        body.apiKey,
-        body.apiSecret,
+        body.apillonApiKey,
+        body.apillonApiSecret,
         body.frontendVariables,
       );
       simpletDeploy.frontend_uuid = website_uuid;

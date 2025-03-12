@@ -69,12 +69,12 @@ export class SimpletDeployDto extends ModelBase {
     parser: { array: true },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    // validators: [
-    //   {
-    //     resolver: presenceValidator(),
-    //     code: ValidatorErrorCode.DATA_NOT_PRESENT,
-    //   },
-    // ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.DATA_NOT_PRESENT,
+      },
+    ],
   })
   public contractConstructorArguments: any[];
 
@@ -114,7 +114,7 @@ export class SimpletDeployDto extends ModelBase {
       },
     ],
   })
-  apiKey: string;
+  apillonApiKey: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -126,5 +126,5 @@ export class SimpletDeployDto extends ModelBase {
       },
     ],
   })
-  apiSecret: string;
+  apillonApiSecret: string;
 }
