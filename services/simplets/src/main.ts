@@ -4,6 +4,7 @@ import {
   Mailing,
   SimpletsEventType,
   SimpletsMSEventType,
+  StorageMicroservice,
 } from '@apillon/lib';
 import { SimpletsController } from './modules/simplets/simplets.controller';
 import { ServiceContext } from '@apillon/service-lib';
@@ -32,6 +33,7 @@ export async function processEvent(
   const controller = new SimpletsController(
     context,
     contractsService,
+    new StorageMicroservice(this.context),
     new Lmas(),
   );
 
