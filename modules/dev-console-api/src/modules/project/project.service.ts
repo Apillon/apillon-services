@@ -195,6 +195,14 @@ export class ProjectService {
 
     project.populate(data, PopulateFrom.PROFILE);
 
+    if (/https?:\/\/|www\.|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/.test(project.name)) {
+      throw new CodeException({
+        code: BadRequestErrorCode.INVALID_PROJECT_NAME,
+        status: HttpStatus.BAD_REQUEST,
+        errorCodes: BadRequestErrorCode,
+      });
+    }
+
     await project.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     await project.update();
