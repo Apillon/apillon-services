@@ -2,8 +2,7 @@ export function stripHtmlElements(input: string): string {
   return input
     .replace(/<[^>]*>/g, '')
     .replace(/<!--/g, '')
-    .replace(/-->/g, '')
-    .replace(/\b[^\s]+\.[^\s]{2,}/g, '');
+    .replace(/-->/g, '');
 }
 
 export function stripHtmlFromObject(obj: any): any {
