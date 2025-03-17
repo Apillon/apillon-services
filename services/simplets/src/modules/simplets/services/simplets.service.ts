@@ -16,6 +16,7 @@ import {
   StorageMicroservice,
   ValidatorErrorCode,
   WebsiteDeployDto,
+  WebsiteSource,
 } from '@apillon/lib';
 import { SimpletsRepository } from '../repositores/simplets-repository';
 import { SimpletsSpendService } from './simplets-spend.service';
@@ -147,6 +148,7 @@ export class SimpletsService {
       new CreateWebsiteDto({}, this.context).populate({
         project_uuid,
         name: `${simpletName} (Website)`,
+        source: WebsiteSource.GITHUB,
       }),
     );
     if (!websiteResponse.success) {
@@ -164,7 +166,7 @@ export class SimpletsService {
       });
     }
     const { website_uuid } = websiteResponse.data;
-    const storageResponse = await this.storageService.triggerWebDeploy(
+    const storageResponse = await this.deployService.triggerWebDeploy(
       new WebsiteDeployDto({}, this.context).populate({
         url: simplet.frontendRepo,
         buildDirectory: path.join(

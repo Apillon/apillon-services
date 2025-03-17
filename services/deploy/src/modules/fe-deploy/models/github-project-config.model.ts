@@ -1,4 +1,4 @@
-import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import {
   AdvancedSQLModel,
   PoolConnection,
@@ -8,7 +8,7 @@ import {
   presenceValidator,
   prop,
 } from '@apillon/lib';
-import { DbTables, StorageErrorCode } from '../../../config/types';
+import { DbTables, DeployErrorCode } from '../../../config/types';
 
 export class GithubProjectConfig extends AdvancedSQLModel {
   public readonly tableName = DbTables.GITHUB_PROJECT_CONFIG;
@@ -33,7 +33,7 @@ export class GithubProjectConfig extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.GITHUB_PROJECT_CONFIG_PROJECT_UUID_NOT_PRESENT,
+        code: DeployErrorCode.DATA_NOT_PRESENT,
       },
     ],
   })

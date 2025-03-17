@@ -145,6 +145,21 @@ export class DeployController {
     );
   }
 
+  @Get('config/:websiteUuid')
+  @Permissions(
+    { role: DefaultUserRole.ADMIN },
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.USER },
+  )
+  @UseGuards(AuthGuard)
+  async getDeploymentConfig(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('websiteUuid') websiteUuid: string,
+  ) {
+    return await this.deployService.getDeploymentConfig(context, websiteUuid);
+  }
+
   @Get('config/variables/:deploymentConfigId')
   @Permissions(
     { role: DefaultUserRole.ADMIN },

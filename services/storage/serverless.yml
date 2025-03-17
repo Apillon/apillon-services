@@ -62,23 +62,3 @@ functions:
           batchSize: 4
           maximumBatchingWindow: 5
           functionResponseType: ReportBatchItemFailures
-  storage-service-builder:
-    handler: ./src/workers/builder-executor.handler
-    name: apillon-storage-service-builder-${self:provider.stage}
-    description: Worker for building projects on Apillon
-    memorySize: 2048
-    timeout: 900
-    reservedConcurrency: 20
-    ephemeralStorageSize: 3072
-    environment:
-      APILLON_API_URL: ${env:BUILDER_APILLON_API_URL}
-      AWS_WORKER_LAMBDA_NAME: ${self:functions.storage-service-builder.name}
-      PATH: '/var/lang/bin:/opt/bin:/opt/node_modules/.bin:/bin:/usr/bin:/opt/apillon_cli/bin:/opt/apillon_cli/node_modules/.bin:/var/lang/bin:${PATH}'
-    events:
-      - sqs:
-          arn: ${env:BUILDER_SQS_ARN}
-          batchSize: 2
-          maximumBatchingWindow: 5
-          functionResponseType: ReportBatchItemFailures
-    layers:
-      - arn:aws:lambda:eu-west-1:018021943180:layer:git-layer:3

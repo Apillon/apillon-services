@@ -7,7 +7,7 @@ frameworkVersion: '3'
 custom:
   webpack:
     webpackConfig: ./webpack.config.js
-    packager: "npm"
+    packager: 'npm'
     includeModules: true
     packagerOptions:
       lockFile: '../../package-lock.json'
@@ -31,8 +31,7 @@ provider:
       - subnet-085447b898128fc92
       - subnet-0ed148d48e931f5fa
 
-  environment:
-    ${file(../../bin/deploy/env/env.yml)}
+  environment: ${file(../../bin/deploy/env/env.yml)}
 
 package:
   individually: true
@@ -47,6 +46,26 @@ functions:
     description: Apillon deploy Service
     memorySize: 512
     timeout: 30
+  deploy-service-builder:
+    handler: ./src/workers/builder-executor.handler
+    name: apillon-deploy-service-builder-${self:provider.stage}
+    description: Worker for building projects on Apillon
+    memorySize: 2048
+    timeout: 900
+    reservedConcurrency: 20
+    ephemeralStorageSize: 3072
+    environment:
+      APILLON_API_URL: ${env:BUILDER_APILLON_API_URL}
+      AWS_WORKER_LAMBDA_NAME: ${self:functions.deploy-service-builder.name}
+      PATH: '/var/lang/bin:/opt/bin:/opt/node_modules/.bin:/bin:/usr/bin:/opt/apillon_cli/bin:/opt/apillon_cli/node_modules/.bin:/var/lang/bin:${PATH}'
+    events:
+      - sqs:
+          arn: ${env:BUILDER_SQS_ARN}
+          batchSize: 2
+          maximumBatchingWindow: 5
+          functionResponseType: ReportBatchItemFailures
+    layers:
+      - arn:aws:lambda:eu-west-1:018021943180:layer:git-layer:3
 #  deploy-service-worker:
 #    handler: ./src/workers/worker-executor.handler
 #    name: apillon-deploy-service-worker-${self:provider.stage}

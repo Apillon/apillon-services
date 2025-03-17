@@ -1,6 +1,6 @@
 import { NftWebsiteType } from '@apillon/lib';
-import { StorageCodeException } from './exceptions';
-import { StorageErrorCode } from '../config/types';
+import { DeployCodeException } from './exceptions';
+import { DeployErrorCode } from '../config/types';
 
 export const getNftWebsiteConfig = (
   type: NftWebsiteType,
@@ -70,9 +70,9 @@ export const getNftWebsiteConfig = (
         ],
       };
     default:
-      throw new StorageCodeException({
+      throw new DeployCodeException({
         status: 400,
-        code: StorageErrorCode.INVALID_NFT_WEBSITE_TYPE,
+        code: DeployErrorCode.INVALID_NFT_WEBSITE_TYPE,
       });
   }
 };

@@ -8,7 +8,6 @@ import { NftStorageService } from './modules/nfts/nft-storage.service';
 import { StorageService } from './modules/storage/storage.service';
 import { CrustService } from './modules/crust/crust.service';
 import { UrlShortenerService } from './modules/url-shortener/url-shortener.service';
-import { DeployService } from './modules/deploy/deploy.service';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -61,6 +60,8 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [StorageEventType.WEBSITE_LIST]: HostingService.listWebsites,
     [StorageEventType.WEBSITE_GET]: HostingService.getWebsite,
+    [StorageEventType.WEBSITE_GET_WITH_ACCESS]:
+      HostingService.getWebsiteWithAccess,
     [StorageEventType.WEBSITE_CREATE]: HostingService.createWebsite,
     [StorageEventType.WEBSITE_UPDATE]: HostingService.updateWebsite,
     [StorageEventType.WEBSITE_DEPLOY]: HostingService.deployWebsite,
@@ -105,28 +106,6 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [StorageEventType.GENERATE_SHORT_URL]: UrlShortenerService.generateShortUrl,
     [StorageEventType.GET_TARGET_URL]: UrlShortenerService.getTargetUrl,
-
-    [StorageEventType.TRIGGER_GITHUB_DEPLOY]: DeployService.triggerGithubDeploy,
-    [StorageEventType.TRIGGER_WEB_DEPLOY]: DeployService.triggerWebDeploy,
-    [StorageEventType.GET_DEPLOY_CONFIG_BY_REPO_ID]:
-      DeployService.getDeploymentConfigByRepoId,
-    [StorageEventType.GET_PROJECT_GITHUB_CONFIG]:
-      DeployService.getProjectConfigByProjectUuid,
-    [StorageEventType.CREATE_DEPLOY_CONFIG]:
-      DeployService.createDeploymentConfig,
-    [StorageEventType.UPDATE_DEPLOY_CONFIG]:
-      DeployService.updateDeploymentConfig,
-    [StorageEventType.LINK_GITHUB]: DeployService.linkGithub,
-    [StorageEventType.UNLINK_GITHUB]: DeployService.unlinkGithub,
-    [StorageEventType.LIST_REPOS]: DeployService.listRepos,
-    [StorageEventType.LIST_DEPLOYMENT_BUILDS]:
-      DeployService.listDeploymentBuildsForWebsite,
-    [StorageEventType.DELETE_DEPLOYMENT_CONFIG]:
-      DeployService.deleteDeploymentConfig,
-    [StorageEventType.SET_ENVIRONMENT_VARIABLES]:
-      DeployService.setEnvironmentVariables,
-    [StorageEventType.GET_ENVIRONMENT_VARIABLES]:
-      DeployService.getEnvironmentVariables,
   };
 
   return await processors[event.eventName](event, context);
