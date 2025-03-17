@@ -1,13 +1,22 @@
 import {
   CreateDeploymentConfigDto,
+  CreateDeploymentConfigDtoType,
   DeploymentBuildQueryFilter,
   GithubLinkDto,
+  GithubLinkDtoType,
   GithubUnlinkDto,
+  GithubUnlinkDtoType,
   NftWebsiteDeployDto,
+  NftWebsiteDeployDtoType,
   SetEnvironmentVariablesDto,
+  SetEnvironmentVariablesDtoType,
   StorageMicroservice,
+  TriggerGithubDeployDto,
+  TriggerGithubDeployDtoType,
   UpdateDeploymentConfigDto,
+  UpdateDeploymentConfigDtoType,
   WebsiteDeployDto,
+  WebsiteDeployDtoType,
 } from '@apillon/lib';
 import { DeployService } from './services/deploy.service';
 import { DeploymentConfigService } from './services/deployment-config.service';
@@ -69,12 +78,11 @@ export class FrontendController {
     );
   }
 
-  // TO-DO type
-  async triggerGithubDeploy(body: any) {
+  async triggerGithubDeploy(body: TriggerGithubDeployDtoType) {
     return this.deployService.triggerGithubDeploy(body);
   }
 
-  async triggerWebDeploy(body: NftWebsiteDeployDto | WebsiteDeployDto) {
+  async triggerWebDeploy(body: NftWebsiteDeployDtoType | WebsiteDeployDtoType) {
     return this.deployService.triggerWebDeploy(body);
   }
 
@@ -86,22 +94,22 @@ export class FrontendController {
     return this.getGithubConfigByProjectUuid(projectUuid);
   }
 
-  async createDeploymentConfig(body: CreateDeploymentConfigDto) {
+  async createDeploymentConfig(body: CreateDeploymentConfigDtoType) {
     return this.deploymentConfigService.createDeploymentConfig(body);
   }
 
   async updateDeploymentConfig(body: {
     id: number;
-    body: UpdateDeploymentConfigDto;
+    body: UpdateDeploymentConfigDtoType;
   }) {
     return this.deploymentConfigService.updateDeploymentConfig(body);
   }
 
-  async linkGithub(body: GithubLinkDto) {
+  async linkGithub(body: GithubLinkDtoType) {
     return this.githubConfigService.linkGithub(body);
   }
 
-  async unlinkGithub(body: GithubUnlinkDto) {
+  async unlinkGithub(body: GithubUnlinkDtoType) {
     return this.githubConfigService.unlinkGithub(body);
   }
 
@@ -119,7 +127,7 @@ export class FrontendController {
     );
   }
 
-  async setEnvironmentVariables(body: SetEnvironmentVariablesDto) {
+  async setEnvironmentVariables(body: SetEnvironmentVariablesDtoType) {
     return this.deploymentConfigService.setEnvironmentVariables(body);
   }
 

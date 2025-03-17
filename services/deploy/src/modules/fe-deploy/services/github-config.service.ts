@@ -1,6 +1,6 @@
 import {
-  GithubLinkDto,
-  GithubUnlinkDto,
+  GithubLinkDtoType,
+  GithubUnlinkDtoType,
   ModelValidationException,
 } from '@apillon/lib';
 import { GithubService } from './github.service';
@@ -20,7 +20,7 @@ export class GithubConfigService {
     this.deploymentConfigRepository = deploymentConfigRepository;
   }
 
-  async linkGithub(body: GithubLinkDto) {
+  async linkGithub(body: GithubLinkDtoType) {
     const { access_token, refresh_token } = await this.githubService.getTokens(
       body.code,
     );
@@ -66,7 +66,7 @@ export class GithubConfigService {
     }
   }
 
-  async unlinkGithub(body: GithubUnlinkDto) {
+  async unlinkGithub(body: GithubUnlinkDtoType) {
     const githubProjectConfig =
       await this.githubConfigRepository.getGithubProjectConfigByProjectUuid(
         body.project_uuid,

@@ -1,11 +1,13 @@
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { ModelBase, prop } from '../../../base-models/base';
+import { ModelBase, ModelBaseType, prop } from '../../../base-models/base';
 import {
   PopulateFrom,
   SerializeFor,
   ValidatorErrorCode,
 } from '../../../../config/types';
 import { presenceValidator } from '@rawmodel/validators';
+
+export type TriggerGithubDeployDtoType = ModelBaseType<TriggerGithubDeployDto>;
 
 export class TriggerGithubDeployDto extends ModelBase {
   @prop({

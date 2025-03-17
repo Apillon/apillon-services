@@ -125,7 +125,6 @@ export class DeployService {
       apiSecretRaw = createdApiKey.apiKeySecret;
     }
 
-    // HERE
     const createdDeploymentConfig = (
       await new DeployMicroservice(context).createDeploymentConfig(body)
     ).data;
@@ -158,7 +157,6 @@ export class DeployService {
     context: DevConsoleApiContext,
     websiteUuid: string,
   ) {
-    // HERE
     return (
       await new DeployMicroservice(context).deleteDeploymentConfig(websiteUuid)
     ).data;

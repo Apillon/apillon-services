@@ -1,10 +1,10 @@
 import {
   AWS_KMS,
-  CreateDeploymentConfigDto,
+  CreateDeploymentConfigDtoType,
   ModelValidationException,
-  SetEnvironmentVariablesDto,
+  SetEnvironmentVariablesDtoType,
   StorageMicroservice,
-  UpdateDeploymentConfigDto,
+  UpdateDeploymentConfigDtoType,
   WebsiteSource,
   env,
 } from '@apillon/lib';
@@ -25,7 +25,7 @@ export class DeploymentConfigService {
     private readonly storageMicroservice: StorageMicroservice,
   ) {}
 
-  async createDeploymentConfig(body: CreateDeploymentConfigDto) {
+  async createDeploymentConfig(body: CreateDeploymentConfigDtoType) {
     const config = await this.deploymentConfigRepository.findByRepoId(
       body.repoId,
     );
@@ -100,7 +100,7 @@ export class DeploymentConfigService {
     body,
   }: {
     id: number;
-    body: UpdateDeploymentConfigDto;
+    body: UpdateDeploymentConfigDtoType;
   }) {
     const config = await this.deploymentConfigRepository.getById(id);
 
@@ -196,7 +196,7 @@ export class DeploymentConfigService {
     return config.serialize();
   }
 
-  async setEnvironmentVariables(body: SetEnvironmentVariablesDto) {
+  async setEnvironmentVariables(body: SetEnvironmentVariablesDtoType) {
     const keys = body.variables.map((variable) => variable.key);
     if (new Set(keys).size !== keys.length) {
       throw new DeployCodeException({

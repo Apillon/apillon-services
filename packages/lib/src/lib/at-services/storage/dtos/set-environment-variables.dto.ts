@@ -1,7 +1,9 @@
 import { arrayParser, integerParser, stringParser } from '@rawmodel/parsers';
-import { ModelBase, prop } from '../../../base-models/base';
+import { ModelBase, ModelBaseType, prop } from '../../../base-models/base';
 import { PopulateFrom } from '../../../../config/types';
 
+export type SetEnvironmentVariablesDtoType =
+  ModelBaseType<SetEnvironmentVariablesDto>;
 export class SetEnvironmentVariablesDto extends ModelBase {
   @prop({
     parser: { resolver: arrayParser() },

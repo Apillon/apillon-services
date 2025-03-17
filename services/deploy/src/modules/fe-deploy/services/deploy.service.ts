@@ -3,7 +3,9 @@ import {
   AppEnvironment,
   LogType,
   NftWebsiteDeployDto,
-  WebsiteDeployDto,
+  NftWebsiteDeployDtoType,
+  TriggerGithubDeployDtoType,
+  WebsiteDeployDtoType,
   env,
   writeLog,
 } from '@apillon/lib';
@@ -21,17 +23,7 @@ export class DeployService {
     private readonly githubService: GithubService,
   ) {}
 
-  async triggerGithubDeploy(body: {
-    url: string;
-    websiteUuid: string;
-    buildCommand: string | null;
-    installCommand: string | null;
-    buildDirectory: string;
-    apiKey: string;
-    apiSecret: string;
-    configId: number;
-    encryptedVariables: string | null;
-  }) {
+  async triggerGithubDeploy(body: TriggerGithubDeployDtoType) {
     const deploymentBuild = this.deploymentBuildRepository.create({
       configId: body.configId,
       websiteUuid: body.websiteUuid,
@@ -83,7 +75,7 @@ export class DeployService {
     return 'contractAddress' in body && 'chainId' in body;
   }
 
-  async triggerWebDeploy(body: NftWebsiteDeployDto | WebsiteDeployDto) {
+  async triggerWebDeploy(body: NftWebsiteDeployDtoType | WebsiteDeployDtoType) {
     const deploymentBuild = this.deploymentBuildRepository.create({
       websiteUuid: body.websiteUuid,
     });
