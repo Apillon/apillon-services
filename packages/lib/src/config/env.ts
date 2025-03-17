@@ -660,11 +660,9 @@ export interface IEnv {
   DEPLOY_MYSQL_PASSWORD_TEST: string;
   DEPLOY_MYSQL_DATABASE_TEST: string;
 
-  /**
-   * HOSTING workers config
-   */
-  HOSTING_AWS_WORKER_SQS_URL: string;
-  HOSTING_AWS_WORKER_LAMBDA_NAME: string;
+  DEPLOY_AWS_WORKER_SQS_URL: string;
+  DEPLOY_AWS_WORKER_LAMBDA_NAME: string;
+
   /**
    * HOSTING other config
    */
