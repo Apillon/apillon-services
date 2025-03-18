@@ -11,7 +11,6 @@ import {
 } from '@apillon/lib';
 import { Stage, releaseStage, setupTest } from '../../../test/setup';
 import { BuildProjectWorker } from '../../../workers/build-project-worker';
-import { DbTables as StorageDbTables } from '@apillon/storage/src/config/types';
 import { DbTables } from '../../../config/types';
 import { FrontendController } from '../frontend.controller';
 
@@ -184,27 +183,9 @@ describe('DeployService tests', () => {
       await stage.db.paramExecute(
         `DELETE FROM ${DbTables.GITHUB_PROJECT_CONFIG}`,
       );
-
-      await stage.storageContext.mysql.paramExecute(
-        `DELETE FROM ${StorageDbTables.WEBSITE}`,
-      );
-
-      await stage.storageContext.mysql.paramExecute(
-        `DELETE FROM ${StorageDbTables.BUCKET}`,
-      );
     });
 
     test('User can create new deployment config', async () => {
-      await stage.storageContext.mysql.paramExecute(
-        `INSERT INTO ${StorageDbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
-        VALUES (1, 'uuid', 'uuid', 1, 'name')`,
-      );
-
-      await stage.storageContext.mysql.paramExecute(
-        `INSERT INTO ${StorageDbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
-        VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
-      );
-
       await stage.db.paramExecute(
         `INSERT INTO ${DbTables.GITHUB_PROJECT_CONFIG} (project_uuid, access_token, refresh_token, username)
         VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', '${expectedProjectConfig.refreshToken}', '${expectedProjectConfig.login}')`,
@@ -270,27 +251,9 @@ describe('DeployService tests', () => {
       await stage.db.paramExecute(
         `DELETE FROM ${DbTables.GITHUB_PROJECT_CONFIG}`,
       );
-
-      await stage.storageContext.mysql.paramExecute(
-        `DELETE FROM ${StorageDbTables.WEBSITE}`,
-      );
-
-      await stage.storageContext.mysql.paramExecute(
-        `DELETE FROM ${StorageDbTables.BUCKET}`,
-      );
     });
 
     test('User can update deployment config', async () => {
-      await stage.storageContext.mysql.paramExecute(
-        `INSERT INTO ${StorageDbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
-        VALUES (1, 'uuid', 'uuid', 1, 'name')`,
-      );
-
-      await stage.storageContext.mysql.paramExecute(
-        `INSERT INTO ${StorageDbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
-        VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
-      );
-
       await stage.db.paramExecute(
         `INSERT INTO ${DbTables.GITHUB_PROJECT_CONFIG} (project_uuid, access_token, refresh_token, username)
         VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', '${expectedProjectConfig.refreshToken}', '${expectedProjectConfig.login}')`,
@@ -374,12 +337,6 @@ describe('DeployService tests', () => {
       await stage.db.paramExecute(
         `DELETE FROM ${DbTables.GITHUB_PROJECT_CONFIG}`,
       );
-      await stage.storageContext.mysql.paramExecute(
-        `DELETE FROM ${StorageDbTables.BUCKET}`,
-      );
-      await stage.storageContext.mysql.paramExecute(
-        `DELETE FROM ${StorageDbTables.WEBSITE}`,
-      );
     });
 
     test('User can delete deployment config', async () => {
@@ -395,15 +352,6 @@ describe('DeployService tests', () => {
           ],
         },
       };
-      await stage.storageContext.mysql.paramExecute(
-        `INSERT INTO ${StorageDbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
-        VALUES (1, 'uuid', 'uuid', 1, 'name')`,
-      );
-
-      await stage.storageContext.mysql.paramExecute(
-        `INSERT INTO ${StorageDbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
-        VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
-      );
 
       await stage.db.paramExecute(
         `INSERT INTO ${DbTables.GITHUB_PROJECT_CONFIG} (project_uuid, access_token, refresh_token, username)
@@ -548,14 +496,6 @@ describe('DeployService tests', () => {
       await stage.db.paramExecute(`DELETE FROM ${DbTables.DEPLOYMENT_BUILD}`);
 
       await stage.db.paramExecute(`DELETE FROM ${DbTables.DEPLOYMENT_CONFIG}`);
-
-      await stage.storageContext.mysql.paramExecute(
-        `DELETE FROM ${StorageDbTables.WEBSITE}`,
-      );
-
-      await stage.storageContext.mysql.paramExecute(
-        `DELETE FROM ${StorageDbTables.BUCKET}`,
-      );
     });
 
     test('User can list deployment builds for a website', async () => {
@@ -571,15 +511,7 @@ describe('DeployService tests', () => {
           ],
         },
       };
-      await stage.storageContext.mysql.paramExecute(
-        `INSERT INTO ${StorageDbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
-        VALUES (1, 'uuid', 'uuid', 1, 'name')`,
-      );
 
-      await stage.storageContext.mysql.paramExecute(
-        `INSERT INTO ${StorageDbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
-        VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
-      );
       await stage.db.paramExecute(
         `INSERT INTO ${DbTables.GITHUB_PROJECT_CONFIG} (project_uuid, access_token, refresh_token, username)
         VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', '${expectedProjectConfig.refreshToken}', '${expectedProjectConfig.login}')`,
@@ -636,14 +568,6 @@ describe('DeployService tests', () => {
       await stage.db.paramExecute(
         `DELETE FROM ${DbTables.GITHUB_PROJECT_CONFIG}`,
       );
-
-      await stage.storageContext.mysql.paramExecute(
-        `DELETE FROM ${StorageDbTables.WEBSITE}`,
-      );
-
-      await stage.storageContext.mysql.paramExecute(
-        `DELETE FROM ${StorageDbTables.BUCKET}`,
-      );
     });
 
     test('User can set environment variables', async () => {
@@ -659,15 +583,7 @@ describe('DeployService tests', () => {
           ],
         },
       };
-      await stage.storageContext.mysql.paramExecute(
-        `INSERT INTO ${StorageDbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
-        VALUES (1, 'uuid', 'uuid', 1, 'name')`,
-      );
 
-      await stage.storageContext.mysql.paramExecute(
-        `INSERT INTO ${StorageDbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
-        VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
-      );
       await stage.db.paramExecute(
         `INSERT INTO ${DbTables.GITHUB_PROJECT_CONFIG} (project_uuid, access_token, refresh_token, username)
         VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', '${expectedProjectConfig.refreshToken}', '${expectedProjectConfig.login}')`,
@@ -723,15 +639,7 @@ describe('DeployService tests', () => {
           ],
         },
       };
-      await stage.storageContext.mysql.paramExecute(
-        `INSERT INTO ${StorageDbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
-        VALUES (1, 'uuid', 'uuid', 1, 'name')`,
-      );
 
-      await stage.storageContext.mysql.paramExecute(
-        `INSERT INTO ${StorageDbTables.WEBSITE} (website_uuid, project_uuid, bucket_id, stagingBucket_id,productionBucket_id,name, status)
-        VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
-      );
       await stage.db.paramExecute(
         `INSERT INTO ${DbTables.GITHUB_PROJECT_CONFIG} (project_uuid, access_token, refresh_token, username)
         VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', '${expectedProjectConfig.refreshToken}', '${expectedProjectConfig.login}')`,
