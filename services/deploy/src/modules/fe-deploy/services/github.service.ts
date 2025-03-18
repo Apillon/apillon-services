@@ -33,6 +33,34 @@ export class GithubService {
     }
   }
 
+  async forkRepo(
+    projectConfig: GithubProjectConfig,
+    repoName: string,
+    repoOwnerName: string,
+    newRepoName: string,
+  ) {
+    try {
+      return await this.forkRepoRequest(
+        repoOwnerName,
+        projectConfig.access_token,
+        repoName,
+        newRepoName,
+      );
+    } catch (e) {
+      if (e.response?.status === 401) {
+        const accessToken = await this.refreshAccessToken(projectConfig);
+        return await this.forkRepoRequest(
+          repoOwnerName,
+          accessToken,
+          repoName,
+          newRepoName,
+        );
+      }
+
+      throw e;
+    }
+  }
+
   private async getReposRequest(accessToken: string) {
     const { data } = await this.authorizedClient(accessToken).get<
       {
@@ -121,6 +149,27 @@ export class GithubService {
     await this.authorizedClient(accessToken).delete(
       `/repos/${repoOwnerName}/${repoName}/hooks/${hookId}`,
     );
+  }
+
+  // Note: If user already has a fork of the repo, this will return the existing fork
+  private async forkRepoRequest(
+    repoOwnerName: string,
+    accessToken: string,
+    repoName: string,
+    newRepoName: string,
+  ) {
+    return await this.authorizedClient(accessToken).post<{
+      id: number;
+      clone_url: string;
+      name: string;
+      owner: {
+        login: string;
+      };
+      default_branch: string;
+    }>(`/repos/${repoOwnerName}/${repoName}/forks`, {
+      name: newRepoName,
+      default_branch_only: true,
+    });
   }
 
   private async createWebhookRequest(
