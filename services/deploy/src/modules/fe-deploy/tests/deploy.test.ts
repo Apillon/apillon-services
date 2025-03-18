@@ -86,12 +86,9 @@ jest
   });
 
 let frontendController: FrontendController;
-let githubService: any;
 describe('DeployService tests', () => {
   let stage: Stage;
   beforeAll(async () => {
-    // To this:
-
     stage = await setupTest();
 
     frontendController = new FrontendController(stage.context);
