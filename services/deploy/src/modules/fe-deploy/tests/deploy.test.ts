@@ -1,6 +1,6 @@
-/*import {
+import {
   AWS_KMS,
-  CreateDeploymentConfigDto,
+  CreateDeploymentConfigDtoType,
   DefaultUserRole,
   DeploymentBuildQueryFilter,
   DeploymentBuildStatus,
@@ -9,10 +9,11 @@
   SqlModelStatus,
   UpdateDeploymentConfigDto,
 } from '@apillon/lib';
-import { Stage, releaseStage, setupTest } from '../../../../test/setup';
-import { DeployService } from '../deploy.service';
-import { DbTables } from '../../../config/types';
+import { Stage, releaseStage, setupTest } from '../../../test/setup';
 import { BuildProjectWorker } from '../../../workers/build-project-worker';
+import { DbTables as StorageDbTables } from '@apillon/storage/src/config/types';
+import { DbTables } from '../../../config/types';
+import { FrontendController } from '../frontend.controller';
 
 const expectedProjectConfig = {
   accessToken: 'access_token',
@@ -26,13 +27,42 @@ const expectedCreatedWebhook = {
   id: 1,
 };
 
-jest.mock('../../../lib/github', () => ({
-  getTokens: jest.fn(),
-  getUser: jest.fn(),
-  deleteWebhook: jest.fn(),
-  getRepos: jest.fn(),
-  createWebhook: jest.fn(),
-}));
+jest.mock('../services/github.service', () => {
+  return {
+    GithubService: jest.fn().mockImplementation(() => {
+      return {
+        getTokens: jest.fn().mockResolvedValue({
+          access_token: expectedProjectConfig.accessToken,
+          refresh_token: expectedProjectConfig.refreshToken,
+          scope: '',
+        }),
+        getUser: jest.fn().mockResolvedValue({
+          id: 123,
+          login: expectedProjectConfig.login,
+        }),
+        getRepos: jest.fn().mockResolvedValue([]),
+        deleteWebhook: jest.fn(),
+        createWebhook: jest.fn().mockResolvedValue(expectedCreatedWebhook),
+      };
+    }),
+  };
+});
+
+jest.mock('@apillon/lib', () => {
+  return {
+    ...jest.requireActual('@apillon/lib'),
+    StorageMicroservice: jest.fn().mockImplementation(() => {
+      return {
+        getWebsiteWithAccess: jest.fn().mockResolvedValue({
+          data: {
+            project_uuid: 'uuid',
+          },
+        }),
+        updateWebsite: jest.fn().mockResolvedValue({}),
+      };
+    }),
+  };
+});
 
 // Mock the encrypt method of AWS_KMS
 jest
@@ -56,27 +86,16 @@ jest
     return {};
   });
 
+let frontendController: FrontendController;
+let githubService: any;
 describe('DeployService tests', () => {
   let stage: Stage;
   beforeAll(async () => {
-    const {
-      getTokens,
-      getUser,
-      getRepos,
-      createWebhook,
-    } = require('../../../lib/github');
-    getTokens.mockResolvedValue({
-      access_token: expectedProjectConfig.accessToken,
-      refresh_token: expectedProjectConfig.refreshToken,
-    });
-    getUser.mockResolvedValue({
-      id: expectedProjectConfig.id,
-      login: expectedProjectConfig.login,
-    });
-    getRepos.mockResolvedValue([]);
-    createWebhook.mockResolvedValue(expectedCreatedWebhook);
+    // To this:
 
     stage = await setupTest();
+
+    frontendController = new FrontendController(stage.context);
   });
   afterAll(async () => {
     await releaseStage(stage);
@@ -93,10 +112,7 @@ describe('DeployService tests', () => {
         code: 'test-code',
         project_uuid: expectedProjectConfig.projectUuid,
       });
-      const response = await DeployService.linkGithub(
-        { body: dto },
-        stage.context,
-      );
+      const response = await frontendController.linkGithub(dto);
       expect(response).toBeDefined();
       expect(response.access_token).toBe(expectedProjectConfig.accessToken);
       expect(response.refresh_token).toBe(expectedProjectConfig.refreshToken);
@@ -115,9 +131,7 @@ describe('DeployService tests', () => {
         project_uuid: expectedProjectConfig.projectUuid,
       });
 
-      expect(
-        DeployService.linkGithub({ body: dto }, stage.context),
-      ).rejects.toThrow();
+      expect(frontendController.linkGithub(dto)).rejects.toThrow();
     });
   });
 
@@ -146,7 +160,7 @@ describe('DeployService tests', () => {
       const dto = new GithubLinkDto({
         project_uuid: 'uuid',
       });
-      await DeployService.unlinkGithub({ body: dto }, stage.context);
+      await frontendController.unlinkGithub(dto);
 
       const response = await stage.db.paramExecute(
         `SELECT * FROM ${DbTables.GITHUB_PROJECT_CONFIG} WHERE project_uuid = '${expectedProjectConfig.projectUuid}' AND status <> ${SqlModelStatus.DELETED}`,
@@ -171,19 +185,23 @@ describe('DeployService tests', () => {
         `DELETE FROM ${DbTables.GITHUB_PROJECT_CONFIG}`,
       );
 
-      await stage.db.paramExecute(`DELETE FROM ${DbTables.WEBSITE}`);
+      await stage.storageContext.mysql.paramExecute(
+        `DELETE FROM ${StorageDbTables.WEBSITE}`,
+      );
 
-      await stage.db.paramExecute(`DELETE FROM ${DbTables.BUCKET}`);
+      await stage.storageContext.mysql.paramExecute(
+        `DELETE FROM ${StorageDbTables.BUCKET}`,
+      );
     });
 
     test('User can create new deployment config', async () => {
-      await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
+      await stage.storageContext.mysql.paramExecute(
+        `INSERT INTO ${StorageDbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
         VALUES (1, 'uuid', 'uuid', 1, 'name')`,
       );
 
-      await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
+      await stage.storageContext.mysql.paramExecute(
+        `INSERT INTO ${StorageDbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
         VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
       );
 
@@ -219,19 +237,15 @@ describe('DeployService tests', () => {
         repoName: 'repo-name',
         repoOwnerName: 'owner',
         installCommand: 'npm install',
+        projectUuid: 'uuid',
+        repoUrl: 'https://apillon.io',
         repoId: 123,
         websiteUuid: 'uuid',
         project_uuid: 'uuid',
-      } as Partial<CreateDeploymentConfigDto>;
+      } as CreateDeploymentConfigDtoType;
 
-      const response = await DeployService.createDeploymentConfig(
-        {
-          body: new CreateDeploymentConfigDto({}, stage.context).populate(
-            newConfigData,
-          ),
-        },
-        stage.context,
-      );
+      const response =
+        await frontendController.createDeploymentConfig(newConfigData);
 
       expect(response).toBeDefined();
       expect(response.apiKey).toBe(newConfigData.apiKey);
@@ -257,19 +271,23 @@ describe('DeployService tests', () => {
         `DELETE FROM ${DbTables.GITHUB_PROJECT_CONFIG}`,
       );
 
-      await stage.db.paramExecute(`DELETE FROM ${DbTables.WEBSITE}`);
+      await stage.storageContext.mysql.paramExecute(
+        `DELETE FROM ${StorageDbTables.WEBSITE}`,
+      );
 
-      await stage.db.paramExecute(`DELETE FROM ${DbTables.BUCKET}`);
+      await stage.storageContext.mysql.paramExecute(
+        `DELETE FROM ${StorageDbTables.BUCKET}`,
+      );
     });
 
     test('User can update deployment config', async () => {
-      await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
+      await stage.storageContext.mysql.paramExecute(
+        `INSERT INTO ${StorageDbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
         VALUES (1, 'uuid', 'uuid', 1, 'name')`,
       );
 
-      await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
+      await stage.storageContext.mysql.paramExecute(
+        `INSERT INTO ${StorageDbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
         VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
       );
 
@@ -306,18 +324,14 @@ describe('DeployService tests', () => {
         repoOwnerName: 'owner',
         installCommand: 'npm install',
         repoId: 123,
+        repoUrl: 'https://apillon.io',
+        projectUuid: 'uuid',
         websiteUuid: 'uuid',
         project_uuid: 'uuid',
-      } as Partial<CreateDeploymentConfigDto>;
+      } as CreateDeploymentConfigDtoType;
 
-      const createResponse = await DeployService.createDeploymentConfig(
-        {
-          body: new CreateDeploymentConfigDto({}, stage.context).populate(
-            newConfigData,
-          ),
-        },
-        stage.context,
-      );
+      const createResponse =
+        await frontendController.createDeploymentConfig(newConfigData);
 
       const updatedConfigData = {
         apiKey: '234',
@@ -332,15 +346,12 @@ describe('DeployService tests', () => {
         websiteUuid: 'uuid',
         project_uuid: 'uuid',
       };
-      const response = await DeployService.updateDeploymentConfig(
-        {
-          id: createResponse.id,
-          body: new UpdateDeploymentConfigDto({}, stage.context).populate(
-            updatedConfigData,
-          ),
-        },
-        stage.context,
-      );
+      const response = await frontendController.updateDeploymentConfig({
+        id: createResponse.id,
+        body: new UpdateDeploymentConfigDto({}, stage.context).populate(
+          updatedConfigData,
+        ),
+      });
 
       expect(response).toBeDefined();
       expect(response.apiKey).toBe(updatedConfigData.apiKey);
@@ -363,8 +374,12 @@ describe('DeployService tests', () => {
       await stage.db.paramExecute(
         `DELETE FROM ${DbTables.GITHUB_PROJECT_CONFIG}`,
       );
-      await stage.db.paramExecute(`DELETE FROM ${DbTables.BUCKET}`);
-      await stage.db.paramExecute(`DELETE FROM ${DbTables.WEBSITE}`);
+      await stage.storageContext.mysql.paramExecute(
+        `DELETE FROM ${StorageDbTables.BUCKET}`,
+      );
+      await stage.storageContext.mysql.paramExecute(
+        `DELETE FROM ${StorageDbTables.WEBSITE}`,
+      );
     });
 
     test('User can delete deployment config', async () => {
@@ -380,13 +395,13 @@ describe('DeployService tests', () => {
           ],
         },
       };
-      await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
+      await stage.storageContext.mysql.paramExecute(
+        `INSERT INTO ${StorageDbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
         VALUES (1, 'uuid', 'uuid', 1, 'name')`,
       );
 
-      await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
+      await stage.storageContext.mysql.paramExecute(
+        `INSERT INTO ${StorageDbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
         VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
       );
 
@@ -417,11 +432,8 @@ describe('DeployService tests', () => {
         VALUES (${testConfig.repoId}, '${testConfig.repoName}', '${testConfig.repoOwnerName}', ${testConfig.hookId}, '${testConfig.branchName}', '${testConfig.websiteUuid}', ${testConfig.projectConfigId}, '${testConfig.buildDirectory}', '${testConfig.apiKey}', '${testConfig.apiSecret}')`,
       );
 
-      const response = await DeployService.deleteDeploymentConfig(
-        {
-          websiteUuid: testConfig.websiteUuid,
-        },
-        stage.context,
+      const response = await frontendController.deleteDeploymentConfig(
+        testConfig.websiteUuid,
       );
 
       expect(response).toBeDefined();
@@ -468,9 +480,8 @@ describe('DeployService tests', () => {
         `INSERT INTO ${DbTables.DEPLOYMENT_CONFIG} (repoId, repoName, repoOwnerName, hookId, branchName, websiteUuid, projectConfigId, buildDirectory, apiKey, apiSecret)
         VALUES (${testConfig.repoId}, '${testConfig.repoName}', '${testConfig.repoOwnerName}', ${testConfig.hookId}, '${testConfig.branchName}', '${testConfig.websiteUuid}', ${testConfig.projectConfigId}, '${testConfig.buildDirectory}', '${testConfig.apiKey}', '${testConfig.apiSecret}')`,
       );
-      const response = await DeployService.getDeploymentConfigByRepoId(
-        { repoId: testConfig.repoId },
-        stage.context,
+      const response = await frontendController.getDeploymentConfigByRepoId(
+        testConfig.repoId,
       );
 
       expect(response).toBeDefined();
@@ -500,9 +511,8 @@ describe('DeployService tests', () => {
         VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', ${expectedProjectConfig.refreshToken}, '${expectedProjectConfig.login}')`,
       );
 
-      const response = await DeployService.getProjectConfigByProjectUuid(
-        { project_uuid: expectedProjectConfig.projectUuid },
-        stage.context,
+      const response = await frontendController.getGithubConfigByProjectUuid(
+        expectedProjectConfig.projectUuid,
       );
 
       expect(response).toBeDefined();
@@ -526,9 +536,8 @@ describe('DeployService tests', () => {
         `INSERT INTO ${DbTables.GITHUB_PROJECT_CONFIG} (project_uuid, access_token, refresh_token, username)
         VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', '${expectedProjectConfig.refreshToken}', '${expectedProjectConfig.login}')`,
       );
-      const response = await DeployService.listRepos(
-        { project_uuid: expectedProjectConfig.projectUuid },
-        stage.context,
+      const response = await frontendController.listRepos(
+        expectedProjectConfig.projectUuid,
       );
       expect(response).toBeDefined();
     });
@@ -540,9 +549,13 @@ describe('DeployService tests', () => {
 
       await stage.db.paramExecute(`DELETE FROM ${DbTables.DEPLOYMENT_CONFIG}`);
 
-      await stage.db.paramExecute(`DELETE FROM ${DbTables.WEBSITE}`);
+      await stage.storageContext.mysql.paramExecute(
+        `DELETE FROM ${StorageDbTables.WEBSITE}`,
+      );
 
-      await stage.db.paramExecute(`DELETE FROM ${DbTables.BUCKET}`);
+      await stage.storageContext.mysql.paramExecute(
+        `DELETE FROM ${StorageDbTables.BUCKET}`,
+      );
     });
 
     test('User can list deployment builds for a website', async () => {
@@ -558,13 +571,13 @@ describe('DeployService tests', () => {
           ],
         },
       };
-      await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
+      await stage.storageContext.mysql.paramExecute(
+        `INSERT INTO ${StorageDbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
         VALUES (1, 'uuid', 'uuid', 1, 'name')`,
       );
 
-      await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
+      await stage.storageContext.mysql.paramExecute(
+        `INSERT INTO ${StorageDbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
         VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
       );
       await stage.db.paramExecute(
@@ -602,10 +615,8 @@ describe('DeployService tests', () => {
       );
 
       const filter = new DeploymentBuildQueryFilter({ websiteUuid: 'uuid' });
-      const response = await DeployService.listDeploymentBuildsForWebsite(
-        { filter },
-        stage.context,
-      );
+      const response =
+        await frontendController.listDeploymentBuildsForWebsite(filter);
       expect(response).toBeDefined();
       expect(response.items).toHaveLength(1);
       expect(response.items[0].deploymentConfigId).toBe(
@@ -626,9 +637,13 @@ describe('DeployService tests', () => {
         `DELETE FROM ${DbTables.GITHUB_PROJECT_CONFIG}`,
       );
 
-      await stage.db.paramExecute(`DELETE FROM ${DbTables.WEBSITE}`);
+      await stage.storageContext.mysql.paramExecute(
+        `DELETE FROM ${StorageDbTables.WEBSITE}`,
+      );
 
-      await stage.db.paramExecute(`DELETE FROM ${DbTables.BUCKET}`);
+      await stage.storageContext.mysql.paramExecute(
+        `DELETE FROM ${StorageDbTables.BUCKET}`,
+      );
     });
 
     test('User can set environment variables', async () => {
@@ -644,13 +659,13 @@ describe('DeployService tests', () => {
           ],
         },
       };
-      await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
+      await stage.storageContext.mysql.paramExecute(
+        `INSERT INTO ${StorageDbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
         VALUES (1, 'uuid', 'uuid', 1, 'name')`,
       );
 
-      await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
+      await stage.storageContext.mysql.paramExecute(
+        `INSERT INTO ${StorageDbTables.WEBSITE} (website_uuid, project_uuid,bucket_id,stagingBucket_id,productionBucket_id,name, status)
         VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
       );
       await stage.db.paramExecute(
@@ -682,14 +697,11 @@ describe('DeployService tests', () => {
         },
       ];
 
-      const response = await DeployService.setEnvironmentVariables(
-        {
-          body: new SetEnvironmentVariablesDto({}, stage.context).populate({
-            variables,
-            deploymentConfigId,
-          }),
-        },
-        stage.context,
+      const response = await frontendController.setEnvironmentVariables(
+        new SetEnvironmentVariablesDto({}, stage.context).populate({
+          variables,
+          deploymentConfigId,
+        }),
       );
 
       expect(response).toBeDefined();
@@ -711,13 +723,13 @@ describe('DeployService tests', () => {
           ],
         },
       };
-      await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
+      await stage.storageContext.mysql.paramExecute(
+        `INSERT INTO ${StorageDbTables.BUCKET} (id,bucket_uuid, project_uuid, bucketType, name)
         VALUES (1, 'uuid', 'uuid', 1, 'name')`,
       );
 
-      await stage.db.paramExecute(
-        `INSERT INTO ${DbTables.WEBSITE} (website_uuid, project_uuid, bucket_id, stagingBucket_id,productionBucket_id,name, status)
+      await stage.storageContext.mysql.paramExecute(
+        `INSERT INTO ${StorageDbTables.WEBSITE} (website_uuid, project_uuid, bucket_id, stagingBucket_id,productionBucket_id,name, status)
         VALUES ('uuid','uuid', 1,1,1,'name' , ${SqlModelStatus.ACTIVE})`,
       );
       await stage.db.paramExecute(
@@ -742,17 +754,11 @@ describe('DeployService tests', () => {
 
       const deploymentConfigId = lastInsertId[0].id;
 
-      const response = await DeployService.getEnvironmentVariables(
-        {
-          deploymentConfigId,
-        },
-        stage.context,
-      );
+      const response =
+        await frontendController.getEnvironmentVariables(deploymentConfigId);
 
       expect(response).toBeDefined();
       expect(response.length).toBe(1);
     });
   });
 });
-*/
-// TO_DO Add setup for tests

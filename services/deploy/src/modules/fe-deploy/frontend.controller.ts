@@ -1,21 +1,13 @@
 import {
-  CreateDeploymentConfigDto,
   CreateDeploymentConfigDtoType,
   DeploymentBuildQueryFilter,
-  GithubLinkDto,
   GithubLinkDtoType,
-  GithubUnlinkDto,
   GithubUnlinkDtoType,
-  NftWebsiteDeployDto,
   NftWebsiteDeployDtoType,
-  SetEnvironmentVariablesDto,
   SetEnvironmentVariablesDtoType,
   StorageMicroservice,
-  TriggerGithubDeployDto,
   TriggerGithubDeployDtoType,
-  UpdateDeploymentConfigDto,
   UpdateDeploymentConfigDtoType,
-  WebsiteDeployDto,
   WebsiteDeployDtoType,
 } from '@apillon/lib';
 import { DeployService } from './services/deploy.service';
@@ -29,7 +21,7 @@ import { DeploymentConfigRepository } from './repositories/deployment-config.rep
 import { GithubService } from './services/github.service';
 
 export class FrontendController {
-  private readonly githubService: GithubService;
+  private githubService: GithubService;
   private readonly githubConfigService: GithubConfigService;
   private readonly buildService: BuildService;
   private readonly deploymentConfigService: DeploymentConfigService;
@@ -91,7 +83,7 @@ export class FrontendController {
   }
 
   async getGithubConfigByProjectUuid(projectUuid: string) {
-    return this.getGithubConfigByProjectUuid(projectUuid);
+    return this.githubConfigService.getProjectConfigByProjectUuid(projectUuid);
   }
 
   async createDeploymentConfig(body: CreateDeploymentConfigDtoType) {
