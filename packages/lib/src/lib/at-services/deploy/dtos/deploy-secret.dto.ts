@@ -1,15 +1,13 @@
 import { ModelBase, prop } from '../../../base-models/base';
 import { presenceValidator } from '@rawmodel/validators';
-import {
-  PopulateFrom,
-  SerializeFor,
-  ValidatorErrorCode,
-} from '../../../../config/types';
+import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 
 export class DeploySecretDto extends ModelBase {
+  /**
+   * Environment variable name
+   */
   @prop({
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),
@@ -25,9 +23,11 @@ export class DeploySecretDto extends ModelBase {
   })
   public key: string;
 
+  /**
+   * Environment variable value
+   */
   @prop({
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [
       {
         resolver: presenceValidator(),

@@ -1,6 +1,6 @@
 # Apillon Simplets Service
 
-Service allowing us to deploy and smart contract.
+Service allowing to deploy Apillon simplets.
 
 ## Table of Contents
 
@@ -60,16 +60,6 @@ SIMPLETS_MYSQL_DATABASE_TEST: string;
 SIMPLETS_AWS_WORKER_SQS_URL: string;
 SIMPLETS_AWS_WORKER_LAMBDA_NAME: string;
 ```
-
-## Contract versioning
-
-The underlying smart contracts is versioned such that if there are ever new
-breaking changes introduces to the smart contract, it will not break the
-interaction with previously deployed contract.
-For each contract type and corresponding chain type, there is an entry in
-the `contract_version` table which contains all the versions for that contract
-and chain type. By default, when creating a new collection, the highest version
-is considered.
 
 ## Deployment
 

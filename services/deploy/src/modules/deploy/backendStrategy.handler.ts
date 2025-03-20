@@ -3,6 +3,8 @@ import { ServiceContext } from '@apillon/service-lib';
 import { IBackendDeployStrategy } from './types';
 import { Backend } from './models/backend.model';
 import { v4 as uuidV4 } from 'uuid';
+import { DeployCodeException } from '../../lib/exceptions';
+import { DeployErrorCode } from '../../config/types';
 
 export class BackendStrategyHandler {
   private readonly context: ServiceContext;
@@ -25,41 +27,53 @@ export class BackendStrategyHandler {
     //TODO: ): Promise<ICreateVMResponse> {
   ): Promise<any> {
     try {
-      const result = await this.strategy.deployDockerCompose(body);
+      const backend_uuid = uuidV4();
+      const result = await this.strategy.deployDockerCompose(
+        backend_uuid,
+        body,
+      );
+      if (!result) {
+        throw new DeployCodeException({
+          status: 500,
+          code: DeployErrorCode.DEPLOY_DEPLOY_FAILED,
+          context: this.context,
+          errorMessage: 'No data returned from deploy',
+        });
+      }
       // TODO: vcpu as DTO?
       // TODO: add dto ICreateVMResponse?
-      const appId = result?.app_id;
-      const externalStatus = result?.status;
+      const appId = result.app_id;
+      const externalStatus = result.status;
       // TODO: add backendStatus column and cast externalStatus to a common status?
       const data = {
         appId: appId,
-        id: result?.id,
-        name: result?.name,
+        id: result.id,
+        name: result.name,
         status: externalStatus,
-        teepodId: result?.teepod_id,
+        teepodId: result.teepod_id,
         teepod: {
-          id: result?.teepod?.id,
-          name: result?.teepod?.name,
+          id: result.teepod?.id,
+          name: result.teepod?.name,
         },
-        userId: result?.user_id,
-        vmUuid: result?.vm_uuid,
-        instanceId: result?.instance_id,
-        appUrl: result?.app_url,
-        baseImage: result?.base_image,
-        vcpu: result?.vcpu,
-        memory: result?.memory,
-        diskSize: result?.disk_size,
-        manifestVersion: result?.manifest_version,
-        version: result?.version,
-        runner: result?.runner,
-        dockerComposeFile: result?.docker_compose_file,
-        features: result?.features,
-        createdAt: result?.created_at,
-        encryptedEnvPubkey: result?.encrypted_env_pubkey,
+        userId: result.user_id,
+        vmUuid: result.vm_uuid,
+        instanceId: result.instance_id,
+        appUrl: result.app_url,
+        baseImage: result.base_image,
+        vcpu: result.vcpu,
+        memory: result.memory,
+        diskSize: result.disk_size,
+        manifestVersion: result.manifest_version,
+        version: result.version,
+        runner: result.runner,
+        dockerComposeFile: result.docker_compose_file,
+        features: result.features,
+        createdAt: result.created_at,
+        encryptedEnvPubkey: result.encrypted_env_pubkey,
         dashboardUrl: `https://cloud.phala.network/dashboard/cvms/app_${appId}`,
       };
       const backend = new Backend({}, this.context).populate({
-        backend_uuid: uuidV4(),
+        backend_uuid,
         name: `${body.name} (Backend)`,
         description: body.description ? `${body.description} (Backend)` : null,
         instanceId: appId,
@@ -69,7 +83,15 @@ export class BackendStrategyHandler {
       await backend.insert();
       return backend.serializeByContext(this.context);
     } catch (e: unknown) {
-      throw e;
+      if (e instanceof DeployCodeException) {
+        throw e;
+      }
+      throw new DeployCodeException({
+        status: 500,
+        code: DeployErrorCode.DEPLOY_DEPLOY_FAILED,
+        context: this.context,
+        errorMessage: 'An unknown error occurred during deployment',
+      });
     }
   }
 

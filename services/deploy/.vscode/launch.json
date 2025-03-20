@@ -7,7 +7,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Deploy",
+      "name": "Deploy Service",
       "runtimeExecutable": "nodemon",
       "runtimeArgs": [
         "./src/scripts/dev/run-server.ts",

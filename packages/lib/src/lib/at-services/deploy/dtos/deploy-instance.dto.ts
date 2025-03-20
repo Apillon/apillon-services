@@ -1,11 +1,7 @@
 import { ModelBase, prop } from '../../../base-models/base';
 import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator, stringLengthValidator } from '@rawmodel/validators';
-import {
-  PopulateFrom,
-  SerializeFor,
-  ValidatorErrorCode,
-} from '../../../../config/types';
+import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { arrayPresenceValidator } from '../../../validators';
 import yaml from 'js-yaml';
 import { DeploySecretDto } from './deploy-secret.dto';
@@ -14,22 +10,7 @@ import { VirtualMachineDto } from './virtual-machine.dto';
 export class DeployInstanceDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.LOGGER,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
+    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),
@@ -41,35 +22,26 @@ export class DeployInstanceDto extends ModelBase {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
-      SerializeFor.SELECT_DB,
-    ],
+    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
   })
   public description: string;
 
   // @prop({
   //   parser: { resolver: stringParser() },
-  //   populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+  //
   //   validators: [],
   // })
   // public deploy_uuid: string;
 
+  /**
+   * Represents content of the Docker Compose file.
+   *
+   * This variable holds the content of Docker Compose YAML configuration file.
+   * It is used to define and manage multi-container Docker applications.
+   */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),
@@ -90,8 +62,7 @@ export class DeployInstanceDto extends ModelBase {
 
   @prop({
     parser: { array: true, resolver: DeploySecretDto },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
     validators: [
       {
         resolver: arrayPresenceValidator(),
@@ -101,10 +72,12 @@ export class DeployInstanceDto extends ModelBase {
   })
   public secrets: DeploySecretDto[];
 
+  /**
+   * Describes virtual machine specifications where docker container will be running.
+   */
   @prop({
     parser: { resolver: VirtualMachineDto },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),
@@ -113,15 +86,6 @@ export class DeployInstanceDto extends ModelBase {
     ],
   })
   public virtualMachine: VirtualMachineDto;
-}
-
-export class ApillonApiCallDeployDto extends DeployInstanceDto {
-  @prop({
-    parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [],
-  })
-  public project_uuid: string;
 }
 
 export function validateDockerComposeYaml(allowEmpty = false) {

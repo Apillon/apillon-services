@@ -1,4 +1,3 @@
-import { ofetch } from 'ofetch';
 import {
   ICreateVMRequest,
   ICreateVMResponse,
@@ -7,6 +6,7 @@ import {
   VMDetailsResponse,
 } from '../types';
 import { IVMResourceRequest } from '@apillon/lib';
+import axios, { AxiosInstance } from 'axios';
 
 /**
  * PhalaDockerClient is a client that interacts with the Phala CVM (Confidential
@@ -15,17 +15,14 @@ import { IVMResourceRequest } from '@apillon/lib';
  * preconfigured credentials and endpoints.
  */
 export class PhalaDockerClient {
-  private readonly request: ReturnType<typeof ofetch.create>;
+  private api: AxiosInstance;
 
-  constructor(
-    private baseURL: string,
-    private apiKey: string,
-  ) {
-    this.request = ofetch.create({
-      baseURL: this.baseURL,
+  constructor(baseURL: string, apiKey: string) {
+    this.api = axios.create({
+      baseURL: baseURL,
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': this.apiKey,
+        'x-api-key': apiKey,
       },
     });
   }
@@ -36,92 +33,86 @@ export class PhalaDockerClient {
    * @return A promise that resolves with the response containing the available pods information.
    */
   async getAvailablePods(): Promise<any> {
-    return this.request('/teepods/available', {
-      method: 'GET',
-    });
+    const response = await this.api.get('/teepods/available');
+    return response.data;
   }
 
   /**
    * Get the public key required for secret encryption.
    */
   async getPublicKey(body: Record<string, any>): Promise<any> {
-    return this.request('/cvms/pubkey/from_cvm_configuration', {
-      method: 'POST',
+    const response = await this.api.post(
+      '/cvms/pubkey/from_cvm_configuration',
       body,
-    });
+    );
+    return response.data;
   }
 
   /**
    * Create a virtual machine using the provided configuration.
    */
   async createCVM(vmConfig: ICreateVMRequest): Promise<ICreateVMResponse> {
-    return this.request('/cvms/from_cvm_configuration', {
-      method: 'POST',
-      body: vmConfig,
-    });
+    const response = await this.api.post(
+      '/cvms/from_cvm_configuration',
+      vmConfig,
+    );
+    return response.data;
   }
 
   /**
    * Get detailed information about a virtual machine by its ID.
    */
   async getCVMDetails(identifier: string): Promise<VMDetailsResponse> {
-    return this.request(`/cvms/app_${identifier}`, {
-      method: 'GET',
-    });
+    const response = await this.api.get(`/cvms/app_${identifier}`);
+    return response.data;
   }
 
   /**
    * Start a stopped virtual machine.
    */
   async startCVM(identifier: string): Promise<ICreateVMResponse> {
-    return this.request(`/cvms/app_${identifier}/start`, {
-      method: 'POST',
-    });
+    const response = await this.api.post(`/cvms/app_${identifier}/start`);
+    return response.data;
   }
 
   /**
    * Shut down an active virtual machine.
    */
   async shutdownCVM(identifier: string): Promise<ICreateVMResponse> {
-    return this.request(`/cvms/app_${identifier}/shutdown`, {
-      method: 'POST',
-    });
+    const response = await this.api.post(`/cvms/app_${identifier}/shutdown`);
+    return response.data;
   }
 
   /**
    * Stop a running virtual machine.
    */
   async stopCVM(identifier: string): Promise<ICreateVMResponse> {
-    return this.request(`/cvms/app_${identifier}/stop`, {
-      method: 'POST',
-    });
+    const response = await this.api.post(`/cvms/app_${identifier}/stop`);
+    return response.data;
   }
 
   /**
    * Restart a running virtual machine.
    */
   async restartCVM(identifier: string): Promise<ICreateVMResponse> {
-    return this.request(`/cvms/app_${identifier}/restart`, {
-      method: 'POST',
-    });
+    const response = await this.api.post(`/cvms/app_${identifier}/restart`);
+    return response.data;
   }
 
   /**
    * Destroy a virtual machine.
    */
   async destroyCVM(identifier: string): Promise<void> {
-    await this.request(`/cvms/app_${identifier}`, {
-      method: 'DELETE',
-    });
+    const response = await this.api.delete(`/cvms/app_${identifier}`);
+    return response.data;
   }
 
   /**
    * Get metrics or statistics of a virtual machine by its ID.
    */
   async getCVMStats(identifier: string): Promise<IVMStats> {
-    return this.request(`/cvms/app_${identifier}/stats`, {
-      method: 'GET',
-    });
+    const response = await this.api.get(`/cvms/app_${identifier}/stats`);
+    return response.data;
   }
 
   /**
@@ -131,9 +122,8 @@ export class PhalaDockerClient {
    * @return A promise that resolves to the CVM attestation response.
    */
   async getCVMAttestation(identifier: string): Promise<IVMAttestationResponse> {
-    return this.request(`/cvms/app_${identifier}/attestation`, {
-      method: 'GET',
-    });
+    const response = await this.api.get(`/cvms/app_${identifier}/attestation`);
+    return response.data;
   }
 
   /**
@@ -147,14 +137,16 @@ export class PhalaDockerClient {
     identifier: string,
     config: IVMResourceRequest,
   ): Promise<string> {
-    return await this.request(`/cvms/app_${identifier}/resources`, {
-      method: 'PATCH',
-      body: config,
-    });
+    const response = await this.api.patch(
+      `/cvms/app_${identifier}/resources`,
+      config,
+    );
+    return response.data;
   }
 
   // async getInstanceBilling(identifier: string) {
-  //   return await this.request(
+  //   const response =  await this.request(
+  //   return response.data
   //     `/billing/billing_items/app_${identifier}/resources`,
   //     {
   //       method: 'GET',
