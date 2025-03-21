@@ -13,7 +13,7 @@ import { BuildProjectWorkerInterface } from '../../../lib/interfaces/build-proje
 import { DeploymentBuildRepository } from '../repositories/deployment-build.repository';
 import { inspect } from 'util';
 import { sendToWorkerQueue } from '@apillon/workers-lib';
-import { WorkerName } from '../../../workers/builder-executor.handler';
+import { WorkerName } from '../../../workers/builder-executor';
 import { getNftWebsiteConfig } from '../../../lib/get-nft-website-config';
 import { GithubService } from './github.service';
 
