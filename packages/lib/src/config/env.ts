@@ -627,6 +627,93 @@ export interface IEnv {
   SOCIAL_DEFAULT_SPACE: string;
 
   /************************************************************
+   * HOSTING - Apillon Hosting Service
+   ************************************************************/
+  /**
+   *  function name
+   */
+  DEPLOY_FUNCTION_NAME: string;
+  DEPLOY_FUNCTION_NAME_TEST: string;
+
+  /**
+   * HOSTING dev server port
+   */
+  DEPLOY_SOCKET_PORT: number;
+  DEPLOY_SOCKET_PORT_TEST: number;
+
+  /**
+   * HOSTING Database config
+   */
+
+  DEPLOY_MYSQL_HOST: string;
+  DEPLOY_MYSQL_PORT: number;
+  DEPLOY_MYSQL_USER: string;
+  DEPLOY_MYSQL_PASSWORD: string;
+  DEPLOY_MYSQL_DEPLOY_USER: string;
+  DEPLOY_MYSQL_DEPLOY_PASSWORD: string;
+  DEPLOY_MYSQL_DATABASE: string;
+
+  // TEST
+  DEPLOY_MYSQL_HOST_TEST: string;
+  DEPLOY_MYSQL_PORT_TEST: number;
+  DEPLOY_MYSQL_USER_TEST: string;
+  DEPLOY_MYSQL_PASSWORD_TEST: string;
+  DEPLOY_MYSQL_DATABASE_TEST: string;
+
+  DEPLOY_AWS_WORKER_SQS_URL: string;
+  DEPLOY_AWS_WORKER_LAMBDA_NAME: string;
+
+  /**
+   * HOSTING other config
+   */
+  DEPLOY_PHALA_CLOUD_API_KEY: string;
+
+  /************************************************************
+   * SIMPLETS - Apillon Hosting Service
+   ************************************************************/
+  /**
+   *  function name
+   */
+  SIMPLETS_FUNCTION_NAME: string;
+  SIMPLETS_FUNCTION_NAME_TEST: string;
+
+  /**
+   * SIMPLETS dev server port
+   */
+  SIMPLETS_SOCKET_PORT: number;
+  SIMPLETS_SOCKET_PORT_TEST: number;
+
+  /**
+   * SIMPLETS Database config
+   */
+
+  SIMPLETS_MYSQL_HOST: string;
+  SIMPLETS_MYSQL_PORT: number;
+  SIMPLETS_MYSQL_USER: string;
+  SIMPLETS_MYSQL_PASSWORD: string;
+  SIMPLETS_MYSQL_DEPLOY_USER: string;
+  SIMPLETS_MYSQL_DEPLOY_PASSWORD: string;
+  SIMPLETS_MYSQL_DATABASE: string;
+
+  // TEST
+  SIMPLETS_MYSQL_HOST_TEST: string;
+  SIMPLETS_MYSQL_PORT_TEST: number;
+  SIMPLETS_MYSQL_USER_TEST: string;
+  SIMPLETS_MYSQL_PASSWORD_TEST: string;
+  SIMPLETS_MYSQL_DATABASE_TEST: string;
+
+  /**
+   * SIMPLETS workers config
+   */
+  SIMPLETS_AWS_WORKER_SQS_URL: string;
+  SIMPLETS_AWS_WORKER_LAMBDA_NAME: string;
+
+  /**
+   * SIMPLETS other config
+   */
+  SIMPLETS_PHALA_CLOUD_API_KEY: string;
+
+  /************************************************************
    * Infrastructure - Apillon Infrastructure Service
    ************************************************************/
   /**
@@ -1265,7 +1352,6 @@ export let env: IEnv = {
   SQD_ORGANIZATION_CODE: process.env['SQD_ORGANIZATION_CODE'],
 
   /** CONTRACTS */
-  // TODO: fix default ports?
   CONTRACTS_FUNCTION_NAME: process.env['CONTRACTS_FUNCTION_NAME'],
   CONTRACTS_FUNCTION_NAME_TEST: process.env['CONTRACTS_FUNCTION_NAME_TEST'],
   CONTRACTS_SOCKET_PORT: parseInt(process.env['CONTRACTS_SOCKET_PORT']) || 7302,
@@ -1290,6 +1376,57 @@ export let env: IEnv = {
   CONTRACTS_AWS_WORKER_SQS_URL: process.env['CONTRACTS_AWS_WORKER_SQS_URL'],
   CONTRACTS_AWS_WORKER_LAMBDA_NAME:
     process.env['CONTRACTS_AWS_WORKER_LAMBDA_NAME'],
+
+  /** HOSTING */
+  DEPLOY_FUNCTION_NAME: process.env['DEPLOY_FUNCTION_NAME'],
+  DEPLOY_FUNCTION_NAME_TEST: process.env['DEPLOY_FUNCTION_NAME_TEST'],
+  DEPLOY_SOCKET_PORT: parseInt(process.env['DEPLOY_SOCKET_PORT']) || 6902,
+  DEPLOY_MYSQL_HOST: process.env['DEPLOY_MYSQL_HOST'],
+  DEPLOY_MYSQL_PORT: parseInt(process.env['DEPLOY_MYSQL_PORT']) || 3306,
+  DEPLOY_MYSQL_DATABASE: process.env['DEPLOY_MYSQL_DATABASE'],
+  DEPLOY_MYSQL_USER: process.env['DEPLOY_MYSQL_USER'],
+  DEPLOY_MYSQL_PASSWORD: process.env['DEPLOY_MYSQL_PASSWORD'],
+  DEPLOY_MYSQL_DEPLOY_USER: process.env['DEPLOY_MYSQL_DEPLOY_USER'],
+  DEPLOY_MYSQL_DEPLOY_PASSWORD: process.env['DEPLOY_MYSQL_DEPLOY_PASSWORD'],
+
+  DEPLOY_SOCKET_PORT_TEST:
+    parseInt(process.env['DEPLOY_SOCKET_PORT_TEST']) || 7902,
+  DEPLOY_MYSQL_HOST_TEST: process.env['DEPLOY_MYSQL_HOST_TEST'],
+  DEPLOY_MYSQL_PORT_TEST:
+    parseInt(process.env['DEPLOY_MYSQL_PORT_TEST']) || 3306,
+  DEPLOY_MYSQL_DATABASE_TEST: process.env['DEPLOY_MYSQL_DATABASE_TEST'],
+  DEPLOY_MYSQL_USER_TEST: process.env['DEPLOY_MYSQL_USER_TEST'],
+  DEPLOY_MYSQL_PASSWORD_TEST: process.env['DEPLOY_MYSQL_PASSWORD_TEST'],
+
+  DEPLOY_AWS_WORKER_SQS_URL: process.env['DEPLOY_AWS_WORKER_SQS_URL'],
+  DEPLOY_AWS_WORKER_LAMBDA_NAME: process.env['DEPLOY_AWS_WORKER_LAMBDA_NAME'],
+  DEPLOY_PHALA_CLOUD_API_KEY: process.env['DEPLOY_PHALA_CLOUD_API_KEY'],
+
+  /** SIMPLETS */
+  SIMPLETS_FUNCTION_NAME: process.env['SIMPLETS_FUNCTION_NAME'],
+  SIMPLETS_FUNCTION_NAME_TEST: process.env['SIMPLETS_FUNCTION_NAME_TEST'],
+  SIMPLETS_SOCKET_PORT: parseInt(process.env['SIMPLETS_SOCKET_PORT']) || 6903,
+  SIMPLETS_MYSQL_HOST: process.env['SIMPLETS_MYSQL_HOST'],
+  SIMPLETS_MYSQL_PORT: parseInt(process.env['SIMPLETS_MYSQL_PORT']) || 3306,
+  SIMPLETS_MYSQL_DATABASE: process.env['SIMPLETS_MYSQL_DATABASE'],
+  SIMPLETS_MYSQL_USER: process.env['SIMPLETS_MYSQL_USER'],
+  SIMPLETS_MYSQL_PASSWORD: process.env['SIMPLETS_MYSQL_PASSWORD'],
+  SIMPLETS_MYSQL_DEPLOY_USER: process.env['SIMPLETS_MYSQL_DEPLOY_USER'],
+  SIMPLETS_MYSQL_DEPLOY_PASSWORD: process.env['SIMPLETS_MYSQL_DEPLOY_PASSWORD'],
+
+  SIMPLETS_SOCKET_PORT_TEST:
+    parseInt(process.env['SIMPLETS_SOCKET_PORT_TEST']) || 7903,
+  SIMPLETS_MYSQL_HOST_TEST: process.env['SIMPLETS_MYSQL_HOST_TEST'],
+  SIMPLETS_MYSQL_PORT_TEST:
+    parseInt(process.env['SIMPLETS_MYSQL_PORT_TEST']) || 3306,
+  SIMPLETS_MYSQL_DATABASE_TEST: process.env['SIMPLETS_MYSQL_DATABASE_TEST'],
+  SIMPLETS_MYSQL_USER_TEST: process.env['SIMPLETS_MYSQL_USER_TEST'],
+  SIMPLETS_MYSQL_PASSWORD_TEST: process.env['SIMPLETS_MYSQL_PASSWORD_TEST'],
+
+  SIMPLETS_AWS_WORKER_SQS_URL: process.env['SIMPLETS_AWS_WORKER_SQS_URL'],
+  SIMPLETS_AWS_WORKER_LAMBDA_NAME:
+    process.env['SIMPLETS_AWS_WORKER_LAMBDA_NAME'],
+  SIMPLETS_PHALA_CLOUD_API_KEY: process.env['SIMPLETS_PHALA_CLOUD_API_KEY'],
 
   /** DISCORD */
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',

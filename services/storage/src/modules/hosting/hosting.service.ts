@@ -6,6 +6,7 @@ import {
   CreateS3UrlsForUploadDto,
   CreateWebsiteDto,
   DeploymentQueryFilter,
+  DeployMicroservice,
   DeployWebsiteDto,
   DomainQueryFilter,
   EmailDataDto,
@@ -49,7 +50,6 @@ import { StorageService } from '../storage/storage.service';
 import { Deployment } from './models/deployment.model';
 import { Website } from './models/website.model';
 import { checkDomainDns } from '../../lib/domains';
-import { DeployService } from '../deploy/deploy.service';
 
 export class HostingService {
   //#region web page CRUD
@@ -86,6 +86,28 @@ export class HostingService {
 
     //Get buckets
     await website.populateBucketsAndLink();
+
+    return website.serializeByContext();
+  }
+
+  static async getWebsiteWithAccess(
+    event: {
+      websiteUuid: string;
+      hasModifyAccess: boolean;
+    },
+    context: ServiceContext,
+  ) {
+    const website = await new Website({}, context).populateByUUID(
+      event.websiteUuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+
+    event.hasModifyAccess
+      ? website.canModify(context)
+      : website.canAccess(context);
 
     return website.serializeByContext();
   }
@@ -149,12 +171,7 @@ export class HostingService {
       // Should not be populated as we reuse the same DTO on endpoint
       payload.skipWebsiteCheck = true;
 
-      await DeployService.createDeploymentConfig(
-        {
-          body: payload,
-        },
-        context,
-      );
+      await new DeployMicroservice(context).createDeploymentConfig(payload);
     }
 
     return website.serializeByContext();

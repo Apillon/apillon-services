@@ -19,6 +19,11 @@ export enum DeploymentBuildStatus {
   FAILED = 4,
 }
 
+export enum WebsiteSource {
+  APILLON = 1,
+  GITHUB = 2,
+}
+
 export enum SubstrateChain {
   CRUST = 1,
   KILT = 2,
@@ -206,6 +211,7 @@ export enum StorageEventType {
   WEBSITE_ARCHIVE = 'archive-website',
   WEBSITE_ACTIVATE = 'activate-website',
   WEBSITE_GET = 'get-website',
+  WEBSITE_GET_WITH_ACCESS = 'get-website-with-access',
   WEBSITE_DEPLOY = 'deploy-website',
   WEBSITE_LIST_DOMAINS = 'list-website-domains',
   WEBSITE_GET_ALL_DOMAINS = 'get-all-domains',
@@ -232,19 +238,6 @@ export enum StorageEventType {
   GET_LINKS = 'get-links',
   GENERATE_SHORT_URL = 'generate-short-url',
   GET_TARGET_URL = 'get-target-url',
-  TRIGGER_GITHUB_DEPLOY = 'trigger-github-deploy',
-  GET_DEPLOY_CONFIG_BY_REPO_ID = 'get-deploy-config-by-repo-id',
-  CREATE_DEPLOY_CONFIG = 'create-deploy-config',
-  UPDATE_DEPLOY_CONFIG = 'update-deploy-config',
-  LINK_GITHUB = 'link-github',
-  UNLINK_GITHUB = 'unlink-github',
-  LIST_REPOS = 'list-repos',
-  GET_PROJECT_GITHUB_CONFIG = 'get-project-github-config',
-  LIST_DEPLOYMENT_BUILDS = 'list-deployment-builds',
-  DELETE_DEPLOYMENT_CONFIG = 'delete-deployment-config',
-  SET_ENVIRONMENT_VARIABLES = 'set-environment-variables',
-  GET_ENVIRONMENT_VARIABLES = 'get-environment-variables',
-  TRIGGER_WEB_DEPLOY = 'trigger-web-deploy',
 }
 
 export enum AuthenticationEventType {
@@ -416,6 +409,46 @@ export enum ContractEventType {
   ACTIVATE_DEPLOYED_CONTRACT = 'activate-deployed-contract',
 }
 
+export enum DeployEventType {
+  BE_DEPLOY_DOCKER_COMPOSE = 'be-deploy-docker-compose',
+  BE_LIST_BACKENDS = 'be-list-backends',
+  BE_GET_INSTANCE = 'be-get-instance',
+  BE_GET_INSTANCE_DETAILS = 'be-get-instance-details',
+  BE_START_INSTANCE = 'be-start-instance',
+  BE_SHUTDOWN_INSTANCE = 'be-shutdown-instance',
+  BE_STOP_INSTANCE = 'be-stop-instance',
+  BE_RESTART_INSTANCE = 'be-restart-instance',
+  BE_DESTROY_INSTANCE = 'be-destroy-instance',
+  BE_GET_INSTANCE_STATE = 'be-get-instance-state',
+  BE_GET_INSTANCE_ATTESTATION = 'be-get-instance-attestation',
+  // BE_GET_INSTANCE_BILLING = 'be-get-instance-billing',
+  BE_RESIZE_INSTANCE = 'be-resize-instance',
+
+  TRIGGER_GITHUB_DEPLOY = 'fe-trigger-github-deploy',
+  TRIGGER_WEB_DEPLOY = 'fe-trigger-web-deploy',
+  GET_DEPLOY_CONFIG_BY_REPO_ID = 'fe-get-deploy-config-by-repo-id',
+  GET_PROJECT_GITHUB_CONFIG = 'fe-get-project-github-config',
+  CREATE_DEPLOY_CONFIG = 'fe-create-deploy-config',
+  UPDATE_DEPLOY_CONFIG = 'fe-update-deploy-config',
+  LINK_GITHUB = 'fe-link-github',
+  UNLINK_GITHUB = 'fe-unlink-github',
+  LIST_REPOS = 'fe-list-repos',
+  LIST_DEPLOYMENT_BUILDS = 'fe-list-deployment-builds',
+  DELETE_DEPLOYMENT_CONFIG = 'fe-delete-deployment-config',
+  SET_ENVIRONMENT_VARIABLES = 'fe-set-environment-variables',
+  GET_ENVIRONMENT_VARIABLES = 'fe-get-environment-variables',
+  GET_DEPLOYMENT_CONFIG = 'fe-get-deployment-config',
+}
+
+export enum SimpletsEventType {
+  SIMPLETS_LIST = 'simplets-list',
+  SIMPLETS_DEPLOY = 'deploy',
+  GET_SIMPLET = 'get-simplet',
+  // deployed
+  GET_DEPLOYED_SIMPLET = 'get-deployed-simplet',
+  LIST_DEPLOYED_SIMPLETS = 'list-deployed-simplets',
+}
+
 export enum InfrastructureEventType {
   LIST_RPC_API_KEYS = 'list-rpc-api-keys',
   REVOKE_RPC_API_KEY = 'revoke-rpc-api-key',
@@ -466,6 +499,8 @@ export enum ServiceName {
   SOCIAL = 'SOCIAL',
   CONTRACTS = 'CONTRACTS',
   INFRASTRUCTURE = 'INFRASTRUCTURE',
+  SIMPLETS = 'SIMPLETS',
+  DEPLOY = 'DEPLOY',
 }
 
 export enum ServiceCode {
@@ -538,6 +573,7 @@ export enum AttachedServiceType {
   CONTRACTS = 8,
   RPC = 9,
   INDEXING = 10,
+  SIMPLETS = 11,
   SYSTEM = 999,
 }
 
@@ -628,6 +664,7 @@ export enum DefaultPermission {
   CONTRACTS = 8,
   RPC = 9,
   INDEXING = 10,
+  SIMPLETS = 11,
 }
 
 //#endregion

@@ -27,6 +27,7 @@ import { RpcModule } from './modules/rpc/rpc.module';
 import { IndexingModule } from './modules/indexing/indexing.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { DeployModule } from './modules/deploy/deploy.module';
+import { SimpletsModule } from './modules/simplets/simplets.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { DeployModule } from './modules/deploy/deploy.module';
     ContractsModule,
     RpcModule,
     IndexingModule,
+    SimpletsModule,
   ],
   controllers: [],
   providers: [],

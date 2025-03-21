@@ -6,6 +6,7 @@ import {
   CreateDeploymentConfigDto,
   CreateWebsiteDto,
   DefaultApiKeyRole,
+  DeployMicroservice,
   DeploymentBuildQueryFilter,
   GithubLinkDto,
   GithubUnlinkDto,
@@ -17,6 +18,7 @@ import {
   SetEnvironmentVariablesDto,
   StorageMicroservice,
   UpdateDeploymentConfigDto,
+  WebsiteSource,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
@@ -82,9 +84,9 @@ export class DeployService {
       service: ServiceName.DEV_CONSOLE,
       location: 'DeployService.handleGithubWebhook',
     });
-    const storageMS = new StorageMicroservice(context);
+    const deployMS = new DeployMicroservice(context);
 
-    const config = await storageMS.getDeployConfigByRepoId(repoId);
+    const config = await deployMS.getDeployConfigByRepoId(repoId);
 
     if (event.ref !== `refs/heads/${config.data.branchName}`) {
       return;
@@ -97,7 +99,8 @@ export class DeployService {
       service: ServiceName.DEV_CONSOLE,
       location: 'DeployService.handleGithubWebhook',
     });
-    await storageMS.triggerGithubDeploy({
+
+    await deployMS.triggerGithubDeploy({
       url: event.repository.clone_url,
       configId: config.data.id,
       ...config.data,
@@ -105,9 +108,8 @@ export class DeployService {
   }
 
   async getProjectConfig(context: DevConsoleApiContext, projectUuid: string) {
-    return (
-      await new StorageMicroservice(context).getProjectConfig(projectUuid)
-    ).data;
+    return (await new DeployMicroservice(context).getProjectConfig(projectUuid))
+      .data;
   }
 
   async createDeploymentConfig(
@@ -124,7 +126,7 @@ export class DeployService {
     }
 
     const createdDeploymentConfig = (
-      await new StorageMicroservice(context).createDeploymentConfig(body)
+      await new DeployMicroservice(context).createDeploymentConfig(body)
     ).data;
 
     return {
@@ -139,16 +141,16 @@ export class DeployService {
     body: UpdateDeploymentConfigDto,
   ) {
     return (
-      await new StorageMicroservice(context).updateDeploymentConfig(id, body)
+      await new DeployMicroservice(context).updateDeploymentConfig(id, body)
     ).data;
   }
 
   async linkGithub(context: DevConsoleApiContext, body: GithubLinkDto) {
-    return (await new StorageMicroservice(context).linkGithub(body)).data;
+    return (await new DeployMicroservice(context).linkGithub(body)).data;
   }
 
   async unlinkGithub(context: DevConsoleApiContext, body: GithubUnlinkDto) {
-    return (await new StorageMicroservice(context).unlinkGithub(body)).data;
+    return (await new DeployMicroservice(context).unlinkGithub(body)).data;
   }
 
   async deleteDeploymentConfig(
@@ -156,20 +158,19 @@ export class DeployService {
     websiteUuid: string,
   ) {
     return (
-      await new StorageMicroservice(context).deleteDeploymentConfig(websiteUuid)
+      await new DeployMicroservice(context).deleteDeploymentConfig(websiteUuid)
     ).data;
   }
 
   async listRepos(context: DevConsoleApiContext, project_uuid: string) {
-    return (await new StorageMicroservice(context).listRepos(project_uuid))
-      .data;
+    return (await new DeployMicroservice(context).listRepos(project_uuid)).data;
   }
 
   async listDeploymentBuilds(
     context: DevConsoleApiContext,
     filter: DeploymentBuildQueryFilter,
   ) {
-    return (await new StorageMicroservice(context).listDeploymentBuilds(filter))
+    return (await new DeployMicroservice(context).listDeploymentBuilds(filter))
       .data;
   }
 
@@ -177,9 +178,8 @@ export class DeployService {
     context: DevConsoleApiContext,
     body: SetEnvironmentVariablesDto,
   ) {
-    return (
-      await new StorageMicroservice(context).setEnvironmentVariables(body)
-    ).data;
+    return (await new DeployMicroservice(context).setEnvironmentVariables(body))
+      .data;
   }
 
   async getEnvironmentVariables(
@@ -187,9 +187,18 @@ export class DeployService {
     deploymentConfigId: number,
   ) {
     return (
-      await new StorageMicroservice(context).getEnvironmentVariables(
+      await new DeployMicroservice(context).getEnvironmentVariables(
         deploymentConfigId,
       )
+    ).data;
+  }
+
+  async getDeploymentConfig(
+    context: DevConsoleApiContext,
+    websiteUuid: string,
+  ) {
+    return (
+      await new DeployMicroservice(context).getDeploymentConfig(websiteUuid)
     ).data;
   }
 
@@ -209,6 +218,7 @@ export class DeployService {
           project_uuid: collection.project_uuid,
           name: `${collection.name} - Website`,
           nftCollectionUuid: collection.collection_uuid,
+          source: WebsiteSource.GITHUB,
         }),
       )
     ).data;
@@ -223,7 +233,7 @@ export class DeployService {
       apiSecretRaw = createdApiKey.apiKeySecret;
     }
 
-    await storageMS.triggerWebDeploy(
+    await new DeployMicroservice(context).triggerWebDeploy(
       new NftWebsiteDeployDto({}, context).populate({
         websiteUuid: website.website_uuid,
         apiKey: body.apiKey,

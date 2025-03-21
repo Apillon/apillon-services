@@ -1,12 +1,13 @@
-import { stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
   SerializeFor,
   ValidatorErrorCode,
+  WebsiteSource,
 } from '../../../../config/types';
 import { ModelBase, prop } from '../../../base-models/base';
-import { CreateDeploymentConfigDto } from './create-deployment-config.dto';
+import { CreateDeploymentConfigDto } from '../../deploy/dtos/create-deployment-config.dto';
 
 export class CreateWebsiteDeploymentConfigDto extends CreateDeploymentConfigDto {
   @prop({
@@ -72,6 +73,14 @@ export class CreateWebsiteDto extends ModelBase {
     validators: [],
   })
   public nftCollectionUuid: string | null;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+  })
+  public source: WebsiteSource;
 
   @prop({
     parser: { resolver: CreateWebsiteDeploymentConfigDto },

@@ -16,6 +16,7 @@ export enum StageName {
   CONTRACTS = 'contracts',
   INFRASTRUCTURE = 'infrastructure',
   MAILING = 'mailing',
+  DEPLOY = 'deploy',
 }
 
 export type StageObject<Type> = {
