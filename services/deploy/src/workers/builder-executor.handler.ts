@@ -9,8 +9,8 @@ import {
 } from '@apillon/workers-lib';
 
 import { Context, env } from '@apillon/lib';
-import { TestWorker } from './test-worker';
 import { BuildProjectWorker } from './build-project-worker';
+import { GithubService } from '../modules/fe-deploy/services/github.service';
 
 export enum WorkerName {
   TEST_WORKER = 'TestWorker',
@@ -99,10 +99,6 @@ export async function handleLambdaEvent(
 
   // eslint-disable-next-line sonarjs/no-small-switch
   switch (workerDefinition.workerName) {
-    case WorkerName.TEST_WORKER:
-      const testLambda = new TestWorker(workerDefinition, context);
-      await testLambda.run();
-      break;
     default:
       console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,
@@ -154,10 +150,12 @@ export async function handleSqsMessages(
       // eslint-disable-next-line sonarjs/no-small-switch
       switch (workerName) {
         case WorkerName.BUILD_PROJECT_WORKER: {
+          const githubService = new GithubService();
           await new BuildProjectWorker(
             workerDefinition,
             context,
             QueueWorkerType.EXECUTOR,
+            githubService,
           ).run({
             executeArg: message?.body,
           });

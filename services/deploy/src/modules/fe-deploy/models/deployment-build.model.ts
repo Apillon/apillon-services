@@ -12,7 +12,7 @@ import {
 } from '@apillon/lib';
 import { integerParser, stringParser, dateParser } from '@rawmodel/parsers';
 
-import { DbTables, StorageErrorCode } from '../../../config/types';
+import { DbTables, DeployErrorCode } from '../../../config/types';
 
 export class DeploymentBuild extends AdvancedSQLModel {
   public readonly tableName = DbTables.DEPLOYMENT_BUILD;
@@ -80,7 +80,7 @@ export class DeploymentBuild extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_BUILD_WEBSITE_UUID_NOT_PRESENT,
+        code: DeployErrorCode.DATA_NOT_PRESENT,
       },
     ],
   })

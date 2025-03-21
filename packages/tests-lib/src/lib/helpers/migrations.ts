@@ -96,6 +96,13 @@ export const SQL_CONFIGS: StageObject<ConnectionOptions> = {
     port: env.MAILING_MYSQL_PORT_TEST,
     user: env.MAILING_MYSQL_USER_TEST,
   },
+  [StageName.DEPLOY]: {
+    host: env.DEPLOY_MYSQL_HOST_TEST,
+    database: env.DEPLOY_MYSQL_DATABASE_TEST,
+    password: env.DEPLOY_MYSQL_PASSWORD_TEST,
+    port: env.DEPLOY_MYSQL_PORT_TEST,
+    user: env.DEPLOY_MYSQL_USER_TEST,
+  },
 };
 
 let migrations: Partial<StageObject<Migration>> = {};

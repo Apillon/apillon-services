@@ -10,9 +10,7 @@ import {
   safeJsonParse,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { DbTables, StorageErrorCode } from '../../../config/types';
-import { deleteWebhook } from '../../../lib/github';
-import { GithubProjectConfig } from './github-project-config.model';
+import { DbTables, DeployErrorCode } from '../../../config/types';
 
 export class DeploymentConfig extends AdvancedSQLModel {
   public readonly tableName = DbTables.DEPLOYMENT_CONFIG;
@@ -37,7 +35,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_CONFIG_REPO_ID_NOT_PRESENT,
+        code: DeployErrorCode.DATA_NOT_PRESENT,
       },
     ],
   })
@@ -63,7 +61,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_CONFIG_REPO_NAME_NOT_PRESENT,
+        code: DeployErrorCode.DATA_NOT_PRESENT,
       },
     ],
   })
@@ -89,7 +87,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_CONFIG_REPO_OWNER_NAME_NOT_PRESENT,
+        code: DeployErrorCode.DATA_NOT_PRESENT,
       },
     ],
   })
@@ -114,7 +112,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_CONFIG_HOOK_ID_NOT_PRESENT,
+        code: DeployErrorCode.DATA_NOT_PRESENT,
       },
     ],
   })
@@ -139,7 +137,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_CONFIG_BRANCH_NAME_NOT_PRESENT,
+        code: DeployErrorCode.DATA_NOT_PRESENT,
       },
     ],
   })
@@ -166,7 +164,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_CONFIG_WEBSITE_UUID_NOT_PRESENT,
+        code: DeployErrorCode.DATA_NOT_PRESENT,
       },
     ],
   })
@@ -235,7 +233,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_CONFIG_BUILD_DIRECTORY_NOT_PRESENT,
+        code: DeployErrorCode.DATA_NOT_PRESENT,
       },
     ],
   })
@@ -283,7 +281,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_CONFIG_API_KEY_NOT_PRESENT,
+        code: DeployErrorCode.DATA_NOT_PRESENT,
       },
     ],
   })
@@ -310,7 +308,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
     validators: [
       {
         resolver: presenceValidator(),
-        code: StorageErrorCode.DEPLOYMENT_CONFIG_API_SECRET_NOT_PRESENT,
+        code: DeployErrorCode.DATA_NOT_PRESENT,
       },
     ],
   })
@@ -387,15 +385,6 @@ export class DeploymentConfig extends AdvancedSQLModel {
       `UPDATE \`${DbTables.DEPLOYMENT_CONFIG}\`
       SET status = ${SqlModelStatus.DELETED}
       WHERE id IN (${ids.join(',')})`,
-    );
-  }
-
-  public async deleteConfigWebhook(projectConfig: GithubProjectConfig) {
-    await deleteWebhook(
-      projectConfig,
-      this.repoOwnerName,
-      this.repoName,
-      this.hookId,
     );
   }
 

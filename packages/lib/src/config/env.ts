@@ -627,7 +627,7 @@ export interface IEnv {
   SOCIAL_DEFAULT_SPACE: string;
 
   /************************************************************
-   * Deploy - Apillon Deploy Service
+   * HOSTING - Apillon Hosting Service
    ************************************************************/
   /**
    *  function name
@@ -636,13 +636,13 @@ export interface IEnv {
   DEPLOY_FUNCTION_NAME_TEST: string;
 
   /**
-   * Deploy dev server port
+   * HOSTING dev server port
    */
   DEPLOY_SOCKET_PORT: number;
   DEPLOY_SOCKET_PORT_TEST: number;
 
   /**
-   * Deploy Database config
+   * HOSTING Database config
    */
 
   DEPLOY_MYSQL_HOST: string;
@@ -660,18 +660,16 @@ export interface IEnv {
   DEPLOY_MYSQL_PASSWORD_TEST: string;
   DEPLOY_MYSQL_DATABASE_TEST: string;
 
-  /**
-   * Deploy workers config
-   */
   DEPLOY_AWS_WORKER_SQS_URL: string;
   DEPLOY_AWS_WORKER_LAMBDA_NAME: string;
+
   /**
-   * Deploy other config
+   * HOSTING other config
    */
   DEPLOY_PHALA_CLOUD_API_KEY: string;
 
   /************************************************************
-   * SIMPLETS - Apillon Simplets Service
+   * SIMPLETS - Apillon Hosting Service
    ************************************************************/
   /**
    *  function name
@@ -1379,7 +1377,7 @@ export let env: IEnv = {
   CONTRACTS_AWS_WORKER_LAMBDA_NAME:
     process.env['CONTRACTS_AWS_WORKER_LAMBDA_NAME'],
 
-  /** Deploy */
+  /** HOSTING */
   DEPLOY_FUNCTION_NAME: process.env['DEPLOY_FUNCTION_NAME'],
   DEPLOY_FUNCTION_NAME_TEST: process.env['DEPLOY_FUNCTION_NAME_TEST'],
   DEPLOY_SOCKET_PORT: parseInt(process.env['DEPLOY_SOCKET_PORT']) || 6902,

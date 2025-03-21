@@ -5,10 +5,10 @@ import {
   Get,
   Param,
   ParseIntPipe,
-  Patch,
   Post,
   Query,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import { DeployService } from './deploy.service';
 import {
@@ -143,6 +143,21 @@ export class DeployController {
       context,
       websiteUuid,
     );
+  }
+
+  @Get('config/:websiteUuid')
+  @Permissions(
+    { role: DefaultUserRole.ADMIN },
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+    { role: DefaultUserRole.USER },
+  )
+  @UseGuards(AuthGuard)
+  async getDeploymentConfig(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('websiteUuid') websiteUuid: string,
+  ) {
+    return await this.deployService.getDeploymentConfig(context, websiteUuid);
   }
 
   @Get('config/variables/:deploymentConfigId')

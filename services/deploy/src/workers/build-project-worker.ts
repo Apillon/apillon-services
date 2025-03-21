@@ -5,10 +5,10 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { spawn } from 'child_process';
-import { DeploymentBuild } from '../modules/deploy/models/deployment-build.model';
-import { GithubProjectConfig } from '../modules/deploy/models/github-project-config.model';
-import { refreshAccessToken } from '../lib/github';
+import { DeploymentBuild } from '../modules/fe-deploy/models/deployment-build.model';
 import { BuildProjectWorkerInterface } from '../lib/interfaces/build-project-worker.interface';
+import { GithubProjectConfig } from '../modules/fe-deploy/models/github-project-config.model';
+import { GithubService } from '../modules/fe-deploy/services/github.service';
 
 // TO-DO - Move script to runtime
 const script = `#!/bin/bash
@@ -88,6 +88,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
     workerDefinition: WorkerDefinition,
     context: Context,
     type: QueueWorkerType,
+    private readonly githubService: GithubService,
   ) {
     super(workerDefinition, context, type, env.BUILDER_SQS_URL);
   }
@@ -134,7 +135,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
       secret = await kmsClient.decrypt(data.apiSecret, env.DEPLOY_KMS_KEY_ID);
 
       const accessToken = githubProjectConfig.refresh_token
-        ? await refreshAccessToken(githubProjectConfig)
+        ? await this.githubService.refreshAccessToken(githubProjectConfig)
         : githubProjectConfig.access_token;
 
       url = url.replace('https://', `https://oauth2:${accessToken}@`);

@@ -1,5 +1,5 @@
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { ModelBase, prop } from '../../../base-models/base';
+import { ModelBase, ModelBaseType, prop } from '../../../base-models/base';
 import {
   PopulateFrom,
   SerializeFor,
@@ -7,6 +7,8 @@ import {
 } from '../../../../config/types';
 import { presenceValidator } from '@rawmodel/validators';
 import { JSONParser } from '../../../parsers';
+
+export type WebsiteDeployDtoType = ModelBaseType<WebsiteDeployDto>;
 
 export class WebsiteDeployDto extends ModelBase {
   @prop({

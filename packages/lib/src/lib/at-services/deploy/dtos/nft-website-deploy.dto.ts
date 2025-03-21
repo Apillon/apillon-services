@@ -1,5 +1,5 @@
 import { integerParser, stringParser } from '@rawmodel/parsers';
-import { ModelBase, prop } from '../../../base-models/base';
+import { ModelBase, ModelBaseType, prop } from '../../../base-models/base';
 import {
   BadRequestErrorCode,
   NftWebsiteType,
@@ -9,6 +9,8 @@ import {
 } from '../../../../config/types';
 import { presenceValidator } from '@rawmodel/validators';
 import { enumInclusionValidator } from '../../../validators';
+
+export type NftWebsiteDeployDtoType = ModelBaseType<NftWebsiteDeployDto>;
 
 export class NftWebsiteDeployDto extends ModelBase {
   @prop({
