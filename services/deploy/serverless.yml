@@ -47,7 +47,7 @@ functions:
     memorySize: 512
     timeout: 30
   deploy-service-builder:
-    handler: src/workers/builder-executor.handler
+    handler: ./src/workers/builder-executor.handler
     name: apillon-deploy-service-builder-${self:provider.stage}
     description: Worker for building projects on Apillon
     memorySize: 2048

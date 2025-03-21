@@ -13,7 +13,7 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { BuildProjectWorkerInterface } from '../../../lib/interfaces/build-project-worker.interface';
-import { WorkerName } from '../../../workers/builder-executor.handler';
+import { WorkerName } from '../../../workers/builder-executor';
 import { BuildProjectWorker } from '../../../workers/build-project-worker';
 import { GithubService } from '../services/github.service';
 
