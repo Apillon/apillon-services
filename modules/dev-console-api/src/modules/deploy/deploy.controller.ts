@@ -242,7 +242,7 @@ export class DeployController {
   ) {
     return await this.backendsService.getInstance(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid }),
     );
   }
 
@@ -256,7 +256,7 @@ export class DeployController {
   ) {
     return await this.backendsService.getInstanceDetails(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid }),
     );
   }
 
@@ -270,7 +270,7 @@ export class DeployController {
   ) {
     return await this.backendsService.getInstanceState(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid }),
     );
   }
 
@@ -284,7 +284,7 @@ export class DeployController {
   ) {
     return await this.backendsService.getInstanceAttestation(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid }),
     );
   }
 
@@ -312,7 +312,7 @@ export class DeployController {
   ) {
     return await this.backendsService.startInstance(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid }),
     );
   }
 
@@ -326,7 +326,7 @@ export class DeployController {
   ) {
     return await this.backendsService.shutdownInstance(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid }),
     );
   }
 
@@ -340,7 +340,7 @@ export class DeployController {
   ) {
     return await this.backendsService.stopInstance(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid }),
     );
   }
 
@@ -354,7 +354,7 @@ export class DeployController {
   ) {
     return await this.backendsService.restartInstance(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid }),
     );
   }
 
@@ -368,7 +368,7 @@ export class DeployController {
   ) {
     return await this.backendsService.destroyInstance(
       context,
-      new GenericDeployRequestDto().populate({ deploy_uuid: deploy_uuid }),
+      new GenericDeployRequestDto().populate({ deploy_uuid }),
     );
   }
 

@@ -151,7 +151,10 @@ export interface IVMAttestationResponse {
 }
 
 export interface IBackendDeployStrategy {
-  deployDockerCompose(body: DeployInstanceDto): Promise<ICreateVMResponse>;
+  deployDockerCompose(
+    backend_uuid: string,
+    body: DeployInstanceDto,
+  ): Promise<ICreateVMResponse>;
 
   getInstanceDetails(backend: Backend): Promise<any>;
 

@@ -24,20 +24,13 @@ export class SimpletDeploy extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.LOGGER,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
-      SerializeFor.APILLON_API,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -50,19 +43,13 @@ export class SimpletDeploy extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -71,23 +58,20 @@ export class SimpletDeploy extends UuidSqlModel {
       },
     ],
   })
-  public simpletDeployed_uuid: string;
+  public simpletDeploy_uuid: string;
 
+  /**
+   * Simplet that has been used as a template to create this deploy.
+   */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -100,21 +84,13 @@ export class SimpletDeploy extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.LOGGER,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -127,20 +103,13 @@ export class SimpletDeploy extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public description: string;
@@ -148,40 +117,26 @@ export class SimpletDeploy extends UuidSqlModel {
   //region BACKEND
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public backend_uuid: string;
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: ResourceStatus.CREATED,
   })
@@ -189,20 +144,13 @@ export class SimpletDeploy extends UuidSqlModel {
 
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.LOGGER,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
-      SerializeFor.APILLON_API,
+      SerializeFor.PROFILE,
     ],
   })
   public backendUrl: string;
@@ -211,40 +159,26 @@ export class SimpletDeploy extends UuidSqlModel {
   //region CONTRACT
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public contract_uuid: string;
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: ResourceStatus.CREATED,
   })
@@ -256,8 +190,7 @@ export class SimpletDeploy extends UuidSqlModel {
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.WORKER,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -276,8 +209,7 @@ export class SimpletDeploy extends UuidSqlModel {
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.WORKER,
+      SerializeFor.PROFILE,
     ],
   })
   public contractChainType: ChainType;
@@ -288,8 +220,7 @@ export class SimpletDeploy extends UuidSqlModel {
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.WORKER,
+      SerializeFor.PROFILE,
     ],
   })
   public contractAddress: string;
@@ -304,28 +235,20 @@ export class SimpletDeploy extends UuidSqlModel {
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
-      SerializeFor.WORKER,
+      SerializeFor.PROFILE,
     ],
   })
   public frontend_uuid: string;
 
   @prop({
     parser: { resolver: integerParser() },
-    populatable: [
-      PopulateFrom.DB,
-      PopulateFrom.SERVICE,
-      PopulateFrom.ADMIN,
-      PopulateFrom.PROFILE,
-    ],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
-      SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
     defaultValue: ResourceStatus.CREATED,
   })

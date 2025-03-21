@@ -9,7 +9,10 @@ export async function upgrade(
       \`status\` INT NULL,
       \`project_uuid\` VARCHAR(36) NOT NULL,
 
-      \`simpletDeployed_uuid\` VARCHAR(36) NOT NULL,
+      \`simpletDeploy_uuid\` VARCHAR
+     (
+       36
+     ) NOT NULL,
       \`simplet_uuid\` VARCHAR(36) NOT NULL,
       \`name\` VARCHAR(255) NOT NULL,
       \`description\` VARCHAR(1000) NULL,
@@ -32,7 +35,10 @@ export async function upgrade(
       \`updateTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       \`updateUser\` INT NULL,
       PRIMARY KEY (\`id\`),
-      CONSTRAINT unique_simplet_deploy_uuid UNIQUE (\`simpletDeployed_uuid\`)
+      CONSTRAINT unique_simplet_deploy_uuid UNIQUE
+     (
+       \`simpletDeploy_uuid\`
+     )
     );`,
   );
 }

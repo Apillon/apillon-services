@@ -67,7 +67,7 @@ export class SimpletsService {
     const simplet = await this.simpletRepository.getSimplet(simplet_uuid);
     const simpletDeploy = new SimpletDeploy({}, this.context).populate({
       project_uuid,
-      simpletDeployed_uuid: uuidV4(),
+      simpletDeploy_uuid: uuidV4(),
       simplet_uuid: simplet.simplet_uuid,
       name: simpletName,
       description: simpletDescription,

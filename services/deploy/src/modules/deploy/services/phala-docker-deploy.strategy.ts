@@ -15,6 +15,7 @@ import {
 import { Backend } from '../models/backend.model';
 import { DeployCodeException } from '../../../lib/exceptions';
 import { DeployErrorCode } from '../../../config/types';
+import axios from 'axios';
 
 export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
   private client: PhalaDockerClient;
@@ -24,60 +25,66 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
   }
 
   async deployDockerCompose(
+    backend_uuid: string,
     body: DeployInstanceDto,
   ): Promise<ICreateVMResponse> {
     const secrets = body.secrets;
     const virtualMachine = body.virtualMachine;
-    const pod = await this.client.getAvailablePods();
-    if (pod.nodes.length === 0) {
-      throw new DeployCodeException({
-        status: 500,
-        code: DeployErrorCode.DEPLOY_POD_NOT_FOUND,
-        errorMessage: 'No available pods found.',
-      });
-    }
-    const podId = pod.nodes[0].teepod_id;
-    const isProduction = env.APP_ENV === AppEnvironment.PROD;
-    const imageName = pod.nodes[0].images.find(
-      (image: any) => image.is_dev === !isProduction,
-    )?.name;
-    if (!imageName) {
-      throw new DeployCodeException({
-        status: 500,
-        code: DeployErrorCode.DEPLOY_POD_NOT_FOUND,
-        errorMessage: 'No development image with is_dev set to true was found.',
-      });
-    }
-
-    const vmConfig = {
-      name: `my-tee-for-poa`,
-      //image: 'dstack-dev-0.3.4',
-      image: imageName,
-      teepod_id: podId,
-      compose_manifest: {
-        name: `my-tee-for-poa`,
-        features: ['kms', 'tproxy-net'],
-        docker_compose_file: body.dockerCompose,
-      },
-      // specs
-      vcpu: virtualMachine.cpuCount,
-      memory: virtualMachine.memory,
-      disk_size: virtualMachine.diskSize,
-      advanced_features: {
-        tproxy: true,
-        kms: true,
-        public_sys_info: true,
-        public_logs: false,
-        // docker registry
-        docker_config: {
-          username: '',
-          password: '',
-          registry: null,
-        },
-        listed: false,
-      },
-    };
     try {
+      const pod = await this.client.getAvailablePods();
+      if (pod.nodes.length === 0) {
+        throw new DeployCodeException({
+          status: 500,
+          code: DeployErrorCode.DEPLOY_POD_NOT_FOUND,
+          errorMessage: 'No available pods found.',
+        });
+      }
+      const podId = pod.nodes[0].teepod_id;
+      const isProduction = env.APP_ENV === AppEnvironment.PROD;
+      const latestImage = pod.nodes[0].images
+        .filter((image: any) => image.is_dev === !isProduction)
+        .reduce((latest: any, current: any) => {
+          const currentVersion = parsePhalaImageVersion(current.version);
+          const latestVersion = latest
+            ? parsePhalaImageVersion(latest.version)
+            : 0;
+          return currentVersion > latestVersion ? current : latest;
+        }, null);
+      const imageName = latestImage?.name;
+      if (!imageName) {
+        throw new DeployCodeException({
+          status: 500,
+          code: DeployErrorCode.DEPLOY_POD_NOT_FOUND,
+          errorMessage: 'No suitable image was found.',
+        });
+      }
+      const vmConfig = {
+        name: backend_uuid,
+        image: imageName,
+        teepod_id: podId,
+        compose_manifest: {
+          name: backend_uuid,
+          features: ['kms', 'tproxy-net'],
+          docker_compose_file: body.dockerCompose,
+        },
+        // specs
+        vcpu: virtualMachine.cpuCount,
+        memory: virtualMachine.memory,
+        disk_size: virtualMachine.diskSize,
+        advanced_features: {
+          tproxy: true,
+          kms: true,
+          public_sys_info: true,
+          public_logs: false,
+          // docker registry
+          docker_config: {
+            username: '',
+            password: '',
+            registry: null,
+          },
+          listed: false,
+        },
+      };
       const withPubKey = await this.client.getPublicKey(vmConfig);
       const encryptedEnv = await this.encryptEnvVariables(
         secrets,
@@ -89,11 +96,37 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
         app_env_encrypt_pubkey: withPubKey.app_env_encrypt_pubkey,
         app_id_salt: withPubKey.app_id_salt,
       });
-    } catch (error: any) {
-      const errorMessage =
-        error.response?.status === 422
-          ? `Failed to deploy CVM (422): ${JSON.stringify(error.response._data, null, 2)}`
-          : `Failed to deploy CVM: ${error}`;
+    } catch (error: unknown) {
+      if (error instanceof DeployCodeException) {
+        console.error(`Failed to deploy CVM: ${error.message}`);
+        throw error;
+      }
+
+      if (error instanceof axios.AxiosError) {
+        console.error(
+          `Failed to deploy CVM due to AxiosError: ${error.message}`,
+        );
+        const response = error.response;
+        const errorDetails =
+          response?.status === 422
+            ? `Failed to deploy CVM (422): ${JSON.stringify(response.data, null, 2)}`
+            : `${response?.status}: ${JSON.stringify(
+                {
+                  status: response?.status,
+                  headers: response?.headers,
+                  data: response?.data,
+                },
+                null,
+                2,
+              )}`;
+        throw new DeployCodeException({
+          status: 500,
+          code: DeployErrorCode.DEPLOY_DEPLOY_FAILED,
+          errorMessage: errorDetails,
+        });
+      }
+      const errorMessage = `Unhandled error when deploying CVM: ${String(error)}`;
+      console.error(errorMessage);
       throw new DeployCodeException({
         status: 500,
         code: DeployErrorCode.DEPLOY_DEPLOY_FAILED,
@@ -219,3 +252,6 @@ function uint8ArrayToHex(buffer: Uint8Array): string {
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
 }
+
+const parsePhalaImageVersion = (versionArray: number[]) =>
+  versionArray.reduce((acc, num, idx) => acc + num * 10 ** (2 * (2 - idx)), 0);

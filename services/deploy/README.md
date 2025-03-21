@@ -1,6 +1,27 @@
-# Apillon Contracts Service
+# Apillon Deploy Service
 
 Service responsible for deploying static websites and backend solutions.
+
+## Backend Deploy
+
+Service for deploying backend solutions.
+
+### Phala Cloud
+
+Service integrates with Phala Cloud for deployment of Docker containers.
+Docker containers are specified in docker-compose.yml file which is passed to
+this service for deploy (with associated environment variables).
+
+Note that docker-compose.yml can only contain images that are published on the
+docker registry (Docker Hub for now) and this service is not building any docker
+images.
+
+#### Custom Docker Images
+
+Preparing a custom docker image involves manually building it, tagging it with
+the appropriate version or commit hash, and pushing it to container registry.
+Remember that docker image also contains source code that is copied to it during
+build process.
 
 ## Table of Contents
 
@@ -22,7 +43,7 @@ Environment variables that have to be set:
 
 ```ts
 /************************************************************
- * Contracts - Apillon Contracts Service
+ * Deploy - Apillon Deploy Service
  ************************************************************/
 /**
  *  function name
@@ -55,21 +76,11 @@ DEPLOY_MYSQL_PASSWORD_TEST: string;
 DEPLOY_MYSQL_DATABASE_TEST: string;
 
 /**
- * Contracts workers config
+ * Deploy workers config
  */
 DEPLOY_AWS_WORKER_SQS_URL: string;
 DEPLOY_AWS_WORKER_LAMBDA_NAME: string;
 ```
-
-## Contract versioning
-
-The underlying smart contracts is versioned such that if there are ever new
-breaking changes introduces to the smart contract, it will not break the
-interaction with previously deployed contract.
-For each contract type and corresponding chain type, there is an entry in
-the `contract_version` table which contains all the versions for that contract
-and chain type. By default, when creating a new collection, the highest version
-is considered.
 
 ## Deployment
 
