@@ -826,6 +826,14 @@ export class NftsService {
       });
     }
 
+    if (!collection.bucket_uuid) {
+      throw new NftsCodeException({
+        status: 400,
+        code: NftsErrorCode.COLLECTION_DOES_NOT_HAVE_BUCKET,
+        context,
+        sourceFunction: 'addIpnsToCollection()',
+      });
+    }
     //Call storageMS to generate IPNS
     const createIpnsDto = new CreateIpnsDto({}, context).populate({
       bucket_uuid: collection.bucket_uuid,

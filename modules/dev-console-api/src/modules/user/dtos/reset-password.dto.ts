@@ -26,7 +26,7 @@ export class ResetPasswordDto extends ModelBase {
         code: ValidatorErrorCode.USER_PASSWORD_NOT_PRESENT,
       },
       {
-        resolver: stringLengthValidator({ minOrEqual: 12 }),
+        resolver: stringLengthValidator({ minOrEqual: 12, max: 100 }),
         code: ValidatorErrorCode.USER_PASSWORD_TOO_SHORT,
       },
     ],

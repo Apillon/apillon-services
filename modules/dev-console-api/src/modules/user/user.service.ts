@@ -191,6 +191,15 @@ export class UserService {
   ): Promise<any> {
     const { email, refCode, metadata } = emailVal;
 
+    // Validate email to prevent header injection attacks
+    if (/%0d|%0a|\\r|\\n/i.test(email)) {
+      throw new CodeException({
+        status: HttpStatus.BAD_REQUEST,
+        code: ValidatorErrorCode.USER_EMAIL_NOT_VALID,
+        errorCodes: ValidatorErrorCode,
+      });
+    }
+
     const { data: emailResult } = await new Ams(context).emailExists(
       emailVal.email,
     );
