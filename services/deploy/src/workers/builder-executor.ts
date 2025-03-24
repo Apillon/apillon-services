@@ -24,24 +24,24 @@ export async function handler(event: any) {
   const options = {
     host:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.STORAGE_MYSQL_HOST_TEST
-        : env.STORAGE_MYSQL_HOST,
+        ? env.DEPLOY_MYSQL_HOST_TEST
+        : env.DEPLOY_MYSQL_HOST,
     port:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.STORAGE_MYSQL_PORT_TEST
-        : env.STORAGE_MYSQL_PORT,
+        ? env.DEPLOY_MYSQL_PORT_TEST
+        : env.DEPLOY_MYSQL_PORT,
     database:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.STORAGE_MYSQL_DATABASE_TEST
-        : env.STORAGE_MYSQL_DATABASE,
+        ? env.DEPLOY_MYSQL_DATABASE_TEST
+        : env.DEPLOY_MYSQL_DATABASE,
     user:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.STORAGE_MYSQL_USER_TEST
-        : env.STORAGE_MYSQL_USER,
+        ? env.DEPLOY_MYSQL_USER_TEST
+        : env.DEPLOY_MYSQL_USER,
     password:
       env.APP_ENV === AppEnvironment.TEST
-        ? env.STORAGE_MYSQL_PASSWORD_TEST
-        : env.STORAGE_MYSQL_PASSWORD,
+        ? env.DEPLOY_MYSQL_PASSWORD_TEST
+        : env.DEPLOY_MYSQL_PASSWORD,
   };
 
   const mysql = new MySql(options);
@@ -52,7 +52,7 @@ export async function handler(event: any) {
   const serviceDef = {
     type: ServiceDefinitionType.LAMBDA,
     config: { region: env.AWS_REGION },
-    params: { FunctionName: env.STORAGE_AWS_WORKER_LAMBDA_NAME },
+    params: { FunctionName: env.DEPLOY_BUILDER_AWS_WORKER_LAMBDA_NAME },
   };
 
   console.info(`EVENT: ${JSON.stringify(event)}`);

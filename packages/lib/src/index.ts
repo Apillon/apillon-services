@@ -140,6 +140,12 @@ export * from './lib/at-services/deploy/dtos/generic-deploy-request.dto';
 export * from './lib/at-services/deploy/dtos/resize-instance.dto';
 export * from './lib/at-services/deploy/dtos/virtual-machine.dto';
 export * from './lib/at-services/deploy/dtos/backends-query-filter.dto';
+export * from './lib/at-services/deploy/types/delete-deployment-config.type';
+export * from './lib/at-services/deploy/types/get-deploy-config-by-repo-id.type';
+export * from './lib/at-services/deploy/types/get-deployment-config.type';
+export * from './lib/at-services/deploy/types/get-environment-variables.type';
+export * from './lib/at-services/deploy/types/get-project-config.type';
+export * from './lib/at-services/deploy/types/list-repos.type';
 
 //#REGION SIMPLETS
 export * from './lib/at-services/simplets/eventTypes';

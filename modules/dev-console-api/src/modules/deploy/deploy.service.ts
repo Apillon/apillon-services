@@ -86,25 +86,29 @@ export class DeployService {
     });
     const deployMS = new DeployMicroservice(context);
 
-    const config = await deployMS.getDeployConfigByRepoId(repoId);
+    try {
+      const config = await deployMS.getDeployConfigByRepoId(repoId);
 
-    if (event.ref !== `refs/heads/${config.data.branchName}`) {
-      return;
+      if (event.ref !== `refs/heads/${config.data.branchName}`) {
+        return;
+      }
+
+      new Lmas().writeLog({
+        data: event,
+        logType: LogType.INFO,
+        message: `Deploying ${config.data.websiteUuid}`,
+        service: ServiceName.DEV_CONSOLE,
+        location: 'DeployService.handleGithubWebhook',
+      });
+
+      await deployMS.triggerGithubDeploy({
+        url: event.repository.clone_url,
+        configId: config.data.id,
+        ...config.data,
+      });
+    } catch (e) {
+      // DeployConfig might not yet exist for this repo so just return 200 so github won't show error
     }
-
-    new Lmas().writeLog({
-      data: event,
-      logType: LogType.INFO,
-      message: `Deploying ${config.data.websiteUuid}`,
-      service: ServiceName.DEV_CONSOLE,
-      location: 'DeployService.handleGithubWebhook',
-    });
-
-    await deployMS.triggerGithubDeploy({
-      url: event.repository.clone_url,
-      configId: config.data.id,
-      ...config.data,
-    });
   }
 
   async getProjectConfig(context: DevConsoleApiContext, projectUuid: string) {

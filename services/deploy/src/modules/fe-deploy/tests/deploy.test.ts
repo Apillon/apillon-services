@@ -377,9 +377,9 @@ describe('DeployService tests', () => {
         VALUES (${testConfig.repoId}, '${testConfig.repoName}', '${testConfig.repoOwnerName}', ${testConfig.hookId}, '${testConfig.branchName}', '${testConfig.websiteUuid}', ${testConfig.projectConfigId}, '${testConfig.buildDirectory}', '${testConfig.apiKey}', '${testConfig.apiSecret}')`,
       );
 
-      const response = await frontendController.deleteDeploymentConfig(
-        testConfig.websiteUuid,
-      );
+      const response = await frontendController.deleteDeploymentConfig({
+        websiteUuid: testConfig.websiteUuid,
+      });
 
       expect(response).toBeDefined();
       expect(response).toBe(true);
@@ -425,9 +425,9 @@ describe('DeployService tests', () => {
         `INSERT INTO ${DbTables.DEPLOYMENT_CONFIG} (repoId, repoName, repoOwnerName, hookId, branchName, websiteUuid, projectConfigId, buildDirectory, apiKey, apiSecret)
         VALUES (${testConfig.repoId}, '${testConfig.repoName}', '${testConfig.repoOwnerName}', ${testConfig.hookId}, '${testConfig.branchName}', '${testConfig.websiteUuid}', ${testConfig.projectConfigId}, '${testConfig.buildDirectory}', '${testConfig.apiKey}', '${testConfig.apiSecret}')`,
       );
-      const response = await frontendController.getDeploymentConfigByRepoId(
-        testConfig.repoId,
-      );
+      const response = await frontendController.getDeploymentConfigByRepoId({
+        repoId: testConfig.repoId,
+      });
 
       expect(response).toBeDefined();
       expect(response.repoId).toBe(testConfig.repoId);
@@ -456,9 +456,9 @@ describe('DeployService tests', () => {
         VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', ${expectedProjectConfig.refreshToken}, '${expectedProjectConfig.login}')`,
       );
 
-      const response = await frontendController.getGithubConfigByProjectUuid(
-        expectedProjectConfig.projectUuid,
-      );
+      const response = await frontendController.getGithubConfigByProjectUuid({
+        project_uuid: expectedProjectConfig.projectUuid,
+      });
 
       expect(response).toBeDefined();
       if (response) {
@@ -481,9 +481,9 @@ describe('DeployService tests', () => {
         `INSERT INTO ${DbTables.GITHUB_PROJECT_CONFIG} (project_uuid, access_token, refresh_token, username)
         VALUES ('${expectedProjectConfig.projectUuid}', '${expectedProjectConfig.accessToken}', '${expectedProjectConfig.refreshToken}', '${expectedProjectConfig.login}')`,
       );
-      const response = await frontendController.listRepos(
-        expectedProjectConfig.projectUuid,
-      );
+      const response = await frontendController.listRepos({
+        project_uuid: expectedProjectConfig.projectUuid,
+      });
       expect(response).toBeDefined();
     });
   });

@@ -25,6 +25,7 @@ export class DeploymentBuild extends AdvancedSQLModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
       PopulateFrom.AUTH,
+      PopulateFrom.WORKER,
     ],
     serializable: [
       SerializeFor.INSERT_DB,
@@ -47,6 +48,7 @@ export class DeploymentBuild extends AdvancedSQLModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
       PopulateFrom.AUTH,
+      PopulateFrom.WORKER,
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -94,6 +96,7 @@ export class DeploymentBuild extends AdvancedSQLModel {
       PopulateFrom.ADMIN,
       PopulateFrom.PROFILE,
       PopulateFrom.AUTH,
+      PopulateFrom.WORKER,
     ],
     serializable: [
       SerializeFor.ADMIN,
@@ -193,9 +196,10 @@ export class DeploymentBuild extends AdvancedSQLModel {
   }
 
   public async addLog(log: string) {
+    console.log('add log, id = ', this.id);
     await this.getContext().mysql.paramExecute(
       `
-        UPDATE \`${this.tableName}\`
+        UPDATE \`${DbTables.DEPLOYMENT_BUILD}\`
         SET logs = CONCAT(COALESCE(logs, ''), '\n', @log)
         WHERE id = @id
       `,
@@ -209,9 +213,11 @@ export class DeploymentBuild extends AdvancedSQLModel {
   }
 
   public async handleSuccess() {
+    console.log('handle success, id = ', this.id);
+
     await this.getContext().mysql.paramExecute(
       `
-        UPDATE \`${this.tableName}\`
+        UPDATE \`${DbTables.DEPLOYMENT_BUILD}\`
         SET logs = CONCAT(COALESCE(logs, ''), '\n', 'Deployment completed successfully'),
         buildStatus = ${DeploymentBuildStatus.SUCCESS},
         finishedTime = NOW()
@@ -228,7 +234,7 @@ export class DeploymentBuild extends AdvancedSQLModel {
   public async handleFailure(log?: string) {
     await this.getContext().mysql.paramExecute(
       `
-        UPDATE \`${this.tableName}\`
+        UPDATE \`${DbTables.DEPLOYMENT_BUILD}\`
         SET logs = CONCAT(COALESCE(logs, ''), '\n', '${log ?? 'Deployment failed'}'),
         buildStatus = ${DeploymentBuildStatus.FAILED},
         finishedTime = NOW()

@@ -1,14 +1,20 @@
 import {
   CreateDeploymentConfigDtoType,
+  DeleteDeploymentConfigType,
   DeploymentBuildQueryFilter,
+  GetDeploymentConfigType,
+  GetEnvironmentVariablesType,
+  GetProjectConfigType,
   GithubLinkDtoType,
   GithubUnlinkDtoType,
+  ListReposType,
   NftWebsiteDeployDtoType,
   SetEnvironmentVariablesDtoType,
   StorageMicroservice,
   TriggerGithubDeployDtoType,
   UpdateDeploymentConfigDtoType,
   WebsiteDeployDtoType,
+  GetDeployConfigByRepoIdType,
 } from '@apillon/lib';
 import { DeployService } from './services/deploy.service';
 import { DeploymentConfigService } from './services/deployment-config.service';
@@ -78,12 +84,12 @@ export class FrontendController {
     return this.deployService.triggerWebDeploy(body);
   }
 
-  async getDeploymentConfigByRepoId(repoId: number) {
-    return this.deploymentConfigService.getDeploymentConfigByRepoId(repoId);
+  async getDeploymentConfigByRepoId(body: GetDeployConfigByRepoIdType) {
+    return this.deploymentConfigService.getDeploymentConfigByRepoId(body);
   }
 
-  async getGithubConfigByProjectUuid(projectUuid: string) {
-    return this.githubConfigService.getProjectConfigByProjectUuid(projectUuid);
+  async getGithubConfigByProjectUuid(body: GetProjectConfigType) {
+    return this.githubConfigService.getProjectConfigByProjectUuid(body);
   }
 
   async createDeploymentConfig(body: CreateDeploymentConfigDtoType) {
@@ -105,17 +111,17 @@ export class FrontendController {
     return this.githubConfigService.unlinkGithub(body);
   }
 
-  async listRepos(projectUuid: string) {
-    return this.githubConfigService.listRepos(projectUuid);
+  async listRepos(body: ListReposType) {
+    return this.githubConfigService.listRepos(body);
   }
 
   async listDeploymentBuildsForWebsite(body: DeploymentBuildQueryFilter) {
     return this.buildService.listDeploymentBuildsForWebsite(body);
   }
 
-  async deleteDeploymentConfig(websiteUuid: string) {
+  async deleteDeploymentConfig(body: DeleteDeploymentConfigType) {
     return this.deploymentConfigService.deleteDeploymentConfigByWebsiteUuid(
-      websiteUuid,
+      body,
     );
   }
 
@@ -123,13 +129,11 @@ export class FrontendController {
     return this.deploymentConfigService.setEnvironmentVariables(body);
   }
 
-  async getEnvironmentVariables(deploymentConfigId: number) {
-    return this.deploymentConfigService.getEnvironmentVariables(
-      deploymentConfigId,
-    );
+  async getEnvironmentVariables(body: GetEnvironmentVariablesType) {
+    return this.deploymentConfigService.getEnvironmentVariables(body);
   }
 
-  async getDeploymentConfig(websiteUuid: string) {
-    return this.deploymentConfigService.getDeploymentConfig(websiteUuid);
+  async getDeploymentConfig(body: GetDeploymentConfigType) {
+    return this.deploymentConfigService.getDeploymentConfig(body);
   }
 }

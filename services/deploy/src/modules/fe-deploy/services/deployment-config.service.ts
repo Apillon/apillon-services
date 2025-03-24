@@ -1,12 +1,16 @@
 import {
   AWS_KMS,
   CreateDeploymentConfigDtoType,
+  DeleteDeploymentConfigType,
+  GetDeploymentConfigType,
+  GetEnvironmentVariablesType,
   ModelValidationException,
   SetEnvironmentVariablesDtoType,
   StorageMicroservice,
   UpdateDeploymentConfigDtoType,
   WebsiteSource,
   env,
+  GetDeployConfigByRepoIdType,
 } from '@apillon/lib';
 import { GithubService } from './github.service';
 import { DeployCodeException } from '../../../lib/exceptions';
@@ -63,14 +67,13 @@ export class DeploymentConfigService {
 
     const kmsClient = new AWS_KMS();
 
+    console.log(env.DEPLOY_KMS_KEY_ID);
+
     const deploymentConfig = this.deploymentConfigRepository.create({
       ...body,
       hookId: createdWebhook.id,
       projectConfigId: githubProjectConfig.id,
-      apiSecret: await kmsClient.encrypt(
-        body.apiSecret,
-        process.env.DEPLOY_KMS_KEY_ID,
-      ),
+      apiSecret: await kmsClient.encrypt(body.apiSecret, env.DEPLOY_KMS_KEY_ID),
     });
 
     await deploymentConfig.validateOrThrow(ModelValidationException);
@@ -136,7 +139,9 @@ export class DeploymentConfigService {
     return config.serialize();
   }
 
-  async deleteDeploymentConfigByWebsiteUuid(websiteUuid: string) {
+  async deleteDeploymentConfigByWebsiteUuid({
+    websiteUuid,
+  }: DeleteDeploymentConfigType) {
     const website = (
       await this.storageMicroservice.getWebsiteWithAccess(websiteUuid, true)
     ).data;
@@ -183,8 +188,10 @@ export class DeploymentConfigService {
     return true;
   }
 
-  async getDeploymentConfigByRepoId(repoId: number) {
-    const config = await this.deploymentConfigRepository.findByRepoId(repoId);
+  async getDeploymentConfigByRepoId(body: GetDeployConfigByRepoIdType) {
+    const config = await this.deploymentConfigRepository.findByRepoId(
+      body.repoId,
+    );
 
     if (!config.exists()) {
       throw new DeployCodeException({
@@ -236,9 +243,10 @@ export class DeploymentConfigService {
     return await deploymentConfig.update();
   }
 
-  async getEnvironmentVariables(deploymentConfigId: number) {
-    const deploymentConfig =
-      await this.deploymentConfigRepository.getById(deploymentConfigId);
+  async getEnvironmentVariables(body: GetEnvironmentVariablesType) {
+    const deploymentConfig = await this.deploymentConfigRepository.getById(
+      body.deploymentConfigId,
+    );
 
     if (!deploymentConfig.exists()) {
       throw new DeployCodeException({
@@ -255,11 +263,16 @@ export class DeploymentConfigService {
     return await deploymentConfig.getEnvironmentVariables();
   }
 
-  async getDeploymentConfig(websiteUuid: string) {
-    await this.storageMicroservice.getWebsiteWithAccess(websiteUuid, false);
+  async getDeploymentConfig(body: GetDeploymentConfigType) {
+    await this.storageMicroservice.getWebsiteWithAccess(
+      body.websiteUuid,
+      false,
+    );
 
     const deploymentConfigs =
-      await this.deploymentConfigRepository.getActiveByWebsiteUuid(websiteUuid);
+      await this.deploymentConfigRepository.getActiveByWebsiteUuid(
+        body.websiteUuid,
+      );
 
     if (!deploymentConfigs.length) {
       return false;
