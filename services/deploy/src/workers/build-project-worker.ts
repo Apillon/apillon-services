@@ -1,4 +1,10 @@
-import { AWS_KMS, Context, DeploymentBuildStatus, env } from '@apillon/lib';
+import {
+  AWS_KMS,
+  Context,
+  DeploymentBuildStatus,
+  SerializeFor,
+  env,
+} from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
@@ -83,6 +89,39 @@ npx @apillon/cli hosting deploy-website $BUILD_DIR --uuid "$WEBSITE_UUID" --key 
 
 exit 0`;
 
+function sanitizeToJsonString(str: string) {
+  // First, temporarily replace date strings to protect them
+  let result = str;
+
+  // Find and store all date-like strings
+  const datePattern = /'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)'/g;
+  const dates = [];
+  let match: string[] | null;
+
+  while ((match = datePattern.exec(str)) !== null) {
+    dates.push(match[1]);
+  }
+
+  // Replace date strings with placeholders
+  result = result.replace(datePattern, "'DATE_PLACEHOLDER'");
+
+  // Add double quotes around property names
+  result = result.replace(/(\w+)\s*:/g, '"$1":');
+
+  // Replace single quotes with double quotes for regular string values
+  result = result.replace(/'([^']*)'/g, '"$1"');
+
+  // Handle null values
+  result = result.replace(/"(null)"/g, '$1');
+
+  // Restore date strings
+  for (const date of dates) {
+    result = result.replace('"DATE_PLACEHOLDER"', `"${date}"`);
+  }
+
+  return result;
+}
+
 export class BuildProjectWorker extends BaseQueueWorker {
   public constructor(
     workerDefinition: WorkerDefinition,
@@ -113,7 +152,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
     deploymentBuild.buildStatus = DeploymentBuildStatus.IN_PROGRESS;
     deploymentBuild.logs = '';
 
-    await deploymentBuild.update();
+    await deploymentBuild.update(SerializeFor.UPDATE_DB);
 
     let url = data.url;
     let secret = data.apiSecret;
@@ -140,6 +179,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
 
       url = url.replace('https://', `https://oauth2:${accessToken}@`);
     }
+    let lastLog = '';
 
     const child = spawn(
       '/bin/bash',
@@ -170,17 +210,20 @@ export class BuildProjectWorker extends BaseQueueWorker {
 
     child.stdout.on('data', async (data) => {
       const log = data.toString();
+      lastLog = log;
       await deploymentBuild.addLog(log);
       console.log(`stdout: ${log}`);
     });
 
     child.stderr.on('data', async (data) => {
       const log = data.toString();
+      lastLog = log;
       await deploymentBuild.addLog(log);
       console.error(`stderr: ${data}`);
     });
 
     child.on('error', async (error) => {
+      lastLog = error.message;
       await deploymentBuild.addLog(error.message);
       console.error(`error: ${error.message}`);
     });
@@ -188,12 +231,22 @@ export class BuildProjectWorker extends BaseQueueWorker {
     // Wait for the child process to finish
     await new Promise((resolve, reject) => {
       child.on('close', async (exitCode) => {
+        console.log('Exit code: ', exitCode);
+        console.log('Last log: ', lastLog);
         if (exitCode !== 0) {
           await deploymentBuild.handleFailure();
           console.log(`Failure, child process exited with code ${exitCode}`);
           reject(exitCode);
         } else {
-          await deploymentBuild.handleSuccess();
+          // Check if data is JSON
+          try {
+            const sanitizedLog = sanitizeToJsonString(lastLog);
+            const parsedResponse = JSON.parse(sanitizedLog);
+            console.log('Parsed response: ', parsedResponse);
+            await deploymentBuild.handleSuccess();
+          } catch (e) {
+            await deploymentBuild.handleFailure();
+          }
           console.log(`Success, child process exited with code ${data}`);
           resolve(data);
         }

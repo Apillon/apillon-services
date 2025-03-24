@@ -13,6 +13,7 @@ import { PhalaDockerClient } from './modules/deploy/clients/phala-tee.client';
 import { DeployRepository } from './modules/deploy/repositores/deploy-repository';
 import { BackendController } from './modules/deploy/backend.controller';
 import { FrontendController } from './modules/fe-deploy/frontend.controller';
+import { inspect } from 'util';
 
 /**
  * Processing lambda event with appropriate service function based on event name
@@ -25,9 +26,9 @@ export async function processEvent(
   context: ServiceContext,
 ): Promise<any> {
   const eventName = event.eventName;
-
   if (eventName?.slice(0, 2) === 'fe') {
     const frontendController = new FrontendController(context);
+    console.log('Event:', inspect(event));
     switch (event.eventName) {
       case DeployEventType.TRIGGER_GITHUB_DEPLOY:
         return frontendController.triggerGithubDeploy(event.body);

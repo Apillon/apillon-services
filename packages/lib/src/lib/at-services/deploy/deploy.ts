@@ -124,7 +124,7 @@ export class DeployMicroservice extends BaseService {
   public async triggerGithubDeploy(payload: TriggerGithubDeployDto) {
     const data = {
       eventName: DeployEventType.TRIGGER_GITHUB_DEPLOY,
-      ...payload,
+      body: payload,
     };
     return await this.callService(data);
   }
@@ -132,7 +132,9 @@ export class DeployMicroservice extends BaseService {
   public async getDeployConfigByRepoId(repoId: number) {
     const data = {
       eventName: DeployEventType.GET_DEPLOY_CONFIG_BY_REPO_ID,
-      repoId,
+      body: {
+        repoId,
+      },
     };
 
     return await this.callService(data);
@@ -152,8 +154,10 @@ export class DeployMicroservice extends BaseService {
   ) {
     const data = {
       eventName: DeployEventType.UPDATE_DEPLOY_CONFIG,
-      id,
-      body: params.serialize(),
+      body: {
+        id,
+        body: params.serialize(),
+      },
     };
     return await this.callService(data);
   }
@@ -177,7 +181,9 @@ export class DeployMicroservice extends BaseService {
   public async listRepos(project_uuid: string) {
     const data = {
       eventName: DeployEventType.LIST_REPOS,
-      project_uuid,
+      body: {
+        project_uuid,
+      },
     };
     return await this.callService(data);
   }
@@ -185,7 +191,9 @@ export class DeployMicroservice extends BaseService {
   public async getProjectConfig(project_uuid: string) {
     const data = {
       eventName: DeployEventType.GET_PROJECT_GITHUB_CONFIG,
-      project_uuid,
+      body: {
+        project_uuid,
+      },
     };
     return await this.callService(data);
   }
@@ -193,7 +201,7 @@ export class DeployMicroservice extends BaseService {
   public async listDeploymentBuilds(filter: DeploymentBuildQueryFilter) {
     const data = {
       eventName: DeployEventType.LIST_DEPLOYMENT_BUILDS,
-      filter: filter.serialize(),
+      body: filter.serialize(),
     };
     return await this.callService(data);
   }
@@ -201,7 +209,9 @@ export class DeployMicroservice extends BaseService {
   public async deleteDeploymentConfig(websiteUuid: string) {
     const data = {
       eventName: DeployEventType.DELETE_DEPLOYMENT_CONFIG,
-      websiteUuid,
+      body: {
+        websiteUuid,
+      },
     };
     return await this.callService(data);
   }
@@ -217,7 +227,9 @@ export class DeployMicroservice extends BaseService {
   public async getEnvironmentVariables(deploymentConfigId: number) {
     const data = {
       eventName: DeployEventType.GET_ENVIRONMENT_VARIABLES,
-      deploymentConfigId,
+      body: {
+        deploymentConfigId,
+      },
     };
     return await this.callService(data);
   }
@@ -235,7 +247,9 @@ export class DeployMicroservice extends BaseService {
   public async getDeploymentConfig(websiteUuid: string) {
     const data = {
       eventName: DeployEventType.GET_DEPLOYMENT_CONFIG,
-      websiteUuid,
+      body: {
+        websiteUuid,
+      },
     };
     return await this.callService(data);
   }

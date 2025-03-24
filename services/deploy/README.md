@@ -79,7 +79,7 @@ DEPLOY_MYSQL_DATABASE_TEST: string;
  * Deploy workers config
  */
 DEPLOY_AWS_WORKER_SQS_URL: string;
-DEPLOY_AWS_WORKER_LAMBDA_NAME: string;
+DEPLOY_BUILDER_AWS_WORKER_LAMBDA_NAME: string;
 ```
 
 ## Deployment

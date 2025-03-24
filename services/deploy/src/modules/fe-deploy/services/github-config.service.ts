@@ -1,6 +1,8 @@
 import {
+  GetProjectConfigType,
   GithubLinkDtoType,
   GithubUnlinkDtoType,
+  ListReposType,
   ModelValidationException,
 } from '@apillon/lib';
 import { GithubService } from './github.service';
@@ -106,10 +108,10 @@ export class GithubConfigService {
     return true;
   }
 
-  async getProjectConfigByProjectUuid(project_uuid: string) {
+  async getProjectConfigByProjectUuid(body: GetProjectConfigType) {
     const projectConfig =
       await this.githubConfigRepository.getGithubProjectConfigByProjectUuid(
-        project_uuid,
+        body.project_uuid,
       );
 
     if (!projectConfig.exists()) {
@@ -119,7 +121,7 @@ export class GithubConfigService {
     return projectConfig.serialize();
   }
 
-  async listRepos(project_uuid: string) {
+  async listRepos({ project_uuid }: ListReposType) {
     const projectConfig =
       await this.githubConfigRepository.getGithubProjectConfigByProjectUuid(
         project_uuid,
