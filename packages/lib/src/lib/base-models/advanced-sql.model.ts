@@ -327,12 +327,8 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
       WHERE id = @id
       `;
 
-      console.log('createQuery', createQuery);
-
       // re-set id parameter for where clause.
       serializedModel.id = this.id;
-
-      console.log('serializedModel', serializedModel);
 
       await this.getContext().mysql.paramExecute(
         createQuery,

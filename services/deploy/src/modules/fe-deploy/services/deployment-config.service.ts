@@ -67,8 +67,6 @@ export class DeploymentConfigService {
 
     const kmsClient = new AWS_KMS();
 
-    console.log(env.DEPLOY_KMS_KEY_ID);
-
     const deploymentConfig = this.deploymentConfigRepository.create({
       ...body,
       hookId: createdWebhook.id,
