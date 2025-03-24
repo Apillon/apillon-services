@@ -1,15 +1,8 @@
 import { ModelBase, prop } from '../../../base-models/base';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
-import {
-  EvmChain,
-  PopulateFrom,
-  ValidatorErrorCode,
-} from '../../../../config/types';
-import {
-  arrayPresenceValidator,
-  enumInclusionValidator,
-} from '../../../validators';
+import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
+import { arrayPresenceValidator } from '../../../validators';
 import { DeploySecretDto } from '../../deploy/dtos/deploy-secret.dto';
 
 /**
@@ -46,36 +39,51 @@ export class SimpletDeployDto extends ModelBase {
   })
   public description: string;
 
-  /**
-   * Represents an EVM-compatible blockchain network.
-   * This property holds the chain information used for determining where to
-   * deploy a smart contract.
-   */
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.DATA_NOT_PRESENT,
-      },
-      {
-        resolver: enumInclusionValidator(EvmChain),
-        code: ValidatorErrorCode.DATA_NOT_VALID,
-      },
-    ],
-  })
-  public chain: EvmChain;
+  // /**
+  //  * Represents an EVM-compatible blockchain network.
+  //  * This property holds the chain information used for determining where to
+  //  * deploy a smart contract.
+  //  */
+  // @prop({
+  //   parser: { resolver: integerParser() },
+  //   populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+  //   validators: [
+  //     {
+  //       resolver: conditionalPresenceValidator(
+  //         'contractConstructorArguments',
+  //         (value) => !!value,
+  //       ),
+  //       code: ValidatorErrorCode.DATA_NOT_PRESENT,
+  //     },
+  //     {
+  //       resolver: enumInclusionValidator(EvmChain, true),
+  //       code: ValidatorErrorCode.DATA_NOT_VALID,
+  //     },
+  //   ],
+  // })
+  // public chain: EvmChain | null;
+  //
+  // /**
+  //  * Represents an array of arguments to be passed to a smart contract's
+  //  * constructor during deployment or instantiation.
+  //  *
+  //  * Each element in the array corresponds to a specific parameter required by
+  //  * the smart contract's constructor definition.
+  //  */
+  // @prop({
+  //   parser: { array: true },
+  //   populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+  //   validators: [
+  //     {
+  //       resolver: conditionalPresenceValidator('chain', (value) => !!value),
+  //       code: ValidatorErrorCode.DATA_NOT_PRESENT,
+  //     },
+  //   ],
+  // })
+  // public contractConstructorArguments: any[] | null;
 
-  /**
-   * Represents an array of arguments to be passed to a smart contract's
-   * constructor during deployment or instantiation.
-   *
-   * Each element in the array corresponds to a specific parameter required by
-   * the smart contract's constructor definition.
-   */
   @prop({
-    parser: { array: true },
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     validators: [
       {
@@ -84,7 +92,7 @@ export class SimpletDeployDto extends ModelBase {
       },
     ],
   })
-  public contractConstructorArguments: any[];
+  public nftCollection_uuid: string;
 
   /**
    * Represents an array of deployment environment variables used in the backend.
@@ -99,14 +107,8 @@ export class SimpletDeployDto extends ModelBase {
   @prop({
     parser: { array: true, resolver: DeploySecretDto },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: arrayPresenceValidator(),
-        code: ValidatorErrorCode.DATA_NOT_PRESENT,
-      },
-    ],
   })
-  public backendVariables: DeploySecretDto[];
+  public backendVariables: DeploySecretDto[] | null;
 
   /**
    * Represents an array of DeploySecretDto objects required by the frontend.

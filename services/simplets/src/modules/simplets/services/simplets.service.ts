@@ -11,6 +11,7 @@ import {
   LogType,
   Mailing,
   ModelValidationException,
+  NftsMicroservice,
   ServiceName,
   SimpletsQueryFilterDto,
   StorageMicroservice,
@@ -35,12 +36,14 @@ export class SimpletsService {
   private logging: Lmas;
   private deployService: DeployMicroservice;
   private storageService: StorageMicroservice;
+  private nftsService: NftsMicroservice;
 
   constructor(
     context: ServiceContext,
     simpletRepository: SimpletsRepository,
     deployService: DeployMicroservice,
     storageService: StorageMicroservice,
+    nftsService: NftsMicroservice,
     spendService: SimpletsSpendService,
     mailingClient: Mailing,
     logging: Lmas,
@@ -49,6 +52,7 @@ export class SimpletsService {
     this.spendService = spendService;
     this.deployService = deployService;
     this.storageService = storageService;
+    this.nftsService = nftsService;
     this.mailingClient = mailingClient;
     this.logging = logging;
     this.context = context;
@@ -104,6 +108,18 @@ export class SimpletsService {
     return await new ContractsMicroservice(this.context).deployContract(
       payload,
     );
+  }
+
+  async getCollection(collection_uuid: string): Promise<any | null> {
+    const result = await this.nftsService.getNftCollection(collection_uuid);
+    if (!result.success) {
+      throw new SimpletsCodeException({
+        status: 500,
+        code: SimpletsErrorCode.COLLECTION_FETCH_FAILED,
+        errorMessage: `Failed to fetch NFT collection with uuid ${collection_uuid}.`,
+      });
+    }
+    return result.data ?? null;
   }
 
   async deployBackend(simplet: Simplet, secrets: any[]) {

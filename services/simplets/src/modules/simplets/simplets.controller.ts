@@ -1,6 +1,5 @@
 import {
   DeployedSimpletsQueryFilterDto,
-  DeployWebsiteDto,
   Lmas,
   LogType,
   ServiceName,
@@ -56,39 +55,103 @@ export class SimpletsController {
         service: ServiceName.SIMPLETS,
         location: 'SimpletsController.deploySimplet',
       });
-      // CONTRACT AND BACKEND DEPLOY
-      simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
-      simpletDeploy.contractStatus = ResourceStatus.DEPLOYING;
-      const [contractDeploy, backendDeploy] = await Promise.all([
-        this.simpletsService.deployContract(
-          simplet,
-          body.project_uuid,
-          body.name,
-          body.description,
-          body.chain,
-          body.contractConstructorArguments,
-        ),
-        this.simpletsService.deployBackend(simplet, body.backendVariables),
-      ]);
-      // Update contract details
-      if (contractDeploy.success) {
-        await this.logging.writeLog({
-          logType: LogType.INFO,
-          message: `Contract successfully deployed for simplet uuid ${body.simplet_uuid}.`,
-          service: ServiceName.SIMPLETS,
-          location: 'SimpletsController.deploySimplet',
-          data: contractDeploy.data,
-        });
-        const { contract_uuid, contractAddress, chain, chainType } =
-          contractDeploy.data;
-        simpletDeploy.contract_uuid = contract_uuid;
+      // CONTRACT DEPLOY
+      if (body.nftCollection_uuid) {
+        simpletDeploy.contractStatus = ResourceStatus.DEPLOYING;
+        // USE EXISTING COLLECTION
+        const collection = await this.simpletsService.getCollection(
+          body.nftCollection_uuid,
+        );
+        if (!collection) {
+          throw new SimpletsCodeException({
+            status: 404,
+            code: SimpletsErrorCode.NFT_COLLECTION_NOT_FOUND,
+            errorMessage: 'NFT collection does not found.',
+          });
+        }
+        // if collection is not deployed
+        if (collection.collectionStatus !== 3) {
+          throw new SimpletsCodeException({
+            status: 422,
+            code: SimpletsErrorCode.COLLECTION_NOT_DEPLOYED,
+            errorMessage: `NFT collection with uuid ${collection.collection_uuid} is not deployed.`,
+          });
+        }
         simpletDeploy.contractStatus = ResourceStatus.DEPLOYED;
-        simpletDeploy.contractChainType = chainType;
-        simpletDeploy.contractChain = chain;
-        simpletDeploy.contractAddress = contractAddress;
+        simpletDeploy.contractAddress = collection.address;
+        simpletDeploy.contractChain = collection.chain;
+        simpletDeploy.contractChainType = collection.chainType;
+        simpletDeploy.contract_uuid = collection.collection_uuid;
       }
-      // Update backend details
-      if (backendDeploy.success) {
+      // else if (simplet.contract_uuid) {
+      //    simpletDeploy.contractStatus = ResourceStatus.DEPLOYING;
+      //   // DEPLOY NEW SMART CONTRACT
+      //   if (!body.chain || !body.contractConstructorArguments) {
+      //     throw new SimpletsCodeException({
+      //       status: 422,
+      //       code: SimpletsErrorCode.DATA_NOT_VALID,
+      //       errorMessage: 'Chain or contract constructor arguments are missing',
+      //     });
+      //   }
+      //   const contractDeploy = await this.simpletsService.deployContract(
+      //     simplet,
+      //     body.project_uuid,
+      //     body.name,
+      //     body.description,
+      //     body.chain,
+      //     body.contractConstructorArguments,
+      //   );
+      //   if (!contractDeploy.success) {
+      //     await this.logging.writeLog({
+      //       sendAdminAlert: true,
+      //       logType: LogType.ERROR,
+      //       message: `Contract deployment failed for simplet uuid ${body.simplet_uuid}.`,
+      //       service: ServiceName.SIMPLETS,
+      //       location: 'SimpletsController.deploySimplet',
+      //     });
+      //     throw new SimpletsCodeException({
+      //       status: 500,
+      //       code: SimpletsErrorCode.CONTRACT_DEPLOYMENT_FAILED,
+      //       errorMessage: 'Contract deployment failed',
+      //     });
+      //   }
+      //   await this.logging.writeLog({
+      //     logType: LogType.INFO,
+      //     message: `Contract successfully deployed for simplet uuid ${body.simplet_uuid}.`,
+      //     service: ServiceName.SIMPLETS,
+      //     location: 'SimpletsController.deploySimplet',
+      //     data: contractDeploy.data,
+      //   });
+      //   const { contract_uuid, contractAddress, chain, chainType } =
+      //     contractDeploy.data;
+      //   simpletDeploy.contract_uuid = contract_uuid;
+      //   simpletDeploy.contractStatus = ResourceStatus.DEPLOYED;
+      //   simpletDeploy.contractChainType = chainType;
+      //   simpletDeploy.contractChain = chain;
+      //   simpletDeploy.contractAddress = contractAddress;
+      // }
+
+      // BACKEND DEPLOY
+      if (simplet.backendRepo) {
+        simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
+        const backendDeploy = await this.simpletsService.deployBackend(
+          simplet,
+          body.backendVariables,
+        );
+        if (!backendDeploy.success) {
+          await this.logging.writeLog({
+            sendAdminAlert: true,
+            logType: LogType.ERROR,
+            message: `Backend deployment failed for simplet uuid ${body.simplet_uuid}.`,
+            service: ServiceName.SIMPLETS,
+            location: 'SimpletsController.deploySimplet',
+          });
+          throw new SimpletsCodeException({
+            status: 500,
+            code: SimpletsErrorCode.BACKEND_DEPLOYMENT_FAILED,
+            errorMessage: 'Backend deployment failed',
+          });
+        }
         await this.logging.writeLog({
           logType: LogType.INFO,
           message: `Backend successfully deployed for simplet uuid ${body.simplet_uuid}.`,
@@ -101,34 +164,6 @@ export class SimpletsController {
         simpletDeploy.backendStatus = ResourceStatus.DEPLOYED;
         simpletDeploy.backendUrl = backendUrl;
       }
-      if (!contractDeploy.success) {
-        await this.logging.writeLog({
-          sendAdminAlert: true,
-          logType: LogType.ERROR,
-          message: `Contract deployment failed for simplet uuid ${body.simplet_uuid}.`,
-          service: ServiceName.SIMPLETS,
-          location: 'SimpletsController.deploySimplet',
-        });
-        throw new SimpletsCodeException({
-          status: 500,
-          code: SimpletsErrorCode.CONTRACT_DEPLOYMENT_FAILED,
-          errorMessage: 'Contract deployment failed',
-        });
-      }
-      if (!backendDeploy.success) {
-        await this.logging.writeLog({
-          sendAdminAlert: true,
-          logType: LogType.ERROR,
-          message: `Backend deployment failed for simplet uuid ${body.simplet_uuid}.`,
-          service: ServiceName.SIMPLETS,
-          location: 'SimpletsController.deploySimplet',
-        });
-        throw new SimpletsCodeException({
-          status: 500,
-          code: SimpletsErrorCode.BACKEND_DEPLOYMENT_FAILED,
-          errorMessage: 'Backend deployment failed',
-        });
-      }
 
       // FRONTEND DEPLOY
       simpletDeploy.frontendStatus = ResourceStatus.DEPLOYING;
@@ -136,7 +171,7 @@ export class SimpletsController {
         simplet,
         body.project_uuid,
         body.name,
-        backendDeploy.data.url,
+        simpletDeploy.backendUrl,
         body.apillonApiKey,
         body.apillonApiSecret,
         body.frontendVariables,
