@@ -25,6 +25,7 @@ import {
   SpendCreditDto,
   SqlModelStatus,
   WebsiteQueryFilter,
+  WebsiteSource,
   WebsitesQuotaReachedQueryFilter,
   writeLog,
 } from '@apillon/lib';
@@ -116,7 +117,11 @@ export class HostingService {
     event: { body: CreateWebsiteDto },
     context: ServiceContext,
   ): Promise<any> {
-    const website: Website = new Website(event.body, context);
+    const website: Website = new Website(event.body, context).populate({
+      source: event.body.deploymentConfig
+        ? WebsiteSource.GITHUB
+        : WebsiteSource.APILLON,
+    });
 
     if (website.domain) {
       //Check if domain already exists
@@ -172,6 +177,9 @@ export class HostingService {
       payload.skipWebsiteCheck = true;
 
       await new DeployMicroservice(context).createDeploymentConfig(payload);
+
+      // No need to update as createDeployementConfig already updates
+      website.source = WebsiteSource.GITHUB;
     }
 
     return website.serializeByContext();
