@@ -169,7 +169,7 @@ export class HostingService {
 
     if (event.body.deploymentConfig) {
       const payload = new CreateDeploymentConfigDto({}, context).populate({
-        ...event.body.deploymentConfig.serialize(),
+        ...event.body.deploymentConfig,
         websiteUuid: website_uuid,
       });
 
