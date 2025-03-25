@@ -1,12 +1,9 @@
 import { ServiceContext } from '@apillon/service-lib';
 import {
-  ContractsMicroservice,
-  CreateContractDTO,
   CreateWebsiteDto,
   DeployedSimpletsQueryFilterDto,
   DeployInstanceDto,
   DeployMicroservice,
-  EvmChain,
   Lmas,
   LogType,
   Mailing,
@@ -23,7 +20,7 @@ import { SimpletsRepository } from '../repositores/simplets-repository';
 import { SimpletsSpendService } from './simplets-spend.service';
 import { Simplet } from '../models/simplet.model';
 import { SimpletsCodeException } from '../../../lib/exceptions';
-import { SimpletsErrorCode } from '../../../config/types';
+import { ResourceStatus, SimpletsErrorCode } from '../../../config/types';
 import path from 'node:path';
 import { SimpletDeploy } from '../models/simpletDeploy.model';
 import { v4 as uuidV4 } from 'uuid';
@@ -87,30 +84,84 @@ export class SimpletsService {
     return await this.simpletRepository.getDeployedSimplet(uuid);
   }
 
-  async deployContract(
-    simplet: Simplet,
-    project_uuid: string,
-    name: string,
-    description: string,
-    chain: EvmChain,
-    constructorArguments: any[],
-  ) {
-    const payload = new CreateContractDTO({}, this.context).populate({
-      project_uuid,
-      name,
-      description,
-      contract_uuid: simplet.contract_uuid,
-      chain,
-      constructorArguments,
-    });
-    await payload.validateOrThrow(ModelValidationException, ValidatorErrorCode);
+  // async deployContract(
+  //   simpletDeploy: SimpletDeploy,
+  //   simplet: Simplet,
+  //   project_uuid: string,
+  //   name: string,
+  //   description: string,
+  //   chain: EvmChain,
+  //   constructorArguments: any[],
+  // ) {
+  //   await this.logging.writeLog({
+  //     logType: LogType.INFO,
+  //     message: `Starting contract deployment for simplet uuid ${simplet.simplet_uuid}.`,
+  //     service: ServiceName.SIMPLETS,
+  //     location: 'SimpletsService.deployContract',
+  //   });
+  //   simpletDeploy.contractStatus = ResourceStatus.DEPLOYING;
+  //   const payload = new CreateContractDTO({}, this.context).populate({
+  //     project_uuid,
+  //     name,
+  //     description,
+  //     contract_uuid: simplet.contract_uuid,
+  //     chain,
+  //     constructorArguments,
+  //   });
+  //   await payload.validateOrThrow(ModelValidationException, ValidatorErrorCode);
+  //
+  //   const contractDeploy = await new ContractsMicroservice(
+  //     this.context,
+  //   ).deployContract(payload);
+  //   if (!contractDeploy.success) {
+  //     await this.logging.writeLog({
+  //       sendAdminAlert: true,
+  //       logType: LogType.ERROR,
+  //       message: `Contract deployment failed for simplet uuid ${simplet.simplet_uuid}.`,
+  //       service: ServiceName.SIMPLETS,
+  //       location: 'SimpletsService.deploySimplet',
+  //     });
+  //     throw new SimpletsCodeException({
+  //       status: 500,
+  //       code: SimpletsErrorCode.CONTRACT_DEPLOYMENT_FAILED,
+  //       errorMessage: 'Contract deployment failed',
+  //     });
+  //   }
+  //   await this.logging.writeLog({
+  //     logType: LogType.INFO,
+  //     message: `Contract successfully deployed for simplet uuid ${simplet.simplet_uuid}.`,
+  //     service: ServiceName.SIMPLETS,
+  //     location: 'SimpletsService.deploySimplet',
+  //     data: contractDeploy.data,
+  //   });
+  //   simpletDeploy.contract_uuid = contractDeploy.data.contract_uuid;
+  //   simpletDeploy.contractStatus = ResourceStatus.DEPLOYED;
+  //   simpletDeploy.contractChainType = contractDeploy.data.chainType;
+  //   simpletDeploy.contractChain = contractDeploy.data.chain;
+  //   simpletDeploy.contractAddress = contractDeploy.data.contractAddress;
+  // }
 
-    return await new ContractsMicroservice(this.context).deployContract(
-      payload,
-    );
+  async verifyNftCollection(
+    simpletDeploy: SimpletDeploy,
+    nftCollection_uuid: string,
+  ) {
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Verifying collection with uuid ${nftCollection_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.deploySimplet',
+    });
+    simpletDeploy.contractStatus = ResourceStatus.DEPLOYING;
+    // USE EXISTING COLLECTION
+    const collection = await this.getCollection(nftCollection_uuid);
+    simpletDeploy.contractStatus = ResourceStatus.DEPLOYED;
+    simpletDeploy.contractAddress = collection.address;
+    simpletDeploy.contractChain = collection.chain;
+    simpletDeploy.contractChainType = collection.chainType;
+    simpletDeploy.contract_uuid = collection.collection_uuid;
   }
 
-  async getCollection(collection_uuid: string): Promise<any | null> {
+  private async getCollection(collection_uuid: string): Promise<any | null> {
     const result = await this.nftsService.getNftCollection(collection_uuid);
     if (!result.success) {
       throw new SimpletsCodeException({
@@ -119,10 +170,37 @@ export class SimpletsService {
         errorMessage: `Failed to fetch NFT collection with uuid ${collection_uuid}.`,
       });
     }
-    return result.data ?? null;
+    if (!result.data) {
+      throw new SimpletsCodeException({
+        status: 404,
+        code: SimpletsErrorCode.NFT_COLLECTION_NOT_FOUND,
+        errorMessage: 'NFT collection does not found.',
+      });
+    }
+    const collection = result.data;
+    // if collection is not deployed
+    if (collection.collectionStatus !== 3) {
+      throw new SimpletsCodeException({
+        status: 422,
+        code: SimpletsErrorCode.COLLECTION_NOT_DEPLOYED,
+        errorMessage: `NFT collection with uuid ${collection.collection_uuid} is not deployed.`,
+      });
+    }
+    return collection;
   }
 
-  async deployBackend(simplet: Simplet, secrets: any[]) {
+  async deployBackend(
+    simpletDeploy: SimpletDeploy,
+    simplet: Simplet,
+    secrets: any[],
+  ) {
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Starting backend deployment for simplet uuid ${simplet.simplet_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.deploySimplet',
+    });
+    simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
     const dockerComposeLocation = `${simplet.backendRepo.replace(/\/+$/, '')}/${simplet.backendPath.replace(/^\/+/, '')}`;
     const response = await fetch(dockerComposeLocation);
     if (!response.ok) {
@@ -142,23 +220,52 @@ export class SimpletsService {
       ModelValidationException,
       ValidatorErrorCode,
     );
-    return await this.deployService.deployDockerCompose(deployDto);
+    const backendDeploy =
+      await this.deployService.deployDockerCompose(deployDto);
+    if (!backendDeploy.success) {
+      await this.logging.writeLog({
+        sendAdminAlert: true,
+        logType: LogType.ERROR,
+        message: `Backend deployment failed for simplet uuid ${simplet.simplet_uuid}.`,
+        service: ServiceName.SIMPLETS,
+        location: 'SimpletsService.deploySimplet',
+      });
+      throw new SimpletsCodeException({
+        status: 500,
+        code: SimpletsErrorCode.BACKEND_DEPLOYMENT_FAILED,
+        errorMessage: 'Backend deployment failed',
+      });
+    }
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Backend successfully deployed for simplet uuid ${simplet.simplet_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.deploySimplet',
+      data: backendDeploy.data,
+    });
+    const { backend_uuid, url: backendUrl } = backendDeploy.data;
+    simpletDeploy.backend_uuid = backend_uuid;
+    simpletDeploy.backendStatus = ResourceStatus.DEPLOYED;
+    simpletDeploy.backendUrl = backendUrl;
+
+    return backendDeploy;
   }
 
   async deployFrontend(
+    simpletDeploy: SimpletDeploy,
     simplet: Simplet,
     project_uuid: string,
     simpletName: string,
-    backendUrl: string,
     apillonApiKey: string,
     apillonApiSecret: string,
     secrets: any[],
   ) {
+    simpletDeploy.frontendStatus = ResourceStatus.DEPLOYING;
     await this.logging.writeLog({
       logType: LogType.INFO,
       message: `Starting frontend deployment for simplet uuid ${simplet.simplet_uuid}.`,
       service: ServiceName.SIMPLETS,
-      location: 'SimpletsController.deploySimplet',
+      location: 'SimpletsService.deploySimplet',
     });
     const websiteResponse = await this.storageService.createWebsite(
       new CreateWebsiteDto({}, this.context).populate({
@@ -173,7 +280,7 @@ export class SimpletsService {
         logType: LogType.ERROR,
         message: `Website creation failed for simplet uuid ${simplet.simplet_uuid}.`,
         service: ServiceName.SIMPLETS,
-        location: 'SimpletsController.deploySimplet',
+        location: 'SimpletsService.deploySimplet',
       });
       throw new SimpletsCodeException({
         status: 500,
@@ -192,7 +299,10 @@ export class SimpletsService {
         websiteUuid: website_uuid,
         installCommand: `cd ${simplet.frontendPath} && ${simplet.frontendInstallCommand}`,
         buildCommand: `cd ${simplet.frontendPath} && ${simplet.frontendBuildCommand}`,
-        variables: [...secrets, { key: 'APP_URL', value: backendUrl }],
+        variables: [
+          ...secrets,
+          { key: 'APP_URL', value: simpletDeploy.backendUrl },
+        ],
         apiKey: apillonApiKey,
         apiSecret: apillonApiSecret,
       }),
@@ -203,7 +313,7 @@ export class SimpletsService {
         logType: LogType.ERROR,
         message: `Frontend deployment failed for simplet uuid ${simplet.simplet_uuid}.`,
         service: ServiceName.SIMPLETS,
-        location: 'SimpletsController.deploySimplet',
+        location: 'SimpletsService.deploySimplet',
       });
       throw new SimpletsCodeException({
         status: 500,
@@ -216,9 +326,8 @@ export class SimpletsService {
       logType: LogType.INFO,
       message: `Frontend successfully deployed for simplet uuid ${simplet.simplet_uuid}.`,
       service: ServiceName.SIMPLETS,
-      location: 'SimpletsController.deploySimplet',
+      location: 'SimpletsService.deploySimplet',
     });
-    return { website_uuid };
   }
 
   async listDeployedSimplets(query: DeployedSimpletsQueryFilterDto) {
