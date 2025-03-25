@@ -8,6 +8,7 @@ import {
   LogType,
   Mailing,
   ModelValidationException,
+  NFTCollectionType,
   NftsMicroservice,
   ServiceName,
   SimpletsQueryFilterDto,
@@ -154,6 +155,29 @@ export class SimpletsService {
     simpletDeploy.contractStatus = ResourceStatus.DEPLOYING;
     // USE EXISTING COLLECTION
     const collection = await this.getCollection(nftCollection_uuid);
+    // if collection is not deployed
+    if (collection.collectionStatus !== 3) {
+      throw new SimpletsCodeException({
+        status: 422,
+        code: SimpletsErrorCode.COLLECTION_NOT_DEPLOYED,
+        errorMessage: `NFT collection with uuid ${collection.collection_uuid} is not deployed.`,
+      });
+    }
+    if (!collection.isAutoIncrement) {
+      throw new SimpletsCodeException({
+        status: 422,
+        code: SimpletsErrorCode.INVALID_COLLECTION_CONFIGURATION,
+        errorMessage: `NFT collection with uuid ${collection.collection_uuid} has invalid configuration. Auto-increment is required.`,
+      });
+    }
+    if (collection.collectionType !== NFTCollectionType.GENERIC) {
+      throw new SimpletsCodeException({
+        status: 422,
+        code: SimpletsErrorCode.INVALID_COLLECTION_CONFIGURATION,
+        errorMessage: `NFT collection with uuid ${collection.collection_uuid} has invalid configuration. Collection type should be generic.`,
+      });
+    }
+
     simpletDeploy.contractStatus = ResourceStatus.DEPLOYED;
     simpletDeploy.contractAddress = collection.address;
     simpletDeploy.contractChain = collection.chain;
@@ -177,16 +201,7 @@ export class SimpletsService {
         errorMessage: 'NFT collection does not found.',
       });
     }
-    const collection = result.data;
-    // if collection is not deployed
-    if (collection.collectionStatus !== 3) {
-      throw new SimpletsCodeException({
-        status: 422,
-        code: SimpletsErrorCode.COLLECTION_NOT_DEPLOYED,
-        errorMessage: `NFT collection with uuid ${collection.collection_uuid} is not deployed.`,
-      });
-    }
-    return collection;
+    return result.data;
   }
 
   async deployBackend(
