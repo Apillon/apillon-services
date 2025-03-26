@@ -67,7 +67,7 @@ export class DeployService {
     );
 
     body.apiKey = createdApiKey.data.apiKey;
-    body.apiSecret = createdApiKey.data.apiKeySecretHashed;
+    body.apiSecret = createdApiKey.data.apiKeySecret;
 
     return createdApiKey.data;
   }

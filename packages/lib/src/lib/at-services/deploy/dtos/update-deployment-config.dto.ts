@@ -20,4 +20,11 @@ export class UpdateDeploymentConfigDto extends CreateDeploymentConfigDto {
     serializable: [],
   })
   public websiteUuid: null;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [],
+    serializable: [],
+  })
+  public repoUrl: null;
 }
