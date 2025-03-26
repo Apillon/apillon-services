@@ -78,12 +78,15 @@ export class DeploymentConfigService {
 
     await deploymentConfig.insert();
 
-    await this.storageMicroservice.updateWebsite({
-      website_uuid: body.websiteUuid,
-      data: {
-        source: WebsiteSource.GITHUB,
-      },
-    });
+    if (!body.skipWebsiteCheck) {
+      // When we already have website, we set source in advance
+      await this.storageMicroservice.updateWebsite({
+        website_uuid: body.websiteUuid,
+        data: {
+          source: WebsiteSource.GITHUB,
+        },
+      });
+    }
 
     const serializedConfig = deploymentConfig.serialize() as DeploymentConfig;
 
