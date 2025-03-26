@@ -34,6 +34,8 @@ APILLON_API_SECRET=$6
 APP_DIR=/tmp/github-app
 
 rm -rf "$APP_DIR"
+rm -rf /tmp/.npm
+rm -rf /tmp/npm-global
 
 # Clone the repository and checkout the specified branch
 echo "Cloning repository $REPO_URL..."
