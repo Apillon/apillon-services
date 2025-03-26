@@ -46,8 +46,15 @@ export class DeployService {
       context,
       new ServiceQueryFilter({}, context).populate({
         project_uuid: body.projectUuid,
-        serviceType_id: AttachedServiceType.HOSTING,
       }),
+    );
+
+    const hostingService = serviceList.items.find(
+      (item) => item.serviceType_id === AttachedServiceType.HOSTING,
+    );
+
+    const storageService = serviceList.items.find(
+      (item) => item.serviceType_id === AttachedServiceType.STORAGE,
     );
 
     const createdApiKey = await accessMS.createApiKey(
@@ -59,15 +66,33 @@ export class DeployService {
           new ApiKeyRoleBaseDto({}, context).populate({
             role_id: DefaultApiKeyRole.KEY_EXECUTE,
             project_uuid: body.projectUuid,
-            service_uuid: serviceList.items[0].service_uuid,
+            service_uuid: hostingService.service_uuid,
             serviceType_id: AttachedServiceType.HOSTING,
+          }),
+          new ApiKeyRoleBaseDto({}, context).populate({
+            role_id: DefaultApiKeyRole.KEY_READ,
+            project_uuid: body.projectUuid,
+            service_uuid: hostingService.service_uuid,
+            serviceType_id: AttachedServiceType.HOSTING,
+          }),
+          new ApiKeyRoleBaseDto({}, context).populate({
+            role_id: DefaultApiKeyRole.KEY_EXECUTE,
+            project_uuid: body.projectUuid,
+            service_uuid: storageService.service_uuid,
+            serviceType_id: AttachedServiceType.STORAGE,
+          }),
+          new ApiKeyRoleBaseDto({}, context).populate({
+            role_id: DefaultApiKeyRole.KEY_READ,
+            project_uuid: body.projectUuid,
+            service_uuid: storageService.service_uuid,
+            serviceType_id: AttachedServiceType.STORAGE,
           }),
         ],
       }),
     );
 
     body.apiKey = createdApiKey.data.apiKey;
-    body.apiSecret = createdApiKey.data.apiKeySecretHashed;
+    body.apiSecret = createdApiKey.data.apiKeySecret;
 
     return createdApiKey.data;
   }
