@@ -65,6 +65,15 @@ export class ContractsSpendService {
       [EvmChain.ASTAR]: ProductCode.CONTRACT_ASTAR_CALL,
       [EvmChain.BASE]: ProductCode.CONTRACT_BASE_CALL,
       [EvmChain.BASE_SEPOLIA]: ProductCode.CONTRACT_BASE_SEPOLIA_CALL,
+      [EvmChain.ARBITRUM_ONE]: ProductCode.CONTRACT_ARBITRUM_ONE_CALL,
+      [EvmChain.ARBITRUM_ONE_SEPOLIA]:
+        ProductCode.CONTRACT_ARBITRUM_ONE_SEPOLIA_CALL,
+      [EvmChain.AVALANCHE]: ProductCode.CONTRACT_AVALANCHE_CALL,
+      [EvmChain.AVALANCHE_FUJI]: ProductCode.CONTRACT_AVALANCHE_SEPOLIA_CALL,
+      [EvmChain.OPTIMISM]: ProductCode.CONTRACT_OPTIMISM_CALL,
+      [EvmChain.OPTIMISM_SEPOLIA]: ProductCode.CONTRACT_OPTIMISM_SEPOLIA_CALL,
+      [EvmChain.POLYGON]: ProductCode.CONTRACT_POLYGON_CALL,
+      [EvmChain.POLYGON_AMOY]: ProductCode.CONTRACT_POLYGON_AMOY_CALL,
     }[chain];
     const spendCredit = new SpendCreditDto(
       {

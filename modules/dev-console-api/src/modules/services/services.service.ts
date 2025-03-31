@@ -13,6 +13,7 @@ import {
   LogType,
   ServiceName,
   ModelValidationException,
+  Mailing,
 } from '@apillon/lib';
 import { v4 as uuidV4 } from 'uuid';
 import { DevConsoleApiContext } from '../../context';
@@ -76,32 +77,31 @@ export class ServicesService {
    * @param serviceType_id
    * @returns {Promise<boolean>} - True if service was created, false otherwise.
    */
-  async createServiceIfItDoesntExist(
+  async createServiceIfNotExists(
     context: DevConsoleApiContext,
     project_uuid: string,
     serviceType_id: AttachedServiceType,
-  ) {
-    const { total } = await new Service({}).getServices(
+  ): Promise<boolean> {
+    const { items, total } = await new Service({}).getServices(
       context,
-      new ServiceQueryFilter(
-        {
-          project_uuid,
-          serviceType_id,
-        },
-        context,
-      ),
+      new ServiceQueryFilter({ project_uuid }, context),
     );
-    if (total == 0) {
-      const service = new ServiceDto(
+
+    const filteredServices = items.filter(
+      (service) => service.serviceType_id === serviceType_id,
+    );
+
+    if (filteredServices.length === 0) {
+      const newService = new ServiceDto(
         {
           project_uuid,
-          name: `${serviceType_id} service`,
+          name: `Service ${serviceType_id}`,
           serviceType_id,
         },
         context,
       );
-      await this.createService(context, service);
 
+      await this.createService(context, newService, total);
       return true;
     }
 
@@ -118,6 +118,7 @@ export class ServicesService {
   async createService(
     context: DevConsoleApiContext,
     body: ServiceDto,
+    totalServices: number = 1,
   ): Promise<Service> {
     const project = await new Project({}, context).populateByUUIDOrThrow(
       body.project_uuid,
@@ -129,9 +130,11 @@ export class ServicesService {
       [AttachedServiceType.STORAGE]: DefaultPermission.STORAGE,
       [AttachedServiceType.HOSTING]: DefaultPermission.HOSTING,
       [AttachedServiceType.NFT]: DefaultPermission.NFTS,
+      [AttachedServiceType.SOCIAL]: DefaultPermission.SOCIAL,
       [AttachedServiceType.COMPUTING]: DefaultPermission.COMPUTING,
       [AttachedServiceType.CONTRACTS]: DefaultPermission.CONTRACTS,
       [AttachedServiceType.RPC]: DefaultPermission.RPC,
+      [AttachedServiceType.INDEXING]: DefaultPermission.INDEXING,
     }[body.serviceType_id];
 
     if (requiredPermission && !context.hasPermission(requiredPermission)) {
@@ -152,17 +155,21 @@ export class ServicesService {
     service.populate({ service_uuid: uuidV4(), project_id: project.id });
     await service.insert();
 
-    await new Lmas().writeLog({
-      context,
-      project_uuid: project.project_uuid,
-      logType: LogType.INFO,
-      message: 'New project service attached',
-      location: 'DEV-CONSOLE-API/ServicesService/createService',
-      service: ServiceName.DEV_CONSOLE,
-      data: {
-        service: service.serialize(),
-      },
-    });
+    Promise.all([
+      new Lmas().writeLog({
+        context,
+        project_uuid: project.project_uuid,
+        logType: LogType.INFO,
+        message: 'New project service attached',
+        location: 'DEV-CONSOLE-API/ServicesService/createService',
+        service: ServiceName.DEV_CONSOLE,
+        data: {
+          service: service.serialize(),
+        },
+      }),
+      // Set mailerlite field indicating the user created a bucket
+      new Mailing(context).setMailerliteField('total_services', totalServices),
+    ]);
 
     return service;
   }

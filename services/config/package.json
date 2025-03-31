@@ -1,6 +1,6 @@
 {
   "name": "@apillon/config",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "author": "Apillon",
   "license": "GNU GPL V3",
   "description": "System configuration service",

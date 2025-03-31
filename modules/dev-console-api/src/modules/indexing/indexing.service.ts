@@ -1,4 +1,5 @@
 import {
+  AttachedServiceType,
   BaseProjectQueryFilter,
   CreateIndexerDto,
   IndexerBillingQueryFilter,
@@ -9,9 +10,12 @@ import {
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
+import { ServicesService } from '../services/services.service';
 
 @Injectable()
 export class IndexingService {
+  constructor(private readonly serviceService: ServicesService) {}
+
   async listIndexers(
     context: DevConsoleApiContext,
     query: BaseProjectQueryFilter,
@@ -21,6 +25,12 @@ export class IndexingService {
   }
 
   async createIndexer(context: DevConsoleApiContext, body: CreateIndexerDto) {
+    await this.serviceService.createServiceIfNotExists(
+      context,
+      body.project_uuid,
+      AttachedServiceType.INDEXING,
+    );
+
     return (await new InfrastructureMicroservice(context).createIndexer(body))
       .data;
   }

@@ -30,6 +30,7 @@ import { StorageValidationException } from '../../../lib/exceptions';
 import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { ProjectConfig } from '../../config/models/project-config.model';
+import { WebsiteSource } from '@apillon/lib';
 
 export class Website extends UuidSqlModel {
   public readonly tableName = DbTables.WEBSITE;
@@ -373,6 +374,38 @@ export class Website extends UuidSqlModel {
     validators: [],
   })
   public lastDeploymentStatus: number;
+
+  @prop({
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [],
+  })
+  public nftCollectionUuid: string | null;
+
+  @prop({
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
+    ],
+    defaultValue: WebsiteSource.APILLON,
+  })
+  public source: WebsiteSource;
 
   /**
    * Populate by id or by uuid

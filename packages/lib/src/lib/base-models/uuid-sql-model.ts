@@ -56,7 +56,7 @@ export abstract class UuidSqlModel extends ProjectAccessModel {
       return SqlModelStatus.ACTIVE;
     },
   })
-  public status?: number;
+  public status?: SqlModelStatus;
 
   /**
    * Created at property definition.

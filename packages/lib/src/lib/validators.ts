@@ -145,3 +145,16 @@ export function minutesInFutureValidator(minutesInFuture: number) {
     return true;
   };
 }
+
+export function arrayPresenceValidator(allowEmpty = true) {
+  return function (this: any, value: any): boolean {
+    if (!Array.isArray(value)) {
+      return false;
+    }
+    if (allowEmpty && value.length === 0) {
+      return true;
+    }
+
+    return value.length > 0;
+  };
+}

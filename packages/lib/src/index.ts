@@ -38,12 +38,21 @@ export * from './lib/at-services/storage/dtos/bucket-qouta-reached-query-filter.
 export * from './lib/at-services/storage/dtos/create-ipns.dto';
 export * from './lib/at-services/storage/dtos/ipns-query-filter.dto';
 export * from './lib/at-services/storage/dtos/publish-ipns.dto';
+export * from './lib/at-services/deploy/dtos/create-deployment-config.dto';
+export * from './lib/at-services/deploy/dtos/trigger-github-deploy.dto';
+export * from './lib/at-services/deploy/dtos/update-deployment-config.dto';
+export * from './lib/at-services/storage/dtos/set-environment-variables.dto';
+export * from './lib/at-services/deploy/dtos/nft-website-deploy.dto';
+export * from './lib/at-services/storage/dtos/website-deploy.dto';
 export * from './lib/at-services/storage/storage';
 export * from './lib/at-services/storage/dtos/create-bucket.dto';
 export * from './lib/at-services/storage/dtos/bucket-query-filter.dto';
 export * from './lib/at-services/storage/dtos/create-directory.dto';
 export * from './lib/at-services/storage/dtos/get-links.dto';
 export * from './lib/at-services/storage/dtos/get-project-links.dto';
+export * from './lib/at-services/deploy/dtos/github-link.dto';
+export * from './lib/at-services/deploy/dtos/github-unlink.dto';
+export * from './lib/at-services/deploy/dtos/deployment-build-query-filter.dto';
 export * from './lib/at-services/storage/dtos/create-s3-url-for-upload.dto';
 export * from './lib/at-services/storage/dtos/directory-content-query-filter.dto';
 export * from './lib/at-services/storage/dtos/file-details-query-filter.dto';
@@ -122,6 +131,27 @@ export * from './lib/at-services/contracts/dtos/deployed-contract-query-filter.d
 export * from './lib/at-services/contracts/dtos/transaction-query-filter.dto';
 export * from './lib/at-services/contracts/dtos/call-contract.dto';
 export * from './lib/at-services/contracts/dtos/contract-abi-query.dto';
+
+//#REGION DEPLOY
+export * from './lib/at-services/deploy/eventTypes';
+export * from './lib/at-services/deploy/deploy';
+export * from './lib/at-services/deploy/dtos/deploy-instance.dto';
+export * from './lib/at-services/deploy/dtos/generic-deploy-request.dto';
+export * from './lib/at-services/deploy/dtos/resize-instance.dto';
+export * from './lib/at-services/deploy/dtos/virtual-machine.dto';
+export * from './lib/at-services/deploy/dtos/backends-query-filter.dto';
+export * from './lib/at-services/deploy/types/delete-deployment-config.type';
+export * from './lib/at-services/deploy/types/get-deploy-config-by-repo-id.type';
+export * from './lib/at-services/deploy/types/get-deployment-config.type';
+export * from './lib/at-services/deploy/types/get-environment-variables.type';
+export * from './lib/at-services/deploy/types/get-project-config.type';
+export * from './lib/at-services/deploy/types/list-repos.type';
+
+//#REGION SIMPLETS
+export * from './lib/at-services/simplets/eventTypes';
+export * from './lib/at-services/simplets/simplets';
+export * from './lib/at-services/simplets/dtos/simplet-deploy.dto';
+export * from './lib/at-services/simplets/dtos/simplets-query-filter.dto';
 
 //#REGION Blockchain
 export * from './lib/at-services/blockchain/blockchain';

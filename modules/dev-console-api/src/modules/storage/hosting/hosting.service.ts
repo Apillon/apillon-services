@@ -13,17 +13,10 @@ import {
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
 } from '@apillon/lib';
-import { HttpStatus, Injectable } from '@nestjs/common';
-import {
-  BadRequestErrorCode,
-  ResourceNotFoundErrorCode,
-} from '../../../config/types';
+import { Injectable } from '@nestjs/common';
+import { BadRequestErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
-import { Project } from '../../project/models/project.model';
-import { ServiceQueryFilter } from '../../services/dtos/services-query-filter.dto';
-import { Service } from '../../services/models/service.model';
 import { ServicesService } from '../../services/services.service';
-import { ServiceDto } from '../../services/dtos/service.dto';
 
 @Injectable()
 export class HostingService {
@@ -39,29 +32,11 @@ export class HostingService {
   }
 
   async createWebsite(context: DevConsoleApiContext, body: CreateWebsiteDto) {
-    const project = await new Project({}, context).populateByUUIDOrThrow(
-      body.project_uuid,
-    );
-
-    //Check if hosting service for this project already exists
-    const query: ServiceQueryFilter = new ServiceQueryFilter(
-      {},
+    await this.serviceService.createServiceIfNotExists(
       context,
-    ).populate({
-      project_uuid: project.project_uuid,
-      serviceType_id: AttachedServiceType.HOSTING,
-    });
-    const hostingServices = await new Service({}).getServices(context, query);
-    if (hostingServices.total == 0) {
-      //Create HOSTING service - "Attach"
-      const storageService: ServiceDto = new ServiceDto({}, context).populate({
-        project_uuid: project.project_uuid,
-        name: 'Hosting service',
-        serviceType_id: AttachedServiceType.HOSTING,
-      });
-
-      await this.serviceService.createService(context, storageService);
-    }
+      body.project_uuid,
+      AttachedServiceType.HOSTING,
+    );
 
     //Call Storage microservice, to create website
     return (await new StorageMicroservice(context).createWebsite(body)).data;

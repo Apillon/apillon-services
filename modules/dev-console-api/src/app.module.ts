@@ -26,6 +26,8 @@ import { EmbeddedWalletModule } from './modules/wallet/embedded-wallet.module';
 import { RpcModule } from './modules/rpc/rpc.module';
 import { IndexingModule } from './modules/indexing/indexing.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { DeployModule } from './modules/deploy/deploy.module';
+import { SimpletsModule } from './modules/simplets/simplets.module';
 
 @Module({
   imports: [
@@ -41,6 +43,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     ReferralModule,
     NftsModule,
     NotificationModule,
+    DeployModule,
     ComputingModule,
     PaymentsModule,
     PublicModule,
@@ -50,6 +53,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     ContractsModule,
     RpcModule,
     IndexingModule,
+    SimpletsModule,
   ],
   controllers: [],
   providers: [],
@@ -66,6 +70,7 @@ export class AppModule {
         { path: '/', method: RequestMethod.GET },
         { path: '/favicon.ico', method: RequestMethod.GET },
         // Auth routes:
+        { path: 'deploy/webhook', method: RequestMethod.POST },
         { path: 'users/login', method: RequestMethod.POST },
         { path: 'users/login/wallet', method: RequestMethod.POST },
         { path: 'users/login-kilt', method: RequestMethod.POST },

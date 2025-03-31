@@ -408,6 +408,18 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async getWebsiteWithAccess(
+    websiteUuid: string,
+    hasModifyAccess: boolean,
+  ) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_GET_WITH_ACCESS,
+      websiteUuid,
+      hasModifyAccess,
+    };
+    return await this.callService(data);
+  }
+
   public async createWebsite(params: CreateWebsiteDto) {
     const data = {
       eventName: StorageEventType.WEBSITE_CREATE,

@@ -1,6 +1,7 @@
 # Apillon - A Web3 development platform
 
-In this repository you will find source and documentation for microservices, APIs and libraries that form Apillon services.
+In this repository you will find source and documentation for microservices,
+APIs and libraries that form Apillon services.
 
 ## Table of Contents
 
@@ -37,6 +38,7 @@ In this repository you will find source and documentation for microservices, API
 | 19   | SUBS      | Social service                           | [@apillon/social](/services/social/)                  | /services/social/         |
 | 20   | INFRA     | Infrastructure service                   | [@apillon/infrastructure](/services/infrastructure)   | /services/infrastructure/ |
 | 21   | CONTRACTS | Contracts service                        | [@apillon/contracts](/services/contracts/)            | /services/contracts/      |
+| 21   | DEPLOY    | Deploy service                           | [@apillon/deploy](/services/deploy/)                  | /services/deploy/         |
 
 ## Documentation
 

@@ -244,7 +244,7 @@ export class Service extends AdvancedSQLModel {
         INNER JOIN \`${DbTables.PROJECT}\` p
           ON p.id = s.project_id
         WHERE p.project_uuid = @project_uuid
-        AND (@serviceType_id IS NULL OR  s.serviceType_id = @serviceType_id )
+        AND (@serviceType_id IS NULL OR  s.serviceType_id = @serviceType_id)
       `,
       qFilter: `
         ORDER BY ${filters.orderStr}

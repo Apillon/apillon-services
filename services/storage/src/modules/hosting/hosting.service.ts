@@ -2,9 +2,11 @@ import {
   Ams,
   ApillonHostingApiCreateS3UrlsForUploadDto,
   AWS_S3,
+  CreateDeploymentConfigDto,
   CreateS3UrlsForUploadDto,
   CreateWebsiteDto,
   DeploymentQueryFilter,
+  DeployMicroservice,
   DeployWebsiteDto,
   DomainQueryFilter,
   EmailDataDto,
@@ -23,6 +25,7 @@ import {
   SpendCreditDto,
   SqlModelStatus,
   WebsiteQueryFilter,
+  WebsiteSource,
   WebsitesQuotaReachedQueryFilter,
   writeLog,
 } from '@apillon/lib';
@@ -88,11 +91,37 @@ export class HostingService {
     return website.serializeByContext();
   }
 
+  static async getWebsiteWithAccess(
+    event: {
+      websiteUuid: string;
+      hasModifyAccess: boolean;
+    },
+    context: ServiceContext,
+  ) {
+    const website = await new Website({}, context).populateByUUID(
+      event.websiteUuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+
+    event.hasModifyAccess
+      ? website.canModify(context)
+      : website.canAccess(context);
+
+    return website.serialize(SerializeFor.SERVICE);
+  }
+
   static async createWebsite(
     event: { body: CreateWebsiteDto },
     context: ServiceContext,
   ): Promise<any> {
-    const website: Website = new Website(event.body, context);
+    const website: Website = new Website(event.body, context).populate({
+      source: event.body.deploymentConfig
+        ? WebsiteSource.GITHUB
+        : WebsiteSource.APILLON,
+    });
 
     if (website.domain) {
       //Check if domain already exists
@@ -137,6 +166,21 @@ export class HostingService {
       // Set mailerlite field indicating the user has a website
       new Mailing(context).setMailerliteField('has_website'),
     ]);
+
+    if (event.body.deploymentConfig) {
+      const payload = new CreateDeploymentConfigDto({}, context).populate({
+        ...event.body.deploymentConfig,
+        websiteUuid: website_uuid,
+      });
+
+      // Should not be populated as we reuse the same DTO on endpoint
+      payload.skipWebsiteCheck = true;
+
+      await new DeployMicroservice(context).createDeploymentConfig(payload);
+
+      // No need to update as createDeployementConfig already updates
+      website.source = WebsiteSource.GITHUB;
+    }
 
     return website.serializeByContext();
   }
