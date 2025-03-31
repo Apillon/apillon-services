@@ -110,7 +110,7 @@ export class HostingService {
       ? website.canModify(context)
       : website.canAccess(context);
 
-    return website.serializeByContext();
+    return website.serialize(SerializeFor.SERVICE);
   }
 
   static async createWebsite(
