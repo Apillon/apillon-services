@@ -103,6 +103,8 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.GET_IPFS_CLUSTER_INFO]: StorageService.getIpfsClusterInfo,
     [StorageEventType.GET_LINK]: StorageService.getLink,
     [StorageEventType.GET_LINKS]: StorageService.getLinks,
+    [StorageEventType.UNLINK_GITHUB_FROM_WEBSITES]:
+      StorageService.unlinkGithubFromWebsites,
 
     [StorageEventType.GENERATE_SHORT_URL]: UrlShortenerService.generateShortUrl,
     [StorageEventType.GET_TARGET_URL]: UrlShortenerService.getTargetUrl,
