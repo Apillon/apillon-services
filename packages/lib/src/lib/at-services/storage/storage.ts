@@ -613,4 +613,13 @@ export class StorageMicroservice extends BaseService {
     };
     return await this.callService(data);
   }
+
+  public async unlinkGithubFromWebsites(uuids: string[]) {
+    const data = {
+      eventName: StorageEventType.UNLINK_GITHUB_FROM_WEBSITES,
+      uuids,
+    };
+
+    return await this.callService(data);
+  }
 }

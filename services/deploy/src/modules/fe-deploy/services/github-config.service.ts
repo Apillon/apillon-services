@@ -4,6 +4,7 @@ import {
   GithubUnlinkDtoType,
   ListReposType,
   ModelValidationException,
+  StorageMicroservice,
 } from '@apillon/lib';
 import { GithubService } from './github.service';
 import { DeployCodeException } from '../../../lib/exceptions';
@@ -16,6 +17,7 @@ export class GithubConfigService {
     private readonly githubService: GithubService,
     private readonly githubConfigRepository: GithubConfigRepository,
     private readonly deploymentConfigRepository: DeploymentConfigRepository,
+    private readonly storageMicroservice: StorageMicroservice,
   ) {
     this.githubService = githubService;
     this.githubConfigRepository = githubConfigRepository;
@@ -100,10 +102,18 @@ export class GithubConfigService {
       ),
     );
 
-    configs.length &&
-      (await this.deploymentConfigRepository.markDeploymentConfigsDeleted(
-        configs.map((config) => config.id),
-      ));
+    if (configs.length) {
+      const websiteUuids = configs.map((config) => config.websiteUuid);
+
+      // Get unique website UUIDs
+      const uniqueWebsiteUuids = [...new Set(websiteUuids)];
+      await Promise.all([
+        this.deploymentConfigRepository.markDeploymentConfigsDeleted(
+          configs.map((config) => config.id),
+        ),
+        this.storageMicroservice.unlinkGithubFromWebsites(uniqueWebsiteUuids),
+      ]);
+    }
 
     return true;
   }
