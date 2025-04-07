@@ -54,13 +54,14 @@ export class FrontendController {
       this.githubService,
     );
 
+    const storageMicroservice = new StorageMicroservice(context);
+
     this.githubConfigService = new GithubConfigService(
       this.githubService,
       githubConfigRepository,
       deploymentConfigRepository,
+      storageMicroservice,
     );
-
-    const storageMicroservice = new StorageMicroservice(context);
 
     this.buildService = new BuildService(
       deploymentBuildRepository,

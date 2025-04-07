@@ -132,7 +132,8 @@ export class GithubProjectConfig extends AdvancedSQLModel {
 
     const data = await this.getContext().mysql.paramExecute(
       `SELECT * FROM ${DbTables.GITHUB_PROJECT_CONFIG}
-      WHERE project_uuid = @projectUuid`,
+      WHERE project_uuid = @projectUuid
+      AND status <> ${SqlModelStatus.DELETED}`,
       {
         projectUuid,
       },

@@ -867,4 +867,15 @@ export class StorageService {
       links,
     };
   }
+
+  static async unlinkGithubFromWebsites(
+    event: {
+      uuids: string[];
+    },
+    context: ServiceContext,
+  ) {
+    await new Website({}, context).unlinkGithubFromWebsites(event.uuids);
+
+    return true;
+  }
 }

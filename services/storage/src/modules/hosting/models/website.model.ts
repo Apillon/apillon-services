@@ -748,4 +748,21 @@ export class Website extends UuidSqlModel {
       {},
     );
   }
+
+  public async unlinkGithubFromWebsites(uuids: string[]) {
+    if (!uuids || !uuids.length) {
+      return;
+    }
+
+    await this.getContext().mysql.paramExecute(
+      `
+      UPDATE \`${DbTables.WEBSITE}\`
+      SET source = @source
+      WHERE website_uuid IN (@uuids)`,
+      {
+        source: WebsiteSource.APILLON,
+        uuids,
+      },
+    );
+  }
 }
