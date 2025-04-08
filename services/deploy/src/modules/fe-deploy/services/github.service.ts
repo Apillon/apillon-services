@@ -72,6 +72,7 @@ export class GithubService {
       params: {
         sort: 'pushed',
         per_page: 100,
+        affiliation: 'owner',
       },
     });
 
