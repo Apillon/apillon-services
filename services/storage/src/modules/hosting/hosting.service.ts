@@ -176,7 +176,12 @@ export class HostingService {
       // Should not be populated as we reuse the same DTO on endpoint
       payload.skipWebsiteCheck = true;
 
-      await new DeployMicroservice(context).createDeploymentConfig(payload);
+      try {
+        await new DeployMicroservice(context).createDeploymentConfig(payload);
+      } catch (err) {
+        await website.delete();
+        throw err;
+      }
 
       // No need to update as createDeployementConfig already updates
       website.source = WebsiteSource.GITHUB;
