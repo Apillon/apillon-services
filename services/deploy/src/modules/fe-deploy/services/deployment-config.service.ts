@@ -120,7 +120,14 @@ export class DeploymentConfigService {
       true,
     );
 
-    const { apiSecret, apiKey, ...updatedFields } = body;
+    const {
+      apiSecret,
+      apiKey,
+      websiteUuid: _websiteUuid,
+      projectUuid: _projectUuid,
+      repoId: _repoId,
+      ...updatedFields
+    } = body;
 
     const apiKeyToSet = apiKey ?? config.apiKey;
     const apiSecretToSet = apiSecret
