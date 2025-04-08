@@ -241,17 +241,6 @@ export class DeployService {
 
     const storageMS = new StorageMicroservice(context);
 
-    const website = (
-      await storageMS.createWebsite(
-        new CreateWebsiteDto({}, context).populate({
-          project_uuid: collection.project_uuid,
-          name: `${collection.name} - Website`,
-          nftCollectionUuid: collection.collection_uuid,
-          source: WebsiteSource.GITHUB,
-        }),
-      )
-    ).data;
-
     let apiSecretRaw: string;
     if (!body.apiKey || !body.apiSecret) {
       const createdApiKey = await this.createAndPopulateApiKeyForDeploy(
@@ -261,6 +250,16 @@ export class DeployService {
 
       apiSecretRaw = createdApiKey.apiKeySecret;
     }
+
+    const website = (
+      await storageMS.createWebsite(
+        new CreateWebsiteDto({}, context).populate({
+          project_uuid: collection.project_uuid,
+          name: `${collection.name} - Website`,
+          nftCollectionUuid: collection.collection_uuid,
+        }),
+      )
+    ).data;
 
     await new DeployMicroservice(context).triggerWebDeploy(
       new NftWebsiteDeployDto({}, context).populate({
