@@ -10,6 +10,7 @@ import {
   ModelValidationException,
   NFTCollectionType,
   NftsMicroservice,
+  ResourceStatus,
   ServiceName,
   SimpletsQueryFilterDto,
   StorageMicroservice,
@@ -21,10 +22,11 @@ import { SimpletsRepository } from '../repositores/simplets-repository';
 import { SimpletsSpendService } from './simplets-spend.service';
 import { Simplet } from '../models/simplet.model';
 import { SimpletsCodeException } from '../../../lib/exceptions';
-import { ResourceStatus, SimpletsErrorCode } from '../../../config/types';
+import { SimpletsErrorCode } from '../../../config/types';
 import path from 'node:path';
 import { SimpletDeploy } from '../models/simpletDeploy.model';
 import { v4 as uuidV4 } from 'uuid';
+import axios from 'axios';
 
 export class SimpletsService {
   private readonly context: ServiceContext;
@@ -136,7 +138,7 @@ export class SimpletsService {
   //     data: contractDeploy.data,
   //   });
   //   simpletDeploy.contract_uuid = contractDeploy.data.contract_uuid;
-  //   simpletDeploy.contractStatus = ResourceStatus.DEPLOYED;
+  //   simpletDeploy.contractStatus = ResourceStatus.ONLINE;
   //   simpletDeploy.contractChainType = contractDeploy.data.chainType;
   //   simpletDeploy.contractChain = contractDeploy.data.chain;
   //   simpletDeploy.contractAddress = contractDeploy.data.contractAddress;
@@ -178,11 +180,13 @@ export class SimpletsService {
       });
     }
 
-    simpletDeploy.contractStatus = ResourceStatus.DEPLOYED;
-    simpletDeploy.contractAddress = collection.address;
-    simpletDeploy.contractChain = collection.chain;
-    simpletDeploy.contractChainType = collection.chainType;
-    simpletDeploy.contract_uuid = collection.collection_uuid;
+    simpletDeploy.populate({
+      contractStatus: ResourceStatus.ONLINE,
+      contractAddress: collection.address,
+      contractChain: collection.chain,
+      contractChainType: collection.chainType,
+      contract_uuid: collection.collection_uuid,
+    });
   }
 
   private async getCollection(collection_uuid: string): Promise<any | null> {
@@ -217,19 +221,16 @@ export class SimpletsService {
     });
     simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
     const dockerComposeLocation = `${simplet.backendRepo.replace(/\/+$/, '')}/${simplet.backendPath.replace(/^\/+/, '')}`;
-    const response = await fetch(dockerComposeLocation);
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch content from URL: ${dockerComposeLocation}, status: ${response.status}`,
-      );
-    }
-    const dockerCompose = await response.text();
+    const response = await axios.get(dockerComposeLocation);
+    const dockerCompose = response.data;
+
     const deployDto = new DeployInstanceDto({}, this.context).populate({
       name: simplet.name,
       description: simplet.description,
       dockerCompose,
       secrets,
       virtualMachine: simplet.backendMachine,
+      project_uuid: simpletDeploy.project_uuid,
     });
     await deployDto.validateOrThrow(
       ModelValidationException,
@@ -260,7 +261,7 @@ export class SimpletsService {
     });
     const { backend_uuid, url: backendUrl } = backendDeploy.data;
     simpletDeploy.backend_uuid = backend_uuid;
-    simpletDeploy.backendStatus = ResourceStatus.DEPLOYED;
+    simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
     simpletDeploy.backendUrl = backendUrl;
 
     return backendDeploy;
@@ -343,6 +344,8 @@ export class SimpletsService {
       service: ServiceName.SIMPLETS,
       location: 'SimpletsService.deploySimplet',
     });
+
+    simpletDeploy.frontend_uuid = website_uuid;
   }
 
   async listDeployedSimplets(query: DeployedSimpletsQueryFilterDto) {

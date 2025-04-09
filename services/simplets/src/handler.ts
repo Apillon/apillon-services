@@ -1,4 +1,12 @@
-import { AppEnvironment, env } from '@apillon/lib';
+import {
+  AppEnvironment,
+  DeployMicroservice,
+  env,
+  Lmas,
+  Mailing,
+  NftsMicroservice,
+  StorageMicroservice,
+} from '@apillon/lib';
 import {
   ErrorHandler,
   InitializeContextAndFillUser,
@@ -9,6 +17,10 @@ import {
 import middy from '@middy/core';
 import type { Callback, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
+import { SimpletsService } from './modules/simplets/services/simplets.service';
+import { SimpletsRepository } from './modules/simplets/repositores/simplets-repository';
+import { SimpletsSpendService } from './modules/simplets/services/simplets-spend.service';
+import { SimpletsController } from './modules/simplets/simplets.controller';
 
 /**
  * Handles AWS Lambda events and passes them to processEvent() for processing.
@@ -24,7 +36,25 @@ const lambdaHandler: Handler = async (
 ) => {
   logLambdaEvent(event);
 
-  return await processEvent(event, context.serviceContext);
+  const logging = new Lmas();
+  const serviceContext = context.serviceContext;
+  const simpletsService = new SimpletsService(
+    serviceContext,
+    new SimpletsRepository(serviceContext),
+    new DeployMicroservice(serviceContext),
+    new StorageMicroservice(serviceContext),
+    new NftsMicroservice(serviceContext),
+    new SimpletsSpendService(serviceContext),
+    new Mailing(serviceContext),
+    logging,
+  );
+  const controller = new SimpletsController(
+    serviceContext,
+    simpletsService,
+    logging,
+  );
+
+  return await processEvent(event, serviceContext, controller);
 };
 
 /**

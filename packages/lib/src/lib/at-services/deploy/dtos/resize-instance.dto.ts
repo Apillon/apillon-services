@@ -4,13 +4,6 @@ import { stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import { VirtualMachineDto } from './virtual-machine.dto';
 
-export interface IVMResourceRequest {
-  vcpu: number;
-  memory: number;
-  disk_size: number;
-  allow_restart: number;
-}
-
 export class ResizeInstanceDto extends VirtualMachineDto {
   @prop({
     parser: { resolver: stringParser() },

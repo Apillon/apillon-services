@@ -55,6 +55,6 @@ export async function downgrade(
   await queryFn(
     `DELETE
      FROM \`${DbTables.SIMPLET}\`
-     WHERE \`name\` = ${SIMPLET_NAME}`,
+     WHERE \`name\` = '${SIMPLET_NAME}'`,
   );
 }

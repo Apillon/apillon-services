@@ -5,7 +5,7 @@ import {
   env,
   ResizeInstanceDto,
 } from '@apillon/lib';
-import { PhalaDockerClient } from '../clients/phala-tee.client';
+import { PhalaCloudClient } from '../clients/phala-cloud.client';
 import {
   IBackendDeployStrategy,
   ICreateVMResponse,
@@ -18,9 +18,9 @@ import { DeployErrorCode } from '../../../config/types';
 import axios from 'axios';
 
 export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
-  private client: PhalaDockerClient;
+  private client: PhalaCloudClient;
 
-  constructor(client: PhalaDockerClient) {
+  constructor(client: PhalaCloudClient) {
     this.client = client;
   }
 
@@ -32,7 +32,7 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
     const virtualMachine = body.virtualMachine;
     try {
       const pod = await this.client.getAvailablePods();
-      if (pod.nodes.length === 0) {
+      if (pod.nodes.length <= 0) {
         throw new DeployCodeException({
           status: 500,
           code: DeployErrorCode.DEPLOY_POD_NOT_FOUND,
@@ -58,12 +58,13 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
           errorMessage: 'No suitable image was found.',
         });
       }
+      const name = `${backend_uuid}-backend`;
       const vmConfig = {
-        name: backend_uuid,
+        name: name,
         image: imageName,
         teepod_id: podId,
         compose_manifest: {
-          name: backend_uuid,
+          name: name,
           features: ['kms', 'tproxy-net'],
           docker_compose_file: body.dockerCompose,
         },
@@ -86,7 +87,7 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
         },
       };
       const withPubKey = await this.client.getPublicKey(vmConfig);
-      const encryptedEnv = await this.encryptEnvVariables(
+      const encryptedEnv = await PhalaDockerDeployStrategy.encryptEnvVariables(
         secrets,
         withPubKey.app_env_encrypt_pubkey,
       );
@@ -195,7 +196,7 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
   }
 
   //region HELPER
-  private async encryptEnvVariables(
+  private static async encryptEnvVariables(
     envs: Record<string, any>[],
     publicKeyHex: string,
   ): Promise<string> {
@@ -253,5 +254,15 @@ function uint8ArrayToHex(buffer: Uint8Array): string {
     .join('');
 }
 
+/**
+ * Parses and converts a version array into a numerical value representing the version.
+ *
+ * This function takes an array of numbers, where each number represents a part of a version (e.g., major, minor, patch: `[1, 5, 7]`),
+ * and calculates a single numerical value by assigning decreasing weights to each segment of the version.
+ *
+ * @param versionArray - An array of numbers representing the individual parts of the version
+ *                                  (e.g., [major, minor, patch]).
+ * @returns A computed numeric value representing the version, with each part weighted appropriately.
+ */
 const parsePhalaImageVersion = (versionArray: number[]) =>
   versionArray.reduce((acc, num, idx) => acc + num * 10 ** (2 * (2 - idx)), 0);

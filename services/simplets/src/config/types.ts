@@ -31,11 +31,3 @@ export enum ResourceActions {
   DEPLOY_FAILED = 2,
   SHUT_DOWN = 3,
 }
-
-export enum ResourceStatus {
-  CREATED = 0,
-  DEPLOYING = 1,
-  DEPLOYED = 2,
-  SHUT_DOWN = 3,
-  FAILED = 4,
-}

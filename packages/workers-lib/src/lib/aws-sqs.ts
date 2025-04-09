@@ -1,6 +1,6 @@
 import { env, Lmas, LogType, ServiceName } from '@apillon/lib';
-import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import type { SendMessageCommandInput } from '@aws-sdk/client-sqs';
+import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 
 export function createSqsClient() {
   return new SQSClient({
@@ -81,4 +81,78 @@ export async function sendToWorkerQueue(
     });
   }
   return { errCount, errMsgs };
+}
+
+export class WorkerService {
+  private sqs: SQSClient;
+
+  constructor(sqs: SQSClient) {
+    this.sqs = sqs;
+  }
+
+  async sendToWorkerQueue(
+    queueUrl: string,
+    workerName: string,
+    msgData: Array<any>,
+    id: number,
+    parameters: any[] = null,
+    delaySeconds = 0,
+  ): Promise<{ errCount: number; errMsgs: string[] }> {
+    let errCount = 0;
+    const errMsgs = [];
+    const promises = [];
+    for (const msg of msgData) {
+      const message: SendMessageCommandInput = {
+        MessageAttributes: {
+          workerName: {
+            DataType: 'String',
+            StringValue: workerName,
+          },
+          ...(id
+            ? {
+                jobId: {
+                  DataType: 'String',
+                  StringValue: id.toString(),
+                },
+              }
+            : {}),
+          parameters: {
+            DataType: 'String',
+            StringValue: JSON.stringify(parameters),
+          },
+        },
+        MessageBody: JSON.stringify(
+          typeof msg.serialize == 'function' ? msg.serialize() : msg,
+        ),
+        QueueUrl: queueUrl,
+        DelaySeconds: delaySeconds,
+      };
+      if (!parameters) {
+        delete message.MessageAttributes.parameters;
+      }
+      const command = new SendMessageCommand(message);
+      const promise = this.sqs.send(command).catch((err) => {
+        console.log('sendToWorkerQueue: Error sending SQS message!', err);
+        errCount++;
+        errMsgs.push(err.message);
+      });
+
+      promises.push(promise);
+    }
+    await Promise.all(promises);
+    if (errCount) {
+      await new Lmas().writeLog({
+        logType: LogType.ERROR,
+        message: 'Errors detected while sending messages to queue',
+        location: 'sendToWorkerQueue',
+        service: ServiceName.GENERAL,
+        data: {
+          errCount,
+          errMsgs: JSON.stringify(errMsgs),
+        },
+        sendAdminAlert: true,
+      });
+    }
+    return { errCount, errMsgs };
+  }
 }

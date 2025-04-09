@@ -7,16 +7,13 @@ import {
   PopulateFrom,
   presenceValidator,
   prop,
+  ResourceStatus,
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
   UuidSqlModel,
 } from '@apillon/lib';
-import {
-  DbTables,
-  ResourceStatus,
-  SimpletsErrorCode,
-} from '../../../config/types';
+import { DbTables, SimpletsErrorCode } from '../../../config/types';
 import { integerParser, stringParser } from '@rawmodel/parsers';
 
 export class SimpletDeploy extends UuidSqlModel {
@@ -136,9 +133,10 @@ export class SimpletDeploy extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.PROFILE,
     ],
-    defaultValue: ResourceStatus.CREATED,
+    defaultValue: ResourceStatus.REQUESTED,
   })
   public backendStatus: ResourceStatus;
 
@@ -180,7 +178,7 @@ export class SimpletDeploy extends UuidSqlModel {
       SerializeFor.SELECT_DB,
       SerializeFor.PROFILE,
     ],
-    defaultValue: ResourceStatus.CREATED,
+    defaultValue: ResourceStatus.REQUESTED,
   })
   public contractStatus: ResourceStatus;
 
@@ -250,7 +248,7 @@ export class SimpletDeploy extends UuidSqlModel {
       SerializeFor.SELECT_DB,
       SerializeFor.PROFILE,
     ],
-    defaultValue: ResourceStatus.CREATED,
+    defaultValue: ResourceStatus.REQUESTED,
   })
   public frontendStatus: ResourceStatus;
 

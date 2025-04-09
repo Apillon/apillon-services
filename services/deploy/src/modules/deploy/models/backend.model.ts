@@ -5,13 +5,14 @@ import {
   PopulateFrom,
   presenceValidator,
   prop,
+  ResourceStatus,
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
   UuidSqlModel,
   ValidatorErrorCode,
 } from '@apillon/lib';
-import { stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, DeployErrorCode } from '../../../config/types';
 
 export class Backend extends UuidSqlModel {
@@ -43,7 +44,57 @@ export class Backend extends UuidSqlModel {
       },
     ],
   })
+  public project_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: DeployErrorCode.DATA_NOT_PRESENT,
+      },
+    ],
+  })
   public backend_uuid: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+      SerializeFor.UPDATE_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: DeployErrorCode.DATA_NOT_PRESENT,
+      },
+    ],
+    defaultValue: ResourceStatus.REQUESTED,
+  })
+  public backendStatus: ResourceStatus;
 
   @prop({
     parser: { resolver: stringParser() },

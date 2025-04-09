@@ -106,7 +106,7 @@ export class SimpletsController {
       if (e instanceof SimpletsCodeException) {
         throw e;
       }
-      const message = `An unexpected error occurred while deploying simplet with uuid ${body.simplet_uuid}.`;
+      const message = `An unexpected error occurred while deploying simplet with uuid ${body.simplet_uuid}: ${String(e)}.`;
       await this.logging.writeLog({
         sendAdminAlert: true,
         logType: LogType.ERROR,

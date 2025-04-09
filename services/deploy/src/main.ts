@@ -1,16 +1,14 @@
 import {
   BackendsQueryFilter,
   DeployEventType,
+  DeployInstanceDto,
   DeployMSEventType,
-  env,
-  Lmas,
+  GenericDeployRequestDto,
+  ModelValidationException,
   ResizeInstanceDto,
+  ValidatorErrorCode,
 } from '@apillon/lib';
-import { BackendStrategyHandler } from './modules/deploy/backendStrategy.handler';
 import { ServiceContext } from '@apillon/service-lib';
-import { PhalaDockerDeployStrategy } from './modules/deploy/services/phala-docker-deploy.strategy';
-import { PhalaDockerClient } from './modules/deploy/clients/phala-tee.client';
-import { DeployRepository } from './modules/deploy/repositores/deploy-repository';
 import { BackendController } from './modules/deploy/backend.controller';
 import { FrontendController } from './modules/fe-deploy/frontend.controller';
 import { inspect } from 'util';
@@ -19,11 +17,13 @@ import { inspect } from 'util';
  * Processing lambda event with appropriate service function based on event name
  * @param event lambda event
  * @param context lambda context
+ * @param backendController
  * @returns service response
  */
 export async function processEvent(
   event: DeployMSEventType,
   context: ServiceContext,
+  backendController: BackendController,
 ): Promise<any> {
   const eventName = event.eventName;
   if (eventName?.slice(0, 2) === 'fe') {
@@ -62,53 +62,138 @@ export async function processEvent(
         throw new Error('Invalid Deploy Event Type');
     }
   } else if (eventName && eventName.slice(0, 2) === 'be') {
-    const phalaDockerDeployStrategy = new PhalaDockerDeployStrategy(
-      new PhalaDockerClient(
-        'https://cloud-api.phala.network/api/v1',
-        env.DEPLOY_PHALA_CLOUD_API_KEY,
-      ),
-    );
-    const backendController = new BackendController(
-      new DeployRepository(context),
-      new BackendStrategyHandler(
-        context,
-        phalaDockerDeployStrategy,
-        new Lmas(),
-      ),
-    );
     switch (event.eventName) {
       case DeployEventType.BE_LIST_BACKENDS:
-        return backendController.listBackends(
-          new BackendsQueryFilter(event.body),
+        const backendQuery = new BackendsQueryFilter(event.body);
+        await backendQuery.validateOrThrow(
+          ModelValidationException,
+          ValidatorErrorCode,
         );
+        return backendController.listBackends(backendQuery);
       case DeployEventType.BE_DEPLOY_DOCKER_COMPOSE:
-        return backendController.deployDockerCompose(event.body);
-      case DeployEventType.BE_GET_INSTANCE:
-        return backendController.getInstance(event.body);
-      case DeployEventType.BE_GET_INSTANCE_DETAILS:
-        return backendController.getInstanceDetails(event.body);
-      case DeployEventType.BE_GET_INSTANCE_STATE:
-        return backendController.getInstanceStats(event.body);
-      case DeployEventType.BE_GET_INSTANCE_ATTESTATION:
-        return backendController.getInstanceAttestation(event.body);
-      // case DeployEventType.BE_GET_INSTANCE_BILLING:
-      //   return backendController.getInstanceBilling(event.body);
-      case DeployEventType.BE_START_INSTANCE:
-        return backendController.startInstance(event.body);
-      case DeployEventType.BE_SHUTDOWN_INSTANCE:
-        return backendController.shutdownInstance(event.body);
-      case DeployEventType.BE_STOP_INSTANCE:
-        return backendController.stopInstance(event.body);
-      case DeployEventType.BE_RESTART_INSTANCE:
-        return backendController.restartInstance(event.body);
-      case DeployEventType.BE_DESTROY_INSTANCE:
-        return backendController.destroyInstance(event.body);
-      case DeployEventType.BE_RESIZE_INSTANCE:
-        return backendController.resizeInstance(
-          new ResizeInstanceDto(event.body),
+        const deployInstance = new DeployInstanceDto({}, context).populate(
+          event.body,
         );
+        await deployInstance.validateOrThrow(
+          ModelValidationException,
+          ValidatorErrorCode,
+        );
+        return backendController.deployDockerCompose(deployInstance);
+      case DeployEventType.BE_GET_INSTANCE:
+        const getInstanceDto = new GenericDeployRequestDto(
+          {},
+          context,
+        ).populate(event.body);
+        await getInstanceDto.validateOrThrow(
+          ModelValidationException,
+          ValidatorErrorCode,
+        );
+        return backendController.getInstance(getInstanceDto);
+      case DeployEventType.BE_GET_INSTANCE_DETAILS:
+        const getInstanceDetailsDto = new GenericDeployRequestDto(
+          {},
+          context,
+        ).populate(event.body);
+        await getInstanceDetailsDto.validateOrThrow(
+          ModelValidationException,
+          ValidatorErrorCode,
+        );
+        return backendController.getInstanceDetails(getInstanceDetailsDto);
+      case DeployEventType.BE_GET_INSTANCE_STATE:
+        const getInstanceStateDto = new GenericDeployRequestDto(
+          {},
+          context,
+        ).populate(event.body);
+        await getInstanceStateDto.validateOrThrow(
+          ModelValidationException,
+          ValidatorErrorCode,
+        );
+        return backendController.getInstanceStats(getInstanceStateDto);
+      case DeployEventType.BE_GET_INSTANCE_ATTESTATION:
+        const getInstanceAttestationDto = new GenericDeployRequestDto(
+          {},
+          context,
+        ).populate(event.body);
+        await getInstanceAttestationDto.validateOrThrow(
+          ModelValidationException,
+          ValidatorErrorCode,
+        );
+        return backendController.getInstanceAttestation(
+          getInstanceAttestationDto,
+        );
+      // case DeployEventType.BE_GET_INSTANCE_BILLING:
+      //   return backendController.getInstanceBilling();
+      case DeployEventType.BE_START_INSTANCE:
+        const startInstanceDto = new GenericDeployRequestDto(
+          {},
+          context,
+        ).populate(event.body);
+        await startInstanceDto.validateOrThrow(
+          ModelValidationException,
+          ValidatorErrorCode,
+        );
+        return backendController.startInstance(startInstanceDto);
+      case DeployEventType.BE_SHUTDOWN_INSTANCE:
+        const shutdownInstanceDto = new GenericDeployRequestDto(
+          {},
+          context,
+        ).populate(event.body);
+        await shutdownInstanceDto.validateOrThrow(
+          ModelValidationException,
+          ValidatorErrorCode,
+        );
+        return backendController.shutdownInstance(shutdownInstanceDto);
+      case DeployEventType.BE_STOP_INSTANCE:
+        const stopInstanceDto = new GenericDeployRequestDto(
+          {},
+          context,
+        ).populate(event.body);
+        await stopInstanceDto.validateOrThrow(
+          ModelValidationException,
+          ValidatorErrorCode,
+        );
+        return backendController.stopInstance(stopInstanceDto);
+      case DeployEventType.BE_RESTART_INSTANCE:
+        const restartInstanceDto = new GenericDeployRequestDto(
+          {},
+          context,
+        ).populate(event.body);
+        await restartInstanceDto.validateOrThrow(
+          ModelValidationException,
+          ValidatorErrorCode,
+        );
+        return backendController.restartInstance(restartInstanceDto);
+      case DeployEventType.BE_DESTROY_INSTANCE:
+        const destroyInstanceDto = new GenericDeployRequestDto(
+          {},
+          context,
+        ).populate(event.body);
+        await destroyInstanceDto.validateOrThrow(
+          ModelValidationException,
+          ValidatorErrorCode,
+        );
+        return backendController.destroyInstance(destroyInstanceDto);
+      case DeployEventType.BE_RESIZE_INSTANCE:
+        const resizeInstanceDto = new ResizeInstanceDto({}, context).populate(
+          event.body,
+        );
+        await resizeInstanceDto.validateOrThrow(
+          ModelValidationException,
+          ValidatorErrorCode,
+        );
+        return backendController.resizeInstance(resizeInstanceDto);
       default:
         throw new Error('Invalid Deploy Event Type');
     }
   }
 }
+
+// async function getDto<T extends ModelBase>(
+//   dtoClass: new (data: unknown, context: ServiceContext) => T,
+//   context: ServiceContext,
+//   body: ModelBaseType<T>,
+// ): Promise<T> {
+//   const instance = new dtoClass({}, context).populate(body);
+//   await instance.validateOrThrow(ModelValidationException, ValidatorErrorCode);
+//   return instance;
+// }
