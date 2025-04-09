@@ -75,7 +75,19 @@ export class SimpletsRepository extends BaseRepository {
   }
 
   async getDeployedSimplet(uuid: string) {
-    return await new SimpletDeploy({}, this.context).populateByUUID(uuid);
+    const deployedSimplet = await new SimpletDeploy(
+      {},
+      this.context,
+    ).populateByUUID(uuid);
+    if (!deployedSimplet || !deployedSimplet.exists()) {
+      throw new SimpletsCodeException({
+        status: 404,
+        code: SimpletsErrorCode.DEPLOYED_SIMPLET_NOT_FOUND,
+        context: this.context,
+        errorMessage: `Deployed Simplet with uuid ${uuid} not found`,
+      });
+    }
+    return deployedSimplet;
   }
 
   //#endregion

@@ -39,49 +39,6 @@ export class SimpletDeployDto extends ModelBase {
   })
   public description: string;
 
-  // /**
-  //  * Represents an EVM-compatible blockchain network.
-  //  * This property holds the chain information used for determining where to
-  //  * deploy a smart contract.
-  //  */
-  // @prop({
-  //   parser: { resolver: integerParser() },
-  //   populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-  //   validators: [
-  //     {
-  //       resolver: conditionalPresenceValidator(
-  //         'contractConstructorArguments',
-  //         (value) => !!value,
-  //       ),
-  //       code: ValidatorErrorCode.DATA_NOT_PRESENT,
-  //     },
-  //     {
-  //       resolver: enumInclusionValidator(EvmChain, true),
-  //       code: ValidatorErrorCode.DATA_NOT_VALID,
-  //     },
-  //   ],
-  // })
-  // public chain: EvmChain | null;
-  //
-  // /**
-  //  * Represents an array of arguments to be passed to a smart contract's
-  //  * constructor during deployment or instantiation.
-  //  *
-  //  * Each element in the array corresponds to a specific parameter required by
-  //  * the smart contract's constructor definition.
-  //  */
-  // @prop({
-  //   parser: { array: true },
-  //   populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-  //   validators: [
-  //     {
-  //       resolver: conditionalPresenceValidator('chain', (value) => !!value),
-  //       code: ValidatorErrorCode.DATA_NOT_PRESENT,
-  //     },
-  //   ],
-  // })
-  // public contractConstructorArguments: any[] | null;
-
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],

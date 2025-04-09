@@ -259,7 +259,7 @@ export class SimpletDeploy extends UuidSqlModel {
    *****************************************************/
 
   public override async populateByUUID(uuid: string): Promise<this> {
-    return super.populateByUUID(uuid, 'simplet_uuid');
+    return super.populateByUUID(uuid, 'simpletDeploy_uuid');
   }
 
   public async getList(
@@ -293,7 +293,11 @@ export class SimpletDeploy extends UuidSqlModel {
         FROM \`${DbTables.SIMPLET_DEPLOY}\` c
         WHERE c.project_uuid = IFNULL(@project_uuid, c.project_uuid)
         AND (@search IS null OR c.name LIKE CONCAT('%', @search, '%'))
-        AND (@resourceStatus IS null OR c.resourceStatus = @resourceStatus)
+        AND (
+            (@backendStatus IS null OR c.backendStatus = @backendStatus)
+            OR (@frontendStatus IS null OR c.frontendStatus = @backendStatus)
+            OR (@contractStatus IS null OR c.contractStatus = @backendStatus)
+        )
         AND
             (
                 (@status IS null AND c.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.ARCHIVED}))
