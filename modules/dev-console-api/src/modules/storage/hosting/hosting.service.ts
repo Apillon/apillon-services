@@ -43,6 +43,9 @@ export class HostingService {
       AttachedServiceType.HOSTING,
     );
 
+    let generatedApiKeyId: number | undefined;
+    let accessMS: Ams;
+
     if (
       body.deploymentConfig &&
       (!body.deploymentConfig.apiKey || !body.deploymentConfig.apiKey)
@@ -62,7 +65,7 @@ export class HostingService {
         (item) => item.serviceType_id === AttachedServiceType.STORAGE,
       );
 
-      const accessMS = new Ams(context);
+      accessMS = new Ams(context);
 
       const createdApiKey = await accessMS.createApiKey(
         new CreateApiKeyDto({}, context).populate({
@@ -98,12 +101,23 @@ export class HostingService {
         }),
       );
 
+      generatedApiKeyId = createdApiKey.data.id;
+
       body.deploymentConfig.apiKey = createdApiKey.data.apiKey;
       body.deploymentConfig.apiSecret = createdApiKey.data.apiKeySecret;
     }
 
     //Call Storage microservice, to create website
-    return (await new StorageMicroservice(context).createWebsite(body)).data;
+    try {
+      return (await new StorageMicroservice(context).createWebsite(body)).data;
+    } catch (e) {
+      if (generatedApiKeyId && accessMS) {
+        await accessMS.deleteApiKey({
+          id: generatedApiKeyId,
+        });
+      }
+      throw e;
+    }
   }
 
   async updateWebsite(

@@ -316,6 +316,28 @@ export class HostingService {
     return await website.markArchived();
   }
 
+  static async deleteWebsite(
+    event: { website_uuid: string },
+    context: ServiceContext,
+  ): Promise<Website> {
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+    website.canModify(context);
+
+    if (website.source === WebsiteSource.GITHUB) {
+      await new DeployMicroservice(context).deleteDeploymentConfig(
+        website.website_uuid,
+      );
+    }
+
+    return await website.delete();
+  }
+
   /**
    * Set a website's status to active
    * @param {{ website_uuid: string }} event

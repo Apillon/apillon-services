@@ -241,48 +241,71 @@ export class DeployService {
 
     const storageMS = new StorageMicroservice(context);
 
-    let apiSecretRaw: string;
+    let generatedApiKeyId: number;
     if (!body.apiKey || !body.apiSecret) {
       const createdApiKey = await this.createAndPopulateApiKeyForDeploy(
         body,
         context,
       );
 
-      apiSecretRaw = createdApiKey.apiKeySecret;
+      generatedApiKeyId = createdApiKey.id;
     }
 
-    const website = (
-      await storageMS.createWebsite(
-        new CreateWebsiteDto({}, context).populate({
-          project_uuid: collection.project_uuid,
-          name: `${collection.name} - Website`,
-          nftCollectionUuid: collection.collection_uuid,
-          source: WebsiteSource.GITHUB,
-        }),
-      )
-    ).data;
+    let website:
+      | {
+          website_uuid: string;
+        }
+      | undefined;
 
-    await new DeployMicroservice(context).triggerWebDeploy(
-      new NftWebsiteDeployDto({}, context).populate({
-        websiteUuid: website.website_uuid,
-        apiKey: body.apiKey,
-        apiSecret: body.apiSecret,
-        contractAddress: collection.contractAddress,
-        chainId: collection.chain,
-        type: body.type,
-        new: true,
-      }),
-    );
+    try {
+      website = (
+        await storageMS.createWebsite(
+          new CreateWebsiteDto({}, context).populate({
+            project_uuid: collection.project_uuid,
+            name: `${collection.name} - Website`,
+            nftCollectionUuid: collection.collection_uuid,
+            source: WebsiteSource.GITHUB,
+          }),
+        )
+      ).data;
+    } catch (e) {
+      if (generatedApiKeyId) {
+        await new Ams(context).deleteApiKey({
+          id: generatedApiKeyId,
+        });
+      }
+
+      throw e;
+    }
+
+    try {
+      await new DeployMicroservice(context).triggerWebDeploy(
+        new NftWebsiteDeployDto({}, context).populate({
+          websiteUuid: website.website_uuid,
+          apiKey: body.apiKey,
+          apiSecret: body.apiSecret,
+          contractAddress: collection.contractAddress,
+          chainId: collection.chain,
+          type: body.type,
+          new: true,
+        }),
+      );
+    } catch (e) {
+      if (generatedApiKeyId) {
+        await new Ams(context).deleteApiKey({
+          id: generatedApiKeyId,
+        });
+      }
+      await storageMS.deleteWebsite(website.website_uuid);
+      throw e;
+    }
 
     await nftsMS.setWebsiteUuid(
       collection.collection_uuid,
       website.website_uuid,
     );
 
-    return {
-      ...website,
-      apiSecretRaw,
-    };
+    return website;
   }
 
   async redeployWebsite(context: DevConsoleApiContext, uuid: string) {
