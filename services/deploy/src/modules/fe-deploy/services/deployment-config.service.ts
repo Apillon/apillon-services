@@ -168,12 +168,13 @@ export class DeploymentConfigService {
     await Promise.all(
       deploymentConfigs.map(
         async (config) =>
-          await this.githubService.deleteWebhook(
+          config.repoId &&
+          (await this.githubService.deleteWebhook(
             githubProjectConfig,
             config.repoOwnerName,
             config.repoName,
             config.hookId,
-          ),
+          )),
       ),
     );
 

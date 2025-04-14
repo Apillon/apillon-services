@@ -236,7 +236,11 @@ export class HostingService {
       websiteDomainUpdated = true;
     }
 
+    console.log(event.data);
+
     website.populate(event.data, PopulateFrom.PROFILE);
+
+    console.log(website);
 
     await website.validateOrThrow(StorageValidationException);
 
