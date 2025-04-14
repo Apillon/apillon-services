@@ -38,7 +38,7 @@ rm -rf /tmp/.npm
 rm -rf /tmp/npm-global
 
 # Clone the repository and checkout the specified branch
-echo "Cloning repository $REPO_URL..."
+echo "Cloning repository..."
 
 mkdir -p $APP_DIR
 
