@@ -311,6 +311,8 @@ export abstract class AdvancedSQLModel extends BaseSQLModel {
     delete serializedModel.createTime;
     delete serializedModel.updateTime;
 
+    console.log(serializedModel);
+
     let isSingleTrans = false;
     if (!conn) {
       isSingleTrans = true;
