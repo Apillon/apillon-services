@@ -33,7 +33,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.APILLON_API,
     ],
   })
-  public repoId: number;
+  public repoId: number | null;
 
   @prop({
     parser: { resolver: stringParser() },
