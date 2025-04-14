@@ -118,12 +118,5 @@ export class WebsiteDeployDto extends ModelBase {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
-  public isRedeploy?: boolean;
-
-  @prop({
-    parser: { resolver: booleanParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-  })
   public new?: boolean;
 }
