@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { ModelBase, ModelBaseType, prop } from '../../../base-models/base';
 import {
   PopulateFrom,
@@ -112,4 +112,18 @@ export class WebsiteDeployDto extends ModelBase {
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
   })
   public variables: { key: string; value: string }[];
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public isRedeploy?: boolean;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public new?: boolean;
 }

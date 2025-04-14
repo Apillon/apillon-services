@@ -180,7 +180,11 @@ export class BuildProjectWorker extends BaseQueueWorker {
         : githubProjectConfig.access_token;
 
       url = url.replace('https://', `https://oauth2:${accessToken}@`);
+    } else if (data.isRedeploy) {
+      const kmsClient = new AWS_KMS();
+      secret = await kmsClient.decrypt(data.apiSecret, env.DEPLOY_KMS_KEY_ID);
     }
+
     let lastLog = '';
 
     const child = spawn(

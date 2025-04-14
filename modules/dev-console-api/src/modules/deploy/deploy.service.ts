@@ -257,6 +257,7 @@ export class DeployService {
           project_uuid: collection.project_uuid,
           name: `${collection.name} - Website`,
           nftCollectionUuid: collection.collection_uuid,
+          source: WebsiteSource.GITHUB,
         }),
       )
     ).data;
@@ -269,6 +270,7 @@ export class DeployService {
         contractAddress: collection.contractAddress,
         chainId: collection.chain,
         type: body.type,
+        new: true,
       }),
     );
 
@@ -281,5 +283,9 @@ export class DeployService {
       ...website,
       apiSecretRaw,
     };
+  }
+
+  async redeployWebsite(context: DevConsoleApiContext, uuid: string) {
+    return (await new DeployMicroservice(context).redeployWebsite(uuid)).data;
   }
 }

@@ -146,6 +146,7 @@ export * from './lib/at-services/deploy/types/get-deployment-config.type';
 export * from './lib/at-services/deploy/types/get-environment-variables.type';
 export * from './lib/at-services/deploy/types/get-project-config.type';
 export * from './lib/at-services/deploy/types/list-repos.type';
+export * from './lib/at-services/deploy/types/redeploy-website.type';
 
 //#REGION SIMPLETS
 export * from './lib/at-services/simplets/eventTypes';

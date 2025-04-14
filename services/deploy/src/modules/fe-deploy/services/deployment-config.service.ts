@@ -157,10 +157,8 @@ export class DeploymentConfigService {
       );
 
     if (!githubProjectConfig.exists()) {
-      throw new DeployCodeException({
-        status: 404,
-        code: DeployErrorCode.GITHUB_PROJECT_CONFIG_NOT_FOUND,
-      });
+      // Archive website is also calling this method & NFT websites are not linked to github
+      return true;
     }
 
     const deploymentConfigs =
@@ -268,7 +266,9 @@ export class DeploymentConfigService {
     return await deploymentConfig.getEnvironmentVariables();
   }
 
-  async getDeploymentConfig(body: GetDeploymentConfigType) {
+  async getDeploymentConfig(
+    body: GetDeploymentConfigType,
+  ): Promise<DeploymentConfig | boolean> {
     await this.storageMicroservice.getWebsiteWithAccess(
       body.websiteUuid,
       false,
@@ -283,6 +283,6 @@ export class DeploymentConfigService {
       return false;
     }
 
-    return deploymentConfigs[0].serialize();
+    return deploymentConfigs[0].serialize() as DeploymentConfig;
   }
 }

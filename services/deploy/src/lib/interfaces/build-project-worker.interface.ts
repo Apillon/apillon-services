@@ -12,4 +12,5 @@ export interface BuildProjectWorkerInterface {
     value: string;
   }[];
   isTriggeredByWebhook?: boolean;
+  isRedeploy?: boolean;
 }

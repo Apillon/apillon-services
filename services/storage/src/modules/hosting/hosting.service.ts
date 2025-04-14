@@ -118,9 +118,10 @@ export class HostingService {
     context: ServiceContext,
   ): Promise<any> {
     const website: Website = new Website(event.body, context).populate({
-      source: event.body.deploymentConfig
-        ? WebsiteSource.GITHUB
-        : WebsiteSource.APILLON,
+      source:
+        event.body.source || event.body.deploymentConfig
+          ? WebsiteSource.GITHUB
+          : WebsiteSource.APILLON,
     });
 
     if (website.domain) {
@@ -305,6 +306,12 @@ export class HostingService {
       throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
     }
     website.canModify(context);
+
+    if (website.source === WebsiteSource.GITHUB) {
+      await new DeployMicroservice(context).deleteDeploymentConfig(
+        website.website_uuid,
+      );
+    }
 
     return await website.markArchived();
   }

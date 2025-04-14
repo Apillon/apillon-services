@@ -65,6 +65,32 @@ export class DeploymentConfig extends AdvancedSQLModel {
       },
     ],
   })
+  public repoUrl: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.PROFILE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.AUTH,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.SELECT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: DeployErrorCode.DATA_NOT_PRESENT,
+      },
+    ],
+  })
   public repoName: string;
 
   @prop({

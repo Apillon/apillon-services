@@ -439,6 +439,7 @@ export enum DeployEventType {
   SET_ENVIRONMENT_VARIABLES = 'fe-set-environment-variables',
   GET_ENVIRONMENT_VARIABLES = 'fe-get-environment-variables',
   GET_DEPLOYMENT_CONFIG = 'fe-get-deployment-config',
+  REDEPLOY_WEBSITE = 'fe-redeploy-website',
 }
 
 export enum SimpletsEventType {
