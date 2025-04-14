@@ -123,6 +123,7 @@ export class DeploymentConfigService {
       websiteUuid: _websiteUuid,
       projectUuid: _projectUuid,
       repoId: _repoId,
+      repoUrl: _repoUrl,
       ...updatedFields
     } = body;
 
