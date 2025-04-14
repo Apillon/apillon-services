@@ -236,11 +236,7 @@ export class HostingService {
       websiteDomainUpdated = true;
     }
 
-    console.log(event.data);
-
     website.populate(event.data, PopulateFrom.PROFILE);
-
-    console.log(website.source);
 
     await website.validateOrThrow(StorageValidationException);
 
@@ -315,6 +311,8 @@ export class HostingService {
       await new DeployMicroservice(context).deleteDeploymentConfig(
         website.website_uuid,
       );
+      // Need this as we set the source to APILLON in the deleteDeploymentConfig & don't want for markArchived to set it back
+      website.source = WebsiteSource.APILLON;
     }
 
     return await website.markArchived();
