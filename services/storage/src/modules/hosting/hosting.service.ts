@@ -240,7 +240,7 @@ export class HostingService {
 
     website.populate(event.data, PopulateFrom.PROFILE);
 
-    console.log(website);
+    console.log(website.source);
 
     await website.validateOrThrow(StorageValidationException);
 
