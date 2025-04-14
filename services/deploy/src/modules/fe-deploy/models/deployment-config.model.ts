@@ -32,12 +32,6 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
     ],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: DeployErrorCode.DATA_NOT_PRESENT,
-      },
-    ],
   })
   public repoId: number;
 
