@@ -153,6 +153,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
+      SerializeFor.UPDATE_DB,
     ],
     validators: [
       {
@@ -228,6 +229,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
+      SerializeFor.UPDATE_DB,
     ],
   })
   public buildCommand: string | null;
@@ -249,6 +251,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
+      SerializeFor.UPDATE_DB,
     ],
     validators: [
       {
@@ -276,6 +279,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
+      SerializeFor.UPDATE_DB,
     ],
   })
   public installCommand: string | null;
@@ -297,6 +301,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
+      SerializeFor.UPDATE_DB,
     ],
     validators: [
       {
@@ -324,6 +329,7 @@ export class DeploymentConfig extends AdvancedSQLModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.APILLON_API,
+      SerializeFor.UPDATE_DB,
     ],
     validators: [
       {
