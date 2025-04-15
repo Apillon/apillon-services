@@ -2,7 +2,9 @@ import {
   AWS_KMS,
   Context,
   DeploymentBuildStatus,
+  Lmas,
   SerializeFor,
+  ServiceName,
   env,
 } from '@apillon/lib';
 import {
@@ -242,6 +244,16 @@ export class BuildProjectWorker extends BaseQueueWorker {
         if (exitCode !== 0) {
           await deploymentBuild.handleFailure();
           console.log(`Failure, child process exited with code ${exitCode}`);
+          await new Lmas().sendMessageToSlack({
+            message: `
+              Build failed for website ${data.websiteUuid}\n
+              Last log: ${lastLog}\n
+              Environment: ${env.APP_ENV}
+            `,
+            service: ServiceName.DEPLOY,
+            blocks: [],
+            channel: env.SLACK_CHANNEL_BUILD_PROJECT_FAILURES,
+          });
           reject(exitCode);
         } else {
           // Check if data is JSON
@@ -252,15 +264,35 @@ export class BuildProjectWorker extends BaseQueueWorker {
             await deploymentBuild.handleSuccess();
           } catch (e) {
             await deploymentBuild.handleFailure();
+            await new Lmas().sendMessageToSlack({
+              message: `
+              Build failed for website ${data.websiteUuid}\n
+              Last log: ${lastLog}\n
+              Environment: ${env.APP_ENV}
+            `,
+              service: ServiceName.DEPLOY,
+              blocks: [],
+              channel: env.SLACK_CHANNEL_BUILD_PROJECT_FAILURES,
+            });
           }
           console.log(`Success, child process exited with code ${data}`);
           resolve(data);
         }
       });
-      child.on('error', async (data) => {
+      child.on('error', async (errData) => {
         await deploymentBuild.handleFailure();
-        console.log(`Failure, child process exited with code ${data}`);
-        reject(data);
+        await new Lmas().sendMessageToSlack({
+          message: `
+              Build failed for website ${data.websiteUuid}\n
+              Last log: ${lastLog}\n
+              Environment: ${env.APP_ENV}
+            `,
+          service: ServiceName.DEPLOY,
+          blocks: [],
+          channel: env.SLACK_CHANNEL_BUILD_PROJECT_FAILURES,
+        });
+        console.log(`Failure, child process exited with code ${errData}`);
+        reject(errData);
       });
     });
 

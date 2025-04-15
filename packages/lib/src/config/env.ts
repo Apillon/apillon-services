@@ -91,6 +91,7 @@ export interface IEnv {
   SLACK_TOKEN: string;
   SLACK_CHANNEL: string;
   SLACK_CHANNEL_FOR_WEBSITE_REVIEWS: string;
+  SLACK_CHANNEL_BUILD_PROJECT_FAILURES: string;
 
   /**
    * MONITORING SQS
@@ -890,6 +891,9 @@ export let env: IEnv = {
   SLACK_CHANNEL: process.env['SLACK_CHANNEL'] || 'monitoring',
   SLACK_CHANNEL_FOR_WEBSITE_REVIEWS:
     process.env['SLACK_CHANNEL_FOR_WEBSITE_REVIEWS'] || 'website-reviews',
+  SLACK_CHANNEL_BUILD_PROJECT_FAILURES:
+    process.env['SLACK_CHANNEL_BUILD_PROJECT_FAILURES'] ||
+    'build-project-failures',
   /** DEV CONSOLE API DB conn*/
   DEV_CONSOLE_API_MYSQL_HOST: process.env['DEV_CONSOLE_API_MYSQL_HOST'],
   DEV_CONSOLE_API_MYSQL_PORT:
