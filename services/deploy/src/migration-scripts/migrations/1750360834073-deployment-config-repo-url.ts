@@ -19,14 +19,4 @@ export async function downgrade(
   await queryFn(`
     ALTER TABLE \`${DbTables.DEPLOYMENT_CONFIG}\` DROP COLUMN \`repoUrl\`;
   `);
-
-  await queryFn(`
-    DELETE FROM \`${DbTables.DEPLOYMENT_CONFIG}\`
-    WHERE \`projectConfigId\` IS NULL;
-  `);
-
-  await queryFn(`
-    ALTER TABLE \`${DbTables.DEPLOYMENT_CONFIG}\`
-    MODIFY \`projectConfigId\` INT NOT NULL;
-  `);
 }

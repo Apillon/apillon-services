@@ -9,13 +9,5 @@ export async function upgrade(
 }
 
 export async function downgrade(
-  queryFn: (query: string, values?: any[]) => Promise<void>,
-) {
-  await queryFn(`
-    DELETE FROM \`${DbTables.DEPLOYMENT_CONFIG}\`
-    WHERE \`repoId\` IS NULL;
-  `);
-  await queryFn(`
-    ALTER TABLE \`${DbTables.DEPLOYMENT_CONFIG}\` MODIFY \`repoId\` INT NOT NULL;
-  `);
-}
+  _queryFn: (query: string, values?: any[]) => Promise<void>,
+) {}

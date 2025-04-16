@@ -81,6 +81,11 @@ else
   echo "Build command not set"
 fi
 
+# Check if build directory has index.html file
+if [ ! -f "$BUILD_DIR/index.html" ]; then
+  echo "Build directory does not contain index.html file."
+  exit 2
+fi
 
 
 # SET values for Apillon
