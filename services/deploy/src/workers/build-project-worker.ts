@@ -54,12 +54,14 @@ cd $APP_DIR
 # Install dependencies and build
 echo "Installing dependencies..."
 
+export HOME=/tmp
+export npm_config_cache=/tmp/.npm
+export npm_config_prefix=/tmp/npm-global
+mkdir -p /tmp/.npm /tmp/npm-global
+
 # Check if install command is provided and run it
 if [ -n "$INSTALL_COMMAND" ] && [ "$INSTALL_COMMAND" != "undefined" ]; then
-  export HOME=/tmp
-  export npm_config_cache=/tmp/.npm
-  export npm_config_prefix=/tmp/npm-global
-  mkdir -p /tmp/.npm /tmp/npm-global
+
 
   npm config set cache /tmp/.npm
 
