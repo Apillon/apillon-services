@@ -111,7 +111,7 @@ export class ProjectService {
       ),
 
       // Set mailerlite field indicating the user owns a project
-      new Mailing(context).setMailerliteField('project_owner', true),
+      new Mailing(context).setMailerliteField('project_owner'),
 
       // If it's the user's first project, add credits if using promo code
       projects.length === 0 &&
@@ -194,6 +194,14 @@ export class ProjectService {
     const project = await new Project({}, context).populateByUUIDOrThrow(uuid);
 
     project.populate(data, PopulateFrom.PROFILE);
+
+    if (/https?:\/\/|www\.|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/.test(project.name)) {
+      throw new CodeException({
+        code: BadRequestErrorCode.INVALID_PROJECT_NAME,
+        status: HttpStatus.BAD_REQUEST,
+        errorCodes: BadRequestErrorCode,
+      });
+    }
 
     await project.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 

@@ -25,6 +25,8 @@ export class Scheduler extends WorkerScheduler {
       //   `${job.name} scheduled to run`,
       //   job,
       // );
+      if (!job.name) continue;
+
       defs.push(
         new WorkerDefinition(
           this.workerDefinition.serviceDefinition,

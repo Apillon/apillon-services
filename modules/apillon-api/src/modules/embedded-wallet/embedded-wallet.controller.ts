@@ -2,38 +2,42 @@ import {
   CreateOasisSignatureDto,
   GenerateOtpDto,
   ValidateOtpDto,
+  CacheKeyPrefix,
+  CacheKeyTTL,
+  CodeException,
+  ForbiddenErrorCodes,
+  env,
+  AppEnvironment,
 } from '@apillon/lib';
-import { Ctx, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
+  HttpStatus,
   Post,
   Req,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import {
+  Cache,
+  CacheInterceptor,
+  CaptchaGuard,
+  Ctx,
+  Validation,
+} from '@apillon/modules-lib';
 import { ApillonApiContext } from '../../context';
 import { EmbeddedWalletService } from './embedded-wallet.service';
 import { ValidationGuard } from '../../guards/validation.guard';
 
 @Controller('embedded-wallet')
+@UseInterceptors(CacheInterceptor)
 export class EmbeddedWalletController {
   constructor(private ewalletService: EmbeddedWalletService) {}
 
-  // Note: Session tokens are getting replaced by only using whitelisted domains
-  // @Get('session-token')
-  // @ApiKeyPermissions({
-  //   role: DefaultApiKeyRole.KEY_EXECUTE,
-  //   serviceType: AttachedServiceType.WALLET,
-  // })
-  // @UseGuards(AuthGuard)
-  // async generateSessionToken(@Ctx() context: ApillonApiContext) {
-  //   return await this.ewalletService.generateSessionToken(context);
-  // }
-
   @Post('signature')
   @Validation({ dto: CreateOasisSignatureDto })
-  // @UseGuards(JwtGuard(JwtTokenType.EMBEDDED_WALLET_SDK_TOKEN), ValidationGuard)
   @UseGuards(ValidationGuard)
   @HttpCode(200)
   async createOasisSignature(
@@ -45,13 +49,32 @@ export class EmbeddedWalletController {
       request.headers[
         ['origin', 'referer', 'host'].find((h) => !!request.headers[h])
       ];
+
+    // If body referrer domain is present, check that domain for embedded wallet whitelist
+    if (body.referrerDomain) {
+      // Request origin must match with the passkey gateway URL
+      if (
+        !body.origin?.endsWith(env.PASSKEY_GATEWAY_URL) &&
+        [AppEnvironment.STG, AppEnvironment.PROD].includes(
+          env.APP_ENV as AppEnvironment,
+        )
+      ) {
+        throw new CodeException({
+          status: HttpStatus.FORBIDDEN,
+          code: ForbiddenErrorCodes.INVALID_ORIGIN,
+          errorCodes: ForbiddenErrorCodes,
+        });
+      }
+      const url = new URL(body.referrerDomain);
+      body.origin = url.port ? `${url.hostname}:${url.port}` : url.hostname;
+    }
+
     return await this.ewalletService.createOasisSignature(context, body);
   }
 
-  // TODO: Need to add some kind of auth/validation, for example captcha
   @Post('otp/generate')
   @Validation({ dto: GenerateOtpDto })
-  @UseGuards(ValidationGuard)
+  @UseGuards(ValidationGuard, CaptchaGuard)
   @HttpCode(200)
   async generateOtp(
     @Ctx() context: ApillonApiContext,
@@ -69,5 +92,14 @@ export class EmbeddedWalletController {
     @Body() body: ValidateOtpDto,
   ) {
     return await this.ewalletService.validateOtp(context, body);
+  }
+
+  @Get('evm-token-prices')
+  @Cache({
+    keyPrefix: CacheKeyPrefix.EVM_TOKEN_PRICES,
+    ttl: CacheKeyTTL.EXTENDED,
+  })
+  async getTopEvmTokenPrices() {
+    return await this.ewalletService.getEvmTokenPrices();
   }
 }

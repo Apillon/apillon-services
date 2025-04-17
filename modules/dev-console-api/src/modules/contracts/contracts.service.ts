@@ -1,7 +1,6 @@
 import {
   AttachedServiceType,
   CallContractDTO,
-  CodeException,
   ContractAbiQueryDTO,
   ContractsMicroservice,
   ContractsQueryFilter,
@@ -9,14 +8,9 @@ import {
   CreateContractDTO,
   DeployedContractsQueryFilter,
 } from '@apillon/lib';
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { ResourceNotFoundErrorCode } from '../../config/types';
+import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
-import { Project } from '../project/models/project.model';
 import { ServicesService } from '../services/services.service';
-import { Service } from '../services/models/service.model';
-import { ServiceQueryFilter } from '../services/dtos/services-query-filter.dto';
-import { ServiceDto } from '../services/dtos/service.dto';
 
 @Injectable()
 export class ContractsService {
@@ -44,35 +38,11 @@ export class ContractsService {
 
   // DEPLOYED CONTRACTS
   async deployContract(context: DevConsoleApiContext, body: CreateContractDTO) {
-    // TODO: we read DB twice, once here and once inside ServicesService.createService
-
-    const project = await new Project({}, context).populateByUUIDOrThrow(
-      body.project_uuid,
-    );
-
-    // Check if contracts service for this project already exists
-    const { total } = await new Service({}).getServices(
+    await this.serviceService.createServiceIfNotExists(
       context,
-      new ServiceQueryFilter(
-        {
-          project_uuid: project.project_uuid,
-          serviceType_id: AttachedServiceType.CONTRACTS,
-        },
-        context,
-      ),
+      body.project_uuid,
+      AttachedServiceType.CONTRACTS,
     );
-    if (total == 0) {
-      // Create contracts service - "Attach"
-      const contractsService = new ServiceDto(
-        {
-          project_uuid: project.project_uuid,
-          name: 'Contracts service',
-          serviceType_id: AttachedServiceType.CONTRACTS,
-        },
-        context,
-      );
-      await this.serviceService.createService(context, contractsService);
-    }
 
     return (await new ContractsMicroservice(context).deployContract(body)).data;
   }

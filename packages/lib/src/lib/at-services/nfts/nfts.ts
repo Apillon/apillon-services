@@ -67,6 +67,16 @@ export class NftsMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async setWebsiteUuid(collectionUuid: string, websiteUuid: string) {
+    const data = {
+      eventName: NftsEventType.SET_WEBSITE_UUID,
+      collectionUuid,
+      websiteUuid,
+    };
+
+    return await this.callService(data);
+  }
+
   public async transferCollectionOwnership(params: TransferCollectionDTO) {
     const data = {
       eventName: NftsEventType.TRANSFER_OWNERSHIP,

@@ -112,7 +112,7 @@ export class OasisSignature extends ProjectAccessModel {
       SerializeFor.SELECT_DB,
     ],
   })
-  public hashedUsername: string;
+  public contractAddress: string;
 
   @prop({
     parser: { resolver: stringParser() },

@@ -164,6 +164,7 @@ export class ApiKeyService {
     return {
       ...key.serialize(SerializeFor.PROFILE),
       apiKeySecret: apiKeySecret,
+      apiKeySecretHashed: key.apiKeySecret,
     };
   }
 

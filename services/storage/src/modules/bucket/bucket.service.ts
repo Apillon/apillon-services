@@ -83,7 +83,7 @@ export class BucketService {
         project_uuid: bucket.project_uuid,
       }),
       // Set mailerlite field indicating the user created a bucket
-      new Mailing(context).setMailerliteField('has_bucket', true),
+      new Mailing(context).setMailerliteField('has_bucket'),
     ]);
 
     return bucket.serializeByContext();

@@ -19,6 +19,24 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "Jest Test Current file",
+      "program": "${workspaceFolder}/../../node_modules/jest/bin/jest.js",
+      "args": [
+        "--runInBand",
+        "--config=${workspaceFolder}/package.json",
+        "--forceExit",
+        "${fileBasename}"
+      ],
+      "env": {
+        "LOG_TARGET": "color",
+        "APP_ENV": "test"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "Run current file",
       "runtimeExecutable": "nodemon",
       "runtimeArgs": [

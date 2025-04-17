@@ -53,14 +53,20 @@ export class Mailer {
    * @param {{ field: string; value: any }}
    */
   static async setMailerliteField(
-    { field, value }: { field: string; value: any },
+    { field, value, email }: { field: string; value: any; email: string },
     context: ServiceContext,
   ) {
     await getEnvSecrets();
     if (env.APP_ENV !== AppEnvironment.PROD) {
       return;
     }
-    const email = context.user?.email;
+    email ||= context.user?.email;
+
+    if (!email) {
+      writeLog(LogType.WARN, 'setMailerliteField: No email found in context');
+      return;
+    }
+
     try {
       await axios.put(
         `https://api.mailerlite.com/api/v2/subscribers/${email}`,
@@ -69,13 +75,13 @@ export class Mailer {
       );
       writeLog(
         LogType.INFO,
-        `mailerlite field ${field} set for email ${email}`,
+        `mailerlite field ${field} set to ${value} for email ${email}`,
       );
     } catch (err) {
       if (err?.response?.status === 404) {
         writeLog(
           LogType.ERROR,
-          `Error setting mailerlite field ${field} for email ${email}: 404 Not Found`,
+          `Error setting mailerlite field ${field} with value ${value} for email ${email}: 404 Not Found`,
         );
       } else {
         await new Lmas().writeLog({

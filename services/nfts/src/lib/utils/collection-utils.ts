@@ -82,6 +82,7 @@ export async function deployNFTCollectionContract(
   // TODO: we should use NftsService.sendTransaction() here since code is the same but weoker call makes it difficult
   let response: { data: TransactionDto };
   let contractVersion_id: number = null;
+  let callArguments = [];
   switch (collection.chainType) {
     case ChainType.EVM: {
       const { id, abi, bytecode } = await new ContractVersion(
@@ -96,7 +97,7 @@ export async function deployNFTCollectionContract(
         collection.royaltiesAddress ??
         '0x0000000000000000000000000000000000000000';
 
-      const contractArguments: any[] = [
+      callArguments = [
         collection.name,
         collection.symbol,
         collection.baseUri,
@@ -108,20 +109,42 @@ export async function deployNFTCollectionContract(
           collection.isAutoIncrement,
         ],
       ];
+      let deployerAddress: string | null = null;
       switch (collection.collectionType) {
         case NFTCollectionType.GENERIC: {
-          contractArguments.push(
-            TransactionUtils.convertBaseToGwei(collection.dropPrice),
-            collection.dropStart,
-            maxSupply,
-            collection.dropReserve,
+          let adminAddress = collection.adminAddress;
+          // if admin wallet is not set use one of our wallets
+          if (!adminAddress) {
+            const wallets = await blockchainService.getWallets(
+              collection.chain,
+              collection.chainType,
+            );
+            if (!wallets.success || wallets.data.length <= 0) {
+              throw new NftsCodeException({
+                status: 500,
+                code: NftsErrorCode.WALLET_NOT_FOUND,
+              });
+            }
+            const randomIndex = Math.floor(Math.random() * wallets.data.length);
+            adminAddress = wallets.data[randomIndex].address;
+            // we need to set deployer so that our wallet has admin access
+            deployerAddress = adminAddress;
+          }
+          callArguments.push(
+            [
+              TransactionUtils.convertBaseToGwei(collection.dropPrice),
+              collection.dropStart,
+              maxSupply,
+              collection.dropReserve,
+              royaltiesFees,
+            ],
             royaltiesAddress,
-            royaltiesFees,
+            adminAddress,
           );
           break;
         }
         case NFTCollectionType.NESTABLE: {
-          contractArguments.push(collection.dropStart, collection.dropReserve, {
+          callArguments.push(collection.dropStart, collection.dropReserve, {
             royaltyRecipient: royaltiesAddress,
             royaltyPercentageBps: royaltiesFees,
             maxSupply,
@@ -137,10 +160,22 @@ export async function deployNFTCollectionContract(
             code: NftsErrorCode.GENERAL_SERVER_ERROR,
           });
       }
+
+      console.log(
+        `[EVM Deployment] Sending transaction for creation of NFT collection:`,
+        {
+          Name: `${collection.name}`,
+          Symbol: `${collection.symbol}`,
+          Chain: `${collection.chain}`,
+          ChainType: `${collection.chainType}`,
+          AdminAddress: `${collection.adminAddress || deployerAddress}`,
+          CallArguments: `${JSON.stringify(callArguments)}`,
+        },
+      );
       const serializedTransaction = EVMContractClient.createDeployTransaction(
         abi,
         bytecode,
-        contractArguments,
+        callArguments,
       );
       response = await blockchainService.createEvmTransaction(
         new CreateEvmTransactionDto(
@@ -150,6 +185,7 @@ export async function deployNFTCollectionContract(
             referenceTable: DbTables.COLLECTION,
             referenceId: collection.id,
             project_uuid: collection.project_uuid,
+            ...(deployerAddress ? { fromAddress: deployerAddress } : {}),
           },
           context,
         ),
@@ -160,7 +196,7 @@ export async function deployNFTCollectionContract(
       let transactionHex: string;
       if (collection.chain === SubstrateChain.UNIQUE) {
         const client = new UniqueNftClient(env.UNIQUE_NETWORK_API_URL);
-        transactionHex = await client.createCollection(
+        callArguments = [
           collection.name,
           collection.symbol,
           collection.description ?? '', // unique requires an empty string instead of null
@@ -174,6 +210,19 @@ export async function deployNFTCollectionContract(
           collection.maxSupply <= 0
             ? SUBSTRATE_NFTS_MAX_SUPPLY
             : collection.maxSupply,
+        ];
+        transactionHex = await client.createCollection(
+          ...(callArguments as [
+            string,
+            string,
+            string,
+            string[],
+            boolean,
+            boolean,
+            boolean,
+            boolean,
+            number,
+          ]),
         );
       } else {
         const { id, abi } = await new ContractVersion(
@@ -256,6 +305,8 @@ export async function deployNFTCollectionContract(
         refId: collection.id,
         transactionHash: response.data.transactionHash,
         transactionStatus: TransactionStatus.PENDING,
+        callMethod: 'constructor',
+        callArguments,
       },
       context,
     ),

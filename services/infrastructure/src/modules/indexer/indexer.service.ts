@@ -8,6 +8,7 @@ import {
   IndexerUsageQueryFilter,
   Lmas,
   LogType,
+  Mailing,
   Scs,
   ServiceName,
   SqlModelStatus,
@@ -54,6 +55,9 @@ export class IndexerService {
       data: indexer.serialize(),
     });
 
+    // Set mailerlite field indicating the user created an indexer
+    new Mailing(context).setMailerliteField('has_indexer');
+
     return indexer.serializeByContext();
   }
 
@@ -65,10 +69,10 @@ export class IndexerService {
       data.indexer_uuid,
     );
 
-    await indexer.canModify(context);
+    indexer.canModify(context);
 
     //Update indexer
-    await indexer.populate(data);
+    indexer.populate(data);
     await indexer.update();
 
     return indexer.serializeByContext();

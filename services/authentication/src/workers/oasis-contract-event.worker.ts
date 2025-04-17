@@ -30,7 +30,13 @@ export class OasisContractEventWorker extends BaseQueueWorker {
     return [];
   }
 
-  public async runExecutor(input: any): Promise<any> {
+  public async runExecutor(input: {
+    data: {
+      dataHash: string;
+      contractAddress: string;
+      publicAddress: string;
+    }[];
+  }): Promise<any> {
     await this.writeEventLog(
       {
         logType: LogType.INFO,
@@ -40,28 +46,19 @@ export class OasisContractEventWorker extends BaseQueueWorker {
       LogOutput.DEBUG,
     );
 
-    //Update status of oasis-signatures, for received dataHashes and update other oasis signature properties
-    await runWithWorkers(
-      input.data,
-      20,
-      this.context,
-      async (data: {
-        dataHash: string;
-        hashedUsername: string;
-        publicAddress: string;
-      }) => {
-        await this.context.mysql.paramExecute(
-          `
-          UPDATE \`${DbTables.OASIS_SIGNATURE}\`
-          SET 
-            status = ${SqlModelStatus.ACTIVE},
-            hashedUsername = '${data.hashedUsername}',
-            publicAddress = '${data.publicAddress}'
-          WHERE dataHash LIKE '${data.dataHash}'
-        `,
-          {},
-        );
-      },
-    );
+    // Update status of oasis-signatures, for received dataHashes and update other oasis signature properties
+    for (const data of input.data) {
+      await this.context.mysql.paramExecute(
+        `
+        UPDATE \`${DbTables.OASIS_SIGNATURE}\`
+        SET
+          status = ${SqlModelStatus.ACTIVE},
+          contractAddress = '${data.contractAddress}',
+          publicAddress = '${data.publicAddress}'
+        WHERE dataHash LIKE '${data.dataHash}'
+      `,
+        {},
+      );
+    }
   }
 }

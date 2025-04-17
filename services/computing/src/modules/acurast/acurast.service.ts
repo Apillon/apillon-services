@@ -24,6 +24,7 @@ import {
   env,
   DefaultUserRole,
   MySql,
+  Mailing,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -83,6 +84,8 @@ export class AcurastService {
     cloudFunction.bucket_uuid = bucket.bucket_uuid;
 
     await cloudFunction.insert();
+    // Set mailerlite field indicating the user created an acurast cloud function
+    new Mailing(context).setMailerliteField('has_cloud_function');
 
     return cloudFunction.serializeByContext() as CloudFunction;
   }

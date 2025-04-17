@@ -24,8 +24,8 @@ export type DwellirGetEndpointsResponse = {
     name: string;
     nodes: {
       id: number;
-      https: string;
-      wss: string;
+      https?: string | null;
+      wss?: string | null;
       node_type: string;
       type: string;
       version: string;

@@ -1,19 +1,13 @@
 import {
   AttachedServiceType,
   BaseProjectQueryFilter,
-  CodeException,
   CreatePostDto,
   CreateSpaceDto,
   SocialMicroservice,
   SocialPostQueryFilter,
 } from '@apillon/lib';
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { ResourceNotFoundErrorCode } from '../../config/types';
+import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
-import { Project } from '../project/models/project.model';
-import { ServiceDto } from '../services/dtos/service.dto';
-import { ServiceQueryFilter } from '../services/dtos/services-query-filter.dto';
-import { Service } from '../services/models/service.model';
 import { ServicesService } from '../services/services.service';
 
 @Injectable()
@@ -32,33 +26,11 @@ export class SocialService {
   }
 
   async createSpace(context: DevConsoleApiContext, body: CreateSpaceDto) {
-    const project = await new Project({}, context).populateByUUIDOrThrow(
-      body.project_uuid,
-    );
-
-    // Check if social service for this project already exists
-    const { total } = await new Service({}).getServices(
+    await this.serviceService.createServiceIfNotExists(
       context,
-      new ServiceQueryFilter(
-        {
-          project_uuid: project.project_uuid,
-          serviceType_id: AttachedServiceType.SOCIAL,
-        },
-        context,
-      ),
+      body.project_uuid,
+      AttachedServiceType.SOCIAL,
     );
-    if (total == 0) {
-      // Create social service - "Attach"
-      const computingService = new ServiceDto(
-        {
-          project_uuid: project.project_uuid,
-          name: 'Social service',
-          serviceType_id: AttachedServiceType.SOCIAL,
-        },
-        context,
-      );
-      await this.serviceService.createService(context, computingService);
-    }
 
     return (await new SocialMicroservice(context).createSpace(body)).data;
   }

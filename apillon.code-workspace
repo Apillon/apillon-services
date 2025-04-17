@@ -53,6 +53,10 @@
       "path": "services/infrastructure",
     },
     {
+      "name": "🌐@services_deploy [@apillon_deploy]",
+      "path": "services/deploy",
+    },
+    {
       "name": "😎@modules_dev-console-api",
       "path": "modules/dev-console-api",
     },

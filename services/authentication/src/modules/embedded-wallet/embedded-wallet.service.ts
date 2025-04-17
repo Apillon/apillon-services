@@ -3,14 +3,19 @@ import {
   BlockchainMicroservice,
   CreateEWIntegrationDto,
   CreateOasisSignatureDto,
+  DefaultUserRole,
   EmbeddedWalletSignaturesQueryFilter,
   GetQuotaDto,
+  Mailing,
+  MySql,
   ProductCode,
   QuotaCode,
   Scs,
   ServiceName,
   SpendCreditDto,
   SqlModelStatus,
+  env,
+  getEnvSecrets,
   spendCreditAction,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
@@ -95,9 +100,7 @@ export class EmbeddedWalletService {
     const ewIntegration = new EmbeddedWalletIntegration(
       event.body,
       context,
-    ).populate({
-      integration_uuid: uuid(),
-    });
+    ).populate({ integration_uuid: uuid() });
 
     await ewIntegration.validateOrThrow(AuthenticationValidationException);
 
@@ -123,6 +126,9 @@ export class EmbeddedWalletService {
 
     await ewIntegration.insert();
 
+    // Set mailerlite field indicating the user created an embedded wallet integration
+    new Mailing(context).setMailerliteField('has_wallet_integration');
+
     return ewIntegration.serialize(context.getSerializationStrategy());
   }
 
@@ -146,7 +152,7 @@ export class EmbeddedWalletService {
     event: { body: CreateOasisSignatureDto },
     context: ServiceContext,
   ) {
-    //Get embedded wallet integration
+    // Get embedded wallet integration
     const ewIntegration = await new EmbeddedWalletIntegration(
       {},
       context,
@@ -231,6 +237,8 @@ export class EmbeddedWalletService {
       oasisSignature.insert(),
     );
 
+    EmbeddedWalletService.setWalletMailerliteField(context, project_uuid);
+
     return {
       signature: signatureRes.signature,
       gasPrice: signatureRes.gasPrice,
@@ -270,5 +278,50 @@ export class EmbeddedWalletService {
     return await new OasisSignature({}, context).populateByPublicAddress(
       event.publicAddress,
     );
+  }
+
+  private static async setWalletMailerliteField(
+    context: ServiceContext,
+    project_uuid: string,
+  ) {
+    await getEnvSecrets();
+    const mysql = new MySql({
+      host: env.DEV_CONSOLE_API_MYSQL_HOST,
+      database: env.DEV_CONSOLE_API_MYSQL_DATABASE,
+      password: env.DEV_CONSOLE_API_MYSQL_PASSWORD,
+      port: env.DEV_CONSOLE_API_MYSQL_PORT,
+      user: env.DEV_CONSOLE_API_MYSQL_USER,
+    });
+
+    try {
+      await mysql.connect();
+      // Get the project owner's email to set mailerlite field
+      const { 0: owner } =
+        (await mysql.paramExecute(
+          `SELECT u.email, u.user_uuid FROM project_user pu
+          LEFT JOIN project p on p.id = pu.project_id
+          LEFT JOIN user u on u.id = pu.user_id
+          WHERE p.project_uuid = @project_uuid AND pu.role_id = ${DefaultUserRole.PROJECT_OWNER}`,
+          { project_uuid },
+        )) || [];
+
+      if (owner?.email) {
+        const mailContext = {
+          ...context,
+          user: { email: owner.email, user_uuid: owner.user_uuid },
+        } as ServiceContext;
+        await new Mailing(mailContext).setMailerliteField(
+          'has_embedded_wallet',
+          true,
+          owner.email,
+        );
+      }
+      await mysql.close();
+    } catch (err) {
+      console.error(`Error setting mailerlite field: ${err}`);
+      await mysql
+        .close()
+        .catch((err2) => console.error('Error closing MySQL connection', err2));
+    }
   }
 }

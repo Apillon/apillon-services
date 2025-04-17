@@ -6,6 +6,7 @@ import {
   SerializeFor,
   ValidatorErrorCode,
 } from '../../../../config/types';
+import { arrayPresenceValidator } from '../../../validators';
 
 export class CallContractDTO extends ModelBase {
   @prop({
@@ -53,17 +54,4 @@ export class ApillonApiCallContractDTO extends CallContractDTO {
     validators: [],
   })
   public project_uuid: string;
-}
-
-export function arrayPresenceValidator(allowEmpty = true) {
-  return function (this: any, value: any): boolean {
-    if (!Array.isArray(value)) {
-      return false;
-    }
-    if (allowEmpty && value.length === 0) {
-      return true;
-    }
-
-    return value.length > 0;
-  };
 }

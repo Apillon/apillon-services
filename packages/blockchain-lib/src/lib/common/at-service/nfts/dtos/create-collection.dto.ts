@@ -1,4 +1,19 @@
-import { ChainType, ModelBase, prop } from '@apillon/lib';
+import {
+  ChainType,
+  conditionalPresenceValidator,
+  dropReserveLowerOrEqualToMaxSupplyValidator,
+  enumInclusionValidator,
+  EvmChain,
+  ModelBase,
+  NFTCollectionType,
+  PopulateFrom,
+  prop,
+  SerializeFor,
+  SUBSTRATE_NFTS_MAX_SUPPLY,
+  SubstrateChain,
+  validateDropPriceIfDrop,
+  ValidatorErrorCode,
+} from '@apillon/lib';
 import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   ethAddressValidator,
@@ -7,24 +22,9 @@ import {
   stringLengthValidator,
 } from '@rawmodel/validators';
 import {
-  EvmChain,
-  NFTCollectionType,
-  PopulateFrom,
-  SerializeFor,
-  SubstrateChain,
-  ValidatorErrorCode,
-} from '@apillon/lib';
-import {
-  conditionalPresenceValidator,
-  enumInclusionValidator,
-} from '@apillon/lib';
-import { dropReserveLowerOrEqualToMaxSupplyValidator } from '@apillon/lib';
-import { validateDropPriceIfDrop } from '@apillon/lib';
-import {
   substrateAddressValidator,
   SubstrateChainPrefix,
 } from '../../../../substrate';
-import { SUBSTRATE_NFTS_MAX_SUPPLY } from '@apillon/lib';
 
 export class CreateCollectionDtoGenericBase extends ModelBase {
   @prop({
@@ -247,6 +247,18 @@ export class CreateCollectionDTO extends CreateCollectionDTOBase {
     ],
   })
   public royaltiesAddress: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [
+      {
+        resolver: ethAddressValidator(),
+        code: ValidatorErrorCode.DATA_NOT_VALID,
+      },
+    ],
+  })
+  public adminAddress: string;
 
   @prop({
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],

@@ -19,6 +19,7 @@ export class RpcApiKeyBaseDto extends ModelBase {
     ],
   })
   public name: string;
+
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],

@@ -408,6 +408,18 @@ export class StorageMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async getWebsiteWithAccess(
+    websiteUuid: string,
+    hasModifyAccess: boolean,
+  ) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_GET_WITH_ACCESS,
+      websiteUuid,
+      hasModifyAccess,
+    };
+    return await this.callService(data);
+  }
+
   public async createWebsite(params: CreateWebsiteDto) {
     const data = {
       eventName: StorageEventType.WEBSITE_CREATE,
@@ -427,6 +439,14 @@ export class StorageMicroservice extends BaseService {
   public async archiveWebsite(website_uuid: string) {
     const data = {
       eventName: StorageEventType.WEBSITE_ARCHIVE,
+      website_uuid,
+    };
+    return await this.callService(data);
+  }
+
+  public async deleteWebsite(website_uuid: string) {
+    const data = {
+      eventName: StorageEventType.WEBSITE_DELETE,
       website_uuid,
     };
     return await this.callService(data);
@@ -599,6 +619,15 @@ export class StorageMicroservice extends BaseService {
       eventName: StorageEventType.IPNS_GET_BY_NAME,
       ipnsName,
     };
+    return await this.callService(data);
+  }
+
+  public async unlinkGithubFromWebsites(uuids: string[]) {
+    const data = {
+      eventName: StorageEventType.UNLINK_GITHUB_FROM_WEBSITES,
+      uuids,
+    };
+
     return await this.callService(data);
   }
 }
