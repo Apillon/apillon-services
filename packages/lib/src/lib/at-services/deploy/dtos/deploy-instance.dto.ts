@@ -14,7 +14,7 @@ export class DeployInstanceDto extends ModelBase {
     validators: [
       {
         resolver: presenceValidator(),
-        code: ValidatorErrorCode.DATA_NOT_VALID,
+        code: ValidatorErrorCode.DATA_NOT_PRESENT,
       },
     ],
   })

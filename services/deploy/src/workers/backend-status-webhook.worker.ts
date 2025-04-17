@@ -7,6 +7,7 @@ import {
   ResourceStatus,
   SerializeFor,
   ServiceName,
+  splitArray,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
@@ -154,19 +155,10 @@ export class BackendStatusWebhookWorker extends BaseQueueWorker {
     return true;
   }
 
-  splitter(arr, splitBy) {
-    const cache = [];
-    const tmp = [...arr];
-    while (tmp.length) {
-      cache.push(tmp.splice(0, splitBy));
-    }
-    return cache;
-  }
-
   async processWebhook(webhooks: any[], sqsUrl: string, workerName: string) {
     let updates = [];
     if (webhooks.length > 0) {
-      const splits = this.splitter(webhooks, 10); // batch updates to up to 10 items
+      const splits = splitArray(webhooks, 10); // batch updates to up to 10 items
       for (let i = 0; i < splits.length; i++) {
         try {
           // sending batch by batch because we need to know if a failure occurred.

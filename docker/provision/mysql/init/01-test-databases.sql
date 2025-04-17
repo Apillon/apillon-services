@@ -4,7 +4,6 @@ CREATE DATABASE IF NOT EXISTS `Apillon_console_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_storage_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_config_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_authentication_test`;
-CREATE DATABASE IF NOT EXISTS `Apillon_auth_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_referral_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_nfts_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_blockchain_test`;
