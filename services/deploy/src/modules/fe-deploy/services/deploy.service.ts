@@ -2,6 +2,7 @@ import {
   AWS_KMS,
   AppEnvironment,
   LogType,
+  ModelValidationException,
   NftWebsiteDeployDto,
   NftWebsiteDeployDtoType,
   TriggerGithubDeployDtoType,
@@ -16,10 +17,12 @@ import { sendToWorkerQueue } from '@apillon/workers-lib';
 import { WorkerName } from '../../../workers/builder-executor';
 import { getNftWebsiteConfig } from '../../../lib/get-nft-website-config';
 import { GithubService } from './github.service';
+import { DeploymentConfigRepository } from '../repositories/deployment-config.repository';
 
 export class DeployService {
   constructor(
     private readonly deploymentBuildRepository: DeploymentBuildRepository,
+    private readonly deploymentConfigRepository: DeploymentConfigRepository,
     private readonly githubService: GithubService,
   ) {}
 
@@ -76,6 +79,70 @@ export class DeployService {
   }
 
   async triggerWebDeploy(body: NftWebsiteDeployDtoType | WebsiteDeployDtoType) {
+    const isNftWebsiteDeploy = DeployService.isNftWebsiteDeployDto(body);
+
+    if (isNftWebsiteDeploy && body.new) {
+      const kmsClient = new AWS_KMS();
+
+      const websiteConfigParams = getNftWebsiteConfig(
+        body.type,
+        body.contractAddress,
+        body.chainId,
+      );
+      const deploymentConfig = this.deploymentConfigRepository.create({
+        repoUrl: websiteConfigParams.url,
+        repoName: 'Nft website',
+        repoOwnerName: 'Apillon',
+        hookId: 0,
+        branchName: 'master',
+        websiteUuid: body.websiteUuid,
+        buildCommand: websiteConfigParams.buildCommand,
+        buildDirectory: websiteConfigParams.buildDirectory,
+        installCommand: websiteConfigParams.installCommand,
+        apiKey: body.apiKey,
+        apiSecret: await kmsClient.encrypt(
+          body.apiSecret,
+          env.DEPLOY_KMS_KEY_ID,
+        ),
+        encryptedVariables: await kmsClient.encrypt(
+          JSON.stringify(websiteConfigParams.variables),
+          env.DEPLOY_KMS_KEY_ID,
+        ),
+      });
+
+      await deploymentConfig.validateOrThrow(ModelValidationException);
+
+      await deploymentConfig.insert();
+    } else if (!isNftWebsiteDeploy && body.new) {
+      const webBody = body as WebsiteDeployDtoType;
+      const kmsClient = new AWS_KMS();
+
+      const deploymentConfig = this.deploymentConfigRepository.create({
+        repoUrl: webBody.url,
+        repoName: 'Web',
+        repoOwnerName: 'Apillon',
+        hookId: 0,
+        branchName: 'master',
+        websiteUuid: body.websiteUuid,
+        buildCommand: webBody.buildCommand,
+        buildDirectory: webBody.buildDirectory,
+        installCommand: webBody.installCommand,
+        apiKey: webBody.apiKey,
+        apiSecret: await kmsClient.encrypt(
+          webBody.apiSecret,
+          env.DEPLOY_KMS_KEY_ID,
+        ),
+        encryptedVariables: await kmsClient.encrypt(
+          JSON.stringify(webBody.variables),
+          env.DEPLOY_KMS_KEY_ID,
+        ),
+      });
+
+      await deploymentConfig.validateOrThrow(ModelValidationException);
+
+      await deploymentConfig.insert();
+    }
+
     const deploymentBuild = this.deploymentBuildRepository.create({
       websiteUuid: body.websiteUuid,
     });
@@ -85,9 +152,10 @@ export class DeployService {
     const parameters = {
       deploymentBuildId: deploymentBuild.id,
       ...body,
-      ...(DeployService.isNftWebsiteDeployDto(body)
+      ...(isNftWebsiteDeploy && body.new
         ? getNftWebsiteConfig(body.type, body.contractAddress, body.chainId)
         : {}),
+      isRedeploy: !body.new,
     } as BuildProjectWorkerInterface;
 
     writeLog(

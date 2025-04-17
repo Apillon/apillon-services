@@ -392,6 +392,7 @@ export class Website extends UuidSqlModel {
   public nftCollectionUuid: string | null;
 
   @prop({
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,
@@ -746,6 +747,23 @@ export class Website extends UuidSqlModel {
       AND w.status <> ${SqlModelStatus.DELETED}
       `,
       {},
+    );
+  }
+
+  public async unlinkGithubFromWebsites(uuids: string[]) {
+    if (!uuids || !uuids.length) {
+      return;
+    }
+
+    await this.getContext().mysql.paramExecute(
+      `
+      UPDATE \`${DbTables.WEBSITE}\`
+      SET source = @source
+      WHERE website_uuid IN (@uuids)`,
+      {
+        source: WebsiteSource.APILLON,
+        uuids,
+      },
     );
   }
 }

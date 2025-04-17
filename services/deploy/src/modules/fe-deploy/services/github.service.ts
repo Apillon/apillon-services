@@ -72,6 +72,7 @@ export class GithubService {
       params: {
         sort: 'pushed',
         per_page: 100,
+        affiliation: 'owner',
       },
     });
 
@@ -101,6 +102,27 @@ export class GithubService {
     await projectConfig.update();
 
     return access_token;
+  }
+
+  async deleteAppRequest(accessToken: string) {
+    const clientId = env.GITHUB_AUTH_CLIENT_ID;
+    const clientSecret = env.GITHUB_AUTH_CLIENT_SECRET;
+
+    return await axios.delete(
+      `https://api.github.com/applications/${clientId}/grant`,
+      {
+        headers: {
+          Accept: 'application/vnd.github+json',
+        },
+        auth: {
+          username: clientId,
+          password: clientSecret,
+        },
+        data: {
+          access_token: accessToken,
+        },
+      },
+    );
   }
 
   async deleteWebhook(

@@ -238,6 +238,8 @@ export enum StorageEventType {
   GET_LINKS = 'get-links',
   GENERATE_SHORT_URL = 'generate-short-url',
   GET_TARGET_URL = 'get-target-url',
+  UNLINK_GITHUB_FROM_WEBSITES = 'unlink-github-from-websites',
+  WEBSITE_DELETE = 'delete-website',
 }
 
 export enum AuthenticationEventType {
@@ -438,6 +440,7 @@ export enum DeployEventType {
   SET_ENVIRONMENT_VARIABLES = 'fe-set-environment-variables',
   GET_ENVIRONMENT_VARIABLES = 'fe-get-environment-variables',
   GET_DEPLOYMENT_CONFIG = 'fe-get-deployment-config',
+  REDEPLOY_WEBSITE = 'fe-redeploy-website',
 }
 
 export enum SimpletsEventType {
