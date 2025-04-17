@@ -118,9 +118,10 @@ export class HostingService {
     context: ServiceContext,
   ): Promise<any> {
     const website: Website = new Website(event.body, context).populate({
-      source: event.body.deploymentConfig
-        ? WebsiteSource.GITHUB
-        : WebsiteSource.APILLON,
+      source:
+        event.body.source || event.body.deploymentConfig
+          ? WebsiteSource.GITHUB
+          : WebsiteSource.APILLON,
     });
 
     if (website.domain) {
@@ -176,7 +177,12 @@ export class HostingService {
       // Should not be populated as we reuse the same DTO on endpoint
       payload.skipWebsiteCheck = true;
 
-      await new DeployMicroservice(context).createDeploymentConfig(payload);
+      try {
+        await new DeployMicroservice(context).createDeploymentConfig(payload);
+      } catch (err) {
+        await website.delete();
+        throw err;
+      }
 
       // No need to update as createDeployementConfig already updates
       website.source = WebsiteSource.GITHUB;
@@ -301,7 +307,37 @@ export class HostingService {
     }
     website.canModify(context);
 
+    if (website.source === WebsiteSource.GITHUB) {
+      await new DeployMicroservice(context).deleteDeploymentConfig(
+        website.website_uuid,
+      );
+      // Need this as we set the source to APILLON in the deleteDeploymentConfig & don't want for markArchived to set it back
+      website.source = WebsiteSource.APILLON;
+    }
+
     return await website.markArchived();
+  }
+
+  static async deleteWebsite(
+    event: { website_uuid: string },
+    context: ServiceContext,
+  ): Promise<Website> {
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+    website.canModify(context);
+
+    if (website.source === WebsiteSource.GITHUB) {
+      await new DeployMicroservice(context).deleteDeploymentConfig(
+        website.website_uuid,
+      );
+    }
+
+    return await website.delete();
   }
 
   /**

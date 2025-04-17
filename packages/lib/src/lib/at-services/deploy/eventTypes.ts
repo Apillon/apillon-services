@@ -18,6 +18,7 @@ import { ListReposType } from './types/list-repos.type';
 import { DeleteDeploymentConfigType } from './types/delete-deployment-config.type';
 import { GetEnvironmentVariablesType } from './types/get-environment-variables.type';
 import { GetDeploymentConfigType } from './types/get-deployment-config.type';
+import { RedeployWebsiteType } from './types/redeploy-website.type';
 
 export type DeployMSEventType =
   | IBodyEvent<DeployEventType.BE_DEPLOY_DOCKER_COMPOSE, DeployInstanceDto>
@@ -78,7 +79,9 @@ export type DeployMSEventType =
       DeployEventType.GET_ENVIRONMENT_VARIABLES,
       GetEnvironmentVariablesType
     >
-  | IBodyEvent<DeployEventType.GET_DEPLOYMENT_CONFIG, GetDeploymentConfigType>;
+  | IBodyEvent<DeployEventType.GET_DEPLOYMENT_CONFIG, GetDeploymentConfigType>
+  | IBodyEvent<DeployEventType.REDEPLOY_WEBSITE, RedeployWebsiteType>;
+
 // | IBodyEvent<
 //     DeployEventType.BE_GET_INSTANCE_BILLING,
 //     GenericDeployRequestDto

@@ -148,6 +148,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         //If deployment was not already reviewed, and env variable for sending websites to review is set to 1
         if (
           !deploymentReviewed &&
+          !website.nftCollectionUuid &&
           env.SEND_WEBSITES_TO_REVIEW &&
           !(await checkProjectSubscription(this.context, website.project_uuid))
         ) {

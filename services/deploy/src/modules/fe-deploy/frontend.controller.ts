@@ -15,6 +15,8 @@ import {
   UpdateDeploymentConfigDtoType,
   WebsiteDeployDtoType,
   GetDeployConfigByRepoIdType,
+  env,
+  AWS_KMS,
 } from '@apillon/lib';
 import { DeployService } from './services/deploy.service';
 import { DeploymentConfigService } from './services/deployment-config.service';
@@ -25,6 +27,9 @@ import { DeploymentBuildRepository } from './repositories/deployment-build.repos
 import { GithubConfigRepository } from './repositories/github-config.repository';
 import { DeploymentConfigRepository } from './repositories/deployment-config.repository';
 import { GithubService } from './services/github.service';
+import { RedeployWebsiteType } from '@apillon/lib';
+import { DeployCodeException } from '../../lib/exceptions';
+import { DeployErrorCode } from '../../config/types';
 
 export class FrontendController {
   private githubService: GithubService;
@@ -32,6 +37,7 @@ export class FrontendController {
   private readonly buildService: BuildService;
   private readonly deploymentConfigService: DeploymentConfigService;
   private readonly deployService: DeployService;
+  private readonly storageMicroservice: StorageMicroservice;
 
   static initializeFrontendRepositories = (context: ServiceContext) => {
     return {
@@ -51,21 +57,22 @@ export class FrontendController {
     this.githubService = new GithubService();
     this.deployService = new DeployService(
       deploymentBuildRepository,
+      deploymentConfigRepository,
       this.githubService,
     );
 
-    const storageMicroservice = new StorageMicroservice(context);
+    this.storageMicroservice = new StorageMicroservice(context);
 
     this.githubConfigService = new GithubConfigService(
       this.githubService,
       githubConfigRepository,
       deploymentConfigRepository,
-      storageMicroservice,
+      this.storageMicroservice,
     );
 
     this.buildService = new BuildService(
       deploymentBuildRepository,
-      storageMicroservice,
+      this.storageMicroservice,
     );
 
     this.deploymentConfigService = new DeploymentConfigService(
@@ -73,7 +80,7 @@ export class FrontendController {
       githubConfigRepository,
       deploymentConfigRepository,
       this.deployService,
-      storageMicroservice,
+      this.storageMicroservice,
     );
   }
 
@@ -136,5 +143,54 @@ export class FrontendController {
 
   async getDeploymentConfig(body: GetDeploymentConfigType) {
     return this.deploymentConfigService.getDeploymentConfig(body);
+  }
+
+  async redeployWebsite(body: RedeployWebsiteType) {
+    const website = (
+      await this.storageMicroservice.getWebsiteWithAccess(
+        body.websiteUuid,
+        false,
+      )
+    ).data;
+
+    const config = await this.getDeploymentConfig({
+      websiteUuid: body.websiteUuid,
+    });
+
+    if (typeof config === 'boolean') {
+      throw new DeployCodeException({
+        status: 404,
+        code: DeployErrorCode.DEPLOYMENT_CONFIG_NOT_FOUND,
+      });
+    }
+
+    if (website.nftCollectionUuid) {
+      const kmsClient = new AWS_KMS();
+      await this.deployService.triggerWebDeploy({
+        websiteUuid: body.websiteUuid,
+        apiKey: config.apiKey,
+        apiSecret: config.apiSecret,
+        installCommand: config.installCommand,
+        buildCommand: config.buildCommand,
+        buildDirectory: config.buildDirectory,
+        url: config.repoUrl,
+        variables: JSON.parse(
+          await kmsClient.decrypt(
+            config.encryptedVariables,
+            env.DEPLOY_KMS_KEY_ID,
+          ),
+        ),
+      } as WebsiteDeployDtoType);
+    } else if (false) {
+      // TODO: Add support for simplets (differentiate between simplet and github)
+    } else {
+      await this.deployService.triggerGithubDeploy({
+        configId: config.id,
+        url: config.repoUrl,
+        ...config,
+      });
+    }
+
+    return true;
   }
 }

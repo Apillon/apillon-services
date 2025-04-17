@@ -66,6 +66,7 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.WEBSITE_UPDATE]: HostingService.updateWebsite,
     [StorageEventType.WEBSITE_DEPLOY]: HostingService.deployWebsite,
     [StorageEventType.WEBSITE_ARCHIVE]: HostingService.archiveWebsite,
+    [StorageEventType.WEBSITE_DELETE]: HostingService.deleteWebsite,
     [StorageEventType.WEBSITE_ACTIVATE]: HostingService.activateWebsite,
     [StorageEventType.WEBSITE_LIST_DOMAINS]: HostingService.listDomains,
     [StorageEventType.WEBSITE_GET_ALL_DOMAINS]: HostingService.getDomains,

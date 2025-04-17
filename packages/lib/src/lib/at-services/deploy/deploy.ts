@@ -254,6 +254,17 @@ export class DeployMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  public async redeployWebsite(websiteUuid: string) {
+    const data = {
+      eventName: DeployEventType.REDEPLOY_WEBSITE,
+      body: {
+        websiteUuid,
+      },
+    };
+
+    return await this.callService(data);
+  }
+
   // public async getInstanceBilling(body: GenericDeployRequestDto) {
   //   return await this.emitEvent({
   //     eventName: DeployEventType.BE_GET_INSTANCE_BILLING,

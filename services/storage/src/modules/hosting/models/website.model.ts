@@ -392,6 +392,7 @@ export class Website extends UuidSqlModel {
   public nftCollectionUuid: string | null;
 
   @prop({
+    parser: { resolver: integerParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
     serializable: [
       SerializeFor.INSERT_DB,

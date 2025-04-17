@@ -115,6 +115,8 @@ export class GithubConfigService {
       ]);
     }
 
+    await this.githubService.deleteAppRequest(githubProjectConfig.access_token);
+
     return true;
   }
 

@@ -12,11 +12,16 @@ import {
   ValidatorErrorCode,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
+  Ams,
+  CreateApiKeyDto,
+  ApiKeyRoleBaseDto,
+  DefaultApiKeyRole,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { BadRequestErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
 import { ServicesService } from '../../services/services.service';
+import { ServiceQueryFilter } from '../../services/dtos/services-query-filter.dto';
 
 @Injectable()
 export class HostingService {
@@ -38,8 +43,81 @@ export class HostingService {
       AttachedServiceType.HOSTING,
     );
 
+    let generatedApiKeyId: number | undefined;
+    let accessMS: Ams;
+
+    if (
+      body.deploymentConfig &&
+      (!body.deploymentConfig.apiKey || !body.deploymentConfig.apiKey)
+    ) {
+      const serviceList = await this.serviceService.getServiceList(
+        context,
+        new ServiceQueryFilter({}, context).populate({
+          project_uuid: body.project_uuid,
+        }),
+      );
+
+      const hostingService = serviceList.items.find(
+        (item) => item.serviceType_id === AttachedServiceType.HOSTING,
+      );
+
+      const storageService = serviceList.items.find(
+        (item) => item.serviceType_id === AttachedServiceType.STORAGE,
+      );
+
+      accessMS = new Ams(context);
+
+      const createdApiKey = await accessMS.createApiKey(
+        new CreateApiKeyDto({}, context).populate({
+          project_uuid: body.project_uuid,
+          name: `Deployment API Key - ${body.name}`,
+          testNetwork: false,
+          roles: [
+            new ApiKeyRoleBaseDto({}, context).populate({
+              role_id: DefaultApiKeyRole.KEY_EXECUTE,
+              project_uuid: body.project_uuid,
+              service_uuid: hostingService.service_uuid,
+              serviceType_id: AttachedServiceType.HOSTING,
+            }),
+            new ApiKeyRoleBaseDto({}, context).populate({
+              role_id: DefaultApiKeyRole.KEY_READ,
+              project_uuid: body.project_uuid,
+              service_uuid: hostingService.service_uuid,
+              serviceType_id: AttachedServiceType.HOSTING,
+            }),
+            new ApiKeyRoleBaseDto({}, context).populate({
+              role_id: DefaultApiKeyRole.KEY_EXECUTE,
+              project_uuid: body.project_uuid,
+              service_uuid: storageService.service_uuid,
+              serviceType_id: AttachedServiceType.STORAGE,
+            }),
+            new ApiKeyRoleBaseDto({}, context).populate({
+              role_id: DefaultApiKeyRole.KEY_READ,
+              project_uuid: body.project_uuid,
+              service_uuid: storageService.service_uuid,
+              serviceType_id: AttachedServiceType.STORAGE,
+            }),
+          ],
+        }),
+      );
+
+      generatedApiKeyId = createdApiKey.data.id;
+
+      body.deploymentConfig.apiKey = createdApiKey.data.apiKey;
+      body.deploymentConfig.apiSecret = createdApiKey.data.apiKeySecret;
+    }
+
     //Call Storage microservice, to create website
-    return (await new StorageMicroservice(context).createWebsite(body)).data;
+    try {
+      return (await new StorageMicroservice(context).createWebsite(body)).data;
+    } catch (e) {
+      if (generatedApiKeyId && accessMS) {
+        await accessMS.deleteApiKey({
+          id: generatedApiKeyId,
+        });
+      }
+      throw e;
+    }
   }
 
   async updateWebsite(

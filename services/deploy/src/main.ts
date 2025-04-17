@@ -58,6 +58,8 @@ export async function processEvent(
         return frontendController.getEnvironmentVariables(event.body);
       case DeployEventType.GET_DEPLOYMENT_CONFIG:
         return frontendController.getDeploymentConfig(event.body);
+      case DeployEventType.REDEPLOY_WEBSITE:
+        return frontendController.redeployWebsite(event.body);
       default:
         throw new Error('Invalid Deploy Event Type');
     }

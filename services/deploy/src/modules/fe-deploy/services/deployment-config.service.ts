@@ -78,15 +78,12 @@ export class DeploymentConfigService {
 
     await deploymentConfig.insert();
 
-    if (!body.skipWebsiteCheck) {
-      // When we already have website, we set source in advance
-      await this.storageMicroservice.updateWebsite({
-        website_uuid: body.websiteUuid,
-        data: {
-          source: WebsiteSource.GITHUB,
-        },
-      });
-    }
+    await this.storageMicroservice.updateWebsite({
+      website_uuid: body.websiteUuid,
+      data: {
+        source: WebsiteSource.GITHUB,
+      },
+    });
 
     const serializedConfig = deploymentConfig.serialize() as DeploymentConfig;
 
@@ -120,7 +117,15 @@ export class DeploymentConfigService {
       true,
     );
 
-    const { apiSecret, apiKey, ...updatedFields } = body;
+    const {
+      apiSecret,
+      apiKey,
+      websiteUuid: _websiteUuid,
+      projectUuid: _projectUuid,
+      repoId: _repoId,
+      repoUrl: _repoUrl,
+      ...updatedFields
+    } = body;
 
     const apiKeyToSet = apiKey ?? config.apiKey;
     const apiSecretToSet = apiSecret
@@ -153,10 +158,8 @@ export class DeploymentConfigService {
       );
 
     if (!githubProjectConfig.exists()) {
-      throw new DeployCodeException({
-        status: 404,
-        code: DeployErrorCode.GITHUB_PROJECT_CONFIG_NOT_FOUND,
-      });
+      // Archive website is also calling this method & NFT websites are not linked to github
+      return true;
     }
 
     const deploymentConfigs =
@@ -165,12 +168,13 @@ export class DeploymentConfigService {
     await Promise.all(
       deploymentConfigs.map(
         async (config) =>
-          await this.githubService.deleteWebhook(
+          config.repoId &&
+          (await this.githubService.deleteWebhook(
             githubProjectConfig,
             config.repoOwnerName,
             config.repoName,
             config.hookId,
-          ),
+          )),
       ),
     );
 
@@ -264,7 +268,9 @@ export class DeploymentConfigService {
     return await deploymentConfig.getEnvironmentVariables();
   }
 
-  async getDeploymentConfig(body: GetDeploymentConfigType) {
+  async getDeploymentConfig(
+    body: GetDeploymentConfigType,
+  ): Promise<DeploymentConfig | boolean> {
     await this.storageMicroservice.getWebsiteWithAccess(
       body.websiteUuid,
       false,
@@ -279,6 +285,6 @@ export class DeploymentConfigService {
       return false;
     }
 
-    return deploymentConfigs[0].serialize();
+    return deploymentConfigs[0].serialize() as DeploymentConfig;
   }
 }

@@ -2,7 +2,9 @@ import {
   AWS_KMS,
   Context,
   DeploymentBuildStatus,
+  Lmas,
   SerializeFor,
+  ServiceName,
   env,
 } from '@apillon/lib';
 import {
@@ -38,7 +40,7 @@ rm -rf /tmp/.npm
 rm -rf /tmp/npm-global
 
 # Clone the repository and checkout the specified branch
-echo "Cloning repository $REPO_URL..."
+echo "Cloning repository..."
 
 mkdir -p $APP_DIR
 
@@ -52,12 +54,14 @@ cd $APP_DIR
 # Install dependencies and build
 echo "Installing dependencies..."
 
+export HOME=/tmp
+export npm_config_cache=/tmp/.npm
+export npm_config_prefix=/tmp/npm-global
+mkdir -p /tmp/.npm /tmp/npm-global
+
 # Check if install command is provided and run it
 if [ -n "$INSTALL_COMMAND" ] && [ "$INSTALL_COMMAND" != "undefined" ]; then
-  export HOME=/tmp
-  export npm_config_cache=/tmp/.npm
-  export npm_config_prefix=/tmp/npm-global
-  mkdir -p /tmp/.npm /tmp/npm-global
+
 
   npm config set cache /tmp/.npm
 
@@ -77,6 +81,11 @@ else
   echo "Build command not set"
 fi
 
+# Check if build directory has index.html file
+if [ ! -f "$BUILD_DIR/index.html" ]; then
+  echo "Build directory does not contain index.html file."
+  exit 2
+fi
 
 
 # SET values for Apillon
@@ -180,7 +189,11 @@ export class BuildProjectWorker extends BaseQueueWorker {
         : githubProjectConfig.access_token;
 
       url = url.replace('https://', `https://oauth2:${accessToken}@`);
+    } else if (data.isRedeploy) {
+      const kmsClient = new AWS_KMS();
+      secret = await kmsClient.decrypt(data.apiSecret, env.DEPLOY_KMS_KEY_ID);
     }
+
     let lastLog = '';
 
     const child = spawn(
@@ -238,6 +251,16 @@ export class BuildProjectWorker extends BaseQueueWorker {
         if (exitCode !== 0) {
           await deploymentBuild.handleFailure();
           console.log(`Failure, child process exited with code ${exitCode}`);
+          await new Lmas().sendMessageToSlack({
+            message: `
+              Build failed for website ${data.websiteUuid}\n
+              Last log: ${lastLog}\n
+              Environment: ${env.APP_ENV}
+            `,
+            service: ServiceName.DEPLOY,
+            blocks: [],
+            channel: env.SLACK_CHANNEL_BUILD_PROJECT_FAILURES,
+          });
           reject(exitCode);
         } else {
           // Check if data is JSON
@@ -248,15 +271,35 @@ export class BuildProjectWorker extends BaseQueueWorker {
             await deploymentBuild.handleSuccess();
           } catch (e) {
             await deploymentBuild.handleFailure();
+            await new Lmas().sendMessageToSlack({
+              message: `
+              Build failed for website ${data.websiteUuid}\n
+              Last log: ${lastLog}\n
+              Environment: ${env.APP_ENV}
+            `,
+              service: ServiceName.DEPLOY,
+              blocks: [],
+              channel: env.SLACK_CHANNEL_BUILD_PROJECT_FAILURES,
+            });
           }
           console.log(`Success, child process exited with code ${data}`);
           resolve(data);
         }
       });
-      child.on('error', async (data) => {
+      child.on('error', async (errData) => {
         await deploymentBuild.handleFailure();
-        console.log(`Failure, child process exited with code ${data}`);
-        reject(data);
+        await new Lmas().sendMessageToSlack({
+          message: `
+              Build failed for website ${data.websiteUuid}\n
+              Last log: ${lastLog}\n
+              Environment: ${env.APP_ENV}
+            `,
+          service: ServiceName.DEPLOY,
+          blocks: [],
+          channel: env.SLACK_CHANNEL_BUILD_PROJECT_FAILURES,
+        });
+        console.log(`Failure, child process exited with code ${errData}`);
+        reject(errData);
       });
     });
 
