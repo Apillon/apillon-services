@@ -57,9 +57,9 @@ export class Mailer {
     context: ServiceContext,
   ) {
     await getEnvSecrets();
-    // if (env.APP_ENV !== AppEnvironment.PROD) {
-    //   return;
-    // }
+    if (env.APP_ENV !== AppEnvironment.PROD) {
+      return;
+    }
     email ||= context.user?.email;
 
     if (!email) {

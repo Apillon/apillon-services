@@ -60,10 +60,13 @@ export async function processEvent(event, context: Context): Promise<any> {
 
     [StorageEventType.WEBSITE_LIST]: HostingService.listWebsites,
     [StorageEventType.WEBSITE_GET]: HostingService.getWebsite,
+    [StorageEventType.WEBSITE_GET_WITH_ACCESS]:
+      HostingService.getWebsiteWithAccess,
     [StorageEventType.WEBSITE_CREATE]: HostingService.createWebsite,
     [StorageEventType.WEBSITE_UPDATE]: HostingService.updateWebsite,
     [StorageEventType.WEBSITE_DEPLOY]: HostingService.deployWebsite,
     [StorageEventType.WEBSITE_ARCHIVE]: HostingService.archiveWebsite,
+    [StorageEventType.WEBSITE_DELETE]: HostingService.deleteWebsite,
     [StorageEventType.WEBSITE_ACTIVATE]: HostingService.activateWebsite,
     [StorageEventType.WEBSITE_LIST_DOMAINS]: HostingService.listDomains,
     [StorageEventType.WEBSITE_GET_ALL_DOMAINS]: HostingService.getDomains,
@@ -101,6 +104,8 @@ export async function processEvent(event, context: Context): Promise<any> {
     [StorageEventType.GET_IPFS_CLUSTER_INFO]: StorageService.getIpfsClusterInfo,
     [StorageEventType.GET_LINK]: StorageService.getLink,
     [StorageEventType.GET_LINKS]: StorageService.getLinks,
+    [StorageEventType.UNLINK_GITHUB_FROM_WEBSITES]:
+      StorageService.unlinkGithubFromWebsites,
 
     [StorageEventType.GENERATE_SHORT_URL]: UrlShortenerService.generateShortUrl,
     [StorageEventType.GET_TARGET_URL]: UrlShortenerService.getTargetUrl,

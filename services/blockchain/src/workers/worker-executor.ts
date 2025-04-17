@@ -73,6 +73,22 @@ export enum WorkerName {
   VERIFY_BASE_TRANSACTIONS = 'VerifyBaseTransactions',
   TRANSMIT_BASE_SEPOLIA_TRANSACTIONS = 'TransmitBaseSepoliaTransactions',
   VERIFY_BASE_SEPOLIA_TRANSACTIONS = 'VerifyBaseSepoliaTransactions',
+  TRANSMIT_ARBITRUM_ONE_TRANSACTIONS = 'TransmitArbitrumOneTransactions',
+  VERIFY_ARBITRUM_ONE_TRANSACTIONS = 'VerifyArbitrumOneTransactions',
+  TRANSMIT_ARBITRUM_ONE_SEPOLIA_TRANSACTIONS = 'TransmitArbitrumOneSepoliaTransactions',
+  VERIFY_ARBITRUM_ONE_SEPOLIA_TRANSACTIONS = 'VerifyArbitrumOneSepoliaTransactions',
+  TRANSMIT_AVALANCHE_TRANSACTIONS = 'TransmitAvalancheTransactions',
+  VERIFY_AVALANCHE_TRANSACTIONS = 'VerifyAvalancheTransactions',
+  TRANSMIT_AVALANCHE_FUJI_TRANSACTIONS = 'TransmitAvalancheFujiTransactions',
+  VERIFY_AVALANCHE_FUJI_TRANSACTIONS = 'VerifyAvalancheFujiTransactions',
+  TRANSMIT_OPTIMISM_TRANSACTIONS = 'TransmitOptimismTransactions',
+  VERIFY_OPTIMISM_TRANSACTIONS = 'VerifyOptimismTransactions',
+  TRANSMIT_OPTIMISM_SEPOLIA_TRANSACTIONS = 'TransmitOptimismSepoliaTransactions',
+  VERIFY_OPTIMISM_SEPOLIA_TRANSACTIONS = 'VerifyOptimismSepoliaTransactions',
+  TRANSMIT_POLYGON_TRANSACTIONS = 'TransmitPolygonTransactions',
+  VERIFY_POLYGON_TRANSACTIONS = 'VerifyPolygonTransactions',
+  TRANSMIT_POLYGON_AMOY_TRANSACTIONS = 'TransmitPolygonAmoyTransactions',
+  VERIFY_POLYGON_AMOY_TRANSACTIONS = 'VerifyPolygonAmoyTransactions',
 }
 
 export async function handler(event: any) {
@@ -171,6 +187,14 @@ export async function handleLambdaEvent(
     case WorkerName.TRANSMIT_ALFAJORES_TRANSACTIONS:
     case WorkerName.TRANSMIT_BASE_TRANSACTIONS:
     case WorkerName.TRANSMIT_BASE_SEPOLIA_TRANSACTIONS:
+    case WorkerName.TRANSMIT_ARBITRUM_ONE_TRANSACTIONS:
+    case WorkerName.TRANSMIT_ARBITRUM_ONE_SEPOLIA_TRANSACTIONS:
+    case WorkerName.TRANSMIT_AVALANCHE_TRANSACTIONS:
+    case WorkerName.TRANSMIT_AVALANCHE_FUJI_TRANSACTIONS:
+    case WorkerName.TRANSMIT_OPTIMISM_TRANSACTIONS:
+    case WorkerName.TRANSMIT_OPTIMISM_SEPOLIA_TRANSACTIONS:
+    case WorkerName.TRANSMIT_POLYGON_TRANSACTIONS:
+    case WorkerName.TRANSMIT_POLYGON_AMOY_TRANSACTIONS:
       await new TransmitEvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
@@ -225,6 +249,14 @@ export async function handleLambdaEvent(
     case WorkerName.VERIFY_ALFAJORES_TRANSACTIONS:
     case WorkerName.VERIFY_BASE_TRANSACTIONS:
     case WorkerName.VERIFY_BASE_SEPOLIA_TRANSACTIONS:
+    case WorkerName.VERIFY_ARBITRUM_ONE_TRANSACTIONS:
+    case WorkerName.VERIFY_ARBITRUM_ONE_SEPOLIA_TRANSACTIONS:
+    case WorkerName.VERIFY_AVALANCHE_TRANSACTIONS:
+    case WorkerName.VERIFY_AVALANCHE_FUJI_TRANSACTIONS:
+    case WorkerName.VERIFY_OPTIMISM_TRANSACTIONS:
+    case WorkerName.VERIFY_OPTIMISM_SEPOLIA_TRANSACTIONS:
+    case WorkerName.VERIFY_POLYGON_TRANSACTIONS:
+    case WorkerName.VERIFY_POLYGON_AMOY_TRANSACTIONS:
       await new EvmTransactionWorker(workerDefinition, context).run({
         executeArg: JSON.stringify(workerDefinition.parameters),
       });
@@ -330,6 +362,18 @@ export async function handleSqsMessages(
         case WorkerName.TRANSMIT_MOONBEAM_TRANSACTIONS:
         case WorkerName.TRANSMIT_MOONBASE_TRANSACTIONS:
         case WorkerName.TRANSMIT_ASTAR_TRANSACTIONS:
+        case WorkerName.TRANSMIT_CELO_TRANSACTIONS:
+        case WorkerName.TRANSMIT_ALFAJORES_TRANSACTIONS:
+        case WorkerName.TRANSMIT_BASE_TRANSACTIONS:
+        case WorkerName.TRANSMIT_BASE_SEPOLIA_TRANSACTIONS:
+        case WorkerName.TRANSMIT_OPTIMISM_TRANSACTIONS:
+        case WorkerName.TRANSMIT_OPTIMISM_SEPOLIA_TRANSACTIONS:
+        case WorkerName.TRANSMIT_ARBITRUM_ONE_TRANSACTIONS:
+        case WorkerName.TRANSMIT_ARBITRUM_ONE_SEPOLIA_TRANSACTIONS:
+        case WorkerName.TRANSMIT_AVALANCHE_TRANSACTIONS:
+        case WorkerName.TRANSMIT_AVALANCHE_FUJI_TRANSACTIONS:
+        case WorkerName.TRANSMIT_POLYGON_TRANSACTIONS:
+        case WorkerName.TRANSMIT_POLYGON_AMOY_TRANSACTIONS:
           await new TransmitEvmTransactionWorker(workerDefinition, context).run(
             {
               executeArg: message?.body,
@@ -341,10 +385,21 @@ export async function handleSqsMessages(
         //   break;
         case WorkerName.VERIFY_ETHEREUM_TRANSACTIONS:
         case WorkerName.VERIFY_SEPOLIA_TRANSACTIONS:
+        case WorkerName.VERIFY_ALFAJORES_TRANSACTIONS:
         case WorkerName.VERIFY_CELO_TRANSACTIONS:
         case WorkerName.VERIFY_MOONBEAM_TRANSACTIONS:
         case WorkerName.VERIFY_MOONBASE_TRANSACTIONS:
         case WorkerName.VERIFY_ASTAR_TRANSACTIONS:
+        case WorkerName.VERIFY_BASE_TRANSACTIONS:
+        case WorkerName.VERIFY_BASE_SEPOLIA_TRANSACTIONS:
+        case WorkerName.VERIFY_OPTIMISM_TRANSACTIONS:
+        case WorkerName.VERIFY_OPTIMISM_SEPOLIA_TRANSACTIONS:
+        case WorkerName.VERIFY_ARBITRUM_ONE_TRANSACTIONS:
+        case WorkerName.VERIFY_ARBITRUM_ONE_SEPOLIA_TRANSACTIONS:
+        case WorkerName.VERIFY_AVALANCHE_TRANSACTIONS:
+        case WorkerName.VERIFY_AVALANCHE_FUJI_TRANSACTIONS:
+        case WorkerName.VERIFY_POLYGON_TRANSACTIONS:
+        case WorkerName.VERIFY_POLYGON_AMOY_TRANSACTIONS:
           await new EvmTransactionWorker(workerDefinition, context).run({
             executeArg: message?.body,
           });

@@ -2,9 +2,11 @@ import {
   Ams,
   ApillonHostingApiCreateS3UrlsForUploadDto,
   AWS_S3,
+  CreateDeploymentConfigDto,
   CreateS3UrlsForUploadDto,
   CreateWebsiteDto,
   DeploymentQueryFilter,
+  DeployMicroservice,
   DeployWebsiteDto,
   DomainQueryFilter,
   EmailDataDto,
@@ -23,6 +25,7 @@ import {
   SpendCreditDto,
   SqlModelStatus,
   WebsiteQueryFilter,
+  WebsiteSource,
   WebsitesQuotaReachedQueryFilter,
   writeLog,
 } from '@apillon/lib';
@@ -88,11 +91,38 @@ export class HostingService {
     return website.serializeByContext();
   }
 
+  static async getWebsiteWithAccess(
+    event: {
+      websiteUuid: string;
+      hasModifyAccess: boolean;
+    },
+    context: ServiceContext,
+  ) {
+    const website = await new Website({}, context).populateByUUID(
+      event.websiteUuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+
+    event.hasModifyAccess
+      ? website.canModify(context)
+      : website.canAccess(context);
+
+    return website.serialize(SerializeFor.SERVICE);
+  }
+
   static async createWebsite(
     event: { body: CreateWebsiteDto },
     context: ServiceContext,
   ): Promise<any> {
-    const website: Website = new Website(event.body, context);
+    const website: Website = new Website(event.body, context).populate({
+      source:
+        event.body.source || event.body.deploymentConfig
+          ? WebsiteSource.GITHUB
+          : WebsiteSource.APILLON,
+    });
 
     if (website.domain) {
       //Check if domain already exists
@@ -137,6 +167,26 @@ export class HostingService {
       // Set mailerlite field indicating the user has a website
       new Mailing(context).setMailerliteField('has_website'),
     ]);
+
+    if (event.body.deploymentConfig) {
+      const payload = new CreateDeploymentConfigDto({}, context).populate({
+        ...event.body.deploymentConfig,
+        websiteUuid: website_uuid,
+      });
+
+      // Should not be populated as we reuse the same DTO on endpoint
+      payload.skipWebsiteCheck = true;
+
+      try {
+        await new DeployMicroservice(context).createDeploymentConfig(payload);
+      } catch (err) {
+        await website.delete();
+        throw err;
+      }
+
+      // No need to update as createDeployementConfig already updates
+      website.source = WebsiteSource.GITHUB;
+    }
 
     return website.serializeByContext();
   }
@@ -257,7 +307,37 @@ export class HostingService {
     }
     website.canModify(context);
 
+    if (website.source === WebsiteSource.GITHUB) {
+      await new DeployMicroservice(context).deleteDeploymentConfig(
+        website.website_uuid,
+      );
+      // Need this as we set the source to APILLON in the deleteDeploymentConfig & don't want for markArchived to set it back
+      website.source = WebsiteSource.APILLON;
+    }
+
     return await website.markArchived();
+  }
+
+  static async deleteWebsite(
+    event: { website_uuid: string },
+    context: ServiceContext,
+  ): Promise<Website> {
+    const website: Website = await new Website({}, context).populateByUUID(
+      event.website_uuid,
+    );
+
+    if (!website.exists()) {
+      throw new StorageNotFoundException(StorageErrorCode.WEBSITE_NOT_FOUND);
+    }
+    website.canModify(context);
+
+    if (website.source === WebsiteSource.GITHUB) {
+      await new DeployMicroservice(context).deleteDeploymentConfig(
+        website.website_uuid,
+      );
+    }
+
+    return await website.delete();
   }
 
   /**

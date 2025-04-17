@@ -114,10 +114,11 @@ export class BlockchainMicroservice extends BaseService {
     });
   }
 
-  public async getWallets(chain: Chain) {
+  public async getWallets(chain: Chain, chainType: ChainType) {
     return await this.callService({
       eventName: BlockchainEventType.GET_WALLETS,
       chain,
+      chainType,
     });
   }
 

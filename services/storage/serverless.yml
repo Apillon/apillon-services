@@ -7,7 +7,7 @@ frameworkVersion: '3'
 custom:
   webpack:
     webpackConfig: ./webpack.config.js
-    packager: "npm"
+    packager: 'npm'
     includeModules: true
     packagerOptions:
       lockFile: '../../package-lock.json'
@@ -31,8 +31,7 @@ provider:
       - subnet-085447b898128fc92
       - subnet-0ed148d48e931f5fa
 
-  environment:
-    ${file(../../bin/deploy/env/env.yml)}
+  environment: ${file(../../bin/deploy/env/env.yml)}
 
 package:
   individually: true

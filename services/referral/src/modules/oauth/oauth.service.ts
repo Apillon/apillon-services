@@ -184,7 +184,7 @@ export class OauthService {
     // get user access token
     // FE gets the code by calling https://github.com/login/oauth/authorize?client_id=#
     const res = await axios.post(
-      `https://github.com/login/oauth/access_token?client_id=${env.GITHUB_CLIENT_ID}&client_secret=${env.GITHUB_CLIENT_SECRET}&code=${event.body.code}`,
+      `https://github.com/login/oauth/access_token?client_id=${env.GITHUB_AUTH_CLIENT_ID}&client_secret=${env.GITHUB_AUTH_CLIENT_SECRET}&code=${event.body.code}`,
       {},
       {
         headers: {

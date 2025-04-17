@@ -140,3 +140,7 @@ export abstract class ModelBase extends Model<Context> {
     }
   }
 }
+
+export type ModelBaseKeys = keyof ModelBase;
+
+export type ModelBaseType<T> = Omit<T, ModelBaseKeys>;

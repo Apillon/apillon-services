@@ -410,7 +410,11 @@ export class ContractService {
       }).writeToMonitor({
         context: this.context,
         logType: LogType.ERROR,
-        data: { err, contract_uuid, chainType: ChainType.EVM },
+        data: {
+          err: JSON.stringify(err, Object.getOwnPropertyNames(err)),
+          contract_uuid,
+          chainType: ChainType.EVM,
+        },
         sendAdminAlert: true,
       });
     }

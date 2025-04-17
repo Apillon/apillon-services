@@ -12,18 +12,16 @@ import {
   ValidatorErrorCode,
   WebsiteQueryFilter,
   WebsitesQuotaReachedQueryFilter,
+  Ams,
+  CreateApiKeyDto,
+  ApiKeyRoleBaseDto,
+  DefaultApiKeyRole,
 } from '@apillon/lib';
-import { HttpStatus, Injectable } from '@nestjs/common';
-import {
-  BadRequestErrorCode,
-  ResourceNotFoundErrorCode,
-} from '../../../config/types';
+import { Injectable } from '@nestjs/common';
+import { BadRequestErrorCode } from '../../../config/types';
 import { DevConsoleApiContext } from '../../../context';
-import { Project } from '../../project/models/project.model';
-import { ServiceQueryFilter } from '../../services/dtos/services-query-filter.dto';
-import { Service } from '../../services/models/service.model';
 import { ServicesService } from '../../services/services.service';
-import { ServiceDto } from '../../services/dtos/service.dto';
+import { ServiceQueryFilter } from '../../services/dtos/services-query-filter.dto';
 
 @Injectable()
 export class HostingService {
@@ -39,32 +37,87 @@ export class HostingService {
   }
 
   async createWebsite(context: DevConsoleApiContext, body: CreateWebsiteDto) {
-    const project = await new Project({}, context).populateByUUIDOrThrow(
+    await this.serviceService.createServiceIfNotExists(
+      context,
       body.project_uuid,
+      AttachedServiceType.HOSTING,
     );
 
-    //Check if hosting service for this project already exists
-    const query: ServiceQueryFilter = new ServiceQueryFilter(
-      {},
-      context,
-    ).populate({
-      project_uuid: project.project_uuid,
-      serviceType_id: AttachedServiceType.HOSTING,
-    });
-    const hostingServices = await new Service({}).getServices(context, query);
-    if (hostingServices.total == 0) {
-      //Create HOSTING service - "Attach"
-      const storageService: ServiceDto = new ServiceDto({}, context).populate({
-        project_uuid: project.project_uuid,
-        name: 'Hosting service',
-        serviceType_id: AttachedServiceType.HOSTING,
-      });
+    let generatedApiKeyId: number | undefined;
+    let accessMS: Ams;
 
-      await this.serviceService.createService(context, storageService);
+    if (
+      body.deploymentConfig &&
+      (!body.deploymentConfig.apiKey || !body.deploymentConfig.apiKey)
+    ) {
+      const serviceList = await this.serviceService.getServiceList(
+        context,
+        new ServiceQueryFilter({}, context).populate({
+          project_uuid: body.project_uuid,
+        }),
+      );
+
+      const hostingService = serviceList.items.find(
+        (item) => item.serviceType_id === AttachedServiceType.HOSTING,
+      );
+
+      const storageService = serviceList.items.find(
+        (item) => item.serviceType_id === AttachedServiceType.STORAGE,
+      );
+
+      accessMS = new Ams(context);
+
+      const createdApiKey = await accessMS.createApiKey(
+        new CreateApiKeyDto({}, context).populate({
+          project_uuid: body.project_uuid,
+          name: `Deployment API Key - ${body.name}`,
+          testNetwork: false,
+          roles: [
+            new ApiKeyRoleBaseDto({}, context).populate({
+              role_id: DefaultApiKeyRole.KEY_EXECUTE,
+              project_uuid: body.project_uuid,
+              service_uuid: hostingService.service_uuid,
+              serviceType_id: AttachedServiceType.HOSTING,
+            }),
+            new ApiKeyRoleBaseDto({}, context).populate({
+              role_id: DefaultApiKeyRole.KEY_READ,
+              project_uuid: body.project_uuid,
+              service_uuid: hostingService.service_uuid,
+              serviceType_id: AttachedServiceType.HOSTING,
+            }),
+            new ApiKeyRoleBaseDto({}, context).populate({
+              role_id: DefaultApiKeyRole.KEY_EXECUTE,
+              project_uuid: body.project_uuid,
+              service_uuid: storageService.service_uuid,
+              serviceType_id: AttachedServiceType.STORAGE,
+            }),
+            new ApiKeyRoleBaseDto({}, context).populate({
+              role_id: DefaultApiKeyRole.KEY_READ,
+              project_uuid: body.project_uuid,
+              service_uuid: storageService.service_uuid,
+              serviceType_id: AttachedServiceType.STORAGE,
+            }),
+          ],
+        }),
+      );
+
+      generatedApiKeyId = createdApiKey.data.id;
+
+      body.deploymentConfig.apiKey = createdApiKey.data.apiKey;
+      body.deploymentConfig.apiSecret = createdApiKey.data.apiKeySecret;
     }
 
     //Call Storage microservice, to create website
-    return (await new StorageMicroservice(context).createWebsite(body)).data;
+    try {
+      return (await new StorageMicroservice(context).createWebsite(body)).data;
+    } catch (e) {
+      if (generatedApiKeyId && accessMS) {
+        await accessMS.deleteApiKey({
+          id: generatedApiKeyId,
+        });
+      }
+      throw e;
+    }
   }
 
   async updateWebsite(
