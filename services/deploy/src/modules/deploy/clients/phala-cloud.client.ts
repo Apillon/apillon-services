@@ -5,8 +5,8 @@ import {
   IVMStats,
   VMDetailsResponse,
 } from '../types';
-import { IVMResourceRequest } from '@apillon/lib';
 import axios, { AxiosInstance } from 'axios';
+import { IVMResourceRequest } from './types';
 
 /**
  * PhalaDockerClient is a client that interacts with the Phala CVM (Confidential
@@ -14,7 +14,7 @@ import axios, { AxiosInstance } from 'axios';
  * environment variables. It facilitates communication with the API using
  * preconfigured credentials and endpoints.
  */
-export class PhalaDockerClient {
+export class PhalaCloudClient {
   private api: AxiosInstance;
 
   constructor(baseURL: string, apiKey: string) {

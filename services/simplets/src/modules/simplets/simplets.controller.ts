@@ -1,6 +1,5 @@
 import {
   DeployedSimpletsQueryFilterDto,
-  DeployWebsiteDto,
   Lmas,
   LogType,
   ServiceName,
@@ -10,7 +9,7 @@ import {
 import { ServiceContext } from '@apillon/service-lib';
 import { SimpletsCodeException } from '../../lib/exceptions';
 import { SimpletsService } from './services/simplets.service';
-import { ResourceStatus, SimpletsErrorCode } from '../../config/types';
+import { SimpletsErrorCode } from '../../config/types';
 
 export class SimpletsController {
   private readonly context: ServiceContext;
@@ -50,98 +49,53 @@ export class SimpletsController {
       body.description,
     );
     try {
-      await this.logging.writeLog({
-        logType: LogType.INFO,
-        message: `Starting contract and backend deployment for simplet uuid ${body.simplet_uuid}.`,
-        service: ServiceName.SIMPLETS,
-        location: 'SimpletsController.deploySimplet',
-      });
-      // CONTRACT AND BACKEND DEPLOY
-      simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
-      simpletDeploy.contractStatus = ResourceStatus.DEPLOYING;
-      const [contractDeploy, backendDeploy] = await Promise.all([
-        this.simpletsService.deployContract(
+      // NFT COLLECTION CHECK
+      if (body.nftCollection_uuid) {
+        await this.simpletsService.verifyNftCollection(
+          simpletDeploy,
+          body.nftCollection_uuid,
+        );
+      }
+      // else if (simplet.contract_uuid) {
+      // // DEPLOY NEW SMART CONTRACT
+      // if (!body.chain || !body.contractConstructorArguments) {
+      //   throw new SimpletsCodeException({
+      //     status: 422,
+      //     code: SimpletsErrorCode.DATA_NOT_VALID,
+      //     errorMessage: 'Chain or contract constructor arguments are missing',
+      //   });
+      // }
+      // const contractDeploy = await this.simpletsService.deployContract(
+      //   simpletDeploy,
+      //   simplet,
+      //   body.project_uuid,
+      //   body.name,
+      //   body.description,
+      //   body.chain,
+      //   body.contractConstructorArguments,
+      // );
+      // }
+
+      // BACKEND DEPLOY
+      if (simplet.backendRepo) {
+        await this.simpletsService.deployBackend(
+          simpletDeploy,
           simplet,
-          body.project_uuid,
-          body.name,
-          body.description,
-          body.chain,
-          body.contractConstructorArguments,
-        ),
-        this.simpletsService.deployBackend(simplet, body.backendVariables),
-      ]);
-      // Update contract details
-      if (contractDeploy.success) {
-        await this.logging.writeLog({
-          logType: LogType.INFO,
-          message: `Contract successfully deployed for simplet uuid ${body.simplet_uuid}.`,
-          service: ServiceName.SIMPLETS,
-          location: 'SimpletsController.deploySimplet',
-          data: contractDeploy.data,
-        });
-        const { contract_uuid, contractAddress, chain, chainType } =
-          contractDeploy.data;
-        simpletDeploy.contract_uuid = contract_uuid;
-        simpletDeploy.contractStatus = ResourceStatus.DEPLOYED;
-        simpletDeploy.contractChainType = chainType;
-        simpletDeploy.contractChain = chain;
-        simpletDeploy.contractAddress = contractAddress;
-      }
-      // Update backend details
-      if (backendDeploy.success) {
-        await this.logging.writeLog({
-          logType: LogType.INFO,
-          message: `Backend successfully deployed for simplet uuid ${body.simplet_uuid}.`,
-          service: ServiceName.SIMPLETS,
-          location: 'SimpletsController.deploySimplet',
-          data: backendDeploy.data,
-        });
-        const { backend_uuid, url: backendUrl } = backendDeploy.data;
-        simpletDeploy.backend_uuid = backend_uuid;
-        simpletDeploy.backendStatus = ResourceStatus.DEPLOYED;
-        simpletDeploy.backendUrl = backendUrl;
-      }
-      if (!contractDeploy.success) {
-        await this.logging.writeLog({
-          sendAdminAlert: true,
-          logType: LogType.ERROR,
-          message: `Contract deployment failed for simplet uuid ${body.simplet_uuid}.`,
-          service: ServiceName.SIMPLETS,
-          location: 'SimpletsController.deploySimplet',
-        });
-        throw new SimpletsCodeException({
-          status: 500,
-          code: SimpletsErrorCode.CONTRACT_DEPLOYMENT_FAILED,
-          errorMessage: 'Contract deployment failed',
-        });
-      }
-      if (!backendDeploy.success) {
-        await this.logging.writeLog({
-          sendAdminAlert: true,
-          logType: LogType.ERROR,
-          message: `Backend deployment failed for simplet uuid ${body.simplet_uuid}.`,
-          service: ServiceName.SIMPLETS,
-          location: 'SimpletsController.deploySimplet',
-        });
-        throw new SimpletsCodeException({
-          status: 500,
-          code: SimpletsErrorCode.BACKEND_DEPLOYMENT_FAILED,
-          errorMessage: 'Backend deployment failed',
-        });
+          body.backendVariables,
+        );
       }
 
       // FRONTEND DEPLOY
-      simpletDeploy.frontendStatus = ResourceStatus.DEPLOYING;
-      const { website_uuid } = await this.simpletsService.deployFrontend(
+      await this.simpletsService.deployFrontend(
+        simpletDeploy,
         simplet,
         body.project_uuid,
         body.name,
-        backendDeploy.data.url,
         body.apillonApiKey,
         body.apillonApiSecret,
         body.frontendVariables,
       );
-      simpletDeploy.frontend_uuid = website_uuid;
+
       await this.logging.writeLog({
         logType: LogType.INFO,
         message: `Successfully completed deployment of simplet with uuid ${body.simplet_uuid}.`,
@@ -152,7 +106,7 @@ export class SimpletsController {
       if (e instanceof SimpletsCodeException) {
         throw e;
       }
-      const message = `An unexpected error occurred while deploying simplet with uuid ${body.simplet_uuid}.`;
+      const message = `An unexpected error occurred while deploying simplet with uuid ${body.simplet_uuid}: ${String(e)}.`;
       await this.logging.writeLog({
         sendAdminAlert: true,
         logType: LogType.ERROR,

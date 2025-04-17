@@ -29,6 +29,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -47,6 +48,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -65,6 +67,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public description: string;
@@ -77,6 +80,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public contract_uuid: string | null;
@@ -89,6 +93,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public backendRepo: string | null;
@@ -101,6 +106,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public backendPath: string | null;
@@ -116,6 +122,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public backendMachine: VirtualMachineDto | null;
@@ -128,6 +135,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public frontendRepo: string | null;
@@ -140,6 +148,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public frontendPath: string | null;
@@ -152,6 +161,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public frontendInstallCommand: string | null;
@@ -164,6 +174,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public frontendBuildCommand: string | null;
@@ -176,6 +187,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public frontendBuildDirectory: string | null;

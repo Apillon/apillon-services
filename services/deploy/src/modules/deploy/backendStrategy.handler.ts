@@ -5,6 +5,7 @@ import { Backend } from './models/backend.model';
 import { v4 as uuidV4 } from 'uuid';
 import { DeployCodeException } from '../../lib/exceptions';
 import { DeployErrorCode } from '../../config/types';
+import { getBackendStatus } from './helpers/phala-statuses';
 
 export class BackendStrategyHandler {
   private readonly context: ServiceContext;
@@ -44,7 +45,6 @@ export class BackendStrategyHandler {
       // TODO: add dto ICreateVMResponse?
       const appId = result.app_id;
       const externalStatus = result.status;
-      // TODO: add backendStatus column and cast externalStatus to a common status?
       const data = {
         appId: appId,
         id: result.id,
@@ -74,11 +74,13 @@ export class BackendStrategyHandler {
       };
       const backend = new Backend({}, this.context).populate({
         backend_uuid,
+        backendStatus: getBackendStatus(externalStatus),
         name: `${body.name} (Backend)`,
         description: body.description ? `${body.description} (Backend)` : null,
         instanceId: appId,
         url: `https://${appId}-80.dstack-prod4.phala.network`,
         data,
+        project_uuid: body.project_uuid,
       });
       await backend.insert();
       return backend.serializeByContext(this.context);

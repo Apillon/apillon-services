@@ -1,11 +1,12 @@
 import { DeployInstanceDto, ResizeInstanceDto } from '@apillon/lib';
 import { Backend } from './models/backend.model';
 
-enum VMStatus {
-  CREATED = 'created',
+export enum VMStatus {
+  EXITED = 'exited',
+  STOPPED = 'stopped',
+  STARTING = 'starting',
+  CREATING = 'creating',
   RUNNING = 'running',
-  // STOPPED = 'stopped',
-  // ERROR = 'error',
 }
 
 export interface ICreateVMRequest {
@@ -66,7 +67,7 @@ export interface ICreateVMResponse {
 
 export interface VMDetailsResponse {
   id: string;
-  status: string;
+  status: VMStatus;
   createdAt: string;
   updatedAt: string;
   configuration: Record<string, any>;

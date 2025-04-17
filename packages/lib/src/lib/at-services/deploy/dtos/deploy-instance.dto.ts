@@ -10,6 +10,18 @@ import { VirtualMachineDto } from './virtual-machine.dto';
 export class DeployInstanceDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public project_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
     validators: [
       {

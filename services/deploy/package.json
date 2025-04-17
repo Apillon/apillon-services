@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@apillon/tests-lib": "*",
+    "@aws-sdk/client-sqs": "3.552.0",
     "eslint-config-common": "*",
     "tsconfig": "*"
   },

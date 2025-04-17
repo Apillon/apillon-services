@@ -626,7 +626,7 @@ export interface IEnv {
   SOCIAL_DEFAULT_SPACE: string;
 
   /************************************************************
-   * HOSTING - Apillon Hosting Service
+   * DEPLOY - Apillon Deploy Service
    ************************************************************/
   /**
    *  function name
@@ -635,13 +635,13 @@ export interface IEnv {
   DEPLOY_FUNCTION_NAME_TEST: string;
 
   /**
-   * HOSTING dev server port
+   * DEPLOY dev server port
    */
   DEPLOY_SOCKET_PORT: number;
   DEPLOY_SOCKET_PORT_TEST: number;
 
   /**
-   * HOSTING Database config
+   * DEPLOY Database config
    */
 
   DEPLOY_MYSQL_HOST: string;
@@ -661,14 +661,17 @@ export interface IEnv {
 
   DEPLOY_AWS_WORKER_SQS_URL: string;
   DEPLOY_BUILDER_AWS_WORKER_LAMBDA_NAME: string;
+  DEPLOY_AWS_WORKER_LAMBDA_NAME: string;
 
   /**
-   * HOSTING other config
+   * DEPLOY other config
    */
+  DEPLOY_PHALA_CLOUD_API_URL: string;
   DEPLOY_PHALA_CLOUD_API_KEY: string;
+  DEPLOY_STATUS_UPDATE_INTERVAL_HOURS: number;
 
   /************************************************************
-   * SIMPLETS - Apillon Hosting Service
+   * SIMPLETS - Apillon Simplets Service
    ************************************************************/
   /**
    *  function name
@@ -706,11 +709,6 @@ export interface IEnv {
    */
   SIMPLETS_AWS_WORKER_SQS_URL: string;
   SIMPLETS_AWS_WORKER_LAMBDA_NAME: string;
-
-  /**
-   * SIMPLETS other config
-   */
-  SIMPLETS_PHALA_CLOUD_API_KEY: string;
 
   /************************************************************
    * Infrastructure - Apillon Infrastructure Service
@@ -1401,7 +1399,12 @@ export let env: IEnv = {
   DEPLOY_AWS_WORKER_SQS_URL: process.env['DEPLOY_AWS_WORKER_SQS_URL'],
   DEPLOY_BUILDER_AWS_WORKER_LAMBDA_NAME:
     process.env['DEPLOY_BUILDER_AWS_WORKER_LAMBDA_NAME'],
+  DEPLOY_AWS_WORKER_LAMBDA_NAME: process.env['DEPLOY_AWS_WORKER_LAMBDA_NAME'],
   DEPLOY_PHALA_CLOUD_API_KEY: process.env['DEPLOY_PHALA_CLOUD_API_KEY'],
+  DEPLOY_PHALA_CLOUD_API_URL: process.env['DEPLOY_PHALA_CLOUD_API_URL'],
+  DEPLOY_STATUS_UPDATE_INTERVAL_HOURS: parseInt(
+    process.env['DEPLOY_STATUS_UPDATE_INTERVAL_HOURS'],
+  ),
 
   /** SIMPLETS */
   SIMPLETS_FUNCTION_NAME: process.env['SIMPLETS_FUNCTION_NAME'],
@@ -1427,7 +1430,6 @@ export let env: IEnv = {
   SIMPLETS_AWS_WORKER_SQS_URL: process.env['SIMPLETS_AWS_WORKER_SQS_URL'],
   SIMPLETS_AWS_WORKER_LAMBDA_NAME:
     process.env['SIMPLETS_AWS_WORKER_LAMBDA_NAME'],
-  SIMPLETS_PHALA_CLOUD_API_KEY: process.env['SIMPLETS_PHALA_CLOUD_API_KEY'],
 
   /** DISCORD */
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',

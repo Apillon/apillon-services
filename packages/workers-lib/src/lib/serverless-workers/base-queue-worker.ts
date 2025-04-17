@@ -1,6 +1,6 @@
-import { Context } from '@apillon/lib';
+import { Context, Lmas } from '@apillon/lib';
 import { WorkerDefinition } from '.';
-import { DbTables, WorkerLogStatus, QueueWorkerType } from '../../config/types';
+import { DbTables, QueueWorkerType, WorkerLogStatus } from '../../config/types';
 import { Job } from '../../modules/job/job.model';
 import { sendToWorkerQueue } from '../aws-sqs';
 import { BaseWorker } from './base-worker';
@@ -16,8 +16,9 @@ export abstract class BaseQueueWorker extends BaseWorker {
     context: Context,
     type: QueueWorkerType,
     queueUrl: string,
+    logger: Lmas = new Lmas(),
   ) {
-    super(workerDefinition, context);
+    super(workerDefinition, context, logger);
     this.workerType = type;
     this.context = context;
     this.workerName = workerDefinition.workerName;
