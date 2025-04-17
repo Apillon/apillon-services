@@ -302,9 +302,6 @@ describe('DeployService tests', () => {
         repoName: 'new-repo',
         repoOwnerName: 'new-owner',
         installCommand: 'npm install',
-        repoId: 234,
-        websiteUuid: 'uuid',
-        project_uuid: 'uuid',
       };
       const response = await frontendController.updateDeploymentConfig({
         id: createResponse.id,
@@ -321,8 +318,8 @@ describe('DeployService tests', () => {
       expect(response.buildCommand).toBe(updatedConfigData.buildCommand);
       expect(response.buildDirectory).toBe(updatedConfigData.buildDirectory);
       expect(response.installCommand).toBe(updatedConfigData.installCommand);
-      expect(response.repoId).toBe(updatedConfigData.repoId);
-      expect(response.websiteUuid).toBe(updatedConfigData.websiteUuid);
+      expect(response.repoId).toBe(newConfigData.repoId);
+      expect(response.websiteUuid).toBe(newConfigData.websiteUuid);
       expect(response.hookId).toBe(expectedCreatedWebhook.id);
       expect(response.projectConfigId).toBe(githubProjectConfigId);
     });

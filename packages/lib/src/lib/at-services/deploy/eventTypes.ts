@@ -19,6 +19,7 @@ import { GetEnvironmentVariablesType } from './types/get-environment-variables.t
 import { GetDeploymentConfigType } from './types/get-deployment-config.type';
 import { ModelBaseType } from '../../base-models/base';
 import { DeployInstanceDto } from './dtos/deploy-instance.dto';
+import { RedeployWebsiteType } from './types/redeploy-website.type';
 
 export type DeployMSEventType =
   // BE
@@ -111,7 +112,9 @@ export type DeployMSEventType =
       DeployEventType.GET_ENVIRONMENT_VARIABLES,
       GetEnvironmentVariablesType
     >
-  | IBodyEvent<DeployEventType.GET_DEPLOYMENT_CONFIG, GetDeploymentConfigType>;
+  | IBodyEvent<DeployEventType.GET_DEPLOYMENT_CONFIG, GetDeploymentConfigType>
+  | IBodyEvent<DeployEventType.REDEPLOY_WEBSITE, RedeployWebsiteType>;
+
 // | IBodyEvent<
 //     DeployEventType.BE_GET_INSTANCE_BILLING,
 //     ModelBaseType<GenericDeployRequestDto>

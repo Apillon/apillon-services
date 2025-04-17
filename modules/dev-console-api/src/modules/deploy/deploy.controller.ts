@@ -218,6 +218,15 @@ export class DeployController {
     return await this.deployService.deployNftWebsite(context, body);
   }
 
+  @Post(':uuid/redeploy')
+  @UseGuards(AuthGuard)
+  async redeployWebsite(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') uuid: string,
+  ) {
+    return await this.deployService.redeployWebsite(context, uuid);
+  }
+
   //region BACKENDS
   @Get(ROUTE_BACKENDS)
   @Permissions({ role: RoleGroup.ProjectAccess })

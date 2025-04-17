@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { ModelBase, ModelBaseType, prop } from '../../../base-models/base';
 import {
   BadRequestErrorCode,
@@ -90,4 +90,10 @@ export class NftWebsiteDeployDto extends ModelBase {
     ],
   })
   chainId: number;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+  })
+  new: boolean;
 }
