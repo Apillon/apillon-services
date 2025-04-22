@@ -11,6 +11,25 @@ import { SimpletsCodeException } from '../../lib/exceptions';
 import { SimpletsService } from './services/simplets.service';
 import { SimpletsErrorCode } from '../../config/types';
 
+function overrideEnvironmentVariables(
+  envVariables: any[],
+  key: string,
+  value: string,
+) {
+  if (value) {
+    const apiSecretVariable = envVariables?.find((v) => v.key === key);
+    if (apiSecretVariable) {
+      apiSecretVariable.value = value;
+    } else {
+      envVariables.push({
+        key,
+        value,
+      });
+    }
+  }
+  return envVariables;
+}
+
 export class SimpletsController {
   private readonly context: ServiceContext;
   private readonly simpletsService: SimpletsService;
@@ -50,12 +69,27 @@ export class SimpletsController {
     );
     try {
       // NFT COLLECTION CHECK
-      if (body.nftCollection_uuid) {
-        await this.simpletsService.verifyNftCollection(
-          simpletDeploy,
-          body.nftCollection_uuid,
-        );
-      }
+      await this.simpletsService.verifyNftCollection(
+        simpletDeploy,
+        body.nftCollection_uuid,
+      );
+      // override ENV variables
+      overrideEnvironmentVariables(
+        body.backendVariables,
+        'APILLON_KEY',
+        body.apillonApiSecret,
+      );
+      overrideEnvironmentVariables(
+        body.backendVariables,
+        'APILLON_SECRET',
+        body.apillonApiSecret,
+      );
+      overrideEnvironmentVariables(
+        body.backendVariables,
+        'COLLECTION_UUID',
+        body.nftCollection_uuid,
+      );
+
       // else if (simplet.contract_uuid) {
       // // DEPLOY NEW SMART CONTRACT
       // if (!body.chain || !body.contractConstructorArguments) {
