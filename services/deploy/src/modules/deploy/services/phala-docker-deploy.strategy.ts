@@ -58,7 +58,7 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
           errorMessage: 'No suitable image was found.',
         });
       }
-      const name = `${backend_uuid}-backend`;
+      const name = body.name;
       const vmConfig = {
         name: name,
         image: imageName,
