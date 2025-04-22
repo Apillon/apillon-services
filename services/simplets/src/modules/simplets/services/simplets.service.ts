@@ -321,6 +321,7 @@ export class SimpletsService {
         ],
         apiKey: apillonApiKey,
         apiSecret: apillonApiSecret,
+        new: true,
       }),
     );
     if (!storageResponse.success) {
