@@ -25,7 +25,6 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
   }
 
   async deployDockerCompose(
-    backend_uuid: string,
     body: DeployInstanceDto,
   ): Promise<ICreateVMResponse> {
     const secrets = body.secrets;
@@ -58,13 +57,12 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
           errorMessage: 'No suitable image was found.',
         });
       }
-      const name = `${backend_uuid}-backend`;
       const vmConfig = {
-        name: name,
+        name: body.name,
         image: imageName,
         teepod_id: podId,
         compose_manifest: {
-          name: name,
+          name: body.name,
           features: ['kms', 'tproxy-net'],
           docker_compose_file: body.dockerCompose,
         },

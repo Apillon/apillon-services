@@ -29,10 +29,7 @@ export class BackendStrategyHandler {
   ): Promise<any> {
     try {
       const backend_uuid = uuidV4();
-      const result = await this.strategy.deployDockerCompose(
-        backend_uuid,
-        body,
-      );
+      const result = await this.strategy.deployDockerCompose(body);
       if (!result) {
         throw new DeployCodeException({
           status: 500,

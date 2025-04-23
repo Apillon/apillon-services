@@ -1,13 +1,13 @@
 import {
-  AWS_KMS,
   AppEnvironment,
+  AWS_KMS,
+  env,
   LogType,
   ModelValidationException,
   NftWebsiteDeployDto,
   NftWebsiteDeployDtoType,
   TriggerGithubDeployDtoType,
   WebsiteDeployDtoType,
-  env,
   writeLog,
 } from '@apillon/lib';
 import { BuildProjectWorkerInterface } from '../../../lib/interfaces/build-project-worker.interface';
@@ -79,6 +79,7 @@ export class DeployService {
   }
 
   async triggerWebDeploy(body: NftWebsiteDeployDtoType | WebsiteDeployDtoType) {
+    console.info('Triggered web deploy: ', body);
     const isNftWebsiteDeploy = DeployService.isNftWebsiteDeployDto(body);
 
     if (isNftWebsiteDeploy && body.new) {
