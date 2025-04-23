@@ -29,7 +29,7 @@ export class DeployInstanceDto extends ModelBase {
         code: ValidatorErrorCode.DATA_NOT_PRESENT,
       },
       {
-        resolver: stringLengthValidator({ maxOrEqual: 20 }), // phala limits name to 20 chars for name
+        resolver: stringLengthValidator({ maxOrEqual: 20 }), // phala limits name to 20 chars
         code: ValidatorErrorCode.DATA_NOT_VALID,
       },
     ],

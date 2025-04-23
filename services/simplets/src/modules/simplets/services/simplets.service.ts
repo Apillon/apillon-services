@@ -225,7 +225,7 @@ export class SimpletsService {
     const dockerCompose = response.data;
 
     const deployDto = new DeployInstanceDto({}, this.context).populate({
-      name: simplet.name,
+      name: simplet.name.slice(0, 20),
       description: simplet.description,
       dockerCompose,
       secrets,

@@ -25,7 +25,6 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
   }
 
   async deployDockerCompose(
-    backend_uuid: string,
     body: DeployInstanceDto,
   ): Promise<ICreateVMResponse> {
     const secrets = body.secrets;
@@ -58,7 +57,7 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
           errorMessage: 'No suitable image was found.',
         });
       }
-      const name = body.name;
+      const name = `${body.name}`.substring(0, 20);
       const vmConfig = {
         name: name,
         image: imageName,
