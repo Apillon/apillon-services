@@ -340,23 +340,7 @@ export class SimpletsService {
         websiteUuid: website_uuid,
         installCommand: `cd ${simplet.frontendPath} && ${simplet.frontendInstallCommand}`,
         buildCommand: `cd ${simplet.frontendPath} && ${simplet.frontendBuildCommand}`,
-        variables: [
-          ...secrets,
-          // TODO: API base variable will be different for each simplet/framework
-          { key: 'NUXT_PUBLIC_API_BASE', value: simpletDeploy.backendUrl },
-          {
-            key: 'NUXT_PUBLIC_EMBEDDED_WALLET_CLIENT',
-            value: embeddedWallet.integration_uuid,
-          },
-          {
-            key: 'NUXT_PUBLIC_CONTRACT_ADDRESS',
-            value: simpletDeploy.contractAddress,
-          },
-          {
-            key: 'NUXT_PUBLIC_CHAIN_ID',
-            value: simpletDeploy.contractChain,
-          },
-        ],
+        variables: secrets,
         apiKey: apillonApiKey,
         apiSecret: apillonApiSecret,
         new: true,
