@@ -93,6 +93,17 @@ export class AuthUser extends AdvancedSQLModel {
   })
   public email: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public googleId: string | null;
+
   /**
    * User's password hash property
    */
@@ -212,7 +223,10 @@ export class AuthUser extends AdvancedSQLModel {
       SELECT * FROM authUser
       WHERE email = @email AND status = @status
     `,
-      { email, status: SqlModelStatus.ACTIVE },
+      {
+        email,
+        status: SqlModelStatus.ACTIVE,
+      },
       conn,
     );
 

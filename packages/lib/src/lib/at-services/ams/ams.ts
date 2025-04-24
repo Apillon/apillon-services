@@ -55,6 +55,7 @@ export class Ams extends BaseService {
     project_uuid?: string;
     wallet?: string;
     evmWallet?: string;
+    googleId?: string;
   }) {
     const data = {
       eventName: AmsEventType.USER_REGISTER,

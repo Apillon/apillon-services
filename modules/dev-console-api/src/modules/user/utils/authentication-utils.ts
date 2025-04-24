@@ -20,6 +20,57 @@ import { ProjectService } from '../../project/project.service';
 import { RegisterUserDto } from '../dtos/register-user.dto';
 import { ValidatorErrorCode } from '../../../config/types';
 
+export async function createUserForGoogle(
+  email: string,
+  id: string,
+  context: DevConsoleApiContext,
+  projectService: ProjectService,
+  metadata?: any,
+  country?: string,
+  refCode?: string,
+  hasPendingInvitation?: boolean,
+) {
+  const user = await createUser(
+    {
+      email,
+      country,
+      metadata,
+    },
+    context,
+  );
+
+  const conn = await context.mysql.start();
+  let amsResponse;
+  try {
+    await user.insert(SerializeFor.INSERT_DB, conn);
+    amsResponse = await new Ams(context).register({
+      user_uuid: user.user_uuid,
+      email,
+      password: generateRandomCode(15),
+      googleId: id,
+    });
+
+    user.setUserRolesAndPermissionsFromAmsResponse(amsResponse);
+    await context.mysql.commit(conn);
+  } catch (err) {
+    await context.mysql.rollback(conn);
+    throw err;
+  }
+
+  if (hasPendingInvitation) {
+    await resolvePendingProjectInvitations(projectService, user, context);
+  }
+
+  if (refCode) {
+    await createReferralPlayer(refCode, user, context);
+  }
+
+  return {
+    ...user.serialize(SerializeFor.PROFILE),
+    token: amsResponse.data.token,
+  };
+}
+
 export async function registerUser(
   params: RegisterUserDto & {
     projectService: ProjectService;

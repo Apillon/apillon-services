@@ -39,7 +39,10 @@ import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { ValidateEmailDto } from './dtos/validate-email.dto';
 import { User } from './models/user.model';
-import { registerUser } from './utils/authentication-utils';
+import {
+  createUserForGoogle,
+  registerUser,
+} from './utils/authentication-utils';
 import { DiscordCodeDto } from './dtos/discord-code.dto';
 import { Identity } from '@apillon/sdk';
 import axios from 'axios';
@@ -117,6 +120,63 @@ export class UserService {
         code: ValidatorErrorCode.USER_INVALID_LOGIN,
         errorCodes: ValidatorErrorCode,
       });
+    }
+  }
+
+  async validateUserGoogle(
+    {
+      email,
+      id,
+      state,
+    }: {
+      id: string;
+      email: string;
+      state?: string;
+    },
+    context: DevConsoleApiContext,
+  ) {
+    const authUser = await new Ams(context).getAuthUserByEmail(email);
+
+    if (authUser.data?.user_uuid) {
+      if (!authUser.data.googleId) {
+        throw new CodeException({
+          status: HttpStatus.UNAUTHORIZED,
+          code: ValidatorErrorCode.USER_INVALID_LOGIN,
+          errorCodes: ValidatorErrorCode,
+        });
+      }
+
+      const user = await new User({}, context).populateByUUID(
+        authUser.data.user_uuid,
+      );
+      if (!user.exists()) {
+        throw new CodeException({
+          status: HttpStatus.UNAUTHORIZED,
+          code: ValidatorErrorCode.USER_INVALID_LOGIN,
+          errorCodes: ValidatorErrorCode,
+        });
+      }
+
+      user.setUserRolesAndPermissionsFromAmsResponse(authUser.data);
+      user.setWalletsFromAmsResponse(authUser.data);
+      return {
+        ...user.serialize(SerializeFor.PROFILE),
+        token: authUser.data.token,
+      };
+    } else {
+      const { metadata, country, refCode, hasPendingInvitation } = JSON.parse(
+        state ?? '{}',
+      );
+      return await createUserForGoogle(
+        email,
+        id,
+        context,
+        this.projectService,
+        metadata,
+        country,
+        refCode,
+        hasPendingInvitation === 'true',
+      );
     }
   }
 

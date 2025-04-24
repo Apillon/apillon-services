@@ -5,6 +5,7 @@ import {
   HttpCode,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { DefaultUserRole, SerializeFor, UserWalletAuthDto } from '@apillon/lib';
@@ -27,6 +28,7 @@ import { UpdateUserDto } from './dtos/update-user.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { DiscordCodeDto } from './dtos/discord-code.dto';
 import { Headers } from '@nestjs/common';
+import { GoogleGuard } from '../../guards/google.guard';
 
 @Controller('users')
 export class UserController {
@@ -177,5 +179,26 @@ export class UserController {
   @Get('/oauth-session')
   getOauthSession() {
     return this.userService.getOauthSession();
+  }
+
+  @Get('google')
+  @UseGuards(GoogleGuard)
+  async google() {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleGuard)
+  async googleCallback(
+    @Ctx() context: DevConsoleApiContext,
+    @Req()
+    request: {
+      user?: {
+        id: string;
+        name: string;
+        email: string;
+        state?: string;
+      };
+    },
+  ) {
+    return this.userService.validateUserGoogle(request.user, context);
   }
 }
