@@ -199,7 +199,7 @@ describe('DeployService tests', () => {
         backendStatus: 2,
         name: 'Name (Backend)',
         instanceId: 'sample-app-id',
-        url: 'https://sample-app-id-80.dstack-prod4.phala.network',
+        url: 'https://sample-app-id-80.dstack-prod5.phala.network',
         data: {
           appId: 'sample-app-id',
           id: 'sample-id',

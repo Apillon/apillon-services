@@ -75,7 +75,8 @@ export class BackendStrategyHandler {
         name: `${body.name} (Backend)`,
         description: body.description ? `${body.description} (Backend)` : null,
         instanceId: appId,
-        url: `https://${appId}-80.dstack-prod4.phala.network`,
+        // TODO: this URL changes
+        url: `https://${appId}-80.dstack-prod5.phala.network`,
         data,
         project_uuid: body.project_uuid,
       });
