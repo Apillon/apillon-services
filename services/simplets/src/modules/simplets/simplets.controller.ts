@@ -11,20 +11,26 @@ import { SimpletsCodeException } from '../../lib/exceptions';
 import { SimpletsService } from './services/simplets.service';
 import { SimpletsErrorCode } from '../../config/types';
 
+interface EnvUpdate {
+  key: string;
+  value: string;
+}
+
 function overrideEnvironmentVariables(
   envVariables: any[],
-  key: string,
-  value: string,
+  updates: EnvUpdate[],
 ) {
-  if (value) {
-    const apiSecretVariable = envVariables?.find((v) => v.key === key);
-    if (apiSecretVariable) {
-      apiSecretVariable.value = value;
-    } else {
-      envVariables.push({
-        key,
-        value,
-      });
+  for (const update of updates) {
+    if (update.value) {
+      const existingVariable = envVariables?.find((v) => v.key === update.key);
+      if (existingVariable) {
+        existingVariable.value = update.value;
+      } else {
+        envVariables.push({
+          key: update.key,
+          value: update.value,
+        });
+      }
     }
   }
   return envVariables;
@@ -73,22 +79,6 @@ export class SimpletsController {
         simpletDeploy,
         body.nftCollection_uuid,
       );
-      // override ENV variables
-      overrideEnvironmentVariables(
-        body.backendVariables,
-        'APILLON_KEY',
-        body.apillonApiSecret,
-      );
-      overrideEnvironmentVariables(
-        body.backendVariables,
-        'APILLON_SECRET',
-        body.apillonApiSecret,
-      );
-      overrideEnvironmentVariables(
-        body.backendVariables,
-        'COLLECTION_UUID',
-        body.nftCollection_uuid,
-      );
 
       // else if (simplet.contract_uuid) {
       // // DEPLOY NEW SMART CONTRACT
@@ -115,19 +105,41 @@ export class SimpletsController {
         await this.simpletsService.deployBackend(
           simpletDeploy,
           simplet,
-          body.backendVariables,
+          overrideEnvironmentVariables(body.backendVariables, [
+            { key: 'APILLON_KEY', value: body.apillonApiSecret },
+            { key: 'APILLON_SECRET', value: body.apillonApiSecret },
+            { key: 'COLLECTION_UUID', value: body.nftCollection_uuid },
+          ]),
         );
       }
+
+      // EMBEDDED WALLET
+      const embeddedWallet =
+        await this.simpletsService.createWallet(simpletDeploy);
 
       // FRONTEND DEPLOY
       await this.simpletsService.deployFrontend(
         simpletDeploy,
         simplet,
-        body.project_uuid,
-        body.name,
+        embeddedWallet,
         body.apillonApiKey,
         body.apillonApiSecret,
-        body.frontendVariables,
+        overrideEnvironmentVariables(body.frontendVariables, [
+          // TODO: API base variable will be different for each simplet/framework
+          { key: 'NUXT_PUBLIC_API_BASE', value: simpletDeploy.backendUrl },
+          {
+            key: 'NUXT_PUBLIC_EMBEDDED_WALLET_CLIENT',
+            value: embeddedWallet.integration_uuid,
+          },
+          {
+            key: 'NUXT_PUBLIC_CONTRACT_ADDRESS',
+            value: simpletDeploy.contractAddress,
+          },
+          {
+            key: 'NUXT_PUBLIC_CHAIN_ID',
+            value: `${simpletDeploy.contractChain}`,
+          },
+        ]),
       );
 
       await this.logging.writeLog({

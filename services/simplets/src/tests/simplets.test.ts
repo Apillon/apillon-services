@@ -1,4 +1,5 @@
 import {
+  AuthenticationMicroservice,
   ChainType,
   DeployMicroservice,
   EvmChain,
@@ -49,6 +50,7 @@ describe('Simplets controller', () => {
   let controller: SimpletsController;
   let deployMicroservice: DeployMicroservice;
   let nftsMicroservice: NftsMicroservice;
+  let authenticationMicroservice: AuthenticationMicroservice;
   let storageMicroservice: StorageMicroservice;
   beforeAll(async () => {
     stage = await setupTest();
@@ -74,6 +76,7 @@ describe('Simplets controller', () => {
     deployMicroservice = new DeployMicroservice(context);
     storageMicroservice = new StorageMicroservice(context);
     nftsMicroservice = new NftsMicroservice(context);
+    authenticationMicroservice = new AuthenticationMicroservice(context);
     const spendService = new SimpletsSpendService(context);
     const mailing = new Mailing(context);
     const simpletsService = new SimpletsService(
@@ -82,6 +85,7 @@ describe('Simplets controller', () => {
       deployMicroservice,
       storageMicroservice,
       nftsMicroservice,
+      authenticationMicroservice,
       spendService,
       mailing,
       logger,
@@ -324,6 +328,15 @@ describe('Simplets controller', () => {
           isAutoIncrement: true,
         },
       });
+      jest
+        .spyOn(authenticationMicroservice, 'createEmbeddedWalletIntegration')
+        .mockResolvedValue({
+          success: true,
+          data: {
+            wallet_uuid: 'wallet_uuid',
+            integration_uuid: 'integration_uuid',
+          },
+        });
 
       axiosMock
         .onGet('https://github.com/dummy-backend-repo-1/path/to/backend/1')
@@ -753,7 +766,7 @@ describe('Simplets controller', () => {
     });
 
     it('should get deployed simplet', async () => {
-      await new SimpletDeploy({}, context)
+      const simpletDeploy = await new SimpletDeploy({}, context)
         .populate({
           project_uuid: TEST_PROJECT_UUID,
           simpletDeploy_uuid: 'dummySimpletDeployUuid',
@@ -775,7 +788,7 @@ describe('Simplets controller', () => {
 
       const event: any = {
         eventName: SimpletsEventType.GET_DEPLOYED_SIMPLET,
-        body: { uuid: TEST_SIMPLET_UUID },
+        body: { uuid: simpletDeploy.simpletDeploy_uuid },
       };
       const result = await processEvent(event, context, controller);
 

@@ -1,5 +1,6 @@
 import {
   AppEnvironment,
+  AuthenticationMicroservice,
   DeployMicroservice,
   env,
   Lmas,
@@ -38,12 +39,14 @@ const lambdaHandler: Handler = async (
 
   const logging = new Lmas();
   const serviceContext = context.serviceContext;
+
   const simpletsService = new SimpletsService(
     serviceContext,
     new SimpletsRepository(serviceContext),
     new DeployMicroservice(serviceContext),
     new StorageMicroservice(serviceContext),
     new NftsMicroservice(serviceContext),
+    new AuthenticationMicroservice(serviceContext),
     new SimpletsSpendService(serviceContext),
     new Mailing(serviceContext),
     logging,
