@@ -317,7 +317,8 @@ export class SimpletsService {
         buildCommand: `cd ${simplet.frontendPath} && ${simplet.frontendBuildCommand}`,
         variables: [
           ...secrets,
-          { key: 'APP_URL', value: simpletDeploy.backendUrl },
+          // TODO: API base variable will be different for each simplet/framework
+          { key: 'NUXT_PUBLIC_API_BASE', value: simpletDeploy.backendUrl },
         ],
         apiKey: apillonApiKey,
         apiSecret: apillonApiSecret,
