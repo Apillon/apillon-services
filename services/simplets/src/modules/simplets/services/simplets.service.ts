@@ -215,23 +215,31 @@ export class SimpletsService {
   }
 
   async createWallet(simpletDeploy: SimpletDeploy): Promise<IEmbeddedWallet> {
-    const response =
-      await this.authenticationService.createEmbeddedWalletIntegration(
-        new CreateEWIntegrationDto({}, this.context).populate({
-          project_uuid: simpletDeploy.project_uuid,
-          title: `${simpletDeploy.name} (Simplet Wallet)`,
-          description: `Auto generated wallet for ${simpletDeploy.name} simplet.`,
-          whitelistedDomains: '',
-        }),
-      );
-    if (!response?.success) {
+    try {
+      const response =
+        await this.authenticationService.createEmbeddedWalletIntegration(
+          new CreateEWIntegrationDto({}, this.context).populate({
+            project_uuid: simpletDeploy.project_uuid,
+            title: `${simpletDeploy.name} (Simplet Wallet)`,
+            description: `Auto generated wallet for ${simpletDeploy.name} simplet.`,
+            whitelistedDomains: '',
+          }),
+        );
+      if (!response?.success) {
+        throw new SimpletsCodeException({
+          status: 500,
+          code: SimpletsErrorCode.WALLET_CREATION_FAILED,
+          errorMessage: 'Failed to create embedded wallet',
+        });
+      }
+      return response.data;
+    } catch (e) {
       throw new SimpletsCodeException({
         status: 500,
         code: SimpletsErrorCode.WALLET_CREATION_FAILED,
-        errorMessage: 'Failed to create embedded wallet',
+        errorMessage: `Failed to create embedded wallet: ${e?.message ?? String(e)}`,
       });
     }
-    return response.data;
   }
 
   async deployBackend(
