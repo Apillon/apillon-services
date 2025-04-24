@@ -119,12 +119,15 @@ export class SimpletsController {
         );
       }
 
+      // EMBEDDED WALLET
+      const embeddedWallet =
+        await this.simpletsService.createWallet(simpletDeploy);
+
       // FRONTEND DEPLOY
       await this.simpletsService.deployFrontend(
         simpletDeploy,
         simplet,
-        body.project_uuid,
-        body.name,
+        embeddedWallet,
         body.apillonApiKey,
         body.apillonApiSecret,
         body.frontendVariables,

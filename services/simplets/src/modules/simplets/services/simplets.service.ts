@@ -1,5 +1,7 @@
 import { ServiceContext } from '@apillon/service-lib';
 import {
+  AuthenticationMicroservice,
+  CreateEWIntegrationDto,
   CreateWebsiteDto,
   DeployedSimpletsQueryFilterDto,
   DeployInstanceDto,
@@ -27,6 +29,7 @@ import path from 'node:path';
 import { SimpletDeploy } from '../models/simpletDeploy.model';
 import { v4 as uuidV4 } from 'uuid';
 import axios from 'axios';
+import { IEmbeddedWallet } from '../types';
 
 export class SimpletsService {
   private readonly context: ServiceContext;
@@ -37,6 +40,7 @@ export class SimpletsService {
   private deployService: DeployMicroservice;
   private storageService: StorageMicroservice;
   private nftsService: NftsMicroservice;
+  private authenticationService: AuthenticationMicroservice;
 
   constructor(
     context: ServiceContext,
@@ -44,6 +48,7 @@ export class SimpletsService {
     deployService: DeployMicroservice,
     storageService: StorageMicroservice,
     nftsService: NftsMicroservice,
+    authenticationService: AuthenticationMicroservice,
     spendService: SimpletsSpendService,
     mailingClient: Mailing,
     logging: Lmas,
@@ -53,6 +58,7 @@ export class SimpletsService {
     this.deployService = deployService;
     this.storageService = storageService;
     this.nftsService = nftsService;
+    this.authenticationService = authenticationService;
     this.mailingClient = mailingClient;
     this.logging = logging;
     this.context = context;
@@ -208,6 +214,26 @@ export class SimpletsService {
     return result.data;
   }
 
+  async createWallet(simpletDeploy: SimpletDeploy): Promise<IEmbeddedWallet> {
+    const response =
+      await this.authenticationService.createEmbeddedWalletIntegration(
+        new CreateEWIntegrationDto({}, this.context).populate({
+          project_uuid: simpletDeploy.project_uuid,
+          title: `${simpletDeploy.name} (Simplet Wallet)`,
+          description: `Auto generated wallet for ${simpletDeploy.name} simplet.`,
+          whitelistedDomains: '',
+        }),
+      );
+    if (!response?.success) {
+      throw new SimpletsCodeException({
+        status: 500,
+        code: SimpletsErrorCode.WALLET_CREATION_FAILED,
+        errorMessage: 'Failed to create embedded wallet',
+      });
+    }
+    return response.data;
+  }
+
   async deployBackend(
     simpletDeploy: SimpletDeploy,
     simplet: Simplet,
@@ -270,8 +296,7 @@ export class SimpletsService {
   async deployFrontend(
     simpletDeploy: SimpletDeploy,
     simplet: Simplet,
-    project_uuid: string,
-    simpletName: string,
+    embeddedWallet: IEmbeddedWallet,
     apillonApiKey: string,
     apillonApiSecret: string,
     secrets: any[],
@@ -285,8 +310,8 @@ export class SimpletsService {
     });
     const websiteResponse = await this.storageService.createWebsite(
       new CreateWebsiteDto({}, this.context).populate({
-        project_uuid,
-        name: `${simpletName} (Website)`,
+        project_uuid: simpletDeploy.project_uuid,
+        name: `${simpletDeploy.name} (Website)`,
         source: WebsiteSource.GITHUB,
       }),
     );
@@ -319,6 +344,18 @@ export class SimpletsService {
           ...secrets,
           // TODO: API base variable will be different for each simplet/framework
           { key: 'NUXT_PUBLIC_API_BASE', value: simpletDeploy.backendUrl },
+          {
+            key: 'NUXT_PUBLIC_EMBEDDED_WALLET_CLIENT',
+            value: embeddedWallet.integration_uuid,
+          },
+          {
+            key: 'NUXT_PUBLIC_CONTRACT_ADDRESS',
+            value: simpletDeploy.contractAddress,
+          },
+          {
+            key: 'NUXT_PUBLIC_CHAIN_ID',
+            value: simpletDeploy.contractChain,
+          },
         ],
         apiKey: apillonApiKey,
         apiSecret: apillonApiSecret,
