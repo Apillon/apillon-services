@@ -27,6 +27,7 @@ export async function upgrade(
       \`backendStatus\` INT NULL,
       \`backendUrl\` VARCHAR(255) NULL,
 
+      \`wallet_uuid\` VARCHAR(36) NULL,
       \`frontend_uuid\` VARCHAR(36) NULL,
       \`frontendStatus\` INT NULL,
 
