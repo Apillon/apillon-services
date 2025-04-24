@@ -80,25 +80,9 @@ export class SimpletsController {
         body.nftCollection_uuid,
       );
 
-      // else if (simplet.contract_uuid) {
-      // // DEPLOY NEW SMART CONTRACT
-      // if (!body.chain || !body.contractConstructorArguments) {
-      //   throw new SimpletsCodeException({
-      //     status: 422,
-      //     code: SimpletsErrorCode.DATA_NOT_VALID,
-      //     errorMessage: 'Chain or contract constructor arguments are missing',
-      //   });
-      // }
-      // const contractDeploy = await this.simpletsService.deployContract(
-      //   simpletDeploy,
-      //   simplet,
-      //   body.project_uuid,
-      //   body.name,
-      //   body.description,
-      //   body.chain,
-      //   body.contractConstructorArguments,
-      // );
-      // }
+      // EMBEDDED WALLET
+      const embeddedWallet =
+        await this.simpletsService.createWallet(simpletDeploy);
 
       // BACKEND DEPLOY
       if (simplet.backendRepo) {
@@ -112,10 +96,6 @@ export class SimpletsController {
           ]),
         );
       }
-
-      // EMBEDDED WALLET
-      const embeddedWallet =
-        await this.simpletsService.createWallet(simpletDeploy);
 
       // FRONTEND DEPLOY
       await this.simpletsService.deployFrontend(
