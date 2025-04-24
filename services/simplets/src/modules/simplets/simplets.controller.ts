@@ -2,6 +2,7 @@ import {
   DeployedSimpletsQueryFilterDto,
   Lmas,
   LogType,
+  ResourceStatus,
   ServiceName,
   SimpletDeployDto,
   SimpletsQueryFilterDto,
@@ -83,10 +84,12 @@ export class SimpletsController {
       // EMBEDDED WALLET
       const embeddedWallet =
         await this.simpletsService.createWallet(simpletDeploy);
+      simpletDeploy.wallet_uuid = embeddedWallet.wallet_uuid;
 
       // BACKEND DEPLOY
       if (simplet.backendRepo) {
-        await this.simpletsService.deployBackend(
+        simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
+        const backendDeploy = await this.simpletsService.deployBackend(
           simpletDeploy,
           simplet,
           overrideEnvironmentVariables(body.backendVariables, [
@@ -95,13 +98,17 @@ export class SimpletsController {
             { key: 'COLLECTION_UUID', value: body.nftCollection_uuid },
           ]),
         );
+        const { backend_uuid, url: backendUrl } = backendDeploy.data;
+        simpletDeploy.backend_uuid = backend_uuid;
+        simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
+        simpletDeploy.backendUrl = backendUrl;
       }
 
       // FRONTEND DEPLOY
-      await this.simpletsService.deployFrontend(
+      simpletDeploy.frontendStatus = ResourceStatus.DEPLOYING;
+      simpletDeploy.frontend_uuid = await this.simpletsService.deployFrontend(
         simpletDeploy,
         simplet,
-        embeddedWallet,
         body.apillonApiKey,
         body.apillonApiSecret,
         overrideEnvironmentVariables(body.frontendVariables, [

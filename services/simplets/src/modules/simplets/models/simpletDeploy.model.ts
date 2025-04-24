@@ -225,6 +225,21 @@ export class SimpletDeploy extends UuidSqlModel {
 
   //endregion
 
+  //region EMBEDDED WALLET
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public wallet_uuid: string;
+
+  //endregion
+
   //region FRONTEND
 
   @prop({

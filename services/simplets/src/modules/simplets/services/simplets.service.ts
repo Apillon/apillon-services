@@ -253,7 +253,6 @@ export class SimpletsService {
       service: ServiceName.SIMPLETS,
       location: 'SimpletsService.deploySimplet',
     });
-    simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
     const dockerComposeLocation = `${simplet.backendRepo.replace(/\/+$/, '')}/${simplet.backendPath.replace(/^\/+/, '')}`;
     const response = await axios.get(dockerComposeLocation);
     const dockerCompose = response.data;
@@ -293,10 +292,6 @@ export class SimpletsService {
       location: 'SimpletsService.deploySimplet',
       data: backendDeploy.data,
     });
-    const { backend_uuid, url: backendUrl } = backendDeploy.data;
-    simpletDeploy.backend_uuid = backend_uuid;
-    simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
-    simpletDeploy.backendUrl = backendUrl;
 
     return backendDeploy;
   }
@@ -304,12 +299,10 @@ export class SimpletsService {
   async deployFrontend(
     simpletDeploy: SimpletDeploy,
     simplet: Simplet,
-    embeddedWallet: IEmbeddedWallet,
     apillonApiKey: string,
     apillonApiSecret: string,
     secrets: any[],
   ) {
-    simpletDeploy.frontendStatus = ResourceStatus.DEPLOYING;
     await this.logging.writeLog({
       logType: LogType.INFO,
       message: `Starting frontend deployment for simplet uuid ${simplet.simplet_uuid}.`,
@@ -376,7 +369,7 @@ export class SimpletsService {
       location: 'SimpletsService.deploySimplet',
     });
 
-    simpletDeploy.frontend_uuid = website_uuid;
+    return website_uuid;
   }
 
   async listDeployedSimplets(query: DeployedSimpletsQueryFilterDto) {
