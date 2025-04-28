@@ -80,6 +80,10 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
       job.jobId,
     );
 
+    if (!job.account) {
+      return;
+    }
+
     job.publicKey = (
       await client.getJobPublicKeys(job.deployerAddress, job.account, job.jobId)
     )[0].secp256r1;
