@@ -30,6 +30,13 @@ export async function createUserForGoogle(
   refCode?: string,
   hasPendingInvitation?: boolean,
 ) {
+  if (country) {
+    metadata = {
+      ...metadata,
+      country,
+    };
+  }
+
   const user = await createUser(
     {
       email,
