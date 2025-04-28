@@ -22,6 +22,7 @@ import {
   EmailTemplate,
   LogType,
   JwtExpireTime,
+  LoginType,
 } from '@apillon/lib';
 import { getDiscordProfile } from '@apillon/modules-lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -138,16 +139,13 @@ export class UserService {
     const authUser = await new Ams(context).getAuthUserByEmail(email);
 
     if (authUser.data?.user_uuid) {
-      if (!authUser.data.googleId) {
-        throw new CodeException({
-          status: HttpStatus.UNAUTHORIZED,
-          code: ValidatorErrorCode.USER_INVALID_LOGIN,
-          errorCodes: ValidatorErrorCode,
-        });
-      }
+      const { data: loggedInUser } = await new Ams(context).login({
+        email,
+        type: LoginType.GOOGLE,
+      });
 
       const user = await new User({}, context).populateByUUID(
-        authUser.data.user_uuid,
+        loggedInUser.user_uuid,
       );
       if (!user.exists()) {
         throw new CodeException({
@@ -157,11 +155,11 @@ export class UserService {
         });
       }
 
-      user.setUserRolesAndPermissionsFromAmsResponse(authUser.data);
-      user.setWalletsFromAmsResponse(authUser.data);
+      user.setUserRolesAndPermissionsFromAmsResponse(loggedInUser);
+      user.setWalletsFromAmsResponse(loggedInUser);
       return {
         ...user.serialize(SerializeFor.PROFILE),
-        token: authUser.data.token,
+        token: loggedInUser.token,
       };
     } else {
       const { metadata, country, refCode, hasPendingInvitation } = JSON.parse(
