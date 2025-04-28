@@ -15,6 +15,7 @@ export * from './config/types';
 export * from './config/env';
 export * from './lib/at-services/config/dtos/spend-credit.dto';
 export * from './lib/at-services/config/dtos/add-credit.dto';
+export * from './lib/at-services/config/dtos/add-subscription.dto';
 export * from './lib/at-services/config/dtos/credit-transaction-query-filter.dto';
 export * from './lib/at-services/config/dtos/pricelist-query-filter.dto';
 export * from './lib/at-services/mailing/dto/notification-query-filter.dto';

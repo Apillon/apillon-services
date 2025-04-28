@@ -286,6 +286,7 @@ export enum ScsEventType {
   CREATE_OVERRIDE = 'create-override',
   DELETE_OVERRIDE = 'delete-override',
   ADD_CREDIT = 'add-credit',
+  ADD_SUBSCRIPTION = 'add-subscription',
   CONFIGURE_CREDIT = 'configure-credit',
   SPEND_CREDIT = 'spend-credit',
   REFUND_CREDIT = 'refund-credit',
