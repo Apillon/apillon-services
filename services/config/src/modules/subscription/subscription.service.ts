@@ -29,6 +29,8 @@ export class SubscriptionService {
       projectUuid,
       packageId,
       expiresOn,
+      stripeId,
+      subscriberEmail,
     }: {
       projectUuid: string;
       stripeId: string;
@@ -41,8 +43,8 @@ export class SubscriptionService {
         project_uuid: projectUuid,
         package_id: packageId,
         expiresOn,
-        stripeId: projectUuid,
-        subscriberEmail: projectUuid,
+        stripeId,
+        subscriberEmail,
       }),
       context,
     );
