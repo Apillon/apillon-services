@@ -16,6 +16,7 @@ import {
   StorageMicroservice,
   ModelValidationException,
   ContractsMicroservice,
+  AddSubscriptionDto,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { UUID } from 'crypto';
@@ -160,5 +161,31 @@ export class ProjectService {
     await data.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     return (await new Scs(context).addCredit(data)).data;
+  }
+
+  async addSubscriptionToProject(
+    context: DevConsoleApiContext,
+    projectUuid: string,
+    data: AddSubscriptionDto,
+  ) {
+    const projectOwner = (await new Ams(context).getProjectOwner(projectUuid))
+      .data;
+
+    if (!projectOwner?.email) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_OWNER_NOT_FOUND,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    return (
+      await new Scs(context).addSubscription(
+        projectUuid,
+        data,
+        'admin',
+        projectOwner.email,
+      )
+    ).data;
   }
 }
