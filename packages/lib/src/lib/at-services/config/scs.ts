@@ -127,6 +127,8 @@ export class Scs extends BaseService {
       eventName: ScsEventType.ADD_SUBSCRIPTION,
       body: {
         projectUuid,
+        stripeId,
+        subscriberEmail,
         ...dto.serialize(),
       },
     };
