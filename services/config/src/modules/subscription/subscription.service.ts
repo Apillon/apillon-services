@@ -26,16 +26,14 @@ import { InvoiceService } from '../invoice/invoice.service';
 export class SubscriptionService {
   static async addSubscription(
     {
-      projectUuid,
-      packageId,
-      expiresOn,
-      stripeId,
-      subscriberEmail,
+      body: { projectUuid, packageId, expiresOn, stripeId, subscriberEmail },
     }: {
-      projectUuid: string;
-      stripeId: string;
-      subscriberEmail: string;
-    } & Pick<AddSubscriptionDto, 'packageId' | 'expiresOn'>,
+      body: {
+        projectUuid: string;
+        stripeId: string;
+        subscriberEmail: string;
+      } & Pick<AddSubscriptionDto, 'packageId' | 'expiresOn'>;
+    },
     context: ServiceContext,
   ) {
     return await SubscriptionService.createSubscription(
