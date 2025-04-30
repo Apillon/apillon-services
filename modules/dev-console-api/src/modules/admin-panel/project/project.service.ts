@@ -81,9 +81,12 @@ export class ProjectService {
     //   context,
     // ).getProjectDeployedContractsDetails(project_uuid);
 
-    const { data: projectCredit } = await new Scs(context).getProjectCredit(
-      project_uuid,
-    );
+    const scs = new Scs(context);
+
+    const { data: projectCredit } = await scs.getProjectCredit(project_uuid);
+
+    const { data: activeSubscription } =
+      await scs.getProjectActiveSubscription(project_uuid);
 
     return {
       ...project.serialize(SerializeFor.ADMIN),
@@ -92,6 +95,7 @@ export class ProjectService {
       ...projectCollectionDetails,
       // ...projectContractsDetails,
       creditBalance: projectCredit.balance,
+      subscriptionPackageId: activeSubscription?.package_id,
     };
   }
 
