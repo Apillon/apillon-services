@@ -2,26 +2,42 @@ import {
   BackendsQueryFilter,
   DeployInstanceDto,
   GenericDeployRequestDto,
+  RedeployInstanceDto,
   ResizeInstanceDto,
   SqlModelStatus,
 } from '@apillon/lib';
 import { BackendStrategyHandler } from './backendStrategy.handler';
 import { DeployRepository } from './repositores/deploy-repository';
+import { ServiceContext } from '@apillon/service-lib';
 
 export class BackendController {
   private readonly deployRepository: DeployRepository;
   private readonly backendStrategyHandler: BackendStrategyHandler;
+  private context: ServiceContext;
 
   constructor(
+    context: ServiceContext,
     deployRepository: DeployRepository,
     backendStrategyHandler: BackendStrategyHandler,
   ) {
+    this.context = context;
     this.deployRepository = deployRepository;
     this.backendStrategyHandler = backendStrategyHandler;
   }
 
-  async deployDockerCompose(body: DeployInstanceDto): Promise<any> {
-    return await this.backendStrategyHandler.deployDockerCompose(body);
+  async deployDockerCompose(
+    body: DeployInstanceDto,
+  ): Promise<{ [key: string]: any }> {
+    const backend = await this.backendStrategyHandler.deployDockerCompose(body);
+    return backend.serializeByContext(this.context);
+  }
+
+  async redeployDockerCompose(
+    body: RedeployInstanceDto,
+  ): Promise<{ [key: string]: any }> {
+    const backend =
+      await this.backendStrategyHandler.redeployDockerCompose(body);
+    return backend.serializeByContext(this.context);
   }
 
   async listBackends(body: BackendsQueryFilter): Promise<any> {

@@ -1,7 +1,10 @@
 import {
   AuthenticationMicroservice,
+  AWS_KMS,
   ChainType,
   DeployMicroservice,
+  EncryptionService,
+  env,
   EvmChain,
   Lmas,
   Mailing,
@@ -88,6 +91,7 @@ describe('Simplets controller', () => {
       authenticationMicroservice,
       spendService,
       mailing,
+      new EncryptionService(new AWS_KMS(), env.DEPLOY_KMS_KEY_ID),
       logger,
     );
     controller = new SimpletsController(context, simpletsService, logger);
@@ -783,6 +787,8 @@ describe('Simplets controller', () => {
           contractAddress: '0xDummyContractAddress',
           frontend_uuid: TEST_WEBSITE_UUID,
           frontendStatus: ResourceStatus.REQUESTED,
+          apillonApiKey: 'dummyApiKey',
+          apillonApiSecret: 'dummyApiSecret',
         })
         .insert();
 

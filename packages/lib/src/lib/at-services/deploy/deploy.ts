@@ -44,6 +44,13 @@ export class DeployMicroservice extends BaseService {
     });
   }
 
+  public async redeployDockerCompose(body: GenericDeployRequestDto) {
+    return await this.emitEvent({
+      eventName: DeployEventType.BE_REDEPLOY_DOCKER_COMPOSE,
+      body,
+    });
+  }
+
   public async listBackends(body: BackendsQueryFilter) {
     return await this.emitEvent({
       eventName: DeployEventType.BE_LIST_BACKENDS,

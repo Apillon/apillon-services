@@ -2,13 +2,16 @@ import { x25519 } from '@noble/curves/ed25519';
 import {
   AppEnvironment,
   DeployInstanceDto,
+  DeploySecretDto,
   env,
   ResizeInstanceDto,
+  VirtualMachineDto,
 } from '@apillon/lib';
 import { PhalaCloudClient } from '../clients/phala-cloud.client';
 import {
   IBackendDeployStrategy,
   ICreateVMResponse,
+  IDeployDockerResult,
   IVMAttestationResponse,
   IVMStats,
 } from '../types';
@@ -16,6 +19,7 @@ import { Backend } from '../models/backend.model';
 import { DeployCodeException } from '../../../lib/exceptions';
 import { DeployErrorCode } from '../../../config/types';
 import axios from 'axios';
+import { getBackendStatus } from '../helpers/phala-statuses';
 
 export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
   private client: PhalaCloudClient;
@@ -26,7 +30,7 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
 
   async deployDockerCompose(
     body: DeployInstanceDto,
-  ): Promise<ICreateVMResponse> {
+  ): Promise<IDeployDockerResult> {
     const secrets = body.secrets;
     const virtualMachine = body.virtualMachine;
     try {
@@ -57,44 +61,69 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
           errorMessage: 'No suitable image was found.',
         });
       }
-      const vmConfig = {
-        name: body.name,
-        image: imageName,
-        teepod_id: podId,
-        compose_manifest: {
-          name: body.name,
-          features: ['kms', 'tproxy-net'],
-          docker_compose_file: body.dockerCompose,
-        },
-        // specs
-        vcpu: virtualMachine.cpuCount,
-        memory: virtualMachine.memory,
-        disk_size: virtualMachine.diskSize,
-        advanced_features: {
-          tproxy: true,
-          kms: true,
-          public_sys_info: true,
-          public_logs: false,
-          // docker registry
-          docker_config: {
-            username: '',
-            password: '',
-            registry: null,
-          },
-          listed: false,
-        },
-      };
+      const vmConfig = this.getVmConfig(
+        body.name,
+        imageName,
+        podId,
+        body.dockerCompose,
+        virtualMachine,
+      );
       const withPubKey = await this.client.getPublicKey(vmConfig);
       const encryptedEnv = await PhalaDockerDeployStrategy.encryptEnvVariables(
         secrets,
         withPubKey.app_env_encrypt_pubkey,
       );
-      return await this.client.createCVM({
+      const result = await this.client.createCVM({
         ...vmConfig,
         encrypted_env: encryptedEnv,
         app_env_encrypt_pubkey: withPubKey.app_env_encrypt_pubkey,
         app_id_salt: withPubKey.app_id_salt,
       });
+      if (!result) {
+        throw new DeployCodeException({
+          status: 500,
+          code: DeployErrorCode.DEPLOY_DEPLOY_FAILED,
+          errorMessage: 'No data returned from deploy',
+        });
+      }
+      // TODO: vcpu as DTO?
+      // TODO: add dto ICreateVMResponse?
+      const appId = result.app_id;
+      const externalStatus = result.status;
+      const data = {
+        appId: appId,
+        id: result.id,
+        name: result.name,
+        status: externalStatus,
+        teepodId: result.teepod_id,
+        teepod: {
+          id: result.teepod?.id,
+          name: result.teepod?.name,
+        },
+        userId: result.user_id,
+        vmUuid: result.vm_uuid,
+        instanceId: result.instance_id,
+        appUrl: result.app_url,
+        baseImage: result.base_image,
+        vcpu: result.vcpu,
+        memory: result.memory,
+        diskSize: result.disk_size,
+        manifestVersion: result.manifest_version,
+        version: result.version,
+        runner: result.runner,
+        dockerComposeFile: result.docker_compose_file,
+        features: result.features,
+        createdAt: result.created_at,
+        encryptedEnvPubkey: result.encrypted_env_pubkey,
+        dashboardUrl: `https://cloud.phala.network/dashboard/cvms/app_${appId}`,
+      };
+      return {
+        backendStatus: getBackendStatus(externalStatus),
+        instanceId: appId,
+        // TODO: this URL changes
+        url: `https://${appId}-80.dstack-prod5.phala.network`,
+        data,
+      };
     } catch (error: unknown) {
       if (error instanceof DeployCodeException) {
         console.error(`Failed to deploy CVM: ${error.message}`);
@@ -132,6 +161,55 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
         errorMessage,
       });
     }
+  }
+
+  private getVmConfig(
+    instanceName: string,
+    imageName: string,
+    podId: number,
+    dockerCompose: string,
+    virtualMachine: VirtualMachineDto,
+  ) {
+    return {
+      name: instanceName,
+      image: imageName,
+      teepod_id: podId,
+      compose_manifest: {
+        name: instanceName,
+        features: ['kms', 'tproxy-net'],
+        docker_compose_file: dockerCompose,
+      },
+      // specs
+      vcpu: virtualMachine.cpuCount,
+      memory: virtualMachine.memory,
+      disk_size: virtualMachine.diskSize,
+      advanced_features: {
+        tproxy: true,
+        kms: true,
+        public_sys_info: true,
+        public_logs: false,
+        // docker registry
+        docker_config: {
+          username: '',
+          password: '',
+          registry: null,
+        },
+        listed: false,
+      },
+    };
+  }
+
+  async updateDockerCompose(instanceId: string, secrets: DeploySecretDto[]) {
+    const cvmDetails = await this.client.getCVMCompose(instanceId);
+    const encryptedEnv = await PhalaDockerDeployStrategy.encryptEnvVariables(
+      secrets,
+      cvmDetails.env_pubkey,
+    );
+
+    return this.client.updateCVM(instanceId, {
+      compose_manifest: cvmDetails.compose_file.docker_compose_file,
+      encrypted_env: encryptedEnv,
+    });
   }
 
   async getInstanceDetails(backend: Backend) {

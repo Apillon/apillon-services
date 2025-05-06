@@ -3,6 +3,7 @@ import {
   DefaultUserRole,
   RoleGroup,
   SimpletDeployDto,
+  SimpletRedeployDto,
   SimpletsQueryFilterDto,
   ValidateFor,
 } from '@apillon/lib';
@@ -28,6 +29,22 @@ export class SimpletsController {
   constructor(private readonly simpletsService: SimpletsService) {}
 
   //#region ------------- DEPLOYED SIMPLETS -------------
+
+  @Post('deployed/:uuid/redeploy')
+  @Validation({ dto: SimpletRedeployDto })
+  @UseGuards(AuthGuard, ValidationGuard)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  async redeploy(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') simpletDeploy_uuid: string,
+    @Body() body: SimpletRedeployDto,
+  ) {
+    body.simpletDeploy_uuid = simpletDeploy_uuid;
+    return await this.simpletsService.redeploySimplet(context, body);
+  }
 
   @Get('/deployed')
   @Permissions({ role: RoleGroup.ProjectAccess })

@@ -21,6 +21,14 @@ export class BackendsService {
     return (await new DeployMicroservice(context).listBackends(body)).data;
   }
 
+  async redeployInstance(
+    context: DevConsoleApiContext,
+    body: GenericDeployRequestDto,
+  ) {
+    return (await new DeployMicroservice(context).redeployDockerCompose(body))
+      .data;
+  }
+
   async getInstance(
     context: DevConsoleApiContext,
     body: GenericDeployRequestDto,

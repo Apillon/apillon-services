@@ -51,6 +51,12 @@ export class SimpletDeployDto extends ModelBase {
   })
   public nftCollection_uuid: string;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+  })
+  public walletIntegration_uuid: string;
+
   /**
    * Represents an array of deployment environment variables used in the backend.
    *
@@ -64,6 +70,12 @@ export class SimpletDeployDto extends ModelBase {
   @prop({
     parser: { array: true, resolver: DeploySecretDto },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [
+      {
+        resolver: arrayPresenceValidator(),
+        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
+      },
+    ],
   })
   public backendVariables: DeploySecretDto[] | null;
 

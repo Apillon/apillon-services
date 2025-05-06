@@ -1,4 +1,9 @@
-import { DeployInstanceDto, ResizeInstanceDto } from '@apillon/lib';
+import {
+  DeployInstanceDto,
+  DeploySecretDto,
+  ResizeInstanceDto,
+  ResourceStatus,
+} from '@apillon/lib';
 import { Backend } from './models/backend.model';
 
 export enum VMStatus {
@@ -36,6 +41,36 @@ export interface ICreateVMRequest {
   encrypted_env: string;
   app_env_encrypt_pubkey: string;
   app_id_salt: string;
+}
+
+export interface IUpdateVMRequest {
+  compose_manifest: string;
+  encrypted_env: string;
+}
+
+export interface ICvmComposeDetails {
+  compose_file: {
+    bash_script: string;
+    docker_compose_file: string;
+    docker_config: {
+      password: string;
+      registry: string;
+      username: string;
+    };
+    features: string[];
+    kms_enabled: boolean;
+    manifest_version: number;
+    name: string;
+    pre_launch_script: string;
+    public_logs: boolean;
+    public_sysinfo: boolean;
+    runner: string;
+    salt: string;
+    tproxy_enabled: boolean;
+    version: string;
+  };
+  env_pubkey: string;
+  salt: string;
 }
 
 export interface ICreateVMResponse {
@@ -151,10 +186,22 @@ export interface IVMAttestationResponse {
   };
 }
 
-export interface IBackendDeployStrategy {
-  deployDockerCompose(body: DeployInstanceDto): Promise<ICreateVMResponse>;
+export interface IDeployDockerResult {
+  backendStatus: ResourceStatus;
+  instanceId: string;
+  url: string;
+  data: any;
+}
 
-  getInstanceDetails(backend: Backend): Promise<any>;
+export interface IBackendDeployStrategy {
+  deployDockerCompose(body: DeployInstanceDto): Promise<IDeployDockerResult>;
+
+  updateDockerCompose(
+    instanceId: string,
+    secrets: DeploySecretDto[],
+  ): Promise<any>;
+
+  getInstanceDetails(backend: Backend): Promise<VMDetailsResponse>;
 
   // getInstanceBilling(backend: Backend): Promise<any>;
 

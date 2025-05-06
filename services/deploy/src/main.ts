@@ -5,6 +5,7 @@ import {
   DeployMSEventType,
   GenericDeployRequestDto,
   ModelValidationException,
+  RedeployInstanceDto,
   ResizeInstanceDto,
   ValidatorErrorCode,
 } from '@apillon/lib';
@@ -75,6 +76,12 @@ export async function processEvent(
       case DeployEventType.BE_DEPLOY_DOCKER_COMPOSE:
         return backendController.deployDockerCompose(
           await new DeployInstanceDto({}, context)
+            .populate(event.body)
+            .validateOrThrow(ModelValidationException, ValidatorErrorCode),
+        );
+      case DeployEventType.BE_REDEPLOY_DOCKER_COMPOSE:
+        return backendController.redeployDockerCompose(
+          await new RedeployInstanceDto({}, context)
             .populate(event.body)
             .validateOrThrow(ModelValidationException, ValidatorErrorCode),
         );

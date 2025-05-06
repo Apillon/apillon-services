@@ -84,6 +84,7 @@ export class SimpletDeploy extends UuidSqlModel {
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
@@ -103,6 +104,7 @@ export class SimpletDeploy extends UuidSqlModel {
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
@@ -130,10 +132,10 @@ export class SimpletDeploy extends UuidSqlModel {
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.PROFILE,
     ],
     defaultValue: ResourceStatus.REQUESTED,
@@ -145,6 +147,7 @@ export class SimpletDeploy extends UuidSqlModel {
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
@@ -152,6 +155,13 @@ export class SimpletDeploy extends UuidSqlModel {
     ],
   })
   public backendUrl: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.INSERT_DB],
+  })
+  public backendVariables: string;
   //endregion
 
   //region CONTRACT
@@ -192,7 +202,7 @@ export class SimpletDeploy extends UuidSqlModel {
     ],
     validators: [
       {
-        resolver: enumInclusionValidator(EvmChain, false),
+        resolver: enumInclusionValidator(EvmChain, true),
         code: SimpletsErrorCode.DATA_NOT_VALID,
       },
     ],
@@ -236,7 +246,7 @@ export class SimpletDeploy extends UuidSqlModel {
       SerializeFor.PROFILE,
     ],
   })
-  public wallet_uuid: string;
+  public walletIntegration_uuid: string;
 
   //endregion
 
@@ -258,6 +268,7 @@ export class SimpletDeploy extends UuidSqlModel {
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
@@ -267,7 +278,28 @@ export class SimpletDeploy extends UuidSqlModel {
   })
   public frontendStatus: ResourceStatus;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.INSERT_DB],
+  })
+  public frontendVariables: string;
+
   //endregion
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.INSERT_DB],
+  })
+  public apillonApiKey: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.INSERT_DB],
+  })
+  public apillonApiSecret: string;
 
   /***************************************************
    * Queries

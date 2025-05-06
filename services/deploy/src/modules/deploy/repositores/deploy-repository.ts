@@ -4,11 +4,13 @@ import {
   BackendsQueryFilter,
   PoolConnection,
   PopulateFrom,
+  ResourceStatus,
 } from '@apillon/lib';
 import { Backend } from '../models/backend.model';
 import { BaseRepository } from './base-repository';
 import { DeployCodeException } from '../../../lib/exceptions';
 import { DbTables, DeployErrorCode } from '../../../config/types';
+import { v4 as uuidV4 } from 'uuid';
 
 export class DeployRepository extends BaseRepository {
   constructor(context: ServiceContext) {
@@ -21,7 +23,23 @@ export class DeployRepository extends BaseRepository {
     return await new Backend({}, this.context).getList(filter);
   }
 
-  async getBackend(uuid: string) {
+  async newBackend(
+    project_uuid: string,
+    name: string,
+    description: string,
+    environmentVariables: string | null = null,
+  ): Promise<Backend> {
+    return new Backend({}, this.context).populate({
+      backend_uuid: uuidV4(),
+      name: `${name} (Backend)`,
+      description: description ? `${description} (Backend)` : null,
+      project_uuid,
+      environmentVariables,
+      backendStatus: ResourceStatus.REQUESTED,
+    });
+  }
+
+  async getBackend(uuid: string): Promise<Backend> {
     const backend = await new Backend({}, this.context).populateByUUID(uuid);
     if (!backend.exists()) {
       throw new DeployCodeException({

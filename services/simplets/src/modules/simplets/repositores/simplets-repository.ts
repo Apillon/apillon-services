@@ -1,9 +1,11 @@
 import {
   DeployedSimpletsQueryFilterDto,
+  ModelValidationException,
   PoolConnection,
   PopulateFrom,
   SimpletsQueryFilterDto,
   SqlModelStatus,
+  ValidatorErrorCode,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { SimpletDeploy } from '../models/simpletDeploy.model';
@@ -11,10 +13,39 @@ import { Simplet } from '../models/simplet.model';
 import { BaseRepository } from './base-repository';
 import { SimpletsCodeException } from '../../../lib/exceptions';
 import { DbTables, SimpletsErrorCode } from '../../../config/types';
+import { v4 as uuidV4 } from 'uuid';
 
 export class SimpletsRepository extends BaseRepository {
   constructor(context: ServiceContext) {
     super(context);
+  }
+
+  async createSimpletDeploy(
+    project_uuid: string,
+    simplet_uuid: string,
+    name: string,
+    description: string,
+    apillonApiKey: string,
+    apillonApiSecret: string,
+    backendVariables: string,
+    frontendVariables: string,
+  ): Promise<SimpletDeploy> {
+    const simpletDeploy = new SimpletDeploy({}, this.context).populate({
+      project_uuid,
+      simpletDeploy_uuid: uuidV4(),
+      simplet_uuid,
+      name,
+      description,
+      apillonApiKey,
+      apillonApiSecret,
+      backendVariables,
+      frontendVariables,
+    });
+    await simpletDeploy.validateOrThrow(
+      ModelValidationException,
+      ValidatorErrorCode,
+    );
+    return simpletDeploy;
   }
 
   //#region ------------- SIMPLETS -------------
@@ -78,7 +109,7 @@ export class SimpletsRepository extends BaseRepository {
       .getList(filter);
   }
 
-  async getDeployedSimplet(uuid: string) {
+  async getDeployedSimplet(uuid: string): Promise<SimpletDeploy> {
     const deployedSimplet = await new SimpletDeploy(
       {},
       this.context,

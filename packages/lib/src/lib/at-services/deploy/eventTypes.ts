@@ -27,6 +27,10 @@ export type DeployMSEventType =
       DeployEventType.BE_DEPLOY_DOCKER_COMPOSE,
       ModelBaseType<DeployInstanceDto>
     >
+  | IBodyEvent<
+      DeployEventType.BE_REDEPLOY_DOCKER_COMPOSE,
+      ModelBaseType<GenericDeployRequestDto>
+    >
   | IBodyEvent<DeployEventType.BE_LIST_BACKENDS, BackendsQueryFilter>
   | IBodyEvent<
       DeployEventType.BE_GET_INSTANCE,

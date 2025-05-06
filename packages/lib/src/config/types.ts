@@ -414,6 +414,7 @@ export enum ContractEventType {
 
 export enum DeployEventType {
   BE_DEPLOY_DOCKER_COMPOSE = 'be-deploy-docker-compose',
+  BE_REDEPLOY_DOCKER_COMPOSE = 'be-redeploy-docker-compose',
   BE_LIST_BACKENDS = 'be-list-backends',
   BE_GET_INSTANCE = 'be-get-instance',
   BE_GET_INSTANCE_DETAILS = 'be-get-instance-details',
@@ -447,6 +448,7 @@ export enum DeployEventType {
 export enum SimpletsEventType {
   SIMPLETS_LIST = 'simplets-list',
   SIMPLETS_DEPLOY = 'deploy',
+  SIMPLETS_REDEPLOY = 'redeploy',
   GET_SIMPLET = 'get-simplet',
   // deployed
   GET_DEPLOYED_SIMPLET = 'get-deployed-simplet',

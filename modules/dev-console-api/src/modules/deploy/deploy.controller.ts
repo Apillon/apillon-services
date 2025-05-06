@@ -5,10 +5,10 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
-  Patch,
 } from '@nestjs/common';
 import { DeployService } from './deploy.service';
 import {
@@ -239,6 +239,20 @@ export class DeployController {
     body: BackendsQueryFilter,
   ) {
     return await this.backendsService.listBackends(context, body);
+  }
+
+  @Post(`${ROUTE_BACKENDS}/:uuid/redeploy`)
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard)
+  async redeployInstance(
+    @Ctx()
+    context: DevConsoleApiContext,
+    @Param('uuid') deploy_uuid: string,
+  ) {
+    return await this.backendsService.redeployInstance(
+      context,
+      new GenericDeployRequestDto().populate({ deploy_uuid }),
+    );
   }
 
   @Get(`${ROUTE_BACKENDS}/:uuid`)
