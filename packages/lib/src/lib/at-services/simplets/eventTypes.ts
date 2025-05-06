@@ -5,12 +5,17 @@ import {
   SimpletsQueryFilterDto,
 } from './dtos/simplets-query-filter.dto';
 import { ModelBaseType } from '../../base-models/base';
+import { SimpletRedeployDto } from './dtos/simplet-redeploy.dto';
 
 export type SimpletsMSEventType =
   | IBodyEvent<SimpletsEventType.SIMPLETS_LIST, SimpletsQueryFilterDto>
   | IBodyEvent<
       SimpletsEventType.SIMPLETS_DEPLOY,
       ModelBaseType<SimpletDeployDto>
+    >
+  | IBodyEvent<
+      SimpletsEventType.SIMPLETS_REDEPLOY,
+      ModelBaseType<SimpletRedeployDto>
     >
   | ISimpletsUuidEvent<SimpletsEventType.GET_SIMPLET>
   // deployed

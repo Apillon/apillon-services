@@ -85,6 +85,8 @@ describe('BackendStatusWorker tests', () => {
           contractAddress: null,
           frontend_uuid: null,
           frontendStatus: null,
+          apillonApiKey: 'dummyApiKey',
+          apillonApiSecret: 'dummyApiSecret',
         },
         stage.context,
       ).insert();
@@ -124,6 +126,8 @@ describe('BackendStatusWorker tests', () => {
           contractAddress: null,
           frontend_uuid: null,
           frontendStatus: null,
+          apillonApiKey: 'dummyApiKey',
+          apillonApiSecret: 'dummyApiSecret',
         },
         stage.context,
       ).insert();
@@ -173,6 +177,8 @@ describe('BackendStatusWorker tests', () => {
           contractAddress: null,
           frontend_uuid: null,
           frontendStatus: null,
+          apillonApiKey: 'dummyApiKey',
+          apillonApiSecret: 'dummyApiSecret',
         },
         stage.context,
       ).insert();

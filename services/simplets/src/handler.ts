@@ -1,7 +1,9 @@
 import {
   AppEnvironment,
   AuthenticationMicroservice,
+  AWS_KMS,
   DeployMicroservice,
+  EncryptionService,
   env,
   Lmas,
   Mailing,
@@ -49,6 +51,7 @@ const lambdaHandler: Handler = async (
     new AuthenticationMicroservice(serviceContext),
     new SimpletsSpendService(serviceContext),
     new Mailing(serviceContext),
+    new EncryptionService(new AWS_KMS(), env.DEPLOY_KMS_KEY_ID),
     logging,
   );
   const controller = new SimpletsController(

@@ -136,6 +136,8 @@ export * from './lib/at-services/contracts/dtos/contract-abi-query.dto';
 export * from './lib/at-services/deploy/eventTypes';
 export * from './lib/at-services/deploy/deploy';
 export * from './lib/at-services/deploy/dtos/deploy-instance.dto';
+export * from './lib/at-services/deploy/dtos/deploy-secret.dto';
+export * from './lib/at-services/deploy/dtos/redeploy-instance.dto';
 export * from './lib/at-services/deploy/dtos/generic-deploy-request.dto';
 export * from './lib/at-services/deploy/dtos/resize-instance.dto';
 export * from './lib/at-services/deploy/dtos/virtual-machine.dto';
@@ -154,6 +156,7 @@ export * from './lib/at-services/deploy/types/redeploy-website.type';
 export * from './lib/at-services/simplets/eventTypes';
 export * from './lib/at-services/simplets/simplets';
 export * from './lib/at-services/simplets/dtos/simplet-deploy.dto';
+export * from './lib/at-services/simplets/dtos/simplet-redeploy.dto';
 export * from './lib/at-services/simplets/dtos/simplets-query-filter.dto';
 
 //#REGION Blockchain
@@ -217,6 +220,7 @@ export * from './lib/logger';
 export * from './lib/database/sql-utils';
 export * from './lib/aws/aws-s3';
 export * from './lib/aws/aws-kms';
+export * from './lib/aws/encryption-service';
 export * from './lib/validators';
 export * from './lib/utils';
 export * from './lib/at-services/ams/dtos/create-api-key.dto';

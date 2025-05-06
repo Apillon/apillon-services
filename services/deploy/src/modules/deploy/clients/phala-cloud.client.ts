@@ -1,6 +1,8 @@
 import {
   ICreateVMRequest,
   ICreateVMResponse,
+  ICvmComposeDetails,
+  IUpdateVMRequest,
   IVMAttestationResponse,
   IVMStats,
   VMDetailsResponse,
@@ -56,6 +58,35 @@ export class PhalaCloudClient {
       '/cvms/from_cvm_configuration',
       vmConfig,
     );
+    return response.data;
+  }
+
+  /**
+   * Update a virtual machine configuration.
+   *
+   * @param identifier - The unique identifier of the CVM to update
+   * @param vmConfig - The new configuration for the virtual machine
+   * @returns A promise that resolves with the response containing the updated configuration
+   */
+  async updateCVM(
+    identifier: string,
+    vmConfig: IUpdateVMRequest,
+  ): Promise<ICreateVMResponse> {
+    const response = await this.api.put(
+      `/cvms/${identifier}/compose`,
+      vmConfig,
+    );
+    return response.data;
+  }
+
+  /**
+   * Get virtual machine configuration.
+   *
+   * @param identifier - The unique identifier of the CVM to get configuration for
+   * @returns A promise that resolves with the response containing the CVM configuration
+   */
+  async getCVMCompose(identifier: string): Promise<ICvmComposeDetails> {
+    const response = await this.api.get(`/cvms/${identifier}/compose`);
     return response.data;
   }
 

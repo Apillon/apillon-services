@@ -8,6 +8,7 @@ import {
   DeployedSimpletsQueryFilterDto,
   SimpletsQueryFilterDto,
 } from './dtos/simplets-query-filter.dto';
+import { SimpletRedeployDto } from './dtos/simplet-redeploy.dto';
 
 export class SimpletsMicroservice extends BaseService {
   lambdaFunctionName =
@@ -41,6 +42,13 @@ export class SimpletsMicroservice extends BaseService {
   public async deploySimplet(body: SimpletDeployDto) {
     return await this.emitEvent({
       eventName: SimpletsEventType.SIMPLETS_DEPLOY,
+      body,
+    });
+  }
+
+  public async redeploySimplet(body: SimpletRedeployDto) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.SIMPLETS_REDEPLOY,
       body,
     });
   }

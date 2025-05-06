@@ -1,6 +1,7 @@
 import {
   ModelValidationException,
   SimpletDeployDto,
+  SimpletRedeployDto,
   SimpletsEventType,
   SimpletsMSEventType,
   ValidatorErrorCode,
@@ -24,9 +25,17 @@ export async function processEvent(
     case SimpletsEventType.SIMPLETS_LIST:
       return controller.listSimplets(event.body);
     case SimpletsEventType.SIMPLETS_DEPLOY:
-      const dto = new SimpletDeployDto({}, context).populate(event.body);
-      await dto.validateOrThrow(ModelValidationException, ValidatorErrorCode);
-      return controller.deploySimplet(dto);
+      return controller.deploySimplet(
+        await new SimpletDeployDto({}, context)
+          .populate(event.body)
+          .validateOrThrow(ModelValidationException, ValidatorErrorCode),
+      );
+    case SimpletsEventType.SIMPLETS_REDEPLOY:
+      return controller.redeploySimplet(
+        await new SimpletRedeployDto({}, context)
+          .populate(event.body)
+          .validateOrThrow(ModelValidationException, ValidatorErrorCode),
+      );
     case SimpletsEventType.GET_SIMPLET:
       return controller.getSimplet(event.body.uuid);
     //deployed

@@ -1,9 +1,11 @@
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import {
+  AWS_KMS,
   BaseQueryFilter,
   DeployEventType,
   DeployInstanceDto,
   DeployMSEventType,
+  EncryptionService,
   Lmas,
   ResourceStatus,
 } from '@apillon/lib';
@@ -135,9 +137,12 @@ describe('DeployService tests', () => {
       'DEPLOY_PHALA_CLOUD_API_KEY',
     );
     backendController = new BackendController(
+      context,
       new DeployRepository(context),
       new BackendStrategyHandler(
         context,
+        new EncryptionService(new AWS_KMS(), 'key'),
+        new DeployRepository(context),
         new PhalaDockerDeployStrategy(phalaClient),
         logger,
       ),

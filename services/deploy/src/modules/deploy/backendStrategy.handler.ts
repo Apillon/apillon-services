@@ -1,88 +1,72 @@
-import { DeployInstanceDto, Lmas, ResizeInstanceDto } from '@apillon/lib';
+import {
+  DeployInstanceDto,
+  DeploySecretDto,
+  EncryptionService,
+  Lmas,
+  RedeployInstanceDto,
+  ResizeInstanceDto,
+  ResourceStatus,
+} from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { IBackendDeployStrategy } from './types';
 import { Backend } from './models/backend.model';
-import { v4 as uuidV4 } from 'uuid';
+
 import { DeployCodeException } from '../../lib/exceptions';
 import { DeployErrorCode } from '../../config/types';
-import { getBackendStatus } from './helpers/phala-statuses';
+import { DeployRepository } from './repositores/deploy-repository';
 
 export class BackendStrategyHandler {
   private readonly context: ServiceContext;
   private readonly strategy: IBackendDeployStrategy;
   private logging: Lmas;
+  private encryptionService: EncryptionService;
+  private deployRepository: DeployRepository;
 
   constructor(
     context: ServiceContext,
+    encryptionService: EncryptionService,
+    deployRepository: DeployRepository,
     deployStrategy: IBackendDeployStrategy,
     logging: Lmas,
   ) {
     this.context = context;
+    this.encryptionService = encryptionService;
+    this.deployRepository = deployRepository;
     this.strategy = deployStrategy;
     this.logging = logging;
   }
 
   //#region on-chain
-  async deployDockerCompose(
-    body: DeployInstanceDto,
-    //TODO: ): Promise<ICreateVMResponse> {
-  ): Promise<any> {
+  async deployDockerCompose(body: DeployInstanceDto): Promise<Backend> {
+    let backend: Backend;
     try {
-      const backend_uuid = uuidV4();
-      const result = await this.strategy.deployDockerCompose(body);
-      if (!result) {
-        throw new DeployCodeException({
-          status: 500,
-          code: DeployErrorCode.DEPLOY_DEPLOY_FAILED,
-          context: this.context,
-          errorMessage: 'No data returned from deploy',
-        });
-      }
-      // TODO: vcpu as DTO?
-      // TODO: add dto ICreateVMResponse?
-      const appId = result.app_id;
-      const externalStatus = result.status;
-      const data = {
-        appId: appId,
-        id: result.id,
-        name: result.name,
-        status: externalStatus,
-        teepodId: result.teepod_id,
-        teepod: {
-          id: result.teepod?.id,
-          name: result.teepod?.name,
-        },
-        userId: result.user_id,
-        vmUuid: result.vm_uuid,
-        instanceId: result.instance_id,
-        appUrl: result.app_url,
-        baseImage: result.base_image,
-        vcpu: result.vcpu,
-        memory: result.memory,
-        diskSize: result.disk_size,
-        manifestVersion: result.manifest_version,
-        version: result.version,
-        runner: result.runner,
-        dockerComposeFile: result.docker_compose_file,
-        features: result.features,
-        createdAt: result.created_at,
-        encryptedEnvPubkey: result.encrypted_env_pubkey,
-        dashboardUrl: `https://cloud.phala.network/dashboard/cvms/app_${appId}`,
-      };
-      const backend = new Backend({}, this.context).populate({
-        backend_uuid,
-        backendStatus: getBackendStatus(externalStatus),
-        name: `${body.name} (Backend)`,
-        description: body.description ? `${body.description} (Backend)` : null,
-        instanceId: appId,
-        // TODO: this URL changes
-        url: `https://${appId}-80.dstack-prod5.phala.network`,
+      const encryptedSecrets = await this.encryptionService.encryptJson(
+        body.secrets,
+      );
+      backend = await this.deployRepository.newBackend(
+        body.project_uuid,
+        body.name,
+        body.description,
+        JSON.stringify(encryptedSecrets),
+      );
+
+      const { backendStatus, instanceId, url, data } =
+        await this.strategy.deployDockerCompose(body);
+      backend.populate({
+        backendStatus,
+        instanceId,
+        url,
         data,
-        project_uuid: body.project_uuid,
       });
-      await backend.insert();
-      return backend.serializeByContext(this.context);
+      await backend.update();
+      return backend;
     } catch (e: unknown) {
+      if (backend) {
+        backend.populate({
+          backendStatus: ResourceStatus.FAILED,
+        });
+        await backend.update();
+      }
       if (e instanceof DeployCodeException) {
         throw e;
       }
@@ -92,6 +76,41 @@ export class BackendStrategyHandler {
         context: this.context,
         errorMessage: 'An unknown error occurred during deployment',
       });
+    }
+  }
+
+  async redeployDockerCompose(body: RedeployInstanceDto): Promise<Backend> {
+    const backend = await this.deployRepository.getBackend(body.backend_uuid);
+    const secrets = await this.encryptionService.decryptJson<DeploySecretDto[]>(
+      backend.encryptedVariables,
+    );
+
+    try {
+      const { backendStatus, instanceId, url, data } =
+        await this.strategy.updateDockerCompose(backend.instanceId, secrets);
+      backend.populate({
+        backendStatus,
+        instanceId,
+        url,
+        data,
+      });
+
+      return backend;
+    } catch (e: unknown) {
+      backend.populate({
+        backendStatus: ResourceStatus.FAILED,
+      });
+      if (e instanceof DeployCodeException) {
+        throw e;
+      }
+      throw new DeployCodeException({
+        status: 500,
+        code: DeployErrorCode.DEPLOY_DEPLOY_FAILED,
+        context: this.context,
+        errorMessage: 'An unknown error occurred during deployment',
+      });
+    } finally {
+      await backend.update();
     }
   }
 

@@ -26,10 +26,14 @@ export async function upgrade(
       \`backend_uuid\` VARCHAR(36) NULL,
       \`backendStatus\` INT NULL,
       \`backendUrl\` VARCHAR(255) NULL,
+      \`backendVariables\`       TEXT         NULL,
 
-      \`wallet_uuid\` VARCHAR(36) NULL,
+      \`walletIntegration_uuid\` VARCHAR(36)  NULL,
       \`frontend_uuid\` VARCHAR(36) NULL,
       \`frontendStatus\` INT NULL,
+      \`frontendVariables\`      TEXT         NULL,
+      \`apillonApiKey\`          VARCHAR(36)  NOT NULL,
+      \`apillonApiSecret\`       VARCHAR(255) NOT NULL,
 
       \`createTime\` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
       \`createUser\` INT NULL,

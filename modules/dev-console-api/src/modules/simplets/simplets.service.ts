@@ -2,6 +2,7 @@ import {
   AttachedServiceType,
   DeployedSimpletsQueryFilterDto,
   SimpletDeployDto,
+  SimpletRedeployDto,
   SimpletsMicroservice,
   SimpletsQueryFilterDto,
 } from '@apillon/lib';
@@ -30,6 +31,13 @@ export class SimpletsService {
     );
 
     return (await new SimpletsMicroservice(context).deploySimplet(body)).data;
+  }
+
+  async redeploySimplet(
+    context: DevConsoleApiContext,
+    body: SimpletRedeployDto,
+  ) {
+    return (await new SimpletsMicroservice(context).redeploySimplet(body)).data;
   }
 
   async getSimplet(context: DevConsoleApiContext, uuid: string) {
