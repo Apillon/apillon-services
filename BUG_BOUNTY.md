@@ -2,7 +2,7 @@
 
 _This documents Apillon's bug bounty process and how you can get rewarded for finding issues._
 
-At Apillon we consider security as a top priority but bugs unfortunetly still happen.
+At Apillon we consider security as a top priority but bugs unfortunately still happen.
 
 If you discover a voulnerability we would like to know about it so we can take appropriate steps to fix it. We would like to ask for your help to better protect Apillons services.
 
