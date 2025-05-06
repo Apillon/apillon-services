@@ -1,5 +1,6 @@
 import { ServiceContext } from '@apillon/service-lib';
 import {
+  AppEnvironment,
   AuthenticationMicroservice,
   CreateEWIntegrationDto,
   CreateWebsiteDto,
@@ -8,6 +9,7 @@ import {
   DeployMicroservice,
   DeploySecretDto,
   EncryptionService,
+  env,
   Lmas,
   LogType,
   Mailing,
@@ -22,6 +24,7 @@ import {
   WebsiteDeployDto,
   WebsiteSource,
 } from '@apillon/lib';
+import crypto from 'crypto';
 import { SimpletsRepository } from '../repositores/simplets-repository';
 import { SimpletsSpendService } from './simplets-spend.service';
 import { Simplet } from '../models/simplet.model';
@@ -32,6 +35,17 @@ import { SimpletDeploy } from '../models/simpletDeploy.model';
 
 import axios from 'axios';
 import { IEmbeddedWallet } from '../types';
+
+function getApillonApiUrl() {
+  switch (env.APP_ENV) {
+    case AppEnvironment.DEV:
+    case AppEnvironment.STG:
+    case AppEnvironment.PROD:
+      return env.APILLON_API_HOST;
+    default:
+      return `${env.APILLON_API_HOST_TEST}:${env.APILLON_API_PORT_TEST}`;
+  }
+}
 
 export class SimpletsService {
   private readonly context: ServiceContext;
@@ -479,8 +493,10 @@ export class SimpletsService {
     collection_uuid: string,
   ) {
     return overrideEnvironmentVariables(backendVariables, [
+      { key: 'APILLON_API_URL', value: getApillonApiUrl() },
       { key: 'APILLON_KEY', value: apillonApiKey },
       { key: 'APILLON_SECRET', value: apillonApiSecret },
+      { key: 'APP_SECRET', value: crypto.randomBytes(32).toString('hex') },
       { key: 'COLLECTION_UUID', value: collection_uuid },
     ]);
   }
