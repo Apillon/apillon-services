@@ -17,19 +17,12 @@ export class RegisterUserDto extends ModelBase {
   })
   public token: string;
 
+  /**
+   * No validators are present in case wallet login is used
+   */
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.USER_PASSWORD_NOT_PRESENT,
-      },
-      {
-        resolver: stringLengthValidator({ minOrEqual: 12, max: 100 }),
-        code: ValidatorErrorCode.USER_PASSWORD_TOO_SHORT,
-      },
-    ],
   })
   public password: string;
 }
