@@ -5,7 +5,7 @@ export async function upgrade(
 ) {
   await queryFn(
     `ALTER TABLE ${DbTables.BACKEND}
-      ADD COLUMN \`encryptedVariables\` TEXT NULL AFTER \`description\`;`,
+      ADD COLUMN \`environmentVariables\` TEXT NULL AFTER \`description\`;`,
   );
 }
 
@@ -14,6 +14,6 @@ export async function downgrade(
 ) {
   await queryFn(
     `ALTER TABLE ${DbTables.BACKEND}
-      DROP COLUMN \`encryptedVariables\`;`,
+      DROP COLUMN \`environmentVariables\`;`,
   );
 }

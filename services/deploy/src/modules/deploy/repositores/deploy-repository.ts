@@ -27,14 +27,14 @@ export class DeployRepository extends BaseRepository {
     project_uuid: string,
     name: string,
     description: string,
-    encryptedVariables: string | null = null,
+    environmentVariables: string | null = null,
   ): Promise<Backend> {
     return new Backend({}, this.context).populate({
       backend_uuid: uuidV4(),
       name: `${name} (Backend)`,
       description: description ? `${description} (Backend)` : null,
       project_uuid,
-      encryptedVariables,
+      environmentVariables,
       backendStatus: ResourceStatus.REQUESTED,
     });
   }

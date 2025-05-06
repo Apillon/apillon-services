@@ -140,7 +140,7 @@ export class Backend extends UuidSqlModel {
       SerializeFor.SELECT_DB,
     ],
   })
-  public encryptedVariables: string;
+  public environmentVariables: string;
 
   @prop({
     parser: { resolver: stringParser() },

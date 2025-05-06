@@ -40,14 +40,12 @@ export class BackendStrategyHandler {
   async deployDockerCompose(body: DeployInstanceDto): Promise<Backend> {
     let backend: Backend;
     try {
-      const encryptedSecrets = await this.encryptionService.encryptJson(
-        body.secrets,
-      );
+      const secrets = await this.encryptionService.encryptJson(body.secrets);
       backend = await this.deployRepository.newBackend(
         body.project_uuid,
         body.name,
         body.description,
-        JSON.stringify(encryptedSecrets),
+        secrets,
       );
 
       const { backendStatus, instanceId, url, data } =
@@ -82,7 +80,7 @@ export class BackendStrategyHandler {
   async redeployDockerCompose(body: RedeployInstanceDto): Promise<Backend> {
     const backend = await this.deployRepository.getBackend(body.backend_uuid);
     const secrets = await this.encryptionService.decryptJson<DeploySecretDto[]>(
-      backend.encryptedVariables,
+      backend.environmentVariables,
     );
 
     try {
