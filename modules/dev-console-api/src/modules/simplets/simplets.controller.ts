@@ -1,6 +1,7 @@
 import {
   DefaultPermission,
   DefaultUserRole,
+  DeployedSimpletsQueryFilterDto,
   RoleGroup,
   SimpletDeployDto,
   SimpletRedeployDto,
@@ -49,13 +50,13 @@ export class SimpletsController {
   @Get('/deployed')
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({
-    dto: SimpletsQueryFilterDto,
+    dto: DeployedSimpletsQueryFilterDto,
     validateFor: ValidateFor.QUERY,
   })
   @UseGuards(ValidationGuard, AuthGuard)
   async listDeployedSimplets(
     @Ctx() context: DevConsoleApiContext,
-    @Query() query: SimpletsQueryFilterDto,
+    @Query() query: DeployedSimpletsQueryFilterDto,
   ) {
     return await this.simpletsService.listDeployedSimplets(context, query);
   }
