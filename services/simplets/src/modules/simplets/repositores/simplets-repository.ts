@@ -102,7 +102,11 @@ export class SimpletsRepository extends BaseRepository {
   //#region ------------- DEPLOYED SIMPLETS -------------
 
   async listDeployedSimplets(filter: DeployedSimpletsQueryFilterDto) {
-    return await new SimpletDeploy({}, this.context).getList(filter);
+    return await new SimpletDeploy({}, this.context)
+      .populate({
+        project_uuid: filter.project_uuid,
+      })
+      .getList(filter);
   }
 
   async getDeployedSimplet(uuid: string): Promise<SimpletDeploy> {

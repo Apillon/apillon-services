@@ -828,6 +828,13 @@ export interface IEnv {
   GITHUB_WEBHOOK_SECRET: string;
   GITHUB_AUTH_CLIENT_ID: string;
   GITHUB_AUTH_CLIENT_SECRET: string;
+
+  /**
+   * Google OAuth
+   */
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
+  GOOGLE_CALLBACK_URL: string;
 }
 
 // dotenv.config();
@@ -1493,6 +1500,13 @@ export let env: IEnv = {
   GITHUB_WEBHOOK_SECRET: process.env['GITHUB_WEBHOOK_SECRET'],
   GITHUB_AUTH_CLIENT_ID: process.env['GITHUB_AUTH_CLIENT_ID'],
   GITHUB_AUTH_CLIENT_SECRET: process.env['GITHUB_AUTH_CLIENT_SECRET'],
+
+  /**
+   * Google OAuth
+   */
+  GOOGLE_CLIENT_ID: process.env['GOOGLE_CLIENT_ID'],
+  GOOGLE_CLIENT_SECRET: process.env['GOOGLE_CLIENT_SECRET'],
+  GOOGLE_CALLBACK_URL: process.env['GOOGLE_CALLBACK_URL'],
 };
 
 export let isEnvReady = false;

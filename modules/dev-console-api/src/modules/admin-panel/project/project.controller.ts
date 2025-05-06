@@ -1,5 +1,6 @@
 import {
   AddCreditDto,
+  AddSubscriptionDto,
   ApiKeyQueryFilterDto,
   CacheKeyPrefix,
   CreateQuotaOverrideDto,
@@ -151,5 +152,25 @@ export class ProjectController {
   ): Promise<any> {
     data.project_uuid = project_uuid;
     return this.projectService.addCreditsToProject(context, data);
+  }
+
+  @Post(':project_uuid/add-subscription')
+  @HttpCode(200)
+  @Validation({
+    dto: AddSubscriptionDto,
+    validateFor: ValidateFor.BODY,
+    populateFrom: PopulateFrom.ADMIN,
+  })
+  @UseGuards(ValidationGuard)
+  async addSubscriptionToProject(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('project_uuid', ParseUUIDPipe) project_uuid: UUID,
+    @Body() data: AddSubscriptionDto,
+  ) {
+    return this.projectService.addSubscriptionToProject(
+      context,
+      project_uuid,
+      data,
+    );
   }
 }

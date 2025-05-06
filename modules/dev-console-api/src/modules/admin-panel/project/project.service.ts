@@ -16,6 +16,7 @@ import {
   StorageMicroservice,
   ModelValidationException,
   ContractsMicroservice,
+  AddSubscriptionDto,
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { UUID } from 'crypto';
@@ -80,9 +81,12 @@ export class ProjectService {
     //   context,
     // ).getProjectDeployedContractsDetails(project_uuid);
 
-    const { data: projectCredit } = await new Scs(context).getProjectCredit(
-      project_uuid,
-    );
+    const scs = new Scs(context);
+
+    const { data: projectCredit } = await scs.getProjectCredit(project_uuid);
+
+    const { data: activeSubscription } =
+      await scs.getProjectActiveSubscription(project_uuid);
 
     return {
       ...project.serialize(SerializeFor.ADMIN),
@@ -91,6 +95,7 @@ export class ProjectService {
       ...projectCollectionDetails,
       // ...projectContractsDetails,
       creditBalance: projectCredit.balance,
+      subscriptionPackageId: activeSubscription?.package_id,
     };
   }
 
@@ -160,5 +165,31 @@ export class ProjectService {
     await data.validateOrThrow(ModelValidationException, ValidatorErrorCode);
 
     return (await new Scs(context).addCredit(data)).data;
+  }
+
+  async addSubscriptionToProject(
+    context: DevConsoleApiContext,
+    projectUuid: string,
+    data: AddSubscriptionDto,
+  ) {
+    const projectOwner = (await new Ams(context).getProjectOwner(projectUuid))
+      .data;
+
+    if (!projectOwner?.email) {
+      throw new CodeException({
+        code: ResourceNotFoundErrorCode.PROJECT_OWNER_NOT_FOUND,
+        status: HttpStatus.NOT_FOUND,
+        errorCodes: ResourceNotFoundErrorCode,
+      });
+    }
+
+    return (
+      await new Scs(context).addSubscription(
+        projectUuid,
+        data,
+        'admin',
+        projectOwner.email,
+      )
+    ).data;
   }
 }

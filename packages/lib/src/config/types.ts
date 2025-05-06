@@ -286,6 +286,7 @@ export enum ScsEventType {
   CREATE_OVERRIDE = 'create-override',
   DELETE_OVERRIDE = 'delete-override',
   ADD_CREDIT = 'add-credit',
+  ADD_SUBSCRIPTION = 'add-subscription',
   CONFIGURE_CREDIT = 'configure-credit',
   SPEND_CREDIT = 'spend-credit',
   REFUND_CREDIT = 'refund-credit',
@@ -1393,6 +1394,7 @@ export enum NotificationType {
 
 export enum HttpStatus {
   BAD_REQUEST = 400,
+  UNAUTHORIZED = 401,
   FORBIDDEN = 403,
   NOT_FOUND = 404,
 }
@@ -1401,4 +1403,9 @@ export enum NftWebsiteType {
   PLAIN_JS = 1,
   REACT = 2,
   VUE = 3,
+}
+
+export enum LoginType {
+  EMAIL = 'email',
+  GOOGLE = 'google',
 }
