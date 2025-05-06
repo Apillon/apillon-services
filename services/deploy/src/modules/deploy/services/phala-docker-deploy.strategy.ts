@@ -2,15 +2,16 @@ import { x25519 } from '@noble/curves/ed25519';
 import {
   AppEnvironment,
   DeployInstanceDto,
+  DeploySecretDto,
   env,
   ResizeInstanceDto,
-  ResourceStatus,
   VirtualMachineDto,
 } from '@apillon/lib';
 import { PhalaCloudClient } from '../clients/phala-cloud.client';
 import {
   IBackendDeployStrategy,
   ICreateVMResponse,
+  IDeployDockerResult,
   IVMAttestationResponse,
   IVMStats,
 } from '../types';
@@ -19,14 +20,6 @@ import { DeployCodeException } from '../../../lib/exceptions';
 import { DeployErrorCode } from '../../../config/types';
 import axios from 'axios';
 import { getBackendStatus } from '../helpers/phala-statuses';
-import { DeploySecretDto } from '@apillon/lib/dist/lib/at-services/deploy/dtos/deploy-secret.dto';
-
-interface IDeployDockerResult {
-  backendStatus: ResourceStatus;
-  instanceId: string;
-  url: string;
-  data: any;
-}
 
 export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
   private client: PhalaCloudClient;

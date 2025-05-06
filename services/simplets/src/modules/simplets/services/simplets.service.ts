@@ -342,65 +342,6 @@ export class SimpletsService {
     return backendDeploy;
   }
 
-  // async redeployBackend(simpletDeploy_uuid: string) {
-  //   const simpletDeploy =
-  //     await this.simpletRepository.getDeployedSimplet(simpletDeploy_uuid);
-  //   const simplet = await this.simpletRepository.getSimplet(
-  //     simpletDeploy.simplet_uuid,
-  //   );
-  //   await this.logging.writeLog({
-  //     logType: LogType.INFO,
-  //     message: `Starting backend redeployment for simplet deploy uuid ${simpletDeploy.simpletDeploy_uuid}.`,
-  //     service: ServiceName.SIMPLETS,
-  //     location: 'SimpletsService.redeploySimplet',
-  //   });
-  //
-  //   const dockerCompose = await this.getDockerCompose(simplet);
-  //
-  //   const redeployDto = new GenericDeployRequestDto({}, this.context).populate({
-  //     deploy_uuid: simpletDeploy.backend_uuid,
-  //   });
-  //   await redeployDto.validateOrThrow(
-  //     ModelValidationException,
-  //     ValidatorErrorCode,
-  //   );
-  //
-  //   // const redeployDto = new RedeployInstanceDto({}, this.context).populate({
-  //   //   backend_uuid: simpletDeploy.backend_uuid,
-  //   //   dockerCompose,
-  //   //   virtualMachine: simplet.backendMachine,
-  //   // });
-  //   // await redeployDto.validateOrThrow(
-  //   //   ModelValidationException,
-  //   //   ValidatorErrorCode,
-  //   // );
-  //   const backendDeploy =
-  //     await this.deployService.redeployDockerCompose(redeployDto);
-  //   if (!backendDeploy.success) {
-  //     await this.logging.writeLog({
-  //       sendAdminAlert: true,
-  //       logType: LogType.ERROR,
-  //       message: `Backend redeployment failed for simplet uuid ${simplet.simplet_uuid}.`,
-  //       service: ServiceName.SIMPLETS,
-  //       location: 'SimpletsService.deploySimplet',
-  //     });
-  //     throw new SimpletsCodeException({
-  //       status: 500,
-  //       code: SimpletsErrorCode.BACKEND_DEPLOYMENT_FAILED,
-  //       errorMessage: 'Backend redeployment failed',
-  //     });
-  //   }
-  //   await this.logging.writeLog({
-  //     logType: LogType.INFO,
-  //     message: `Backend successfully redeployed for simplet uuid ${simplet.simplet_uuid}.`,
-  //     service: ServiceName.SIMPLETS,
-  //     location: 'SimpletsService.redeploySimplet',
-  //     data: backendDeploy.data,
-  //   });
-  //
-  //   return backendDeploy;
-  // }
-
   private async getDockerCompose(simplet: Simplet) {
     const dockerComposeLocation = `${simplet.backendRepo.replace(/\/+$/, '')}/${simplet.backendPath.replace(/^\/+/, '')}`;
     const response = await axios.get(dockerComposeLocation);
@@ -504,50 +445,6 @@ export class SimpletsService {
 
     return website_uuid;
   }
-
-  // async redeployFrontend(simpletDeploy: SimpletDeploy, simplet: Simplet) {
-  //   await this.logging.writeLog({
-  //     logType: LogType.INFO,
-  //     message: `Starting frontend redeployment for simplet uuid ${simplet.simplet_uuid}.`,
-  //     service: ServiceName.SIMPLETS,
-  //     location: 'SimpletsService.redeploySimplet',
-  //   });
-  //   const website_uuid = await this.createWebsite(
-  //     simpletDeploy.simplet_uuid,
-  //     new CreateWebsiteDto({}, this.context).populate({
-  //       project_uuid: simpletDeploy.project_uuid,
-  //       name: `${simpletDeploy.name} (Website)`,
-  //       source: WebsiteSource.GITHUB,
-  //     }),
-  //   );
-  //   await this.triggerWebDeploy(
-  //     simpletDeploy.simplet_uuid,
-  //     new WebsiteDeployDto({}, this.context).populate({
-  //       url: simplet.frontendRepo,
-  //       buildDirectory: path.join(
-  //         simplet.frontendPath,
-  //         simplet.frontendBuildDirectory,
-  //       ),
-  //       websiteUuid: website_uuid,
-  //       installCommand: `cd ${simplet.frontendPath} && ${simplet.frontendInstallCommand}`,
-  //       buildCommand: `cd ${simplet.frontendPath} && ${simplet.frontendBuildCommand}`,
-  //       // TODO: key/values bellow were removed so this wont work? rewrite the whole method?
-  //       // variables: secrets,
-  //       // apiKey: apillonApiKey,
-  //       // apiSecret: apillonApiSecret,
-  //       new: false,
-  //     }),
-  //   );
-  //
-  //   await this.logging.writeLog({
-  //     logType: LogType.INFO,
-  //     message: `Frontend successfully deployed for simplet uuid ${simplet.simplet_uuid}.`,
-  //     service: ServiceName.SIMPLETS,
-  //     location: 'SimpletsService.deploySimplet',
-  //   });
-  //
-  //   return website_uuid;
-  // }
 
   async listDeployedSimplets(query: DeployedSimpletsQueryFilterDto) {
     return await this.simpletRepository.listDeployedSimplets(query);

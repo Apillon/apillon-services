@@ -2,6 +2,7 @@ import {
   DeployInstanceDto,
   DeploySecretDto,
   ResizeInstanceDto,
+  ResourceStatus,
 } from '@apillon/lib';
 import { Backend } from './models/backend.model';
 
@@ -185,16 +186,22 @@ export interface IVMAttestationResponse {
   };
 }
 
+export interface IDeployDockerResult {
+  backendStatus: ResourceStatus;
+  instanceId: string;
+  url: string;
+  data: any;
+}
+
 export interface IBackendDeployStrategy {
-  // TODO: any
-  deployDockerCompose(body: DeployInstanceDto): Promise<any>;
+  deployDockerCompose(body: DeployInstanceDto): Promise<IDeployDockerResult>;
 
   updateDockerCompose(
     instanceId: string,
     secrets: DeploySecretDto[],
   ): Promise<any>;
 
-  getInstanceDetails(backend: Backend): Promise<any>;
+  getInstanceDetails(backend: Backend): Promise<VMDetailsResponse>;
 
   // getInstanceBilling(backend: Backend): Promise<any>;
 

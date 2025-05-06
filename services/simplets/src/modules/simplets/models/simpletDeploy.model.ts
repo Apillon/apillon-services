@@ -119,8 +119,6 @@ export class SimpletDeploy extends UuidSqlModel {
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
-      // TODO: remove update_DB
-      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
@@ -260,7 +258,6 @@ export class SimpletDeploy extends UuidSqlModel {
     serializable: [
       SerializeFor.ADMIN,
       SerializeFor.INSERT_DB,
-      SerializeFor.UPDATE_DB,
       SerializeFor.PROFILE,
     ],
   })
@@ -293,13 +290,7 @@ export class SimpletDeploy extends UuidSqlModel {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
-    serializable: [
-      SerializeFor.INSERT_DB,
-      SerializeFor.SELECT_DB,
-      SerializeFor.ADMIN,
-      SerializeFor.SERVICE,
-      SerializeFor.PROFILE,
-    ],
+    serializable: [SerializeFor.INSERT_DB],
   })
   public apillonApiKey: string;
 
