@@ -23,6 +23,12 @@ export class RegisterUserDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE],
+    validators: [
+      {
+        resolver: stringLengthValidator({ minOrEqual: 12, max: 100 }),
+        code: ValidatorErrorCode.USER_PASSWORD_INVALID_LENGTH,
+      },
+    ],
   })
   public password: string;
 }
