@@ -1,5 +1,4 @@
 import { execSync } from 'child_process';
-import { readdir } from 'fs/promises';
 import path from 'path';
 import { yamlParser } from '@apillon/lib';
 import { readFileSync } from 'fs';
@@ -23,12 +22,8 @@ async function deployChangedServices(stage: string): Promise<void> {
   }
 
   const functions = getFunctionsFromServerlessYml();
-  const serverlessDir = path.resolve('./.serverless');
 
   try {
-    const files = await readdir(serverlessDir);
-    console.log('Files in .serverless directory:', files);
-
     for (const functionName of functions) {
       console.log(`Deploying function "${functionName}"...`);
       execSync(
