@@ -2,8 +2,8 @@ import { execSync } from 'child_process';
 import { readFile, readdir } from 'fs/promises';
 import { createHash } from 'crypto';
 import path from 'path';
-import { Lambda, env } from '@apillon/lib';
-import { existsSync } from 'fs';
+import { Lambda, env, yamlParser } from '@apillon/lib';
+import { existsSync, readFileSync } from 'fs';
 
 async function getDeployedLambdaHash(functionName: string) {
   const lambda = new Lambda({
@@ -17,65 +17,77 @@ async function getDeployedLambdaHash(functionName: string) {
   return response.Configuration.CodeSha256;
 }
 
-async function generateLocalHash(zipFilePath) {
+async function generateLocalHash(zipFilePath: string) {
   const fileData = await readFile(zipFilePath);
   return createHash('sha256').update(fileData).digest('base64');
 }
 
-async function shouldDeploy(
-  functionName: string,
-  stage: string,
-): Promise<boolean> {
-  // Step 1: Run `serverless package` to generate the .zip file
+function getFunctionsFromServerlessYml(): string[] {
+  const serverlessYmlPath = path.resolve('./serverless.yml');
+  const serverlessYmlContent = readFileSync(serverlessYmlPath, 'utf8');
+  const serverlessConfig = yamlParser.load(serverlessYmlContent) as {
+    functions: Record<string, unknown>;
+  };
+  return Object.keys(serverlessConfig.functions);
+}
+
+async function deployChangedServices(stage: string): Promise<void> {
   console.log('Packaging the service...');
   execSync(`serverless package --stage ${stage}`, { stdio: 'inherit' });
 
-  // Step 2: List all files in the .serverless directory
+  const functions = getFunctionsFromServerlessYml();
   const serverlessDir = path.resolve('./.serverless');
-  let zipFilePath: string | undefined;
 
   try {
     const files = await readdir(serverlessDir);
     console.log('Files in .serverless directory:', files);
 
-    // Step 3: Locate the .zip file
-    zipFilePath = files.find((file) => file.endsWith('.zip'))
-      ? path.join(serverlessDir, `${functionName}.zip`)
-      : undefined;
+    for (const functionName of functions) {
+      const zipFileName = `${functionName}.zip`;
+      const zipFilePath = files.includes(zipFileName)
+        ? path.join(serverlessDir, zipFileName)
+        : undefined;
 
-    if (!zipFilePath || !existsSync(zipFilePath)) {
-      console.warn(`.zip file for function "${functionName}" not found.`);
-      return true; // Return true to trigger deployment
+      if (!zipFilePath || !existsSync(zipFilePath)) {
+        console.warn(`.zip file for function "${functionName}" not found.`);
+        continue; // Skip deployment for this function
+      }
+
+      const localHash = await generateLocalHash(zipFilePath);
+      const deployedHash = await getDeployedLambdaHash(functionName);
+
+      console.log(`Function: ${functionName}`);
+      console.log('Deployed Hash:', deployedHash);
+      console.log('Local Hash:', localHash);
+
+      if (deployedHash !== localHash) {
+        console.log(
+          `Changes detected for function "${functionName}". Deploying...`,
+        );
+        execSync(
+          `serverless deploy function --function ${functionName} --stage ${stage}`,
+          { stdio: 'inherit' },
+        );
+      } else {
+        console.log(
+          `No changes detected for function "${functionName}". Skipping deployment.`,
+        );
+      }
     }
   } catch (err) {
-    console.error('Error reading .serverless directory:', err);
-    return true; // Return true to trigger deployment
+    console.error('Error during deployment:', err);
+    throw err;
   }
-
-  // Step 4: Compute the local hash
-  const localHash = await generateLocalHash(zipFilePath);
-
-  // Step 5: Fetch the deployed Lambda hash
-  const deployedHash = await getDeployedLambdaHash(functionName);
-
-  console.log('Deployed Hash:', deployedHash);
-  console.log('Local Hash:', localHash);
-
-  // Step 6: Compare hashes
-  return deployedHash !== localHash;
 }
+
 // Example usage
 (async () => {
   const stage = process.argv[2];
 
-  const functionName = `apillon-${process.argv[3]}-service-${stage}`;
-
-  const deploy = await shouldDeploy(functionName, stage);
-
-  if (deploy) {
-    console.log('Changes detected. Proceeding with deployment...');
-    execSync(`serverless deploy --stage ${stage}`, { stdio: 'inherit' });
-  } else {
-    console.log('No changes detected. Skipping deployment.');
+  if (!stage) {
+    console.error('Usage: node deploy.js <stage>');
+    process.exit(1);
   }
+
+  await deployChangedServices(stage);
 })();
