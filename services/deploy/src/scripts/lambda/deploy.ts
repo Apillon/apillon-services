@@ -54,7 +54,9 @@ async function deployChangedServices(stage: string): Promise<void> {
       }
 
       const localHash = await generateLocalHash(zipFilePath);
-      const deployedHash = await getDeployedLambdaHash(functionName);
+      const deployedHash = await getDeployedLambdaHash(
+        `apillon-${functionName}-${stage}`,
+      );
 
       console.log(`Function: ${functionName}`);
       console.log('Deployed Hash:', deployedHash);
