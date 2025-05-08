@@ -38,6 +38,7 @@
     "@apillon/tests-lib": "*",
     "@aws-sdk/client-sqs": "3.552.0",
     "eslint-config-common": "*",
+    "serverless-prune-plugin": "^2.1.0",
     "tsconfig": "*"
   },
   "jest": {
