@@ -1,8 +1,9 @@
 import { execSync } from 'child_process';
-import { readFile } from 'fs/promises';
+import { readFile, readdir } from 'fs/promises';
 import { createHash } from 'crypto';
 import path from 'path';
 import { Lambda, env } from '@apillon/lib';
+import { existsSync } from 'fs';
 
 async function getDeployedLambdaHash(functionName: string) {
   const lambda = new Lambda({
@@ -21,27 +22,48 @@ async function generateLocalHash(zipFilePath) {
   return createHash('sha256').update(fileData).digest('base64');
 }
 
-async function shouldDeploy(functionName, stage) {
+async function shouldDeploy(
+  functionName: string,
+  stage: string,
+): Promise<boolean> {
   // Step 1: Run `serverless package` to generate the .zip file
   console.log('Packaging the service...');
   execSync(`serverless package --stage ${stage}`, { stdio: 'inherit' });
 
-  // Step 2: Locate the .zip file
-  const zipFilePath = path.resolve('./.serverless', `${functionName}.zip`);
+  // Step 2: List all files in the .serverless directory
+  const serverlessDir = path.resolve('./.serverless');
+  let zipFilePath: string | undefined;
 
-  // Step 3: Compute the local hash
+  try {
+    const files = await readdir(serverlessDir);
+    console.log('Files in .serverless directory:', files);
+
+    // Step 3: Locate the .zip file
+    zipFilePath = files.find((file) => file.endsWith('.zip'))
+      ? path.join(serverlessDir, `${functionName}.zip`)
+      : undefined;
+
+    if (!zipFilePath || !existsSync(zipFilePath)) {
+      console.warn(`.zip file for function "${functionName}" not found.`);
+      return true; // Return true to trigger deployment
+    }
+  } catch (err) {
+    console.error('Error reading .serverless directory:', err);
+    return true; // Return true to trigger deployment
+  }
+
+  // Step 4: Compute the local hash
   const localHash = await generateLocalHash(zipFilePath);
 
-  // Step 4: Fetch the deployed Lambda hash
+  // Step 5: Fetch the deployed Lambda hash
   const deployedHash = await getDeployedLambdaHash(functionName);
 
   console.log('Deployed Hash:', deployedHash);
   console.log('Local Hash:', localHash);
 
-  // Step 5: Compare hashes
+  // Step 6: Compare hashes
   return deployedHash !== localHash;
 }
-
 // Example usage
 (async () => {
   const stage = process.argv[2];
