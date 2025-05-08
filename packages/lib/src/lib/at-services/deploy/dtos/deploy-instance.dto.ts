@@ -106,7 +106,7 @@ export class DeployInstanceDto extends ModelBase {
 
 export function validateDockerComposeYaml(allowEmpty = false) {
   return function (this: any, value: any): boolean {
-    if (allowEmpty && !!value) {
+    if (allowEmpty && !value) {
       return true;
     }
     try {
