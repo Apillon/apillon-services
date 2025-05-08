@@ -1,6 +1,9 @@
 import {
   AppEnvironment,
+  AWS_KMS,
   Context,
+  DeployMicroservice,
+  EncryptionService,
   env,
   getEnvSecrets,
   Lmas,
@@ -17,10 +20,12 @@ import {
 import { Scheduler } from './scheduler';
 import { BackendStatusWorker } from './backend-status.worker';
 import { SimpletsRepository } from '../modules/simplets/repositores/simplets-repository';
+import { FrontendStatusWorker } from './frontend-status.worker';
 
 export enum WorkerName {
   SCHEDULER = 'scheduler',
   BACKEND_STATUS = 'BackendStatusWorker',
+  FRONTEND_STATUS = 'FrontendStatusWorker',
 }
 
 export async function handler(event: any) {
@@ -116,6 +121,20 @@ export async function handleLambdaEvent(
         new Lmas(),
       );
       await resourceStatusWorker.run();
+      break;
+    }
+    case WorkerName.FRONTEND_STATUS: {
+      const resourceStatusWorker = new FrontendStatusWorker(
+        workerDefinition,
+        context,
+        QueueWorkerType.EXECUTOR,
+        new SimpletsRepository(context),
+        new DeployMicroservice(context),
+        new EncryptionService(new AWS_KMS(), env.DEPLOY_KMS_KEY_ID),
+        new Lmas(),
+      );
+      await resourceStatusWorker.run();
+      break;
     }
     default:
       console.log(
@@ -178,6 +197,20 @@ export async function handleSqsMessages(
             context,
             QueueWorkerType.EXECUTOR,
             new SimpletsRepository(context),
+            new Lmas(),
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        }
+        case WorkerName.FRONTEND_STATUS: {
+          await new FrontendStatusWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+            new SimpletsRepository(context),
+            new DeployMicroservice(context),
+            new EncryptionService(new AWS_KMS(), env.DEPLOY_KMS_KEY_ID),
             new Lmas(),
           ).run({
             executeArg: message?.body,

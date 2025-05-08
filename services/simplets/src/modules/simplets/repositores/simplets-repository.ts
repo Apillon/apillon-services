@@ -27,8 +27,8 @@ export class SimpletsRepository extends BaseRepository {
     description: string,
     apillonApiKey: string,
     apillonApiSecret: string,
-    backendVariables: string,
     frontendVariables: string,
+    backendVariables: string,
   ): Promise<SimpletDeploy> {
     const simpletDeploy = new SimpletDeploy({}, this.context).populate({
       project_uuid,
@@ -89,6 +89,35 @@ export class SimpletsRepository extends BaseRepository {
         code: SimpletsErrorCode.SIMPLET_NOT_FOUND,
         context: this.context,
         errorMessage: `Simplet deploy with backend_uuid ${backend_uuid} not found`,
+      });
+    }
+    return new SimpletDeploy({}, this.context).populate(
+      data[0],
+      PopulateFrom.DB,
+    );
+  }
+
+  async getSimpletDeployByFrontend(
+    frontend_uuid: string,
+    conn?: PoolConnection,
+  ): Promise<SimpletDeploy> {
+    const data = await this.context.mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${DbTables.SIMPLET_DEPLOY}\`
+        WHERE frontend_uuid = @frontend_uuid
+          AND frontendStatus <> ${SqlModelStatus.DELETED};
+      `,
+      { frontend_uuid },
+      conn,
+    );
+
+    if (!data?.length) {
+      throw new SimpletsCodeException({
+        status: 404,
+        code: SimpletsErrorCode.SIMPLET_NOT_FOUND,
+        context: this.context,
+        errorMessage: `Simplet deploy with frontend_uuid ${frontend_uuid} not found`,
       });
     }
     return new SimpletDeploy({}, this.context).populate(

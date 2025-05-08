@@ -89,6 +89,7 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
       // TODO: vcpu as DTO?
       // TODO: add dto ICreateVMResponse?
       const appId = result.app_id;
+      const teapodName = result.teepod?.name;
       const externalStatus = result.status;
       const data = {
         appId: appId,
@@ -98,7 +99,7 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
         teepodId: result.teepod_id,
         teepod: {
           id: result.teepod?.id,
-          name: result.teepod?.name,
+          name: teapodName,
         },
         userId: result.user_id,
         vmUuid: result.vm_uuid,
@@ -120,8 +121,7 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
       return {
         backendStatus: getBackendStatus(externalStatus),
         instanceId: appId,
-        // TODO: this URL changes
-        url: `https://${appId}-80.dstack-prod5.phala.network`,
+        url: `https://${appId}-80.dstack-${teapodName}.phala.network`,
         data,
       };
     } catch (error: unknown) {

@@ -14,6 +14,7 @@ import {
 } from '@apillon/workers-lib';
 import { SimpletsRepository } from '../modules/simplets/repositores/simplets-repository';
 import { SimpletsCodeException } from '../lib/exceptions';
+import { ResourceType } from '../modules/simplets/types';
 
 export class BackendStatusWorker extends BaseQueueWorker {
   private simpletRepository: SimpletsRepository;
@@ -47,9 +48,11 @@ export class BackendStatusWorker extends BaseQueueWorker {
       input.data,
       50,
       this.context,
-      async (res: ResourceDeployWebhookDataDto, ctx) => {
+      async (res: ResourceDeployWebhookDataDto, _ctx) => {
         console.info('processing webhook transaction: ', res);
-        //const isBackendDeploy = res.referenceTable === DbTables.BACKEND;
+        if (res.referenceTable !== ResourceType.BACKEND) {
+          return;
+        }
         const backend_uuid = res.referenceId;
         try {
           const simpletDeploy =

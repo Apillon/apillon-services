@@ -4,6 +4,8 @@ import { PopulateFrom, ValidatorErrorCode } from '../../../../config/types';
 import { validateDockerComposeYaml } from './deploy-instance.dto';
 import { VirtualMachineDto } from './virtual-machine.dto';
 import { presenceValidator, stringLengthValidator } from '@rawmodel/validators';
+import { DeploySecretDto } from './deploy-secret.dto';
+import { arrayPresenceValidator } from '../../../validators';
 
 /**
  * Represents the data transfer object for Backend redeploy request.
@@ -56,4 +58,16 @@ export class RedeployInstanceDto extends ModelBase {
     ],
   })
   public virtualMachine: VirtualMachineDto;
+
+  @prop({
+    parser: { array: true, resolver: DeploySecretDto },
+    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
+    validators: [
+      {
+        resolver: arrayPresenceValidator(),
+        code: ValidatorErrorCode.DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public secrets: DeploySecretDto[];
 }
