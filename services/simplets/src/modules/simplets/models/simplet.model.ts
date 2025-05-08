@@ -1,6 +1,7 @@
 import {
   Context,
   getQueryParams,
+  JSONParser,
   PopulateFrom,
   presenceValidator,
   prop,
@@ -128,6 +129,19 @@ export class Simplet extends UuidSqlModel {
   public backendMachine: VirtualMachineDto | null;
 
   @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public backendRequiredVariables: string[] | null;
+
+  @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
@@ -191,6 +205,19 @@ export class Simplet extends UuidSqlModel {
     ],
   })
   public frontendBuildDirectory: string | null;
+
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public frontendRequiredVariables: string[] | null;
 
   /***************************************************
    * Info properties
