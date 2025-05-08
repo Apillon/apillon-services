@@ -1,9 +1,8 @@
 import { execSync } from 'child_process';
-import { Lambda } from '@aws-sdk/client-lambda';
 import { readFile } from 'fs/promises';
 import { createHash } from 'crypto';
 import path from 'path';
-import { env } from '@apillon/lib';
+import { Lambda, env } from '@apillon/lib';
 
 async function getDeployedLambdaHash(functionName: string) {
   const lambda = new Lambda({
