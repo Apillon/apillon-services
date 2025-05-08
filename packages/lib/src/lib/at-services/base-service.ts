@@ -1,11 +1,13 @@
 import { getEnvSecrets } from '../../config/env';
 import { ApiName, AppEnvironment } from '../../config/types';
 import * as Net from 'net';
-import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
+import { LambdaClient, InvokeCommand, Lambda } from '@aws-sdk/client-lambda';
 import { safeJsonParse } from '../utils';
 import { Context } from '../context';
 import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import type { SendMessageCommandInput } from '@aws-sdk/client-sqs';
+
+export { Lambda };
 
 export abstract class BaseService {
   protected isDefaultAsync = false;
