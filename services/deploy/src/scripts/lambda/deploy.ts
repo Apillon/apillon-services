@@ -7,12 +7,12 @@ import { existsSync, readFileSync } from 'fs';
 
 async function getDeployedLambdaHash(functionName: string) {
   const lambda = new Lambda({
-    region: env.AWS_REGION,
-    credentials: {
-      accessKeyId: env.AWS_KEY,
-      secretAccessKey: env.AWS_SECRET,
-    },
+    region: process.env.AWS_REGION,
   });
+  if (!process.env.AWS_KEY || !process.env.AWS_SECRET) {
+    console.log(process.env);
+    console.log(env);
+  }
   const response = await lambda.getFunction({ FunctionName: functionName });
   return response.Configuration.CodeSha256;
 }
