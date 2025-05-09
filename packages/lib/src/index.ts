@@ -241,3 +241,7 @@ export * from './lib/parsers';
 export * from './lib/cache';
 export * from './lib/captcha';
 export * from './lib/credit-and-subscription';
+
+import * as yamlParser from 'js-yaml';
+
+export { yamlParser };

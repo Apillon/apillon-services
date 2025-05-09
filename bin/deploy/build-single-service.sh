@@ -90,7 +90,7 @@ then
 fi
 
 # install libs that doesn't work form global
-npm i ts-node serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader
+npm i ts-node serverless-webpack copy-webpack-plugin webpack webpack-node-externals ts-loader serverless-prune-plugin
 
 echo "Installation of dependencies complete"
 npm list
