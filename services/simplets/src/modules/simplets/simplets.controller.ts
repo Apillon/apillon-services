@@ -79,11 +79,13 @@ export class SimpletsController {
       const { backendDeploy, dockerCompose } =
         await this.simpletsService.deployBackend(simpletDeploy, simplet);
       const { backend_uuid, url: backendUrl } = backendDeploy.data;
-      simpletDeploy.backend_uuid = backend_uuid;
-      simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
-      simpletDeploy.backendUrl = backendUrl;
-      simpletDeploy.backendDockerCompose = dockerCompose;
-      simpletDeploy.backendVirtualMachine = simplet.backendMachine;
+      Object.assign(simpletDeploy, {
+        backend_uuid,
+        backendStatus: ResourceStatus.DEPLOYING,
+        backendUrl,
+        backendDockerCompose: dockerCompose,
+        backendVirtualMachine: simplet.backendMachine,
+      });
     }
 
     // FRONTEND DEPLOY
