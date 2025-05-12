@@ -11,9 +11,10 @@
     "lint": "tsc && eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "tsc": "tsc",
     "dev": "nodemon ./src/scripts/dev/run-server.ts",
-    "deploy:prod": "serverless deploy --stage production",
-    "deploy:staging": "serverless deploy --stage staging",
-    "deploy:dev": "serverless deploy --stage dev"
+    "deploy:prod": "node -r ts-node/register ../../scripts/lambda/deploy production",
+    "deploy:staging": "node -r ts-node/register ../../scripts/lambda/deploy staging",
+    "deploy:dev": "node -r ts-node/register ../../scripts/lambda/deploy dev",
+    "deploy:test": "node -r ts-node/register ../../scripts/lambda/deploy test"
   },
   "dependencies": {
     "@apillon/lib": "*"
