@@ -1,14 +1,21 @@
 import {
+  Ams,
+  ApiKeyRoleBaseDto,
   AttachedServiceType,
+  CodeException,
+  CreateApiKeyDto,
+  DefaultApiKeyRole,
   DeployedSimpletsQueryFilterDto,
   SimpletDeployDto,
   SimpletRedeployDto,
   SimpletsMicroservice,
   SimpletsQueryFilterDto,
+  SystemErrorCode,
 } from '@apillon/lib';
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { ServicesService } from '../services/services.service';
+import { ServiceQueryFilter } from '../services/dtos/services-query-filter.dto';
 
 @Injectable()
 export class SimpletsService {
@@ -29,6 +36,16 @@ export class SimpletsService {
       body.project_uuid,
       AttachedServiceType.SIMPLETS,
     );
+
+    if (!body.apillonApiKey && !body.apillonApiSecret) {
+      const { apiKey, apiKeySecret } = await this.createSimpletApiKey(
+        context,
+        body.project_uuid,
+        `${body.name} (Simplet)`,
+      );
+      body.apillonApiKey = apiKey;
+      body.apillonApiSecret = apiKeySecret;
+    }
 
     return (await new SimpletsMicroservice(context).deploySimplet(body)).data;
   }
@@ -62,4 +79,47 @@ export class SimpletsService {
   }
 
   //#endregion
+
+  private async createSimpletApiKey(
+    context: DevConsoleApiContext,
+    project_uuid: string,
+    apiKeyName: string,
+  ) {
+    const serviceList = await this.serviceService.getServiceList(
+      context,
+      new ServiceQueryFilter({}, context).populate({
+        project_uuid,
+      }),
+    );
+    const storageService = serviceList.items.find(
+      (item) => item.serviceType_id === AttachedServiceType.STORAGE,
+    );
+
+    if (!storageService) {
+      throw new CodeException({
+        code: SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage:
+          'Storage service is required for simplet deployment but was not found for the project',
+      });
+    }
+
+    const createdApiKeyResponse = await new Ams(context).createApiKey(
+      new CreateApiKeyDto({}, context).populate({
+        project_uuid,
+        name: apiKeyName,
+        testNetwork: false,
+        roles: [
+          new ApiKeyRoleBaseDto({}, context).populate({
+            project_uuid,
+            role_id: DefaultApiKeyRole.KEY_READ,
+            service_uuid: storageService.uuid,
+            serviceType_id: AttachedServiceType.STORAGE,
+          }),
+        ],
+      }),
+    );
+
+    return createdApiKeyResponse.data;
+  }
 }
