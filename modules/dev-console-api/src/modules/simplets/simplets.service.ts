@@ -94,13 +94,24 @@ export class SimpletsService {
     const storageService = serviceList.items.find(
       (item) => item.serviceType_id === AttachedServiceType.STORAGE,
     );
-
     if (!storageService) {
       throw new CodeException({
         code: SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
         status: HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessage:
-          'Storage service is required for simplet deployment but was not found for the project',
+          'Storage service is required for simplet deployment but was not found.',
+      });
+    }
+
+    const nftService = serviceList.items.find(
+      (item) => item.serviceType_id === AttachedServiceType.NFT,
+    );
+    if (!nftService) {
+      throw new CodeException({
+        code: SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessage:
+          'NFT service is required for simplet deployment but was not found.',
       });
     }
 
@@ -110,11 +121,31 @@ export class SimpletsService {
         name: apiKeyName,
         testNetwork: false,
         roles: [
+          // STORAGE
           new ApiKeyRoleBaseDto({}, context).populate({
             project_uuid,
             role_id: DefaultApiKeyRole.KEY_READ,
             service_uuid: storageService.uuid,
             serviceType_id: AttachedServiceType.STORAGE,
+          }),
+          // NFTs
+          new ApiKeyRoleBaseDto({}, context).populate({
+            project_uuid,
+            role_id: DefaultApiKeyRole.KEY_READ,
+            service_uuid: nftService.uuid,
+            serviceType_id: AttachedServiceType.NFT,
+          }),
+          new ApiKeyRoleBaseDto({}, context).populate({
+            project_uuid,
+            role_id: DefaultApiKeyRole.KEY_WRITE,
+            service_uuid: nftService.uuid,
+            serviceType_id: AttachedServiceType.NFT,
+          }),
+          new ApiKeyRoleBaseDto({}, context).populate({
+            project_uuid,
+            role_id: DefaultApiKeyRole.KEY_EXECUTE,
+            service_uuid: nftService.uuid,
+            serviceType_id: AttachedServiceType.NFT,
           }),
         ],
       }),
