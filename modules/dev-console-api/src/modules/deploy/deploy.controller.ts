@@ -19,6 +19,7 @@ import {
   GenericDeployRequestDto,
   GithubLinkDto,
   GithubUnlinkDto,
+  RedeployInstanceDto,
   ResizeInstanceDto,
   RoleGroup,
   SetEnvironmentVariablesDto,
@@ -243,16 +244,17 @@ export class DeployController {
 
   @Post(`${ROUTE_BACKENDS}/:uuid/redeploy`)
   @Permissions({ role: RoleGroup.ProjectAccess })
-  @UseGuards(AuthGuard)
+  @Validation({ dto: RedeployInstanceDto })
+  @UseGuards(ValidationGuard, AuthGuard)
   async redeployInstance(
     @Ctx()
     context: DevConsoleApiContext,
-    @Param('uuid') deploy_uuid: string,
+    @Param('uuid') backend_uuid: string,
+    @Body()
+    body: RedeployInstanceDto,
   ) {
-    return await this.backendsService.redeployInstance(
-      context,
-      new GenericDeployRequestDto().populate({ deploy_uuid }),
-    );
+    body.backend_uuid = backend_uuid;
+    return await this.backendsService.redeployInstance(context, body);
   }
 
   @Get(`${ROUTE_BACKENDS}/:uuid`)

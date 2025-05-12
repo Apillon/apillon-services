@@ -20,6 +20,7 @@ import { GetDeploymentConfigType } from './types/get-deployment-config.type';
 import { ModelBaseType } from '../../base-models/base';
 import { DeployInstanceDto } from './dtos/deploy-instance.dto';
 import { RedeployWebsiteType } from './types/redeploy-website.type';
+import { RedeployInstanceDto } from './dtos/redeploy-instance.dto';
 
 export type DeployMSEventType =
   // BE
@@ -29,7 +30,7 @@ export type DeployMSEventType =
     >
   | IBodyEvent<
       DeployEventType.BE_REDEPLOY_DOCKER_COMPOSE,
-      ModelBaseType<GenericDeployRequestDto>
+      ModelBaseType<RedeployInstanceDto>
     >
   | IBodyEvent<DeployEventType.BE_LIST_BACKENDS, BackendsQueryFilter>
   | IBodyEvent<

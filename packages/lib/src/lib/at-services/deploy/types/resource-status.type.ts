@@ -1,8 +1,8 @@
 export enum ResourceStatus {
-  REQUESTED,
-  DEPLOYING,
-  ONLINE,
-  STOPPED,
-  SHUT_DOWN,
-  FAILED,
+  REQUESTED = 0,
+  DEPLOYING = 1,
+  ONLINE = 2,
+  STOPPED = 3,
+  SHUT_DOWN = 4,
+  FAILED = 5,
 }

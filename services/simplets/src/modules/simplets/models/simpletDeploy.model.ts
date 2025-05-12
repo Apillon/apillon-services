@@ -1,3 +1,4 @@
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import {
   ChainType,
   DeployedSimpletsQueryFilterDto,
@@ -12,9 +13,11 @@ import {
   SerializeFor,
   SqlModelStatus,
   UuidSqlModel,
+  validateDockerComposeYaml,
+  ValidatorErrorCode,
+  VirtualMachineDto,
 } from '@apillon/lib';
 import { DbTables, SimpletsErrorCode } from '../../../config/types';
-import { integerParser, stringParser } from '@rawmodel/parsers';
 
 export class SimpletDeploy extends UuidSqlModel {
   public readonly tableName = DbTables.SIMPLET_DEPLOY;
@@ -155,6 +158,32 @@ export class SimpletDeploy extends UuidSqlModel {
     ],
   })
   public backendUrl: string;
+  /**
+   * Represents content of the Docker Compose file.
+   *
+   * This variable holds the content of Docker Compose YAML configuration file.
+   * It is used to define and manage multi-container Docker applications.
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
+    validators: [
+      {
+        resolver: validateDockerComposeYaml(true),
+        code: ValidatorErrorCode.DATA_NOT_VALID,
+      },
+    ],
+  })
+  public backendDockerCompose: string;
+
+  /**
+   * Describes virtual machine specifications where docker container will be running.
+   */
+  @prop({
+    parser: { resolver: VirtualMachineDto },
+    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
+  })
+  public backendVirtualMachine: VirtualMachineDto;
 
   @prop({
     parser: { resolver: stringParser() },

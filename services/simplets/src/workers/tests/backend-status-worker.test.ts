@@ -15,6 +15,7 @@ import { BackendStatusWorker } from '../backend-status.worker';
 import { DbTables } from '../../config/types';
 import { v4 as uuidV4 } from 'uuid';
 import { SimpletsRepository } from '../../modules/simplets/repositores/simplets-repository';
+import { ResourceType } from '../../modules/simplets/types';
 
 const WORKER_DEFINITION = new WorkerDefinition(
   {
@@ -94,7 +95,7 @@ describe('BackendStatusWorker tests', () => {
       await worker.runExecutor({
         data: [
           new ResourceDeployWebhookDataDto({}, stage.context).populate({
-            referenceTable: DbTables.SIMPLET_DEPLOY,
+            referenceTable: ResourceType.BACKEND,
             referenceId: simpletDeploy.backend_uuid,
             resourceStatus: ResourceStatus.ONLINE,
             data: JSON.stringify({ key: 'value' }),
@@ -135,7 +136,7 @@ describe('BackendStatusWorker tests', () => {
       await worker.runExecutor({
         data: [
           new ResourceDeployWebhookDataDto({}, stage.context).populate({
-            referenceTable: DbTables.SIMPLET_DEPLOY,
+            referenceTable: ResourceType.BACKEND,
             referenceId: 'bad_backend_uuid',
             resourceStatus: ResourceStatus.ONLINE,
             data: JSON.stringify({ key: 'value' }),
@@ -186,7 +187,7 @@ describe('BackendStatusWorker tests', () => {
       await worker.runExecutor({
         data: [
           new ResourceDeployWebhookDataDto({}, stage.context).populate({
-            referenceTable: DbTables.SIMPLET_DEPLOY,
+            referenceTable: ResourceType.BACKEND,
             referenceId: simpletDeploy.backend_uuid,
             resourceStatus: ResourceStatus.ONLINE,
             data: JSON.stringify({ key: 'value' }),

@@ -33,6 +33,10 @@ import path from 'node:path';
 import { SimpletDeploy } from '../models/simpletDeploy.model';
 import axios from 'axios';
 import { IEmbeddedWallet } from '../types';
+import {
+  assertRequiredVariables,
+  overrideEnvironmentVariables,
+} from '../../../lib/helpers';
 
 export class SimpletsService {
   private readonly context: ServiceContext;
@@ -85,6 +89,16 @@ export class SimpletsService {
     backendVariables: DeploySecretDto[],
   ): Promise<{ simplet: Simplet; simpletDeploy: SimpletDeploy }> {
     const simplet = await this.simpletRepository.getSimplet(simplet_uuid);
+    await assertRequiredVariables(
+      'frontendVariables',
+      frontendVariables,
+      simplet.frontendRequiredVariables,
+    );
+    await assertRequiredVariables(
+      'backendVariables',
+      backendVariables,
+      simplet.backendRequiredVariables,
+    );
     const simpletDeploy = await this.simpletRepository.createSimpletDeploy(
       project_uuid,
       simplet_uuid,
@@ -340,7 +354,7 @@ export class SimpletsService {
       data: backendDeploy.data,
     });
 
-    return backendDeploy;
+    return { backendDeploy, dockerCompose };
   }
 
   private async getDockerCompose(simplet: Simplet) {
@@ -487,29 +501,4 @@ export class SimpletsService {
       { key: 'COLLECTION_UUID', value: collection_uuid },
     ]);
   }
-}
-
-interface EnvUpdate {
-  key: string;
-  value: string;
-}
-
-function overrideEnvironmentVariables(
-  envVariables: any[],
-  updates: EnvUpdate[],
-) {
-  for (const update of updates) {
-    if (update.value) {
-      const existingVariable = envVariables?.find((v) => v.key === update.key);
-      if (existingVariable) {
-        existingVariable.value = update.value;
-      } else {
-        envVariables.push({
-          key: update.key,
-          value: update.value,
-        });
-      }
-    }
-  }
-  return envVariables;
 }
