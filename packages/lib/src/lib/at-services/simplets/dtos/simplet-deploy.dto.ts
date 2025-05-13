@@ -105,24 +105,12 @@ export class SimpletDeployDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
   })
   apillonApiKey: string;
 
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.REQUIRED_DATA_NOT_PRESENT,
-      },
-    ],
   })
   apillonApiSecret: string;
 }
