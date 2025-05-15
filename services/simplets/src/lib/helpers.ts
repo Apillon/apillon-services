@@ -60,7 +60,7 @@ export async function assertRequiredVariables(
     if (!variables.some((v) => v.key === variableKey)) {
       acc.push({
         code: ValidatorErrorCode.DATA_NOT_PRESENT,
-        property: `${propertyPrefix}`,
+        property: `${propertyPrefix}.${variableKey}`,
         message: variableKey,
       });
     }
