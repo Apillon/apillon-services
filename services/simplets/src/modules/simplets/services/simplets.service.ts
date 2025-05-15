@@ -217,7 +217,7 @@ export class SimpletsService {
 
     simpletDeploy.populate({
       contractStatus: ResourceStatus.ONLINE,
-      contractAddress: collection.address,
+      contractAddress: collection.contractAddress,
       contractChain: collection.chain,
       contractChainType: collection.chainType,
       contract_uuid: collection.collection_uuid,
