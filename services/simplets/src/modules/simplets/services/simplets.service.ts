@@ -322,6 +322,8 @@ export class SimpletsService {
     ).map((secret) => {
       // Convert all secrets to strings else Phala deploy fails
       if (secret.value != null) {
+        secret.value = '';
+      } else {
         secret.value = String(secret.value);
       }
     });
