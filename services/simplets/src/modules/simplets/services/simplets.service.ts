@@ -321,11 +321,7 @@ export class SimpletsService {
       simpletDeploy.contract_uuid,
     ).map((secret) => {
       // Convert all secrets to strings else Phala deploy fails
-      if (secret.value != null) {
-        secret.value = '';
-      } else {
-        secret.value = String(secret.value);
-      }
+      secret.value = secret.value == null ? '' : String(secret.value);
     });
     const deployDto = new DeployInstanceDto({}, this.context).populate({
       name: simplet.name.slice(0, 20),
