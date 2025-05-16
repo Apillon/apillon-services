@@ -322,6 +322,7 @@ export class SimpletsService {
     ).map((secret) => {
       // Convert all secrets to strings else Phala deploy fails
       secret.value = secret.value == null ? '' : String(secret.value);
+      return secret;
     });
     const deployDto = new DeployInstanceDto({}, this.context).populate({
       name: simplet.name.slice(0, 20),
