@@ -310,19 +310,26 @@ export class SimpletsService {
     const backendVariables = await this.encryptionService.decryptJson<
       DeploySecretDto[]
     >(simpletDeploy.backendVariables);
+
     const apillonApiSecret = await this.encryptionService.decrypt(
       simpletDeploy.apillonApiSecret,
     );
+    const secrets = this.overrideBackendSecrets(
+      backendVariables,
+      simpletDeploy.apillonApiKey,
+      apillonApiSecret,
+      simpletDeploy.contract_uuid,
+    ).map((secret) => {
+      // Convert all secrets to strings else Phala deploy fails
+      if (secret.value != null) {
+        secret.value = String(secret.value);
+      }
+    });
     const deployDto = new DeployInstanceDto({}, this.context).populate({
       name: simplet.name.slice(0, 20),
       description: simplet.description,
       dockerCompose,
-      secrets: this.overrideBackendSecrets(
-        backendVariables,
-        simpletDeploy.apillonApiKey,
-        apillonApiSecret,
-        simpletDeploy.contract_uuid,
-      ),
+      secrets,
       virtualMachine: simplet.backendMachine,
       project_uuid: simpletDeploy.project_uuid,
     });
