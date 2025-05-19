@@ -15,9 +15,13 @@ custom:
     packagerOptions:
       lockFile: '../../package-lock.json'
     excludeFiles: '**/*\.test\.js|**/*\.test\.ts|**/tests/**/*|**/test/**/|**/*\.spec\.ts|**/*\.spec\.js'
+  prune:
+    number: 5
+    automatic: true
 
 plugins:
   - serverless-webpack
+  - serverless-prune-plugin
 
 provider:
   name: aws

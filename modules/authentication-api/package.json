@@ -21,9 +21,10 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "tsc": "tsc",
     "dev": "cross-env IS_OFFLINE=true npm run start:dev",
-    "deploy:prod": "serverless deploy --stage production",
-    "deploy:staging": "serverless deploy --stage staging",
-    "deploy:dev": "serverless deploy --stage dev"
+    "deploy:prod": "node -r ts-node/register ../../scripts/lambda/deploy production",
+    "deploy:staging": "node -r ts-node/register ../../scripts/lambda/deploy staging",
+    "deploy:dev": "node -r ts-node/register ../../scripts/lambda/deploy dev",
+    "deploy:test": "node -r ts-node/register ../../scripts/lambda/deploy test"
   },
   "dependencies": {
     "@apillon/lib": "*",
