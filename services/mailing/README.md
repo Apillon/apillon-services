@@ -5,16 +5,11 @@ There is also a deployed lambda for converting an HTML file to a PDF attachment 
 
 ## Table of Contents
 
-- [Apillon Mailing Service - MAIL](#apillon-mailing-service---mail)
-  - [Table of Contents](#table-of-contents)
-  - [Getting Started](#getting-started)
-  - [Configuration](#configuration)
-  - [Deployment](#deployment)
-  - [Sending notifications](#sending-notifications)
-    - [Prerequisites](#prerequisites)
-    - [Steps](#steps)
-    - [Notification Types](#notification-types)
-  - [License](#license)
+1. [Getting Started](#getting-started)
+2. [Configuration](#configuration)
+3. [Deployment](#deployment)
+4. [Sending Notifications](#sending-notifications)
+5. [License](#license)
 
 ## Getting Started
 
