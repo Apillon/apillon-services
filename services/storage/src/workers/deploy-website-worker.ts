@@ -1,9 +1,13 @@
 import {
+  Ams,
   AppEnvironment,
   checkProjectSubscription,
   Context,
+  CreateOrUpdateNotificationDto,
   env,
   LogType,
+  Mailing,
+  NotificationType,
   refundCredit,
   SerializeFor,
   ServiceName,
@@ -308,6 +312,20 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         await targetBucket.update(SerializeFor.UPDATE_DB, conn);
 
         await this.context.mysql.commit(conn);
+
+        const projectOwner = (
+          await new Ams(this.context).getProjectOwner(website.project_uuid)
+        ).data;
+
+        if (projectOwner?.user_uuid) {
+          await new Mailing(this.context).createNotification(
+            new CreateOrUpdateNotificationDto({}, this.context).populate({
+              type: NotificationType.WEBSITE_DEPLOYED,
+              user_uuid: projectOwner.user_uuid,
+            }),
+          );
+        }
+
         //Clear bucket for upload
         try {
           if (

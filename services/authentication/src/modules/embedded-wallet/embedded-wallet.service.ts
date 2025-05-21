@@ -3,11 +3,13 @@ import {
   BlockchainMicroservice,
   CreateEWIntegrationDto,
   CreateOasisSignatureDto,
+  CreateOrUpdateNotificationDto,
   DefaultUserRole,
   EmbeddedWalletSignaturesQueryFilter,
   GetQuotaDto,
   Mailing,
   MySql,
+  NotificationType,
   ProductCode,
   QuotaCode,
   Scs,
@@ -238,6 +240,15 @@ export class EmbeddedWalletService {
     );
 
     EmbeddedWalletService.setWalletMailerliteField(context, project_uuid);
+
+    if (context.user?.user_uuid) {
+      await new Mailing(context).createNotification(
+        new CreateOrUpdateNotificationDto({}, context).populate({
+          type: NotificationType.EMBEDDED_WALLET_GENERATED,
+          user_uuid: context.user.user_uuid,
+        }),
+      );
+    }
 
     return {
       signature: signatureRes.signature,

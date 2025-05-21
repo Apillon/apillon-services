@@ -16,7 +16,8 @@
     "deploy:prod": "node -r ts-node/register ../../scripts/lambda/deploy production",
     "deploy:staging": "node -r ts-node/register ../../scripts/lambda/deploy staging",
     "deploy:dev": "node -r ts-node/register ../../scripts/lambda/deploy dev",
-    "deploy:test": "node -r ts-node/register ../../scripts/lambda/deploy test"
+    "deploy:test": "node -r ts-node/register ../../scripts/lambda/deploy test",
+    "db-generate-migration": "node -r ts-node/register ../../scripts/db/generate-migration-script"
   },
   "dependencies": {
     "@apillon/lib": "*",

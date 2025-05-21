@@ -25,6 +25,8 @@ import {
   DefaultUserRole,
   MySql,
   Mailing,
+  CreateOrUpdateNotificationDto,
+  NotificationType,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
@@ -295,6 +297,15 @@ export class AcurastService {
         data: { dto: event.body.serialize(), err },
         sendAdminAlert: true,
       });
+    }
+
+    if (context.user?.user_uuid) {
+      await new Mailing(context).createNotification(
+        new CreateOrUpdateNotificationDto({}, context).populate({
+          user_uuid: context.user.user_uuid,
+          type: NotificationType.CLOUD_FUNCTION_DEPLOYED,
+        }),
+      );
     }
 
     return job.serializeByContext() as AcurastJob;

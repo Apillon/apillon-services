@@ -1390,6 +1390,13 @@ export enum SubscriptionPackageId {
 
 export enum NotificationType {
   UNKNOWN = 0,
+  WEBSITE_DEPLOYED = 1,
+  NFT_METADATA_DEPLOYED = 2,
+  NFT_COLLECTION_DEPLOYED = 3,
+  CLOUD_FUNCTION_DEPLOYED = 4,
+  INDEXER_DEPLOYED = 5,
+  SMART_CONTRACT_DEPLOYED = 6,
+  EMBEDDED_WALLET_GENERATED = 7,
 }
 
 export enum HttpStatus {

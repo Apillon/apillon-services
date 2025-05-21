@@ -1,10 +1,14 @@
 import {
+  Ams,
   AppEnvironment,
   AWS_S3,
   Context,
+  CreateOrUpdateNotificationDto,
   env,
   LogType,
+  Mailing,
   NftsMicroservice,
+  NotificationType,
   runWithWorkers,
   SerializeFor,
   ServiceName,
@@ -465,6 +469,19 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
         collectionMetadata.currentStep =
           PrepareCollectionMetadataStep.METADATA_SUCCESSFULLY_PREPARED;
         await collectionMetadata.update();
+
+        const projectOwner = (
+          await new Ams(this.context).getProjectOwner(bucket.project_uuid)
+        ).data;
+
+        if (projectOwner?.user_uuid) {
+          await new Mailing(this.context).createNotification(
+            new CreateOrUpdateNotificationDto({}, this.context).populate({
+              type: NotificationType.NFT_METADATA_DEPLOYED,
+              user_uuid: projectOwner.user_uuid,
+            }),
+          );
+        }
 
         await this.writeEventLog({
           logType: LogType.INFO,
