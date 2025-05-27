@@ -71,11 +71,11 @@ export abstract class EvmContractEventsWorker extends BaseSingleThreadWorker {
       const provider = new ethers.providers.JsonRpcProvider(endpoint.url);
 
       const fromBlock = contractData.lastParsedBlock + 1;
-      const currentBlock = (await provider.getBlockNumber()) - 4; // we wait 4 blocks for confirmation
-      let toBlock = fromBlock + contractData.blockParseSize;
-      if (toBlock > currentBlock) {
-        toBlock = currentBlock;
-      }
+      const blockNumber = await provider.getBlockNumber();
+      const toBlock = Math.min(
+        fromBlock + contractData.blockParseSize,
+        blockNumber - 4, // Wait 4 blocks for confirmation
+      );
 
       const contract = new ethers.Contract(
         contractData.address,
