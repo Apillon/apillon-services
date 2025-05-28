@@ -103,7 +103,10 @@ export class NftsController {
     // multer is executed in global middleware for this endpoint, meaning
     // multi-part form data is converted to body and files keys of request
     // automatically (no need for file interceptor here)
-    const file = req.files.find((f) => f.fieldname === 'metadata');
+    const file =
+      req.files && Array.isArray(req.files)
+        ? req.files.find((f) => f.fieldname === 'metadata')
+        : null;
     if (!file) {
       throw new ValidationException({
         code: ValidatorErrorCode.DATA_NOT_PRESENT,
