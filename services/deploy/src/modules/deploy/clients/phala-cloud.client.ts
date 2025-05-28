@@ -186,6 +186,14 @@ export class PhalaCloudClient {
   //   );
   // }
 
+  /**
+   * Encrypts an array of environment variable objects with the given public key using the x25519 algorithm and AES-GCM encryption.
+   * Used to encrypt environment variables before sending them to Phala cloud API.
+   *
+   * @param envs - An array of objects representing the environment variables to be encrypted.
+   * @param publicKeyHex - The hexadecimal representation of the recipient's public key used for encryption.
+   * @return A promise that resolves to the encrypted hexadecimal string of the input environment variables.
+   */
   static async encryptEnvVariables(
     envs: Record<string, any>[],
     publicKeyHex: string,
