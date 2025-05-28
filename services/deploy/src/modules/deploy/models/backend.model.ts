@@ -10,6 +10,7 @@ import {
   SerializeFor,
   SqlModelStatus,
   UuidSqlModel,
+  validateDockerComposeYaml,
   ValidatorErrorCode,
 } from '@apillon/lib';
 import { integerParser, stringParser } from '@rawmodel/parsers';
@@ -129,8 +130,34 @@ export class Backend extends UuidSqlModel {
   })
   public description: string;
 
+  /**
+   * Represents content of the Docker Compose file.
+   *
+   * This variable holds the content of Docker Compose YAML configuration file.
+   * It is used to define and manage multi-container Docker applications.
+   */
   @prop({
     parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: validateDockerComposeYaml(true),
+        code: ValidatorErrorCode.DATA_NOT_VALID,
+      },
+    ],
+  })
+  public dockerCompose: string;
+
+  @prop({
+    // parser disabled so that we dont serialize to string when returning response
+    //parser: { resolver: stringParser() },
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,

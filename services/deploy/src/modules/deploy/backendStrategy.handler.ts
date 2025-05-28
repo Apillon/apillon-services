@@ -1,6 +1,5 @@
 import {
   DeployInstanceDto,
-  DeploySecretDto,
   EncryptionService,
   Lmas,
   RedeployInstanceDto,
@@ -45,6 +44,7 @@ export class BackendStrategyHandler {
         body.project_uuid,
         body.name,
         body.description,
+        body.dockerCompose,
         secrets,
       );
 
@@ -56,14 +56,14 @@ export class BackendStrategyHandler {
         url,
         data,
       });
-      await backend.update();
+      await backend.insert();
       return backend;
     } catch (e: unknown) {
       if (backend) {
         backend.populate({
           backendStatus: ResourceStatus.FAILED,
         });
-        await backend.update();
+        await backend.insert();
       }
       if (e instanceof DeployCodeException) {
         throw e;
@@ -79,18 +79,28 @@ export class BackendStrategyHandler {
 
   async redeployDockerCompose(body: RedeployInstanceDto): Promise<Backend> {
     const backend = await this.deployRepository.getBackend(body.backend_uuid);
-    const secrets = await this.encryptionService.decryptJson<DeploySecretDto[]>(
-      backend.environmentVariables,
-    );
-
     try {
-      const { backendStatus, instanceId, url, data } =
-        await this.strategy.updateDockerCompose(backend.instanceId, secrets);
+      const envVariables = body.secrets.map((secret) => {
+        // Convert all secrets to strings else Phala deploy fails
+        secret.value = secret.value == null ? '' : String(secret.value);
+        return secret;
+      });
+      const secrets = await this.encryptionService.encryptJson(envVariables);
+      const result = await this.strategy.updateDockerCompose(
+        backend,
+        envVariables,
+      );
+      if (result?.detail !== 'Accepted') {
+        throw new DeployCodeException({
+          status: 500,
+          code: DeployErrorCode.DEPLOY_DEPLOY_FAILED,
+          context: this.context,
+          errorMessage: 'Deployment was not accepted by the server',
+        });
+      }
       backend.populate({
-        backendStatus,
-        instanceId,
-        url,
-        data,
+        backendStatus: ResourceStatus.DEPLOYING,
+        secrets: secrets,
       });
 
       return backend;

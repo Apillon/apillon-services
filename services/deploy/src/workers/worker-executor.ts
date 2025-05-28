@@ -1,6 +1,8 @@
 import {
   AppEnvironment,
+  AWS_KMS,
   Context,
+  EncryptionService,
   env,
   getEnvSecrets,
   Lmas,
@@ -120,7 +122,10 @@ export async function handleLambdaEvent(
         workerDefinition,
         context,
         QueueWorkerType.EXECUTOR,
-        new DeployRepository(context),
+        new DeployRepository(
+          context,
+          new EncryptionService(new AWS_KMS(), 'key'),
+        ),
         phalaClient,
         new WorkerService(new SQSClient()),
         new Lmas(),
@@ -189,7 +194,10 @@ export async function handleSqsMessages(
             workerDefinition,
             context,
             QueueWorkerType.EXECUTOR,
-            new DeployRepository(context),
+            new DeployRepository(
+              context,
+              new EncryptionService(new AWS_KMS(), 'key'),
+            ),
             phalaClient,
             new WorkerService(new SQSClient()),
             new Lmas(),

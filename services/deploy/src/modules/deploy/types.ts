@@ -44,7 +44,11 @@ export interface ICreateVMRequest {
 }
 
 export interface IUpdateVMRequest {
-  compose_manifest: string;
+  compose_manifest: {
+    name: string;
+    features: string[];
+    docker_compose_file: string;
+  };
   encrypted_env: string;
 }
 
@@ -197,7 +201,7 @@ export interface IBackendDeployStrategy {
   deployDockerCompose(body: DeployInstanceDto): Promise<IDeployDockerResult>;
 
   updateDockerCompose(
-    instanceId: string,
+    backend: Backend,
     secrets: DeploySecretDto[],
   ): Promise<any>;
 
