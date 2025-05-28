@@ -136,13 +136,15 @@ describe('DeployService tests', () => {
       'DEPLOY_PHALA_CLOUD_API_URL',
       'DEPLOY_PHALA_CLOUD_API_KEY',
     );
+    const encryptionService = new EncryptionService(new AWS_KMS(), 'key');
+    const deployRepository = new DeployRepository(context, encryptionService);
     backendController = new BackendController(
       context,
-      new DeployRepository(context),
+      deployRepository,
       new BackendStrategyHandler(
         context,
-        new EncryptionService(new AWS_KMS(), 'key'),
-        new DeployRepository(context),
+        encryptionService,
+        deployRepository,
         new PhalaDockerDeployStrategy(phalaClient),
         logger,
       ),

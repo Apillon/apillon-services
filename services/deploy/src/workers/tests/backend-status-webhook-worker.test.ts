@@ -1,4 +1,10 @@
-import { env, Lmas, ResourceStatus } from '@apillon/lib';
+import {
+  AWS_KMS,
+  EncryptionService,
+  env,
+  Lmas,
+  ResourceStatus,
+} from '@apillon/lib';
 import {
   QueueWorkerType,
   ServiceDefinitionType,
@@ -65,7 +71,10 @@ describe('Log worker tests', () => {
       WORKER_DEFINITION,
       stage.context,
       QueueWorkerType.PLANNER,
-      new DeployRepository(stage.context),
+      new DeployRepository(
+        stage.context,
+        new EncryptionService(new AWS_KMS(), 'key'),
+      ),
       phalaClient,
       new WorkerService(sqsClient),
       logger,

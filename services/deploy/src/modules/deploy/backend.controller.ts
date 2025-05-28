@@ -13,7 +13,7 @@ import { ServiceContext } from '@apillon/service-lib';
 export class BackendController {
   private readonly deployRepository: DeployRepository;
   private readonly backendStrategyHandler: BackendStrategyHandler;
-  private context: ServiceContext;
+  private readonly context: ServiceContext;
 
   constructor(
     context: ServiceContext,
@@ -44,7 +44,7 @@ export class BackendController {
     return await this.deployRepository.listBackends(body);
   }
 
-  async getInstance(body: GenericDeployRequestDto): Promise<any> {
+  async getBackend(body: GenericDeployRequestDto): Promise<any> {
     return await this.deployRepository.getBackend(body.deploy_uuid);
   }
 

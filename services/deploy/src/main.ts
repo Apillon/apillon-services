@@ -86,7 +86,7 @@ export async function processEvent(
             .validateOrThrow(ModelValidationException, ValidatorErrorCode),
         );
       case DeployEventType.BE_GET_INSTANCE:
-        return backendController.getInstance(
+        return backendController.getBackend(
           await new GenericDeployRequestDto({}, context)
             .populate(event.body)
             .validateOrThrow(ModelValidationException, ValidatorErrorCode),

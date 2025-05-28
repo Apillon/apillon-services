@@ -42,13 +42,21 @@ const lambdaHandler: Handler = async (
       env.DEPLOY_PHALA_CLOUD_API_KEY,
     ),
   );
+  const encryptionService = new EncryptionService(
+    new AWS_KMS(),
+    env.DEPLOY_KMS_KEY_ID,
+  );
+  const deployRepository = new DeployRepository(
+    serviceContext,
+    encryptionService,
+  );
   const backendController = new BackendController(
     serviceContext,
-    new DeployRepository(serviceContext),
+    deployRepository,
     new BackendStrategyHandler(
       serviceContext,
-      new EncryptionService(new AWS_KMS(), env.DEPLOY_KMS_KEY_ID),
-      new DeployRepository(serviceContext),
+      encryptionService,
+      deployRepository,
       phalaDockerDeployStrategy,
       new Lmas(),
     ),

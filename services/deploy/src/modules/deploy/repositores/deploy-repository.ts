@@ -2,6 +2,7 @@ import { ServiceContext } from '@apillon/service-lib';
 
 import {
   BackendsQueryFilter,
+  EncryptionService,
   PoolConnection,
   PopulateFrom,
   ResourceStatus,
@@ -13,8 +14,11 @@ import { DbTables, DeployErrorCode } from '../../../config/types';
 import { v4 as uuidV4 } from 'uuid';
 
 export class DeployRepository extends BaseRepository {
-  constructor(context: ServiceContext) {
+  private encryptionService: EncryptionService;
+
+  constructor(context: ServiceContext, encryptionService: EncryptionService) {
     super(context);
+    this.encryptionService = encryptionService;
   }
 
   //#region ------------- BACKEND -------------
@@ -27,6 +31,7 @@ export class DeployRepository extends BaseRepository {
     project_uuid: string,
     name: string,
     description: string,
+    dockerCompose: string,
     environmentVariables: string | null = null,
   ): Promise<Backend> {
     return new Backend({}, this.context).populate({
@@ -34,6 +39,7 @@ export class DeployRepository extends BaseRepository {
       name: `${name} (Backend)`,
       description: description ? `${description} (Backend)` : null,
       project_uuid,
+      dockerCompose,
       environmentVariables,
       backendStatus: ResourceStatus.REQUESTED,
     });
@@ -49,6 +55,10 @@ export class DeployRepository extends BaseRepository {
         errorMessage: 'Deploy not found',
       });
     }
+    backend.environmentVariables = await this.encryptionService.decryptJson(
+      backend.environmentVariables,
+    );
+
     return backend;
   }
 
