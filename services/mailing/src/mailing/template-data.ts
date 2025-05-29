@@ -347,6 +347,18 @@ export function generateTemplateData(key: string, data: any) {
         <p>To upgrade your plan, click <a href="${data.paymentLink}">here</a></p>
       `,
     },
+    [EmailTemplate.BACKEND_SHUTDOWN]: {
+      subject: 'Your Apillon backend has been shut down',
+      title: 'Your Apillon backend has been shut down',
+      text: `
+        <p>
+          Your Apillon backend has been shut down due to lack of subscription.
+        </p>
+        <p>
+          If you want to continue using the backend, please upgrade your subscription.
+        </p>
+      `,
+    },
   };
 
   return templateData[key];

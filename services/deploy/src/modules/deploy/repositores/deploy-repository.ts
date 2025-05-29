@@ -86,5 +86,19 @@ export class DeployRepository extends BaseRepository {
     );
   }
 
+  async getActiveDeployeBackendsLongerThanDays(
+    days: number,
+  ): Promise<Backend[]> {
+    return await new Backend({}, this.context).getActiveDeployedLongerThanDays(
+      days,
+    );
+  }
+
+  async getActiveByProjectUuid(project_uuid: string): Promise<Backend[]> {
+    return await new Backend({}, this.context).getActiveByProjectUuid(
+      project_uuid,
+    );
+  }
+
   //#endregion
 }

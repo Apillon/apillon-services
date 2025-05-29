@@ -1,4 +1,5 @@
 import {
+  Ams,
   AppEnvironment,
   AWS_KMS,
   Context,
@@ -6,7 +7,9 @@ import {
   env,
   getEnvSecrets,
   Lmas,
+  Mailing,
   MySql,
+  Scs,
 } from '@apillon/lib';
 import {
   QueueWorkerType,
@@ -22,10 +25,14 @@ import { BackendStatusWebhookWorker } from './backend-status-webhook.worker';
 import { PhalaCloudClient } from '../modules/deploy/clients/phala-cloud.client';
 import { DeployRepository } from '../modules/deploy/repositores/deploy-repository';
 import { SQSClient } from '@aws-sdk/client-sqs';
+import { ShutdownWorker } from './shutdown.worker';
+import { BackendStrategyHandler } from '../modules/deploy/backendStrategy.handler';
+import { PhalaDockerDeployStrategy } from '../modules/deploy/services/phala-docker-deploy.strategy';
 
 export enum WorkerName {
   SCHEDULER = 'scheduler',
   BACKEND_STATUS_WORKER = 'BackendStatusWorker',
+  SHUTDOWN_WORKER = 'ShutdownWorker',
 }
 
 const phalaClient = new PhalaCloudClient(
@@ -132,6 +139,41 @@ export async function handleLambdaEvent(
       ).run({
         executeArg: event.body,
       });
+      break;
+    }
+    case WorkerName.SHUTDOWN_WORKER: {
+      const encryptionService = new EncryptionService(
+        new AWS_KMS(),
+        env.DEPLOY_KMS_KEY_ID,
+      );
+
+      const deployRepository = new DeployRepository(context, encryptionService);
+
+      const phalaDockerDeployStrategy = new PhalaDockerDeployStrategy(
+        new PhalaCloudClient(
+          env.DEPLOY_PHALA_CLOUD_API_URL,
+          env.DEPLOY_PHALA_CLOUD_API_KEY,
+        ),
+      );
+
+      const scs = new Scs(context);
+
+      await new ShutdownWorker(
+        workerDefinition,
+        context,
+        deployRepository,
+        new BackendStrategyHandler(
+          context,
+          encryptionService,
+          deployRepository,
+          phalaDockerDeployStrategy,
+          new Lmas(),
+          scs,
+        ),
+        scs,
+        new Mailing(context),
+        new Ams(context),
+      ).run();
       break;
     }
     default:
