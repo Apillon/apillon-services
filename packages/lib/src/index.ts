@@ -241,6 +241,7 @@ export * from './lib/parsers';
 export * from './lib/cache';
 export * from './lib/captcha';
 export * from './lib/credit-and-subscription';
+export * from './lib/helpers';
 
 import * as yamlParser from 'js-yaml';
 

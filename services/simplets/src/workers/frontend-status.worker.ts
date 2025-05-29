@@ -6,6 +6,7 @@ import {
   env,
   Lmas,
   LogType,
+  overrideEnvironmentVariables,
   RedeployInstanceDto,
   ResourceDeployWebhookDataDto,
   ResourceStatus,
@@ -19,7 +20,6 @@ import {
 } from '@apillon/workers-lib';
 import { SimpletsRepository } from '../modules/simplets/repositores/simplets-repository';
 import { SimpletsCodeException } from '../lib/exceptions';
-import { overrideEnvironmentVariables } from '../lib/helpers';
 import { ResourceType } from '../modules/simplets/types';
 
 export class FrontendStatusWorker extends BaseQueueWorker {

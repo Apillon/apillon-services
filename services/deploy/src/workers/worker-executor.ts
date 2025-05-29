@@ -124,7 +124,7 @@ export async function handleLambdaEvent(
         QueueWorkerType.EXECUTOR,
         new DeployRepository(
           context,
-          new EncryptionService(new AWS_KMS(), 'key'),
+          new EncryptionService(new AWS_KMS(), env.DEPLOY_KMS_KEY_ID),
         ),
         phalaClient,
         new WorkerService(new SQSClient()),

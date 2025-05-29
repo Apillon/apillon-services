@@ -1,5 +1,6 @@
 import { ServiceContext } from '@apillon/service-lib';
 import {
+  assertRequiredVariables,
   AuthenticationMicroservice,
   CreateEWIntegrationDto,
   CreateWebsiteDto,
@@ -15,6 +16,7 @@ import {
   ModelValidationException,
   NFTCollectionType,
   NftsMicroservice,
+  overrideEnvironmentVariables,
   ResourceStatus,
   ServiceName,
   SimpletsQueryFilterDto,
@@ -33,10 +35,6 @@ import path from 'node:path';
 import { SimpletDeploy } from '../models/simpletDeploy.model';
 import axios from 'axios';
 import { IEmbeddedWallet } from '../types';
-import {
-  assertRequiredVariables,
-  overrideEnvironmentVariables,
-} from '../../../lib/helpers';
 
 export class SimpletsService {
   private readonly context: ServiceContext;

@@ -2,6 +2,7 @@ import {
   DeployInstanceDto,
   EncryptionService,
   Lmas,
+  overrideEnvironmentVariables,
   RedeployInstanceDto,
   ResizeInstanceDto,
   ResourceStatus,
@@ -80,12 +81,17 @@ export class BackendStrategyHandler {
   async redeployDockerCompose(body: RedeployInstanceDto): Promise<Backend> {
     const backend = await this.deployRepository.getBackend(body.backend_uuid);
     try {
-      const envVariables = body.secrets.map((secret) => {
+      const envVariables = overrideEnvironmentVariables(
+        backend.environmentVariables as any,
+        body.secrets,
+      ).map((envVariable) => {
         // Convert all secrets to strings else Phala deploy fails
-        secret.value = secret.value == null ? '' : String(secret.value);
-        return secret;
+        envVariable.value =
+          envVariable.value == null ? '' : String(envVariable.value);
+        return envVariable;
       });
       const secrets = await this.encryptionService.encryptJson(envVariables);
+
       const result = await this.strategy.updateDockerCompose(
         backend,
         envVariables,

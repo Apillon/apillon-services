@@ -1,8 +1,6 @@
-import {
-  DeploySecretDto,
-  ValidationException,
-  ValidatorErrorCode,
-} from '@apillon/lib';
+import { DeploySecretDto } from './at-services/deploy/dtos/deploy-secret.dto';
+import { ValidatorErrorCode } from '../config/types';
+import { ValidationException } from './exceptions/exceptions';
 
 interface EnvUpdate {
   key: string;
@@ -18,7 +16,7 @@ interface EnvUpdate {
  */
 export function overrideEnvironmentVariables(
   envVariables: any[],
-  updates: EnvUpdate[],
+  updates: DeploySecretDto[] | EnvUpdate[],
 ) {
   for (const update of updates) {
     if (update.value) {
