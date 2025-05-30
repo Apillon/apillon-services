@@ -4,7 +4,6 @@ import {
   Lmas,
   LogType,
   ResourceDeployWebhookDataDto,
-  ResourceStatus,
   SerializeFor,
   ServiceName,
   splitArray,
@@ -60,6 +59,15 @@ export class BackendStatusWebhookWorker extends BaseQueueWorker {
           env.DEPLOY_STATUS_UPDATE_INTERVAL_HOURS,
           conn,
         );
+      await this.writeEventLog(
+        {
+          logType: LogType.INFO,
+          message: `Retrieved ${backendDeploys.length} backends for status update`,
+          service: ServiceName.DEPLOY,
+          data: { count: backendDeploys.length },
+        },
+        LogOutput.EVENT_INFO,
+      );
 
       // get status for each backend and update DB and emit an event
       const backendWebhookItems = [];
@@ -68,24 +76,17 @@ export class BackendStatusWebhookWorker extends BaseQueueWorker {
           const cvmDetails = await this.phalaClient.getCVMDetails(
             backendDeploy.instanceId,
           );
-          const backendStatus = getBackendStatus(cvmDetails.status);
-          if (backendStatus === ResourceStatus.REQUESTED) {
-            await this.writeEventLog(
-              {
-                logType: LogType.INFO,
-                message: `Skipping backend update for uuid: ${backendDeploy.backend_uuid} as status is still CREATED.`,
-                service: ServiceName.DEPLOY,
-                data: {
-                  backend_uuid: backendDeploy.backend_uuid,
-                  instanceId: backendDeploy.instanceId,
-                  backendStatus,
-                },
-              },
-              LogOutput.EVENT_INFO,
-            );
-            continue;
-          }
-          backendDeploy.backendStatus = backendStatus;
+          await this.writeEventLog(
+            {
+              logType: LogType.INFO,
+              message: `Retrieved CVM details for backend deploy ${backendDeploy.backend_uuid} with status ${cvmDetails.status}`,
+              service: ServiceName.DEPLOY,
+              data: { cvmDetails },
+            },
+            LogOutput.EVENT_INFO,
+          );
+
+          backendDeploy.backendStatus = getBackendStatus(cvmDetails.status);
           await backendDeploy.update(SerializeFor.UPDATE_DB, conn);
           // TODO: change to batch update for status and webhook?
           backendWebhookItems.push(
