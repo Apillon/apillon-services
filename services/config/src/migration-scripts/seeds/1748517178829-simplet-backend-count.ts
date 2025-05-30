@@ -21,6 +21,10 @@ export async function upgrade(
 export async function downgrade(
   queryFn: (query: string, values?: any[]) => Promise<void>,
 ) {
+  await queryFn(
+    `DELETE FROM ${DbTables.OVERRIDE} where quota_id=${QuotaCode.MAX_SIMPLET_BACKEND_COUNT};`,
+  );
+
   await queryFn(`
     DELETE FROM ${DbTables.QUOTA}
     WHERE id = ${QuotaCode.MAX_SIMPLET_BACKEND_COUNT};
