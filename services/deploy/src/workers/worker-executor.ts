@@ -130,7 +130,7 @@ export async function handleLambdaEvent(
         new WorkerService(new SQSClient()),
         new Lmas(),
       ).run({
-        executeArg: event.body,
+        executeArg: JSON.stringify(workerDefinition.parameters),
       });
       break;
     }

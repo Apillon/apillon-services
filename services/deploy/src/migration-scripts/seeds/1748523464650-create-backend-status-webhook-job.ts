@@ -12,7 +12,7 @@ export async function upgrade(
                                      \`parameters\`,
                                      \`status\`,
                                      \`timeout\`)
-    VALUES ('BackendStatusWebhookWorker',
+    VALUES ('BackendStatusWorker',
             0,
             '*/2 * * * *',
             '2023-01-25 10:00:00',
@@ -29,6 +29,6 @@ export async function downgrade(
   await queryFn(`
     DELETE
     FROM \`${DbTables.JOB}\`
-    WHERE name IN ('BackendStatusWebhookWorker');
+    WHERE name IN ('BackendStatusWorker');
   `);
 }
