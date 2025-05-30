@@ -69,10 +69,9 @@ export class DeployRepository extends BaseRepository {
     const data = await this.context.mysql.paramExecute(
       `SELECT *
        FROM \`${DbTables.BACKEND}\`
-       WHERE webhookTriggered IS NULL
-          OR webhookTriggered <= NOW() - INTERVAL @updateIntervalHours HOUR
-       ORDER BY webhookTriggered
-       LIMIT 10
+       WHERE updateTime <= NOW() - INTERVAL @updateIntervalHours HOUR
+       ORDER BY updateTime
+       LIMIT 50
        FOR
        UPDATE SKIP LOCKED
       `,
