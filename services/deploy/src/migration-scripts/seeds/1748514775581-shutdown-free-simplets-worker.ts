@@ -8,7 +8,7 @@ export async function upgrade(
   await queryFn(`
     INSERT INTO \`${DbTables.JOB}\`
     (\`name\`, \`channel\`, \`interval\`, \`nextRun\`, \`status\`, \`timeout\`)
-    VALUES ('${WorkerName.SHUTDOWN_WORKER}', 0, '0 1 * * *', NOW(), ${SqlModelStatus.ACTIVE}, 3600);
+    VALUES ('${WorkerName.SHUTDOWN_FREE_SIMPLETS_WORKER}', 0, '0 1 * * *', NOW(), ${SqlModelStatus.ACTIVE}, 3600);
   `);
 }
 
@@ -18,6 +18,6 @@ export async function downgrade(
   await queryFn(`
     DELETE
     FROM \`${DbTables.JOB}\`
-    WHERE name = '${WorkerName.SHUTDOWN_WORKER}';
+    WHERE name = '${WorkerName.SHUTDOWN_FREE_SIMPLETS_WORKER}';
   `);
 }

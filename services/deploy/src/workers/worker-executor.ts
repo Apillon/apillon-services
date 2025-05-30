@@ -25,14 +25,14 @@ import { BackendStatusWebhookWorker } from './backend-status-webhook.worker';
 import { PhalaCloudClient } from '../modules/deploy/clients/phala-cloud.client';
 import { DeployRepository } from '../modules/deploy/repositores/deploy-repository';
 import { SQSClient } from '@aws-sdk/client-sqs';
-import { ShutdownWorker } from './shutdown.worker';
 import { BackendStrategyHandler } from '../modules/deploy/backendStrategy.handler';
 import { PhalaDockerDeployStrategy } from '../modules/deploy/services/phala-docker-deploy.strategy';
+import { ShutdownFreeSimpletsWorker } from './shutdown-free-simplets.worker';
 
 export enum WorkerName {
   SCHEDULER = 'scheduler',
   BACKEND_STATUS_WORKER = 'BackendStatusWorker',
-  SHUTDOWN_WORKER = 'ShutdownWorker',
+  SHUTDOWN_FREE_SIMPLETS_WORKER = 'ShutdownFreeSimpletsWorker',
 }
 
 const phalaClient = new PhalaCloudClient(
@@ -141,7 +141,7 @@ export async function handleLambdaEvent(
       });
       break;
     }
-    case WorkerName.SHUTDOWN_WORKER: {
+    case WorkerName.SHUTDOWN_FREE_SIMPLETS_WORKER: {
       const encryptionService = new EncryptionService(
         new AWS_KMS(),
         env.DEPLOY_KMS_KEY_ID,
@@ -158,7 +158,7 @@ export async function handleLambdaEvent(
 
       const scs = new Scs(context);
 
-      await new ShutdownWorker(
+      await new ShutdownFreeSimpletsWorker(
         workerDefinition,
         context,
         deployRepository,

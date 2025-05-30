@@ -11,7 +11,7 @@ import { BaseSingleThreadWorker, WorkerDefinition } from '@apillon/workers-lib';
 import { DeployRepository } from '../modules/deploy/repositores/deploy-repository';
 import { BackendStrategyHandler } from '../modules/deploy/backendStrategy.handler';
 
-export class ShutdownWorker extends BaseSingleThreadWorker {
+export class ShutdownFreeSimpletsWorker extends BaseSingleThreadWorker {
   public constructor(
     workerDefinition: WorkerDefinition,
     context: Context,
@@ -22,11 +22,11 @@ export class ShutdownWorker extends BaseSingleThreadWorker {
     private readonly accessMS: Ams,
   ) {
     super(workerDefinition, context);
-    this.logPrefix = '[Shutdown Worker]';
+    this.logPrefix = '[ShutdownFreeSimpletsWorker]';
   }
 
   async runExecutor(_data: void): Promise<void> {
-    this.logFn('ShutdownWorker - execute BEGIN');
+    this.logFn('ShutdownFreeSimpletsWorker - execute BEGIN');
 
     // Get all active deployed simplets that are running for more than 3 days
     const deployedBE =
@@ -48,11 +48,7 @@ export class ShutdownWorker extends BaseSingleThreadWorker {
 
         if (
           subscription &&
-          [
-            SubscriptionPackageId.BUTTERFLY,
-            SubscriptionPackageId.CATERPILLAR,
-            SubscriptionPackageId.COCOON,
-          ].includes(subscription.package_id)
+          subscription.package_id !== SubscriptionPackageId.FREEMIUM
         ) {
           return;
         }
@@ -68,6 +64,10 @@ export class ShutdownWorker extends BaseSingleThreadWorker {
         await Promise.all(
           backends.map(async (backend) => {
             await this.backendStarategyHandler.shutdownInstance(backend);
+
+            this.logFn(
+              `Simplet with uuid ${backend.backend_uuid} for project ${projectUuid} successfully shut down`,
+            );
           }),
         );
 
