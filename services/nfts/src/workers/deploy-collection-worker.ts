@@ -104,14 +104,12 @@ export class DeployCollectionWorker extends BaseQueueWorker {
           await new Ams(this.context).getProjectOwner(collection.project_uuid)
         ).data;
 
-        if (projectOwner?.user_uuid) {
-          await new Mailing(this.context).createNotification(
-            new CreateOrUpdateNotificationDto({}, this.context).populate({
-              type: NotificationType.NFT_COLLECTION_DEPLOYED,
-              user_uuid: projectOwner.user_uuid,
-            }),
-          );
-        }
+        await new Mailing(this.context).createNotification(
+          new CreateOrUpdateNotificationDto({}, this.context).populate({
+            type: NotificationType.NFT_COLLECTION_DEPLOYED,
+            user_uuid: projectOwner?.user_uuid,
+          }),
+        );
       } catch (err) {
         await this.context.mysql.rollback(conn);
 

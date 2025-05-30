@@ -26,7 +26,7 @@ export class NotificationService {
       }
       body.user_uuid = user.data.user_uuid;
     }
-    return (await new Mailing(context).createNotification(body)).data;
+    return (await new Mailing(context).createNotificationAdmin(body)).data;
   }
 
   async updateNotification(

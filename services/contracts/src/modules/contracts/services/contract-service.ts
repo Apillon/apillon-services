@@ -142,15 +142,6 @@ export class ContractService {
 
     this.mailingClient.setMailerliteField('has_smart_contract');
 
-    if (this.context.user?.user_uuid) {
-      await new Mailing(this.context).createNotification(
-        new CreateOrUpdateNotificationDto({}, this.context).populate({
-          type: NotificationType.SMART_CONTRACT_DEPLOYED,
-          user_uuid: this.context.user.user_uuid,
-        }),
-      );
-    }
-
     return contractDeploy;
   }
 

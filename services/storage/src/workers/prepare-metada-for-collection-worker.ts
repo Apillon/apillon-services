@@ -474,14 +474,12 @@ export class PrepareMetadataForCollectionWorker extends BaseQueueWorker {
           await new Ams(this.context).getProjectOwner(bucket.project_uuid)
         ).data;
 
-        if (projectOwner?.user_uuid) {
-          await new Mailing(this.context).createNotification(
-            new CreateOrUpdateNotificationDto({}, this.context).populate({
-              type: NotificationType.NFT_METADATA_DEPLOYED,
-              user_uuid: projectOwner.user_uuid,
-            }),
-          );
-        }
+        await new Mailing(this.context).createNotification(
+          new CreateOrUpdateNotificationDto({}, this.context).populate({
+            type: NotificationType.NFT_METADATA_DEPLOYED,
+            user_uuid: projectOwner?.user_uuid,
+          }),
+        );
 
         await this.writeEventLog({
           logType: LogType.INFO,
