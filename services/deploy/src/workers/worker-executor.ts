@@ -28,11 +28,6 @@ export enum WorkerName {
   BACKEND_STATUS_WORKER = 'BackendStatusWorker',
 }
 
-const phalaClient = new PhalaCloudClient(
-  env.DEPLOY_PHALA_CLOUD_API_URL,
-  env.DEPLOY_PHALA_CLOUD_API_KEY,
-);
-
 export async function handler(event: any) {
   await getEnvSecrets();
 
@@ -126,7 +121,10 @@ export async function handleLambdaEvent(
           context,
           new EncryptionService(new AWS_KMS(), env.DEPLOY_KMS_KEY_ID),
         ),
-        phalaClient,
+        new PhalaCloudClient(
+          env.DEPLOY_PHALA_CLOUD_API_URL,
+          env.DEPLOY_PHALA_CLOUD_API_KEY,
+        ),
         new WorkerService(new SQSClient()),
         new Lmas(),
       ).run({
@@ -198,7 +196,10 @@ export async function handleSqsMessages(
               context,
               new EncryptionService(new AWS_KMS(), 'key'),
             ),
-            phalaClient,
+            new PhalaCloudClient(
+              env.DEPLOY_PHALA_CLOUD_API_URL,
+              env.DEPLOY_PHALA_CLOUD_API_KEY,
+            ),
             new WorkerService(new SQSClient()),
             new Lmas(),
           ).run({
