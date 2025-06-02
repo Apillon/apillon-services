@@ -10,7 +10,7 @@ export async function upgrade(
 
   await queryFn(`
   ALTER TABLE ${DbTables.NOTIFICATION}
-  DROP COLUMN user_id;
+  DROP COLUMN userId;
 `);
 }
 
@@ -24,6 +24,6 @@ export async function downgrade(
 
   await queryFn(`
   ALTER TABLE ${DbTables.NOTIFICATION}
-  ADD COLUMN user_id INT NULL;
+  ADD COLUMN userId INT NULL;
 `);
 }
