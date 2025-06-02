@@ -72,10 +72,13 @@ export abstract class EvmContractEventsWorker extends BaseSingleThreadWorker {
 
       const fromBlock = contractData.lastParsedBlock + 1;
       const blockNumber = await provider.getBlockNumber();
-      const toBlock = Math.min(
+      let toBlock = Math.min(
         fromBlock + contractData.blockParseSize,
         blockNumber - 4, // Wait 4 blocks for confirmation
       );
+
+      // Ensure the block range is valid
+      if (toBlock < fromBlock) toBlock = fromBlock;
 
       const contract = new ethers.Contract(
         contractData.address,
