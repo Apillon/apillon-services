@@ -348,14 +348,17 @@ export function generateTemplateData(key: string, data: any) {
       `,
     },
     [EmailTemplate.BACKEND_SHUTDOWN]: {
-      subject: 'Your Apillon backend has been shut down',
-      title: 'Your Apillon backend has been shut down',
+      subject: 'Notice: Simplet Backend Paused - Upgrade Required',
+      title: 'Your Simplet Backend Has Been Paused',
       text: `
         <p>
-          Your Apillon backend has been shut down due to lack of subscription.
+          We would like to inform you that your Simplet backend has been paused as you are currently on the freemium plan, which allows for a maximum of 3 days of operation.
         </p>
         <p>
-          If you want to continue using the backend, please upgrade your subscription.
+          To continue running your Simplet solution, we kindly request that you upgrade to a paid plan. This will ensure uninterrupted access to your backend services.
+        </p>
+        <p>
+          To view and modify your current Apillon subscription, please visit the <a href="https://app.apillon.io/dashboard/payments">Billing and Pricing</a> page.
         </p>
       `,
     },
