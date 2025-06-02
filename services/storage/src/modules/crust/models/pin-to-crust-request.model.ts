@@ -293,4 +293,19 @@ export class PinToCrustRequest extends AdvancedSQLModel {
       AND status <> ${SqlModelStatus.DELETED};`,
     );
   }
+
+  public async skipRequests(ids: number[]): Promise<void> {
+    if (!ids.length) {
+      return;
+    }
+
+    const context = this.getContext();
+
+    await context.mysql.paramExecute(
+      `UPDATE \`${this.tableName}\`
+      SET pinningStatus = ${CrustPinningStatus.SKIPPED}
+      WHERE id IN (${ids.join(',')})
+      `,
+    );
+  }
 }

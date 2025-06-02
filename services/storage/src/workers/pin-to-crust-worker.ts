@@ -1,10 +1,17 @@
 import {
+  Ams,
   AppEnvironment,
+  BaseQueryFilter,
   Context,
+  EmailDataDto,
+  EmailTemplate,
   env,
   LogType,
+  Mailing,
+  MySql,
   runWithWorkers,
   ServiceName,
+  SqlModelStatus,
 } from '@apillon/lib';
 import {
   BaseSingleThreadWorker,
@@ -34,8 +41,130 @@ export class PinToCrustWorker extends BaseSingleThreadWorker {
 
     console.info(`Num of pendingPinRequests: ${pendingPinRequests.length}`);
 
+    // Group by bucket_uuid
+
+    if (!pendingPinRequests.length) {
+      console.info('No pending pin requests found.');
+      return true;
+    }
+
+    const projectsMap: Map<string, PinToCrustRequest[]> = new Map();
+
+    for (const request of pendingPinRequests) {
+      const bucket = await new Bucket({}, this.context).populateByUUID(
+        request.bucket_uuid,
+      );
+      if (!bucket) {
+        console.warn(
+          `Project UUID not found for bucket UUID: ${request.bucket_uuid}`,
+        );
+        continue;
+      }
+      const projectUuid = bucket.project_uuid;
+
+      if (!projectsMap.has(projectUuid)) {
+        projectsMap.set(projectUuid, []);
+      }
+      projectsMap.get(projectUuid)?.push(request);
+    }
+
+    console.info(
+      `Num of projects with pending pin requests: ${projectsMap.size}`,
+    );
+
+    const devConsoleSql = new MySql({
+      host: env.DEV_CONSOLE_API_MYSQL_HOST,
+      database: env.DEV_CONSOLE_API_MYSQL_DATABASE,
+      password: env.DEV_CONSOLE_API_MYSQL_PASSWORD,
+      user: env.DEV_CONSOLE_API_MYSQL_USER,
+      port: env.DEV_CONSOLE_API_MYSQL_PORT,
+    });
+
+    await devConsoleSql.connect();
+
+    const accessMs = new Ams(this.context);
+    const mailingMS = new Mailing(this.context);
+
+    const skippedRequestIds: number[] = [];
+
+    projectsMap.forEach(async (requestsForProject, projectUuid) => {
+      const projectUsers = (await devConsoleSql.paramExecute(
+        `
+        SELECT u.user_uuid, u.email
+        FROM project_user pu
+        LEFT JOIN project p ON pu.project_id = p.id
+        LEFT JOIN user u ON pu.user_id = u.id
+        WHERE p.project_uuid = @project_uuid
+        AND pu.status = ${SqlModelStatus.ACTIVE}
+      `,
+        {
+          project_uuid: projectUuid,
+        },
+      )) as {
+        user_uuid: string;
+        email: string;
+      }[];
+
+      const lastYear = new Date();
+
+      lastYear.setFullYear(lastYear.getFullYear() - 1);
+
+      let allUsersLoggedInLastYear = true;
+
+      const inactiveUsers: string[] = [];
+
+      for (const projectUser of projectUsers) {
+        const userUuid = projectUser.user_uuid;
+
+        const lastLogin = (await accessMs.getUserLogins(
+          userUuid,
+          new BaseQueryFilter(
+            {
+              limit: 1,
+            },
+            this.context,
+          ),
+        )) as {
+          loginDate: string;
+        }[];
+
+        if (!lastLogin.length) {
+          allUsersLoggedInLastYear = false;
+          inactiveUsers.push(projectUser.email);
+        }
+
+        const lastLoginDate = new Date(lastLogin[0].loginDate);
+
+        if (lastLoginDate < lastYear) {
+          allUsersLoggedInLastYear = false;
+          inactiveUsers.push(projectUser.email);
+        }
+      }
+
+      if (!allUsersLoggedInLastYear) {
+        await new PinToCrustRequest({}, this.context).skipRequests(
+          requestsForProject.map((r) => r.id),
+        );
+
+        skippedRequestIds.push(...requestsForProject.map((r) => r.id));
+
+        await mailingMS.sendMail(
+          new EmailDataDto({}, this.context).populate({
+            mailAddresses: inactiveUsers,
+            templateName: EmailTemplate.PINNING_SKIPPED_DUE_TO_INACTIVITY,
+          }),
+        );
+      }
+    });
+
+    devConsoleSql.close();
+
+    const filteredPendingPinRequests = pendingPinRequests.filter(
+      (r) => !skippedRequestIds.includes(r.id),
+    );
+
     await runWithWorkers(
-      pendingPinRequests,
+      filteredPendingPinRequests,
       env.APP_ENV == AppEnvironment.LOCAL_DEV ||
         env.APP_ENV == AppEnvironment.TEST
         ? 1

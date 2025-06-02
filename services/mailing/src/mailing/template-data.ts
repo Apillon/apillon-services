@@ -367,7 +367,15 @@ export function generateTemplateData(key: string, data: any) {
         <br/><br/><br/>
         Cheers,<br/>
         The Apillon team
-      </p>
+      </p>`,
+    },
+    [EmailTemplate.PINNING_SKIPPED_DUE_TO_INACTIVITY]: {
+      subject: 'File pinning skipped due to inactivity',
+      title: 'File pinning skipped due to inactivity',
+      text: `
+        <p>
+          We have skipped pinning of your file due to inactivity.
+        </p>
       `,
     },
   };

@@ -1372,6 +1372,8 @@ export enum EmailTemplate {
   BACKEND_SHUTDOWN = 'backend-shutdown',
 
   OTP_VERIFICATION = 'otp-verification',
+
+  PINNING_SKIPPED_DUE_TO_INACTIVITY = 'pinning-skipped-due-to-inactivity',
 }
 
 export enum JwtExpireTime {
