@@ -25,8 +25,6 @@ import {
   DefaultUserRole,
   MySql,
   Mailing,
-  CreateOrUpdateNotificationDto,
-  NotificationType,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AcurastJob } from './models/acurast-job.model';
