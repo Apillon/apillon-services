@@ -24,9 +24,9 @@ export class NotificationService {
           errorCodes: ResourceNotFoundErrorCode,
         });
       }
-      body.userId = user.data.id;
+      body.user_uuid = user.data.user_uuid;
     }
-    return (await new Mailing(context).createNotification(body)).data;
+    return (await new Mailing(context).createNotificationAdmin(body)).data;
   }
 
   async updateNotification(
@@ -43,7 +43,7 @@ export class NotificationService {
           errorCodes: ResourceNotFoundErrorCode,
         });
       }
-      data.userId = user.data.id;
+      data.user_uuid = user.data.user_uuid;
     }
     return (await new Mailing(context).updateNotification(id, data)).data;
   }

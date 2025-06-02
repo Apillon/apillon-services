@@ -2,6 +2,7 @@ import {
   AWS_S3,
   BaseProjectQueryFilter,
   CreateIndexerDto,
+  CreateOrUpdateNotificationDto,
   env,
   IndexerBillingQueryFilter,
   IndexerLogsQueryFilter,
@@ -9,6 +10,7 @@ import {
   Lmas,
   LogType,
   Mailing,
+  NotificationType,
   Scs,
   ServiceName,
   SqlModelStatus,
@@ -257,6 +259,13 @@ export class IndexerService {
     indexer.lastDeploymentId = body.id;
     indexer.status = SqlModelStatus.ACTIVE;
     await indexer.update();
+
+    await new Mailing(context).createNotification(
+      new CreateOrUpdateNotificationDto({}, context).populate({
+        type: NotificationType.INDEXER_DEPLOYED,
+        user_uuid: context.user?.user_uuid,
+      }),
+    );
 
     return { ...indexer.serialize(), deployment: body };
   }
