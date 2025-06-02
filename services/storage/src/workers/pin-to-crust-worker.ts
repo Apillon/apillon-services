@@ -116,15 +116,17 @@ export class PinToCrustWorker extends BaseSingleThreadWorker {
       for (const projectUser of projectUsers) {
         const userUuid = projectUser.user_uuid;
 
-        const lastLogin = (await accessMs.getUserLogins(
-          userUuid,
-          new BaseQueryFilter(
-            {
-              limit: 1,
-            },
-            this.context,
-          ),
-        )) as {
+        const lastLogin = (
+          await accessMs.getUserLogins(
+            userUuid,
+            new BaseQueryFilter(
+              {
+                limit: 1,
+              },
+              this.context,
+            ),
+          )
+        ).data as {
           loginDate: string;
         }[];
 
