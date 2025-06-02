@@ -94,10 +94,8 @@ export class DeployRepository extends BaseRepository {
     );
   }
 
-  async getActiveByProjectUuid(project_uuid: string): Promise<Backend[]> {
-    return await new Backend({}, this.context).getActiveByProjectUuid(
-      project_uuid,
-    );
+  async getByProjectUuid(project_uuid: string): Promise<Backend[]> {
+    return await new Backend({}, this.context).getByProjectUuid(project_uuid);
   }
 
   //#endregion

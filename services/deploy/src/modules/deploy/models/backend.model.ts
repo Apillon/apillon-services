@@ -304,14 +304,12 @@ export class Backend extends UuidSqlModel {
     return await this.getContext().mysql.paramExecute(sqlQuery);
   }
 
-  public getActiveByProjectUuid(project_uuid: string): Promise<Backend[]> {
+  public getByProjectUuid(project_uuid: string): Promise<Backend[]> {
     const selectFields = this.generateSelectFields();
     const sqlQuery = `
       SELECT ${selectFields}
       FROM \`${DbTables.BACKEND}\`
       WHERE project_uuid = @project_uuid
-      AND backendStatus = ${ResourceStatus.ONLINE}
-      AND status = ${SqlModelStatus.ACTIVE}
     `;
     return this.getContext().mysql.paramExecute(sqlQuery, { project_uuid });
   }

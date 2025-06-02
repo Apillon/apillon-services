@@ -49,11 +49,11 @@ export class BackendStrategyHandler {
       })
     ).value;
 
-    const activeBackends = (
-      await this.deployRepository.getActiveByProjectUuid(body.project_uuid)
+    const totalBackends = (
+      await this.deployRepository.getByProjectUuid(body.project_uuid)
     ).length;
 
-    if (activeBackends >= maxActiveBackends) {
+    if (totalBackends >= maxActiveBackends) {
       const context = this.context;
       throw new DeployCodeException({
         status: 403,
