@@ -100,7 +100,7 @@ export class Notification extends AdvancedSQLModel {
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields('n', '', SerializeFor.SELECT_DB)}`,
       qFrom: `FROM \`${DbTables.NOTIFICATION}\` n
-                WHERE (@type IS NULL or n.type = @type) AND (n.user_uuid = ${context.user.user_uuid} OR n.user_uuid IS NULL)
+                WHERE (@type IS NULL or n.type = @type) AND (n.user_uuid = '${context.user.user_uuid}' OR n.user_uuid IS NULL)
                 AND (n.status = ${SqlModelStatus.ACTIVE})`,
       qFilter: `
                 ORDER BY ${filters.orderStr}
