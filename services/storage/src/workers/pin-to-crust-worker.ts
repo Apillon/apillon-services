@@ -49,18 +49,28 @@ export class PinToCrustWorker extends BaseSingleThreadWorker {
     }
 
     const projectsMap: Map<string, PinToCrustRequest[]> = new Map();
+    const bucketToProjectMap: Map<string, string> = new Map(); // Cache for bucket_uuid -> project_uuid mapping
 
     for (const request of pendingPinRequests) {
-      const bucket = await new Bucket({}, this.context).populateByUUID(
-        request.bucket_uuid,
-      );
-      if (!bucket) {
-        console.warn(
-          `Project UUID not found for bucket UUID: ${request.bucket_uuid}`,
+      const bucketUuid = request.bucket_uuid;
+
+      // Check if the bucket_uuid is already cached
+      let projectUuid = bucketToProjectMap.get(bucketUuid);
+
+      if (!projectUuid) {
+        // Query the bucket only if it's not in the cache
+        const bucket = await new Bucket({}, this.context).populateByUUID(
+          bucketUuid,
         );
-        continue;
+        if (!bucket) {
+          console.warn(`Project UUID not found for bucket UUID: ${bucketUuid}`);
+          continue;
+        }
+        projectUuid = bucket.project_uuid;
+
+        // Cache the bucket_uuid -> project_uuid mapping
+        bucketToProjectMap.set(bucketUuid, projectUuid);
       }
-      const projectUuid = bucket.project_uuid;
 
       if (!projectsMap.has(projectUuid)) {
         projectsMap.set(projectUuid, []);
