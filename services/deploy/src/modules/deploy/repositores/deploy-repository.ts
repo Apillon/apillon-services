@@ -69,14 +69,19 @@ export class DeployRepository extends BaseRepository {
     const data = await this.context.mysql.paramExecute(
       `SELECT *
        FROM \`${DbTables.BACKEND}\`
-       WHERE updateTime = createTime
-          OR updateTime <= NOW() - INTERVAL @updateIntervalHours HOUR
+       WHERE updateTime <= NOW() - INTERVAL @updateIntervalHours HOUR
+          OR backendStatus IN (@statuses)
        ORDER BY updateTime
        LIMIT 100
        FOR
        UPDATE SKIP LOCKED
       `,
-      { updateIntervalHours },
+      {
+        updateIntervalHours,
+        statuses: [ResourceStatus.REQUESTED, ResourceStatus.DEPLOYING].join(
+          ',',
+        ),
+      },
       conn,
     );
     return (
