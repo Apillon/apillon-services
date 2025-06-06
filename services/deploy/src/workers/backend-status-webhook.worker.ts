@@ -120,7 +120,7 @@ export class BackendStatusWebhookWorker extends BaseQueueWorker {
         await this.context.mysql.paramExecute(
           `
             UPDATE \`${DbTables.BACKEND}\`
-            SET backendWebhookTriggered = NOW()
+            SET webhookTriggered = NOW()
             WHERE backend_uuid in (${updatedTransactionIds.map((id) => `'${id}'`).join(',')})`,
           null,
           conn,

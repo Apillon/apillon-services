@@ -5,7 +5,7 @@ export async function upgrade(
 ) {
   await queryFn(
     `ALTER TABLE ${DbTables.BACKEND}
-      ADD COLUMN \`backendWebhookTriggered\` DATETIME NULL AFTER \`data\`;`,
+      ADD COLUMN \`webhookTriggered\` DATETIME NULL AFTER \`data\`;`,
   );
 }
 
@@ -14,6 +14,6 @@ export async function downgrade(
 ) {
   await queryFn(
     `ALTER TABLE ${DbTables.BACKEND}
-      DROP COLUMN \`backendWebhookTriggered\`;`,
+      DROP COLUMN \`webhookTriggered\`;`,
   );
 }
