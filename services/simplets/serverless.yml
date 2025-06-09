@@ -51,19 +51,19 @@ functions:
     description: Apillon simplets Service
     memorySize: 512
     timeout: 30
-#  simplets-service-worker:
-#    handler: ./src/workers/worker-executor.handler
-#    name: apillon-simplets-service-worker-${self:provider.stage}
-#    description: Serverless workers for Apillon simplets microservice
-#    memorySize: 512
-#    timeout: 900
-#    reservedConcurrency: 30
-#    environment:
-#      AWS_WORKER_LAMBDA_NAME: ${self:functions.simplets-service-worker.name}
-#    events:
-#      - schedule: cron(${env:CRON_SCHEDULE, '0/1 * * * ? *'})
-#      - sqs:
-#          arn: ${env:WORKER_SQS_ARN}
-#          batchSize: 4
-#          maximumBatchingWindow: 5
-#          functionResponseType: ReportBatchItemFailures
+  simplets-service-worker:
+    handler: ./src/workers/worker-executor.handler
+    name: apillon-simplets-service-worker-${self:provider.stage}
+    description: Serverless workers for Apillon simplets microservice
+    memorySize: 512
+    timeout: 900
+    reservedConcurrency: 30
+    environment:
+      AWS_WORKER_LAMBDA_NAME: ${self:functions.simplets-service-worker.name}
+    events:
+      - schedule: cron(${env:CRON_SCHEDULE, '0/1 * * * ? *'})
+      - sqs:
+          arn: ${env:WORKER_SQS_ARN}
+          batchSize: 4
+          maximumBatchingWindow: 5
+          functionResponseType: ReportBatchItemFailures

@@ -95,18 +95,10 @@ export async function handleLambdaEvent(
   context: Context,
   serviceDef: ServiceDefinition,
 ) {
-  let workerDefinition;
-  if (event.workerName) {
-    workerDefinition = new WorkerDefinition(
-      serviceDef,
-      event.workerName,
-      event,
-    );
-  } else {
-    workerDefinition = new WorkerDefinition(serviceDef, WorkerName.SCHEDULER);
-  }
+  const workerDefinition = event.workerName
+    ? new WorkerDefinition(serviceDef, event.workerName, event)
+    : new WorkerDefinition(serviceDef, WorkerName.SCHEDULER);
 
-  // eslint-disable-next-line sonarjs/no-small-switch
   switch (workerDefinition.workerName) {
     case WorkerName.SCHEDULER:
       const scheduler = new Scheduler(serviceDef, context);
