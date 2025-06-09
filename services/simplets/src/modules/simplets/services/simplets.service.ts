@@ -426,6 +426,7 @@ export class SimpletsService {
         project_uuid: simpletDeploy.project_uuid,
         name: `${simpletDeploy.name} (Website)`,
         source: WebsiteSource.GITHUB,
+        isSimplet: true,
       }),
     );
     const frontendVariables = await this.encryptionService.decryptJson<
