@@ -102,7 +102,7 @@ export class ServicesService {
 
     let service: Service = filteredServices[0];
 
-    if (filteredServices.length === 0) {
+    if (!service) {
       const newService = new ServiceDto(
         {
           project_uuid,
