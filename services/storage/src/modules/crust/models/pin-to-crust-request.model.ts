@@ -308,4 +308,26 @@ export class PinToCrustRequest extends AdvancedSQLModel {
       `,
     );
   }
+
+  public async unskipByProjectUuids(ids: string[]): Promise<void> {
+    if (!ids.length) {
+      return;
+    }
+
+    const context = this.getContext();
+
+    await context.mysql.paramExecute(
+      `UPDATE \`${this.tableName}\`
+        SET pinningStatus = ${CrustPinningStatus.PENDING},
+        numOfExecutions = 0,
+        renewalDate = NOW()
+        WHERE bucket_uuid IN (
+          SELECT bucket_uuid
+          FROM \`${DbTables.BUCKET}\`
+          WHERE project_uuid IN (${ids.map((id) => `'${id}'`).join(',')})
+        ) AND
+        pinningStatus = ${CrustPinningStatus.SKIPPED}
+      `,
+    );
+  }
 }

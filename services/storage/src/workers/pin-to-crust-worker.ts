@@ -15,7 +15,6 @@ import {
 } from '@apillon/lib';
 import {
   BaseSingleThreadWorker,
-  Job,
   LogOutput,
   WorkerDefinition,
 } from '@apillon/workers-lib';
@@ -26,8 +25,12 @@ import { Bucket } from '../modules/bucket/models/bucket.model';
 
 export class PinToCrustWorker extends BaseSingleThreadWorker {
   protected context: Context;
+  private accessMS: Ams;
+  private mailingMS: Mailing;
   public constructor(workerDefinition: WorkerDefinition, context: Context) {
     super(workerDefinition, context);
+    this.accessMS = new Ams(this.context);
+    this.mailingMS = new Mailing(this.context);
   }
 
   public async runExecutor(data?: any): Promise<any> {
@@ -92,9 +95,6 @@ export class PinToCrustWorker extends BaseSingleThreadWorker {
 
     await devConsoleSql.connect();
 
-    const accessMs = new Ams(this.context);
-    const mailingMS = new Mailing(this.context);
-
     const skippedRequestIds: number[] = [];
 
     projectsMap.forEach(async (requestsForProject, projectUuid) => {
@@ -119,48 +119,44 @@ export class PinToCrustWorker extends BaseSingleThreadWorker {
 
       lastYear.setFullYear(lastYear.getFullYear() - 1);
 
-      let allUsersLoggedInLastYear = true;
-
       const inactiveUsers: string[] = [];
 
-      for (const projectUser of projectUsers) {
-        const userUuid = projectUser.user_uuid;
+      await Promise.all(
+        projectUsers.map(async (projectUser) => {
+          const userUuid = projectUser.user_uuid;
 
-        const lastLogin = (
-          await accessMs.getUserLogins(
-            userUuid,
-            new BaseQueryFilter(
-              {
-                limit: 1,
-              },
-              this.context,
-            ),
-          )
-        ).data as {
-          loginDate: string;
-        }[];
+          const lastLogin = (
+            await this.accessMS.getUserLogins(
+              userUuid,
+              new BaseQueryFilter(
+                {
+                  limit: 1,
+                },
+                this.context,
+              ),
+            )
+          ).data.items as {
+            loginDate: string;
+          }[];
 
-        if (!lastLogin.length) {
-          allUsersLoggedInLastYear = false;
-          inactiveUsers.push(projectUser.email);
-        }
+          if (
+            !lastLogin.length ||
+            new Date(lastLogin[0].loginDate) < lastYear
+          ) {
+            inactiveUsers.push(projectUser.email);
+          }
+        }),
+      );
 
-        const lastLoginDate = new Date(lastLogin[0].loginDate);
-
-        if (lastLoginDate < lastYear) {
-          allUsersLoggedInLastYear = false;
-          inactiveUsers.push(projectUser.email);
-        }
-      }
-
-      if (!allUsersLoggedInLastYear) {
+      if (inactiveUsers.length === projectUsers.length) {
+        // If all users are inactive, skip pinning for this project
         await new PinToCrustRequest({}, this.context).skipRequests(
           requestsForProject.map((r) => r.id),
         );
 
         skippedRequestIds.push(...requestsForProject.map((r) => r.id));
 
-        await mailingMS.sendMail(
+        await this.mailingMS.sendMail(
           new EmailDataDto({}, this.context).populate({
             mailAddresses: inactiveUsers,
             templateName: EmailTemplate.PINNING_SKIPPED_DUE_TO_INACTIVITY,
