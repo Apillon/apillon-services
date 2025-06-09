@@ -198,13 +198,6 @@ export class SimpletsService {
         errorMessage: `NFT collection with uuid ${collection.collection_uuid} is not deployed.`,
       });
     }
-    if (!collection.isAutoIncrement) {
-      throw new SimpletsCodeException({
-        status: 422,
-        code: SimpletsErrorCode.INVALID_COLLECTION_CONFIGURATION,
-        errorMessage: `NFT collection with uuid ${collection.collection_uuid} has invalid configuration. Auto-increment is required.`,
-      });
-    }
     if (collection.collectionType !== NFTCollectionType.GENERIC) {
       throw new SimpletsCodeException({
         status: 422,
