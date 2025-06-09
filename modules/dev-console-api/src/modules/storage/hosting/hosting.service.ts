@@ -37,11 +37,19 @@ export class HostingService {
   }
 
   async createWebsite(context: DevConsoleApiContext, body: CreateWebsiteDto) {
-    await this.serviceService.createServiceIfNotExists(
-      context,
-      body.project_uuid,
-      AttachedServiceType.HOSTING,
-    );
+    const [{ service: storageService }, { service: hostingService }] =
+      await Promise.all([
+        this.serviceService.createServiceIfNotExists(
+          context,
+          body.project_uuid,
+          AttachedServiceType.STORAGE,
+        ),
+        this.serviceService.createServiceIfNotExists(
+          context,
+          body.project_uuid,
+          AttachedServiceType.HOSTING,
+        ),
+      ]);
 
     let generatedApiKeyId: number | undefined;
     let accessMS: Ams;
@@ -50,21 +58,6 @@ export class HostingService {
       body.deploymentConfig &&
       (!body.deploymentConfig.apiKey || !body.deploymentConfig.apiKey)
     ) {
-      const serviceList = await this.serviceService.getServiceList(
-        context,
-        new ServiceQueryFilter({}, context).populate({
-          project_uuid: body.project_uuid,
-        }),
-      );
-
-      const hostingService = serviceList.items.find(
-        (item) => item.serviceType_id === AttachedServiceType.HOSTING,
-      );
-
-      const storageService = serviceList.items.find(
-        (item) => item.serviceType_id === AttachedServiceType.STORAGE,
-      );
-
       accessMS = new Ams(context);
 
       const createdApiKey = await accessMS.createApiKey(
