@@ -86,8 +86,25 @@ export class BackendStatusWebhookWorker extends BaseQueueWorker {
             LogOutput.EVENT_INFO,
           );
 
-          backendDeploy.backendStatus = getBackendStatus(cvmDetails.status);
+          const backendStatus = getBackendStatus(cvmDetails.status);
+          const statusChanged = backendStatus !== backendDeploy.backendStatus;
+          backendDeploy.backendStatus = backendStatus;
           await backendDeploy.update(SerializeFor.UPDATE_DB, conn);
+          if (!statusChanged) {
+            await this.writeEventLog(
+              {
+                logType: LogType.INFO,
+                message: `Backend deploy ${backendDeploy.backend_uuid} status hasn't changed: ${backendStatus}`,
+                service: ServiceName.DEPLOY,
+                data: {
+                  backendStatus,
+                  backend_uuid: backendDeploy.backend_uuid,
+                },
+              },
+              LogOutput.EVENT_INFO,
+            );
+            continue;
+          }
           // TODO: change to batch update for status and webhook?
           backendWebhookItems.push(
             new ResourceDeployWebhookDataDto().populate({
@@ -125,7 +142,6 @@ export class BackendStatusWebhookWorker extends BaseQueueWorker {
           null,
           conn,
         );
-
         await this.writeEventLog(
           {
             logType: LogType.INFO,
@@ -138,7 +154,6 @@ export class BackendStatusWebhookWorker extends BaseQueueWorker {
       }
       await conn.commit();
     } catch (err) {
-      // console.log(err);
       await conn.rollback();
       await this.writeEventLog(
         {
