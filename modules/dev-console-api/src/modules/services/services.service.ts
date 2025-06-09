@@ -71,17 +71,24 @@ export class ServicesService {
   }
 
   /**
-   * Create specified service for project if it doesn't exist yet
-   * @param context
-   * @param project_uuid
-   * @param serviceType_id
-   * @returns {Promise<boolean>} - True if service was created, false otherwise.
+   * Creates a specified service for a project if it does not already exist.
+   *
+   * @param {DevConsoleApiContext} context - The API context for the operation.
+   * @param {string} project_uuid - The unique identifier of the project.
+   * @param {AttachedServiceType} serviceType_id - The type of service to create.
+   * @returns {Promise<{created: boolean, service: Service}>}
+   *          A promise that resolves to an object containing:
+   *          - `created`: A boolean indicating whether a new service was created.
+   *          - `service`: The existing or newly created service.
    */
   async createServiceIfNotExists(
     context: DevConsoleApiContext,
     project_uuid: string,
     serviceType_id: AttachedServiceType,
-  ): Promise<boolean> {
+  ): Promise<{
+    created: boolean;
+    service: Service;
+  }> {
     const { items, total } = await new Service({}).getServices(
       context,
       new ServiceQueryFilter({ project_uuid }, context),
@@ -90,6 +97,10 @@ export class ServicesService {
     const filteredServices = items.filter(
       (service) => service.serviceType_id === serviceType_id,
     );
+
+    let created = false;
+
+    let service: Service = filteredServices[0];
 
     if (filteredServices.length === 0) {
       const newService = new ServiceDto(
@@ -101,11 +112,14 @@ export class ServicesService {
         context,
       );
 
-      await this.createService(context, newService, total);
-      return true;
+      service = await this.createService(context, newService, total);
+      created = true;
     }
 
-    return false;
+    return {
+      created,
+      service,
+    };
   }
 
   /**
