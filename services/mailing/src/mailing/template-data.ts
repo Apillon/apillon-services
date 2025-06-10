@@ -361,6 +361,14 @@ export function generateTemplateData(key: string, data: any) {
           To view and modify your current Apillon subscription, please visit the <a href="https://app.apillon.io/dashboard/payments">Billing and Pricing</a> page.
         </p>
       `,
+      text2: `
+      <p>
+        If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        <br/><br/><br/>
+        Cheers,<br/>
+        The Apillon team
+      </p>
+      `,
     },
   };
 
