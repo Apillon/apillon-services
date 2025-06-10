@@ -1,5 +1,5 @@
-import { getSecrets } from '../lib/aws/aws-secrets';
 import * as dotenv from 'dotenv';
+import { getSecrets } from '../lib/aws/aws-secrets';
 import { AppEnvironment, CacheKeyTTL } from './types';
 
 export interface IEnv {
@@ -1096,7 +1096,7 @@ export let env: IEnv = {
   SMTP_USERNAME: process.env['SMTP_USERNAME'],
   SMTP_PASSWORD: process.env['SMTP_PASSWORD'],
   SMTP_NAME_FROM: process.env['SMTP_NAME_FROM'] || 'Apillon.io',
-  SMTP_EMAIL_FROM: process.env['SMTP_EMAIL_FROM'] || 'info@apillon.io',
+  SMTP_EMAIL_FROM: process.env['SMTP_EMAIL_FROM'] || 'noreply@apillon.io',
   ADMIN_EMAILS: process.env['ADMIN_EMAILS'] || 'info@apillon.io',
   CONTACT_EMAIL_TO: process.env['CONTACT_EMAIL_TO'] || 'info@apillon.io',
 
