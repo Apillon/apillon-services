@@ -91,13 +91,13 @@ export class RpcService {
     context: DevConsoleApiContext,
     body: CreateRpcApiKeyDto,
   ) {
-    const serviceCreated = await this.serviceService.createServiceIfNotExists(
+    const { created } = await this.serviceService.createServiceIfNotExists(
       context,
       body.project_uuid,
       AttachedServiceType.RPC,
     );
 
-    if (serviceCreated) {
+    if (created) {
       // If service was created, RPC key is created automatically, so we need to return the last one
       const existingKeys = (
         await new InfrastructureMicroservice(context).listRpcApiKeys(

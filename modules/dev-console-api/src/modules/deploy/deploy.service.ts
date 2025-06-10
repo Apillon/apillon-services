@@ -25,7 +25,6 @@ import { DevConsoleApiContext } from '../../context';
 import { GitHubWebhookPayload } from '../../config/types';
 import { DeployNftWebsiteDto } from './dtos/deploy-nft-website.dto';
 import { ServicesService } from '../services/services.service';
-import { ServiceQueryFilter } from '../services/dtos/services-query-filter.dto';
 
 @Injectable()
 export class DeployService {
@@ -36,26 +35,20 @@ export class DeployService {
     context: DevConsoleApiContext,
   ) {
     const accessMS = new Ams(context);
-    await this.servicesService.createServiceIfNotExists(
-      context,
-      body.projectUuid,
-      AttachedServiceType.HOSTING,
-    );
 
-    const serviceList = await this.servicesService.getServiceList(
-      context,
-      new ServiceQueryFilter({}, context).populate({
-        project_uuid: body.projectUuid,
-      }),
-    );
-
-    const hostingService = serviceList.items.find(
-      (item) => item.serviceType_id === AttachedServiceType.HOSTING,
-    );
-
-    const storageService = serviceList.items.find(
-      (item) => item.serviceType_id === AttachedServiceType.STORAGE,
-    );
+    const [{ service: storageService }, { service: hostingService }] =
+      await Promise.all([
+        this.servicesService.createServiceIfNotExists(
+          context,
+          body.projectUuid,
+          AttachedServiceType.STORAGE,
+        ),
+        this.servicesService.createServiceIfNotExists(
+          context,
+          body.projectUuid,
+          AttachedServiceType.HOSTING,
+        ),
+      ]);
 
     const createdApiKey = await accessMS.createApiKey(
       new CreateApiKeyDto({}, context).populate({
