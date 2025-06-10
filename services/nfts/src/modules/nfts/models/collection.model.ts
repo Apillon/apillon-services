@@ -17,6 +17,7 @@ import {
   SubstrateChain,
   UuidSqlModel,
 } from '@apillon/lib';
+import { ServiceContext } from '@apillon/service-lib';
 import {
   booleanParser,
   floatParser,
@@ -28,7 +29,6 @@ import {
   DbTables,
   NftsErrorCode,
 } from '../../../config/types';
-import { ServiceContext } from '@apillon/service-lib';
 
 export class Collection extends UuidSqlModel {
   public readonly tableName = DbTables.COLLECTION;
@@ -258,7 +258,6 @@ export class Collection extends UuidSqlModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    validators: [],
   })
   public bucket_uuid: string;
 
@@ -606,7 +605,6 @@ export class Collection extends UuidSqlModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    validators: [],
   })
   public deployerAddress: string;
 
@@ -627,7 +625,6 @@ export class Collection extends UuidSqlModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    validators: [],
   })
   public chainType: ChainType;
 
@@ -648,7 +645,6 @@ export class Collection extends UuidSqlModel {
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    validators: [],
     fakeValue: EvmChain.MOONBASE,
   })
   public chain: EvmChain | SubstrateChain;
@@ -742,13 +738,55 @@ export class Collection extends UuidSqlModel {
       SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
-      SerializeFor.APILLON_API,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
     ],
-    validators: [],
   })
-  public websiteUuid: string | null;
+  public websiteUuid?: string;
+
+  /**
+   * Logo URL of the collection
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public logoUrl?: string;
+
+  /**
+   * Banner URL of the collection
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public bannerUrl?: string;
 
   /***************************************************
    * Info properties

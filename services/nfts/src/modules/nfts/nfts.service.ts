@@ -1,4 +1,11 @@
 import {
+  CreateCollectionDTO,
+  CreateUniqueCollectionDTO,
+  isEvmOrSubstrateWalletAddress,
+} from '@apillon/blockchain-lib/common';
+import { EVM_MAX_INT } from '@apillon/blockchain-lib/evm';
+import { SubstrateChainPrefix } from '@apillon/blockchain-lib/substrate';
+import {
   AddNftsMetadataDto,
   BlockchainMicroservice,
   BurnNftDto,
@@ -40,11 +47,6 @@ import {
   TransactionStatus,
   TransferCollectionDTO,
 } from '@apillon/lib';
-import {
-  CreateCollectionDTO,
-  CreateUniqueCollectionDTO,
-  isEvmOrSubstrateWalletAddress,
-} from '@apillon/blockchain-lib/common';
 import { ServiceContext } from '@apillon/service-lib';
 import {
   QueueWorkerType,
@@ -68,21 +70,19 @@ import {
   NftsNotFoundException,
   NftsValidationException,
 } from '../../lib/exceptions';
-import { DeployCollectionWorker } from '../../workers/deploy-collection-worker';
-import { WorkerName } from '../../workers/worker-executor';
-import { Transaction } from '../transaction/models/transaction.model';
-import { TransactionService } from '../transaction/transaction.service';
-import { Collection } from './models/collection.model';
 import {
   deployNFTCollectionContract,
   getEvmContractClient,
   getSubstrateContractClient,
 } from '../../lib/utils/collection-utils';
-import { ContractVersion } from './models/contractVersion.model';
-import { EVM_MAX_INT } from '@apillon/blockchain-lib/evm';
+import { DeployCollectionWorker } from '../../workers/deploy-collection-worker';
+import { WorkerName } from '../../workers/worker-executor';
+import { Transaction } from '../transaction/models/transaction.model';
+import { TransactionService } from '../transaction/transaction.service';
 import { UniqueNftClient } from './clients/unique-nft-client';
-import { SubstrateChainPrefix } from '@apillon/blockchain-lib/substrate';
+import { Collection } from './models/collection.model';
 import { CollectionMetadata } from './models/collectionMetadata.model';
+import { ContractVersion } from './models/contractVersion.model';
 
 export class NftsService {
   //#region collection functions
@@ -100,6 +100,7 @@ export class NftsService {
       status: SqlModelStatus.INCOMPLETE,
       chainType: params.body.chainType,
     });
+
     await NftsService.assertIsAllowedToCreateNftCollection(
       context,
       collection.chainType,

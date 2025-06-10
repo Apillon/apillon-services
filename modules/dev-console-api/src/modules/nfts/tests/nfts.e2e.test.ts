@@ -12,30 +12,29 @@ import {
   TransactionType,
 } from '@apillon/nfts/src/config/types';
 import { Collection } from '@apillon/nfts/src/modules/nfts/models/collection.model';
+import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
+import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
+import { File } from '@apillon/storage/src/modules/storage/models/file.model';
 import {
   createTestNFTCollection,
   createTestProject,
   createTestUser,
+  evmGenericNftAbi,
+  evmGenericNftBytecode,
+  evmNestableNftAbi,
+  evmNestableNftBytecode,
+  getNftTransactionStatus,
+  insertNftContractVersion,
   overrideDefaultQuota,
   releaseStage,
   Stage,
   TestBlockchain,
   TestUser,
-  getNftTransactionStatus,
-  insertNftContractVersion,
 } from '@apillon/tests-lib';
+import { expect } from '@jest/globals';
 import * as request from 'supertest';
 import { setupTest } from '../../../../test/helpers/setup';
 import { Project } from '../../project/models/project.model';
-import { Directory } from '@apillon/storage/src/modules/directory/models/directory.model';
-import { Bucket } from '@apillon/storage/src/modules/bucket/models/bucket.model';
-import { File } from '@apillon/storage/src/modules/storage/models/file.model';
-import { expect } from '@jest/globals';
-import { evmGenericNftAbi, evmNestableNftAbi } from '@apillon/tests-lib';
-import {
-  evmGenericNftBytecode,
-  evmNestableNftBytecode,
-} from '@apillon/tests-lib';
 
 describe('Apillon Console NFTs tests for Moonbase', () => {
   const CHAIN_ID = EvmChain.MOONBASE;
@@ -196,6 +195,10 @@ describe('Apillon Console NFTs tests for Moonbase', () => {
           isSoulbound: false,
           royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
           royaltiesFees: 0,
+          logoUrl:
+            'https://bafybeidph2y4okcq7fi4ee2qjlqkqitdn4s6iwndc7us5gs5cud5iql6ne.ipfs.web3approved.com/logo.png',
+          bannerUrl:
+            'https://bafybeidph2y4okcq7fi4ee2qjlqkqitdn4s6iwndc7us5gs5cud5iql6ne.ipfs.web3approved.com/banner.png',
         })
         .set('Authorization', `Bearer ${testUser.token}`);
       expect(response.status).toBe(201);
