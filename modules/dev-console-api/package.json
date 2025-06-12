@@ -65,6 +65,9 @@
     "eslint-config-common": "*",
     "tsconfig": "*"
   },
+  "overrides": {
+    "brace-expansion": "1.1.7"
+  },
   "jest": {
     "testTimeout": 1800000,
     "moduleFileExtensions": [
