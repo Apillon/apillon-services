@@ -2,22 +2,28 @@ import {
   ApiName,
   Context,
   DomainQueryFilter,
+  getQueryParams,
   Lmas,
   LogType,
   PoolConnection,
   PopulateFrom,
+  presenceValidator,
+  prop,
+  selectAndCountQuery,
   SerializeFor,
   ServiceName,
   SqlModelStatus,
   UuidSqlModel,
   WebsiteQueryFilter,
-  getQueryParams,
-  presenceValidator,
-  prop,
-  selectAndCountQuery,
+  WebsiteSource,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
-import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
+import {
+  booleanParser,
+  dateParser,
+  integerParser,
+  stringParser,
+} from '@rawmodel/parsers';
 import { v4 as uuidV4 } from 'uuid';
 import {
   BucketType,
@@ -27,10 +33,8 @@ import {
   WebsiteDomainStatus,
 } from '../../../config/types';
 import { StorageValidationException } from '../../../lib/exceptions';
-import { addJwtToIPFSUrl } from '../../../lib/ipfs-utils';
 import { Bucket } from '../../bucket/models/bucket.model';
 import { ProjectConfig } from '../../config/models/project-config.model';
-import { WebsiteSource } from '@apillon/lib';
 
 export class Website extends UuidSqlModel {
   public readonly tableName = DbTables.WEBSITE;
@@ -408,6 +412,22 @@ export class Website extends UuidSqlModel {
   })
   public source: WebsiteSource;
 
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.PROFILE],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.ADMIN_SELECT_DB,
+      SerializeFor.SERVICE,
+      SerializeFor.PROFILE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
+    ],
+    defaultValue: false,
+  })
+  public isSimplet: boolean;
+
   /**
    * Populate by id or by uuid
    * @param id id or uuid.
@@ -491,6 +511,7 @@ export class Website extends UuidSqlModel {
   /**
    * Generates buckets for hosting, executes validation and inserts new records
    * @param context
+   * @param website_uuid
    * @returns created web site, populated with buckets
    */
   public async createNewWebsite(

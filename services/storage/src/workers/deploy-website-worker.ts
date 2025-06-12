@@ -9,6 +9,7 @@ import {
   Mailing,
   NotificationType,
   refundCredit,
+  ResourceStatus,
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
@@ -16,6 +17,7 @@ import {
   BaseQueueWorker,
   LogOutput,
   QueueWorkerType,
+  sendToWorkerQueue,
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { v4 as uuidV4 } from 'uuid';
@@ -37,6 +39,7 @@ import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { Ipns } from '../modules/ipns/models/ipns.model';
 import { File } from '../modules/storage/models/file.model';
+import { ProjectConfig } from '../modules/config/models/project-config.model';
 
 /**
  * Worker uploads files from source bucket to IPFS, acquired CID is published to website ipns record.
@@ -231,6 +234,37 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
           });
 
           await ipnsDbRecord.update();
+        }
+      }
+
+      if (website.isSimplet) {
+        if (
+          env.APP_ENV !== AppEnvironment.LOCAL_DEV &&
+          env.APP_ENV !== AppEnvironment.TEST
+        ) {
+          const ipfsCluster = await new ProjectConfig(
+            { project_uuid: website.project_uuid },
+            this.context,
+          ).getIpfsCluster();
+
+          const parameters = {
+            referenceTable: 'frontend',
+            referenceId: website.website_uuid,
+            resourceStatus: ResourceStatus.ONLINE,
+            data: await ipfsCluster.generateLink(
+              website.project_uuid,
+              targetBucket.IPNS ? targetBucket.IPNS : targetBucket.CID,
+              !!targetBucket.IPNS,
+            ),
+          };
+
+          await sendToWorkerQueue(
+            env.SIMPLETS_AWS_WORKER_SQS_URL,
+            'FrontendStatusWorker',
+            [parameters],
+            null,
+            null,
+          );
         }
       }
 
