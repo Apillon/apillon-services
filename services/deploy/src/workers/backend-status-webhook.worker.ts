@@ -105,7 +105,6 @@ export class BackendStatusWebhookWorker extends BaseQueueWorker {
             );
             continue;
           }
-          // TODO: change to batch update for status and webhook?
           backendWebhookItems.push(
             new ResourceDeployWebhookDataDto().populate({
               referenceTable: DbTables.BACKEND,

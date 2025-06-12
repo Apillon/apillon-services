@@ -22,6 +22,8 @@ import { DeployRepository } from '../../modules/deploy/repositores/deploy-reposi
 import { SQSClient } from '@aws-sdk/client-sqs';
 import { DbTables } from '../../config/types';
 
+const TIME_IN_THE_PAST = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
 const WORKER_DEFINITION = new WorkerDefinition(
   {
     type: ServiceDefinitionType.SQS,
@@ -131,6 +133,8 @@ describe('Log worker tests', () => {
             name: `name-${backendStatuses.indexOf(backendStatus) + 1}`,
             url: `url-${backendStatuses.indexOf(backendStatus) + 1}`,
             project_uuid: PROJECT_UUID,
+            updateTime: TIME_IN_THE_PAST,
+            createTime: TIME_IN_THE_PAST,
           })
           .insert();
         backendDeploys.push(backendDeploy);
@@ -152,7 +156,7 @@ describe('Log worker tests', () => {
 
       expect(result).toBe(true);
       expect(sqsSendSpy).toHaveBeenCalledTimes(1);
-      expect(writeEventLogSpy).toHaveBeenCalledTimes(2);
+      expect(writeEventLogSpy).toHaveBeenCalledTimes(10);
       // TODO: better assertion
       // expect(writeEventLogSpy).toHaveBeenCalledWith([
       //   {
@@ -198,7 +202,142 @@ describe('Log worker tests', () => {
 
       expect(result).toBe(true);
       expect(sqsSendSpy).toHaveBeenCalledTimes(0);
-      expect(writeEventLogSpy).toHaveBeenCalledTimes(0);
+      expect(writeEventLogSpy).toHaveBeenCalledWith({
+        logType: 'INFO',
+        message:
+          '[BackendStatusWorker]: Retrieved 0 backends for status update',
+        location: 'BackendStatusWorker',
+        service: 'DEPLOY',
+        data: {
+          count: 0,
+        },
+      });
+    });
+
+    test('should update backend with old update time even if status is not pending', async () => {
+      const backendDeploy = await new Backend({}, stage.context)
+        .populate({
+          backend_uuid: uuidV4(),
+          backendStatus: ResourceStatus.ONLINE,
+          instanceId: 'instance-id-old',
+          name: 'name-old',
+          url: 'url-old',
+          project_uuid: PROJECT_UUID,
+          updateTime: TIME_IN_THE_PAST,
+          createTime: TIME_IN_THE_PAST,
+        })
+        .insert();
+
+      jest.spyOn(phalaClient, 'getCVMDetails').mockResolvedValueOnce({
+        status: VMStatus.STOPPED,
+        id: backendDeploy.instanceId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        configuration: {
+          key: 'value',
+          dummy: true,
+        },
+      });
+
+      const result = await worker.runExecutor({});
+
+      expect(result).toBe(true);
+      await backendDeploy.reload();
+      expect(backendDeploy.backendStatus).toBe(ResourceStatus.STOPPED);
+    });
+
+    test('should update backend with pending status even if update time is recent', async () => {
+      const backendDeploy = await new Backend({}, stage.context)
+        .populate({
+          backend_uuid: uuidV4(),
+          backendStatus: ResourceStatus.REQUESTED,
+          instanceId: 'instance-id-recent',
+          name: 'name-recent',
+          url: 'url-recent',
+          project_uuid: PROJECT_UUID,
+          updateTime: new Date(),
+        })
+        .insert();
+
+      jest.spyOn(phalaClient, 'getCVMDetails').mockResolvedValueOnce({
+        status: VMStatus.RUNNING,
+        id: backendDeploy.instanceId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        configuration: {
+          key: 'value',
+          dummy: true,
+        },
+      });
+
+      const result = await worker.runExecutor({});
+
+      expect(result).toBe(true);
+      await backendDeploy.reload();
+      expect(backendDeploy.backendStatus).toBe(ResourceStatus.ONLINE);
+    });
+
+    test('should update backends with pending status regardless of update time', async () => {
+      const backendDeploy = await new Backend({}, stage.context)
+        .populate({
+          backend_uuid: uuidV4(),
+          backendStatus: ResourceStatus.REQUESTED, // Pending status
+          instanceId: 'instance-id',
+          name: 'name',
+          url: 'url',
+          project_uuid: PROJECT_UUID,
+          updateTime: new Date(), // Recent update time
+        })
+        .insert();
+
+      jest.spyOn(phalaClient, 'getCVMDetails').mockResolvedValueOnce({
+        status: VMStatus.CREATING,
+        id: backendDeploy.instanceId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        configuration: {
+          key: 'value',
+          dummy: true,
+        },
+      });
+
+      const result = await worker.runExecutor({});
+
+      expect(result).toBe(true);
+      await backendDeploy.reload();
+      expect(backendDeploy.backendStatus).toBe(ResourceStatus.REQUESTED);
+    });
+
+    test('should update backend status after update interval has passed', async () => {
+      const backendDeploy = await new Backend({}, stage.context)
+        .populate({
+          backend_uuid: uuidV4(),
+          backendStatus: ResourceStatus.ONLINE,
+          instanceId: 'instance-id',
+          name: 'name',
+          url: 'url',
+          project_uuid: PROJECT_UUID,
+          updateTime: TIME_IN_THE_PAST,
+          createTime: TIME_IN_THE_PAST,
+        })
+        .insert();
+
+      jest.spyOn(phalaClient, 'getCVMDetails').mockResolvedValueOnce({
+        status: VMStatus.STOPPED,
+        id: backendDeploy.instanceId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        configuration: {
+          key: 'value',
+          dummy: true,
+        },
+      });
+
+      const result = await worker.runExecutor({});
+
+      expect(result).toBe(true);
+      await backendDeploy.reload();
+      expect(backendDeploy.backendStatus).toBe(ResourceStatus.STOPPED);
     });
 
     test('should handle errors when fetching backend details', async () => {
@@ -284,6 +423,8 @@ describe('Log worker tests', () => {
           name: 'name-online',
           url: 'url-online',
           project_uuid: PROJECT_UUID,
+          updateTime: TIME_IN_THE_PAST,
+          createTime: TIME_IN_THE_PAST,
         })
         .insert();
 
