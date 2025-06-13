@@ -128,6 +128,12 @@ export class SimpletsService {
             service_uuid: storageService.service_uuid,
             serviceType_id: AttachedServiceType.STORAGE,
           }),
+          new ApiKeyRoleBaseDto({}, context).populate({
+            project_uuid,
+            role_id: DefaultApiKeyRole.KEY_EXECUTE,
+            service_uuid: storageService.service_uuid,
+            serviceType_id: AttachedServiceType.STORAGE,
+          }),
           // NFTs
           new ApiKeyRoleBaseDto({}, context).populate({
             project_uuid,
