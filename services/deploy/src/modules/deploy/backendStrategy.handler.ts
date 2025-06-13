@@ -42,7 +42,7 @@ export class BackendStrategyHandler {
   //#region on-chain
   async deployDockerCompose(body: DeployInstanceDto): Promise<Backend> {
     let backend: Backend;
-    const maxActiveBackends = (
+    const maxBackends = (
       await this.configMS.getQuota({
         quota_id: QuotaCode.MAX_SIMPLET_BACKEND_COUNT,
         project_uuid: body.project_uuid,
@@ -53,7 +53,7 @@ export class BackendStrategyHandler {
       await this.deployRepository.getByProjectUuid(body.project_uuid)
     ).length;
 
-    if (totalBackends >= maxActiveBackends) {
+    if (totalBackends >= maxBackends) {
       const context = this.context;
       throw new DeployCodeException({
         status: 403,
