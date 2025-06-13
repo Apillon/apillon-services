@@ -68,6 +68,7 @@ export abstract class UuidSqlModel extends ProjectAccessModel {
       SerializeFor.APILLON_API,
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
     ],
     populatable: [PopulateFrom.DB],
     defaultValue: new Date(),
@@ -84,6 +85,7 @@ export abstract class UuidSqlModel extends ProjectAccessModel {
       SerializeFor.APILLON_API,
       SerializeFor.ADMIN,
       SerializeFor.SELECT_DB,
+      SerializeFor.INSERT_DB,
     ],
     populatable: [PopulateFrom.DB],
   })
