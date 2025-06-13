@@ -86,7 +86,7 @@ export class DeployRepository extends BaseRepository {
     );
   }
 
-  async getActiveDeployeBackendsLongerThanDays(
+  async getActiveDeployedBackendsLongerThanDays(
     days: number,
   ): Promise<Backend[]> {
     return await new Backend({}, this.context).getActiveDeployedLongerThanDays(

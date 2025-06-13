@@ -30,7 +30,7 @@ export class ShutdownFreeSimpletsWorker extends BaseSingleThreadWorker {
 
     // Get all active deployed simplets that are running for more than 3 days
     const deployedBE =
-      await this.deployRepository.getActiveDeployeBackendsLongerThanDays(3);
+      await this.deployRepository.getActiveDeployedBackendsLongerThanDays(3);
 
     const projectsToCheck = Array.from(
       new Set<string>(deployedBE.map((simplet) => simplet.project_uuid)),
