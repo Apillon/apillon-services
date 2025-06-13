@@ -3,6 +3,8 @@ export enum DbTables {
   GITHUB_PROJECT_CONFIG = 'github_project_config',
   DEPLOYMENT_BUILD = 'deployment_build',
   DEPLOYMENT_CONFIG = 'deployment_config',
+
+  JOB = 'job',
 }
 
 export enum DeployErrorCode {
@@ -16,6 +18,7 @@ export enum DeployErrorCode {
   DEPLOYMENT_CONFIG_ALREADY_EXISTS = 40021007,
   DEPLOYMENT_CONFIG_VARIABLES_DUPLICATE = 40021008,
   INVALID_NFT_WEBSITE_TYPE = 40021009,
+  MAX_SIMPLET_BACKEND_COUNT_REACHED = 40021010,
   //404,
   DEPLOY_NOT_FOUND = 40421001,
   DEPLOY_POD_NOT_FOUND = 40421002,

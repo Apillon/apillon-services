@@ -347,6 +347,29 @@ export function generateTemplateData(key: string, data: any) {
         <p>To upgrade your plan, click <a href="${data.paymentLink}">here</a></p>
       `,
     },
+    [EmailTemplate.BACKEND_SHUTDOWN]: {
+      subject: 'Notice: Simplet Backend Paused - Upgrade Required',
+      title: 'Your Simplet Backend Has Been Paused',
+      text: `
+        <p>
+          We would like to inform you that your Simplet backend has been paused as you are currently on the freemium plan, which allows for a maximum of 3 days of operation.
+        </p>
+        <p>
+          To continue running your Simplet solution, we kindly request that you upgrade to a paid plan. This will ensure uninterrupted access to your backend services.
+        </p>
+        <p>
+          To view and modify your current Apillon subscription, please visit the <a href="https://app.apillon.io/dashboard/payments">Billing and Pricing</a> page.
+        </p>
+      `,
+      text2: `
+      <p>
+        If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        <br/><br/><br/>
+        Cheers,<br/>
+        The Apillon team
+      </p>
+      `,
+    },
   };
 
   return templateData[key];

@@ -1019,6 +1019,7 @@ export enum QuotaCode {
   MAX_EMBEDDED_WALLET_INTEGRATIONS = 13,
   MAX_EMBEDDED_WALLET_SIGNATURES = 14,
   MAX_RPC_KEYS = 15,
+  MAX_SIMPLET_BACKEND_COUNT = 16,
 }
 
 /**
@@ -1367,6 +1368,8 @@ export enum EmailTemplate {
 
   IPFS_BANDWIDTH_NEAR_QUOTA = 'ipfs-bandwidth-near-quota',
   IPFS_BANDWIDTH_EXCEEDED_QUOTA = 'ipfs-bandwidth-exceeded-quota',
+
+  BACKEND_SHUTDOWN = 'backend-shutdown',
 
   OTP_VERIFICATION = 'otp-verification',
 }

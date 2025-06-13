@@ -4,6 +4,7 @@ import {
   EncryptionService,
   env,
   Lmas,
+  Scs,
 } from '@apillon/lib';
 import {
   ErrorHandler,
@@ -59,6 +60,7 @@ const lambdaHandler: Handler = async (
       deployRepository,
       phalaDockerDeployStrategy,
       new Lmas(),
+      new Scs(serviceContext),
     ),
   );
   return await processEvent(event, serviceContext, backendController);
