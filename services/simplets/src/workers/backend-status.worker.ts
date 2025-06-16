@@ -49,7 +49,7 @@ export class BackendStatusWorker extends BaseQueueWorker {
       50,
       this.context,
       async (res: ResourceDeployWebhookDataDto, _ctx) => {
-        console.info('processing webhook transaction: ', res);
+        console.info('processing webhook backend status: ', res);
         if (res.referenceTable !== ResourceType.BACKEND) {
           return;
         }
