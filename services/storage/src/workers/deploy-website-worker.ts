@@ -448,6 +448,28 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         ServiceName.STORAGE,
       );
 
+      if (website.isSimplet) {
+        if (
+          env.APP_ENV !== AppEnvironment.LOCAL_DEV &&
+          env.APP_ENV !== AppEnvironment.TEST
+        ) {
+          const parameters = {
+            referenceTable: 'frontend',
+            referenceId: website.website_uuid,
+            resourceStatus: ResourceStatus.FAILED,
+            data: null,
+          };
+
+          await sendToWorkerQueue(
+            env.SIMPLETS_AWS_WORKER_SQS_URL,
+            'FrontendStatusWorker',
+            [parameters],
+            null,
+            null,
+          );
+        }
+      }
+
       if (
         env.APP_ENV == AppEnvironment.LOCAL_DEV ||
         env.APP_ENV == AppEnvironment.TEST

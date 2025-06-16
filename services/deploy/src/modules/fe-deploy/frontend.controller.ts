@@ -55,13 +55,15 @@ export class FrontendController {
     } = FrontendController.initializeFrontendRepositories(context);
 
     this.githubService = new GithubService();
+
+    this.storageMicroservice = new StorageMicroservice(context);
+
     this.deployService = new DeployService(
       deploymentBuildRepository,
       deploymentConfigRepository,
       this.githubService,
+      this.storageMicroservice,
     );
-
-    this.storageMicroservice = new StorageMicroservice(context);
 
     this.githubConfigService = new GithubConfigService(
       this.githubService,

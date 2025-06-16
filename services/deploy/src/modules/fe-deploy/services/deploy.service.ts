@@ -6,6 +6,7 @@ import {
   ModelValidationException,
   NftWebsiteDeployDto,
   NftWebsiteDeployDtoType,
+  StorageMicroservice,
   TriggerGithubDeployDtoType,
   WebsiteDeployDtoType,
   writeLog,
@@ -24,6 +25,7 @@ export class DeployService {
     private readonly deploymentBuildRepository: DeploymentBuildRepository,
     private readonly deploymentConfigRepository: DeploymentConfigRepository,
     private readonly githubService: GithubService,
+    private readonly storageMS: StorageMicroservice,
   ) {}
 
   async triggerGithubDeploy(body: TriggerGithubDeployDtoType) {
@@ -34,11 +36,14 @@ export class DeployService {
 
     await deploymentBuild.insert();
 
+    const website = (await this.storageMS.getWebsite(body.websiteUuid)).data;
+
     const parameters = {
       ...body,
       deploymentBuildId: deploymentBuild.id,
       variables: [],
       isTriggeredByWebhook: true,
+      isSimplet: website.isSimplet,
     } as BuildProjectWorkerInterface;
 
     if (body.encryptedVariables) {
@@ -150,8 +155,11 @@ export class DeployService {
 
     await deploymentBuild.insert();
 
+    const website = (await this.storageMS.getWebsite(body.websiteUuid)).data;
+
     const parameters = {
       deploymentBuildId: deploymentBuild.id,
+      isSimplet: website.isSimplet,
       ...body,
       ...(isNftWebsiteDeploy && body.new
         ? getNftWebsiteConfig(body.type, body.contractAddress, body.chainId)
