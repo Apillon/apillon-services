@@ -1,8 +1,10 @@
 import {
   AWS_KMS,
+  AppEnvironment,
   Context,
   DeploymentBuildStatus,
   Lmas,
+  ResourceStatus,
   SerializeFor,
   ServiceName,
   env,
@@ -11,6 +13,7 @@ import {
   BaseQueueWorker,
   QueueWorkerType,
   WorkerDefinition,
+  sendToWorkerQueue,
 } from '@apillon/workers-lib';
 import { spawn } from 'child_process';
 import { DeploymentBuild } from '../modules/fe-deploy/models/deployment-build.model';
@@ -133,6 +136,33 @@ function sanitizeToJsonString(str: string) {
   return result;
 }
 
+async function notifyFailureToSimpletsWorker(website: {
+  isSimplet: boolean;
+  website_uuid: string;
+}) {
+  if (website.isSimplet) {
+    if (
+      env.APP_ENV !== AppEnvironment.LOCAL_DEV &&
+      env.APP_ENV !== AppEnvironment.TEST
+    ) {
+      const parameters = {
+        referenceTable: 'frontend',
+        referenceId: website.website_uuid,
+        resourceStatus: ResourceStatus.FAILED,
+        data: null,
+      };
+
+      await sendToWorkerQueue(
+        env.SIMPLETS_AWS_WORKER_SQS_URL,
+        'FrontendStatusWorker',
+        [parameters],
+        null,
+        null,
+      );
+    }
+  }
+}
+
 export class BuildProjectWorker extends BaseQueueWorker {
   public constructor(
     workerDefinition: WorkerDefinition,
@@ -177,6 +207,10 @@ export class BuildProjectWorker extends BaseQueueWorker {
       if (!githubProjectConfig.exists()) {
         console.error('Github project config not found');
         await deploymentBuild.handleFailure('Github project config not found');
+        await notifyFailureToSimpletsWorker({
+          website_uuid: data.websiteUuid,
+          isSimplet: data.isSimplet,
+        });
         return;
       }
 
@@ -250,6 +284,10 @@ export class BuildProjectWorker extends BaseQueueWorker {
         console.log('Last log: ', lastLog);
         if (exitCode !== 0) {
           await deploymentBuild.handleFailure();
+          await notifyFailureToSimpletsWorker({
+            website_uuid: data.websiteUuid,
+            isSimplet: data.isSimplet,
+          });
           console.log(`Failure, child process exited with code ${exitCode}`);
           await new Lmas().sendMessageToSlack({
             message: `
@@ -271,6 +309,10 @@ export class BuildProjectWorker extends BaseQueueWorker {
             await deploymentBuild.handleSuccess();
           } catch (e) {
             await deploymentBuild.handleFailure();
+            await notifyFailureToSimpletsWorker({
+              website_uuid: data.websiteUuid,
+              isSimplet: data.isSimplet,
+            });
             await new Lmas().sendMessageToSlack({
               message: `
               Build failed for website ${data.websiteUuid}\n
@@ -288,6 +330,10 @@ export class BuildProjectWorker extends BaseQueueWorker {
       });
       child.on('error', async (errData) => {
         await deploymentBuild.handleFailure();
+        await notifyFailureToSimpletsWorker({
+          website_uuid: data.websiteUuid,
+          isSimplet: data.isSimplet,
+        });
         await new Lmas().sendMessageToSlack({
           message: `
               Build failed for website ${data.websiteUuid}\n
