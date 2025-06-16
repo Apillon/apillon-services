@@ -1,13 +1,18 @@
-import { QuotaCode, SqlModelStatus, SubscriptionPackageId } from '@apillon/lib';
+import {
+  QuotaCode,
+  QuotaType,
+  SqlModelStatus,
+  SubscriptionPackageId,
+} from '@apillon/lib';
 import { DbTables } from '../../config/types';
 
 export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<void>,
 ) {
   await queryFn(`
-    INSERT INTO ${DbTables.QUOTA} (id, status, groupName, name, description, valueType, value)
+    INSERT INTO ${DbTables.QUOTA} (id, status, groupName, name, description, valueType, value, type)
     VALUES
-    (${QuotaCode.MAX_SIMPLET_BACKEND_COUNT}, ${SqlModelStatus.ACTIVE}, 'Deploy', 'Active simplet backend count', 'Number of backend simplets that can be deployed by a project',1, 1);
+    (${QuotaCode.MAX_SIMPLET_BACKEND_COUNT}, ${SqlModelStatus.ACTIVE}, 'Deploy', 'Active simplet backend count', 'Number of backend simplets that can be deployed by a project',1, 1, ${QuotaType.FOR_PROJECT});
   `);
 
   await queryFn(`
