@@ -157,7 +157,7 @@ export class BackendStatusWebhookWorker extends BaseQueueWorker {
       await this.writeEventLog(
         {
           logType: LogType.ERROR,
-          message: 'Error in TransactionWebhookWorker',
+          message: 'Error in BackendStatusWebhookWorker',
           service: ServiceName.DEPLOY,
           data: { params, err },
           err,
@@ -198,7 +198,7 @@ export class BackendStatusWebhookWorker extends BaseQueueWorker {
           await this.writeEventLog(
             {
               logType: LogType.ERROR,
-              message: 'Error in TransactionWebhookWorker sending webhook',
+              message: 'Error in BackendStatusWebhookWorker sending webhook',
               service: ServiceName.DEPLOY,
               data: { splits, e },
               err: e,

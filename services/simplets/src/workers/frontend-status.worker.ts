@@ -61,7 +61,7 @@ export class FrontendStatusWorker extends BaseQueueWorker {
       50,
       this.context,
       async (res: ResourceDeployWebhookDataDto, _ctx) => {
-        console.info('processing webhook transaction: ', res);
+        console.info('processing webhook for frontend status: ', res);
         if (res.referenceTable !== ResourceType.FRONTEND) {
           return;
         }
