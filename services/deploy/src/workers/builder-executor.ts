@@ -1,4 +1,4 @@
-import { AppEnvironment, getEnvSecrets, MySql } from '@apillon/lib';
+import { Ams, AppEnvironment, getEnvSecrets, MySql } from '@apillon/lib';
 import {
   QueueWorkerType,
   ServiceDefinition,
@@ -151,11 +151,13 @@ export async function handleSqsMessages(
       switch (workerName) {
         case WorkerName.BUILD_PROJECT_WORKER: {
           const githubService = new GithubService();
+          const accessMS = new Ams(context);
           await new BuildProjectWorker(
             workerDefinition,
             context,
             QueueWorkerType.EXECUTOR,
             githubService,
+            accessMS,
           ).run({
             executeArg: message?.body,
           });

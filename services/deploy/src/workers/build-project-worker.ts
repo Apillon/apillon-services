@@ -1,7 +1,10 @@
 import {
   AWS_KMS,
   AppEnvironment,
+  Ams,
+  AttachedServiceType,
   Context,
+  DefaultApiKeyRole,
   DeploymentBuildStatus,
   Lmas,
   ResourceStatus,
@@ -169,6 +172,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
     context: Context,
     type: QueueWorkerType,
     private readonly githubService: GithubService,
+    private readonly accessMS: Ams,
   ) {
     super(workerDefinition, context, type, env.BUILDER_SQS_URL);
   }
@@ -226,6 +230,37 @@ export class BuildProjectWorker extends BaseQueueWorker {
     } else if (data.isRedeploy) {
       const kmsClient = new AWS_KMS();
       secret = await kmsClient.decrypt(data.apiSecret, env.DEPLOY_KMS_KEY_ID);
+    }
+
+    // Check if API key & secret match
+    const apiKey = (
+      await this.accessMS.getApiKey({
+        apiKey: data.apiKey,
+        apiKeySecret: secret,
+      })
+    ).data;
+
+    // Due to use of apillon hosting deploy-website command, we need to ensure that the API key has the required role for hosting service
+
+    const requiredRole = DefaultApiKeyRole.KEY_EXECUTE;
+    const requiredService = AttachedServiceType.HOSTING;
+
+    if (
+      !apiKey.apiKeyRoles?.find(
+        ({
+          role_id,
+          serviceType_id,
+        }: {
+          role_id: number;
+          serviceType_id: AttachedServiceType;
+        }) => role_id === requiredRole && serviceType_id === requiredService,
+      )
+    ) {
+      console.log('API key does not have required role for build');
+      await deploymentBuild.handleFailure(
+        `Insufficient permissions - missing ${DefaultApiKeyRole[requiredRole]} permission for ${AttachedServiceType[requiredService]}`,
+      );
+      return;
     }
 
     let lastLog = '';

@@ -2,6 +2,7 @@ import { ServiceContext } from '@apillon/service-lib';
 import { BaseRepository } from '../../deploy/repositores/base-repository';
 import { DeploymentConfig } from '../models/deployment-config.model';
 import {
+  Ams,
   DeploymentBuildQueryFilter,
   DeploymentBuildStatus,
 } from '@apillon/lib';
@@ -39,6 +40,7 @@ export class DeploymentBuildRepository extends BaseRepository {
   async executeBuildProjectWorkerLocally(
     parameters: BuildProjectWorkerInterface,
     githubService: GithubService,
+    accessMS: Ams,
   ) {
     const serviceDef: ServiceDefinition = {
       type: ServiceDefinitionType.SQS,
@@ -58,6 +60,7 @@ export class DeploymentBuildRepository extends BaseRepository {
       this.context,
       QueueWorkerType.EXECUTOR,
       githubService,
+      accessMS,
     );
     await builderWorker.runExecutor(parameters);
   }

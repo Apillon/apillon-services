@@ -1,4 +1,5 @@
 import {
+  Ams,
   AppEnvironment,
   AWS_KMS,
   env,
@@ -26,6 +27,7 @@ export class DeployService {
     private readonly deploymentConfigRepository: DeploymentConfigRepository,
     private readonly githubService: GithubService,
     private readonly storageMS: StorageMicroservice,
+    private readonly accessMS: Ams,
   ) {}
 
   async triggerGithubDeploy(body: TriggerGithubDeployDtoType) {
@@ -65,6 +67,7 @@ export class DeployService {
       await this.deploymentBuildRepository.executeBuildProjectWorkerLocally(
         parameters,
         this.githubService,
+        this.accessMS,
       );
     } else {
       await sendToWorkerQueue(
@@ -179,6 +182,7 @@ export class DeployService {
       await this.deploymentBuildRepository.executeBuildProjectWorkerLocally(
         parameters,
         this.githubService,
+        this.accessMS,
       );
     } else {
       await sendToWorkerQueue(
