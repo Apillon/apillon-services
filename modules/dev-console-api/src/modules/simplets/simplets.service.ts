@@ -40,32 +40,36 @@ export class SimpletsService {
     // validate or create API credentials
     if (body.apillonApiKey && body.apillonApiSecret) {
       // validate provided API key to make sure we don't trigger simplet deploy in case it's invalid
-      const apiKey = (
-        await new Ams(context).getApiKey({
-          apiKey: body.apillonApiKey,
-          apiKeySecret: body.apillonApiSecret,
-        })
-      ).data;
-      if (!apiKey) {
-        throw new CodeException({
-          code: SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errorMessage: 'Provided API key not found',
-        });
-      }
-      const requiredRole = DefaultApiKeyRole.KEY_EXECUTE;
-      const requiredService = AttachedServiceType.HOSTING;
-      if (
-        !apiKey.apiKeyRoles?.find(
-          (role: { role_id: number; serviceType_id: AttachedServiceType }) =>
-            role.role_id === requiredRole &&
-            role.serviceType_id === requiredService,
-        )
-      ) {
+      try {
+        const apiKey = (
+          await new Ams(context).getApiKey({
+            apiKey: body.apillonApiKey,
+            apiKeySecret: body.apillonApiSecret,
+          })
+        ).data;
+        const requiredRole = DefaultApiKeyRole.KEY_EXECUTE;
+        const requiredService = AttachedServiceType.HOSTING;
+        if (
+          !apiKey.apiKeyRoles?.find(
+            (role: { role_id: number; serviceType_id: AttachedServiceType }) =>
+              role.role_id === requiredRole &&
+              role.serviceType_id === requiredService,
+          )
+        ) {
+          throw new CodeException({
+            code: SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
+            status: HttpStatus.INTERNAL_SERVER_ERROR,
+            errorMessage: 'API key does not have required role for build',
+          });
+        }
+      } catch (e: unknown) {
+        if (e instanceof CodeException) {
+          throw e;
+        }
         throw new CodeException({
           code: SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
           status: HttpStatus.INTERNAL_SERVER_ERROR,
-          errorMessage: 'API key does not have required role for build',
+          errorMessage: 'API key is invalid',
         });
       }
     } else {
