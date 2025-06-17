@@ -247,9 +247,13 @@ export class BuildProjectWorker extends BaseQueueWorker {
 
     if (
       !apiKey.apiKeyRoles?.find(
-        (role: { role_id: number; serviceType_id: AttachedServiceType }) =>
-          role.role_id === requiredRole &&
-          role.serviceType_id === requiredService,
+        ({
+          role_id,
+          serviceType_id,
+        }: {
+          role_id: number;
+          serviceType_id: AttachedServiceType;
+        }) => role_id === requiredRole && serviceType_id === requiredService,
       )
     ) {
       console.log('API key does not have required role for build');
