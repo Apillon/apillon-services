@@ -5,7 +5,7 @@ export async function upgrade(
 ) {
   await queryFn(
     `ALTER TABLE ${DbTables.SIMPLET}
-      ADD COLUMN \`servicesUsed\` JSON NULL AFTER \`description\`;`,
+      ADD COLUMN \`servicesUsed\` JSON DEFAULT (CAST('[]' AS JSON)) AFTER \`description\`;`,
   );
 }
 
