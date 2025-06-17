@@ -14,8 +14,8 @@ import {
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
-import { ServicesService } from '../services/services.service';
 import { ServiceQueryFilter } from '../services/dtos/services-query-filter.dto';
+import { ServicesService } from '../services/services.service';
 
 @Injectable()
 export class SimpletsService {
@@ -121,88 +121,57 @@ export class SimpletsService {
     project_uuid: string,
     apiKeyName: string,
   ) {
+    const requiredServices = [
+      { type: AttachedServiceType.STORAGE, name: 'Storage' },
+      { type: AttachedServiceType.NFT, name: 'NFT' },
+      { type: AttachedServiceType.HOSTING, name: 'Hosting' },
+    ];
+
     const serviceList = await this.serviceService.getServiceList(
       context,
-      new ServiceQueryFilter({}, context).populate({
-        project_uuid,
-      }),
+      new ServiceQueryFilter({}, context).populate({ project_uuid }),
     );
-    const storageService = serviceList.items.find(
-      (item) => item.serviceType_id === AttachedServiceType.STORAGE,
-    );
-    if (!storageService) {
-      throw new CodeException({
-        code: SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage:
-          'Storage service is required for simplet deployment but was not found.',
-      });
-    }
 
-    const nftService = serviceList.items.find(
-      (item) => item.serviceType_id === AttachedServiceType.NFT,
+    const services = requiredServices.map(({ type, name }) => {
+      const service = serviceList.items.find(
+        (item) => item.serviceType_id === type,
+      );
+      if (!service) {
+        throw new CodeException({
+          code: SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          errorMessage: `${name} service is required for simplet deployment but was not found.`,
+        });
+      }
+      return service;
+    });
+
+    // Attach API key roles
+    const roles = services.flatMap((service) =>
+      [
+        DefaultApiKeyRole.KEY_READ,
+        DefaultApiKeyRole.KEY_WRITE,
+        DefaultApiKeyRole.KEY_EXECUTE,
+      ].map(
+        (role_id) =>
+          new ApiKeyRoleBaseDto(
+            {
+              project_uuid,
+              role_id,
+              service_uuid: service.service_uuid,
+              serviceType_id: service.serviceType_id,
+            },
+            context,
+          ),
+      ),
     );
-    if (!nftService) {
-      throw new CodeException({
-        code: SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessage:
-          'NFT service is required for simplet deployment but was not found.',
-      });
-    }
 
     const createdApiKeyResponse = await new Ams(context).createApiKey(
       new CreateApiKeyDto({}, context).populate({
         project_uuid,
         name: apiKeyName,
         testNetwork: false,
-        roles: [
-          // STORAGE
-          new ApiKeyRoleBaseDto({}, context).populate({
-            project_uuid,
-            role_id: DefaultApiKeyRole.KEY_READ,
-            service_uuid: storageService.service_uuid,
-            serviceType_id: AttachedServiceType.STORAGE,
-          }),
-          new ApiKeyRoleBaseDto({}, context).populate({
-            project_uuid,
-            role_id: DefaultApiKeyRole.KEY_EXECUTE,
-            service_uuid: storageService.service_uuid,
-            serviceType_id: AttachedServiceType.STORAGE,
-          }),
-          // HOSTING
-          new ApiKeyRoleBaseDto({}, context).populate({
-            project_uuid,
-            role_id: DefaultApiKeyRole.KEY_READ,
-            service_uuid: storageService.service_uuid,
-            serviceType_id: AttachedServiceType.HOSTING,
-          }),
-          new ApiKeyRoleBaseDto({}, context).populate({
-            project_uuid,
-            role_id: DefaultApiKeyRole.KEY_EXECUTE,
-            service_uuid: storageService.service_uuid,
-            serviceType_id: AttachedServiceType.HOSTING,
-          }),
-          // NFTs
-          new ApiKeyRoleBaseDto({}, context).populate({
-            project_uuid,
-            role_id: DefaultApiKeyRole.KEY_READ,
-            service_uuid: nftService.service_uuid,
-            serviceType_id: AttachedServiceType.NFT,
-          }),
-          new ApiKeyRoleBaseDto({}, context).populate({
-            project_uuid,
-            role_id: DefaultApiKeyRole.KEY_WRITE,
-            service_uuid: nftService.service_uuid,
-            serviceType_id: AttachedServiceType.NFT,
-          }),
-          new ApiKeyRoleBaseDto({}, context).populate({
-            project_uuid,
-            role_id: DefaultApiKeyRole.KEY_EXECUTE,
-            service_uuid: nftService.service_uuid,
-            serviceType_id: AttachedServiceType.NFT,
-          }),
-        ],
+        roles,
       }),
     );
 
