@@ -73,8 +73,7 @@
   },
   "overrides": {
     "ipfs-utils": "9.0.6",
-    "semver": "7.6.1",
-    "minimatch": "10.0.1"
+    "semver": "7.6.1"
   },
   "engines": {
     "npm": ">=10.0.0",
