@@ -104,8 +104,8 @@ export class BackendStrategyHandler {
   async redeployDockerCompose(body: RedeployInstanceDto): Promise<Backend> {
     const backend = await this.deployRepository.getBackend(body.backend_uuid);
     try {
-      const envVariables = overrideEnvironmentVariables(
-        backend.environmentVariables as any,
+      const secrets = overrideEnvironmentVariables(
+        await this.encryptionService.decryptJson(backend.environmentVariables),
         body.secrets,
       ).map((envVariable) => {
         // Convert all secrets to strings else Phala deploy fails
@@ -113,12 +113,10 @@ export class BackendStrategyHandler {
           envVariable.value == null ? '' : String(envVariable.value);
         return envVariable;
       });
-      const secrets = await this.encryptionService.encryptJson(envVariables);
+      const environmentVariables =
+        await this.encryptionService.encryptJson(secrets);
 
-      const result = await this.strategy.updateDockerCompose(
-        backend,
-        envVariables,
-      );
+      const result = await this.strategy.updateDockerCompose(backend, secrets);
       if (result?.detail !== 'Accepted') {
         throw new DeployCodeException({
           status: 500,
@@ -129,7 +127,7 @@ export class BackendStrategyHandler {
       }
       backend.populate({
         backendStatus: ResourceStatus.DEPLOYING,
-        secrets: secrets,
+        environmentVariables,
       });
 
       return backend;

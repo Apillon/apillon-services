@@ -55,9 +55,6 @@ export class DeployRepository extends BaseRepository {
         errorMessage: 'Deploy not found',
       });
     }
-    backend.environmentVariables = await this.encryptionService.decryptJson(
-      backend.environmentVariables,
-    );
 
     return backend;
   }

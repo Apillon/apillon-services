@@ -62,6 +62,7 @@ const lambdaHandler: Handler = async (
       new Lmas(),
       new Scs(serviceContext),
     ),
+    encryptionService,
   );
   return await processEvent(event, serviceContext, backendController);
 };

@@ -150,6 +150,7 @@ describe('DeployService tests', () => {
         logger,
         new Scs(context),
       ),
+      encryptionService,
     );
   });
 
@@ -282,7 +283,13 @@ describe('DeployService tests', () => {
     let backend: Backend;
     beforeEach(async () => {
       backend = await new Backend({}, context)
-        .populate(TEST_BACKEND_DATA)
+        .populate({
+          ...TEST_BACKEND_DATA,
+          // environmentVariables: await new EncryptionService(
+          //   new AWS_KMS(),
+          //   env.DEPLOY_KMS_KEY_ID,
+          // ).encryptJson([{ key: 'key', value: 'value' }]),
+        })
         .insert();
     });
     it('should list backends', async () => {

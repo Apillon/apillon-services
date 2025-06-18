@@ -1,6 +1,7 @@
 import {
   BackendsQueryFilter,
   DeployInstanceDto,
+  EncryptionService,
   GenericDeployRequestDto,
   RedeployInstanceDto,
   ResizeInstanceDto,
@@ -11,19 +12,12 @@ import { DeployRepository } from './repositores/deploy-repository';
 import { ServiceContext } from '@apillon/service-lib';
 
 export class BackendController {
-  private readonly deployRepository: DeployRepository;
-  private readonly backendStrategyHandler: BackendStrategyHandler;
-  private readonly context: ServiceContext;
-
   constructor(
-    context: ServiceContext,
-    deployRepository: DeployRepository,
-    backendStrategyHandler: BackendStrategyHandler,
-  ) {
-    this.context = context;
-    this.deployRepository = deployRepository;
-    this.backendStrategyHandler = backendStrategyHandler;
-  }
+    private readonly context: ServiceContext,
+    private readonly deployRepository: DeployRepository,
+    private readonly backendStrategyHandler: BackendStrategyHandler,
+    private readonly encryptionService: EncryptionService,
+  ) {}
 
   async deployDockerCompose(
     body: DeployInstanceDto,
@@ -45,7 +39,11 @@ export class BackendController {
   }
 
   async getBackend(body: GenericDeployRequestDto): Promise<any> {
-    return await this.deployRepository.getBackend(body.deploy_uuid);
+    const backend = await this.deployRepository.getBackend(body.deploy_uuid);
+    backend.environmentVariables = backend.environmentVariables
+      ? await this.encryptionService.decryptJson(backend.environmentVariables)
+      : null;
+    return backend;
   }
 
   async getInstanceDetails(body: GenericDeployRequestDto): Promise<any> {
