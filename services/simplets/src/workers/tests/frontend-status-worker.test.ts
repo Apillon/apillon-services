@@ -120,16 +120,14 @@ describe('FrontendStatusWorker tests', () => {
         stage.context,
       ).insert();
 
-      await worker.runExecutor({
-        data: [
-          new ResourceDeployWebhookDataDto({}, stage.context).populate({
-            referenceTable: ResourceType.FRONTEND,
-            referenceId: simpletDeploy.frontend_uuid,
-            resourceStatus: ResourceStatus.FAILED,
-            data: JSON.stringify({ key: 'value' }),
-          }),
-        ],
-      });
+      await worker.runExecutor(
+        new ResourceDeployWebhookDataDto({}, stage.context).populate({
+          referenceTable: ResourceType.FRONTEND,
+          referenceId: simpletDeploy.frontend_uuid,
+          resourceStatus: ResourceStatus.FAILED,
+          data: JSON.stringify({ key: 'value' }),
+        }),
+      );
 
       //expect(mockRefundCredit).toBeCalledTimes(0);
       await simpletDeploy.reload();
@@ -165,16 +163,14 @@ describe('FrontendStatusWorker tests', () => {
         stage.context,
       ).insert();
 
-      await worker.runExecutor({
-        data: [
-          new ResourceDeployWebhookDataDto({}, stage.context).populate({
-            referenceTable: ResourceType.FRONTEND,
-            referenceId: simpletDeploy.frontend_uuid,
-            resourceStatus: ResourceStatus.ONLINE,
-            data: JSON.stringify({ key: 'value' }),
-          }),
-        ],
-      });
+      await worker.runExecutor(
+        new ResourceDeployWebhookDataDto({}, stage.context).populate({
+          referenceTable: ResourceType.FRONTEND,
+          referenceId: simpletDeploy.frontend_uuid,
+          resourceStatus: ResourceStatus.ONLINE,
+          data: JSON.stringify({ key: 'value' }),
+        }),
+      );
 
       //expect(mockRefundCredit).toBeCalledTimes(0);
       await simpletDeploy.reload();
@@ -218,16 +214,14 @@ describe('FrontendStatusWorker tests', () => {
         stage.context,
       ).insert();
 
-      await worker.runExecutor({
-        data: [
-          new ResourceDeployWebhookDataDto({}, stage.context).populate({
-            referenceTable: ResourceType.BACKEND,
-            referenceId: simpletDeploy.frontend_uuid,
-            resourceStatus: ResourceStatus.ONLINE,
-            data: JSON.stringify({ key: 'value' }),
-          }),
-        ],
-      });
+      await worker.runExecutor(
+        new ResourceDeployWebhookDataDto({}, stage.context).populate({
+          referenceTable: ResourceType.BACKEND,
+          referenceId: simpletDeploy.frontend_uuid,
+          resourceStatus: ResourceStatus.ONLINE,
+          data: JSON.stringify({ key: 'value' }),
+        }),
+      );
 
       await simpletDeploy.reload();
       expect(simpletDeploy.frontendStatus).toBe(ResourceStatus.DEPLOYING);
@@ -259,16 +253,14 @@ describe('FrontendStatusWorker tests', () => {
         stage.context,
       ).insert();
 
-      await worker.runExecutor({
-        data: [
-          new ResourceDeployWebhookDataDto({}, stage.context).populate({
-            referenceTable: ResourceType.FRONTEND,
-            referenceId: 'bad_frontend_uuid',
-            resourceStatus: ResourceStatus.ONLINE,
-            data: JSON.stringify({ key: 'value' }),
-          }),
-        ],
-      });
+      await worker.runExecutor(
+        new ResourceDeployWebhookDataDto({}, stage.context).populate({
+          referenceTable: ResourceType.FRONTEND,
+          referenceId: 'bad_frontend_uuid',
+          resourceStatus: ResourceStatus.ONLINE,
+          data: JSON.stringify({ key: 'value' }),
+        }),
+      );
 
       await simpletDeploy.reload();
       expect(simpletDeploy.frontendStatus).toBe(ResourceStatus.DEPLOYING);
@@ -311,16 +303,14 @@ describe('FrontendStatusWorker tests', () => {
         stage.context,
       ).insert();
 
-      await worker.runExecutor({
-        data: [
-          new ResourceDeployWebhookDataDto({}, stage.context).populate({
-            referenceTable: ResourceType.FRONTEND,
-            referenceId: simpletDeploy.frontend_uuid,
-            resourceStatus: ResourceStatus.ONLINE,
-            data: JSON.stringify({ key: 'value' }),
-          }),
-        ],
-      });
+      await worker.runExecutor(
+        new ResourceDeployWebhookDataDto({}, stage.context).populate({
+          referenceTable: ResourceType.FRONTEND,
+          referenceId: simpletDeploy.frontend_uuid,
+          resourceStatus: ResourceStatus.ONLINE,
+          data: JSON.stringify({ key: 'value' }),
+        }),
+      );
 
       await simpletDeploy.reload();
       expect(simpletDeploy.frontendStatus).toBe(ResourceStatus.DEPLOYING);
