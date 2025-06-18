@@ -143,17 +143,6 @@ export async function deployNFTCollectionContract(
           );
           break;
         }
-        case NFTCollectionType.NESTABLE: {
-          callArguments.push(collection.dropStart, collection.dropReserve, {
-            royaltyRecipient: royaltiesAddress,
-            royaltyPercentageBps: royaltiesFees,
-            maxSupply,
-            pricePerMint: TransactionUtils.convertBaseToGwei(
-              collection.dropPrice,
-            ),
-          });
-          break;
-        }
         default:
           throw new NftsCodeException({
             status: 500,
@@ -204,7 +193,7 @@ export async function deployNFTCollectionContract(
           [],
           // unique suggested to avoid using AllowList since they will redesign it
           false, //collection.drop,
-          collection.collectionType === NFTCollectionType.NESTABLE,
+          false, // not nestable
           collection.isRevokable,
           collection.isSoulbound,
           collection.maxSupply <= 0

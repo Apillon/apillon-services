@@ -79,7 +79,6 @@ export const ENTERPRISE_USER_EVM_CHAINS = [
 
 export enum NFTCollectionType {
   GENERIC = 1,
-  NESTABLE = 2,
 }
 
 export enum SmartContractType {
@@ -317,7 +316,6 @@ export enum NftsEventType {
   GET_NFT_COLLECTION_BY_UUID = 'get-nft-collection-by-uuid',
   TRANSFER_OWNERSHIP = 'transfer-ownership',
   MINT_NFT = 'mint-nft',
-  NEST_MINT_NFT = 'nest-mint-nft',
   SET_BASE_URI = 'set-base-uri',
   CHECK_TRANSACTION_STATUS = 'check-transaction-status',
   NFT_COLLECTION_TRANSACTION_LIST = 'list-collection-transactions',

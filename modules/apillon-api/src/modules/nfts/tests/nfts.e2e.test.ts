@@ -5,12 +5,14 @@ import {
   createTestProject,
   createTestProjectService,
   createTestUser,
+  evmGenericNftAbi,
+  evmGenericNftBytecode,
+  getNftTransactionStatus,
+  insertNftContractVersion,
   releaseStage,
   Stage,
   TestBlockchain,
   TestUser,
-  getNftTransactionStatus,
-  insertNftContractVersion,
 } from '@apillon/tests-lib';
 import {
   ApiKeyRoleBaseDto,
@@ -36,17 +38,9 @@ import {
   getRequestFactory,
   postRequestFactory,
 } from '@apillon/tests-lib/src/lib/helpers/requests';
-import { ethers } from 'ethers';
-import { evmGenericNftAbi, evmNestableNftAbi } from '@apillon/tests-lib';
-import {
-  evmGenericNftBytecode,
-  evmNestableNftBytecode,
-} from '@apillon/tests-lib';
 
 const TEST_COLLECTION_BASE_URI =
   'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/';
-
-let NESTABLE_NFT_INTERFACE;
 
 describe('Apillon API NFTs tests', () => {
   const CHAIN_ID = EvmChain.MOONBASE;
@@ -54,12 +48,10 @@ describe('Apillon API NFTs tests', () => {
 
   let stage: Stage;
   let testUser: TestUser;
-  let testProject: Project, nestableProject: Project;
+  let testProject: Project;
   let testService: Service;
-  let genericCollection: Collection,
-    nestableCollection: Collection,
-    transferredCollection: Collection;
-  let apiKey: ApiKey, nestableApiKey: ApiKey;
+  let genericCollection: Collection, transferredCollection: Collection;
+  let apiKey: ApiKey;
   let getRequest, postRequest;
 
   beforeAll(async () => {
@@ -74,13 +66,6 @@ describe('Apillon API NFTs tests', () => {
       NFTCollectionType.GENERIC,
       evmGenericNftAbi,
       evmGenericNftBytecode,
-    );
-    await insertNftContractVersion(
-      stage.context.nfts,
-      ChainType.EVM,
-      NFTCollectionType.NESTABLE,
-      evmNestableNftAbi,
-      evmNestableNftBytecode,
     );
 
     //User 1 project & other data
@@ -145,51 +130,6 @@ describe('Apillon API NFTs tests', () => {
 
     getRequest = getRequestFactory(stage.http, apiKey);
     postRequest = postRequestFactory(stage.http, apiKey);
-
-    // nestable collection
-    const nestableUser = await createTestUser(
-      stage.context.devConsole,
-      stage.context.access,
-    );
-    nestableProject = await createTestProject(nestableUser, stage);
-    nestableApiKey = await createTestApiKey(
-      stage.context.access,
-      nestableProject.project_uuid,
-    );
-    await nestableApiKey.assignRole(
-      new ApiKeyRoleBaseDto().populate({
-        role_id: DefaultApiKeyRole.KEY_READ,
-        project_uuid: nestableProject.project_uuid,
-        service_uuid: testService.service_uuid,
-        serviceType_id: AttachedServiceType.NFT,
-      }),
-    );
-    await nestableApiKey.assignRole(
-      new ApiKeyRoleBaseDto().populate({
-        role_id: DefaultApiKeyRole.KEY_WRITE,
-        project_uuid: nestableProject.project_uuid,
-        service_uuid: testService.service_uuid,
-        serviceType_id: AttachedServiceType.NFT,
-      }),
-    );
-    await nestableApiKey.assignRole(
-      new ApiKeyRoleBaseDto().populate({
-        role_id: DefaultApiKeyRole.KEY_EXECUTE,
-        project_uuid: nestableProject.project_uuid,
-        service_uuid: testService.service_uuid,
-        serviceType_id: AttachedServiceType.NFT,
-      }),
-    );
-
-    const data = await stage.context.nfts.mysql.paramExecute(`
-      SELECT abi
-      FROM \`contract_version\`
-      WHERE collectionType = ${NFTCollectionType.NESTABLE}
-      AND chainType = ${ChainType.EVM}
-      AND status = ${SqlModelStatus.ACTIVE}
-      ORDER BY version DESC LIMIT 1
-    `);
-    NESTABLE_NFT_INTERFACE = new ethers.utils.Interface(data[0].abi);
   });
 
   describe('Moonbeam NFT Collection tests', () => {
@@ -506,347 +446,6 @@ describe('Apillon API NFTs tests', () => {
         TransactionType.MINT_NFT,
       );
       expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
-    });
-  });
-
-  describe('NFT Collection tests for nestable type', () => {
-    test('User should be able to create nestable collection with existing baseURI', async () => {
-      const testCollectionName = 'Nestable NFT Collection';
-      const response = await postRequest(
-        '/nfts/collections',
-        {
-          collectionType: 2,
-          symbol: 'NNFT',
-          name: testCollectionName,
-          maxSupply: 0,
-          dropPrice: 0.00001,
-          project_uuid: nestableProject.project_uuid,
-          baseUri: TEST_COLLECTION_BASE_URI,
-          baseExtension: 'json',
-          drop: true,
-          dropStart: 123,
-          dropReserve: 5,
-          chain: CHAIN_ID,
-          isRevokable: true,
-          isSoulbound: false,
-          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
-          royaltiesFees: 0,
-        },
-        nestableApiKey,
-      );
-
-      expect(response.status).toBe(201);
-      expect(response.body.data.contractAddress).toBeTruthy();
-      nestableCollection = await new Collection(
-        {},
-        stage.context.nfts,
-      ).populateByUUID(response.body.data.collectionUuid);
-      expect(nestableCollection.exists()).toBeTruthy();
-      expect(nestableCollection.name).toBe(testCollectionName);
-      expect(nestableCollection.collectionStatus).toBe(
-        CollectionStatus.DEPLOYING,
-      );
-      const transactionStatus = await getNftTransactionStatus(
-        stage,
-        CHAIN_ID,
-        nestableCollection.collection_uuid,
-        TransactionType.DEPLOY_CONTRACT,
-      );
-      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
-    });
-
-    test('User should be able to get nestable collection transactions', async () => {
-      const collection = await createTestNFTCollection(
-        testUser,
-        stage.context.nfts,
-        nestableProject,
-        SqlModelStatus.ACTIVE,
-        CollectionStatus.CREATED,
-        { collectionType: 2 },
-      );
-      const transaction = new Transaction({}, stage.context.nfts).populate({
-        chainId: 123,
-        transactionType: TransactionType.MINT_NFT,
-        transactionHash: 'transaction_hash',
-        refTable: 'collection',
-        refId: collection.id,
-      });
-      await transaction.insert();
-
-      const response = await getRequest(
-        `/nfts/collections/${collection.collection_uuid}/transactions`,
-        nestableApiKey,
-      );
-
-      expect(response.status).toBe(200);
-      expect(response.body.data.items.length).toBe(1);
-      expect(response.body.data.items[0]?.transactionHash).toBe(
-        transaction.transactionHash,
-      );
-    });
-
-    test('User should be able to mint nestable collection NFT', async () => {
-      const response = await postRequest(
-        `/nfts/collections/${nestableCollection.collection_uuid}/mint`,
-        {
-          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
-          quantity: 1,
-        },
-        nestableApiKey,
-      );
-
-      expect(response.status).toBe(201);
-      const transactionStatus = await getNftTransactionStatus(
-        stage,
-        CHAIN_ID,
-        nestableCollection.collection_uuid,
-        TransactionType.MINT_NFT,
-      );
-      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
-    });
-
-    test('User should be able to nest mint NFT for nestable NFT', async () => {
-      const childCollectionResponse = await postRequest(
-        '/nfts/collections',
-        {
-          collectionType: 2,
-          symbol: 'CNFT',
-          name: 'Child Collection',
-          maxSupply: 50,
-          dropPrice: 0,
-          project_uuid: nestableProject.project_uuid,
-          baseUri: TEST_COLLECTION_BASE_URI,
-          baseExtension: 'json',
-          drop: false,
-          dropStart: 0,
-          dropReserve: 5,
-          chain: CHAIN_ID,
-          isRevokable: true,
-          isSoulbound: false,
-          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
-          royaltiesFees: 0,
-        },
-        nestableApiKey,
-      );
-      expect(childCollectionResponse.status).toBe(201);
-      const childCollection = childCollectionResponse.body.data;
-
-      const response = await postRequest(
-        `/nfts/collections/${childCollection.collectionUuid}/nest-mint`,
-        {
-          parentCollectionUuid: nestableCollection.collection_uuid,
-          parentNftId: 1,
-          quantity: 1,
-        },
-        nestableApiKey,
-      );
-
-      expect(response.status).toBe(201);
-      expect(response.body.data.success).toBe(true);
-      const transactionStatus = await getNftTransactionStatus(
-        stage,
-        CHAIN_ID,
-        childCollection.collectionUuid,
-        TransactionType.NEST_MINT_NFT,
-      );
-      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
-    });
-
-    test('User should be able to transfer nestable NFT collection', async () => {
-      const { id } = await new ContractVersion(
-        {},
-        stage.context.nfts,
-      ).getContractVersion(NFTCollectionType.NESTABLE);
-
-      const newCollection = await createTestNFTCollection(
-        testUser,
-        stage.context.nfts,
-        nestableProject,
-        SqlModelStatus.DRAFT,
-        CollectionStatus.CREATED,
-        { collectionType: 2, contractVersion_id: id },
-      );
-      const response = await postRequest(
-        `/nfts/collections/${newCollection.collection_uuid}/transfer`,
-        {
-          address: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
-        },
-        nestableApiKey,
-      );
-
-      expect(response.status).toBe(201);
-      const transactionStatus = await getNftTransactionStatus(
-        stage,
-        CHAIN_ID,
-        newCollection.collection_uuid,
-        TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-      );
-      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
-    });
-
-    test('User should NOT be able to Mint transferred nestable collection', async () => {
-      const newCollection = await createTestNFTCollection(
-        testUser,
-        stage.context.nfts,
-        nestableProject,
-        SqlModelStatus.DRAFT,
-        CollectionStatus.CREATED,
-        { collectionStatus: CollectionStatus.TRANSFERED, collectionType: 2 },
-      );
-
-      const response = await postRequest(
-        `/nfts/collections/${newCollection.collection_uuid}/mint`,
-        {
-          receivingAddress: '0xcC765934f460bf4Ba43244a36f7561cBF618daCa',
-          quantity: 1,
-        },
-        nestableApiKey,
-      );
-
-      expect(response.status).toBe(500);
-      expect(response.body.code).toBe(50012002);
-    });
-
-    test('User should be able to burn nestable collection NFT', async () => {
-      const response = await postRequest(
-        `/nfts/collections/${nestableCollection.collection_uuid}/burn`,
-        { tokenId: 1 },
-        nestableApiKey,
-      );
-
-      expect(response.status).toBe(201);
-      expect(response.body.data.success).toBe(true);
-      const transactionStatus = await getNftTransactionStatus(
-        stage,
-        CHAIN_ID,
-        nestableCollection.collection_uuid,
-        TransactionType.BURN_NFT,
-      );
-      expect(transactionStatus).toBe(TransactionStatus.CONFIRMED);
-    });
-
-    test('User should not be able to burn nestable collection NFT with nest-minted child', async () => {
-      //create parent collection
-      const parentCollectionResponse = await postRequest(
-        '/nfts/collections',
-        {
-          collectionType: 2,
-          symbol: 'PNFT',
-          name: 'Parent Collection',
-          maxSupply: 50,
-          dropPrice: 0,
-          project_uuid: nestableProject.project_uuid,
-          baseUri: TEST_COLLECTION_BASE_URI,
-          baseExtension: 'json',
-          drop: false,
-          dropStart: 0,
-          dropReserve: 5,
-          chain: CHAIN_ID,
-          isRevokable: true,
-          isSoulbound: false,
-          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
-          royaltiesFees: 0,
-        },
-        nestableApiKey,
-      );
-      expect(parentCollectionResponse.status).toBe(201);
-      const parentCollection = await new Collection(
-        {},
-        stage.context.nfts,
-      ).populateByUUID(parentCollectionResponse.body.data.collectionUuid);
-      //mint parent NFT
-      const parentOwnerIndex = 0;
-      const parentMintResponse = await postRequest(
-        `/nfts/collections/${parentCollection.collection_uuid}/mint`,
-        {
-          receivingAddress: blockchain.getWalletAddress(parentOwnerIndex),
-          quantity: 1,
-        },
-        nestableApiKey,
-      );
-      expect(parentMintResponse.status).toBe(201);
-      //create child collection
-      const childCollectionResponse = await postRequest(
-        '/nfts/collections',
-        {
-          collectionType: 2,
-          symbol: 'CNFT',
-          name: 'Child Collection',
-          maxSupply: 0,
-          dropPrice: 0,
-          project_uuid: nestableProject.project_uuid,
-          baseUri: TEST_COLLECTION_BASE_URI,
-          baseExtension: 'json',
-          drop: false,
-          dropStart: 0,
-          dropReserve: 5,
-          chain: CHAIN_ID,
-          isRevokable: true,
-          isSoulbound: false,
-          royaltiesAddress: '0x452101C96A1Cf2cBDfa5BB5353e4a7F235241557',
-          royaltiesFees: 0,
-        },
-        nestableApiKey,
-      );
-      expect(childCollectionResponse.status).toBe(201);
-      const childCollection = await new Collection(
-        {},
-        stage.context.nfts,
-      ).populateByUUID(childCollectionResponse.body.data.collectionUuid);
-      //nest mint child under parent
-      const nestMintResponse = await postRequest(
-        `/nfts/collections/${childCollection.collection_uuid}/nest-mint`,
-        {
-          parentCollectionUuid: parentCollection.collection_uuid,
-          parentNftId: 1,
-          quantity: 1,
-        },
-        nestableApiKey,
-      );
-      expect(nestMintResponse.status).toBe(201);
-      //accept nesting child on parent
-      const acceptChildData = NESTABLE_NFT_INTERFACE.encodeFunctionData(
-        'acceptChild',
-        [
-          1, //uint256 parentId
-          0, //uint256 childIndex
-          childCollection.contractAddress, //address childAddress
-          1, //uint256 childId
-        ],
-      );
-      const acceptChildTxHash = await blockchain.contractWrite(
-        parentOwnerIndex,
-        parentCollection.contractAddress,
-        acceptChildData,
-      );
-      const acceptChildReceipt =
-        await blockchain.getTransactionReceipt(acceptChildTxHash);
-      expect(acceptChildReceipt.status).toBe('0x1');
-
-      const response = await postRequest(
-        `/nfts/collections/${parentCollection.collection_uuid}/burn`,
-        { tokenId: 1 },
-        nestableApiKey,
-      );
-
-      expect(response.status).toBe(500);
-      expect(response.body.code).toBe(50012012);
-      expect(response.body.message).toBe('Error burning NFT');
-    });
-
-    test('Customer should be able to mint NFT', async () => {
-      const mintData = NESTABLE_NFT_INTERFACE.encodeFunctionData('mint', [
-        '0xcC765934f460bf4Ba43244a36f7561cBF618daCa', // to,
-        1, //numToMint
-      ]);
-      const mintTxHash = await blockchain.contractWrite(
-        0,
-        nestableCollection.contractAddress,
-        mintData,
-        nestableCollection.dropPrice,
-      );
-      const mintdReceipt = await blockchain.getTransactionReceipt(mintTxHash);
-      expect(mintdReceipt.status).toBe('0x1');
     });
   });
 

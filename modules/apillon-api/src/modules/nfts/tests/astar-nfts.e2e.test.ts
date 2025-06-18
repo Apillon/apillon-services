@@ -5,13 +5,15 @@ import {
   createTestProject,
   createTestProjectService,
   createTestUser,
+  evmGenericNftAbi,
+  evmGenericNftBytecode,
+  getNftTransactionStatus,
+  insertNftContractVersion,
   overrideDefaultQuota,
   releaseStage,
   Stage,
   TestBlockchain,
   TestUser,
-  getNftTransactionStatus,
-  insertNftContractVersion,
 } from '@apillon/tests-lib';
 import {
   ApiKeyRoleBaseDto,
@@ -38,11 +40,6 @@ import {
   getRequestFactory,
   postRequestFactory,
 } from '@apillon/tests-lib/src/lib/helpers/requests';
-import { evmGenericNftAbi, evmNestableNftAbi } from '@apillon/tests-lib';
-import {
-  evmGenericNftBytecode,
-  evmNestableNftBytecode,
-} from '@apillon/tests-lib';
 
 const TEST_COLLECTION_BASE_URI =
   'https://ipfs2.apillon.io/ipns/k2k4r8maf9scf6y6cmyjd497l1ipmu2hystzngvdmvgduih78jfphht2/';
@@ -70,13 +67,6 @@ describe('Apillon API NFTs tests on Astar', () => {
       NFTCollectionType.GENERIC,
       evmGenericNftAbi,
       evmGenericNftBytecode,
-    );
-    await insertNftContractVersion(
-      stage.context.nfts,
-      ChainType.EVM,
-      NFTCollectionType.NESTABLE,
-      evmNestableNftAbi,
-      evmNestableNftBytecode,
     );
 
     //User 1 project & other data
