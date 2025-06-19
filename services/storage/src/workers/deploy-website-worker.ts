@@ -156,6 +156,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         if (
           !deploymentReviewed &&
           !website.nftCollectionUuid &&
+          !website.isSimplet &&
           env.SEND_WEBSITES_TO_REVIEW &&
           !(await checkProjectSubscription(this.context, website.project_uuid))
         ) {
