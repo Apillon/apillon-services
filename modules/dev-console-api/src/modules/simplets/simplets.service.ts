@@ -14,7 +14,6 @@ import {
 } from '@apillon/lib';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
-import { ServiceQueryFilter } from '../services/dtos/services-query-filter.dto';
 import { ServicesService } from '../services/services.service';
 
 @Injectable()
@@ -31,11 +30,23 @@ export class SimpletsService {
 
   // DEPLOY
   async deploySimplet(context: DevConsoleApiContext, body: SimpletDeployDto) {
-    await this.serviceService.createServiceIfNotExists(
-      context,
-      body.project_uuid,
-      AttachedServiceType.SIMPLETS,
-    );
+    const requestedServices = await Promise.all([
+      this.serviceService.createServiceIfNotExists(
+        context,
+        body.project_uuid,
+        AttachedServiceType.SIMPLETS,
+      ),
+      this.serviceService.createServiceIfNotExists(
+        context,
+        body.project_uuid,
+        AttachedServiceType.STORAGE,
+      ),
+      this.serviceService.createServiceIfNotExists(
+        context,
+        body.project_uuid,
+        AttachedServiceType.HOSTING,
+      ),
+    ]);
 
     // validate or create API credentials
     if (body.apillonApiKey && body.apillonApiSecret) {
@@ -76,6 +87,7 @@ export class SimpletsService {
       // create new API credentials
       const { apiKey, apiKeySecret } = await this.createSimpletApiKey(
         context,
+        requestedServices.map((requestedService) => requestedService.service),
         body.project_uuid,
         `${body.name} (Simplet)`,
       );
@@ -118,34 +130,10 @@ export class SimpletsService {
 
   private async createSimpletApiKey(
     context: DevConsoleApiContext,
+    services: any[],
     project_uuid: string,
     apiKeyName: string,
   ) {
-    const requiredServices = [
-      { type: AttachedServiceType.STORAGE, name: 'Storage' },
-      { type: AttachedServiceType.NFT, name: 'NFT' },
-      { type: AttachedServiceType.HOSTING, name: 'Hosting' },
-    ];
-
-    const serviceList = await this.serviceService.getServiceList(
-      context,
-      new ServiceQueryFilter({}, context).populate({ project_uuid }),
-    );
-
-    const services = requiredServices.map(({ type, name }) => {
-      const service = serviceList.items.find(
-        (item) => item.serviceType_id === type,
-      );
-      if (!service) {
-        throw new CodeException({
-          code: SystemErrorCode.MICROSERVICE_SYSTEM_ERROR,
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          errorMessage: `${name} service is required for simplet deployment but was not found.`,
-        });
-      }
-      return service;
-    });
-
     // Attach API key roles
     const roles = services.flatMap((service) =>
       [
