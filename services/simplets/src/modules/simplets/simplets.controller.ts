@@ -2,6 +2,7 @@ import {
   DeployedSimpletsQueryFilterDto,
   Lmas,
   LogType,
+  ProductCode,
   ResourceStatus,
   ServiceName,
   SimpletDeployDto,
@@ -15,6 +16,7 @@ import { SimpletsErrorCode } from '../../config/types';
 import { SimpletDeploy } from './models/simpletDeploy.model';
 import { Simplet } from './models/simplet.model';
 import { IEmbeddedWallet } from './types';
+import { SimpletsSpendService } from './services/simplets-spend.service';
 
 interface DeployResult {
   success: boolean;
@@ -23,19 +25,12 @@ interface DeployResult {
 }
 
 export class SimpletsController {
-  private readonly context: ServiceContext;
-  private readonly simpletsService: SimpletsService;
-  private logging: Lmas;
-
   constructor(
-    context: ServiceContext,
-    simpletService: SimpletsService,
-    logging: Lmas,
-  ) {
-    this.context = context;
-    this.simpletsService = simpletService;
-    this.logging = logging;
-  }
+    private readonly context: ServiceContext,
+    private readonly simpletsService: SimpletsService,
+    private readonly spendService: SimpletsSpendService,
+    private readonly logging: Lmas,
+  ) {}
 
   //#region SIMPLETS
 
@@ -127,10 +122,16 @@ export class SimpletsController {
         body.nftCollection_uuid,
       );
       // DEPLOY ALL
-      await this.deploySimpletComponents(
-        simplet,
-        simpletDeploy,
-        body.walletIntegration_uuid,
+      await this.spendService.chargeDeploy(
+        body.project_uuid,
+        simpletDeploy.simpletDeploy_uuid,
+        ProductCode.SIMPLET_NFT_STUDIO_DEPLOY,
+        () =>
+          this.deploySimpletComponents(
+            simplet,
+            simpletDeploy,
+            body.walletIntegration_uuid,
+          ),
       );
       await this.logging.writeLog({
         logType: LogType.INFO,

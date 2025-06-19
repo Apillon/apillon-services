@@ -1,5 +1,10 @@
 import { ServiceContext } from '@apillon/service-lib';
-import { ServiceName, spendCreditAction, SpendCreditDto } from '@apillon/lib';
+import {
+  ProductCode,
+  ServiceName,
+  spendCreditAction,
+  SpendCreditDto,
+} from '@apillon/lib';
 import { DbTables } from '../../../config/types';
 
 export class SimpletsSpendService {
@@ -11,7 +16,7 @@ export class SimpletsSpendService {
 
   chargeDeploy: ChargeDeploySimpletType = async (
     project_uuid,
-    simplet_uuid,
+    simpletDeploy_uuid,
     product_id,
     action,
   ) => {
@@ -20,7 +25,7 @@ export class SimpletsSpendService {
         project_uuid,
         product_id,
         referenceTable: DbTables.SIMPLET_DEPLOY,
-        referenceId: simplet_uuid,
+        referenceId: simpletDeploy_uuid,
         location: 'SimpletsService.chargeDeploy',
         service: ServiceName.SIMPLETS,
       },
@@ -40,6 +45,6 @@ export class SimpletsSpendService {
 type ChargeDeploySimpletType = <T>(
   project_uuid: string,
   simplet_uuid: string,
-  product_id: string,
+  product_id: ProductCode,
   action: () => Promise<T>,
 ) => Promise<{ result: T; spendUuid: string }>;
