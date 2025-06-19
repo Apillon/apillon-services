@@ -1286,6 +1286,9 @@ export enum ProductCode {
   CONTRACT_POLYGON_CALL = 128,
   CONTRACT_POLYGON_AMOY_CREATE = 129,
   CONTRACT_POLYGON_AMOY_CALL = 130,
+
+  // Simplets
+  SIMPLET_NFT_STUDIO_DEPLOY = 131,
 }
 export enum ProductService {
   HOSTING = 'HOSTING',
@@ -1297,6 +1300,7 @@ export enum ProductService {
   CONTRACTS = 'CONTRACTS',
   WALLET = 'WALLET',
   INDEXING = 'INDEXING',
+  SIMPLETS = 'SIMPLETS',
 }
 
 export enum ProductCategory {
@@ -1343,6 +1347,7 @@ export enum ProductCategory {
   SIGNATURE = 'SIGNATURE',
   UNIQUE_NFT = 'UNIQUE_NFT',
   INDEXER = 'INDEXER',
+  SIMPLETS_NFT_STUDIO = 'SIMPLETS_NFT_STUDIO',
 }
 
 export enum EmailTemplate {

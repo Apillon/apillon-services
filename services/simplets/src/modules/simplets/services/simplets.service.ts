@@ -27,7 +27,6 @@ import {
 } from '@apillon/lib';
 import crypto from 'crypto';
 import { SimpletsRepository } from '../repositores/simplets-repository';
-import { SimpletsSpendService } from './simplets-spend.service';
 import { Simplet } from '../models/simplet.model';
 import { SimpletsCodeException } from '../../../lib/exceptions';
 import { SimpletsErrorCode } from '../../../config/types';
@@ -37,40 +36,17 @@ import axios from 'axios';
 import { IEmbeddedWallet } from '../types';
 
 export class SimpletsService {
-  private readonly context: ServiceContext;
-  private simpletRepository: SimpletsRepository;
-  private spendService: SimpletsSpendService;
-  private mailingClient: Mailing;
-  private logging: Lmas;
-  private deployService: DeployMicroservice;
-  private storageService: StorageMicroservice;
-  private nftsService: NftsMicroservice;
-  private authenticationService: AuthenticationMicroservice;
-  private encryptionService: EncryptionService;
-
   constructor(
-    context: ServiceContext,
-    simpletRepository: SimpletsRepository,
-    deployService: DeployMicroservice,
-    storageService: StorageMicroservice,
-    nftsService: NftsMicroservice,
-    authenticationService: AuthenticationMicroservice,
-    spendService: SimpletsSpendService,
-    mailingClient: Mailing,
-    encryptionService: EncryptionService,
-    logging: Lmas,
-  ) {
-    this.simpletRepository = simpletRepository;
-    this.spendService = spendService;
-    this.deployService = deployService;
-    this.storageService = storageService;
-    this.nftsService = nftsService;
-    this.authenticationService = authenticationService;
-    this.mailingClient = mailingClient;
-    this.encryptionService = encryptionService;
-    this.logging = logging;
-    this.context = context;
-  }
+    private readonly context: ServiceContext,
+    private readonly simpletRepository: SimpletsRepository,
+    private readonly deployService: DeployMicroservice,
+    private readonly storageService: StorageMicroservice,
+    private readonly nftsService: NftsMicroservice,
+    private readonly authenticationService: AuthenticationMicroservice,
+    private readonly mailingClient: Mailing,
+    private readonly encryptionService: EncryptionService,
+    private readonly logging: Lmas,
+  ) {}
 
   async listSimplets(query: SimpletsQueryFilterDto) {
     return await this.simpletRepository.listSimplets(query);

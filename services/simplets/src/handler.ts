@@ -49,7 +49,6 @@ const lambdaHandler: Handler = async (
     new StorageMicroservice(serviceContext),
     new NftsMicroservice(serviceContext),
     new AuthenticationMicroservice(serviceContext),
-    new SimpletsSpendService(serviceContext),
     new Mailing(serviceContext),
     new EncryptionService(new AWS_KMS(), env.DEPLOY_KMS_KEY_ID),
     logging,
@@ -57,6 +56,7 @@ const lambdaHandler: Handler = async (
   const controller = new SimpletsController(
     serviceContext,
     simpletsService,
+    new SimpletsSpendService(serviceContext),
     logging,
   );
 

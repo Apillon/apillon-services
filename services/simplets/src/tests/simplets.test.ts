@@ -89,12 +89,16 @@ describe('Simplets controller', () => {
       storageMicroservice,
       nftsMicroservice,
       authenticationMicroservice,
-      spendService,
       mailing,
       new EncryptionService(new AWS_KMS(), env.DEPLOY_KMS_KEY_ID),
       logger,
     );
-    controller = new SimpletsController(context, simpletsService, logger);
+    controller = new SimpletsController(
+      context,
+      simpletsService,
+      spendService,
+      logger,
+    );
   });
 
   it('should throw an error for an invalid event type', async () => {
