@@ -43,6 +43,8 @@ export async function processEvent(
       return controller.listDeployedSimplets(event.body);
     case SimpletsEventType.GET_DEPLOYED_SIMPLET:
       return controller.getDeployedSimplet(event.body.uuid);
+    case SimpletsEventType.IS_SIMPLET_QUOTA_REACHED:
+      return controller.isSimpletQuotaReached(event.body.uuid);
     default:
       throw new Error('Invalid Simplet Event Type');
   }

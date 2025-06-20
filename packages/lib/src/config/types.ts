@@ -453,6 +453,7 @@ export enum SimpletsEventType {
   // deployed
   GET_DEPLOYED_SIMPLET = 'get-deployed-simplet',
   LIST_DEPLOYED_SIMPLETS = 'list-deployed-simplets',
+  IS_SIMPLET_QUOTA_REACHED = 'is-simplet-quota-reached',
 }
 
 export enum InfrastructureEventType {
