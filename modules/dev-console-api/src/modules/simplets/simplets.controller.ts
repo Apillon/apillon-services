@@ -23,7 +23,9 @@ import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { SimpletsService } from './simplets.service';
 import { ProjectModifyGuard } from '../../guards/project-modify.guard';
+import { ProjectAccessGuard } from '../../guards/project-access.guard';
 
+const ROUTE_DEPLOYED_PREFIX = '/deployed';
 @Controller('simplets')
 @Permissions({ permission: DefaultPermission.SIMPLETS })
 export class SimpletsController {
@@ -31,7 +33,7 @@ export class SimpletsController {
 
   //#region ------------- DEPLOYED SIMPLETS -------------
 
-  @Post('deployed/:uuid/redeploy')
+  @Post(`${ROUTE_DEPLOYED_PREFIX}/:uuid/redeploy`)
   @Validation({ dto: SimpletRedeployDto })
   @UseGuards(AuthGuard, ValidationGuard)
   @Permissions(
@@ -47,7 +49,7 @@ export class SimpletsController {
     return await this.simpletsService.redeploySimplet(context, body);
   }
 
-  @Get('/deployed')
+  @Get(ROUTE_DEPLOYED_PREFIX)
   @Permissions({ role: RoleGroup.ProjectAccess })
   @Validation({
     dto: DeployedSimpletsQueryFilterDto,
@@ -61,7 +63,7 @@ export class SimpletsController {
     return await this.simpletsService.listDeployedSimplets(context, query);
   }
 
-  @Get('/deployed/:uuid')
+  @Get(`${ROUTE_DEPLOYED_PREFIX}/:uuid`)
   @Permissions(
     { role: DefaultUserRole.PROJECT_OWNER },
     { role: DefaultUserRole.PROJECT_ADMIN },
@@ -72,6 +74,20 @@ export class SimpletsController {
     @Param('uuid') uuid: string,
   ) {
     return await this.simpletsService.getDeployedSimplet(context, uuid);
+  }
+
+  @Get(`${ROUTE_DEPLOYED_PREFIX}/projects/:project_uuid/quota-reached`)
+  @Permissions({ role: RoleGroup.ProjectAccess })
+  @UseGuards(AuthGuard, ProjectAccessGuard)
+  async isBackendQuotaReached(
+    @Ctx()
+    context: DevConsoleApiContext,
+    @Param('project_uuid') project_uuid: string,
+  ) {
+    return await this.simpletsService.isSimpletQuotaReached(
+      context,
+      project_uuid,
+    );
   }
 
   //#endregion
@@ -85,7 +101,7 @@ export class SimpletsController {
     validateFor: ValidateFor.QUERY,
   })
   @UseGuards(ValidationGuard, AuthGuard)
-  async listDeployedContracts(
+  async listSimplets(
     @Ctx() context: DevConsoleApiContext,
     @Query() query: SimpletsQueryFilterDto,
   ) {
@@ -114,7 +130,7 @@ export class SimpletsController {
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
   @UseGuards(AuthGuard)
-  async getDeployedContract(
+  async getSimplet(
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') uuid: string,
   ) {

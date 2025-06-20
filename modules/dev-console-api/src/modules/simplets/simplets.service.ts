@@ -165,4 +165,13 @@ export class SimpletsService {
 
     return createdApiKeyResponse.data;
   }
+
+  async isSimpletQuotaReached(
+    context: DevConsoleApiContext,
+    projectUuid: string,
+  ) {
+    return (
+      await new SimpletsMicroservice(context).isSimpletQuotaReached(projectUuid)
+    ).data;
+  }
 }

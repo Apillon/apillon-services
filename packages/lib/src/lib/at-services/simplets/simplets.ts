@@ -79,4 +79,10 @@ export class SimpletsMicroservice extends BaseService {
   }
 
   //#endregion
+  async isSimpletQuotaReached(projectUuid: string) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.IS_SIMPLET_QUOTA_REACHED,
+      body: { uuid: projectUuid },
+    });
+  }
 }

@@ -98,7 +98,16 @@ export class SimpletsController {
 
   async deploySimplet(body: SimpletDeployDto): Promise<DeployResult> {
     // VALIDATION
-    await this.validateSimpletsQuota(body.project_uuid);
+    const isSimpletQuotaReached = await this.getSimpletQuotaReached(
+      body.project_uuid,
+    );
+    if (isSimpletQuotaReached) {
+      throw new SimpletsCodeException({
+        status: 403,
+        code: SimpletsErrorCode.MAX_SIMPLETS_COUNT_REACHED,
+        context: this.context,
+      });
+    }
     const { simplet, simpletDeploy } =
       await this.simpletsService.newSimpletDeploy(
         body.project_uuid,
@@ -168,7 +177,7 @@ export class SimpletsController {
     };
   }
 
-  private async validateSimpletsQuota(project_uuid: string) {
+  private async getSimpletQuotaReached(project_uuid: string) {
     const maxBackends = (
       await this.configService.getQuota({
         quota_id: QuotaCode.MAX_SIMPLET_COUNT,
@@ -177,13 +186,7 @@ export class SimpletsController {
     ).value;
     const simpletsCount =
       await this.simpletsService.getDeployedSimpletsCount(project_uuid);
-    if (simpletsCount >= maxBackends) {
-      throw new SimpletsCodeException({
-        status: 403,
-        code: SimpletsErrorCode.MAX_SIMPLETS_COUNT_REACHED,
-        context: this.context,
-      });
-    }
+    return simpletsCount >= maxBackends;
   }
 
   async redeploySimplet(body: SimpletRedeployDto): Promise<DeployResult> {
@@ -246,7 +249,10 @@ export class SimpletsController {
 
   //#region ------------- DEPLOYED SIMPLETS -------------
 
-  //#endregion
+  async isSimpletQuotaReached(project_uuid: string) {
+    return { quotaReached: await this.getSimpletQuotaReached(project_uuid) };
+  }
+
   async getDeployedSimplet(uuid: string) {
     const deployedSimplet = await this.simpletsService.getDeployedSimplet(uuid);
 
