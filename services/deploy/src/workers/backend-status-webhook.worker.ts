@@ -32,7 +32,7 @@ export class BackendStatusWebhookWorker extends BaseQueueWorker {
     type: QueueWorkerType,
     backendRepository: DeployRepository,
     phalaClient: PhalaCloudClient,
-    WorkerService: WorkerService,
+    workerService: WorkerService,
     logger: Lmas,
   ) {
     super(
@@ -44,7 +44,7 @@ export class BackendStatusWebhookWorker extends BaseQueueWorker {
     );
     this.backendRepository = backendRepository;
     this.phalaClient = phalaClient;
-    this.workerService = WorkerService;
+    this.workerService = workerService;
   }
 
   public async runPlanner(): Promise<any[]> {
