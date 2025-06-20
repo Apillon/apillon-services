@@ -11,6 +11,7 @@ import {
   NFTCollectionType,
   NftsMicroservice,
   ResourceStatus,
+  Scs,
   SimpletsEventType,
   StorageMicroservice,
   WebsiteSource,
@@ -95,6 +96,7 @@ describe('Simplets controller', () => {
     );
     controller = new SimpletsController(
       context,
+      new Scs(context),
       simpletsService,
       spendService,
       logger,

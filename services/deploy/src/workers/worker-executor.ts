@@ -165,8 +165,6 @@ export async function handleLambdaEvent(
           encryptionService,
           deployRepository,
           phalaDockerDeployStrategy,
-          new Lmas(),
-          scs,
         ),
         scs,
         new Mailing(context),
