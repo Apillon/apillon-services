@@ -11,7 +11,7 @@ export async function upgrade(
 ) {
   await queryFn(`
     INSERT INTO ${DbTables.QUOTA} (id, status, groupName, name, description, valueType, value, type)
-    VALUES (${QuotaCode.MAX_SIMPLET_COUNT}, ${SqlModelStatus.ACTIVE}, 'Deploy', 'Active simplet backend count',
+    VALUES (${QuotaCode.MAX_SIMPLET_COUNT}, ${SqlModelStatus.ACTIVE}, 'Deploy', 'Active simplet count',
             'Number of simplets that can be deployed by a project', 1, 1, ${QuotaType.FOR_PROJECT});
   `);
 
@@ -19,17 +19,17 @@ export async function upgrade(
     INSERT INTO ${DbTables.OVERRIDE} (quota_id, status, package_id, description, value) VALUES (${QuotaCode.MAX_SIMPLET_COUNT},
                                                                                                 ${SqlModelStatus.ACTIVE},
                                                                                                 ${SubscriptionPackageId.CATERPILLAR},
-                                                                                                'Caterpillar plan - Active simplet backend count',
+                                                                                                'Caterpillar plan - Active simplet count',
                                                                                                 3),
                                                                                                (${QuotaCode.MAX_SIMPLET_COUNT},
                                                                                                 ${SqlModelStatus.ACTIVE},
                                                                                                 ${SubscriptionPackageId.COCOON},
-                                                                                                'Cocoon plan - Active simplet backend count',
+                                                                                                'Cocoon plan - Active simplet count',
                                                                                                 3),
                                                                                                (${QuotaCode.MAX_SIMPLET_COUNT},
                                                                                                 ${SqlModelStatus.ACTIVE},
                                                                                                 ${SubscriptionPackageId.BUTTERFLY},
-                                                                                                'Butterfly plan - Active simplet backend count',
+                                                                                                'Butterfly plan - Active simplet count',
                                                                                                 3);
   `);
 }
