@@ -52,7 +52,7 @@ export class SimpletsService {
     return await this.simpletRepository.listSimplets(query);
   }
 
-  async createSimpletDeploy(
+  async newSimpletDeploy(
     project_uuid: string,
     simplet_uuid: string,
     simpletName: string,
@@ -474,5 +474,9 @@ export class SimpletsService {
       { key: 'APP_SECRET', value: crypto.randomBytes(32).toString('hex') },
       { key: 'COLLECTION_UUID', value: collection_uuid },
     ]);
+  }
+
+  async getDeployedSimpletsCount(project_uuid: string) {
+    return await this.simpletRepository.getDeployedSimpletsCount(project_uuid);
   }
 }

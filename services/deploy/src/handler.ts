@@ -1,11 +1,4 @@
-import {
-  AppEnvironment,
-  AWS_KMS,
-  EncryptionService,
-  env,
-  Lmas,
-  Scs,
-} from '@apillon/lib';
+import { AppEnvironment, AWS_KMS, EncryptionService, env } from '@apillon/lib';
 import {
   ErrorHandler,
   InitializeContextAndFillUser,
@@ -59,8 +52,6 @@ const lambdaHandler: Handler = async (
       encryptionService,
       deployRepository,
       phalaDockerDeployStrategy,
-      new Lmas(),
-      new Scs(serviceContext),
     ),
     encryptionService,
   );

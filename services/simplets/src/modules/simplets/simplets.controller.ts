@@ -3,7 +3,9 @@ import {
   Lmas,
   LogType,
   ProductCode,
+  QuotaCode,
   ResourceStatus,
+  Scs,
   ServiceName,
   SimpletDeployDto,
   SimpletRedeployDto,
@@ -27,6 +29,7 @@ interface DeployResult {
 export class SimpletsController {
   constructor(
     private readonly context: ServiceContext,
+    private readonly configService: Scs,
     private readonly simpletsService: SimpletsService,
     private readonly spendService: SimpletsSpendService,
     private readonly logging: Lmas,
@@ -94,15 +97,10 @@ export class SimpletsController {
   }
 
   async deploySimplet(body: SimpletDeployDto): Promise<DeployResult> {
-    await this.logging.writeLog({
-      logType: LogType.INFO,
-      message: `Deploying simplet with uuid ${body.simplet_uuid}.`,
-      service: ServiceName.SIMPLETS,
-      location: 'SimpletsController.deploySimplet',
-      data: body,
-    });
+    // VALIDATION
+    await this.validateSimpletsQuota(body.project_uuid);
     const { simplet, simpletDeploy } =
-      await this.simpletsService.createSimpletDeploy(
+      await this.simpletsService.newSimpletDeploy(
         body.project_uuid,
         body.simplet_uuid,
         body.name,
@@ -112,16 +110,22 @@ export class SimpletsController {
         body.frontendVariables,
         body.backendVariables,
       );
+    await this.simpletsService.verifyNftCollection(
+      simpletDeploy,
+      body.nftCollection_uuid,
+    );
 
+    // DEPLOY ALL
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Deploying simplet with uuid ${body.simplet_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsController.deploySimplet',
+      data: body,
+    });
     let success = false;
     const errors: string[] = [];
     try {
-      // NFT COLLECTION CHECK
-      await this.simpletsService.verifyNftCollection(
-        simpletDeploy,
-        body.nftCollection_uuid,
-      );
-      // DEPLOY ALL
       await this.spendService.chargeDeploy(
         body.project_uuid,
         simpletDeploy.simpletDeploy_uuid,
@@ -162,6 +166,24 @@ export class SimpletsController {
       data: simpletDeploy.serializeByContext(this.context),
       errors,
     };
+  }
+
+  private async validateSimpletsQuota(project_uuid: string) {
+    const maxBackends = (
+      await this.configService.getQuota({
+        quota_id: QuotaCode.MAX_SIMPLET_COUNT,
+        project_uuid,
+      })
+    ).value;
+    const simpletsCount =
+      await this.simpletsService.getDeployedSimpletsCount(project_uuid);
+    if (simpletsCount >= maxBackends) {
+      throw new SimpletsCodeException({
+        status: 403,
+        code: SimpletsErrorCode.MAX_SIMPLETS_COUNT_REACHED,
+        context: this.context,
+      });
+    }
   }
 
   async redeploySimplet(body: SimpletRedeployDto): Promise<DeployResult> {

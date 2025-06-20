@@ -3,6 +3,7 @@ import {
   ModelValidationException,
   PoolConnection,
   PopulateFrom,
+  ResourceStatus,
   SimpletsQueryFilterDto,
   SqlModelStatus,
   ValidatorErrorCode,
@@ -155,4 +156,18 @@ export class SimpletsRepository extends BaseRepository {
   }
 
   //#endregion
+  async getDeployedSimpletsCount(project_uuid: string, conn?: PoolConnection) {
+    const data = await this.context.mysql.paramExecute(
+      `
+        SELECT COUNT(simpletDeploy_uuid) AS count
+        FROM \`${DbTables.SIMPLET_DEPLOY}\`
+        WHERE project_uuid = @project_uuid
+          AND (backendStatus <> ${ResourceStatus.FAILED} OR frontendStatus <> ${ResourceStatus.FAILED});
+      `,
+      { project_uuid },
+      conn,
+    );
+
+    return data[0].count;
+  }
 }

@@ -8,7 +8,6 @@ import {
   EncryptionService,
   Lmas,
   ResourceStatus,
-  Scs,
 } from '@apillon/lib';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -147,8 +146,6 @@ describe('DeployService tests', () => {
         encryptionService,
         deployRepository,
         new PhalaDockerDeployStrategy(phalaClient),
-        logger,
-        new Scs(context),
       ),
       encryptionService,
     );

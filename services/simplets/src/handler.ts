@@ -8,6 +8,7 @@ import {
   Lmas,
   Mailing,
   NftsMicroservice,
+  Scs,
   StorageMicroservice,
 } from '@apillon/lib';
 import {
@@ -55,6 +56,7 @@ const lambdaHandler: Handler = async (
   );
   const controller = new SimpletsController(
     serviceContext,
+    new Scs(serviceContext),
     simpletsService,
     new SimpletsSpendService(serviceContext),
     logging,
