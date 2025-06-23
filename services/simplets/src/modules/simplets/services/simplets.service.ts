@@ -10,6 +10,7 @@ import {
   DeploySecretDto,
   EncryptionService,
   env,
+  GenericDeployRequestDto,
   Lmas,
   LogType,
   Mailing,
@@ -20,6 +21,7 @@ import {
   ResourceStatus,
   ServiceName,
   SimpletsQueryFilterDto,
+  SqlModelStatus,
   StorageMicroservice,
   ValidatorErrorCode,
   WebsiteDeployDto,
@@ -478,5 +480,95 @@ export class SimpletsService {
 
   async getDeployedSimpletsCount(project_uuid: string) {
     return await this.simpletRepository.getDeployedSimpletsCount(project_uuid);
+  }
+
+  async deleteSimpleDeploy(simpletDeploy_uuid: string) {
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Starting deletion of simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.deleteSimpleDeploy',
+    });
+    const simpletDeploy =
+      await this.simpletRepository.getSimpletDeploy(simpletDeploy_uuid);
+
+    if (simpletDeploy.status !== SqlModelStatus.ACTIVE) {
+      return;
+    }
+
+    // Delete backend deployment if it exists
+    if (simpletDeploy.backend_uuid) {
+      try {
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Stopping backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.deleteSimpleDeploy',
+        });
+
+        await this.deployService.stopInstance(
+          new GenericDeployRequestDto().populate({
+            deploy_uuid: simpletDeploy.backend_uuid,
+          }),
+        );
+
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Successfully deleted backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.deleteSimpleDeploy',
+        });
+      } catch (e) {
+        await this.logging.writeLog({
+          sendAdminAlert: true,
+          logType: LogType.ERROR,
+          message: `Failed to delete backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.deleteSimpleDeploy',
+          data: e,
+        });
+      }
+    }
+
+    // Delete frontend deployment if it exists
+    if (simpletDeploy.frontend_uuid) {
+      try {
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Archiving website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.deleteSimpleDeploy',
+        });
+
+        await this.storageService.archiveWebsite(simpletDeploy.frontend_uuid);
+
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Successfully deleted website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.deleteSimpleDeploy',
+        });
+      } catch (e) {
+        await this.logging.writeLog({
+          sendAdminAlert: true,
+          logType: LogType.ERROR,
+          message: `Failed to delete website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.deleteSimpleDeploy',
+          data: e,
+        });
+      }
+    }
+
+    // Mark the deployed simplet as deleted
+    simpletDeploy.status = SqlModelStatus.DELETED;
+    await simpletDeploy.update();
+
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Successfully completed deletion of simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.deleteSimpleDeploy',
+    });
   }
 }

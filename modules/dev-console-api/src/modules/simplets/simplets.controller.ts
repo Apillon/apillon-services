@@ -12,6 +12,7 @@ import { Ctx, Permissions, Validation } from '@apillon/modules-lib';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -135,6 +136,22 @@ export class SimpletsController {
     @Param('uuid') uuid: string,
   ) {
     return await this.simpletsService.getSimplet(context, uuid);
+  }
+
+  @Delete(`${ROUTE_DEPLOYED_PREFIX}/:uuid`)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async deleteSimpleDeploy(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') simpletDeploy_uuid: string,
+  ) {
+    return await this.simpletsService.deleteSimpleDeploy(
+      context,
+      simpletDeploy_uuid,
+    );
   }
 
   //#endregion

@@ -111,7 +111,7 @@ export class SimpletsService {
 
   //#endregion
 
-  //#region ------------- SIMPLETS -------------
+  //#region ------------- DEPLOYED SIMPLETS -------------
 
   async getDeployedSimplet(context: DevConsoleApiContext, uuid: string) {
     return (await new SimpletsMicroservice(context).getDeployedSimplet(uuid))
@@ -123,6 +123,11 @@ export class SimpletsService {
     query: DeployedSimpletsQueryFilterDto,
   ) {
     return (await new SimpletsMicroservice(context).listDeployedSimplets(query))
+      .data;
+  }
+
+  async deleteSimpleDeploy(context: DevConsoleApiContext, uuid: string) {
+    return (await new SimpletsMicroservice(context).deleteSimpleDeploy(uuid))
       .data;
   }
 
