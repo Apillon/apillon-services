@@ -362,6 +362,26 @@ export class SubstrateService {
         `Processing wallet with address ${wallet.address} with last nonce ${wallet.lastProcessedNonce}`,
       );
 
+      // Check wallet balance before processing transactions
+      const balanceData = await wallet.checkAndUpdateBalance();
+      if (balanceData.isBelowTransactionThreshold) {
+        await eventLogger(
+          {
+            logType: LogType.ERROR,
+            message: `Skipping transactions for wallet ${wallet.address} on chain ${getEnumKey(SubstrateChain, _event.chain)} - balance below transaction minimum`,
+            service: ServiceName.BLOCKCHAIN,
+            data: {
+              wallet: wallet.address,
+              chain: _event.chain,
+              chainType: ChainType.SUBSTRATE,
+              ...balanceData,
+            },
+          },
+          LogOutput.NOTIFY_WARN,
+        );
+        continue;
+      }
+
       const transactions = await new Transaction({}, context).getList(
         _event.chain,
         ChainType.SUBSTRATE,
