@@ -1634,7 +1634,6 @@ const TYPE_ERROR_MAP: Record<TransactionType, NftsErrorCode> = {
   [TransactionType.SET_COLLECTION_BASE_URI]:
     NftsErrorCode.SET_NFT_BASE_URI_ERROR,
   [TransactionType.MINT_NFT]: NftsErrorCode.MINT_NFT_ERROR,
-  [TransactionType.NEST_MINT_NFT]: NftsErrorCode.NEST_MINT_NFT_ERROR,
   [TransactionType.BURN_NFT]: NftsErrorCode.BURN_NFT_ERROR,
 };
 

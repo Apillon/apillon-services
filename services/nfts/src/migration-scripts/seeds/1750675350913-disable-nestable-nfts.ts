@@ -1,12 +1,13 @@
 import { DbTables } from '../../config/types';
+import { NFTCollectionType, SqlModelStatus } from '@apillon/lib';
 
 export async function upgrade(
   queryFn: (query: string, values?: any[]) => Promise<void>,
 ) {
   await queryFn(
     `UPDATE ${DbTables.CONTRACT_VERSION}
-     SET status = 3
-     WHERE collectionType = 2;`,
+     SET status = ${SqlModelStatus.INACTIVE}
+     WHERE collectionType = ${NFTCollectionType.NESTABLE};`,
   );
 }
 
@@ -15,7 +16,7 @@ export async function downgrade(
 ) {
   await queryFn(
     `UPDATE ${DbTables.CONTRACT_VERSION}
-     SET status = 5
-     WHERE collectionType = 2;`,
+     SET status = ${SqlModelStatus.ACTIVE}
+     WHERE collectionType = ${NFTCollectionType.NESTABLE};`,
   );
 }

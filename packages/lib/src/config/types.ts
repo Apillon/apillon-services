@@ -79,6 +79,7 @@ export const ENTERPRISE_USER_EVM_CHAINS = [
 
 export enum NFTCollectionType {
   GENERIC = 1,
+  NESTABLE = 2, // nestable NFTs were deprecated
 }
 
 export enum SmartContractType {
