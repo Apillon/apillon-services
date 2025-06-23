@@ -46,31 +46,7 @@ export class SimpletsController {
   private async deploySimpletComponents(
     simplet: Simplet,
     simpletDeploy: SimpletDeploy,
-    overrideWalletIntegration_uuid: string = null,
   ) {
-    // EMBEDDED WALLET
-    const walletIntegration_uuid =
-      simpletDeploy.walletIntegration_uuid || overrideWalletIntegration_uuid;
-    let embeddedWallet: IEmbeddedWallet;
-    if (walletIntegration_uuid) {
-      embeddedWallet = await this.simpletsService.getEmbeddedWallet(
-        walletIntegration_uuid,
-      );
-      if (embeddedWallet.project_uuid !== simpletDeploy.project_uuid) {
-        throw new SimpletsCodeException({
-          status: 403,
-          code: SimpletsErrorCode.WALLET_ACCESS_DENIED,
-          errorMessage: 'Access to wallet denied - project mismatch',
-        });
-      }
-    } else {
-      embeddedWallet = await this.simpletsService.createWallet(
-        simpletDeploy.project_uuid,
-        simpletDeploy.name,
-      );
-    }
-    simpletDeploy.walletIntegration_uuid = embeddedWallet.integration_uuid;
-
     // BACKEND DEPLOY
     if (simplet.backendRepo && !simpletDeploy.backend_uuid) {
       simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
@@ -94,6 +70,35 @@ export class SimpletsController {
         simplet,
       );
     }
+  }
+
+  private async getOrCreateWallet(
+    project_uuid: string,
+    name: string,
+    walletIntegration_uuid?: string,
+  ): Promise<IEmbeddedWallet> {
+    if (walletIntegration_uuid) {
+      return await this.getWallet(project_uuid, walletIntegration_uuid);
+    } else {
+      return await this.simpletsService.createWallet(project_uuid, name);
+    }
+  }
+
+  private async getWallet(
+    project_uuid: string,
+    walletIntegration_uuid: string,
+  ) {
+    const embeddedWallet = await this.simpletsService.getEmbeddedWallet(
+      walletIntegration_uuid,
+    );
+    if (embeddedWallet.project_uuid !== project_uuid) {
+      throw new SimpletsCodeException({
+        status: 403,
+        code: SimpletsErrorCode.WALLET_ACCESS_DENIED,
+        errorMessage: 'Access to wallet denied - project mismatch',
+      });
+    }
+    return embeddedWallet;
   }
 
   async deploySimplet(body: SimpletDeployDto): Promise<DeployResult> {
@@ -124,6 +129,14 @@ export class SimpletsController {
       body.nftCollection_uuid,
     );
 
+    // EMBEDDED WALLET
+    const embeddedWallet = await this.getOrCreateWallet(
+      simpletDeploy.project_uuid,
+      simpletDeploy.name,
+      simpletDeploy.walletIntegration_uuid || body.walletIntegration_uuid,
+    );
+    simpletDeploy.walletIntegration_uuid = embeddedWallet.integration_uuid;
+
     // DEPLOY ALL
     await this.logging.writeLog({
       logType: LogType.INFO,
@@ -139,12 +152,7 @@ export class SimpletsController {
         body.project_uuid,
         simpletDeploy.simpletDeploy_uuid,
         ProductCode.SIMPLET_NFT_STUDIO_DEPLOY,
-        () =>
-          this.deploySimpletComponents(
-            simplet,
-            simpletDeploy,
-            body.walletIntegration_uuid,
-          ),
+        () => this.deploySimpletComponents(simplet, simpletDeploy),
       );
       await this.logging.writeLog({
         logType: LogType.INFO,
@@ -203,6 +211,11 @@ export class SimpletsController {
     );
     const simplet = await this.simpletsService.getSimplet(
       simpletDeploy.simplet_uuid,
+    );
+    // get wallet to verify it exists, else error is thrown
+    await this.getWallet(
+      simpletDeploy.project_uuid,
+      simpletDeploy.walletIntegration_uuid,
     );
 
     let success = false;
