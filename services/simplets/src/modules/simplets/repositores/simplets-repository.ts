@@ -69,20 +69,50 @@ export class SimpletsRepository extends BaseRepository {
     return simplet;
   }
 
-  async getSimpletDeploy(simpletDeploy_uuid: string): Promise<SimpletDeploy> {
-    const simpletDeploy = await new SimpletDeploy(
+  //#endregion
+
+  //#region ------------- DEPLOYED SIMPLETS -------------
+
+  async listDeployedSimplets(filter: DeployedSimpletsQueryFilterDto) {
+    return await new SimpletDeploy({}, this.context)
+      .populate({
+        project_uuid: filter.project_uuid,
+      })
+      .getList(filter);
+  }
+
+  async getDeployedSimplet(simpletDeploy_uuid: string): Promise<SimpletDeploy> {
+    const deployedSimplet = await new SimpletDeploy(
       {},
       this.context,
     ).populateByUUID(simpletDeploy_uuid);
-    if (!simpletDeploy || !simpletDeploy.exists()) {
+    if (!deployedSimplet || !deployedSimplet.exists()) {
       throw new SimpletsCodeException({
         status: 404,
-        code: SimpletsErrorCode.SIMPLET_NOT_FOUND,
+        code: SimpletsErrorCode.DEPLOYED_SIMPLET_NOT_FOUND,
         context: this.context,
-        errorMessage: `Simplet with simplet_uuid ${simpletDeploy_uuid} not found`,
+        errorMessage: `Deployed Simplet with uuid ${simpletDeploy_uuid} not found`,
       });
     }
-    return simpletDeploy;
+    deployedSimplet.canAccess(this.context);
+
+    return deployedSimplet;
+  }
+
+  //#endregion
+  async getDeployedSimpletsCount(project_uuid: string, conn?: PoolConnection) {
+    const data = await this.context.mysql.paramExecute(
+      `
+        SELECT COUNT(simpletDeploy_uuid) AS count
+        FROM \`${DbTables.SIMPLET_DEPLOY}\`
+        WHERE project_uuid = @project_uuid
+          AND (backendStatus <> ${ResourceStatus.FAILED} OR frontendStatus <> ${ResourceStatus.FAILED});
+      `,
+      { project_uuid },
+      conn,
+    );
+
+    return data[0].count;
   }
 
   async getSimpletDeployByBackend(
@@ -108,10 +138,12 @@ export class SimpletsRepository extends BaseRepository {
         errorMessage: `Simplet deploy with backend_uuid ${backend_uuid} not found`,
       });
     }
-    return new SimpletDeploy({}, this.context).populate(
+    const simpletDeploy = new SimpletDeploy({}, this.context).populate(
       data[0],
       PopulateFrom.DB,
     );
+    simpletDeploy.canAccess(this.context);
+    return simpletDeploy;
   }
 
   async getSimpletDeployByFrontend(
@@ -137,53 +169,11 @@ export class SimpletsRepository extends BaseRepository {
         errorMessage: `Simplet deploy with frontend_uuid ${frontend_uuid} not found`,
       });
     }
-    return new SimpletDeploy({}, this.context).populate(
+    const simpletDeploy = new SimpletDeploy({}, this.context).populate(
       data[0],
       PopulateFrom.DB,
     );
-  }
-
-  //#endregion
-
-  //#region ------------- DEPLOYED SIMPLETS -------------
-
-  async listDeployedSimplets(filter: DeployedSimpletsQueryFilterDto) {
-    return await new SimpletDeploy({}, this.context)
-      .populate({
-        project_uuid: filter.project_uuid,
-      })
-      .getList(filter);
-  }
-
-  async getDeployedSimplet(uuid: string): Promise<SimpletDeploy> {
-    const deployedSimplet = await new SimpletDeploy(
-      {},
-      this.context,
-    ).populateByUUID(uuid);
-    if (!deployedSimplet || !deployedSimplet.exists()) {
-      throw new SimpletsCodeException({
-        status: 404,
-        code: SimpletsErrorCode.DEPLOYED_SIMPLET_NOT_FOUND,
-        context: this.context,
-        errorMessage: `Deployed Simplet with uuid ${uuid} not found`,
-      });
-    }
-    return deployedSimplet;
-  }
-
-  //#endregion
-  async getDeployedSimpletsCount(project_uuid: string, conn?: PoolConnection) {
-    const data = await this.context.mysql.paramExecute(
-      `
-        SELECT COUNT(simpletDeploy_uuid) AS count
-        FROM \`${DbTables.SIMPLET_DEPLOY}\`
-        WHERE project_uuid = @project_uuid
-          AND (backendStatus <> ${ResourceStatus.FAILED} OR frontendStatus <> ${ResourceStatus.FAILED});
-      `,
-      { project_uuid },
-      conn,
-    );
-
-    return data[0].count;
+    simpletDeploy.canAccess(this.context);
+    return simpletDeploy;
   }
 }

@@ -93,9 +93,7 @@ export class SimpletsService {
   }
 
   async getDeployedSimplet(uuid: string): Promise<SimpletDeploy> {
-    const simpletDeploy = await this.simpletRepository.getDeployedSimplet(uuid);
-    simpletDeploy.canAccess(this.context);
-    return simpletDeploy;
+    return await this.simpletRepository.getDeployedSimplet(uuid);
   }
 
   // async deployContract(
@@ -490,7 +488,7 @@ export class SimpletsService {
       location: 'SimpletsService.deleteSimpletDeploy',
     });
     const simpletDeploy =
-      await this.simpletRepository.getSimpletDeploy(simpletDeploy_uuid);
+      await this.simpletRepository.getDeployedSimplet(simpletDeploy_uuid);
 
     if (simpletDeploy.status !== SqlModelStatus.ACTIVE) {
       return;
