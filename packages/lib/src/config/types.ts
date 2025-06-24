@@ -455,6 +455,7 @@ export enum SimpletsEventType {
   GET_DEPLOYED_SIMPLET = 'get-deployed-simplet',
   LIST_DEPLOYED_SIMPLETS = 'list-deployed-simplets',
   DELETE_SIMPLET_DEPLOY = 'delete-simplet-deploy',
+  RESTORE_SIMPLET_DEPLOY = 'restore-simplet-deploy',
   IS_SIMPLET_QUOTA_REACHED = 'is-simplet-quota-reached',
 }
 

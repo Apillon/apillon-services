@@ -47,6 +47,8 @@ export async function processEvent(
       return controller.isSimpletQuotaReached(event.body.uuid);
     case SimpletsEventType.DELETE_SIMPLET_DEPLOY:
       return controller.deleteSimpletDeploy(event.body.uuid);
+    case SimpletsEventType.RESTORE_SIMPLET_DEPLOY:
+      return controller.restoreSimpletDeploy(event.body.uuid);
     default:
       throw new Error('Invalid Simplet Event Type');
   }

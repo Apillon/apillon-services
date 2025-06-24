@@ -298,6 +298,44 @@ export class SimpletsController {
     }
   }
 
+  async restoreSimpletDeploy(simpletDeploy_uuid: string) {
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Restoring simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsController.restoreSimpletDeploy',
+    });
+
+    try {
+      await this.simpletsService.restoreSimpletDeploy(simpletDeploy_uuid);
+
+      await this.logging.writeLog({
+        logType: LogType.INFO,
+        message: `Successfully restored simplet deploy with uuid ${simpletDeploy_uuid}.`,
+        service: ServiceName.SIMPLETS,
+        location: 'SimpletsController.restoreSimpletDeploy',
+      });
+
+      return { success: true };
+    } catch (e: unknown) {
+      const message =
+        e instanceof SimpletsCodeException
+          ? e.message
+          : `An unexpected error occurred while restoring simplet deploy with uuid ${simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`;
+
+      await this.logging.writeLog({
+        sendAdminAlert: true,
+        logType: LogType.ERROR,
+        message,
+        service: ServiceName.SIMPLETS,
+        location: 'SimpletsController.restoreSimpletDeploy',
+        data: e,
+      });
+
+      return { success: false, error: message };
+    }
+  }
+
   //#region ------------- DEPLOYED SIMPLETS -------------
 
   async isSimpletQuotaReached(project_uuid: string) {

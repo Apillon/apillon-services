@@ -569,4 +569,98 @@ export class SimpletsService {
       location: 'SimpletsService.deleteSimpletDeploy',
     });
   }
+
+  async restoreSimpletDeploy(simpletDeploy_uuid: string) {
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Starting restoration of simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.restoreSimpletDeploy',
+    });
+    const simpletDeploy =
+      await this.simpletRepository.getDeployedSimplet(simpletDeploy_uuid);
+
+    if (simpletDeploy.status !== SqlModelStatus.ARCHIVED) {
+      throw new SimpletsCodeException({
+        status: 422,
+        code: SimpletsErrorCode.INVALID_SIMPLET_DEPLOY_STATUS,
+        errorMessage: `Cannot restore simplet deploy with uuid ${simpletDeploy_uuid} because it is not archived.`,
+      });
+    }
+
+    // Restore backend deployment if it exists
+    if (simpletDeploy.backend_uuid) {
+      try {
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Starting backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.restoreSimpletDeploy',
+        });
+
+        await this.deployService.startInstance(
+          new GenericDeployRequestDto().populate({
+            deploy_uuid: simpletDeploy.backend_uuid,
+          }),
+        );
+
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Successfully restored backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.restoreSimpletDeploy',
+        });
+      } catch (e) {
+        await this.logging.writeLog({
+          sendAdminAlert: true,
+          logType: LogType.ERROR,
+          message: `Failed to restore backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.restoreSimpletDeploy',
+          data: e,
+        });
+      }
+    }
+
+    // Restore frontend deployment if it exists
+    if (simpletDeploy.frontend_uuid) {
+      try {
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Activating website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.restoreSimpletDeploy',
+        });
+
+        await this.storageService.activateWebsite(simpletDeploy.frontend_uuid);
+
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Successfully restored website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.restoreSimpletDeploy',
+        });
+      } catch (e) {
+        await this.logging.writeLog({
+          sendAdminAlert: true,
+          logType: LogType.ERROR,
+          message: `Failed to restore website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.restoreSimpletDeploy',
+          data: e,
+        });
+      }
+    }
+
+    // Mark the deployed simplet as active
+    simpletDeploy.status = SqlModelStatus.ACTIVE;
+    await simpletDeploy.update();
+
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Successfully completed restoration of simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.restoreSimpletDeploy',
+    });
+  }
 }

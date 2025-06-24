@@ -154,5 +154,21 @@ export class SimpletsController {
     );
   }
 
+  @Post(`${ROUTE_DEPLOYED_PREFIX}/:uuid/restore`)
+  @Permissions(
+    { role: DefaultUserRole.PROJECT_OWNER },
+    { role: DefaultUserRole.PROJECT_ADMIN },
+  )
+  @UseGuards(AuthGuard)
+  async restoreSimpletDeploy(
+    @Ctx() context: DevConsoleApiContext,
+    @Param('uuid') simpletDeploy_uuid: string,
+  ) {
+    return await this.simpletsService.restoreSimpletDeploy(
+      context,
+      simpletDeploy_uuid,
+    );
+  }
+
   //#endregion
 }

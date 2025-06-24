@@ -85,6 +85,13 @@ export class SimpletsMicroservice extends BaseService {
     });
   }
 
+  public async restoreSimpletDeploy(simpletDeploy_uuid: string) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.RESTORE_SIMPLET_DEPLOY,
+      body: { uuid: simpletDeploy_uuid },
+    });
+  }
+
   async isSimpletQuotaReached(projectUuid: string) {
     return await this.emitEvent({
       eventName: SimpletsEventType.IS_SIMPLET_QUOTA_REACHED,
