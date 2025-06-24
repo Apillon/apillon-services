@@ -34,6 +34,9 @@ export class ComputingMicroservice extends BaseService {
     this.isDefaultAsync = false;
   }
 
+  /**
+   * @deprecated Schrodinger contract functionality is deprecated and will be removed in a future release
+   */
   public async createContract(params: CreateContractDto) {
     const data = {
       eventName: ComputingEventType.CREATE_CONTRACT,
@@ -92,6 +95,9 @@ export class ComputingMicroservice extends BaseService {
   }
 
   // TODO: TransferOwnershipDto was removed here and replaced with any so that we don't import blockchain-lib into lib
+  /**
+   * @deprecated Schrodinger contract functionality is deprecated and will be removed in a future release
+   */
   public async transferContractOwnership(body: any) {
     const data = {
       eventName: ComputingEventType.TRANSFER_CONTRACT_OWNERSHIP,
@@ -100,6 +106,9 @@ export class ComputingMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  /**
+   * @deprecated Schrodinger contract functionality is deprecated and will be removed in a future release
+   */
   public async encryptContent(body: EncryptContentDto) {
     const data = {
       eventName: ComputingEventType.ENCRYPT_CONTENT,
@@ -108,6 +117,9 @@ export class ComputingMicroservice extends BaseService {
     return await this.callService(data);
   }
 
+  /**
+   * @deprecated Schrodinger contract functionality is deprecated and will be removed in a future release
+   */
   public async assignCidToNft(body: AssignCidToNft) {
     const data = {
       eventName: ComputingEventType.ASSIGN_CID_TO_NFT,

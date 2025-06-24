@@ -1,50 +1,27 @@
 import {
   AssignCidToNft,
   ClusterWalletQueryFilter,
-  ComputingContractType,
   ComputingTransactionQueryFilter,
   ContractQueryFilter,
-  CreateBucketDto,
   CreateContractDto,
   EncryptContentDto,
   Lmas,
   LogType,
-  ProductCode,
-  SerializeFor,
   ServiceName,
-  spendCreditAction,
-  SpendCreditDto,
-  SqlModelStatus,
-  StorageMicroservice,
 } from '@apillon/lib';
 import {
   DepositToClusterDto,
   TransferOwnershipDto,
 } from '@apillon/blockchain-lib/common';
 import { ServiceContext } from '@apillon/service-lib';
-import { v4 as uuidV4 } from 'uuid';
-import {
-  ComputingErrorCode,
-  ComputingTransactionStatus,
-  ContractStatus,
-  DbTables,
-  TransactionType,
-} from '../../config/types';
+import { ComputingErrorCode } from '../../config/types';
 import {
   ComputingCodeException,
-  ComputingModelValidationException,
   ComputingNotFoundException,
 } from '../../lib/exceptions';
-import {
-  assignCidToNft,
-  deployPhalaContract,
-  depositToPhalaCluster,
-  encryptContent,
-  transferContractOwnership,
-} from '../../lib/utils/contract-utils';
+import { depositToPhalaCluster } from '../../lib/utils/contract-utils';
 import { Contract } from './models/contract.model';
 import { Transaction } from '../transaction/models/transaction.model';
-import { ContractAbi } from './models/contractAbi.model';
 import { ClusterWallet } from './models/cluster-wallet.model';
 
 export class ComputingService {
@@ -54,149 +31,28 @@ export class ComputingService {
    * @param {ServiceContext} context
    * @returns {Contract}
    */
+  /**
+   * @deprecated Schrodinger contract functionality is deprecated and will be removed in a future release
+   */
   static async createContract(
     params: { body: CreateContractDto },
     context: ServiceContext,
   ) {
     console.log(`Creating computing contract: ${JSON.stringify(params.body)}`);
-    const createContractDto = new CreateContractDto(params.body);
 
-    let bucket_uuid = createContractDto.bucket_uuid;
-    if (bucket_uuid) {
-      try {
-        await new StorageMicroservice(context).getBucket(bucket_uuid);
-      } catch (e) {
-        if (e.status === 404) {
-          throw await new ComputingCodeException({
-            status: 404,
-            code: ComputingErrorCode.BUCKET_NOT_FOUND,
-            context,
-            sourceFunction: 'createContract()',
-            errorMessage: `Bucket with UUID ${bucket_uuid} not found.`,
-          }).writeToMonitor({});
-        } else {
-          throw e;
-        }
-      }
-    } else {
-      console.log(
-        `Creating bucket for computing contract with name ${createContractDto.name}.`,
-      );
-      const bucket = (
-        await new StorageMicroservice(context).createBucket(
-          new CreateBucketDto().populate({
-            project_uuid: createContractDto.project_uuid,
-            bucketType: 1,
-            name: `${createContractDto.name} bucket`,
-          }),
-        )
-      ).data;
-      bucket_uuid = bucket.bucket_uuid;
-    }
-
-    const ipfsCluster = (
-      await new StorageMicroservice(context).getProjectIpfsCluster(
-        createContractDto.project_uuid,
-      )
-    ).data;
-    const ipfsGatewayUrl = ipfsCluster.ipfsGateway.endsWith('/')
-      ? ipfsCluster.ipfsGateway.slice(0, -1)
-      : ipfsCluster.ipfsGateway;
-
-    const contractType = ComputingContractType.SCHRODINGER;
-    const contractAbi = await new ContractAbi({}, context).getLatest(
-      contractType,
-    );
-    if (!contractAbi || !contractAbi.exists()) {
-      throw await new ComputingCodeException({
-        status: 500,
-        code: ComputingErrorCode.DEPLOY_CONTRACT_ERROR,
-        context,
-        sourceFunction: 'createContract()',
-        errorMessage: `Contract ABI not found for contract type ${contractType}.`,
-      }).writeToMonitor({});
-    }
-
-    const contract = new Contract(createContractDto, context).populate({
-      contract_uuid: uuidV4(),
-      bucket_uuid,
-      status: SqlModelStatus.ACTIVE,
-      contractAbi_id: contractAbi.id,
-      data: {
-        nftContractAddress: createContractDto.contractData.nftContractAddress,
-        nftChainRpcUrl: createContractDto.contractData.nftChainRpcUrl,
-        restrictToOwner: createContractDto.contractData.restrictToOwner,
-        ipfsGatewayUrl,
-      },
-    });
-    // Set to true by default if not set
-    if (contract.data.restrictToOwner === null) {
-      contract.data.restrictToOwner = true;
-    }
-
-    await contract.validateOrThrow(ComputingModelValidationException);
-
-    const spendCredit = new SpendCreditDto(
-      {
-        project_uuid: contract.project_uuid,
-        product_id: ProductCode.COMPUTING_SCHRODINGER_CREATE,
-        referenceTable: DbTables.TRANSACTION,
-        referenceId: uuidV4(),
-        location: 'ComputingService.createContract',
-        service: ServiceName.COMPUTING,
-      },
+    // Throw error indicating that Schrodinger contract is deprecated
+    throw await new ComputingCodeException({
+      status: 410, // Gone
+      code: ComputingErrorCode.DEPLOY_CONTRACT_ERROR,
       context,
-    );
-    await spendCreditAction(
-      context,
-      spendCredit,
-      () =>
-        new Promise(async (resolve, _reject) => {
-          const conn = await context.mysql.start();
-          try {
-            await contract.insert(SerializeFor.INSERT_DB, conn);
-            await deployPhalaContract(
-              context,
-              spendCredit.referenceId,
-              contract,
-              contractAbi,
-              conn,
-            );
-            await context.mysql.commit(conn);
-            resolve(true);
-          } catch (err) {
-            await context.mysql.rollback(conn);
-
-            throw await new ComputingCodeException({
-              status: 500,
-              code: ComputingErrorCode.DEPLOY_CONTRACT_ERROR,
-              context,
-              sourceFunction: 'createContract()',
-              errorMessage: `Error creating contract: ${err}`,
-              details: err,
-            }).writeToMonitor({
-              logType: LogType.ERROR,
-              service: ServiceName.COMPUTING,
-              data: { dto: createContractDto.serialize(), err },
-            });
-          }
-        }),
-    );
-
-    await new Lmas().writeLog({
-      context,
-      project_uuid: contract.project_uuid,
-      logType: LogType.INFO,
-      message: 'New Computing contract created and submitted for deployment',
-      location: 'ComputingService/createContract',
+      sourceFunction: 'createContract()',
+      errorMessage:
+        'Schrodinger contract functionality is deprecated and no longer available.',
+    }).writeToMonitor({
+      logType: LogType.WARN,
       service: ServiceName.COMPUTING,
-      data: { contract_uuid: contract.contract_uuid },
+      data: { dto: params.body },
     });
-
-    contract.updateTime = new Date();
-    contract.createTime = new Date();
-
-    return contract.serializeByContext();
   }
 
   /**
@@ -350,88 +206,28 @@ export class ComputingService {
    * @param {ServiceContext} context
    * @returns {{success: boolean}}
    */
+  /**
+   * @deprecated Schrodinger contract functionality is deprecated and will be removed in a future release
+   */
   static async transferContractOwnership(
     { body }: { body: TransferOwnershipDto },
     context: ServiceContext,
   ) {
     console.log(`Transferring contract ownership: ${JSON.stringify(body)}`);
-    const newOwnerAddress = body.accountAddress;
-    const contract = await new Contract({}, context).populateByUUID(
-      body.contract_uuid,
-    );
 
-    if (!contract.exists()) {
-      throw new ComputingNotFoundException();
-    }
-    contract.canModify(context);
-
-    const sourceFunction = 'transferContractOwnership()';
-    contract.verifyStatusAndAccess(sourceFunction, context);
-    await ComputingService.checkTransferConditions(
+    // Throw error indicating that Schrodinger contract is deprecated
+    throw await new ComputingCodeException({
+      status: 410, // Gone
+      code: ComputingErrorCode.TRANSFER_CONTRACT_ERROR,
       context,
-      contract,
-      newOwnerAddress,
-      sourceFunction,
-    );
-
-    await contract.populateAbi();
-
-    const spendCredit = new SpendCreditDto(
-      {
-        project_uuid: contract.project_uuid,
-        product_id: ProductCode.COMPUTING_SCHRODINGER_TRANSFER_OWNERSHIP,
-        referenceTable: DbTables.TRANSACTION,
-        referenceId: uuidV4(),
-        location: 'ComputingService.transferContractOwnership',
-        service: ServiceName.COMPUTING,
-      },
-      context,
-    );
-    await spendCreditAction(
-      context,
-      spendCredit,
-      () =>
-        new Promise(async (resolve, _reject) => {
-          try {
-            await transferContractOwnership(
-              context,
-              spendCredit.referenceId,
-              contract.project_uuid,
-              contract.id,
-              contract.contractAbi.abi,
-              contract.contractAddress,
-              newOwnerAddress,
-            );
-            resolve(true);
-          } catch (e: any) {
-            throw await new ComputingCodeException({
-              status: 500,
-              code: ComputingErrorCode.TRANSFER_CONTRACT_ERROR,
-              context,
-              sourceFunction,
-              errorMessage: `Error transferring contract ownership: ${e.message}`,
-              details: e,
-            }).writeToMonitor({});
-          }
-        }),
-    );
-
-    await new Lmas().writeLog({
-      context,
-      project_uuid: contract.project_uuid,
-      logType: LogType.INFO,
-      message:
-        `Transferred contract ${contract.contract_uuid} ownership to ` +
-        `address ${newOwnerAddress}.`,
-      location: 'ComputingService/transferContractOwnership',
+      sourceFunction: 'transferContractOwnership()',
+      errorMessage:
+        'Schrodinger contract functionality is deprecated and no longer available.',
+    }).writeToMonitor({
+      logType: LogType.WARN,
       service: ServiceName.COMPUTING,
-      data: {
-        contract_uuid: contract.contract_uuid,
-        newOwnerAddress,
-      },
+      data: { dto: body },
     });
-
-    return { success: true };
   }
 
   /**
@@ -440,55 +236,28 @@ export class ComputingService {
    * @param {{ body: EncryptContentDto }} param
    * @param {ServiceContext} context
    */
+  /**
+   * @deprecated Schrodinger contract functionality is deprecated and will be removed in a future release
+   */
   static async encryptContent(
     { body }: { body: EncryptContentDto },
     context: ServiceContext,
   ) {
     const sourceFunction = 'encryptContent()';
-    const contract = await new Contract({}, context).populateByUUID(
-      body.contract_uuid,
-    );
 
-    if (!contract.exists()) {
-      throw new ComputingNotFoundException();
-    }
-    contract.canAccess(context);
-
-    contract.verifyStatusAndAccess(sourceFunction, context);
-
-    await contract.populateAbi();
-    let encryptedContent: string;
-    try {
-      encryptedContent = await encryptContent(
-        context,
-        contract.contractAbi.abi,
-        contract.contractAddress,
-        body.content,
-      );
-    } catch (e: any) {
-      throw await new ComputingCodeException({
-        status: 500,
-        code: ComputingErrorCode.FAILED_TO_ENCRYPT_CONTENT,
-        context,
-        sourceFunction,
-        errorMessage: `Error encrypting content: ${e.message}`,
-        details: e,
-      }).writeToMonitor({});
-    }
-
-    await new Lmas().writeLog({
+    // Throw error indicating that Schrodinger contract is deprecated
+    throw await new ComputingCodeException({
+      status: 410, // Gone
+      code: ComputingErrorCode.FAILED_TO_ENCRYPT_CONTENT,
       context,
-      project_uuid: contract.project_uuid,
-      logType: LogType.INFO,
-      message: `Encrypted content on contract with uuid ${contract.contract_uuid}.`,
-      location: 'ComputingService/encryptContent',
+      sourceFunction,
+      errorMessage:
+        'Schrodinger contract functionality is deprecated and no longer available.',
+    }).writeToMonitor({
+      logType: LogType.WARN,
       service: ServiceName.COMPUTING,
-      data: {
-        contract_uuid: contract.contract_uuid,
-      },
+      data: { dto: body },
     });
-
-    return { encryptedContent };
   }
 
   /**
@@ -496,81 +265,28 @@ export class ComputingService {
    * @param {{ body: AssignCidToNft }} param
    * @param {ServiceContext} context
    */
+  /**
+   * @deprecated Schrodinger contract functionality is deprecated and will be removed in a future release
+   */
   static async assignCidToNft(
     { body }: { body: AssignCidToNft },
     context: ServiceContext,
   ) {
     const sourceFunction = 'assignCidToNft()';
-    const contract = await new Contract({}, context).populateByUUID(
-      body.contract_uuid,
-    );
 
-    if (!contract.exists()) {
-      throw new ComputingNotFoundException();
-    }
-    contract.canAccess(context);
-
-    contract.verifyStatusAndAccess(sourceFunction, context);
-    await contract.populateAbi();
-
-    const spendCredit = new SpendCreditDto(
-      {
-        project_uuid: contract.project_uuid,
-        product_id: ProductCode.COMPUTING_SCHRODINGER_ASSIGN_CID_TO_NFT,
-        referenceTable: DbTables.TRANSACTION,
-        referenceId: uuidV4(),
-        location: 'ComputingService.transferContractOwnership',
-        service: ServiceName.COMPUTING,
-      },
+    // Throw error indicating that Schrodinger contract is deprecated
+    throw await new ComputingCodeException({
+      status: 410, // Gone
+      code: ComputingErrorCode.FAILED_TO_ASSIGN_CID_TO_NFT,
       context,
-    );
-    await spendCreditAction(
-      context,
-      spendCredit,
-      () =>
-        new Promise(async (resolve, _reject) => {
-          try {
-            await assignCidToNft(
-              context,
-              spendCredit.referenceId,
-              contract.project_uuid,
-              contract.id,
-              contract.contractAbi.abi,
-              contract.contractAddress,
-              body.cid,
-              body.nftId,
-            );
-            resolve(true);
-          } catch (e: any) {
-            throw await new ComputingCodeException({
-              status: 500,
-              code: ComputingErrorCode.FAILED_TO_ASSIGN_CID_TO_NFT,
-              context,
-              sourceFunction,
-              errorMessage: `Error assigning CID to NFT: ${e.message}`,
-              details: e,
-            }).writeToMonitor({});
-          }
-        }),
-    );
-
-    await new Lmas().writeLog({
-      context,
-      project_uuid: contract.project_uuid,
-      logType: LogType.INFO,
-      message:
-        `Assigned CID ${body.cid} to NFT with id ${body.nftId} for contract ` +
-        `with uuid ${contract.contract_uuid}.`,
-      location: 'ComputingService/assignCidToNft',
+      sourceFunction,
+      errorMessage:
+        'Schrodinger contract functionality is deprecated and no longer available.',
+    }).writeToMonitor({
+      logType: LogType.WARN,
       service: ServiceName.COMPUTING,
-      data: {
-        contract_uuid: contract.contract_uuid,
-        cid: body.cid,
-        nftId: body.nftId,
-      },
+      data: { dto: body },
     });
-
-    return { success: true };
   }
 
   /**
@@ -587,65 +303,6 @@ export class ComputingService {
       context,
       new ClusterWalletQueryFilter(event.query),
     );
-  }
-
-  /**
-   * Check conditions if contract can be transferred
-   * @param {ServiceContext} context
-   * @param {Contract} contract
-   * @param {string} newOwnerAddress
-   * @param sourceFunction
-   */
-  private static async checkTransferConditions(
-    context: ServiceContext,
-    contract: Contract,
-    newOwnerAddress: string,
-    sourceFunction = 'ComputingService/transferContractOwnership',
-  ) {
-    if (
-      [ContractStatus.TRANSFERRING, ContractStatus.TRANSFERRED].includes(
-        contract.contractStatus,
-      )
-    ) {
-      throw new ComputingCodeException({
-        status: 500,
-        code: ComputingErrorCode.CONTRACT_TRANSFERING_OR_ALREADY_TRANSFERED,
-        context,
-        sourceFunction,
-      });
-    }
-    if (contract.deployerAddress == newOwnerAddress) {
-      throw new ComputingCodeException({
-        status: 400,
-        code: ComputingErrorCode.INVALID_ADDRESS_FOR_TRANSFER_TO,
-        context,
-        sourceFunction,
-      });
-    }
-
-    const transactions = await new Transaction(
-      {},
-      context,
-    ).getContractTransactions(
-      contract.contract_uuid,
-      null,
-      TransactionType.TRANSFER_CONTRACT_OWNERSHIP,
-    );
-    if (
-      transactions.find(
-        (x) =>
-          x.transactionStatus == ComputingTransactionStatus.PENDING ||
-          x.transactionStatus == ComputingTransactionStatus.CONFIRMED ||
-          x.transactionStatus == ComputingTransactionStatus.WORKER_SUCCESS,
-      )
-    ) {
-      throw new ComputingCodeException({
-        status: 400,
-        code: ComputingErrorCode.TRANSACTION_FOR_TRANSFER_ALREADY_EXISTS,
-        context,
-        sourceFunction,
-      });
-    }
   }
 
   /**
