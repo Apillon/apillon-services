@@ -56,6 +56,7 @@ export class DeployRepository extends BaseRepository {
       });
     }
 
+    backend.canAccess(this.context);
     return backend;
   }
 
