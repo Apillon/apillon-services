@@ -260,22 +260,22 @@ export class SimpletsController {
     return simplet.serializeByContext(this.context);
   }
 
-  async deleteSimpleDeploy(simpletDeploy_uuid: string) {
+  async deleteSimpletDeploy(simpletDeploy_uuid: string) {
     await this.logging.writeLog({
       logType: LogType.INFO,
       message: `Deleting simplet deploy with uuid ${simpletDeploy_uuid}.`,
       service: ServiceName.SIMPLETS,
-      location: 'SimpletsController.deleteSimpleDeploy',
+      location: 'SimpletsController.deleteSimpletDeploy',
     });
 
     try {
-      await this.simpletsService.deleteSimpleDeploy(simpletDeploy_uuid);
+      await this.simpletsService.deleteSimpletDeploy(simpletDeploy_uuid);
 
       await this.logging.writeLog({
         logType: LogType.INFO,
         message: `Successfully deleted simplet deploy with uuid ${simpletDeploy_uuid}.`,
         service: ServiceName.SIMPLETS,
-        location: 'SimpletsController.deleteSimpleDeploy',
+        location: 'SimpletsController.deleteSimpletDeploy',
       });
 
       return { success: true };
@@ -290,7 +290,7 @@ export class SimpletsController {
         logType: LogType.ERROR,
         message,
         service: ServiceName.SIMPLETS,
-        location: 'SimpletsController.deleteSimpleDeploy',
+        location: 'SimpletsController.deleteSimpletDeploy',
         data: e,
       });
 

@@ -78,7 +78,7 @@ export class SimpletsMicroservice extends BaseService {
     });
   }
 
-  public async deleteSimpleDeploy(simpletDeploy_uuid: string) {
+  public async deleteSimpletDeploy(simpletDeploy_uuid: string) {
     return await this.emitEvent({
       eventName: SimpletsEventType.DELETE_SIMPLET_DEPLOY,
       body: { uuid: simpletDeploy_uuid },

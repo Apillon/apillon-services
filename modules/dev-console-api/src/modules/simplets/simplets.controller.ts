@@ -144,11 +144,11 @@ export class SimpletsController {
     { role: DefaultUserRole.PROJECT_ADMIN },
   )
   @UseGuards(AuthGuard)
-  async deleteSimpleDeploy(
+  async deleteSimpletDeploy(
     @Ctx() context: DevConsoleApiContext,
     @Param('uuid') simpletDeploy_uuid: string,
   ) {
-    return await this.simpletsService.deleteSimpleDeploy(
+    return await this.simpletsService.deleteSimpletDeploy(
       context,
       simpletDeploy_uuid,
     );
