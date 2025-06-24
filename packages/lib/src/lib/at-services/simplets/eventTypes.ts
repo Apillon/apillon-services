@@ -24,6 +24,7 @@ export type SimpletsMSEventType =
       DeployedSimpletsQueryFilterDto
     >
   | ISimpletsUuidEvent<SimpletsEventType.GET_DEPLOYED_SIMPLET>
+  | ISimpletsUuidEvent<SimpletsEventType.DELETE_SIMPLET_DEPLOY>
   | ISimpletsUuidEvent<SimpletsEventType.IS_SIMPLET_QUOTA_REACHED>;
 
 interface ISimpletsMSEventBase {

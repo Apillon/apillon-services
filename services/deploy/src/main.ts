@@ -147,6 +147,12 @@ export async function processEvent(
             .populate(event.body)
             .validateOrThrow(ModelValidationException, ValidatorErrorCode),
         );
+      case DeployEventType.BE_ARCHIVE_INSTANCE:
+        return backendController.archiveInstance(
+          await new GenericDeployRequestDto({}, context)
+            .populate(event.body)
+            .validateOrThrow(ModelValidationException, ValidatorErrorCode),
+        );
       default:
         throw new Error('Invalid Deploy Event Type');
     }

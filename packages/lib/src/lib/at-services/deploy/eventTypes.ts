@@ -73,6 +73,10 @@ export type DeployMSEventType =
       DeployEventType.BE_GET_INSTANCE_ATTESTATION,
       ModelBaseType<GenericDeployRequestDto>
     >
+  | IBodyEvent<
+      DeployEventType.BE_ARCHIVE_INSTANCE,
+      ModelBaseType<GenericDeployRequestDto>
+    >
   // FE
   | IBodyEvent<
       DeployEventType.TRIGGER_GITHUB_DEPLOY,

@@ -427,6 +427,7 @@ export enum DeployEventType {
   BE_GET_INSTANCE_ATTESTATION = 'be-get-instance-attestation',
   // BE_GET_INSTANCE_BILLING = 'be-get-instance-billing',
   BE_RESIZE_INSTANCE = 'be-resize-instance',
+  BE_ARCHIVE_INSTANCE = 'be-archive-instance',
 
   TRIGGER_GITHUB_DEPLOY = 'fe-trigger-github-deploy',
   TRIGGER_WEB_DEPLOY = 'fe-trigger-web-deploy',
@@ -453,6 +454,7 @@ export enum SimpletsEventType {
   // deployed
   GET_DEPLOYED_SIMPLET = 'get-deployed-simplet',
   LIST_DEPLOYED_SIMPLETS = 'list-deployed-simplets',
+  DELETE_SIMPLET_DEPLOY = 'delete-simplet-deploy',
   IS_SIMPLET_QUOTA_REACHED = 'is-simplet-quota-reached',
 }
 

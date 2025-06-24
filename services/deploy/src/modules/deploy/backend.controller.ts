@@ -98,4 +98,11 @@ export class BackendController {
     const backend = await this.deployRepository.getBackend(body.deploy_uuid);
     return await this.backendStrategyHandler.resizeInstance(backend, body);
   }
+
+  async archiveInstance(body: GenericDeployRequestDto): Promise<void> {
+    const backend = await this.deployRepository.getBackend(body.deploy_uuid);
+    await this.backendStrategyHandler.shutdownInstance(backend);
+    backend.status = SqlModelStatus.ARCHIVED;
+    await backend.update();
+  }
 }

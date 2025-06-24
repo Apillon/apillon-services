@@ -62,7 +62,7 @@ export class SimpletsMicroservice extends BaseService {
 
   //#endregion
 
-  //#region ------------- SIMPLETS -------------
+  //#region ------------- DEPLOYED SIMPLETS -------------
 
   public async getDeployedSimplet(uuid: string) {
     return await this.emitEvent({
@@ -78,11 +78,19 @@ export class SimpletsMicroservice extends BaseService {
     });
   }
 
-  //#endregion
+  public async deleteSimpletDeploy(simpletDeploy_uuid: string) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.DELETE_SIMPLET_DEPLOY,
+      body: { uuid: simpletDeploy_uuid },
+    });
+  }
+
   async isSimpletQuotaReached(projectUuid: string) {
     return await this.emitEvent({
       eventName: SimpletsEventType.IS_SIMPLET_QUOTA_REACHED,
       body: { uuid: projectUuid },
     });
   }
+
+  //#endregion
 }
