@@ -37,6 +37,10 @@ export class Collection extends UuidSqlModel {
     super(data, context);
   }
 
+  /**
+   * @deprecated NESTABLE type was deprecated so we always have type=GENERIC and this property is not needed anymore
+   * but it's left so we dont have to change the rest of the code.
+   */
   @prop({
     parser: { resolver: integerParser() },
     populatable: [

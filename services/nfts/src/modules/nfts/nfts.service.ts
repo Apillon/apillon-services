@@ -96,6 +96,8 @@ export class NftsService {
       collection_uuid: uuidV4(),
       status: SqlModelStatus.INCOMPLETE,
       chainType: params.body.chainType,
+      // this is hardcoded since collection type NESTABLE was deprecated
+      collectionType: NFTCollectionType.GENERIC,
     });
 
     await NftsService.assertIsAllowedToCreateNftCollection(
