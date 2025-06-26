@@ -10,6 +10,9 @@ import { TransferOwnershipDto } from '@apillon/blockchain-lib/common';
 import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 
+/**
+ * @deprecated Schrodinger contract functionality is deprecated and will be removed in a future release
+ */
 @Injectable()
 export class ComputingService {
   async createContract(context: ApillonApiContext, body: CreateContractDto) {
