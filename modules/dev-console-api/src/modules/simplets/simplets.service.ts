@@ -131,8 +131,8 @@ export class SimpletsService {
       .data;
   }
 
-  async restoreSimpletDeploy(context: DevConsoleApiContext, uuid: string) {
-    return (await new SimpletsMicroservice(context).restoreSimpletDeploy(uuid))
+  async activateSimpletDeploy(context: DevConsoleApiContext, uuid: string) {
+    return (await new SimpletsMicroservice(context).activateSimpletDeploy(uuid))
       .data;
   }
 

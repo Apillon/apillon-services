@@ -102,7 +102,6 @@ export class BackendController {
   async archiveInstance(body: GenericDeployRequestDto): Promise<void> {
     const backend = await this.deployRepository.getBackend(body.deploy_uuid);
     await this.backendStrategyHandler.shutdownInstance(backend);
-    backend.status = SqlModelStatus.ARCHIVED;
-    await backend.update();
+    await backend.markArchived();
   }
 }

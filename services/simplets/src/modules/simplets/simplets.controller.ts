@@ -260,22 +260,22 @@ export class SimpletsController {
     return simplet.serializeByContext(this.context);
   }
 
-  async deleteSimpletDeploy(simpletDeploy_uuid: string) {
+  async archiveSimpletDeploy(simpletDeploy_uuid: string) {
     await this.logging.writeLog({
       logType: LogType.INFO,
-      message: `Deleting simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      message: `Archiving simplet deploy with uuid ${simpletDeploy_uuid}.`,
       service: ServiceName.SIMPLETS,
-      location: 'SimpletsController.deleteSimpletDeploy',
+      location: 'SimpletsController.archiveSimpletDeploy',
     });
 
     try {
-      await this.simpletsService.deleteSimpletDeploy(simpletDeploy_uuid);
+      await this.simpletsService.archiveSimpletDeploy(simpletDeploy_uuid);
 
       await this.logging.writeLog({
         logType: LogType.INFO,
-        message: `Successfully deleted simplet deploy with uuid ${simpletDeploy_uuid}.`,
+        message: `Successfully archived simplet deploy with uuid ${simpletDeploy_uuid}.`,
         service: ServiceName.SIMPLETS,
-        location: 'SimpletsController.deleteSimpletDeploy',
+        location: 'SimpletsController.archiveSimpletDeploy',
       });
 
       return { success: true };
@@ -283,14 +283,14 @@ export class SimpletsController {
       const message =
         e instanceof SimpletsCodeException
           ? e.message
-          : `An unexpected error occurred while deleting simplet deploy with uuid ${simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`;
+          : `An unexpected error occurred while archiving simplet deploy with uuid ${simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`;
 
       await this.logging.writeLog({
         sendAdminAlert: true,
         logType: LogType.ERROR,
         message,
         service: ServiceName.SIMPLETS,
-        location: 'SimpletsController.deleteSimpletDeploy',
+        location: 'SimpletsController.archiveSimpletDeploy',
         data: e,
       });
 
@@ -298,22 +298,22 @@ export class SimpletsController {
     }
   }
 
-  async restoreSimpletDeploy(simpletDeploy_uuid: string) {
+  async activateSimpletDeploy(simpletDeploy_uuid: string) {
     await this.logging.writeLog({
       logType: LogType.INFO,
-      message: `Restoring simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      message: `Activating simplet deploy with uuid ${simpletDeploy_uuid}.`,
       service: ServiceName.SIMPLETS,
-      location: 'SimpletsController.restoreSimpletDeploy',
+      location: 'SimpletsController.activateSimpletDeploy',
     });
 
     try {
-      await this.simpletsService.restoreSimpletDeploy(simpletDeploy_uuid);
+      await this.simpletsService.activateSimpletDeploy(simpletDeploy_uuid);
 
       await this.logging.writeLog({
         logType: LogType.INFO,
         message: `Successfully restored simplet deploy with uuid ${simpletDeploy_uuid}.`,
         service: ServiceName.SIMPLETS,
-        location: 'SimpletsController.restoreSimpletDeploy',
+        location: 'SimpletsController.activateSimpletDeploy',
       });
 
       return { success: true };
@@ -328,7 +328,7 @@ export class SimpletsController {
         logType: LogType.ERROR,
         message,
         service: ServiceName.SIMPLETS,
-        location: 'SimpletsController.restoreSimpletDeploy',
+        location: 'SimpletsController.activateSimpletDeploy',
         data: e,
       });
 
