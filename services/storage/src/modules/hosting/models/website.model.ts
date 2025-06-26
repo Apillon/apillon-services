@@ -690,6 +690,7 @@ export class Website extends UuidSqlModel {
           this.productionBucket.CIDv1,
           false,
         );
+        this.cidProduction = this.productionBucket.CIDv1;
       }
     }
   }
