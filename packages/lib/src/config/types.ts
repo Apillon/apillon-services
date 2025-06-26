@@ -1415,6 +1415,7 @@ export enum HttpStatus {
   UNAUTHORIZED = 401,
   FORBIDDEN = 403,
   NOT_FOUND = 404,
+  GONE = 410,
 }
 
 export enum NftWebsiteType {
