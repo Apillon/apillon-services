@@ -4,6 +4,8 @@ import {
   BaseProjectQueryFilter,
   CreateSpaceDto,
   DefaultApiKeyRole,
+  HttpException,
+  HttpStatus,
   SocialPostQueryFilter,
   ValidateFor,
 } from '@apillon/lib';
@@ -21,6 +23,8 @@ import { ApillonApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { SocialService } from './social.service';
+
+const SOCIAL_MODULE_DEPRECATED = 'Social module has been deprecated';
 
 @Controller('social')
 export class SocialController {
@@ -44,7 +48,7 @@ export class SocialController {
     @Ctx() context: ApillonApiContext,
     @Query() query: BaseProjectQueryFilter,
   ) {
-    return await this.socialService.listSpaces(context, query);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 
   @Get('hubs/:hub_uuid')
@@ -57,7 +61,7 @@ export class SocialController {
     @Ctx() context: ApillonApiContext,
     @Param('hub_uuid') space_uuid: string,
   ) {
-    return await this.socialService.getSpace(context, space_uuid);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, 410);
   }
 
   @Post('hubs')
@@ -71,7 +75,7 @@ export class SocialController {
     @Ctx() context: ApillonApiContext,
     @Body() body: CreateSpaceDto,
   ) {
-    return await this.socialService.createSpace(context, body);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 
   @Get('channels')
@@ -85,7 +89,7 @@ export class SocialController {
     @Ctx() context: ApillonApiContext,
     @Query() query: SocialPostQueryFilter,
   ) {
-    return await this.socialService.listPosts(context, query);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 
   @Get('channels/:channel_uuid')
@@ -98,7 +102,7 @@ export class SocialController {
     @Ctx() context: ApillonApiContext,
     @Param('channel_uuid') post_uuid: string,
   ) {
-    return await this.socialService.getPost(context, post_uuid);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 
   @Post('channels')
@@ -113,7 +117,6 @@ export class SocialController {
     @Ctx() context: ApillonApiContext,
     @Body() body: ApillonApiCreatePostDto,
   ) {
-    body.space_uuid = body.hubUuid;
-    return await this.socialService.createPost(context, body);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 }
