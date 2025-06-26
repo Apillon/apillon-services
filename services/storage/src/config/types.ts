@@ -217,6 +217,7 @@ export enum CrustPinningStatus {
   PENDING = 0,
   SUCCESSFULL = 10,
   FAILED = 20,
+  SKIPPED = 30,
 }
 
 export enum Defaults {
