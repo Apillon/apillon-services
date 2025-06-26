@@ -8,6 +8,8 @@ import { WalletIdentityService } from './modules/subsocial/wallet-identity.servi
  * @param event lambda event
  * @param context lambda context
  * @returns service response
+ *
+ * @deprecated This service is deprecated and should not be used.
  */
 export async function processEvent(event, context: Context): Promise<any> {
   const processors = {
