@@ -298,7 +298,7 @@ export class Backend extends UuidSqlModel {
       FROM \`${DbTables.BACKEND}\`
       WHERE backendStatus = ${ResourceStatus.ONLINE}
       AND status = ${SqlModelStatus.ACTIVE}
-      AND createTime >= NOW() - INTERVAL ${days} DAY
+      AND createTime <= NOW() - INTERVAL ${days} DAY
     `;
 
     return await this.getContext().mysql.paramExecute(sqlQuery);
