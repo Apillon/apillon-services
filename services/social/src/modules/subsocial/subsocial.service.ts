@@ -2,13 +2,13 @@ import {
   BaseProjectQueryFilter,
   CreatePostDto,
   CreateSpaceDto,
+  env,
   ProductCode,
   ServiceName,
   SocialPostQueryFilter,
+  spendCreditAction,
   SpendCreditDto,
   SqlModelStatus,
-  env,
-  spendCreditAction,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { v4 as uuidV4 } from 'uuid';
@@ -17,6 +17,7 @@ import { SocialCodeException } from '../../lib/exceptions';
 import { Post } from './models/post.model';
 import { Space } from './models/space.model';
 
+/** @deprecated This service is deprecated and should not be used. */
 export class SubsocialService {
   static async listSpaces(
     event: { query: BaseProjectQueryFilter },

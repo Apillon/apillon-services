@@ -1380,6 +1380,8 @@ export enum EmailTemplate {
   BACKEND_SHUTDOWN = 'backend-shutdown',
 
   OTP_VERIFICATION = 'otp-verification',
+
+  PINNING_SKIPPED_DUE_TO_INACTIVITY = 'pinning-skipped-due-to-inactivity',
 }
 
 export enum JwtExpireTime {
@@ -1415,6 +1417,7 @@ export enum HttpStatus {
   UNAUTHORIZED = 401,
   FORBIDDEN = 403,
   NOT_FOUND = 404,
+  GONE = 410,
 }
 
 export enum NftWebsiteType {

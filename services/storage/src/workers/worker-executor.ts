@@ -21,6 +21,7 @@ import { IpfsBandwidthWorker } from './ipfs-bandwidth-worker';
 import { FreeProjectResourcesWorker } from './free-project-resources-worker';
 import { CheckWebsiteDomainWorker } from './check-website-domain-worker';
 import { IpfsMonitorWorker } from './ipfs-monitor-worker';
+import { UnskipPinToCrustRequestsWorker } from './unskip-pin-to-crust-requests.worker';
 
 // get global mysql connection
 // global['mysql'] = global['mysql'] || new MySql(env);
@@ -39,6 +40,7 @@ export enum WorkerName {
   IPFS_MONITOR_WORKER = 'IpfsMonitorWorker',
   FREE_PROJECT_RESOURCES_WORKER = 'FreeProjectResourcesWorker',
   CHECK_WEBSITE_DOMAIN_WORKER = 'CheckWebsiteDomainWorker',
+  UNSKIP_PIN_TO_CRUST_REQUESTS_WORKER = 'UnskipPinToCrustRequestsWorker',
 }
 
 export async function handler(event: any) {
@@ -280,6 +282,15 @@ export async function handleSqsMessages(
           break;
         case WorkerName.FREE_PROJECT_RESOURCES_WORKER:
           await new FreeProjectResourcesWorker(
+            workerDefinition,
+            context,
+            QueueWorkerType.EXECUTOR,
+          ).run({
+            executeArg: message?.body,
+          });
+          break;
+        case WorkerName.UNSKIP_PIN_TO_CRUST_REQUESTS_WORKER:
+          await new UnskipPinToCrustRequestsWorker(
             workerDefinition,
             context,
             QueueWorkerType.EXECUTOR,
