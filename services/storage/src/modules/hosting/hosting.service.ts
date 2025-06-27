@@ -246,7 +246,7 @@ export class HostingService {
           project_uuid: website.project_uuid,
           product_id: ProductCode.HOSTING_CHANGE_WEBSITE_DOMAIN,
           referenceTable: DbTables.WEBSITE,
-          referenceId: website.website_uuid + new Date().toLocaleDateString(),
+          referenceId: uuidV4(),
           location: 'HostingService/updateWebsite',
           service: ServiceName.STORAGE,
         },
