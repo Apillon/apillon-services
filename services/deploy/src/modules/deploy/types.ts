@@ -7,7 +7,9 @@ import {
 import { Backend } from './models/backend.model';
 
 export enum VMStatus {
+  // TODO: double check statuses with phala team
   EXITED = 'exited',
+  OFFLINE = 'offline',
   STOPPED = 'stopped',
   STARTING = 'starting',
   CREATING = 'creating',

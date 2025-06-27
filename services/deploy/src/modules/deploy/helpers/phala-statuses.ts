@@ -17,6 +17,8 @@ export function getBackendStatus(externalStatus: VMStatus): ResourceStatus {
       return ResourceStatus.STOPPING;
     case VMStatus.STOPPED:
       return ResourceStatus.STOPPED;
+    case VMStatus.OFFLINE:
+      return ResourceStatus.STOPPED;
     case VMStatus.SHUTTING_DOWN:
       return ResourceStatus.SHUTTING_DOWN;
     case VMStatus.EXITED:
