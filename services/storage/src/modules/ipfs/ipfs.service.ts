@@ -286,6 +286,11 @@ export class IPFSService {
                 );
               });
             }
+          } else if (error.Message === 'file already exists') {
+            // Silently ignoring IPFS file already exists error
+            console.warn(
+              `File already exists on IPFS: ${fileUploadReq.fileName}. Skipping upload.`,
+            );
           } else {
             //Something else does not work - maybe IPFS node. Throw error.
             throw error;
