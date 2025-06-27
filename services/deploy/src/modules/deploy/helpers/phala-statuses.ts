@@ -19,7 +19,6 @@ export function getBackendStatus(externalStatus: VMStatus): ResourceStatus {
       throw new DeployCodeException({
         status: 500,
         code: DeployErrorCode.UNKNOWN_EXTERNAL_STATUS,
-        context: this.context,
         errorMessage: `Unsupported external status: ${externalStatus}`,
       });
     }
