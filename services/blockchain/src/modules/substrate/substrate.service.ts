@@ -135,6 +135,24 @@ export class SubstrateService {
 
       // If wallet balance is below minimum balance for sending a tx, throw an error
       const balanceData = await wallet.checkAndUpdateBalance(conn);
+      await new Lmas().writeLog({
+        logType: LogType.INFO,
+        message: `Checking if balance is below transaction threshold (${wallet.minTxBalance}>${wallet.currentBalance}=${balanceData.isBelowTransactionThreshold})`,
+        location: 'SubstrateService.createTransaction',
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          transaction: params.transaction,
+          chainType: ChainType.SUBSTRATE,
+          chain: params.chain,
+          address: params.fromAddress,
+          referenceTable: params.referenceTable,
+          referenceId: params.referenceId,
+          currentBalance: wallet.currentBalance,
+          minTxBalance: wallet.minTxBalance,
+          isBelowTransactionThreshold: balanceData.isBelowTransactionThreshold,
+        },
+      });
+
       if (balanceData.isBelowTransactionThreshold) {
         throw await new BlockchainCodeException({
           code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
@@ -361,26 +379,6 @@ export class SubstrateService {
         LogType.INFO,
         `Processing wallet with address ${wallet.address} with last nonce ${wallet.lastProcessedNonce}`,
       );
-
-      // Check wallet balance before processing transactions
-      const balanceData = await wallet.checkAndUpdateBalance();
-      if (balanceData.isBelowTransactionThreshold) {
-        await eventLogger(
-          {
-            logType: LogType.ERROR,
-            message: `Skipping transactions for wallet ${wallet.address} on chain ${getEnumKey(SubstrateChain, _event.chain)} - balance below transaction minimum`,
-            service: ServiceName.BLOCKCHAIN,
-            data: {
-              wallet: wallet.address,
-              chain: _event.chain,
-              chainType: ChainType.SUBSTRATE,
-              ...balanceData,
-            },
-          },
-          LogOutput.NOTIFY_WARN,
-        );
-        continue;
-      }
 
       const transactions = await new Transaction({}, context).getList(
         _event.chain,
