@@ -66,6 +66,7 @@ export class BackendStrategyHandler {
 
   async redeployDockerCompose(body: RedeployInstanceDto): Promise<Backend> {
     const backend = await this.deployRepository.getBackend(body.backend_uuid);
+    backend.canModify(this.context);
     try {
       const secrets = overrideEnvironmentVariables(
         await this.encryptionService.decryptJson(backend.environmentVariables),

@@ -55,8 +55,6 @@ export class DeployRepository extends BaseRepository {
         errorMessage: 'Deploy not found',
       });
     }
-
-    backend.canAccess(this.context);
     return backend;
   }
 
