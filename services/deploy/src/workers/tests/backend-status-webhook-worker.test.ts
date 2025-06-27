@@ -458,5 +458,44 @@ describe('Log worker tests', () => {
       await backendDeploy.reload();
       expect(backendDeploy.backendStatus).toBe(ResourceStatus.STOPPED);
     });
+
+    test('should handle case where backend has unknown status', async () => {
+      const backendDeploy = await new Backend({}, stage.context)
+        .populate({
+          backend_uuid: uuidV4(),
+          backendStatus: ResourceStatus.ONLINE,
+          instanceId: 'instance-id',
+          name: 'name-online',
+          url: 'url-online',
+          project_uuid: PROJECT_UUID,
+          updateTime: TIME_IN_THE_PAST,
+          createTime: TIME_IN_THE_PAST,
+        })
+        .insert();
+
+      jest.spyOn(phalaClient, 'getCVMDetails').mockResolvedValueOnce({
+        status: 'unknown' as any,
+        id: backendDeploy.instanceId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        configuration: {
+          key: 'value',
+          dummy: true,
+        },
+      });
+      const writeEventLogSpy = jest.spyOn(logger, 'writeLog');
+
+      const result = await worker.runExecutor({});
+
+      expect(result).toBe(true);
+      expect(sqsSendSpy).toHaveBeenCalledTimes(0);
+      const lastCall =
+        writeEventLogSpy.mock.calls[writeEventLogSpy.mock.calls.length - 1][0];
+      expect(lastCall.message).toBe(
+        `[BackendStatusWorker]: Error updating backend deploy for uuid: ${backendDeploy.backend_uuid}`,
+      );
+      await backendDeploy.reload();
+      expect(backendDeploy.backendStatus).toBe(ResourceStatus.ONLINE);
+    });
   });
 });

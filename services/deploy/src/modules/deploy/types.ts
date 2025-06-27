@@ -12,6 +12,9 @@ export enum VMStatus {
   STARTING = 'starting',
   CREATING = 'creating',
   RUNNING = 'running',
+  STOPPING = 'stopping',
+  SHUTTING_DOWN = 'shutting_down',
+  RESTARTING = 'restarting',
 }
 
 export interface ICreateVMRequest {
