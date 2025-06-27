@@ -93,7 +93,9 @@ export class SimpletsService {
   }
 
   async getDeployedSimplet(uuid: string): Promise<SimpletDeploy> {
-    return await this.simpletRepository.getDeployedSimplet(uuid);
+    const simpletDeploy = await this.simpletRepository.getDeployedSimplet(uuid);
+    simpletDeploy.canAccess(this.context);
+    return simpletDeploy;
   }
 
   // async deployContract(
@@ -489,6 +491,7 @@ export class SimpletsService {
     });
     const simpletDeploy =
       await this.simpletRepository.getDeployedSimplet(simpletDeploy_uuid);
+    simpletDeploy.canAccess(this.context);
 
     if (simpletDeploy.status !== SqlModelStatus.ACTIVE) {
       return;

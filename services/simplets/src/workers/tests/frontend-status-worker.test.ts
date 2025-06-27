@@ -1,9 +1,11 @@
 import {
   AWS_KMS,
   DeployMicroservice,
+  DeploySecretDto,
   EncryptionService,
   env,
   Lmas,
+  RedeployInstanceDto,
   ResourceDeployWebhookDataDto,
   ResourceStatus,
 } from '@apillon/lib';
@@ -20,13 +22,6 @@ import { DbTables } from '../../config/types';
 import { v4 as uuidV4 } from 'uuid';
 import { SimpletsRepository } from '../../modules/simplets/repositores/simplets-repository';
 import { ResourceType } from '../../modules/simplets/types';
-
-const TEST_BACKEND_SECRETS = [
-  {
-    key: 'ENV_VARIABLE_NAME',
-    value: 'ENV_VARIABLE_VALUE',
-  },
-];
 
 const WORKER_DEFINITION = new WorkerDefinition(
   {
@@ -70,9 +65,17 @@ describe('FrontendStatusWorker tests', () => {
     jest
       .spyOn(awsKms, 'encrypt')
       .mockImplementation(async () => 'encrypted_string');
-    jest
-      .spyOn(awsKms, 'decrypt')
-      .mockImplementation(async () => JSON.stringify(TEST_BACKEND_SECRETS));
+    jest.spyOn(awsKms, 'decrypt').mockImplementation(async () =>
+      JSON.stringify([
+        new DeploySecretDto(
+          {
+            key: 'ENV_VARIABLE_NAME',
+            value: 'ENV_VARIABLE_VALUE',
+          },
+          stage.context,
+        ),
+      ]),
+    );
     deployService = new DeployMicroservice(stage.context);
     jest
       .spyOn(deployService, 'redeployDockerCompose')
@@ -176,18 +179,32 @@ describe('FrontendStatusWorker tests', () => {
       await simpletDeploy.reload();
       expect(simpletDeploy.frontendStatus).toBe(ResourceStatus.ONLINE);
       expect(writeEventLogSpy).toHaveBeenCalledTimes(0);
-      expect(deployService.redeployDockerCompose).toBeCalledWith({
-        backend_uuid: simpletDeploy.backend_uuid,
-        dockerCompose: simpletDeploy.backendDockerCompose,
-        secrets: [
-          ...TEST_BACKEND_SECRETS,
+      expect(deployService.redeployDockerCompose).toBeCalledWith(
+        new RedeployInstanceDto(
           {
-            key: 'APP_URL',
-            value: '{"key":"value"}',
+            backend_uuid: simpletDeploy.backend_uuid,
+            dockerCompose: simpletDeploy.backendDockerCompose,
+            secrets: [
+              new DeploySecretDto(
+                {
+                  key: 'ENV_VARIABLE_NAME',
+                  value: 'ENV_VARIABLE_VALUE',
+                },
+                stage.context,
+              ),
+              new DeploySecretDto(
+                {
+                  key: 'APP_URL',
+                  value: '{"key":"value"}',
+                },
+                stage.context,
+              ),
+            ],
+            virtualMachine: simpletDeploy.backendVirtualMachine,
           },
-        ],
-        virtualMachine: simpletDeploy.backendVirtualMachine,
-      });
+          stage.context,
+        ),
+      );
     });
 
     test('should skip processing when referenceTable is not frontend', async () => {

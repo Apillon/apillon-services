@@ -94,7 +94,6 @@ export class SimpletsRepository extends BaseRepository {
         errorMessage: `Deployed Simplet with uuid ${simpletDeploy_uuid} not found`,
       });
     }
-    deployedSimplet.canAccess(this.context);
 
     return deployedSimplet;
   }
@@ -138,12 +137,10 @@ export class SimpletsRepository extends BaseRepository {
         errorMessage: `Simplet deploy with backend_uuid ${backend_uuid} not found`,
       });
     }
-    const simpletDeploy = new SimpletDeploy({}, this.context).populate(
+    return new SimpletDeploy({}, this.context).populate(
       data[0],
       PopulateFrom.DB,
     );
-    simpletDeploy.canAccess(this.context);
-    return simpletDeploy;
   }
 
   async getSimpletDeployByFrontend(
@@ -169,11 +166,9 @@ export class SimpletsRepository extends BaseRepository {
         errorMessage: `Simplet deploy with frontend_uuid ${frontend_uuid} not found`,
       });
     }
-    const simpletDeploy = new SimpletDeploy({}, this.context).populate(
+    return new SimpletDeploy({}, this.context).populate(
       data[0],
       PopulateFrom.DB,
     );
-    simpletDeploy.canAccess(this.context);
-    return simpletDeploy;
   }
 }
