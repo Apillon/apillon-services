@@ -480,7 +480,7 @@ export class SimpletsService {
     return await this.simpletRepository.getDeployedSimpletsCount(project_uuid);
   }
 
-  async deleteSimpletDeploy(simpletDeploy_uuid: string) {
+  async archiveSimpletDeploy(simpletDeploy_uuid: string) {
     await this.logging.writeLog({
       logType: LogType.INFO,
       message: `Starting deletion of simplet deploy with uuid ${simpletDeploy_uuid}.`,
@@ -504,7 +504,7 @@ export class SimpletsService {
           location: 'SimpletsService.deleteSimpletDeploy',
         });
 
-        await this.deployService.stopInstance(
+        await this.deployService.archiveInstance(
           new GenericDeployRequestDto().populate({
             deploy_uuid: simpletDeploy.backend_uuid,
           }),
@@ -558,15 +558,107 @@ export class SimpletsService {
       }
     }
 
-    // Mark the deployed simplet as deleted
-    simpletDeploy.status = SqlModelStatus.DELETED;
-    await simpletDeploy.update();
+    // Mark the deployed simplet as archived
+    await simpletDeploy.markArchived();
 
     await this.logging.writeLog({
       logType: LogType.INFO,
-      message: `Successfully completed deletion of simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      message: `Successfully completed archivation of simplet deploy with uuid ${simpletDeploy_uuid}.`,
       service: ServiceName.SIMPLETS,
       location: 'SimpletsService.deleteSimpletDeploy',
+    });
+  }
+
+  async activateSimpletDeploy(simpletDeploy_uuid: string) {
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Starting activation of simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.activateSimpletDeploy',
+    });
+    const simpletDeploy =
+      await this.simpletRepository.getDeployedSimplet(simpletDeploy_uuid);
+
+    if (simpletDeploy.status !== SqlModelStatus.ARCHIVED) {
+      throw new SimpletsCodeException({
+        status: 422,
+        code: SimpletsErrorCode.INVALID_SIMPLET_DEPLOY_STATUS,
+        errorMessage: `Cannot activate simplet deploy with uuid ${simpletDeploy_uuid} because it is not archived.`,
+      });
+    }
+
+    // activate backend deployment if it exists
+    if (simpletDeploy.backend_uuid) {
+      try {
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Starting backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.activateSimpletDeploy',
+        });
+
+        await this.deployService.startInstance(
+          new GenericDeployRequestDto().populate({
+            deploy_uuid: simpletDeploy.backend_uuid,
+          }),
+        );
+
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Successfully activated backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.activateSimpletDeploy',
+        });
+      } catch (e) {
+        await this.logging.writeLog({
+          sendAdminAlert: true,
+          logType: LogType.ERROR,
+          message: `Failed to activate backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.activateSimpletDeploy',
+          data: e,
+        });
+      }
+    }
+
+    // activate frontend deployment if it exists
+    if (simpletDeploy.frontend_uuid) {
+      try {
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Activating website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.activateSimpletDeploy',
+        });
+
+        await this.storageService.activateWebsite(simpletDeploy.frontend_uuid);
+
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Successfully activated website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.activateSimpletDeploy',
+        });
+      } catch (e) {
+        await this.logging.writeLog({
+          sendAdminAlert: true,
+          logType: LogType.ERROR,
+          message: `Failed to activate website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.activateSimpletDeploy',
+          data: e,
+        });
+      }
+    }
+
+    // Mark the deployed simplet as active
+    await simpletDeploy.markActive();
+
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Successfully completed activation of simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.activateSimpletDeploy',
     });
   }
 }

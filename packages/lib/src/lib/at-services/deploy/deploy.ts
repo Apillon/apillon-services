@@ -94,6 +94,13 @@ export class DeployMicroservice extends BaseService {
     });
   }
 
+  public async archiveInstance(body: GenericDeployRequestDto) {
+    return await this.emitEvent({
+      eventName: DeployEventType.BE_ARCHIVE_INSTANCE,
+      body,
+    });
+  }
+
   public async restartInstance(body: GenericDeployRequestDto) {
     return await this.emitEvent({
       eventName: DeployEventType.BE_RESTART_INSTANCE,

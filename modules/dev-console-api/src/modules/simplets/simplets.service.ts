@@ -131,6 +131,11 @@ export class SimpletsService {
       .data;
   }
 
+  async activateSimpletDeploy(context: DevConsoleApiContext, uuid: string) {
+    return (await new SimpletsMicroservice(context).activateSimpletDeploy(uuid))
+      .data;
+  }
+
   //#endregion
 
   private async createSimpletApiKey(
