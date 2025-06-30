@@ -150,6 +150,9 @@ export class PinToCrustWorker extends BaseSingleThreadWorker {
 
       if (inactiveUsers.length === projectUsers.length) {
         // If all users are inactive, skip pinning for this project
+        console.info(
+          `Skipping pinning for project ${projectUuid} due to inactivity of all users`,
+        );
         await new PinToCrustRequest({}, this.context).skipRequests(
           requestsForProject.map((r) => r.id),
         );
@@ -164,8 +167,6 @@ export class PinToCrustWorker extends BaseSingleThreadWorker {
         );
       }
     });
-
-    devConsoleSql.close();
 
     const filteredPendingPinRequests = pendingPinRequests.filter(
       (r) => !skippedRequestIds.includes(r.id),
@@ -253,6 +254,8 @@ export class PinToCrustWorker extends BaseSingleThreadWorker {
     //Get pin to crust request, that need to be renewed.
     //Update those request and they should be pinned in next worker iteration
     await new PinToCrustRequest({}, this.context).renewOldRequests();
+
+    devConsoleSql.close();
 
     return true;
   }

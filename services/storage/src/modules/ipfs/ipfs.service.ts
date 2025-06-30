@@ -40,6 +40,7 @@ import { File } from '../storage/models/file.model';
 import { uploadItemsToIPFSRes } from './interfaces/upload-items-to-ipfs-res.interface';
 import { IpfsBandwidth } from './models/ipfs-bandwidth';
 import { IpfsCluster } from './models/ipfs-cluster.model';
+import { inspect } from 'util';
 
 export class IPFSService {
   //private client: IPFSHTTPClient;
@@ -292,6 +293,8 @@ export class IPFSService {
               `File already exists on IPFS: ${fileUploadReq.fileName}. Skipping upload.`,
             );
           } else {
+            console.error('Error uploading file to IPFS: ');
+            console.error(error);
             //Something else does not work - maybe IPFS node. Throw error.
             throw error;
           }
