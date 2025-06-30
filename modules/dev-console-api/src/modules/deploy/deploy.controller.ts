@@ -334,13 +334,18 @@ export class DeployController {
   @UseGuards(AuthGuard)
   async startInstance(
     @Ctx()
-    context: DevConsoleApiContext,
-    @Param('uuid') deploy_uuid: string,
+    _context: DevConsoleApiContext,
+    @Param('uuid') _deploy_uuid: string,
   ) {
-    return await this.backendsService.startInstance(
-      context,
-      new GenericDeployRequestDto().populate({ deploy_uuid }),
-    );
+    // return await this.backendsService.startInstance(
+    //   context,
+    //   new GenericDeployRequestDto().populate({ deploy_uuid }),
+    // );
+
+    throw new CodeException({
+      status: HttpStatus.NOT_IMPLEMENTED,
+      code: 'NOT_IMPLEMENTED',
+    });
   }
 
   @Post(`${ROUTE_BACKENDS}/:uuid/shutdown`)
@@ -384,13 +389,17 @@ export class DeployController {
   @UseGuards(AuthGuard)
   async restartInstance(
     @Ctx()
-    context: DevConsoleApiContext,
-    @Param('uuid') deploy_uuid: string,
+    _context: DevConsoleApiContext,
+    @Param('uuid') _deploy_uuid: string,
   ) {
-    return await this.backendsService.restartInstance(
-      context,
-      new GenericDeployRequestDto().populate({ deploy_uuid }),
-    );
+    // return await this.backendsService.restartInstance(
+    //   context,
+    //   new GenericDeployRequestDto().populate({ deploy_uuid }),
+    // );
+    throw new CodeException({
+      status: HttpStatus.NOT_IMPLEMENTED,
+      code: 'NOT_IMPLEMENTED',
+    });
   }
 
   @Delete(`${ROUTE_BACKENDS}/:uuid`)
