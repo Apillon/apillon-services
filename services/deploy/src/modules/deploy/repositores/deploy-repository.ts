@@ -62,16 +62,19 @@ export class DeployRepository extends BaseRepository {
     updateIntervalHours: number,
     conn: PoolConnection,
   ): Promise<Backend[]> {
-    const pendingStatuses = [
+    const transitoryStatuses = [
       ResourceStatus.REQUESTED,
       ResourceStatus.DEPLOYING,
+      ResourceStatus.STOPPING,
+      ResourceStatus.SHUTTING_DOWN,
+      ResourceStatus.RESTARTING,
     ];
 
     const data = await this.context.mysql.paramExecute(
       `SELECT *
        FROM \`${DbTables.BACKEND}\`
        WHERE updateTime <= NOW() - INTERVAL @updateIntervalHours HOUR
-          OR backendStatus IN (${pendingStatuses.join(', ')})
+          OR backendStatus IN (${transitoryStatuses.join(', ')})
        ORDER BY updateTime
        LIMIT 100
        FOR
