@@ -66,6 +66,7 @@ export class BackendStrategyHandler {
 
   async redeployDockerCompose(body: RedeployInstanceDto): Promise<Backend> {
     const backend = await this.deployRepository.getBackend(body.backend_uuid);
+    // authorize is caller is user (skip if caller is worker)
     if (this.context.user) {
       backend.canModify(this.context);
     }
