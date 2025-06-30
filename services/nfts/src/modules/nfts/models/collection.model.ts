@@ -762,6 +762,7 @@ export class Collection extends UuidSqlModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
   })
   public logoUrl?: string;
@@ -784,6 +785,7 @@ export class Collection extends UuidSqlModel {
       SerializeFor.SERVICE,
       SerializeFor.PROFILE,
       SerializeFor.SELECT_DB,
+      SerializeFor.APILLON_API,
     ],
   })
   public bannerUrl?: string;
