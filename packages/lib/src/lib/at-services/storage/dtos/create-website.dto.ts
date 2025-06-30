@@ -95,6 +95,7 @@ export class CreateWebsiteDto extends ModelBase {
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
     validators: [],
+    defaultValue: false,
   })
   public isSimplet?: boolean;
 }
