@@ -6,7 +6,7 @@ export async function upgrade(
   await queryFn(
     `ALTER TABLE ${DbTables.SIMPLET_DEPLOY}
       ADD COLUMN \`backendDockerCompose\` TEXT NULL AFTER \`backendUrl\`,
-      ADD COLUMN \`backendVirtualMachine\` TEXT NULL AFTER \`backendDockerCompose\`;`,
+      ADD COLUMN \`backendVirtualMachine\` JSON NOT NULL DEFAULT '{}' AFTER \`backendDockerCompose\`;`,
   );
 }
 
