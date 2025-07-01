@@ -304,6 +304,8 @@ export class IPFSService {
                   console.warn(
                     `File already exists on IPFS: ${fileUploadReq.fileName}. Skipping upload after JSON parse.`,
                   );
+                } else {
+                  throw error;
                 }
               } catch (err) {
                 console.error('Error parsing string error message: ', error);
@@ -313,15 +315,24 @@ export class IPFSService {
                   console.warn(
                     `File already exists on IPFS: ${fileUploadReq.fileName}. Skipping upload after string check.`,
                   );
+                } else {
+                  throw error;
                 }
               }
             } else {
               console.error('Error uploading file to IPFS: ');
               console.error(error);
+              if (error.error?.Message === 'file already exists') {
+                // Silently ignoring IPFS file already exists error
+                console.warn(
+                  `File already exists on IPFS: ${fileUploadReq.fileName}. Skipping upload after error check.`,
+                );
+              } else {
+                throw error;
+              }
             }
 
             //Something else does not work - maybe IPFS node. Throw error.
-            throw error;
           }
         }
       },
