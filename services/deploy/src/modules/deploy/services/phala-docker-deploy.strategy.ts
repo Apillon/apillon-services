@@ -225,10 +225,20 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
     return await this.client.startCVM(backend.instanceId);
   }
 
+  /**
+   * Shuts down instance gracefully.
+   * Equivalent to running command "sudo shutdown now" on instance.
+   * @param backend
+   */
   async shutdownInstance(backend: Backend): Promise<ICreateVMResponse> {
     return await this.client.shutdownCVM(backend.instanceId);
   }
 
+  /**
+   * Abruptly shuts down instance.
+   * Equivalent to plugging off power directly, without saving any data/state.
+   * @param backend
+   */
   async stopInstance(backend: Backend): Promise<ICreateVMResponse> {
     return await this.client.stopCVM(backend.instanceId);
   }
@@ -237,6 +247,10 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
     return await this.client.restartCVM(backend.instanceId);
   }
 
+  /**
+   * Stops instance and destroys storage.
+   * @param backend
+   */
   async destroyInstance(backend: Backend): Promise<void> {
     return await this.client.destroyCVM(backend.instanceId);
   }

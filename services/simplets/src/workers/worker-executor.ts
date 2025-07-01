@@ -1,4 +1,5 @@
 import {
+  Ams,
   AppEnvironment,
   AWS_KMS,
   Context,
@@ -7,7 +8,9 @@ import {
   env,
   getEnvSecrets,
   Lmas,
+  Mailing,
   MySql,
+  Scs,
 } from '@apillon/lib';
 import {
   QueueWorkerType,
@@ -21,11 +24,13 @@ import { Scheduler } from './scheduler';
 import { BackendStatusWorker } from './backend-status.worker';
 import { SimpletsRepository } from '../modules/simplets/repositores/simplets-repository';
 import { FrontendStatusWorker } from './frontend-status.worker';
+import { ShutdownFreeSimpletsWorker } from './shutdown-free-simplets.worker';
 
 export enum WorkerName {
   SCHEDULER = 'scheduler',
   BACKEND_STATUS = 'BackendStatusWorker',
   FRONTEND_STATUS = 'FrontendStatusWorker',
+  SHUTDOWN_FREE_SIMPLETS_WORKER = 'ShutdownFreeSimpletsWorker',
 }
 
 export async function handler(event: any) {
@@ -128,6 +133,21 @@ export async function handleLambdaEvent(
       await resourceStatusWorker.run();
       break;
     }
+    case WorkerName.SHUTDOWN_FREE_SIMPLETS_WORKER: {
+      const simpletsRepository = new SimpletsRepository(context);
+      const scs = new Scs(context);
+      await new ShutdownFreeSimpletsWorker(
+        workerDefinition,
+        context,
+        simpletsRepository,
+        new DeployMicroservice(context),
+        scs,
+        new Mailing(context),
+        new Ams(context),
+      ).run();
+      break;
+    }
+
     default:
       console.log(
         `ERROR - INVALID WORKER NAME: ${workerDefinition.workerName}`,

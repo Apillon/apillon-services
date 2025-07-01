@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   ChainType,
   DeployedSimpletsQueryFilterDto,
@@ -115,6 +115,21 @@ export class SimpletDeploy extends UuidSqlModel {
     ],
   })
   public description: string;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+    ],
+    defaultValue: false,
+  })
+  public trialExpired: boolean;
 
   //region BACKEND
   @prop({
@@ -390,5 +405,29 @@ export class SimpletDeploy extends UuidSqlModel {
     };
 
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'c.id');
+  }
+
+  public async getActiveDeployedLongerThanDays(
+    days: number,
+  ): Promise<SimpletDeploy[]> {
+    const selectFields = this.generateSelectFields();
+    const sqlQuery = `
+      SELECT ${selectFields}
+      FROM \`${DbTables.SIMPLET_DEPLOY}\`
+      WHERE trialExpired = false
+        AND status = ${SqlModelStatus.ACTIVE}
+        AND createTime <= NOW() - INTERVAL ${days} DAY
+    `;
+
+    const data = await this.getContext().mysql.paramExecute(sqlQuery);
+
+    return data
+      ? data.map((simpletData) =>
+          new SimpletDeploy({}, this.getContext()).populate(
+            simpletData,
+            PopulateFrom.DB,
+          ),
+        )
+      : [];
   }
 }

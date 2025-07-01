@@ -289,21 +289,6 @@ export class Backend extends UuidSqlModel {
     return super.populateByUUID(backend_uuid, 'backend_uuid');
   }
 
-  public async getActiveDeployedLongerThanDays(
-    days: number,
-  ): Promise<Backend[]> {
-    const selectFields = this.generateSelectFields();
-    const sqlQuery = `
-      SELECT ${selectFields}
-      FROM \`${DbTables.BACKEND}\`
-      WHERE backendStatus = ${ResourceStatus.ONLINE}
-      AND status = ${SqlModelStatus.ACTIVE}
-      AND createTime <= NOW() - INTERVAL ${days} DAY
-    `;
-
-    return await this.getContext().mysql.paramExecute(sqlQuery);
-  }
-
   public getByProjectUuid(project_uuid: string): Promise<Backend[]> {
     const selectFields = this.generateSelectFields();
     const sqlQuery = `

@@ -7,16 +7,15 @@ import {
 import { Backend } from './models/backend.model';
 
 export enum VMStatus {
-  // TODO: double check statuses with phala team
-  EXITED = 'exited',
-  OFFLINE = 'offline',
-  STOPPED = 'stopped',
-  STARTING = 'starting',
   CREATING = 'creating',
+  STARTING = 'starting',
   RUNNING = 'running',
-  STOPPING = 'stopping',
-  SHUTTING_DOWN = 'shutting_down',
   RESTARTING = 'restarting',
+  SHUTTING_DOWN = 'shutting_down',
+  STOPPING = 'stopping',
+  STOPPED = 'stopped', // usual shut-down/stop (status after shutting_down and stopping)
+  EXITED = 'exited', // startup failed
+  OFFLINE = 'offline', // an urgent case in which the hosting bare metal disconnected
 }
 
 export interface ICreateVMRequest {

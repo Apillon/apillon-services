@@ -1,9 +1,11 @@
 import {
   DeployInstanceDto,
   EncryptionService,
+  env,
   overrideEnvironmentVariables,
   RedeployInstanceDto,
   ResizeInstanceDto,
+  ResourceDeployWebhookDataDto,
   ResourceStatus,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
@@ -11,8 +13,10 @@ import { IBackendDeployStrategy } from './types';
 import { Backend } from './models/backend.model';
 
 import { DeployCodeException } from '../../lib/exceptions';
-import { DeployErrorCode } from '../../config/types';
+import { DbTables, DeployErrorCode } from '../../config/types';
 import { DeployRepository } from './repositores/deploy-repository';
+import { WorkerName } from '../../workers/worker-executor';
+import { sendToWorkerQueue } from '@apillon/workers-lib';
 
 export class BackendStrategyHandler {
   constructor(
@@ -134,28 +138,60 @@ export class BackendStrategyHandler {
   // }
 
   async startInstance(backend: Backend) {
-    return await this.strategy.startInstance(backend);
+    const result = await this.strategy.startInstance(backend);
+    await this.signalBackendStatus(backend, ResourceStatus.DEPLOYING);
+    return result;
   }
 
   async shutdownInstance(backend: Backend) {
-    return await this.strategy.shutdownInstance(backend);
+    const result = await this.strategy.shutdownInstance(backend);
+    await this.signalBackendStatus(backend, ResourceStatus.SHUTTING_DOWN);
+    return result;
   }
 
   async stopInstance(backend: Backend) {
-    return await this.strategy.stopInstance(backend);
+    const result = await this.strategy.stopInstance(backend);
+    await this.signalBackendStatus(backend, ResourceStatus.STOPPING);
+    return result;
   }
 
   async restartInstance(backend: Backend) {
-    return await this.strategy.restartInstance(backend);
+    const result = await this.strategy.restartInstance(backend);
+    await this.signalBackendStatus(backend, ResourceStatus.RESTARTING);
+    return result;
   }
 
   async destroyInstance(backend: Backend) {
-    return await this.strategy.destroyInstance(backend);
+    const result = await this.strategy.destroyInstance(backend);
+    await this.signalBackendStatus(backend, ResourceStatus.SHUTTING_DOWN);
+    return result;
   }
 
   async resizeInstance(backend: Backend, body: ResizeInstanceDto) {
-    return await this.strategy.resizeInstance(backend, body);
+    const result = await this.strategy.resizeInstance(backend, body);
+    await this.signalBackendStatus(backend, ResourceStatus.RESTARTING);
+    return result;
   }
 
   //#endregion
+
+  private async signalBackendStatus(backend: Backend, status: ResourceStatus) {
+    backend.backendStatus = status;
+    await backend.update();
+    await sendToWorkerQueue(
+      env.SIMPLETS_AWS_WORKER_SQS_URL,
+      WorkerName.BACKEND_STATUS_WORKER,
+      [
+        {
+          data: new ResourceDeployWebhookDataDto().populate({
+            referenceTable: DbTables.BACKEND,
+            referenceId: backend.backend_uuid,
+            resourceStatus: backend.backendStatus,
+          }),
+        },
+      ],
+      null,
+      null,
+    );
+  }
 }
