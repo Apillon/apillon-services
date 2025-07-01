@@ -126,27 +126,27 @@ export class BackendStatusWebhookWorker extends BaseQueueWorker {
         }
       }
 
-      const updatedTransactionIds = await this.processWebhook(
+      const updatedBackendIds = await this.processWebhook(
         backendWebhookItems,
         env.SIMPLETS_AWS_WORKER_SQS_URL,
         WorkerName.BACKEND_STATUS_WORKER,
       );
 
-      if (updatedTransactionIds.length > 0) {
+      if (updatedBackendIds.length > 0) {
         await this.context.mysql.paramExecute(
           `
             UPDATE \`${DbTables.BACKEND}\`
             SET webhookTriggered = NOW()
-            WHERE backend_uuid in (${updatedTransactionIds.map((id) => `'${id}'`).join(',')})`,
+            WHERE backend_uuid in (${updatedBackendIds.map((id) => `'${id}'`).join(',')})`,
           null,
           conn,
         );
         await this.writeEventLog(
           {
             logType: LogType.INFO,
-            message: `Triggered webhooks for ${updatedTransactionIds.length} backend deploys!`,
+            message: `Triggered webhooks for ${updatedBackendIds.length} backend deploys!`,
             service: ServiceName.DEPLOY,
-            data: { updates: updatedTransactionIds },
+            data: { updates: updatedBackendIds },
           },
           LogOutput.EVENT_INFO,
         );

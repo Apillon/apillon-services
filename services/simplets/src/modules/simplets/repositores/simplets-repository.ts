@@ -37,6 +37,7 @@ export class SimpletsRepository extends BaseRepository {
       simplet_uuid,
       name,
       description,
+      trialExpired: false,
       apillonApiKey,
       apillonApiSecret,
       backendVariables,
@@ -170,5 +171,14 @@ export class SimpletsRepository extends BaseRepository {
       data[0],
       PopulateFrom.DB,
     );
+  }
+
+  async getActiveDeployedSimpletsLongerThanDays(
+    days: number,
+  ): Promise<SimpletDeploy[]> {
+    return await new SimpletDeploy(
+      {},
+      this.context,
+    ).getActiveDeployedLongerThanDays(days);
   }
 }

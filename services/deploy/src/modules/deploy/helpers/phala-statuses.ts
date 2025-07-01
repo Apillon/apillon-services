@@ -9,20 +9,20 @@ export function getBackendStatus(externalStatus: VMStatus): ResourceStatus {
       return ResourceStatus.REQUESTED;
     case VMStatus.STARTING:
       return ResourceStatus.DEPLOYING;
-    case VMStatus.RESTARTING:
-      return ResourceStatus.RESTARTING;
     case VMStatus.RUNNING:
       return ResourceStatus.ONLINE;
+    case VMStatus.RESTARTING:
+      return ResourceStatus.RESTARTING;
     case VMStatus.STOPPING:
       return ResourceStatus.STOPPING;
+    case VMStatus.SHUTTING_DOWN:
+      return ResourceStatus.SHUTTING_DOWN;
     case VMStatus.STOPPED:
       return ResourceStatus.STOPPED;
     case VMStatus.OFFLINE:
-      return ResourceStatus.STOPPED;
-    case VMStatus.SHUTTING_DOWN:
-      return ResourceStatus.SHUTTING_DOWN;
+      return ResourceStatus.ERROR;
     case VMStatus.EXITED:
-      return ResourceStatus.SHUT_DOWN;
+      return ResourceStatus.ERROR;
     default: {
       throw new DeployCodeException({
         status: 500,

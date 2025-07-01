@@ -1,5 +1,5 @@
 import { SqlModelStatus } from '@apillon/lib';
-import { DbTables } from '../../config/types';
+import { DbTables } from '@apillon/workers-lib';
 import { WorkerName } from '../../workers/worker-executor';
 
 export async function upgrade(
