@@ -6,7 +6,7 @@ export async function upgrade(
   await queryFn(
     `ALTER TABLE ${DbTables.SIMPLET_DEPLOY}
       ADD COLUMN \`backendDockerCompose\` TEXT NULL AFTER \`backendUrl\`,
-      ADD COLUMN \`virtualMachine\`       TEXT NULL AFTER \`backendDockerCompose\`;`,
+      ADD COLUMN \`backendVirtualMachine\` TEXT NULL AFTER \`backendDockerCompose\`;`,
   );
 }
 
@@ -16,6 +16,6 @@ export async function downgrade(
   await queryFn(
     `ALTER TABLE ${DbTables.SIMPLET_DEPLOY}
       DROP COLUMN \`backendDockerCompose\`,
-      DROP COLUMN \`virtualMachine\`;`,
+      DROP COLUMN \`backendVirtualMachine\`;`,
   );
 }
