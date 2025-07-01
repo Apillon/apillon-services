@@ -10,6 +10,7 @@ import {
   SimpletDeployDto,
   SimpletRedeployDto,
   SimpletsQueryFilterDto,
+  VirtualMachineDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { SimpletsCodeException } from '../../lib/exceptions';
@@ -57,7 +58,9 @@ export class SimpletsController {
         backend_uuid,
         backendUrl,
         backendDockerCompose: dockerCompose,
-        backendVirtualMachine: simplet.backendMachine,
+        backendVirtualMachine: new VirtualMachineDto({}, this.context).populate(
+          simplet.backendMachine,
+        ),
       });
     }
 
