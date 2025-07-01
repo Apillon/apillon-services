@@ -79,7 +79,7 @@ export class ShutdownFreeSimpletsWorker extends BaseSingleThreadWorker {
           deploy_uuid: simpletDeploy.backend_uuid,
         }),
       );
-      simpletDeploy.trialExpired = false;
+      simpletDeploy.trialExpired = true;
       await simpletDeploy.update();
       const projectOwner = (
         await this.accessMS.getProjectOwner(simpletDeploy.project_uuid)

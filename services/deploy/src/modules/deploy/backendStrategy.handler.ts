@@ -139,55 +139,45 @@ export class BackendStrategyHandler {
 
   async startInstance(backend: Backend) {
     const result = await this.strategy.startInstance(backend);
-    backend.backendStatus = ResourceStatus.DEPLOYING;
-    await backend.update();
-    await this.signalBackendStatus(backend);
+    await this.signalBackendStatus(backend, ResourceStatus.DEPLOYING);
     return result;
   }
 
   async shutdownInstance(backend: Backend) {
     const result = await this.strategy.shutdownInstance(backend);
-    backend.backendStatus = ResourceStatus.SHUTTING_DOWN;
-    await backend.update();
-    await this.signalBackendStatus(backend);
+    await this.signalBackendStatus(backend, ResourceStatus.SHUTTING_DOWN);
     return result;
   }
 
   async stopInstance(backend: Backend) {
     const result = await this.strategy.stopInstance(backend);
-    backend.backendStatus = ResourceStatus.STOPPING;
-    await backend.update();
-    await this.signalBackendStatus(backend);
+    await this.signalBackendStatus(backend, ResourceStatus.STOPPING);
     return result;
   }
 
   async restartInstance(backend: Backend) {
     const result = await this.strategy.restartInstance(backend);
-    backend.backendStatus = ResourceStatus.RESTARTING;
-    await backend.update();
-    await this.signalBackendStatus(backend);
+    await this.signalBackendStatus(backend, ResourceStatus.RESTARTING);
     return result;
   }
 
   async destroyInstance(backend: Backend) {
     const result = await this.strategy.destroyInstance(backend);
-    backend.backendStatus = ResourceStatus.SHUTTING_DOWN;
-    await backend.update();
-    await this.signalBackendStatus(backend);
+    await this.signalBackendStatus(backend, ResourceStatus.SHUTTING_DOWN);
     return result;
   }
 
   async resizeInstance(backend: Backend, body: ResizeInstanceDto) {
     const result = await this.strategy.resizeInstance(backend, body);
-    backend.backendStatus = ResourceStatus.RESTARTING;
-    await backend.update();
-    await this.signalBackendStatus(backend);
+    await this.signalBackendStatus(backend, ResourceStatus.RESTARTING);
     return result;
   }
 
   //#endregion
 
-  private async signalBackendStatus(backend: Backend) {
+  private async signalBackendStatus(backend: Backend, status: ResourceStatus) {
+    backend.backendStatus = status;
+    await backend.update();
     await sendToWorkerQueue(
       env.SIMPLETS_AWS_WORKER_SQS_URL,
       WorkerName.BACKEND_STATUS_WORKER,

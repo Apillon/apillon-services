@@ -421,7 +421,7 @@ export class SimpletDeploy extends UuidSqlModel {
 
     const data = await this.getContext().mysql.paramExecute(sqlQuery);
 
-    return data && data.length
+    return data
       ? data.map((simpletData) =>
           new SimpletDeploy({}, this.getContext()).populate(
             simpletData,

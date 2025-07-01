@@ -5,7 +5,7 @@ export async function upgrade(
 ) {
   await queryFn(
     `ALTER TABLE ${DbTables.SIMPLET_DEPLOY}
-      ADD COLUMN \`trialExpired\` BOOLEAN DEFAULT FALSE AFTER \`description\`;`,
+      ADD COLUMN \`trialExpired\` BOOLEAN DEFAULT FALSE NOT NULL AFTER \`description\`;`,
   );
 }
 
