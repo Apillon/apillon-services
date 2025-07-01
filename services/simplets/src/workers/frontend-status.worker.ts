@@ -72,8 +72,6 @@ export class FrontendStatusWorker extends BaseQueueWorker {
         const response = await this.deployService.redeployDockerCompose(
           new RedeployInstanceDto({}, this.context).populate({
             backend_uuid: simpletDeploy.backend_uuid,
-            dockerCompose: simpletDeploy.backendDockerCompose,
-            virtualMachine: simpletDeploy.backendVirtualMachine,
             secrets: overrideEnvironmentVariables(secrets, [
               { key: 'APP_URL', value: frontendUrl },
             ]),
