@@ -166,7 +166,8 @@ export class SimpletDeploy extends UuidSqlModel {
    */
   @prop({
     parser: { resolver: stringParser() },
-    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.INSERT_DB],
     validators: [
       {
         resolver: validateDockerComposeYaml(true),
@@ -181,7 +182,8 @@ export class SimpletDeploy extends UuidSqlModel {
    */
   @prop({
     parser: { resolver: VirtualMachineDto },
-    populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.INSERT_DB],
   })
   public backendVirtualMachine: VirtualMachineDto;
 
