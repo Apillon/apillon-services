@@ -10,7 +10,6 @@ import {
   SimpletDeployDto,
   SimpletRedeployDto,
   SimpletsQueryFilterDto,
-  VirtualMachineDto,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { SimpletsCodeException } from '../../lib/exceptions';
@@ -51,16 +50,14 @@ export class SimpletsController {
     // BACKEND DEPLOY
     if (simplet.backendRepo && !simpletDeploy.backend_uuid) {
       simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
-      const { backendDeploy, dockerCompose } =
-        await this.simpletsService.deployBackend(simpletDeploy, simplet);
+      const { backendDeploy } = await this.simpletsService.deployBackend(
+        simpletDeploy,
+        simplet,
+      );
       const { backend_uuid, url: backendUrl } = backendDeploy.data;
       simpletDeploy.populate({
         backend_uuid,
         backendUrl,
-        backendDockerCompose: dockerCompose,
-        backendVirtualMachine: new VirtualMachineDto({}, this.context).populate(
-          simplet.backendMachine,
-        ),
       });
     }
 

@@ -159,9 +159,7 @@ describe('FrontendStatusWorker tests', () => {
           backendStatus: null,
           apillonApiKey: 'dummyApiKey',
           apillonApiSecret: 'dummyApiSecret',
-          backendDockerCompose: 'DOCKER_COMPOSE_CONTENT',
           backendVariables: 'ENCRYPTED_BACKEND_VARIABLES',
-          backendVirtualMachine: {},
         },
         stage.context,
       ).insert();
@@ -183,7 +181,6 @@ describe('FrontendStatusWorker tests', () => {
         new RedeployInstanceDto(
           {
             backend_uuid: simpletDeploy.backend_uuid,
-            dockerCompose: simpletDeploy.backendDockerCompose,
             secrets: [
               new DeploySecretDto(
                 {
@@ -200,7 +197,6 @@ describe('FrontendStatusWorker tests', () => {
                 stage.context,
               ),
             ],
-            virtualMachine: simpletDeploy.backendVirtualMachine,
           },
           stage.context,
         ),
