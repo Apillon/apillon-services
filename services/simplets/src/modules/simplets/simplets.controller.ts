@@ -10,6 +10,7 @@ import {
   SimpletDeployDto,
   SimpletRedeployDto,
   SimpletsQueryFilterDto,
+  SubscriptionPackageId,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { SimpletsCodeException } from '../../lib/exceptions';
@@ -208,6 +209,16 @@ export class SimpletsController {
     const simpletDeploy = await this.simpletsService.getDeployedSimplet(
       body.simpletDeploy_uuid,
     );
+    if (
+      simpletDeploy.trialExpired &&
+      !(await this.hasActiveSubscription(simpletDeploy.project_uuid))
+    ) {
+      throw new SimpletsCodeException({
+        status: 402,
+        code: SimpletsErrorCode.TRIAL_EXPIRED,
+        context: this.context,
+      });
+    }
     const simplet = await this.simpletsService.getSimplet(
       simpletDeploy.simplet_uuid,
     );
@@ -350,6 +361,24 @@ export class SimpletsController {
   async listDeployedSimplets(query: DeployedSimpletsQueryFilterDto) {
     return await this.simpletsService.listDeployedSimplets(
       new DeployedSimpletsQueryFilterDto(query),
+    );
+  }
+
+  //#endregion
+
+  //#region ------------- HELPERS -------------
+  private async hasActiveSubscription(project_uuid: string): Promise<boolean> {
+    const { data } = await new Scs(this.context).getProjectActiveSubscription(
+      project_uuid,
+    );
+
+    return (
+      !!data.package_id &&
+      [
+        SubscriptionPackageId.BUTTERFLY,
+        SubscriptionPackageId.COCOON,
+        SubscriptionPackageId.CATERPILLAR,
+      ].includes(data.package_id)
     );
   }
 
