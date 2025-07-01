@@ -293,8 +293,13 @@ export class IPFSService {
               `File already exists on IPFS: ${fileUploadReq.fileName}. Skipping upload.`,
             );
           } else {
+            try {
+              const parsedError = JSON.parse(error);
+              console.log('Parsed error: ', parsedError);
+            } catch (err) {}
             console.error('Error uploading file to IPFS: ');
             console.error(error);
+            console.log();
             //Something else does not work - maybe IPFS node. Throw error.
             throw error;
           }
