@@ -5,6 +5,8 @@ export enum DbTables {
 
 export enum SimpletsErrorCode {
   //400
+  // 402 - payment required
+  TRIAL_EXPIRED = 40221000,
   //403
   WALLET_ACCESS_DENIED = 40321000,
   MAX_SIMPLETS_COUNT_REACHED = 40321001,

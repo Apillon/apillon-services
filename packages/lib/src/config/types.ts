@@ -452,6 +452,7 @@ export enum SimpletsEventType {
   GET_SIMPLET = 'get-simplet',
   // deployed
   GET_DEPLOYED_SIMPLET = 'get-deployed-simplet',
+  GET_DEPLOYED_SIMPLET_BY_BACKEND_UUID = 'get-deployed-simplet-by-backend-uuid',
   LIST_DEPLOYED_SIMPLETS = 'list-deployed-simplets',
   ARCHIVE_SIMPLET_DEPLOY = 'archive-simplet-deploy',
   ACTIVATE_SIMPLET_DEPLOY = 'activate-simplet-deploy',

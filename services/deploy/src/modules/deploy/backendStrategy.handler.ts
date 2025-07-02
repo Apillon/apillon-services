@@ -7,6 +7,9 @@ import {
   ResizeInstanceDto,
   ResourceDeployWebhookDataDto,
   ResourceStatus,
+  Scs,
+  SimpletsMicroservice,
+  SubscriptionPackageId,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { IBackendDeployStrategy } from './types';
@@ -24,7 +27,32 @@ export class BackendStrategyHandler {
     private readonly encryptionService: EncryptionService,
     private readonly deployRepository: DeployRepository,
     private readonly strategy: IBackendDeployStrategy,
+    private readonly simpletsService: SimpletsMicroservice,
+    private readonly scsService: Scs,
   ) {}
+
+  /**
+   * Checks if a project has an active subscription.
+   * @param project_uuid The UUID of the project to check.
+   * @returns True if the project has an active subscription, false otherwise.
+   */
+  private async hasActiveSubscription(project_uuid: string): Promise<boolean> {
+    if (!this.scsService) {
+      return false;
+    }
+
+    const { data } =
+      await this.scsService.getProjectActiveSubscription(project_uuid);
+
+    return (
+      !!data.package_id &&
+      [
+        SubscriptionPackageId.BUTTERFLY,
+        SubscriptionPackageId.COCOON,
+        SubscriptionPackageId.CATERPILLAR,
+      ].includes(data.package_id)
+    );
+  }
 
   //#region on-chain
   async deployDockerCompose(body: DeployInstanceDto): Promise<Backend> {
@@ -73,6 +101,24 @@ export class BackendStrategyHandler {
     // authorize is caller is user (skip if caller is worker)
     if (this.context.user) {
       backend.canModify(this.context);
+    }
+    // Check if the simplet has expired and if the project has an active subscription
+    const { data: simpletDeploy } =
+      await this.simpletsService.getDeployedSimpletByBackendUuid(
+        body.backend_uuid,
+      );
+    if (
+      simpletDeploy &&
+      simpletDeploy.trialExpired &&
+      !(await this.hasActiveSubscription(backend.project_uuid))
+    ) {
+      throw new DeployCodeException({
+        status: 402,
+        code: DeployErrorCode.TRIAL_EXPIRED,
+        context: this.context,
+        errorMessage:
+          'Trial has expired. Please upgrade to a paid subscription to continue using this service.',
+      });
     }
     try {
       const secrets = overrideEnvironmentVariables(
