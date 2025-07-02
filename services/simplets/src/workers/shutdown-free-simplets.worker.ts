@@ -39,7 +39,7 @@ export class ShutdownFreeSimpletsWorker extends BaseSingleThreadWorker {
     );
 
     this.logFn(
-      `Found ${deployedSimplets.length} active deployed simplets running for more than 3 days`,
+      `Found ${deployedSimplets.length} active deployed simplets running for ${projectsToCheck.length} projects for more than 3 days`,
     );
 
     await Promise.all(
@@ -52,6 +52,9 @@ export class ShutdownFreeSimpletsWorker extends BaseSingleThreadWorker {
           subscription &&
           subscription.package_id !== SubscriptionPackageId.FREEMIUM
         ) {
+          this.logFn(
+            `Skipping project ${projectUuid} with subscription package ${subscription.package_id}`,
+          );
           return;
         }
 

@@ -134,12 +134,11 @@ export async function handleLambdaEvent(
       break;
     }
     case WorkerName.SHUTDOWN_FREE_SIMPLETS_WORKER: {
-      const simpletsRepository = new SimpletsRepository(context);
       const scs = new Scs(context);
       await new ShutdownFreeSimpletsWorker(
         workerDefinition,
         context,
-        simpletsRepository,
+        new SimpletsRepository(context),
         new DeployMicroservice(context),
         scs,
         new Mailing(context),
