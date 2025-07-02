@@ -358,6 +358,13 @@ export class SimpletsController {
     return deployedSimplet.serializeByContext(this.context);
   }
 
+  async getDeployedSimpletByBackendUuid(backend_uuid: string) {
+    const deployedSimplet =
+      await this.simpletsService.getDeployedSimpletByBackendUuid(backend_uuid);
+
+    return deployedSimplet.serializeByContext(this.context);
+  }
+
   async listDeployedSimplets(query: DeployedSimpletsQueryFilterDto) {
     return await this.simpletsService.listDeployedSimplets(
       new DeployedSimpletsQueryFilterDto(query),
@@ -368,9 +375,8 @@ export class SimpletsController {
 
   //#region ------------- HELPERS -------------
   private async hasActiveSubscription(project_uuid: string): Promise<boolean> {
-    const { data } = await new Scs(this.context).getProjectActiveSubscription(
-      project_uuid,
-    );
+    const { data } =
+      await this.configService.getProjectActiveSubscription(project_uuid);
 
     return (
       !!data.package_id &&

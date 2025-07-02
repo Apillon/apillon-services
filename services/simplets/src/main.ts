@@ -43,6 +43,8 @@ export async function processEvent(
       return controller.listDeployedSimplets(event.body);
     case SimpletsEventType.GET_DEPLOYED_SIMPLET:
       return controller.getDeployedSimplet(event.body.uuid);
+    case SimpletsEventType.GET_DEPLOYED_SIMPLET_BY_BACKEND_UUID:
+      return controller.getDeployedSimpletByBackendUuid(event.body.uuid);
     case SimpletsEventType.IS_SIMPLET_QUOTA_REACHED:
       return controller.isSimpletQuotaReached(event.body.uuid);
     case SimpletsEventType.ARCHIVE_SIMPLET_DEPLOY:

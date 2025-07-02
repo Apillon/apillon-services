@@ -98,6 +98,15 @@ export class SimpletsService {
     return simpletDeploy;
   }
 
+  async getDeployedSimpletByBackendUuid(
+    backend_uuid: string,
+  ): Promise<SimpletDeploy> {
+    const simpletDeploy =
+      await this.simpletRepository.getSimpletDeployByBackend(backend_uuid);
+    simpletDeploy.canAccess(this.context);
+    return simpletDeploy;
+  }
+
   // async deployContract(
   //   simpletDeploy: SimpletDeploy,
   //   simplet: Simplet,

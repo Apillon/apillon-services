@@ -71,6 +71,13 @@ export class SimpletsMicroservice extends BaseService {
     });
   }
 
+  public async getDeployedSimpletByBackendUuid(backend_uuid: string) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.GET_DEPLOYED_SIMPLET_BY_BACKEND_UUID,
+      body: { uuid: backend_uuid },
+    });
+  }
+
   public async listDeployedSimplets(body: DeployedSimpletsQueryFilterDto) {
     return await this.emitEvent({
       eventName: SimpletsEventType.LIST_DEPLOYED_SIMPLETS,
