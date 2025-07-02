@@ -101,6 +101,7 @@ export class ShutdownFreeSimpletsWorker extends BaseSingleThreadWorker {
     } catch (e: unknown) {
       this.logFn(
         `Error shutting down simplet ${simpletDeploy.simpletDeploy_uuid} for project ${simpletDeploy.project_uuid}: ${e instanceof Error ? e.message : e.toString()}`,
+        e as any,
       );
     }
   }
