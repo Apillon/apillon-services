@@ -6,6 +6,8 @@ import {
   CreateContractDto,
   DefaultApiKeyRole,
   EncryptContentDto,
+  HttpException,
+  HttpStatus,
   ValidateFor,
 } from '@apillon/lib';
 import { TransferOwnershipDto } from '@apillon/blockchain-lib/common';
@@ -24,6 +26,9 @@ import { ValidationGuard } from '../../guards/validation.guard';
 import { ComputingService } from './computing.service';
 import { ApillonApiContext } from '../../context';
 
+const SCHRODINGER_CONTRACT_DEPRECATED =
+  'Schrodinger contract from computing module has been deprecated';
+
 @Controller('computing')
 export class ComputingController {
   constructor(private readonly computingService: ComputingService) {}
@@ -39,7 +44,7 @@ export class ComputingController {
     @Ctx() context: ApillonApiContext,
     @Body() body: CreateContractDto,
   ) {
-    return await this.computingService.createContract(context, body);
+    throw new HttpException(SCHRODINGER_CONTRACT_DEPRECATED, HttpStatus.GONE);
   }
 
   @Get('contracts')
@@ -53,7 +58,7 @@ export class ComputingController {
     @Ctx() context: ApillonApiContext,
     @Query() query: ContractQueryFilter,
   ) {
-    return await this.computingService.listContracts(context, query);
+    throw new HttpException(SCHRODINGER_CONTRACT_DEPRECATED, HttpStatus.GONE);
   }
 
   @Get('contracts/:uuid')
@@ -66,7 +71,7 @@ export class ComputingController {
     @Ctx() context: ApillonApiContext,
     @Param('uuid') uuid: string,
   ) {
-    return await this.computingService.getContract(context, uuid);
+    throw new HttpException(SCHRODINGER_CONTRACT_DEPRECATED, HttpStatus.GONE);
   }
 
   @Get('contracts/:uuid/transactions')
@@ -84,8 +89,7 @@ export class ComputingController {
     @Param('uuid') uuid: string,
     @Query() query: ComputingTransactionQueryFilter,
   ) {
-    query.contract_uuid = uuid;
-    return await this.computingService.listTransactions(context, query);
+    throw new HttpException(SCHRODINGER_CONTRACT_DEPRECATED, HttpStatus.GONE);
   }
 
   @Post('contracts/:uuid/transfer-ownership')
@@ -100,8 +104,7 @@ export class ComputingController {
     @Param('uuid') uuid: string,
     @Body() body: TransferOwnershipDto,
   ) {
-    body.contract_uuid = uuid;
-    return await this.computingService.transferContractOwnership(context, body);
+    throw new HttpException(SCHRODINGER_CONTRACT_DEPRECATED, HttpStatus.GONE);
   }
 
   @Post('contracts/:uuid/encrypt')
@@ -116,8 +119,7 @@ export class ComputingController {
     @Param('uuid') uuid: string,
     @Body() body: EncryptContentDto,
   ) {
-    body.contract_uuid = uuid;
-    return await this.computingService.encryptContent(context, body);
+    throw new HttpException(SCHRODINGER_CONTRACT_DEPRECATED, HttpStatus.GONE);
   }
 
   @Post('contracts/:uuid/assign-cid-to-nft')
@@ -132,7 +134,6 @@ export class ComputingController {
     @Param('uuid') uuid: string,
     @Body() body: AssignCidToNft,
   ) {
-    body.contract_uuid = uuid;
-    return await this.computingService.assignCidToNft(context, body);
+    throw new HttpException(SCHRODINGER_CONTRACT_DEPRECATED, HttpStatus.GONE);
   }
 }

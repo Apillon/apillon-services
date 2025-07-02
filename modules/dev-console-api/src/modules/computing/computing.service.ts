@@ -12,6 +12,9 @@ import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { ServicesService } from '../services/services.service';
 
+/**
+ * @deprecated Schrodinger contract functionality is deprecated and will be removed in a future release
+ */
 @Injectable()
 export class ComputingService {
   constructor(private readonly serviceService: ServicesService) {}

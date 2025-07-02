@@ -50,6 +50,7 @@ import { ClusterWallet } from './models/cluster-wallet.model';
 export class ComputingService {
   /**
    * Creates a new computing contract with the given data
+   * @deprecated Schrodinger contract functionality is deprecated and will be removed in a future release
    * @param {{ body: CreateContractDto }} params - Contract creation params
    * @param {ServiceContext} context
    * @returns {Contract}
