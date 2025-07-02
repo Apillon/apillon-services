@@ -7,7 +7,6 @@ import {
   GenericDeployRequestDto,
   Mailing,
   Scs,
-  SubscriptionPackageId,
 } from '@apillon/lib';
 import { BaseSingleThreadWorker, WorkerDefinition } from '@apillon/workers-lib';
 import { SimpletsRepository } from '../modules/simplets/repositores/simplets-repository';
@@ -30,38 +29,38 @@ export class ShutdownFreeSimpletsWorker extends BaseSingleThreadWorker {
   async runExecutor(_data: void): Promise<void> {
     this.logFn('ShutdownFreeSimpletsWorker - execute BEGIN');
 
-    // Get all active deployed simplets that are running for more than 3 days
+    // TODO: to optimize we should only retrieve simplet and project uuids else
+    //  after some time we could get too many simplets returned
     const deployedSimplets =
       await this.simpletsRepository.getActiveDeployedSimpletsLongerThanDays(3);
+    if (!deployedSimplets.length) {
+      this.logFn('No deployed simplets found running for more than 3 days');
+      return;
+    }
 
     const projectsToCheck = Array.from(
       new Set<string>(deployedSimplets.map((simplet) => simplet.project_uuid)),
     );
-
     this.logFn(
       `Found ${deployedSimplets.length} active deployed simplets running for ${projectsToCheck.length} projects for more than 3 days`,
     );
-
+    const projectSimpletMap = new Map<string, SimpletDeploy[]>();
+    deployedSimplets.forEach((simplet) => {
+      if (!projectSimpletMap.has(simplet.project_uuid)) {
+        projectSimpletMap.set(simplet.project_uuid, []);
+      }
+      projectSimpletMap.get(simplet.project_uuid).push(simplet);
+    });
     await Promise.all(
       projectsToCheck.map(async (projectUuid) => {
-        const subscription = (
-          await this.configMS.getProjectActiveSubscription(projectUuid)
-        ).data;
-
-        if (
-          subscription &&
-          subscription.package_id !== SubscriptionPackageId.FREEMIUM
-        ) {
+        if (await this.configMS.projectHasPaidSubscription(projectUuid)) {
           this.logFn(
-            `Skipping project ${projectUuid} with subscription package ${subscription.package_id}`,
+            `Skipping project ${projectUuid} with paid subscription package.`,
           );
           return;
         }
 
-        const simpletDeploys = deployedSimplets.filter(
-          (simplets) => simplets.project_uuid === projectUuid,
-        );
-
+        const simpletDeploys = projectSimpletMap.get(projectUuid);
         this.logFn(
           `Shutting down ${simpletDeploys.length} simplets for project ${projectUuid}`,
         );

@@ -9,7 +9,6 @@ import {
   ResourceStatus,
   Scs,
   SimpletsMicroservice,
-  SubscriptionPackageId,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { IBackendDeployStrategy } from './types';
@@ -30,29 +29,6 @@ export class BackendStrategyHandler {
     private readonly simpletsService: SimpletsMicroservice,
     private readonly scsService: Scs,
   ) {}
-
-  /**
-   * Checks if a project has an active subscription.
-   * @param project_uuid The UUID of the project to check.
-   * @returns True if the project has an active subscription, false otherwise.
-   */
-  private async hasActiveSubscription(project_uuid: string): Promise<boolean> {
-    if (!this.scsService) {
-      return false;
-    }
-
-    const { data } =
-      await this.scsService.getProjectActiveSubscription(project_uuid);
-
-    return (
-      !!data.package_id &&
-      [
-        SubscriptionPackageId.BUTTERFLY,
-        SubscriptionPackageId.COCOON,
-        SubscriptionPackageId.CATERPILLAR,
-      ].includes(data.package_id)
-    );
-  }
 
   //#region on-chain
   async deployDockerCompose(body: DeployInstanceDto): Promise<Backend> {
@@ -110,7 +86,7 @@ export class BackendStrategyHandler {
     if (
       simpletDeploy &&
       simpletDeploy.trialExpired &&
-      !(await this.hasActiveSubscription(backend.project_uuid))
+      !(await this.scsService.projectHasPaidSubscription(backend.project_uuid))
     ) {
       throw new DeployCodeException({
         status: 402,

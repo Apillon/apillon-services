@@ -5,6 +5,7 @@ import {
   Merge,
   ProductCode,
   ScsEventType,
+  SubscriptionPackageId,
 } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
@@ -241,6 +242,21 @@ export class Scs extends BaseService {
       eventName: ScsEventType.GET_ACTIVE_SUBSCRIPTION,
       project_uuid,
     });
+  }
+
+  public async projectHasPaidSubscription(project_uuid: string) {
+    const response = await this.callService({
+      eventName: ScsEventType.GET_ACTIVE_SUBSCRIPTION,
+      project_uuid,
+    });
+    if (!response.data) {
+      return false;
+    }
+    return [
+      SubscriptionPackageId.CATERPILLAR,
+      SubscriptionPackageId.COCOON,
+      SubscriptionPackageId.BUTTERFLY,
+    ].includes(response.data.subscription_id);
   }
 
   public async listSubscriptions(query: SubscriptionsQueryFilter) {
