@@ -78,7 +78,9 @@ export class BackendController {
 
   async shutdownInstance(body: GenericDeployRequestDto): Promise<any> {
     const backend = await this.deployRepository.getBackend(body.deploy_uuid);
-    backend.canModify(this.context);
+    if (this.context.user) {
+      backend.canModify(this.context);
+    }
     return await this.backendStrategyHandler.shutdownInstance(backend);
   }
 
