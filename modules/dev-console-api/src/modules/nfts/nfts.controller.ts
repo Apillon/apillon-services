@@ -8,7 +8,6 @@ import {
   DefaultUserRole,
   DeployCollectionDTO,
   MintNftDTO,
-  NestMintNftDTO,
   NFTCollectionQueryFilter,
   RoleGroup,
   SetCollectionBaseUriDTO,
@@ -205,22 +204,6 @@ export class NftsController {
     @Body() body: MintNftDTO,
   ) {
     return await this.nftsService.mintNftTo(context, collectionUuid, body);
-  }
-
-  @Post('/collections/:collectionUuid/nest-mint')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
-  @Validation({ dto: NestMintNftDTO })
-  @UseGuards(ValidationGuard, AuthGuard)
-  async nestMintNft(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('collectionUuid') collectionUuid: string,
-    @Body() body: NestMintNftDTO,
-  ) {
-    return await this.nftsService.nestMintNftTo(context, collectionUuid, body);
   }
 
   @Post('collections/:collectionUuid/set-base-uri')

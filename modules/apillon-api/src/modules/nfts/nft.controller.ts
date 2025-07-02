@@ -5,7 +5,6 @@ import {
   ChainType,
   DefaultApiKeyRole,
   MintNftDTO,
-  NestMintNftDTO,
   TransactionQueryFilter,
   TransferCollectionDTO,
   ValidateFor,
@@ -170,21 +169,6 @@ export class NftController {
     @Body() body: MintNftDTO,
   ) {
     return await this.nftService.mintNft(context, uuid, body);
-  }
-
-  @Post('collections/:uuid/nest-mint')
-  @ApiKeyPermissions({
-    role: DefaultApiKeyRole.KEY_EXECUTE,
-    serviceType: AttachedServiceType.NFT,
-  })
-  @Validation({ dto: NestMintNftDTO })
-  @UseGuards(AuthGuard, ValidationGuard)
-  async nestMintCollectionNft(
-    @Ctx() context: ApillonApiContext,
-    @Param('uuid') uuid: string,
-    @Body() body: NestMintNftDTO,
-  ) {
-    return await this.nftService.nestMintNft(context, uuid, body);
   }
 
   @Post('collections/:uuid/burn')
