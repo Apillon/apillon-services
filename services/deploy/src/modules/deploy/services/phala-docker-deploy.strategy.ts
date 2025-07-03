@@ -39,16 +39,39 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
           errorMessage: 'No available pods found.',
         });
       }
-      const podId = pod.nodes[0].teepod_id;
+
       const isProduction = env.APP_ENV === AppEnvironment.PROD;
-      const latestImage = pod.nodes[0].images
+      // NOTE: for now we have to use prod with kms disabled (when v0.5.x nodes
+      // shipped phala will also introduce new API for deployment & sdks)
+      const usableNodes = pod.nodes.filter(
+        (node) =>
+          node.name?.toLowerCase().includes('prod') &&
+          node.support_onchain_kms === false,
+      );
+      if (usableNodes.length <= 0) {
+        throw new DeployCodeException({
+          status: 500,
+          code: DeployErrorCode.DEPLOY_POD_NOT_FOUND,
+          errorMessage: `No usable nodes found.`,
+        });
+      }
+      const selectedNodeIndex = Math.floor(Math.random() * usableNodes.length);
+      const selectedNode = pod.nodes[selectedNodeIndex];
+      const podId = selectedNode.teepod_id;
+      // get image with latest version
+      const latestImage = selectedNode.images
         .filter((image: any) => image.is_dev === !isProduction)
         .reduce((latest: any, current: any) => {
           const currentVersion = parsePhalaImageVersion(current.version);
           const latestVersion = latest
             ? parsePhalaImageVersion(latest.version)
             : 0;
-          return currentVersion > latestVersion ? current : latest;
+          return currentVersion > latestVersion &&
+            // NOTE: for now we need to use version 3, later we'll switch to v5 when phala is ready
+            currentVersion > 300 &&
+            currentVersion < 400
+            ? current
+            : latest;
         }, null);
       const imageName = latestImage?.name;
       if (!imageName) {
@@ -58,6 +81,10 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
           errorMessage: 'No suitable image was found.',
         });
       }
+      console.log(
+        `Selected Phala image ${imageName} and version ${latestImage?.version}`,
+      );
+
       const vmConfig = this.getVmConfig(
         body.name,
         imageName,

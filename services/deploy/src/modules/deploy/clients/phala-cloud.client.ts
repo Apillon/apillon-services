@@ -35,7 +35,7 @@ export class PhalaCloudClient {
    *
    * @return A promise that resolves with the response containing the available pods information.
    */
-  async getAvailablePods(): Promise<any> {
+  async getAvailablePods(): Promise<ITeePods> {
     const response = await this.api.get('/teepods/available');
     return response.data;
   }
@@ -248,4 +248,22 @@ function uint8ArrayToHex(buffer: Uint8Array): string {
   return Array.from(buffer)
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
+}
+
+interface IImage {
+  name: string;
+  is_dev: boolean;
+  version: number[];
+}
+
+interface INode {
+  name: string;
+  teepod_id: number;
+  support_onchain_kms: boolean;
+  images: IImage[];
+}
+
+interface ITeePods {
+  name: string;
+  nodes: INode[];
 }

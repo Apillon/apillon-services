@@ -54,12 +54,6 @@ export class BackendStrategyHandler {
       await backend.insert();
       return backend;
     } catch (e: unknown) {
-      if (backend) {
-        backend.populate({
-          backendStatus: ResourceStatus.FAILED,
-        });
-        await backend.insert();
-      }
       if (e instanceof DeployCodeException) {
         throw e;
       }
