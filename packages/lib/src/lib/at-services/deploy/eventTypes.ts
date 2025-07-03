@@ -1,5 +1,4 @@
 import { DeployEventType } from '../../../config/types';
-import { DeployInstanceDto } from './dtos/deploy-instance.dto';
 import { GenericDeployRequestDto } from './dtos/generic-deploy-request.dto';
 import { ResizeInstanceDto } from './dtos/resize-instance.dto';
 import { BackendsQueryFilter } from './dtos/backends-query-filter.dto';
@@ -18,24 +17,67 @@ import { ListReposType } from './types/list-repos.type';
 import { DeleteDeploymentConfigType } from './types/delete-deployment-config.type';
 import { GetEnvironmentVariablesType } from './types/get-environment-variables.type';
 import { GetDeploymentConfigType } from './types/get-deployment-config.type';
+import { ModelBaseType } from '../../base-models/base';
+import { DeployInstanceDto } from './dtos/deploy-instance.dto';
 import { RedeployWebsiteType } from './types/redeploy-website.type';
+import { RedeployInstanceDto } from './dtos/redeploy-instance.dto';
 
 export type DeployMSEventType =
-  | IBodyEvent<DeployEventType.BE_DEPLOY_DOCKER_COMPOSE, DeployInstanceDto>
+  // BE
+  | IBodyEvent<
+      DeployEventType.BE_DEPLOY_DOCKER_COMPOSE,
+      ModelBaseType<DeployInstanceDto>
+    >
+  | IBodyEvent<
+      DeployEventType.BE_REDEPLOY_DOCKER_COMPOSE,
+      ModelBaseType<RedeployInstanceDto>
+    >
   | IBodyEvent<DeployEventType.BE_LIST_BACKENDS, BackendsQueryFilter>
-  | IBodyEvent<DeployEventType.BE_GET_INSTANCE, GenericDeployRequestDto>
-  | IBodyEvent<DeployEventType.BE_GET_INSTANCE_DETAILS, GenericDeployRequestDto>
-  | IBodyEvent<DeployEventType.BE_START_INSTANCE, GenericDeployRequestDto>
-  | IBodyEvent<DeployEventType.BE_SHUTDOWN_INSTANCE, GenericDeployRequestDto>
-  | IBodyEvent<DeployEventType.BE_STOP_INSTANCE, GenericDeployRequestDto>
-  | IBodyEvent<DeployEventType.BE_RESTART_INSTANCE, GenericDeployRequestDto>
-  | IBodyEvent<DeployEventType.BE_DESTROY_INSTANCE, GenericDeployRequestDto>
-  | IBodyEvent<DeployEventType.BE_RESIZE_INSTANCE, ResizeInstanceDto>
-  | IBodyEvent<DeployEventType.BE_GET_INSTANCE_STATE, GenericDeployRequestDto>
+  | IBodyEvent<
+      DeployEventType.BE_GET_INSTANCE,
+      ModelBaseType<GenericDeployRequestDto>
+    >
+  | IBodyEvent<
+      DeployEventType.BE_GET_INSTANCE_DETAILS,
+      ModelBaseType<GenericDeployRequestDto>
+    >
+  | IBodyEvent<
+      DeployEventType.BE_START_INSTANCE,
+      ModelBaseType<GenericDeployRequestDto>
+    >
+  | IBodyEvent<
+      DeployEventType.BE_SHUTDOWN_INSTANCE,
+      ModelBaseType<GenericDeployRequestDto>
+    >
+  | IBodyEvent<
+      DeployEventType.BE_STOP_INSTANCE,
+      ModelBaseType<GenericDeployRequestDto>
+    >
+  | IBodyEvent<
+      DeployEventType.BE_RESTART_INSTANCE,
+      ModelBaseType<GenericDeployRequestDto>
+    >
+  | IBodyEvent<
+      DeployEventType.BE_DESTROY_INSTANCE,
+      ModelBaseType<GenericDeployRequestDto>
+    >
+  | IBodyEvent<
+      DeployEventType.BE_RESIZE_INSTANCE,
+      ModelBaseType<ResizeInstanceDto>
+    >
+  | IBodyEvent<
+      DeployEventType.BE_GET_INSTANCE_STATE,
+      ModelBaseType<GenericDeployRequestDto>
+    >
   | IBodyEvent<
       DeployEventType.BE_GET_INSTANCE_ATTESTATION,
-      GenericDeployRequestDto
+      ModelBaseType<GenericDeployRequestDto>
     >
+  | IBodyEvent<
+      DeployEventType.BE_ARCHIVE_INSTANCE,
+      ModelBaseType<GenericDeployRequestDto>
+    >
+  // FE
   | IBodyEvent<
       DeployEventType.TRIGGER_GITHUB_DEPLOY,
       TriggerGithubDeployDtoType
@@ -84,7 +126,7 @@ export type DeployMSEventType =
 
 // | IBodyEvent<
 //     DeployEventType.BE_GET_INSTANCE_BILLING,
-//     GenericDeployRequestDto
+//     ModelBaseType<GenericDeployRequestDto>
 //   >
 
 interface IDeployMSEventBase {

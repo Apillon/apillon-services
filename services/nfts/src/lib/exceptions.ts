@@ -2,10 +2,10 @@ import { Model } from '@rawmodel/core';
 import {
   CodeException,
   ErrorOptions,
-  ServiceName,
-  ModelValidationException,
-  ValidationException,
   IValidationError,
+  ModelValidationException,
+  ServiceName,
+  ValidationException,
 } from '@apillon/lib';
 import { NftsErrorCode } from '../config/types';
 import { ServiceContext } from '@apillon/service-lib';
@@ -62,10 +62,6 @@ export class NftsContractException extends NftsCodeException {
       [NftsErrorCode.MINT_NFT_ERROR]: {
         sourceFunction: 'mintNftTo()',
         errorMessage: 'Error minting NFT',
-      },
-      [NftsErrorCode.NEST_MINT_NFT_ERROR]: {
-        sourceFunction: 'nestMintNftTo()',
-        errorMessage: 'Error nest minting NFT',
       },
       [NftsErrorCode.BURN_NFT_ERROR]: {
         sourceFunction: 'burnNftToken()',

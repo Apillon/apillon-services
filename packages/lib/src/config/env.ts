@@ -1,5 +1,5 @@
-import { getSecrets } from '../lib/aws/aws-secrets';
 import * as dotenv from 'dotenv';
+import { getSecrets } from '../lib/aws/aws-secrets';
 import { AppEnvironment, CacheKeyTTL } from './types';
 
 export interface IEnv {
@@ -626,7 +626,7 @@ export interface IEnv {
   SOCIAL_DEFAULT_SPACE: string;
 
   /************************************************************
-   * HOSTING - Apillon Hosting Service
+   * DEPLOY - Apillon Deploy Service
    ************************************************************/
   /**
    *  function name
@@ -635,13 +635,13 @@ export interface IEnv {
   DEPLOY_FUNCTION_NAME_TEST: string;
 
   /**
-   * HOSTING dev server port
+   * DEPLOY dev server port
    */
   DEPLOY_SOCKET_PORT: number;
   DEPLOY_SOCKET_PORT_TEST: number;
 
   /**
-   * HOSTING Database config
+   * DEPLOY Database config
    */
 
   DEPLOY_MYSQL_HOST: string;
@@ -661,14 +661,17 @@ export interface IEnv {
 
   DEPLOY_AWS_WORKER_SQS_URL: string;
   DEPLOY_BUILDER_AWS_WORKER_LAMBDA_NAME: string;
+  DEPLOY_AWS_WORKER_LAMBDA_NAME: string;
 
   /**
-   * HOSTING other config
+   * DEPLOY other config
    */
+  DEPLOY_PHALA_CLOUD_API_URL: string;
   DEPLOY_PHALA_CLOUD_API_KEY: string;
+  DEPLOY_STATUS_UPDATE_INTERVAL_HOURS: number;
 
   /************************************************************
-   * SIMPLETS - Apillon Hosting Service
+   * SIMPLETS - Apillon Simplets Service
    ************************************************************/
   /**
    *  function name
@@ -706,11 +709,6 @@ export interface IEnv {
    */
   SIMPLETS_AWS_WORKER_SQS_URL: string;
   SIMPLETS_AWS_WORKER_LAMBDA_NAME: string;
-
-  /**
-   * SIMPLETS other config
-   */
-  SIMPLETS_PHALA_CLOUD_API_KEY: string;
 
   /************************************************************
    * Infrastructure - Apillon Infrastructure Service
@@ -830,6 +828,13 @@ export interface IEnv {
   GITHUB_WEBHOOK_SECRET: string;
   GITHUB_AUTH_CLIENT_ID: string;
   GITHUB_AUTH_CLIENT_SECRET: string;
+
+  /**
+   * Google OAuth
+   */
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
+  GOOGLE_CALLBACK_URL: string;
 }
 
 // dotenv.config();
@@ -1091,7 +1096,7 @@ export let env: IEnv = {
   SMTP_USERNAME: process.env['SMTP_USERNAME'],
   SMTP_PASSWORD: process.env['SMTP_PASSWORD'],
   SMTP_NAME_FROM: process.env['SMTP_NAME_FROM'] || 'Apillon.io',
-  SMTP_EMAIL_FROM: process.env['SMTP_EMAIL_FROM'] || 'info@apillon.io',
+  SMTP_EMAIL_FROM: process.env['SMTP_EMAIL_FROM'] || 'noreply@apillon.io',
   ADMIN_EMAILS: process.env['ADMIN_EMAILS'] || 'info@apillon.io',
   CONTACT_EMAIL_TO: process.env['CONTACT_EMAIL_TO'] || 'info@apillon.io',
 
@@ -1401,7 +1406,12 @@ export let env: IEnv = {
   DEPLOY_AWS_WORKER_SQS_URL: process.env['DEPLOY_AWS_WORKER_SQS_URL'],
   DEPLOY_BUILDER_AWS_WORKER_LAMBDA_NAME:
     process.env['DEPLOY_BUILDER_AWS_WORKER_LAMBDA_NAME'],
+  DEPLOY_AWS_WORKER_LAMBDA_NAME: process.env['DEPLOY_AWS_WORKER_LAMBDA_NAME'],
   DEPLOY_PHALA_CLOUD_API_KEY: process.env['DEPLOY_PHALA_CLOUD_API_KEY'],
+  DEPLOY_PHALA_CLOUD_API_URL: process.env['DEPLOY_PHALA_CLOUD_API_URL'],
+  DEPLOY_STATUS_UPDATE_INTERVAL_HOURS: parseInt(
+    process.env['DEPLOY_STATUS_UPDATE_INTERVAL_HOURS'],
+  ),
 
   /** SIMPLETS */
   SIMPLETS_FUNCTION_NAME: process.env['SIMPLETS_FUNCTION_NAME'],
@@ -1427,7 +1437,6 @@ export let env: IEnv = {
   SIMPLETS_AWS_WORKER_SQS_URL: process.env['SIMPLETS_AWS_WORKER_SQS_URL'],
   SIMPLETS_AWS_WORKER_LAMBDA_NAME:
     process.env['SIMPLETS_AWS_WORKER_LAMBDA_NAME'],
-  SIMPLETS_PHALA_CLOUD_API_KEY: process.env['SIMPLETS_PHALA_CLOUD_API_KEY'],
 
   /** DISCORD */
   DISCORD_CLIENT_ID: process.env['DISCORD_CLIENT_ID'] || '',
@@ -1491,6 +1500,13 @@ export let env: IEnv = {
   GITHUB_WEBHOOK_SECRET: process.env['GITHUB_WEBHOOK_SECRET'],
   GITHUB_AUTH_CLIENT_ID: process.env['GITHUB_AUTH_CLIENT_ID'],
   GITHUB_AUTH_CLIENT_SECRET: process.env['GITHUB_AUTH_CLIENT_SECRET'],
+
+  /**
+   * Google OAuth
+   */
+  GOOGLE_CLIENT_ID: process.env['GOOGLE_CLIENT_ID'],
+  GOOGLE_CLIENT_SECRET: process.env['GOOGLE_CLIENT_SECRET'],
+  GOOGLE_CALLBACK_URL: process.env['GOOGLE_CALLBACK_URL'],
 };
 
 export let isEnvReady = false;

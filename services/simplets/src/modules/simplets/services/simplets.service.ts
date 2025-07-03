@@ -1,77 +1,90 @@
 import { ServiceContext } from '@apillon/service-lib';
 import {
-  ContractsMicroservice,
-  CreateContractDTO,
+  assertRequiredVariables,
+  AuthenticationMicroservice,
+  CreateEWIntegrationDto,
   CreateWebsiteDto,
   DeployedSimpletsQueryFilterDto,
   DeployInstanceDto,
   DeployMicroservice,
-  EvmChain,
+  DeploySecretDto,
+  EncryptionService,
+  env,
+  GenericDeployRequestDto,
   Lmas,
   LogType,
   Mailing,
   ModelValidationException,
+  NFTCollectionType,
+  NftsMicroservice,
+  overrideEnvironmentVariables,
+  ResourceStatus,
   ServiceName,
   SimpletsQueryFilterDto,
+  SqlModelStatus,
   StorageMicroservice,
   ValidatorErrorCode,
   WebsiteDeployDto,
   WebsiteSource,
 } from '@apillon/lib';
+import crypto from 'crypto';
 import { SimpletsRepository } from '../repositores/simplets-repository';
-import { SimpletsSpendService } from './simplets-spend.service';
 import { Simplet } from '../models/simplet.model';
 import { SimpletsCodeException } from '../../../lib/exceptions';
 import { SimpletsErrorCode } from '../../../config/types';
 import path from 'node:path';
 import { SimpletDeploy } from '../models/simpletDeploy.model';
-import { v4 as uuidV4 } from 'uuid';
+import axios from 'axios';
+import { IEmbeddedWallet } from '../types';
 
 export class SimpletsService {
-  private readonly context: ServiceContext;
-  private simpletRepository: SimpletsRepository;
-  private spendService: SimpletsSpendService;
-  private mailingClient: Mailing;
-  private logging: Lmas;
-  private deployService: DeployMicroservice;
-  private storageService: StorageMicroservice;
-
   constructor(
-    context: ServiceContext,
-    simpletRepository: SimpletsRepository,
-    deployService: DeployMicroservice,
-    storageService: StorageMicroservice,
-    spendService: SimpletsSpendService,
-    mailingClient: Mailing,
-    logging: Lmas,
-  ) {
-    this.simpletRepository = simpletRepository;
-    this.spendService = spendService;
-    this.deployService = deployService;
-    this.storageService = storageService;
-    this.mailingClient = mailingClient;
-    this.logging = logging;
-    this.context = context;
-  }
+    private readonly context: ServiceContext,
+    private readonly simpletRepository: SimpletsRepository,
+    private readonly deployService: DeployMicroservice,
+    private readonly storageService: StorageMicroservice,
+    private readonly nftsService: NftsMicroservice,
+    private readonly authenticationService: AuthenticationMicroservice,
+    private readonly mailingClient: Mailing,
+    private readonly encryptionService: EncryptionService,
+    private readonly logging: Lmas,
+  ) {}
 
   async listSimplets(query: SimpletsQueryFilterDto) {
     return await this.simpletRepository.listSimplets(query);
   }
 
-  async newSimplet(
+  async newSimpletDeploy(
     project_uuid: string,
     simplet_uuid: string,
     simpletName: string,
     simpletDescription: string,
-  ) {
+    apiKey: string,
+    apiSecret: string,
+    frontendVariables: DeploySecretDto[],
+    backendVariables: DeploySecretDto[],
+  ): Promise<{ simplet: Simplet; simpletDeploy: SimpletDeploy }> {
     const simplet = await this.simpletRepository.getSimplet(simplet_uuid);
-    const simpletDeploy = new SimpletDeploy({}, this.context).populate({
+    await assertRequiredVariables(
+      'frontendVariables',
+      frontendVariables,
+      simplet.frontendRequiredVariables,
+    );
+    await assertRequiredVariables(
+      'backendVariables',
+      backendVariables,
+      simplet.backendRequiredVariables,
+    );
+    const simpletDeploy = await this.simpletRepository.createSimpletDeploy(
       project_uuid,
-      simpletDeploy_uuid: uuidV4(),
-      simplet_uuid: simplet.simplet_uuid,
-      name: simpletName,
-      description: simpletDescription,
-    });
+      simplet_uuid,
+      simpletName,
+      simpletDescription,
+      apiKey,
+      await this.encryptionService.encrypt(apiSecret),
+      await this.encryptionService.encryptJson(frontendVariables),
+      await this.encryptionService.encryptJson(backendVariables),
+    );
     return { simplet, simpletDeploy };
   }
 
@@ -79,85 +92,280 @@ export class SimpletsService {
     return await this.simpletRepository.getSimplet(simplet_uuid);
   }
 
-  async getDeployedSimplet(uuid: string) {
-    return await this.simpletRepository.getDeployedSimplet(uuid);
-  }
-
-  async deployContract(
-    simplet: Simplet,
-    project_uuid: string,
-    name: string,
-    description: string,
-    chain: EvmChain,
-    constructorArguments: any[],
-  ) {
-    const payload = new CreateContractDTO({}, this.context).populate({
-      project_uuid,
-      name,
-      description,
-      contract_uuid: simplet.contract_uuid,
-      chain,
-      constructorArguments,
-    });
-    await payload.validateOrThrow(ModelValidationException, ValidatorErrorCode);
-
-    return await new ContractsMicroservice(this.context).deployContract(
-      payload,
-    );
-  }
-
-  async deployBackend(simplet: Simplet, secrets: any[]) {
-    const dockerComposeLocation = `${simplet.backendRepo.replace(/\/+$/, '')}/${simplet.backendPath.replace(/^\/+/, '')}`;
-    const response = await fetch(dockerComposeLocation);
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch content from URL: ${dockerComposeLocation}, status: ${response.status}`,
-      );
+  async getDeployedSimplet(uuid: string): Promise<SimpletDeploy> {
+    const simpletDeploy = await this.simpletRepository.getDeployedSimplet(uuid);
+    if (this.context.user) {
+      simpletDeploy.canAccess(this.context);
     }
-    const dockerCompose = await response.text();
+
+    return simpletDeploy;
+  }
+
+  async getDeployedSimpletByBackendUuid(
+    backend_uuid: string,
+  ): Promise<SimpletDeploy> {
+    const simpletDeploy =
+      await this.simpletRepository.getSimpletDeployByBackend(backend_uuid);
+    if (this.context.user) {
+      simpletDeploy.canAccess(this.context);
+    }
+
+    return simpletDeploy;
+  }
+
+  // async deployContract(
+  //   simpletDeploy: SimpletDeploy,
+  //   simplet: Simplet,
+  //   project_uuid: string,
+  //   name: string,
+  //   description: string,
+  //   chain: EvmChain,
+  //   constructorArguments: any[],
+  // ) {
+  //   await this.logging.writeLog({
+  //     logType: LogType.INFO,
+  //     message: `Starting contract deployment for simplet uuid ${simplet.simplet_uuid}.`,
+  //     service: ServiceName.SIMPLETS,
+  //     location: 'SimpletsService.deployContract',
+  //   });
+  //   simpletDeploy.contractStatus = ResourceStatus.DEPLOYING;
+  //   const payload = new CreateContractDTO({}, this.context).populate({
+  //     project_uuid,
+  //     name,
+  //     description,
+  //     contract_uuid: simplet.contract_uuid,
+  //     chain,
+  //     constructorArguments,
+  //   });
+  //   await payload.validateOrThrow(ModelValidationException, ValidatorErrorCode);
+  //
+  //   const contractDeploy = await new ContractsMicroservice(
+  //     this.context,
+  //   ).deployContract(payload);
+  //   if (!contractDeploy.success) {
+  //     await this.logging.writeLog({
+  //       sendAdminAlert: true,
+  //       logType: LogType.ERROR,
+  //       message: `Contract deployment failed for simplet uuid ${simplet.simplet_uuid}.`,
+  //       service: ServiceName.SIMPLETS,
+  //       location: 'SimpletsService.deploySimplet',
+  //     });
+  //     throw new SimpletsCodeException({
+  //       status: 500,
+  //       code: SimpletsErrorCode.CONTRACT_DEPLOYMENT_FAILED,
+  //       errorMessage: 'Contract deployment failed',
+  //     });
+  //   }
+  //   await this.logging.writeLog({
+  //     logType: LogType.INFO,
+  //     message: `Contract successfully deployed for simplet uuid ${simplet.simplet_uuid}.`,
+  //     service: ServiceName.SIMPLETS,
+  //     location: 'SimpletsService.deploySimplet',
+  //     data: contractDeploy.data,
+  //   });
+  //   simpletDeploy.contract_uuid = contractDeploy.data.contract_uuid;
+  //   simpletDeploy.contractStatus = ResourceStatus.ONLINE;
+  //   simpletDeploy.contractChainType = contractDeploy.data.chainType;
+  //   simpletDeploy.contractChain = contractDeploy.data.chain;
+  //   simpletDeploy.contractAddress = contractDeploy.data.contractAddress;
+  // }
+
+  async verifyNftCollection(
+    simpletDeploy: SimpletDeploy,
+    nftCollection_uuid: string,
+  ) {
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Verifying collection with uuid ${nftCollection_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.deploySimplet',
+    });
+    simpletDeploy.contractStatus = ResourceStatus.DEPLOYING;
+    // USE EXISTING COLLECTION
+    const collection = await this.getCollection(nftCollection_uuid);
+    // if collection is not deployed
+    if (collection.collectionStatus !== 3) {
+      throw new SimpletsCodeException({
+        status: 422,
+        code: SimpletsErrorCode.COLLECTION_NOT_DEPLOYED,
+        errorMessage: `NFT collection with uuid ${collection.collection_uuid} is not deployed.`,
+      });
+    }
+    if (collection.collectionType !== NFTCollectionType.GENERIC) {
+      throw new SimpletsCodeException({
+        status: 422,
+        code: SimpletsErrorCode.INVALID_COLLECTION_CONFIGURATION,
+        errorMessage: `NFT collection with uuid ${collection.collection_uuid} has invalid configuration. Collection type should be generic.`,
+      });
+    }
+
+    simpletDeploy.populate({
+      contractStatus: ResourceStatus.ONLINE,
+      contractAddress: collection.contractAddress,
+      contractChain: collection.chain,
+      contractChainType: collection.chainType,
+      contract_uuid: collection.collection_uuid,
+    });
+  }
+
+  private async getCollection(collection_uuid: string): Promise<any | null> {
+    const result = await this.nftsService.getNftCollection(collection_uuid);
+    if (!result.success) {
+      throw new SimpletsCodeException({
+        status: 500,
+        code: SimpletsErrorCode.COLLECTION_FETCH_FAILED,
+        errorMessage: `Failed to fetch NFT collection with uuid ${collection_uuid}.`,
+      });
+    }
+    if (!result.data) {
+      throw new SimpletsCodeException({
+        status: 404,
+        code: SimpletsErrorCode.NFT_COLLECTION_NOT_FOUND,
+        errorMessage: 'NFT collection does not found.',
+      });
+    }
+    return result.data;
+  }
+
+  async createWallet(
+    project_uuid: string,
+    simpletName: string,
+  ): Promise<IEmbeddedWallet> {
+    try {
+      const response =
+        await this.authenticationService.createEmbeddedWalletIntegration(
+          new CreateEWIntegrationDto({}, this.context).populate({
+            project_uuid,
+            title: `${simpletName} (Simplet Wallet)`,
+            description: `Auto generated wallet for ${simpletName} simplet.`,
+            whitelistedDomains: '',
+          }),
+        );
+      if (!response?.success) {
+        throw new SimpletsCodeException({
+          status: 500,
+          code: SimpletsErrorCode.WALLET_CREATION_FAILED,
+          errorMessage: 'Failed to create embedded wallet',
+        });
+      }
+      return response.data;
+    } catch (e) {
+      throw new SimpletsCodeException({
+        status: 500,
+        code: SimpletsErrorCode.WALLET_CREATION_FAILED,
+        errorMessage: `Failed to create embedded wallet: ${e?.message ?? String(e)}`,
+      });
+    }
+  }
+
+  async getEmbeddedWallet(
+    walletIntegration_uuid: string,
+  ): Promise<IEmbeddedWallet> {
+    try {
+      const response =
+        await this.authenticationService.getEmbeddedWalletIntegration(
+          walletIntegration_uuid,
+        );
+      if (!response?.success) {
+        throw new SimpletsCodeException({
+          status: 500,
+          code: SimpletsErrorCode.WALLET_RETRIEVAL_FAILED,
+          errorMessage: 'Failed to get embedded wallet',
+        });
+      }
+      return response.data;
+    } catch (e) {
+      throw new SimpletsCodeException({
+        status: 500,
+        code: SimpletsErrorCode.WALLET_RETRIEVAL_FAILED,
+        errorMessage: `Failed to get embedded wallet: ${e?.message ?? String(e)}`,
+      });
+    }
+  }
+
+  async deployBackend(simpletDeploy: SimpletDeploy, simplet: Simplet) {
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Starting backend deployment for simplet uuid ${simplet.simplet_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.deploySimplet',
+    });
+    const dockerCompose = await this.getDockerCompose(simplet);
+    const backendVariables = await this.encryptionService.decryptJson<
+      DeploySecretDto[]
+    >(simpletDeploy.backendVariables);
+
+    const apillonApiSecret = await this.encryptionService.decrypt(
+      simpletDeploy.apillonApiSecret,
+    );
+    const secrets = this.overrideBackendSecrets(
+      backendVariables,
+      simpletDeploy.apillonApiKey,
+      apillonApiSecret,
+      simpletDeploy.contract_uuid,
+    ).map((secret) => {
+      // Convert all secrets to strings else Phala deploy fails
+      secret.value = secret.value == null ? '' : String(secret.value);
+      return secret;
+    });
     const deployDto = new DeployInstanceDto({}, this.context).populate({
-      name: simplet.name,
+      name: simplet.name.slice(0, 20),
       description: simplet.description,
       dockerCompose,
       secrets,
       virtualMachine: simplet.backendMachine,
+      project_uuid: simpletDeploy.project_uuid,
     });
     await deployDto.validateOrThrow(
       ModelValidationException,
       ValidatorErrorCode,
     );
-    return await this.deployService.deployDockerCompose(deployDto);
-  }
-
-  async deployFrontend(
-    simplet: Simplet,
-    project_uuid: string,
-    simpletName: string,
-    backendUrl: string,
-    apillonApiKey: string,
-    apillonApiSecret: string,
-    secrets: any[],
-  ) {
+    const backendDeploy =
+      await this.deployService.deployDockerCompose(deployDto);
+    if (!backendDeploy.success) {
+      await this.logging.writeLog({
+        sendAdminAlert: true,
+        logType: LogType.ERROR,
+        message: `Backend deployment failed for simplet uuid ${simplet.simplet_uuid}.`,
+        service: ServiceName.SIMPLETS,
+        location: 'SimpletsService.deploySimplet',
+      });
+      throw new SimpletsCodeException({
+        status: 500,
+        code: SimpletsErrorCode.BACKEND_DEPLOYMENT_FAILED,
+        errorMessage: 'Backend deployment failed',
+      });
+    }
     await this.logging.writeLog({
       logType: LogType.INFO,
-      message: `Starting frontend deployment for simplet uuid ${simplet.simplet_uuid}.`,
+      message: `Backend successfully deployed for simplet uuid ${simplet.simplet_uuid}.`,
       service: ServiceName.SIMPLETS,
-      location: 'SimpletsController.deploySimplet',
+      location: 'SimpletsService.deploySimplet',
+      data: backendDeploy.data,
     });
-    const websiteResponse = await this.storageService.createWebsite(
-      new CreateWebsiteDto({}, this.context).populate({
-        project_uuid,
-        name: `${simpletName} (Website)`,
-        source: WebsiteSource.GITHUB,
-      }),
-    );
+
+    return { backendDeploy, dockerCompose };
+  }
+
+  private async getDockerCompose(simplet: Simplet) {
+    const dockerComposeLocation = `${simplet.backendRepo.replace(/\/+$/, '')}/${simplet.backendPath.replace(/^\/+/, '')}`;
+    const response = await axios.get(dockerComposeLocation);
+    return response.data;
+  }
+
+  private async createWebsite(
+    simplet_uuid: string,
+    createWebsiteDto: CreateWebsiteDto,
+  ) {
+    const websiteResponse =
+      await this.storageService.createWebsite(createWebsiteDto);
     if (!websiteResponse.success) {
       await this.logging.writeLog({
         sendAdminAlert: true,
         logType: LogType.ERROR,
-        message: `Website creation failed for simplet uuid ${simplet.simplet_uuid}.`,
+        message: `Website creation failed for simplet uuid ${simplet_uuid}.`,
         service: ServiceName.SIMPLETS,
-        location: 'SimpletsController.deploySimplet',
+        location: 'SimpletsService.createWebsite',
       });
       throw new SimpletsCodeException({
         status: 500,
@@ -165,8 +373,56 @@ export class SimpletsService {
         errorMessage: 'Website creation failed',
       });
     }
-    const { website_uuid } = websiteResponse.data;
-    const storageResponse = await this.deployService.triggerWebDeploy(
+    return websiteResponse.data.website_uuid;
+  }
+
+  private async triggerWebDeploy(
+    simplet_uuid: string,
+    websiteDeployDto: WebsiteDeployDto,
+  ) {
+    const storageResponse =
+      await this.deployService.triggerWebDeploy(websiteDeployDto);
+    if (!storageResponse.success) {
+      await this.logging.writeLog({
+        sendAdminAlert: true,
+        logType: LogType.ERROR,
+        message: `Frontend deployment failed for simplet uuid ${simplet_uuid}.`,
+        service: ServiceName.SIMPLETS,
+        location: 'SimpletsService.triggerWebDeploy',
+      });
+      throw new SimpletsCodeException({
+        status: 500,
+        code: SimpletsErrorCode.FRONTEND_DEPLOYMENT_FAILED,
+        errorMessage: 'Frontend deployment failed',
+      });
+    }
+    return storageResponse;
+  }
+
+  async deployFrontend(simpletDeploy: SimpletDeploy, simplet: Simplet) {
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Starting frontend deployment for simplet uuid ${simplet.simplet_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.deploySimplet',
+    });
+    const website_uuid = await this.createWebsite(
+      simpletDeploy.simplet_uuid,
+      new CreateWebsiteDto({}, this.context).populate({
+        project_uuid: simpletDeploy.project_uuid,
+        name: `${simpletDeploy.name} (Website)`,
+        source: WebsiteSource.GITHUB,
+        isSimplet: true,
+      }),
+    );
+    const frontendVariables = await this.encryptionService.decryptJson<
+      DeploySecretDto[]
+    >(simpletDeploy.frontendVariables);
+    const apillonApiSecret = await this.encryptionService.decrypt(
+      simpletDeploy.apillonApiSecret,
+    );
+    await this.triggerWebDeploy(
+      simpletDeploy.simplet_uuid,
       new WebsiteDeployDto({}, this.context).populate({
         url: simplet.frontendRepo,
         buildDirectory: path.join(
@@ -176,36 +432,253 @@ export class SimpletsService {
         websiteUuid: website_uuid,
         installCommand: `cd ${simplet.frontendPath} && ${simplet.frontendInstallCommand}`,
         buildCommand: `cd ${simplet.frontendPath} && ${simplet.frontendBuildCommand}`,
-        variables: [...secrets, { key: 'APP_URL', value: backendUrl }],
-        apiKey: apillonApiKey,
+        variables: this.overrideFrontendVariables(
+          frontendVariables,
+          simpletDeploy,
+        ),
+        apiKey: simpletDeploy.apillonApiKey,
         apiSecret: apillonApiSecret,
+        new: true,
       }),
     );
-    if (!storageResponse.success) {
-      await this.logging.writeLog({
-        sendAdminAlert: true,
-        logType: LogType.ERROR,
-        message: `Frontend deployment failed for simplet uuid ${simplet.simplet_uuid}.`,
-        service: ServiceName.SIMPLETS,
-        location: 'SimpletsController.deploySimplet',
-      });
-      throw new SimpletsCodeException({
-        status: 500,
-        code: SimpletsErrorCode.FRONTEND_DEPLOYMENT_FAILED,
-        errorMessage: 'Frontend deployment failed',
-      });
-    }
 
     await this.logging.writeLog({
       logType: LogType.INFO,
       message: `Frontend successfully deployed for simplet uuid ${simplet.simplet_uuid}.`,
       service: ServiceName.SIMPLETS,
-      location: 'SimpletsController.deploySimplet',
+      location: 'SimpletsService.deploySimplet',
     });
-    return { website_uuid };
+
+    return website_uuid;
   }
 
   async listDeployedSimplets(query: DeployedSimpletsQueryFilterDto) {
     return await this.simpletRepository.listDeployedSimplets(query);
+  }
+
+  private overrideFrontendVariables(
+    frontendVariables: DeploySecretDto[],
+    simpletDeploy: SimpletDeploy,
+  ) {
+    return overrideEnvironmentVariables(frontendVariables, [
+      // TODO: these variables variable will be different for each simplet/framework
+      { key: 'NUXT_PUBLIC_API_BASE', value: simpletDeploy.backendUrl },
+      {
+        key: 'NUXT_PUBLIC_EMBEDDED_WALLET_CLIENT',
+        value: simpletDeploy.walletIntegration_uuid,
+      },
+      {
+        key: 'NUXT_PUBLIC_CONTRACT_ADDRESS',
+        value: simpletDeploy.contractAddress,
+      },
+      {
+        key: 'NUXT_PUBLIC_CHAIN_ID',
+        value: `${simpletDeploy.contractChain}`,
+      },
+    ]);
+  }
+
+  private overrideBackendSecrets(
+    backendVariables: DeploySecretDto[],
+    apillonApiKey: string,
+    apillonApiSecret: string,
+    collection_uuid: string,
+  ) {
+    return overrideEnvironmentVariables(backendVariables, [
+      { key: 'APILLON_API_URL', value: env.APILLON_API_URL },
+      { key: 'APILLON_KEY', value: apillonApiKey },
+      { key: 'APILLON_SECRET', value: apillonApiSecret },
+      { key: 'APP_SECRET', value: crypto.randomBytes(32).toString('hex') },
+      { key: 'COLLECTION_UUID', value: collection_uuid },
+    ]);
+  }
+
+  async getDeployedSimpletsCount(project_uuid: string) {
+    return await this.simpletRepository.getDeployedSimpletsCount(project_uuid);
+  }
+
+  async archiveSimpletDeploy(simpletDeploy_uuid: string) {
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Starting deletion of simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.deleteSimpletDeploy',
+    });
+    const simpletDeploy =
+      await this.simpletRepository.getDeployedSimplet(simpletDeploy_uuid);
+    if (this.context.user) {
+      simpletDeploy.canAccess(this.context);
+    }
+
+    if (simpletDeploy.status !== SqlModelStatus.ACTIVE) {
+      return;
+    }
+
+    // Delete backend deployment if it exists
+    if (simpletDeploy.backend_uuid) {
+      try {
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Stopping backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.deleteSimpletDeploy',
+        });
+
+        await this.deployService.archiveInstance(
+          new GenericDeployRequestDto().populate({
+            deploy_uuid: simpletDeploy.backend_uuid,
+          }),
+        );
+
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Successfully deleted backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.deleteSimpletDeploy',
+        });
+      } catch (e) {
+        await this.logging.writeLog({
+          sendAdminAlert: true,
+          logType: LogType.ERROR,
+          message: `Failed to delete backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.deleteSimpletDeploy',
+          data: e,
+        });
+      }
+    }
+
+    // Delete frontend deployment if it exists
+    if (simpletDeploy.frontend_uuid) {
+      try {
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Archiving website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.deleteSimpletDeploy',
+        });
+
+        await this.storageService.archiveWebsite(simpletDeploy.frontend_uuid);
+
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Successfully deleted website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.deleteSimpletDeploy',
+        });
+      } catch (e) {
+        await this.logging.writeLog({
+          sendAdminAlert: true,
+          logType: LogType.ERROR,
+          message: `Failed to delete website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.deleteSimpletDeploy',
+          data: e,
+        });
+      }
+    }
+
+    // Mark the deployed simplet as archived
+    await simpletDeploy.markArchived();
+
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Successfully completed archivation of simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.deleteSimpletDeploy',
+    });
+  }
+
+  async activateSimpletDeploy(simpletDeploy_uuid: string) {
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Starting activation of simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.activateSimpletDeploy',
+    });
+    const simpletDeploy =
+      await this.simpletRepository.getDeployedSimplet(simpletDeploy_uuid);
+
+    if (simpletDeploy.status !== SqlModelStatus.ARCHIVED) {
+      throw new SimpletsCodeException({
+        status: 422,
+        code: SimpletsErrorCode.INVALID_SIMPLET_DEPLOY_STATUS,
+        errorMessage: `Cannot activate simplet deploy with uuid ${simpletDeploy_uuid} because it is not archived.`,
+      });
+    }
+
+    // activate backend deployment if it exists
+    if (simpletDeploy.backend_uuid) {
+      try {
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Starting backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.activateSimpletDeploy',
+        });
+
+        await this.deployService.startInstance(
+          new GenericDeployRequestDto().populate({
+            deploy_uuid: simpletDeploy.backend_uuid,
+          }),
+        );
+
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Successfully activated backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.activateSimpletDeploy',
+        });
+      } catch (e) {
+        await this.logging.writeLog({
+          sendAdminAlert: true,
+          logType: LogType.ERROR,
+          message: `Failed to activate backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.activateSimpletDeploy',
+          data: e,
+        });
+      }
+    }
+
+    // activate frontend deployment if it exists
+    if (simpletDeploy.frontend_uuid) {
+      try {
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Activating website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.activateSimpletDeploy',
+        });
+
+        await this.storageService.activateWebsite(simpletDeploy.frontend_uuid);
+
+        await this.logging.writeLog({
+          logType: LogType.INFO,
+          message: `Successfully activated website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.activateSimpletDeploy',
+        });
+      } catch (e) {
+        await this.logging.writeLog({
+          sendAdminAlert: true,
+          logType: LogType.ERROR,
+          message: `Failed to activate website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`,
+          service: ServiceName.SIMPLETS,
+          location: 'SimpletsService.activateSimpletDeploy',
+          data: e,
+        });
+      }
+    }
+
+    // Mark the deployed simplet as active
+    await simpletDeploy.markActive();
+
+    await this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Successfully completed activation of simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsService.activateSimpletDeploy',
+    });
   }
 }

@@ -10,6 +10,8 @@ CREATE DATABASE IF NOT EXISTS `Apillon_blockchain_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_computing_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_social_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_contracts_test`;
+CREATE DATABASE IF NOT EXISTS `Apillon_simplets_test`;
+CREATE DATABASE IF NOT EXISTS `Apillon_deploy_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_infrastructure_test`;
 CREATE DATABASE IF NOT EXISTS `Apillon_mailing_test`;
 

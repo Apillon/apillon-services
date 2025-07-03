@@ -17,6 +17,7 @@ import {
   GetDeployConfigByRepoIdType,
   env,
   AWS_KMS,
+  Ams,
 } from '@apillon/lib';
 import { DeployService } from './services/deploy.service';
 import { DeploymentConfigService } from './services/deployment-config.service';
@@ -55,13 +56,18 @@ export class FrontendController {
     } = FrontendController.initializeFrontendRepositories(context);
 
     this.githubService = new GithubService();
+
+    this.storageMicroservice = new StorageMicroservice(context);
+
+    const accessMS = new Ams(context);
+
     this.deployService = new DeployService(
       deploymentBuildRepository,
       deploymentConfigRepository,
       this.githubService,
+      this.storageMicroservice,
+      accessMS,
     );
-
-    this.storageMicroservice = new StorageMicroservice(context);
 
     this.githubConfigService = new GithubConfigService(
       this.githubService,

@@ -6,6 +6,8 @@ import {
   CreateSpaceDto,
   DefaultPermission,
   DefaultUserRole,
+  HttpException,
+  HttpStatus,
   RoleGroup,
   SocialPostQueryFilter,
   ValidateFor,
@@ -22,8 +24,8 @@ import {
   Delete,
   Get,
   Param,
-  Post,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -32,6 +34,8 @@ import { AuthGuard } from '../../guards/auth.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { SocialService } from './social.service';
 import { ProjectModifyGuard } from '../../guards/project-modify.guard';
+
+const SOCIAL_MODULE_DEPRECATED = 'Social module has been deprecated';
 
 @Controller('social')
 @Permissions({ permission: DefaultPermission.SOCIAL })
@@ -50,7 +54,7 @@ export class SocialController {
     @Ctx() context: DevConsoleApiContext,
     @Query() query: BaseProjectQueryFilter,
   ) {
-    return await this.socialService.listSpaces(context, query);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 
   @Get('spaces/:space_uuid')
@@ -60,7 +64,7 @@ export class SocialController {
     @Ctx() context: DevConsoleApiContext,
     @Param('space_uuid') space_uuid: string,
   ) {
-    return await this.socialService.getSpace(context, space_uuid);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 
   @Delete('spaces/:space_uuid')
@@ -73,7 +77,7 @@ export class SocialController {
     @Ctx() context: DevConsoleApiContext,
     @Param('space_uuid') space_uuid: string,
   ) {
-    return await this.socialService.archiveSpace(context, space_uuid);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 
   @Patch('spaces/:space_uuid/activate')
@@ -86,7 +90,7 @@ export class SocialController {
     @Ctx() context: DevConsoleApiContext,
     @Param('space_uuid') space_uuid: string,
   ) {
-    return await this.socialService.activateSpace(context, space_uuid);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 
   @Post('spaces')
@@ -100,7 +104,7 @@ export class SocialController {
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreateSpaceDto,
   ) {
-    return await this.socialService.createSpace(context, body);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 
   @Get('posts')
@@ -115,7 +119,7 @@ export class SocialController {
     @Ctx() context: DevConsoleApiContext,
     @Query() query: SocialPostQueryFilter,
   ) {
-    return await this.socialService.listPosts(context, query);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 
   @Get('posts/:post_uuid')
@@ -125,7 +129,7 @@ export class SocialController {
     @Ctx() context: DevConsoleApiContext,
     @Param('post_uuid') post_uuid: string,
   ) {
-    return await this.socialService.getPost(context, post_uuid);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 
   @Delete('posts/:post_uuid')
@@ -138,7 +142,7 @@ export class SocialController {
     @Ctx() context: DevConsoleApiContext,
     @Param('post_uuid') post_uuid: string,
   ) {
-    return await this.socialService.archivePost(context, post_uuid);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 
   @Patch('posts/:post_uuid/activate')
@@ -151,7 +155,7 @@ export class SocialController {
     @Ctx() context: DevConsoleApiContext,
     @Param('post_uuid') post_uuid: string,
   ) {
-    return await this.socialService.activatePost(context, post_uuid);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 
   @Post('posts')
@@ -166,6 +170,6 @@ export class SocialController {
     @Ctx() context: DevConsoleApiContext,
     @Body() body: CreatePostDto,
   ) {
-    return await this.socialService.createPost(context, body);
+    throw new HttpException(SOCIAL_MODULE_DEPRECATED, HttpStatus.GONE);
   }
 }

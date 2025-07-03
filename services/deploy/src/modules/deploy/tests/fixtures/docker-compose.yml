@@ -1,0 +1,39 @@
+services:
+  poa_db:
+    image: mysql
+    container_name: poa_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - '3306:3306'
+    restart: always
+    networks:
+      - app-network
+
+  poa_app:
+    image: tadej/ps-poa:latest
+    container_name: poa_app
+    depends_on:
+      - poa_db
+    environment:
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      ADMIN_WALLET: ${ADMIN_WALLET}
+      APILLON_KEY: ${APILLON_KEY}
+      APILLON_SECRET: ${APILLON_SECRET}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_NAME_FROM: ${SMTP_NAME_FROM}
+      SMTP_EMAIL_FROM: ${SMTP_EMAIL_FROM}
+    ports:
+      - '80:3000'
+    expose:
+      - '80'
+    restart: always
+    networks:
+      - app-network
+networks:
+  app-network:
+    driver: bridge

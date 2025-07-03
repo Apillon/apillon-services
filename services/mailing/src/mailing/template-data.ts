@@ -347,6 +347,41 @@ export function generateTemplateData(key: string, data: any) {
         <p>To upgrade your plan, click <a href="${data.paymentLink}">here</a></p>
       `,
     },
+    [EmailTemplate.BACKEND_SHUTDOWN]: {
+      subject: 'Notice: Simplet Backend Paused - Upgrade Required',
+      title: 'Your Simplet Backend Has Been Paused',
+      text: `
+        <p>
+          We would like to inform you that your Simplet backend has been paused as you are currently on the freemium plan, which allows for a maximum of 3 days of operation.
+        </p>
+        <p>
+          To continue running your Simplet solution, we kindly request that you upgrade to a paid plan. This will ensure uninterrupted access to your backend services.
+        </p>
+        <p>
+          To view and modify your current Apillon subscription, please visit the <a href="https://app.apillon.io/dashboard/payments">Billing and Pricing</a> page.
+        </p>
+      `,
+      text2: `
+      <p>
+        If you need additional assistance, or you received this email in error, please contact us at <a href="mailto:info@apillon.io">info@apillon.io</a>.
+        <br/><br/><br/>
+        Cheers,<br/>
+        The Apillon team
+      </p>`,
+    },
+    [EmailTemplate.PINNING_SKIPPED_DUE_TO_INACTIVITY]: {
+      subject: 'Notice: File Pinning Paused Due to Inactivity',
+      title: 'File Pinning Paused Due to Inactivity',
+      text: `
+        <p>Dear Apillonian,</p>
+        <p>We hope this message finds you well. We are writing to inform you that the pinning process for your files on the Apillon platform has been paused due to a period of inactivity exceeding one year.</p>
+        <p>While your files remain securely stored, they will not be actively propagated across the global IPFS network. This measure helps us manage resources efficiently for all users.</p>
+        <p>To renew your pinning lease and ensure your files are actively propagated, please log in to the Apillon platform. This will automatically reactivate the pinning process.</p>
+        <p>If you have any questions or require further assistance, please do not hesitate to contact our support team.</p>
+        <p>Thank you for your understanding and continued trust in Apillon.</p>
+        <p>Best regards,<br/>The Apillon Team</p>
+      `,
+    },
   };
 
   return templateData[key];

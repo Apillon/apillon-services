@@ -5,13 +5,15 @@ import {
   PopulateFrom,
   presenceValidator,
   prop,
+  ResourceStatus,
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
   UuidSqlModel,
+  validateDockerComposeYaml,
   ValidatorErrorCode,
 } from '@apillon/lib';
-import { stringParser } from '@rawmodel/parsers';
+import { integerParser, stringParser } from '@rawmodel/parsers';
 import { DbTables, DeployErrorCode } from '../../../config/types';
 
 export class Backend extends UuidSqlModel {
@@ -43,7 +45,57 @@ export class Backend extends UuidSqlModel {
       },
     ],
   })
+  public project_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: DeployErrorCode.DATA_NOT_PRESENT,
+      },
+    ],
+  })
   public backend_uuid: string;
+
+  @prop({
+    parser: { resolver: integerParser() },
+    populatable: [
+      PopulateFrom.DB,
+      PopulateFrom.SERVICE,
+      PopulateFrom.ADMIN,
+      PopulateFrom.PROFILE,
+    ],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+      SerializeFor.UPDATE_DB,
+    ],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: DeployErrorCode.DATA_NOT_PRESENT,
+      },
+    ],
+    defaultValue: ResourceStatus.REQUESTED,
+  })
+  public backendStatus: ResourceStatus;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -77,6 +129,45 @@ export class Backend extends UuidSqlModel {
     ],
   })
   public description: string;
+
+  /**
+   * Represents content of the Docker Compose file.
+   *
+   * This variable holds the content of Docker Compose YAML configuration file.
+   * It is used to define and manage multi-container Docker applications.
+   */
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
+    ],
+    validators: [
+      {
+        resolver: validateDockerComposeYaml(true),
+        code: ValidatorErrorCode.DATA_NOT_VALID,
+      },
+    ],
+  })
+  public dockerCompose: string;
+
+  @prop({
+    // parser disabled so that we dont serialize to string when returning response
+    //parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
+    ],
+  })
+  public environmentVariables: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -196,5 +287,15 @@ export class Backend extends UuidSqlModel {
 
   public override async populateByUUID(backend_uuid: string): Promise<this> {
     return super.populateByUUID(backend_uuid, 'backend_uuid');
+  }
+
+  public getByProjectUuid(project_uuid: string): Promise<Backend[]> {
+    const selectFields = this.generateSelectFields();
+    const sqlQuery = `
+      SELECT ${selectFields}
+      FROM \`${DbTables.BACKEND}\`
+      WHERE project_uuid = @project_uuid
+    `;
+    return this.getContext().mysql.paramExecute(sqlQuery, { project_uuid });
   }
 }

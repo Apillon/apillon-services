@@ -1,11 +1,21 @@
-import { DeployInstanceDto, ResizeInstanceDto } from '@apillon/lib';
+import {
+  DeployInstanceDto,
+  DeploySecretDto,
+  ResizeInstanceDto,
+  ResourceStatus,
+} from '@apillon/lib';
 import { Backend } from './models/backend.model';
 
-enum VMStatus {
-  CREATED = 'created',
+export enum VMStatus {
+  CREATING = 'creating',
+  STARTING = 'starting',
   RUNNING = 'running',
-  // STOPPED = 'stopped',
-  // ERROR = 'error',
+  RESTARTING = 'restarting',
+  SHUTTING_DOWN = 'shutting_down',
+  STOPPING = 'stopping',
+  STOPPED = 'stopped', // usual shut-down/stop (status after shutting_down and stopping)
+  EXITED = 'exited', // startup failed
+  OFFLINE = 'offline', // an urgent case in which the hosting bare metal disconnected
 }
 
 export interface ICreateVMRequest {
@@ -37,6 +47,40 @@ export interface ICreateVMRequest {
   app_id_salt: string;
 }
 
+export interface IUpdateVMRequest {
+  compose_manifest: {
+    name: string;
+    features: string[];
+    docker_compose_file: string;
+  };
+  encrypted_env: string;
+}
+
+export interface ICvmComposeDetails {
+  compose_file: {
+    bash_script: string;
+    docker_compose_file: string;
+    docker_config: {
+      password: string;
+      registry: string;
+      username: string;
+    };
+    features: string[];
+    kms_enabled: boolean;
+    manifest_version: number;
+    name: string;
+    pre_launch_script: string;
+    public_logs: boolean;
+    public_sysinfo: boolean;
+    runner: string;
+    salt: string;
+    tproxy_enabled: boolean;
+    version: string;
+  };
+  env_pubkey: string;
+  salt: string;
+}
+
 export interface ICreateVMResponse {
   id: string;
   name: string;
@@ -66,7 +110,7 @@ export interface ICreateVMResponse {
 
 export interface VMDetailsResponse {
   id: string;
-  status: string;
+  status: VMStatus;
   createdAt: string;
   updatedAt: string;
   configuration: Record<string, any>;
@@ -150,13 +194,22 @@ export interface IVMAttestationResponse {
   };
 }
 
-export interface IBackendDeployStrategy {
-  deployDockerCompose(
-    backend_uuid: string,
-    body: DeployInstanceDto,
-  ): Promise<ICreateVMResponse>;
+export interface IDeployDockerResult {
+  backendStatus: ResourceStatus;
+  instanceId: string;
+  url: string;
+  data: any;
+}
 
-  getInstanceDetails(backend: Backend): Promise<any>;
+export interface IBackendDeployStrategy {
+  deployDockerCompose(body: DeployInstanceDto): Promise<IDeployDockerResult>;
+
+  updateDockerCompose(
+    backend: Backend,
+    secrets: DeploySecretDto[],
+  ): Promise<any>;
+
+  getInstanceDetails(backend: Backend): Promise<VMDetailsResponse>;
 
   // getInstanceBilling(backend: Backend): Promise<any>;
 

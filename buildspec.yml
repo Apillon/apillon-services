@@ -8,7 +8,7 @@ phases:
       - >
         npm install --location=global
         typescript
-        serverless serverless-webpack
+        serverless serverless-webpack serverless-prune-plugin
         copy-webpack-plugin
         webpack webpack-node-externals
         ts-loader ts-node

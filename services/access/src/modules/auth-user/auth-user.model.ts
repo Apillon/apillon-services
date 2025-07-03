@@ -11,6 +11,7 @@ import {
   PopulateFrom,
   SerializeFor,
   SqlModelStatus,
+  env,
   generateJwtToken,
   getQueryParams,
   invalidateCacheMatch,
@@ -28,6 +29,7 @@ import { AuthToken } from '../auth-token/auth-token.model';
 import { AuthUserRole } from '../role/models/auth-user-role.model';
 import { RolePermission } from '../role/models/role-permission.model';
 import { Role } from '../role/models/role.model';
+import { sendToWorkerQueue } from '@apillon/workers-lib';
 
 export class AuthUser extends AdvancedSQLModel {
   public readonly tableName = DbTables.AUTH_USER;
@@ -92,6 +94,17 @@ export class AuthUser extends AdvancedSQLModel {
     ],
   })
   public email: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.SERVICE,
+    ],
+  })
+  public googleId: string | null;
 
   /**
    * User's password hash property
@@ -212,7 +225,10 @@ export class AuthUser extends AdvancedSQLModel {
       SELECT * FROM authUser
       WHERE email = @email AND status = @status
     `,
-      { email, status: SqlModelStatus.ACTIVE },
+      {
+        email,
+        status: SqlModelStatus.ACTIVE,
+      },
       conn,
     );
 
@@ -268,6 +284,34 @@ export class AuthUser extends AdvancedSQLModel {
 
     try {
       await this.invalidateOldToken();
+
+      const lastLogin = (
+        await this.listLogins({
+          user_uuid: this.user_uuid,
+          query: new BaseQueryFilter({
+            limit: 1,
+          }),
+        })
+      ).items as { loginDate: string }[];
+
+      const lastYear = new Date();
+      lastYear.setFullYear(lastYear.getFullYear() - 1);
+
+      if (!lastLogin.length || new Date(lastLogin[0].loginDate) < lastYear) {
+        // If user has not logged in for more than a year, skipped pin to crust requests should be unskipped
+        await sendToWorkerQueue(
+          env.STORAGE_AWS_WORKER_SQS_URL,
+          'UnskipPinToCrustRequestsWorker',
+          [
+            {
+              user_uuid: this.user_uuid,
+            },
+          ],
+          null,
+          null,
+        );
+      }
+
       await authToken.insert(SerializeFor.INSERT_DB, conn);
 
       await context.mysql.commit(conn);

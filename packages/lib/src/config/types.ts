@@ -79,7 +79,7 @@ export const ENTERPRISE_USER_EVM_CHAINS = [
 
 export enum NFTCollectionType {
   GENERIC = 1,
-  NESTABLE = 2,
+  NESTABLE = 2, // nestable NFTs were deprecated
 }
 
 export enum SmartContractType {
@@ -286,6 +286,7 @@ export enum ScsEventType {
   CREATE_OVERRIDE = 'create-override',
   DELETE_OVERRIDE = 'delete-override',
   ADD_CREDIT = 'add-credit',
+  ADD_SUBSCRIPTION = 'add-subscription',
   CONFIGURE_CREDIT = 'configure-credit',
   SPEND_CREDIT = 'spend-credit',
   REFUND_CREDIT = 'refund-credit',
@@ -316,7 +317,6 @@ export enum NftsEventType {
   GET_NFT_COLLECTION_BY_UUID = 'get-nft-collection-by-uuid',
   TRANSFER_OWNERSHIP = 'transfer-ownership',
   MINT_NFT = 'mint-nft',
-  NEST_MINT_NFT = 'nest-mint-nft',
   SET_BASE_URI = 'set-base-uri',
   CHECK_TRANSACTION_STATUS = 'check-transaction-status',
   NFT_COLLECTION_TRANSACTION_LIST = 'list-collection-transactions',
@@ -413,6 +413,7 @@ export enum ContractEventType {
 
 export enum DeployEventType {
   BE_DEPLOY_DOCKER_COMPOSE = 'be-deploy-docker-compose',
+  BE_REDEPLOY_DOCKER_COMPOSE = 'be-redeploy-docker-compose',
   BE_LIST_BACKENDS = 'be-list-backends',
   BE_GET_INSTANCE = 'be-get-instance',
   BE_GET_INSTANCE_DETAILS = 'be-get-instance-details',
@@ -425,6 +426,7 @@ export enum DeployEventType {
   BE_GET_INSTANCE_ATTESTATION = 'be-get-instance-attestation',
   // BE_GET_INSTANCE_BILLING = 'be-get-instance-billing',
   BE_RESIZE_INSTANCE = 'be-resize-instance',
+  BE_ARCHIVE_INSTANCE = 'be-archive-instance',
 
   TRIGGER_GITHUB_DEPLOY = 'fe-trigger-github-deploy',
   TRIGGER_WEB_DEPLOY = 'fe-trigger-web-deploy',
@@ -446,10 +448,15 @@ export enum DeployEventType {
 export enum SimpletsEventType {
   SIMPLETS_LIST = 'simplets-list',
   SIMPLETS_DEPLOY = 'deploy',
+  SIMPLETS_REDEPLOY = 'redeploy',
   GET_SIMPLET = 'get-simplet',
   // deployed
   GET_DEPLOYED_SIMPLET = 'get-deployed-simplet',
+  GET_DEPLOYED_SIMPLET_BY_BACKEND_UUID = 'get-deployed-simplet-by-backend-uuid',
   LIST_DEPLOYED_SIMPLETS = 'list-deployed-simplets',
+  ARCHIVE_SIMPLET_DEPLOY = 'archive-simplet-deploy',
+  ACTIVATE_SIMPLET_DEPLOY = 'activate-simplet-deploy',
+  IS_SIMPLET_QUOTA_REACHED = 'is-simplet-quota-reached',
 }
 
 export enum InfrastructureEventType {
@@ -1016,6 +1023,7 @@ export enum QuotaCode {
   MAX_EMBEDDED_WALLET_INTEGRATIONS = 13,
   MAX_EMBEDDED_WALLET_SIGNATURES = 14,
   MAX_RPC_KEYS = 15,
+  MAX_SIMPLET_COUNT = 16,
 }
 
 /**
@@ -1282,6 +1290,9 @@ export enum ProductCode {
   CONTRACT_POLYGON_CALL = 128,
   CONTRACT_POLYGON_AMOY_CREATE = 129,
   CONTRACT_POLYGON_AMOY_CALL = 130,
+
+  // Simplets
+  SIMPLET_NFT_STUDIO_DEPLOY = 131,
 }
 export enum ProductService {
   HOSTING = 'HOSTING',
@@ -1293,6 +1304,7 @@ export enum ProductService {
   CONTRACTS = 'CONTRACTS',
   WALLET = 'WALLET',
   INDEXING = 'INDEXING',
+  SIMPLETS = 'SIMPLETS',
 }
 
 export enum ProductCategory {
@@ -1339,6 +1351,7 @@ export enum ProductCategory {
   SIGNATURE = 'SIGNATURE',
   UNIQUE_NFT = 'UNIQUE_NFT',
   INDEXER = 'INDEXER',
+  SIMPLETS_NFT_STUDIO = 'SIMPLETS_NFT_STUDIO',
 }
 
 export enum EmailTemplate {
@@ -1365,7 +1378,11 @@ export enum EmailTemplate {
   IPFS_BANDWIDTH_NEAR_QUOTA = 'ipfs-bandwidth-near-quota',
   IPFS_BANDWIDTH_EXCEEDED_QUOTA = 'ipfs-bandwidth-exceeded-quota',
 
+  BACKEND_SHUTDOWN = 'backend-shutdown',
+
   OTP_VERIFICATION = 'otp-verification',
+
+  PINNING_SKIPPED_DUE_TO_INACTIVITY = 'pinning-skipped-due-to-inactivity',
 }
 
 export enum JwtExpireTime {
@@ -1387,16 +1404,30 @@ export enum SubscriptionPackageId {
 
 export enum NotificationType {
   UNKNOWN = 0,
+  WEBSITE_DEPLOYED = 1,
+  NFT_METADATA_DEPLOYED = 2,
+  NFT_COLLECTION_DEPLOYED = 3,
+  CLOUD_FUNCTION_DEPLOYED = 4,
+  INDEXER_DEPLOYED = 5,
+  SMART_CONTRACT_DEPLOYED = 6,
+  EMBEDDED_WALLET_GENERATED = 7,
 }
 
 export enum HttpStatus {
   BAD_REQUEST = 400,
+  UNAUTHORIZED = 401,
   FORBIDDEN = 403,
   NOT_FOUND = 404,
+  GONE = 410,
 }
 
 export enum NftWebsiteType {
   PLAIN_JS = 1,
   REACT = 2,
   VUE = 3,
+}
+
+export enum LoginType {
+  EMAIL = 'email',
+  GOOGLE = 'google',
 }

@@ -1,6 +1,7 @@
 import {
   Context,
   getQueryParams,
+  JSONParser,
   PopulateFrom,
   presenceValidator,
   prop,
@@ -29,6 +30,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -47,6 +49,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
     validators: [
       {
@@ -65,9 +68,22 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public description: string;
+
+  @prop({
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public servicesUsed: string;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -77,6 +93,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public contract_uuid: string | null;
@@ -89,6 +106,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public backendRepo: string | null;
@@ -101,6 +119,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public backendPath: string | null;
@@ -116,9 +135,23 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public backendMachine: VirtualMachineDto | null;
+
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public backendRequiredVariables: string[] | null;
 
   @prop({
     parser: { resolver: stringParser() },
@@ -128,6 +161,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public frontendRepo: string | null;
@@ -140,6 +174,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public frontendPath: string | null;
@@ -152,6 +187,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public frontendInstallCommand: string | null;
@@ -164,6 +200,7 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public frontendBuildCommand: string | null;
@@ -176,9 +213,23 @@ export class Simplet extends UuidSqlModel {
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
     ],
   })
   public frontendBuildDirectory: string | null;
+
+  @prop({
+    parser: { resolver: JSONParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public frontendRequiredVariables: string[] | null;
 
   /***************************************************
    * Info properties

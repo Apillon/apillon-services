@@ -5,6 +5,7 @@ import {
   Merge,
   ProductCode,
   ScsEventType,
+  SubscriptionPackageId,
 } from '../../../config/types';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
@@ -21,6 +22,7 @@ import { InvoicesQueryFilter } from './dtos/invoices-query-filter.dto';
 import { UpdateSubscriptionDto } from './dtos/update-subscription.dto';
 import { PricelistQueryFilter } from './dtos/pricelist-query-filter.dto';
 import { ConfigureCreditDto } from './dtos/configure-credit.dto';
+import { AddSubscriptionDto } from './dtos/add-subscription.dto';
 
 /**
  * System config Service client
@@ -111,6 +113,25 @@ export class Scs extends BaseService {
     const data = {
       eventName: ScsEventType.ADD_CREDIT,
       body: addCreditDto.serialize(),
+    };
+
+    return await this.callService(data);
+  }
+
+  public async addSubscription(
+    projectUuid: string,
+    dto: AddSubscriptionDto,
+    stripeId: string,
+    subscriberEmail: string,
+  ) {
+    const data = {
+      eventName: ScsEventType.ADD_SUBSCRIPTION,
+      body: {
+        projectUuid,
+        stripeId,
+        subscriberEmail,
+        ...dto.serialize(),
+      },
     };
 
     return await this.callService(data);
@@ -221,6 +242,21 @@ export class Scs extends BaseService {
       eventName: ScsEventType.GET_ACTIVE_SUBSCRIPTION,
       project_uuid,
     });
+  }
+
+  public async projectHasPaidSubscription(project_uuid: string) {
+    const response = await this.callService({
+      eventName: ScsEventType.GET_ACTIVE_SUBSCRIPTION,
+      project_uuid,
+    });
+    if (!response.data) {
+      return false;
+    }
+    return [
+      SubscriptionPackageId.CATERPILLAR,
+      SubscriptionPackageId.COCOON,
+      SubscriptionPackageId.BUTTERFLY,
+    ].includes(response.data.subscription_id);
   }
 
   public async listSubscriptions(query: SubscriptionsQueryFilter) {

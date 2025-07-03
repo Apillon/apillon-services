@@ -8,6 +8,7 @@ import {
   DeployedSimpletsQueryFilterDto,
   SimpletsQueryFilterDto,
 } from './dtos/simplets-query-filter.dto';
+import { SimpletRedeployDto } from './dtos/simplet-redeploy.dto';
 
 export class SimpletsMicroservice extends BaseService {
   lambdaFunctionName =
@@ -45,6 +46,13 @@ export class SimpletsMicroservice extends BaseService {
     });
   }
 
+  public async redeploySimplet(body: SimpletRedeployDto) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.SIMPLETS_REDEPLOY,
+      body,
+    });
+  }
+
   public async getSimplet(uuid: string) {
     return await this.emitEvent({
       eventName: SimpletsEventType.GET_SIMPLET,
@@ -54,7 +62,7 @@ export class SimpletsMicroservice extends BaseService {
 
   //#endregion
 
-  //#region ------------- SIMPLETS -------------
+  //#region ------------- DEPLOYED SIMPLETS -------------
 
   public async getDeployedSimplet(uuid: string) {
     return await this.emitEvent({
@@ -63,10 +71,38 @@ export class SimpletsMicroservice extends BaseService {
     });
   }
 
+  public async getDeployedSimpletByBackendUuid(backend_uuid: string) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.GET_DEPLOYED_SIMPLET_BY_BACKEND_UUID,
+      body: { uuid: backend_uuid },
+    });
+  }
+
   public async listDeployedSimplets(body: DeployedSimpletsQueryFilterDto) {
     return await this.emitEvent({
       eventName: SimpletsEventType.LIST_DEPLOYED_SIMPLETS,
       body,
+    });
+  }
+
+  public async deleteSimpletDeploy(simpletDeploy_uuid: string) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.ARCHIVE_SIMPLET_DEPLOY,
+      body: { uuid: simpletDeploy_uuid },
+    });
+  }
+
+  public async activateSimpletDeploy(simpletDeploy_uuid: string) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.ACTIVATE_SIMPLET_DEPLOY,
+      body: { uuid: simpletDeploy_uuid },
+    });
+  }
+
+  async isSimpletQuotaReached(projectUuid: string) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.IS_SIMPLET_QUOTA_REACHED,
+      body: { uuid: projectUuid },
     });
   }
 

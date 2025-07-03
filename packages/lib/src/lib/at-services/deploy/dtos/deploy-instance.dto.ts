@@ -10,11 +10,27 @@ import { VirtualMachineDto } from './virtual-machine.dto';
 export class DeployInstanceDto extends ModelBase {
   @prop({
     parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [
+      {
+        resolver: presenceValidator(),
+        code: ValidatorErrorCode.DATA_NOT_PRESENT,
+      },
+    ],
+  })
+  public project_uuid: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
     populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE],
     validators: [
       {
         resolver: presenceValidator(),
         code: ValidatorErrorCode.DATA_NOT_PRESENT,
+      },
+      {
+        resolver: stringLengthValidator({ maxOrEqual: 20 }), // phala limits name to 20 chars
+        code: ValidatorErrorCode.DATA_NOT_VALID,
       },
     ],
   })
@@ -90,7 +106,7 @@ export class DeployInstanceDto extends ModelBase {
 
 export function validateDockerComposeYaml(allowEmpty = false) {
   return function (this: any, value: any): boolean {
-    if (allowEmpty && !!value) {
+    if (allowEmpty && !value) {
       return true;
     }
     try {

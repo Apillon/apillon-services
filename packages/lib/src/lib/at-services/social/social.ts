@@ -2,12 +2,12 @@ import { SocialPostQueryFilter, WalletIdentityDto } from '../../..';
 import { env } from '../../../config/env';
 import { AppEnvironment, SocialEventType } from '../../../config/types';
 import { BaseProjectQueryFilter } from '../../base-models/base-project-query-filter.model';
-import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
 import { Context } from '../../context';
 import { BaseService } from '../base-service';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { CreateSpaceDto } from './dtos/create-space.dto';
 
+/** @deprecated This service is deprecated and should not be used. */
 export class SocialMicroservice extends BaseService {
   lambdaFunctionName =
     env.APP_ENV === AppEnvironment.TEST

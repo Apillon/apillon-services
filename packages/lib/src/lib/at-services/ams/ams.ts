@@ -3,6 +3,7 @@ import {
   AmsEventType,
   AppEnvironment,
   DefaultUserRole,
+  LoginType,
   OauthLinkType,
 } from '../../../config/types';
 import { BaseQueryFilter } from '../../base-models/base-query-filter.model';
@@ -55,6 +56,7 @@ export class Ams extends BaseService {
     project_uuid?: string;
     wallet?: string;
     evmWallet?: string;
+    googleId?: string;
   }) {
     const data = {
       eventName: AmsEventType.USER_REGISTER,
@@ -64,7 +66,11 @@ export class Ams extends BaseService {
     return await this.callService(data);
   }
 
-  public async login(params: { email: string; password: string }) {
+  public async login(params: {
+    email: string;
+    password?: string;
+    type?: LoginType;
+  }) {
     const data = {
       eventName: AmsEventType.USER_LOGIN,
       ...params,

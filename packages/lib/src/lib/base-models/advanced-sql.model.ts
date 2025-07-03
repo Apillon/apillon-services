@@ -1,5 +1,5 @@
 import { prop } from '@rawmodel/core';
-import { integerParser, dateParser } from '@rawmodel/parsers';
+import { dateParser, integerParser } from '@rawmodel/parsers';
 import {
   ErrorCode,
   PopulateFrom,

@@ -11,7 +11,7 @@ import {
   TransactionQueryFilter,
   TransactionStatus,
 } from '@apillon/lib';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { dateParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   DbTables,
   NftsErrorCode,
@@ -165,6 +165,37 @@ export class Transaction extends AdvancedSQLModel {
     serializable: [SerializeFor.INSERT_DB],
   })
   public callArguments: unknown[];
+
+  /**
+   * Created at property definition.
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+    ],
+    populatable: [PopulateFrom.DB],
+    defaultValue: new Date(),
+  })
+  public createTime?: Date;
+
+  /**
+   * Updated at property definition.
+   */
+  @prop({
+    parser: { resolver: dateParser() },
+    serializable: [
+      SerializeFor.PROFILE,
+      SerializeFor.APILLON_API,
+      SerializeFor.ADMIN,
+      SerializeFor.SELECT_DB,
+    ],
+    populatable: [PopulateFrom.DB],
+  })
+  public updateTime?: Date;
 
   public async populateByTransactionHash(
     transactionHash: string,

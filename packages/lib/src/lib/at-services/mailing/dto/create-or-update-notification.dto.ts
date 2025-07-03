@@ -52,7 +52,7 @@ export class CreateOrUpdateNotificationDto extends ModelBase {
   public message?: string;
 
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     populatable: [
       PopulateFrom.SERVICE,
       PopulateFrom.WORKER,
@@ -71,5 +71,5 @@ export class CreateOrUpdateNotificationDto extends ModelBase {
       SerializeFor.UPDATE_DB,
     ],
   })
-  public userId?: number;
+  public user_uuid?: string;
 }

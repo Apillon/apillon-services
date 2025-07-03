@@ -14,10 +14,14 @@ custom:
   serverless-offline:
     httpPort: 6001
     lambdaPort: 6002
+  prune:
+    number: 5
+    automatic: true
 
 plugins:
   - serverless-webpack
-
+  - serverless-prune-plugin
+  
 provider:
   name: aws
   runtime: nodejs20.x

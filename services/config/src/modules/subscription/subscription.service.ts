@@ -1,5 +1,6 @@
 import {
   AddCreditDto,
+  AddSubscriptionDto,
   CreateSubscriptionDto,
   Lmas,
   LogType,
@@ -23,6 +24,30 @@ import { CreditService } from '../credit/credit.service';
 import { InvoiceService } from '../invoice/invoice.service';
 
 export class SubscriptionService {
+  static async addSubscription(
+    {
+      body: { projectUuid, packageId, expiresOn, stripeId, subscriberEmail },
+    }: {
+      body: {
+        projectUuid: string;
+        stripeId: string;
+        subscriberEmail: string;
+      } & Pick<AddSubscriptionDto, 'packageId' | 'expiresOn'>;
+    },
+    context: ServiceContext,
+  ) {
+    return await SubscriptionService.createSubscription(
+      new CreateSubscriptionDto({}, context).populate({
+        project_uuid: projectUuid,
+        package_id: packageId,
+        expiresOn,
+        stripeId,
+        subscriberEmail,
+      }),
+      context,
+    );
+  }
+
   /**
    * Create a subscription for a project
    * @param {{ createSubscriptionDto: CreateSubscriptionDto }} createSubscriptionDto - subset DTO containing the subscription data

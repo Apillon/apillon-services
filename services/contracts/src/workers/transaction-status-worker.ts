@@ -1,7 +1,11 @@
 import {
+  Ams,
   Context,
+  CreateOrUpdateNotificationDto,
   env,
   LogType,
+  Mailing,
+  NotificationType,
   refundCredit,
   runWithWorkers,
   ServiceName,
@@ -91,6 +95,20 @@ export class TransactionStatusWorker extends BaseQueueWorker {
                 //   contract.contractAddress = data;
                 // }
                 contractDeploy.markAsDeployed();
+
+                const projectOwner = (
+                  await new Ams(this.context).getProjectOwner(
+                    contractDeploy.project_uuid,
+                  )
+                ).data;
+
+                await new Mailing(this.context).createNotification(
+                  new CreateOrUpdateNotificationDto({}, this.context).populate({
+                    type: NotificationType.SMART_CONTRACT_DEPLOYED,
+                    user_uuid: projectOwner?.user_uuid,
+                  }),
+                );
+
                 await contractDeploy.update();
                 break;
               }

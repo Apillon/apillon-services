@@ -23,7 +23,6 @@ import {
   ServiceName,
   spendCreditAction,
   SpendCreditDto,
-  SqlModelStatus,
   WebsiteQueryFilter,
   WebsiteSource,
   WebsitesQuotaReachedQueryFilter,
@@ -307,7 +306,7 @@ export class HostingService {
     }
     website.canModify(context);
 
-    if (website.source === WebsiteSource.GITHUB) {
+    if (website.source === WebsiteSource.GITHUB && !website.isSimplet) {
       await new DeployMicroservice(context).deleteDeploymentConfig(
         website.website_uuid,
       );
