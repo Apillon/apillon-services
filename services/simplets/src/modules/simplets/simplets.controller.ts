@@ -50,25 +50,37 @@ export class SimpletsController {
   ) {
     // BACKEND DEPLOY
     if (simplet.backendRepo && !simpletDeploy.backend_uuid) {
-      simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
-      const { backendDeploy } = await this.simpletsService.deployBackend(
-        simpletDeploy,
-        simplet,
-      );
-      const { backend_uuid, url: backendUrl } = backendDeploy.data;
-      simpletDeploy.populate({
-        backend_uuid,
-        backendUrl,
-      });
+      try {
+        simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
+        const { backendDeploy } = await this.simpletsService.deployBackend(
+          simpletDeploy,
+          simplet,
+        );
+        const { backend_uuid, url: backendUrl } = backendDeploy.data;
+        simpletDeploy.populate({
+          backend_uuid,
+          backendUrl,
+        });
+      } catch (e) {
+        simpletDeploy.backendStatus = ResourceStatus.FAILED;
+        // mark FE status as error since it wont get deployed
+        simpletDeploy.frontendStatus = ResourceStatus.CANCELED;
+        throw e;
+      }
     }
 
     // FRONTEND DEPLOY
     if (simplet.frontendRepo && !simpletDeploy.frontend_uuid) {
-      simpletDeploy.frontendStatus = ResourceStatus.DEPLOYING;
-      simpletDeploy.frontend_uuid = await this.simpletsService.deployFrontend(
-        simpletDeploy,
-        simplet,
-      );
+      try {
+        simpletDeploy.frontendStatus = ResourceStatus.DEPLOYING;
+        simpletDeploy.frontend_uuid = await this.simpletsService.deployFrontend(
+          simpletDeploy,
+          simplet,
+        );
+      } catch (e) {
+        simpletDeploy.frontendStatus = ResourceStatus.FAILED;
+        throw e;
+      }
     }
   }
 
