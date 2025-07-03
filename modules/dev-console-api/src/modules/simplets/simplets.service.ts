@@ -46,6 +46,11 @@ export class SimpletsService {
         body.project_uuid,
         AttachedServiceType.HOSTING,
       ),
+      this.serviceService.createServiceIfNotExists(
+        context,
+        body.project_uuid,
+        AttachedServiceType.NFT,
+      ),
     ]);
 
     // validate or create API credentials
