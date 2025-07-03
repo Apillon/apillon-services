@@ -99,7 +99,6 @@ export class SimpletsRepository extends BaseRepository {
     return deployedSimplet;
   }
 
-  //#endregion
   async getDeployedSimpletsCount(project_uuid: string, conn?: PoolConnection) {
     const data = await this.context.mysql.paramExecute(
       `
@@ -181,4 +180,6 @@ export class SimpletsRepository extends BaseRepository {
       this.context,
     ).getActiveDeployedLongerThanDays(days);
   }
+
+  //#endregion
 }
