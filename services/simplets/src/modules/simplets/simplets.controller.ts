@@ -173,7 +173,6 @@ export class SimpletsController {
         message,
         service: ServiceName.SIMPLETS,
         location: 'SimpletsController.deploySimplet',
-        data: e,
       });
     } finally {
       await simpletDeploy.insert();
