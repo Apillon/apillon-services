@@ -94,7 +94,10 @@ export class SimpletsService {
 
   async getDeployedSimplet(uuid: string): Promise<SimpletDeploy> {
     const simpletDeploy = await this.simpletRepository.getDeployedSimplet(uuid);
-    simpletDeploy.canAccess(this.context);
+    if (this.context.user) {
+      simpletDeploy.canAccess(this.context);
+    }
+
     return simpletDeploy;
   }
 
@@ -103,7 +106,10 @@ export class SimpletsService {
   ): Promise<SimpletDeploy> {
     const simpletDeploy =
       await this.simpletRepository.getSimpletDeployByBackend(backend_uuid);
-    simpletDeploy.canAccess(this.context);
+    if (this.context.user) {
+      simpletDeploy.canAccess(this.context);
+    }
+
     return simpletDeploy;
   }
 
@@ -500,7 +506,9 @@ export class SimpletsService {
     });
     const simpletDeploy =
       await this.simpletRepository.getDeployedSimplet(simpletDeploy_uuid);
-    simpletDeploy.canAccess(this.context);
+    if (this.context.user) {
+      simpletDeploy.canAccess(this.context);
+    }
 
     if (simpletDeploy.status !== SqlModelStatus.ACTIVE) {
       return;
