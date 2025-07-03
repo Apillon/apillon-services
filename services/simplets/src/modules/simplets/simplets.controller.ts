@@ -332,7 +332,7 @@ export class SimpletsController {
 
       await this.logging.writeLog({
         logType: LogType.INFO,
-        message: `Successfully restored simplet deploy with uuid ${simpletDeploy_uuid}.`,
+        message: `Successfully activated simplet deploy with uuid ${simpletDeploy_uuid}.`,
         service: ServiceName.SIMPLETS,
         location: 'SimpletsController.activateSimpletDeploy',
       });

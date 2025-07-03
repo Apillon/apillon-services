@@ -500,9 +500,9 @@ export class SimpletsService {
   async archiveSimpletDeploy(simpletDeploy_uuid: string) {
     await this.logging.writeLog({
       logType: LogType.INFO,
-      message: `Starting deletion of simplet deploy with uuid ${simpletDeploy_uuid}.`,
+      message: `Starting archiving simplet deploy with uuid ${simpletDeploy_uuid}.`,
       service: ServiceName.SIMPLETS,
-      location: 'SimpletsService.deleteSimpletDeploy',
+      location: 'SimpletsService.archiveSimpletDeploy',
     });
     const simpletDeploy =
       await this.simpletRepository.getDeployedSimplet(simpletDeploy_uuid);
@@ -521,7 +521,7 @@ export class SimpletsService {
           logType: LogType.INFO,
           message: `Stopping backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
           service: ServiceName.SIMPLETS,
-          location: 'SimpletsService.deleteSimpletDeploy',
+          location: 'SimpletsService.archiveSimpletDeploy',
         });
 
         await this.deployService.archiveInstance(
@@ -529,20 +529,21 @@ export class SimpletsService {
             deploy_uuid: simpletDeploy.backend_uuid,
           }),
         );
+        simpletDeploy.backendStatus = ResourceStatus.SHUTTING_DOWN;
 
         await this.logging.writeLog({
           logType: LogType.INFO,
-          message: `Successfully deleted backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
+          message: `Successfully archived backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
           service: ServiceName.SIMPLETS,
-          location: 'SimpletsService.deleteSimpletDeploy',
+          location: 'SimpletsService.archiveSimpletDeploy',
         });
       } catch (e) {
         await this.logging.writeLog({
           sendAdminAlert: true,
           logType: LogType.ERROR,
-          message: `Failed to delete backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`,
+          message: `Failed to archive backend for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`,
           service: ServiceName.SIMPLETS,
-          location: 'SimpletsService.deleteSimpletDeploy',
+          location: 'SimpletsService.archiveSimpletDeploy',
           data: e,
         });
       }
@@ -555,7 +556,7 @@ export class SimpletsService {
           logType: LogType.INFO,
           message: `Archiving website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
           service: ServiceName.SIMPLETS,
-          location: 'SimpletsService.deleteSimpletDeploy',
+          location: 'SimpletsService.archiveSimpletDeploy',
         });
 
         await this.storageService.archiveWebsite(simpletDeploy.frontend_uuid);
@@ -564,7 +565,7 @@ export class SimpletsService {
           logType: LogType.INFO,
           message: `Successfully deleted website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}.`,
           service: ServiceName.SIMPLETS,
-          location: 'SimpletsService.deleteSimpletDeploy',
+          location: 'SimpletsService.archiveSimpletDeploy',
         });
       } catch (e) {
         await this.logging.writeLog({
@@ -572,7 +573,7 @@ export class SimpletsService {
           logType: LogType.ERROR,
           message: `Failed to delete website for simplet deploy with uuid ${simpletDeploy.simpletDeploy_uuid}: ${e instanceof Error ? e.message : String(e)}.`,
           service: ServiceName.SIMPLETS,
-          location: 'SimpletsService.deleteSimpletDeploy',
+          location: 'SimpletsService.archiveSimpletDeploy',
           data: e,
         });
       }
@@ -585,7 +586,7 @@ export class SimpletsService {
       logType: LogType.INFO,
       message: `Successfully completed archivation of simplet deploy with uuid ${simpletDeploy_uuid}.`,
       service: ServiceName.SIMPLETS,
-      location: 'SimpletsService.deleteSimpletDeploy',
+      location: 'SimpletsService.archiveSimpletDeploy',
     });
   }
 
@@ -622,6 +623,7 @@ export class SimpletsService {
             deploy_uuid: simpletDeploy.backend_uuid,
           }),
         );
+        simpletDeploy.backendStatus = ResourceStatus.RESTARTING;
 
         await this.logging.writeLog({
           logType: LogType.INFO,
