@@ -6,6 +6,7 @@ import {
   PoolConnection,
   PopulateFrom,
   ResourceStatus,
+  SqlModelStatus,
 } from '@apillon/lib';
 import { Backend } from '../models/backend.model';
 import { BaseRepository } from './base-repository';
@@ -58,6 +59,13 @@ export class DeployRepository extends BaseRepository {
     return backend;
   }
 
+  /**
+   * Fetches a list of Backend objects that require status updates based on the specified conditions.
+   *
+   * @param {number} updateIntervalHours - The number of hours that have passed since the last update, used to determine eligibility for status updates.
+   * @param {PoolConnection} conn - The database connection object used to execute the query.
+   * @return {Promise<Backend[]>} A promise that resolves to an array of Backend objects that meet the status update criteria.
+   */
   async getBackendForStatusUpdate(
     updateIntervalHours: number,
     conn: PoolConnection,
@@ -73,7 +81,10 @@ export class DeployRepository extends BaseRepository {
     const data = await this.context.mysql.paramExecute(
       `SELECT *
        FROM \`${DbTables.BACKEND}\`
-       WHERE updateTime <= NOW() - INTERVAL @updateIntervalHours HOUR
+       WHERE (
+         updateTime <= NOW() - INTERVAL @updateIntervalHours HOUR
+           AND status = ${SqlModelStatus.ACTIVE}
+         )
           OR backendStatus IN (${transitoryStatuses.join(', ')})
        ORDER BY updateTime
        LIMIT 100
