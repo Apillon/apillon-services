@@ -6,6 +6,7 @@ import {
   EmailTemplate,
   GenericDeployRequestDto,
   Mailing,
+  ResourceStatus,
   Scs,
 } from '@apillon/lib';
 import { BaseSingleThreadWorker, WorkerDefinition } from '@apillon/workers-lib';
@@ -82,6 +83,7 @@ export class ShutdownFreeSimpletsWorker extends BaseSingleThreadWorker {
         }),
       );
       simpletDeploy.trialExpired = true;
+      simpletDeploy.backendStatus = ResourceStatus.SHUTTING_DOWN;
       await simpletDeploy.update();
       const projectOwner = (
         await this.accessMS.getProjectOwner(simpletDeploy.project_uuid)
