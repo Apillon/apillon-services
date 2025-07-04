@@ -11,7 +11,7 @@ export class SimpletResourceStatusDto extends ModelBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
   })
-  public uuid: string;
+  public backend_uuid: string;
 
   @prop({
     parser: { resolver: integerParser() },

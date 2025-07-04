@@ -685,10 +685,11 @@ export class SimpletsService {
   }
 
   async updateDeployedSimpletBackendStatus(
-    uuid: string,
+    backend_uuid: string,
     status: ResourceStatus,
   ) {
-    const simpletDeploy = await this.simpletRepository.getDeployedSimplet(uuid);
+    const simpletDeploy =
+      await this.simpletRepository.getSimpletDeployByBackend(backend_uuid);
     simpletDeploy.backendStatus = status;
     await simpletDeploy.update();
 

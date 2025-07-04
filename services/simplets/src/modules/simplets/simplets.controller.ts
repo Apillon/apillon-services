@@ -400,21 +400,21 @@ export class SimpletsController {
   }
 
   //#endregion
-  updateBackendStatus(uuid: string, status: ResourceStatus) {
+  updateBackendStatus(backend_uuid: string, status: ResourceStatus) {
     this.logging.writeLog({
       logType: LogType.INFO,
-      message: `Updating backend status to ${status} for backend with uuid ${uuid}.`,
+      message: `Updating backend status to ${status} for backend with uuid ${backend_uuid}.`,
       service: ServiceName.SIMPLETS,
       location: 'SimpletsController.updateBackendStatus',
     });
 
     try {
       return this.simpletsService.updateDeployedSimpletBackendStatus(
-        uuid,
+        backend_uuid,
         status,
       );
     } catch (e: unknown) {
-      const message = `An unexpected error occurred while updating backend status for uuid ${uuid}: ${e instanceof Error ? e.message : String(e)}.`;
+      const message = `An unexpected error occurred while updating backend status for uuid ${backend_uuid}: ${e instanceof Error ? e.message : String(e)}.`;
       this.logging.writeLog({
         sendAdminAlert: true,
         logType: LogType.ERROR,

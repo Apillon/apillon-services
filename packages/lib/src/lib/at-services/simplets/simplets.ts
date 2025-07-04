@@ -111,7 +111,7 @@ export class SimpletsMicroservice extends BaseService {
   async updateBackendStatus(backend_uuid: string, status: ResourceStatus) {
     return await this.emitEvent({
       eventName: SimpletsEventType.UPDATE_BACKEND_STATUS,
-      body: { uuid: backend_uuid, status },
+      body: { backend_uuid, status },
     });
   }
 }
