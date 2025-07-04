@@ -683,4 +683,15 @@ export class SimpletsService {
       location: 'SimpletsService.activateSimpletDeploy',
     });
   }
+
+  async updateDeployedSimpletBackendStatus(
+    uuid: string,
+    status: ResourceStatus,
+  ) {
+    const simpletDeploy = await this.simpletRepository.getDeployedSimplet(uuid);
+    simpletDeploy.backendStatus = status;
+    await simpletDeploy.update();
+
+    return simpletDeploy;
+  }
 }

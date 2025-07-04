@@ -457,6 +457,7 @@ export enum SimpletsEventType {
   ARCHIVE_SIMPLET_DEPLOY = 'archive-simplet-deploy',
   ACTIVATE_SIMPLET_DEPLOY = 'activate-simplet-deploy',
   IS_SIMPLET_QUOTA_REACHED = 'is-simplet-quota-reached',
+  UPDATE_BACKEND_STATUS = 'update-backend-status',
 }
 
 export enum InfrastructureEventType {
