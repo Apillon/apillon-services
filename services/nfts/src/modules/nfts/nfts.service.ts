@@ -905,7 +905,7 @@ export class NftsService {
   ) {
     body.idsToMint ||= [];
     console.log(
-      `Minting NFT Collection ${body.collection_uuid} to wallet address: ${body.receivingAddress}`,
+      `Minting ${body.quantity} NFTs for Collection ${body.collection_uuid} to wallet address: ${body.receivingAddress}`,
     );
 
     const collection: Collection = await new Collection(
@@ -1363,6 +1363,7 @@ export class NftsService {
       throw new NftsCodeException({
         status: 500,
         code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
+        errorMessage: `Collection max supply reached (minted: ${alreadyMintedCount}, mint:${params.quantity}, max:${collection.maxSupply})`,
         context,
         sourceFunction: 'mintNftTo()',
       });
