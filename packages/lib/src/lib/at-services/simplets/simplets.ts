@@ -9,6 +9,7 @@ import {
   SimpletsQueryFilterDto,
 } from './dtos/simplets-query-filter.dto';
 import { SimpletRedeployDto } from './dtos/simplet-redeploy.dto';
+import { ResourceStatus } from '../deploy/types/resource-status.type';
 
 export class SimpletsMicroservice extends BaseService {
   lambdaFunctionName =
@@ -107,4 +108,10 @@ export class SimpletsMicroservice extends BaseService {
   }
 
   //#endregion
+  async updateBackendStatus(backend_uuid: string, status: ResourceStatus) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.UPDATE_BACKEND_STATUS,
+      body: { uuid: backend_uuid, status },
+    });
+  }
 }

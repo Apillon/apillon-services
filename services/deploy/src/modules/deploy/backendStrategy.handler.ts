@@ -116,6 +116,10 @@ export class BackendStrategyHandler {
         backendStatus: ResourceStatus.DEPLOYING,
         environmentVariables,
       });
+      await this.simpletsService.updateBackendStatus(
+        backend.backend_uuid,
+        ResourceStatus.DEPLOYING,
+      );
 
       return backend;
     } catch (e: unknown) {
