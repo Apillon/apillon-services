@@ -36,6 +36,22 @@ import {
   SubstrateContractClient,
 } from '@apillon/blockchain-lib/substrate';
 import { UniqueNftClient } from '../../modules/nfts/clients/unique-nft-client';
+import { ContractInterface } from 'ethers';
+
+export class EVMNftContractClient extends EVMContractClient {
+  public constructor(
+    rpcEndpoint: string,
+    contractAbi: ContractInterface,
+    contractAddress: string,
+  ) {
+    super(rpcEndpoint, contractAbi, contractAddress);
+  }
+
+  async getTotalSupply() {
+    const totalSupply = await this.query('totalSupply');
+    return parseInt(totalSupply.toString());
+  }
+}
 
 export async function getEvmContractClient(
   context: Context,
@@ -50,7 +66,7 @@ export async function getEvmContractClient(
     )
   ).data?.url;
 
-  return new EVMContractClient(rpcEndpoint, contractAbi, contractAddress);
+  return new EVMNftContractClient(rpcEndpoint, contractAbi, contractAddress);
 }
 
 export async function getSubstrateContractClient(
