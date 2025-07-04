@@ -2,12 +2,15 @@ import {
   DeployInstanceDto,
   EncryptionService,
   env,
+  Lmas,
+  LogType,
   overrideEnvironmentVariables,
   RedeployInstanceDto,
   ResizeInstanceDto,
   ResourceDeployWebhookDataDto,
   ResourceStatus,
   Scs,
+  ServiceName,
   SimpletsMicroservice,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
@@ -28,6 +31,7 @@ export class BackendStrategyHandler {
     private readonly strategy: IBackendDeployStrategy,
     private readonly simpletsService: SimpletsMicroservice,
     private readonly scsService: Scs,
+    private readonly log: Lmas,
   ) {}
 
   //#region on-chain
@@ -54,6 +58,18 @@ export class BackendStrategyHandler {
       await backend.insert();
       return backend;
     } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : e;
+      await this.log.writeLog({
+        context: this.context,
+        message: `Error occurred during docker compose deploy (${message})`,
+        logType: LogType.ERROR,
+        service: ServiceName.DEPLOY,
+        data: {
+          backend_uuid: backend ? backend.backend_uuid : undefined,
+          error: e,
+          message,
+        },
+      });
       if (e instanceof DeployCodeException) {
         throw e;
       }
@@ -126,9 +142,22 @@ export class BackendStrategyHandler {
       backend.populate({
         backendStatus: ResourceStatus.FAILED,
       });
+      const message = e instanceof Error ? e.message : e;
+      await this.log.writeLog({
+        context: this.context,
+        message: `Error occurred during docker compose redeploy (${message})`,
+        logType: LogType.ERROR,
+        service: ServiceName.DEPLOY,
+        data: {
+          backend_uuid: backend.backend_uuid,
+          error: e,
+          message,
+        },
+      });
       if (e instanceof DeployCodeException) {
         throw e;
       }
+
       throw new DeployCodeException({
         status: 500,
         code: DeployErrorCode.DEPLOY_DEPLOY_FAILED,
@@ -141,56 +170,199 @@ export class BackendStrategyHandler {
   }
 
   async getInstanceDetails(backend: Backend) {
-    return await this.strategy.getInstanceDetails(backend);
+    try {
+      return await this.strategy.getInstanceDetails(backend);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : e;
+      await this.log.writeLog({
+        context: this.context,
+        message: `Error getting instance details (${message})`,
+        logType: LogType.ERROR,
+        service: ServiceName.DEPLOY,
+        data: {
+          backend_uuid: backend.backend_uuid,
+          error: e,
+          message,
+        },
+      });
+      throw e;
+    }
   }
 
   async getInstanceStats(backend: Backend) {
-    return await this.strategy.getInstanceStats(backend);
+    try {
+      return await this.strategy.getInstanceStats(backend);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : e;
+      await this.log.writeLog({
+        context: this.context,
+        message: `Error getting instance stats (${message})`,
+        logType: LogType.ERROR,
+        service: ServiceName.DEPLOY,
+        data: {
+          backend_uuid: backend.backend_uuid,
+          error: e,
+          message,
+        },
+      });
+      throw e;
+    }
   }
 
   async getInstanceAttestation(backend: Backend) {
-    return await this.strategy.getInstanceAttestation(backend);
+    try {
+      return await this.strategy.getInstanceAttestation(backend);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : e;
+      await this.log.writeLog({
+        context: this.context,
+        message: `Error getting instance attestation (${message})`,
+        logType: LogType.ERROR,
+        service: ServiceName.DEPLOY,
+        data: {
+          backend_uuid: backend.backend_uuid,
+          error: e,
+          message,
+        },
+      });
+      throw e;
+    }
   }
 
-  //
   // async getInstanceBilling(backend: Backend) {
   //   return await this.strategy.getInstanceBilling(backend);
   // }
 
   async startInstance(backend: Backend) {
-    const result = await this.strategy.startInstance(backend);
-    await this.signalBackendStatus(backend, ResourceStatus.DEPLOYING);
-    return result;
+    try {
+      const result = await this.strategy.startInstance(backend);
+      await this.signalBackendStatus(backend, ResourceStatus.DEPLOYING);
+      return result;
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : e;
+      await this.log.writeLog({
+        context: this.context,
+        message: `Error starting instance (${message})`,
+        logType: LogType.ERROR,
+        service: ServiceName.DEPLOY,
+        data: {
+          backend_uuid: backend.backend_uuid,
+          error: e,
+          message,
+        },
+      });
+      throw e;
+    }
   }
 
   async shutdownInstance(backend: Backend) {
-    const result = await this.strategy.shutdownInstance(backend);
-    await this.signalBackendStatus(backend, ResourceStatus.SHUTTING_DOWN);
-    return result;
+    try {
+      const result = await this.strategy.shutdownInstance(backend);
+      await this.signalBackendStatus(backend, ResourceStatus.SHUTTING_DOWN);
+      return result;
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : e;
+      await this.log.writeLog({
+        context: this.context,
+        message: `Error shutting down instance (${message})`,
+        logType: LogType.ERROR,
+        service: ServiceName.DEPLOY,
+        data: {
+          backend_uuid: backend.backend_uuid,
+          error: e,
+          message,
+        },
+      });
+      throw e;
+    }
   }
 
   async stopInstance(backend: Backend) {
-    const result = await this.strategy.stopInstance(backend);
-    await this.signalBackendStatus(backend, ResourceStatus.STOPPING);
-    return result;
+    try {
+      const result = await this.strategy.stopInstance(backend);
+      await this.signalBackendStatus(backend, ResourceStatus.STOPPING);
+      return result;
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : e;
+      await this.log.writeLog({
+        context: this.context,
+        message: `Error stopping instance (${message})`,
+        logType: LogType.ERROR,
+        service: ServiceName.DEPLOY,
+        data: {
+          backend_uuid: backend.backend_uuid,
+          error: e,
+          message,
+        },
+      });
+      throw e;
+    }
   }
 
   async restartInstance(backend: Backend) {
-    const result = await this.strategy.restartInstance(backend);
-    await this.signalBackendStatus(backend, ResourceStatus.RESTARTING);
-    return result;
+    try {
+      const result = await this.strategy.restartInstance(backend);
+      await this.signalBackendStatus(backend, ResourceStatus.RESTARTING);
+      return result;
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : e;
+      await this.log.writeLog({
+        context: this.context,
+        message: `Error restarting instance (${message})`,
+        logType: LogType.ERROR,
+        service: ServiceName.DEPLOY,
+        data: {
+          backend_uuid: backend.backend_uuid,
+          error: e,
+          message,
+        },
+      });
+      throw e;
+    }
   }
 
   async destroyInstance(backend: Backend) {
-    const result = await this.strategy.destroyInstance(backend);
-    await this.signalBackendStatus(backend, ResourceStatus.SHUTTING_DOWN);
-    return result;
+    try {
+      const result = await this.strategy.destroyInstance(backend);
+      await this.signalBackendStatus(backend, ResourceStatus.SHUTTING_DOWN);
+      return result;
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : e;
+      await this.log.writeLog({
+        context: this.context,
+        message: `Error destroying instance (${message})`,
+        logType: LogType.ERROR,
+        service: ServiceName.DEPLOY,
+        data: {
+          backend_uuid: backend.backend_uuid,
+          error: e,
+          message,
+        },
+      });
+      throw e;
+    }
   }
 
   async resizeInstance(backend: Backend, body: ResizeInstanceDto) {
-    const result = await this.strategy.resizeInstance(backend, body);
-    await this.signalBackendStatus(backend, ResourceStatus.RESTARTING);
-    return result;
+    try {
+      const result = await this.strategy.resizeInstance(backend, body);
+      await this.signalBackendStatus(backend, ResourceStatus.RESTARTING);
+      return result;
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : e;
+      await this.log.writeLog({
+        context: this.context,
+        message: `Error resizing instance (${message})`,
+        logType: LogType.ERROR,
+        service: ServiceName.DEPLOY,
+        data: {
+          backend_uuid: backend.backend_uuid,
+          error: e,
+          message,
+        },
+      });
+      throw e;
+    }
   }
 
   //#endregion
