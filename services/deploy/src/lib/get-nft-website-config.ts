@@ -69,7 +69,7 @@ export const getNftWebsiteConfig = (
             key: 'VITE_IMG_BANNER',
             value: bannerUrl,
           },
-        ],
+        ].filter((v) => v.value !== undefined && v.value !== null),
       };
     case NftWebsiteType.VUE:
       return {
@@ -88,14 +88,14 @@ export const getNftWebsiteConfig = (
           },
 
           {
-            key: 'VITE_IMG_LOGO',
+            key: 'IMG_LOGO',
             value: logoUrl,
           },
           {
-            key: 'VITE_IMG_BANNER',
+            key: 'IMG_BANNER',
             value: bannerUrl,
           },
-        ],
+        ].filter((v) => v.value !== undefined && v.value !== null),
       };
     default:
       throw new DeployCodeException({
