@@ -567,10 +567,8 @@ export class HostingService {
       const spendCredit: SpendCreditDto = new SpendCreditDto(
         {
           project_uuid: website.project_uuid,
-          product_id:
-            event.body.environment == DeploymentEnvironment.STAGING
-              ? ProductCode.HOSTING_DEPLOY_TO_STAGING
-              : ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
+          // As the product code for staging has been removed, we always use the production one
+          product_id: ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
           referenceTable: DbTables.DEPLOYMENT,
           referenceId: deployment.deployment_uuid,
           location: 'HostingService/deployWebsite',
