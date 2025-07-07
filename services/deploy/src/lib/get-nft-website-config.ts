@@ -8,6 +8,7 @@ export const getNftWebsiteConfig = (
   chainId: number,
   logoUrl?: string,
   bannerUrl?: string,
+  embeddedWalletUuid?: string,
 ): {
   variables: {
     key: string;
@@ -43,6 +44,10 @@ export const getNftWebsiteConfig = (
             key: 'VITE_IMG_BANNER',
             value: bannerUrl,
           },
+          {
+            key: 'VITE_EMBEDDED_WALLET_CLIENT',
+            value: embeddedWalletUuid,
+          },
         ].filter((v) => v.value !== undefined && v.value !== null),
       };
     case NftWebsiteType.REACT:
@@ -69,6 +74,10 @@ export const getNftWebsiteConfig = (
             key: 'VITE_IMG_BANNER',
             value: bannerUrl,
           },
+          {
+            key: 'VITE_EMBEDDED_WALLET_CLIENT',
+            value: embeddedWalletUuid,
+          },
         ].filter((v) => v.value !== undefined && v.value !== null),
       };
     case NftWebsiteType.VUE:
@@ -79,21 +88,25 @@ export const getNftWebsiteConfig = (
         url: 'https://github.com/Apillon/nft-template-vue.git',
         variables: [
           {
-            key: 'CONTRACT_ADDRESS',
+            key: 'NUXT_PUBLIC_CONTRACT_ADDRESS',
             value: contractAddress,
           },
           {
-            key: 'CHAIN_ID',
+            key: 'NUXT_PUBLIC_CHAIN_ID',
             value: hexChainId,
           },
 
           {
-            key: 'IMG_LOGO',
+            key: 'NUXT_PUBLIC_IMG_LOGO',
             value: logoUrl,
           },
           {
-            key: 'IMG_BANNER',
+            key: 'NUXT_PUBLIC_IMG_BANNER',
             value: bannerUrl,
+          },
+          {
+            key: 'NUXT_PUBLIC_EMBEDDED_WALLET_CLIENT',
+            value: embeddedWalletUuid,
           },
         ].filter((v) => v.value !== undefined && v.value !== null),
       };

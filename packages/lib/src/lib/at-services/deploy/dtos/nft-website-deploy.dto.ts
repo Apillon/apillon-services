@@ -106,6 +106,13 @@ export class NftWebsiteDeployDto extends ModelBase {
   bannerUrl?: string;
 
   @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    validators: [],
+  })
+  embeddedWalletUuid?: string;
+
+  @prop({
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
   })

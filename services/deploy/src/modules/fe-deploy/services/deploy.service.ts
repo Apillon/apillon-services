@@ -99,6 +99,7 @@ export class DeployService {
         body.chainId,
         body.logoUrl,
         body.bannerUrl,
+        body.embeddedWalletUuid,
       );
       const deploymentConfig = this.deploymentConfigRepository.create({
         repoUrl: websiteConfigParams.url,
@@ -173,6 +174,7 @@ export class DeployService {
             body.chainId,
             body.logoUrl,
             body.bannerUrl,
+            body.embeddedWalletUuid,
           )
         : {}),
       isRedeploy: !body.new,
