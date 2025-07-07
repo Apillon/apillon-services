@@ -279,6 +279,8 @@ export class DeployService {
           apiSecret: body.apiSecret,
           contractAddress: collection.contractAddress,
           chainId: collection.chain,
+          bannerUrl: collection.bannerUrl,
+          logoUrl: collection.logoUrl,
           type: body.type,
           new: true,
         }),

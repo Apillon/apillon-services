@@ -6,6 +6,8 @@ export const getNftWebsiteConfig = (
   type: NftWebsiteType,
   contractAddress: string,
   chainId: number,
+  logoUrl?: string,
+  bannerUrl?: string,
 ): {
   variables: {
     key: string;
@@ -20,20 +22,28 @@ export const getNftWebsiteConfig = (
   switch (type) {
     case NftWebsiteType.PLAIN_JS:
       return {
-        installCommand: './generate-config.sh',
-        buildCommand: './build.sh',
+        installCommand: 'npm install',
+        buildCommand: 'npm run build',
         buildDirectory: './dist',
         url: 'https://github.com/Apillon/nft-template.git',
         variables: [
           {
-            key: 'CONTRACT_ADDRESS',
+            key: 'VITE_CONTRACT_ADDRESS',
             value: contractAddress,
           },
           {
-            key: 'CHAIN_ID',
+            key: 'VITE_CHAIN_ID',
             value: hexChainId,
           },
-        ],
+          {
+            key: 'VITE_IMG_LOGO',
+            value: logoUrl,
+          },
+          {
+            key: 'VITE_IMG_BANNER',
+            value: bannerUrl,
+          },
+        ].filter((v) => v.value !== undefined && v.value !== null),
       };
     case NftWebsiteType.REACT:
       return {
@@ -49,6 +59,15 @@ export const getNftWebsiteConfig = (
           {
             key: 'VITE_CHAIN_ID',
             value: hexChainId,
+          },
+
+          {
+            key: 'VITE_IMG_LOGO',
+            value: logoUrl,
+          },
+          {
+            key: 'VITE_IMG_BANNER',
+            value: bannerUrl,
           },
         ],
       };
@@ -66,6 +85,15 @@ export const getNftWebsiteConfig = (
           {
             key: 'CHAIN_ID',
             value: hexChainId,
+          },
+
+          {
+            key: 'VITE_IMG_LOGO',
+            value: logoUrl,
+          },
+          {
+            key: 'VITE_IMG_BANNER',
+            value: bannerUrl,
           },
         ],
       };
