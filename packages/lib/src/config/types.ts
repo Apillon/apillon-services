@@ -124,6 +124,7 @@ export enum AmsEventType {
   GET_API_KEY_ROLES = 'get-api-key-roles',
   GET_API_KEY = 'get-api-key',
   API_KEYS_IN_PROJECT_UPDATE = 'update-api-keys-in-project',
+  API_KEYS_QUOTA_REACHED = 'api-keys-quota-reached',
   DISCORD_LINK = 'discord-link',
   DISCORD_UNLINK = 'discord-unlink',
   DISCORD_USER_LIST = 'discord-user-list',

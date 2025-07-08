@@ -1,4 +1,3 @@
-import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import {
   AWS_KMS,
   BaseQueryFilter,
@@ -11,18 +10,19 @@ import {
   Scs,
   SimpletsMicroservice,
 } from '@apillon/lib';
+import { ServiceContext } from '@apillon/service-lib';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { processEvent } from '../../../main';
-import { PhalaDockerDeployStrategy } from '../services/phala-docker-deploy.strategy';
-import { PhalaCloudClient } from '../clients/phala-cloud.client';
-import { BackendController } from '../backend.controller';
-import { DeployRepository } from '../repositores/deploy-repository';
-import { BackendStrategyHandler } from '../backendStrategy.handler';
-import { ServiceContext } from '@apillon/service-lib';
-import { Backend } from '../models/backend.model';
-import { VMStatus } from '../types';
 import { DbTables } from '../../../config/types';
+import { processEvent } from '../../../main';
+import { releaseStage, setupTest, Stage } from '../../../test/setup';
+import { BackendController } from '../backend.controller';
+import { BackendStrategyHandler } from '../backendStrategy.handler';
+import { PhalaCloudClient } from '../clients/phala-cloud.client';
+import { Backend } from '../models/backend.model';
+import { DeployRepository } from '../repositores/deploy-repository';
+import { PhalaDockerDeployStrategy } from '../services/phala-docker-deploy.strategy';
+import { VMStatus } from '../types';
 
 const dockerCompose = readFileSync(
   join(__dirname, './fixtures/docker-compose.yml'),
@@ -159,6 +159,7 @@ describe('DeployService tests', () => {
     beforeEach(async () => {
       jest.spyOn(phalaClient, 'getAvailablePods').mockResolvedValueOnce({
         nodes: [
+          // @ts-ignore
           {
             teepod_id: 456,
             images: [
@@ -166,6 +167,7 @@ describe('DeployService tests', () => {
               { name: 'image4', version: [4, 0, 0], is_dev: true },
             ],
           },
+          // @ts-ignore
           {
             teepod_id: 123,
             images: [

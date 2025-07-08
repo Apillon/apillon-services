@@ -316,6 +316,14 @@ export class Ams extends BaseService {
     return await this.callService(data);
   }
 
+  public async isApiKeysQuotaReached(project_uuid: string) {
+    const data = {
+      eventName: AmsEventType.API_KEYS_QUOTA_REACHED,
+      project_uuid,
+    };
+    return await this.callService(data);
+  }
+
   //#endregion
 
   //#region Admin panel functions

@@ -2,6 +2,7 @@ import {
   ApiKeyQueryFilterDto,
   CacheKeyPrefix,
   CreateApiKeyDto,
+  generateRandomCode,
   invalidateCacheKey,
   Lmas,
   LogType,
@@ -9,15 +10,14 @@ import {
   Scs,
   SerializeFor,
   ServiceName,
-  generateRandomCode,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
-import { ApiKey } from './models/api-key.model';
-import { v4 as uuidV4 } from 'uuid';
-import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import * as bcrypt from 'bcryptjs';
+import { v4 as uuidV4 } from 'uuid';
 import { AmsErrorCode } from '../../config/types';
+import { AmsCodeException, AmsValidationException } from '../../lib/exceptions';
 import { ApiKeyRole } from '../role/models/api-key-role.model';
+import { ApiKey } from './models/api-key.model';
 
 /**
  * ApiKeyService class handles API key management, including getting, listing, creating, and deleting API keys.
@@ -95,6 +95,20 @@ export class ApiKeyService {
     ).getList(context, new ApiKeyQueryFilterDto(event.query));
   }
 
+  static async isApiKeysQuotaReached(
+    { project_uuid },
+    context: ServiceContext,
+  ): Promise<boolean> {
+    const key = new ApiKey(project_uuid, context);
+    const numOfApiKeys = await key.getNumOfApiKeysInProject();
+    const maxApiKeysQuota = await new Scs(context).getQuota({
+      quota_id: QuotaCode.MAX_API_KEYS,
+      project_uuid: key.project_uuid,
+    });
+
+    return maxApiKeysQuota?.value && numOfApiKeys >= maxApiKeysQuota?.value;
+  }
+
   /**
    * Creates a new API key using the provided data.
    * @param event An object containing the data for creating a new API key.
@@ -116,12 +130,11 @@ export class ApiKeyService {
     await key.validateOrThrow(AmsValidationException);
 
     //check max api keys quota
-    const numOfApiKeys = await key.getNumOfApiKeysInProject();
-    const maxApiKeysQuota = await new Scs(context).getQuota({
-      quota_id: QuotaCode.MAX_API_KEYS,
-      project_uuid: key.project_uuid,
-    });
-    if (maxApiKeysQuota?.value && numOfApiKeys >= maxApiKeysQuota?.value) {
+    const isQuotaReached = await this.isApiKeysQuotaReached(
+      { project_uuid: key.project_uuid },
+      context,
+    );
+    if (isQuotaReached) {
       throw new AmsCodeException({
         code: AmsErrorCode.MAX_API_KEY_QUOTA_REACHED,
         status: 400,
