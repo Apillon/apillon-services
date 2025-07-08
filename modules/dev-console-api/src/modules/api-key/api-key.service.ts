@@ -142,4 +142,11 @@ export class ApiKeyService {
   async getApiKeyRoles(context: DevConsoleApiContext, id: number) {
     return (await new Ams(context).getApiKeyRoles({ apiKey_id: id })).data;
   }
+
+  async isApiKeysQuotaReached(
+    context: DevConsoleApiContext,
+    project_uuid: string,
+  ) {
+    return (await new Ams(context).isApiKeysQuotaReached(project_uuid)).data;
+  }
 }

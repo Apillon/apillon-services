@@ -48,6 +48,7 @@ export async function processEvent(
     [AmsEventType.API_KEY_ROLES_REMOVE_BY_SERVICE]:
       RoleService.removeApiKeyRolesByService,
     [AmsEventType.GET_API_KEY_ROLES]: RoleService.getApiKeyRoles,
+    [AmsEventType.API_KEYS_QUOTA_REACHED]: ApiKeyService.isApiKeysQuotaReached,
 
     [AmsEventType.DISCORD_LINK]: OauthLinkService.linkDiscord,
     [AmsEventType.DISCORD_UNLINK]: OauthLinkService.unlinkDiscord,
