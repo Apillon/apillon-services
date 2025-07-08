@@ -99,7 +99,7 @@ export class ApiKeyService {
     { project_uuid },
     context: ServiceContext,
   ): Promise<boolean> {
-    const key = new ApiKey(project_uuid, context);
+    const key = new ApiKey({ project_uuid }, context);
     const numOfApiKeys = await key.getNumOfApiKeysInProject();
     const maxApiKeysQuota = await new Scs(context).getQuota({
       quota_id: QuotaCode.MAX_API_KEYS,

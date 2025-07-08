@@ -170,7 +170,8 @@ export class FrontendController {
       });
     }
 
-    if (website.nftCollectionUuid) {
+    if (website.nftCollectionUuid || website.isSimplet) {
+      // If the website is an NFT or Simplet, the github repo is publicly accessible so Github access token is not needed
       const kmsClient = new AWS_KMS();
       await this.deployService.triggerWebDeploy({
         websiteUuid: body.websiteUuid,
@@ -187,8 +188,6 @@ export class FrontendController {
           ),
         ),
       } as WebsiteDeployDtoType);
-    } else if (false) {
-      // TODO: Add support for simplets (differentiate between simplet and github)
     } else {
       await this.deployService.triggerGithubDeploy({
         configId: config.id,

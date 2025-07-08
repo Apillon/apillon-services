@@ -485,6 +485,10 @@ export class SimpletsService {
     collection_uuid: string,
   ) {
     return overrideEnvironmentVariables(backendVariables, [
+      {
+        key: 'APP_ENV',
+        value: env.APP_ENV,
+      },
       { key: 'APILLON_API_URL', value: env.APILLON_API_URL },
       { key: 'APILLON_KEY', value: apillonApiKey },
       { key: 'APILLON_SECRET', value: apillonApiSecret },
@@ -682,5 +686,17 @@ export class SimpletsService {
       service: ServiceName.SIMPLETS,
       location: 'SimpletsService.activateSimpletDeploy',
     });
+  }
+
+  async updateDeployedSimpletBackendStatus(
+    backend_uuid: string,
+    status: ResourceStatus,
+  ) {
+    const simpletDeploy =
+      await this.simpletRepository.getSimpletDeployByBackend(backend_uuid);
+    simpletDeploy.backendStatus = status;
+    await simpletDeploy.update();
+
+    return simpletDeploy;
   }
 }

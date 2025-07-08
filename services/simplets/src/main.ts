@@ -51,6 +51,11 @@ export async function processEvent(
       return controller.archiveSimpletDeploy(event.body.uuid);
     case SimpletsEventType.ACTIVATE_SIMPLET_DEPLOY:
       return controller.activateSimpletDeploy(event.body.uuid);
+    case SimpletsEventType.UPDATE_BACKEND_STATUS:
+      return controller.updateBackendStatus(
+        event.body.backend_uuid,
+        event.body.status,
+      );
     default:
       throw new Error('Invalid Simplet Event Type');
   }

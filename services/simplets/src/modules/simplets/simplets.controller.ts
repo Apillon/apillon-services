@@ -49,7 +49,11 @@ export class SimpletsController {
     simpletDeploy: SimpletDeploy,
   ) {
     // BACKEND DEPLOY
-    if (simplet.backendRepo && !simpletDeploy.backend_uuid) {
+    if (
+      simplet.backendRepo &&
+      (!simpletDeploy.backend_uuid ||
+        simpletDeploy.backendStatus === ResourceStatus.FAILED)
+    ) {
       try {
         simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
         const { backendDeploy } = await this.simpletsService.deployBackend(
@@ -70,7 +74,11 @@ export class SimpletsController {
     }
 
     // FRONTEND DEPLOY
-    if (simplet.frontendRepo && !simpletDeploy.frontend_uuid) {
+    if (
+      simplet.frontendRepo &&
+      (!simpletDeploy.frontend_uuid ||
+        simpletDeploy.frontendStatus === ResourceStatus.FAILED)
+    ) {
       try {
         simpletDeploy.frontendStatus = ResourceStatus.DEPLOYING;
         simpletDeploy.frontend_uuid = await this.simpletsService.deployFrontend(
@@ -400,4 +408,30 @@ export class SimpletsController {
   }
 
   //#endregion
+  updateBackendStatus(backend_uuid: string, status: ResourceStatus) {
+    this.logging.writeLog({
+      logType: LogType.INFO,
+      message: `Updating backend status to ${status} for backend with uuid ${backend_uuid}.`,
+      service: ServiceName.SIMPLETS,
+      location: 'SimpletsController.updateBackendStatus',
+    });
+
+    try {
+      return this.simpletsService.updateDeployedSimpletBackendStatus(
+        backend_uuid,
+        status,
+      );
+    } catch (e: unknown) {
+      const message = `An unexpected error occurred while updating backend status for uuid ${backend_uuid}: ${e instanceof Error ? e.message : String(e)}.`;
+      this.logging.writeLog({
+        sendAdminAlert: true,
+        logType: LogType.ERROR,
+        message,
+        service: ServiceName.SIMPLETS,
+        location: 'SimpletsController.updateBackendStatus',
+        data: e,
+      });
+      throw e;
+    }
+  }
 }

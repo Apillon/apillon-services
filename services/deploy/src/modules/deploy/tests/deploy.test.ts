@@ -150,6 +150,7 @@ describe('DeployService tests', () => {
         new PhalaDockerDeployStrategy(phalaClient),
         new SimpletsMicroservice(context),
         new Scs(context),
+        new Lmas(),
       ),
       encryptionService,
     );
@@ -158,10 +159,13 @@ describe('DeployService tests', () => {
   describe('Backend Deploys', () => {
     beforeEach(async () => {
       jest.spyOn(phalaClient, 'getAvailablePods').mockResolvedValueOnce({
+        name: 'sample-teepod',
         nodes: [
           // @ts-ignore
           {
+            name: 'node-1',
             teepod_id: 456,
+            support_onchain_kms: false,
             images: [
               { name: 'image3', version: [3, 0, 0], is_dev: true },
               { name: 'image4', version: [4, 0, 0], is_dev: true },
@@ -169,7 +173,9 @@ describe('DeployService tests', () => {
           },
           // @ts-ignore
           {
+            name: 'node-2',
             teepod_id: 123,
+            support_onchain_kms: false,
             images: [
               { name: 'image1', version: [1, 0, 0], is_dev: false },
               { name: 'image2', version: [2, 3, 1], is_dev: false },

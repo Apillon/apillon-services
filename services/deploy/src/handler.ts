@@ -3,6 +3,7 @@ import {
   AWS_KMS,
   EncryptionService,
   env,
+  Lmas,
   Scs,
   SimpletsMicroservice,
 } from '@apillon/lib';
@@ -61,6 +62,7 @@ const lambdaHandler: Handler = async (
       phalaDockerDeployStrategy,
       new SimpletsMicroservice(serviceContext),
       new Scs(serviceContext),
+      new Lmas(),
     ),
     encryptionService,
   );

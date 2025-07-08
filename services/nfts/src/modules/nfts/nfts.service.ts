@@ -905,7 +905,7 @@ export class NftsService {
   ) {
     body.idsToMint ||= [];
     console.log(
-      `Minting NFT Collection ${body.collection_uuid} to wallet address: ${body.receivingAddress}`,
+      `Minting ${body.quantity} NFTs for Collection ${body.collection_uuid} to wallet address: ${body.receivingAddress}`,
     );
 
     const collection: Collection = await new Collection(
@@ -982,12 +982,7 @@ export class NftsService {
             collection.contractAddress,
           );
 
-          const minted =
-            (collection.collectionStatus != CollectionStatus.DEPLOYED &&
-              collection.collectionStatus != CollectionStatus.TRANSFERED) ||
-            !collection.contractAddress
-              ? 0
-              : await evmContractClient.query<number>('totalSupply');
+          const minted = await evmContractClient.getTotalSupply();
           await NftsService.checkMintConditions(
             body,
             context,
@@ -1334,7 +1329,7 @@ export class NftsService {
     if (
       !collection.exists() ||
       collection.contractAddress == null ||
-      collection.collectionStatus == CollectionStatus.TRANSFERED
+      collection.collectionStatus != CollectionStatus.DEPLOYED
     ) {
       throw new NftsCodeException({
         status: 400,
@@ -1363,6 +1358,7 @@ export class NftsService {
       throw new NftsCodeException({
         status: 500,
         code: NftsErrorCode.MINT_NFT_SUPPLY_ERROR,
+        errorMessage: `Collection max supply reached (minted: ${alreadyMintedCount}, mint:${params.quantity}, max:${collection.maxSupply})`,
         context,
         sourceFunction: 'mintNftTo()',
       });
