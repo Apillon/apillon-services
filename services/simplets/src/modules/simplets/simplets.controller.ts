@@ -77,7 +77,9 @@ export class SimpletsController {
     if (
       simplet.frontendRepo &&
       (!simpletDeploy.frontend_uuid ||
-        simpletDeploy.frontendStatus === ResourceStatus.FAILED)
+        [ResourceStatus.FAILED, ResourceStatus.CANCELED].includes(
+          simpletDeploy.frontendStatus,
+        ))
     ) {
       try {
         simpletDeploy.frontendStatus = ResourceStatus.DEPLOYING;
