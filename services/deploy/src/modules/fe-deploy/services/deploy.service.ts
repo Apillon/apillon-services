@@ -90,9 +90,8 @@ export class DeployService {
     console.info('Triggered web deploy: ', body);
     const isNftWebsiteDeploy = DeployService.isNftWebsiteDeployDto(body);
 
+    const kmsClient = new AWS_KMS();
     if (isNftWebsiteDeploy && body.new) {
-      const kmsClient = new AWS_KMS();
-
       const websiteConfigParams = getNftWebsiteConfig(
         body.type,
         body.contractAddress,
@@ -124,8 +123,6 @@ export class DeployService {
       await deploymentConfig.insert();
     } else if (!isNftWebsiteDeploy && body.new) {
       const webBody = body as WebsiteDeployDtoType;
-      const kmsClient = new AWS_KMS();
-
       const deploymentConfig = this.deploymentConfigRepository.create({
         repoUrl: webBody.url,
         repoName: 'Web',

@@ -1,7 +1,11 @@
 import {
+  Ams,
+  AWS_KMS,
   CreateDeploymentConfigDtoType,
   DeleteDeploymentConfigType,
   DeploymentBuildQueryFilter,
+  env,
+  GetDeployConfigByRepoIdType,
   GetDeploymentConfigType,
   GetEnvironmentVariablesType,
   GetProjectConfigType,
@@ -9,15 +13,12 @@ import {
   GithubUnlinkDtoType,
   ListReposType,
   NftWebsiteDeployDtoType,
+  RedeployWebsiteType,
   SetEnvironmentVariablesDtoType,
   StorageMicroservice,
   TriggerGithubDeployDtoType,
   UpdateDeploymentConfigDtoType,
   WebsiteDeployDtoType,
-  GetDeployConfigByRepoIdType,
-  env,
-  AWS_KMS,
-  Ams,
 } from '@apillon/lib';
 import { DeployService } from './services/deploy.service';
 import { DeploymentConfigService } from './services/deployment-config.service';
@@ -28,7 +29,6 @@ import { DeploymentBuildRepository } from './repositories/deployment-build.repos
 import { GithubConfigRepository } from './repositories/github-config.repository';
 import { DeploymentConfigRepository } from './repositories/deployment-config.repository';
 import { GithubService } from './services/github.service';
-import { RedeployWebsiteType } from '@apillon/lib';
 import { DeployCodeException } from '../../lib/exceptions';
 import { DeployErrorCode } from '../../config/types';
 
@@ -176,7 +176,10 @@ export class FrontendController {
       await this.deployService.triggerWebDeploy({
         websiteUuid: body.websiteUuid,
         apiKey: config.apiKey,
-        apiSecret: config.apiSecret,
+        apiSecret: await kmsClient.encrypt(
+          config.apiSecret,
+          env.DEPLOY_KMS_KEY_ID,
+        ),
         installCommand: config.installCommand,
         buildCommand: config.buildCommand,
         buildDirectory: config.buildDirectory,

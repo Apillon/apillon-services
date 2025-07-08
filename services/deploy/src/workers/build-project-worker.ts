@@ -1,22 +1,22 @@
 import {
-  AWS_KMS,
-  AppEnvironment,
   Ams,
+  AppEnvironment,
   AttachedServiceType,
+  AWS_KMS,
   Context,
   DefaultApiKeyRole,
   DeploymentBuildStatus,
+  env,
   Lmas,
   ResourceStatus,
   SerializeFor,
   ServiceName,
-  env,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
-  WorkerDefinition,
   sendToWorkerQueue,
+  WorkerDefinition,
 } from '@apillon/workers-lib';
 import { spawn } from 'child_process';
 import { DeploymentBuild } from '../modules/fe-deploy/models/deployment-build.model';
@@ -201,7 +201,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
 
     let url = data.url;
     let secret = data.apiSecret;
-
+    const kmsClient = new AWS_KMS();
     if (data.isTriggeredByWebhook) {
       const githubProjectConfig = await new GithubProjectConfig(
         {},
@@ -217,9 +217,6 @@ export class BuildProjectWorker extends BaseQueueWorker {
         });
         return;
       }
-
-      const kmsClient = new AWS_KMS();
-
       secret = await kmsClient.decrypt(data.apiSecret, env.DEPLOY_KMS_KEY_ID);
 
       const accessToken = githubProjectConfig.refresh_token
@@ -228,7 +225,6 @@ export class BuildProjectWorker extends BaseQueueWorker {
 
       url = url.replace('https://', `https://oauth2:${accessToken}@`);
     } else if (data.isRedeploy) {
-      const kmsClient = new AWS_KMS();
       secret = await kmsClient.decrypt(data.apiSecret, env.DEPLOY_KMS_KEY_ID);
     }
 
