@@ -49,7 +49,11 @@ export class SimpletsController {
     simpletDeploy: SimpletDeploy,
   ) {
     // BACKEND DEPLOY
-    if (simplet.backendRepo && !simpletDeploy.backend_uuid) {
+    if (
+      simplet.backendRepo &&
+      (!simpletDeploy.backend_uuid ||
+        simpletDeploy.backendStatus === ResourceStatus.FAILED)
+    ) {
       try {
         simpletDeploy.backendStatus = ResourceStatus.DEPLOYING;
         const { backendDeploy } = await this.simpletsService.deployBackend(
@@ -70,7 +74,11 @@ export class SimpletsController {
     }
 
     // FRONTEND DEPLOY
-    if (simplet.frontendRepo && !simpletDeploy.frontend_uuid) {
+    if (
+      simplet.frontendRepo &&
+      (!simpletDeploy.frontend_uuid ||
+        simpletDeploy.frontendStatus === ResourceStatus.FAILED)
+    ) {
       try {
         simpletDeploy.frontendStatus = ResourceStatus.DEPLOYING;
         simpletDeploy.frontend_uuid = await this.simpletsService.deployFrontend(
