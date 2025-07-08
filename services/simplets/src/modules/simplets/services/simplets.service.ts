@@ -406,15 +406,18 @@ export class SimpletsService {
       service: ServiceName.SIMPLETS,
       location: 'SimpletsService.deploySimplet',
     });
-    const website_uuid = await this.createWebsite(
-      simpletDeploy.simplet_uuid,
-      new CreateWebsiteDto({}, this.context).populate({
-        project_uuid: simpletDeploy.project_uuid,
-        name: `${simpletDeploy.name} (Website)`,
-        source: WebsiteSource.GITHUB,
-        isSimplet: true,
-      }),
-    );
+    const isNewWebsite = !simpletDeploy.frontend_uuid;
+    const website_uuid = isNewWebsite
+      ? await this.createWebsite(
+          simpletDeploy.simplet_uuid,
+          new CreateWebsiteDto({}, this.context).populate({
+            project_uuid: simpletDeploy.project_uuid,
+            name: `${simpletDeploy.name} (Website)`,
+            source: WebsiteSource.GITHUB,
+            isSimplet: true,
+          }),
+        )
+      : simpletDeploy.frontend_uuid;
     const frontendVariables = await this.encryptionService.decryptJson<
       DeploySecretDto[]
     >(simpletDeploy.frontendVariables);
@@ -438,7 +441,7 @@ export class SimpletsService {
         ),
         apiKey: simpletDeploy.apillonApiKey,
         apiSecret: apillonApiSecret,
-        new: true,
+        new: isNewWebsite,
       }),
     );
 
