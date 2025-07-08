@@ -96,6 +96,9 @@ export class DeployService {
         body.type,
         body.contractAddress,
         body.chainId,
+        body.logoUrl,
+        body.bannerUrl,
+        body.embeddedWalletUuid,
       );
       const deploymentConfig = this.deploymentConfigRepository.create({
         repoUrl: websiteConfigParams.url,
@@ -162,7 +165,14 @@ export class DeployService {
       isSimplet: website.isSimplet,
       ...body,
       ...(isNftWebsiteDeploy && body.new
-        ? getNftWebsiteConfig(body.type, body.contractAddress, body.chainId)
+        ? getNftWebsiteConfig(
+            body.type,
+            body.contractAddress,
+            body.chainId,
+            body.logoUrl,
+            body.bannerUrl,
+            body.embeddedWalletUuid,
+          )
         : {}),
       isRedeploy: !body.new,
     } as BuildProjectWorkerInterface;

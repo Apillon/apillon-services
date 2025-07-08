@@ -68,4 +68,11 @@ export class DeployNftWebsiteDto extends ModelBase {
     ],
   })
   public type: NftWebsiteType;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public embeddedWallet?: string;
 }

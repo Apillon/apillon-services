@@ -6,6 +6,9 @@ export const getNftWebsiteConfig = (
   type: NftWebsiteType,
   contractAddress: string,
   chainId: number,
+  logoUrl?: string,
+  bannerUrl?: string,
+  embeddedWalletUuid?: string,
 ): {
   variables: {
     key: string;
@@ -20,20 +23,32 @@ export const getNftWebsiteConfig = (
   switch (type) {
     case NftWebsiteType.PLAIN_JS:
       return {
-        installCommand: './generate-config.sh',
-        buildCommand: './build.sh',
+        installCommand: 'npm install',
+        buildCommand: 'npm run build',
         buildDirectory: './dist',
         url: 'https://github.com/Apillon/nft-template.git',
         variables: [
           {
-            key: 'CONTRACT_ADDRESS',
+            key: 'VITE_CONTRACT_ADDRESS',
             value: contractAddress,
           },
           {
-            key: 'CHAIN_ID',
+            key: 'VITE_CHAIN_ID',
             value: hexChainId,
           },
-        ],
+          {
+            key: 'VITE_IMG_LOGO',
+            value: logoUrl,
+          },
+          {
+            key: 'VITE_IMG_BANNER',
+            value: bannerUrl,
+          },
+          {
+            key: 'VITE_EMBEDDED_WALLET_CLIENT',
+            value: embeddedWalletUuid,
+          },
+        ].filter((v) => v.value !== undefined && v.value !== null),
       };
     case NftWebsiteType.REACT:
       return {
@@ -50,7 +65,20 @@ export const getNftWebsiteConfig = (
             key: 'VITE_CHAIN_ID',
             value: hexChainId,
           },
-        ],
+
+          {
+            key: 'VITE_IMG_LOGO',
+            value: logoUrl,
+          },
+          {
+            key: 'VITE_IMG_BANNER',
+            value: bannerUrl,
+          },
+          {
+            key: 'VITE_EMBEDDED_WALLET_CLIENT',
+            value: embeddedWalletUuid,
+          },
+        ].filter((v) => v.value !== undefined && v.value !== null),
       };
     case NftWebsiteType.VUE:
       return {
@@ -60,14 +88,27 @@ export const getNftWebsiteConfig = (
         url: 'https://github.com/Apillon/nft-template-vue.git',
         variables: [
           {
-            key: 'CONTRACT_ADDRESS',
+            key: 'NUXT_PUBLIC_CONTRACT_ADDRESS',
             value: contractAddress,
           },
           {
-            key: 'CHAIN_ID',
+            key: 'NUXT_PUBLIC_CHAIN_ID',
             value: hexChainId,
           },
-        ],
+
+          {
+            key: 'NUXT_PUBLIC_IMG_LOGO',
+            value: logoUrl,
+          },
+          {
+            key: 'NUXT_PUBLIC_IMG_BANNER',
+            value: bannerUrl,
+          },
+          {
+            key: 'NUXT_PUBLIC_EMBEDDED_WALLET_CLIENT',
+            value: embeddedWalletUuid,
+          },
+        ].filter((v) => v.value !== undefined && v.value !== null),
       };
     default:
       throw new DeployCodeException({
