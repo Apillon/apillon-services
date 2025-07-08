@@ -176,10 +176,7 @@ export class FrontendController {
       await this.deployService.triggerWebDeploy({
         websiteUuid: body.websiteUuid,
         apiKey: config.apiKey,
-        apiSecret: await kmsClient.encrypt(
-          config.apiSecret,
-          env.DEPLOY_KMS_KEY_ID,
-        ),
+        apiSecret: config.apiSecret,
         installCommand: config.installCommand,
         buildCommand: config.buildCommand,
         buildDirectory: config.buildDirectory,
