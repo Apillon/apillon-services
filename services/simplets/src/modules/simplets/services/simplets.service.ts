@@ -485,6 +485,10 @@ export class SimpletsService {
     collection_uuid: string,
   ) {
     return overrideEnvironmentVariables(backendVariables, [
+      {
+        key: 'APP_ENV',
+        value: env.APP_ENV,
+      },
       { key: 'APILLON_API_URL', value: env.APILLON_API_URL },
       { key: 'APILLON_KEY', value: apillonApiKey },
       { key: 'APILLON_SECRET', value: apillonApiSecret },
