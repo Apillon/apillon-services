@@ -130,7 +130,7 @@ export class ApiKeyService {
     await key.validateOrThrow(AmsValidationException);
 
     //check max api keys quota
-    const isQuotaReached = await this.isApiKeysQuotaReached(
+    const isQuotaReached = await ApiKeyService.isApiKeysQuotaReached(
       { project_uuid: key.project_uuid },
       context,
     );
