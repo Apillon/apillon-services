@@ -154,7 +154,7 @@ export class DeployService {
     } else if (website.isSimplet && !body.new) {
       // WORKAROUND: when redeploying simplet we receive unencrypted secret
       // but deploy service expects it encrypted
-      body.apiKey = await kmsClient.encrypt(
+      body.apiSecret = await kmsClient.encrypt(
         body.apiSecret,
         env.DEPLOY_KMS_KEY_ID,
       );
