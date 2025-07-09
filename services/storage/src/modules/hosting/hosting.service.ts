@@ -37,6 +37,7 @@ import {
   StorageErrorCode,
   WebsiteDomainStatus,
 } from '../../config/types';
+import { checkDomainDns } from '../../lib/domains';
 import {
   StorageCodeException,
   StorageNotFoundException,
@@ -49,7 +50,6 @@ import { File } from '../storage/models/file.model';
 import { StorageService } from '../storage/storage.service';
 import { Deployment } from './models/deployment.model';
 import { Website } from './models/website.model';
-import { checkDomainDns } from '../../lib/domains';
 
 export class HostingService {
   //#region web page CRUD
@@ -280,7 +280,7 @@ export class HostingService {
     website.canModify(context);
 
     website.domain = null;
-    website.domainChangeDate = new Date();
+    // website.domainChangeDate = new Date();
 
     await website.update();
 
