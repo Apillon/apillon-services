@@ -89,6 +89,7 @@ export class DeployService {
   async triggerWebDeploy(body: NftWebsiteDeployDtoType | WebsiteDeployDtoType) {
     console.info('Triggered web deploy: ', body);
     const isNftWebsiteDeploy = DeployService.isNftWebsiteDeployDto(body);
+    const website = (await this.storageMS.getWebsite(body.websiteUuid)).data;
 
     const kmsClient = new AWS_KMS();
     if (isNftWebsiteDeploy && body.new) {
@@ -150,15 +151,19 @@ export class DeployService {
       await deploymentConfig.validateOrThrow(ModelValidationException);
 
       await deploymentConfig.insert();
+    } else if (website.isSimplet && !body.new) {
+      // WORKAROUND: when redeploying simplet we receive unencrypted secret
+      // but deploy service expects it encrypted
+      body.apiKey = await kmsClient.encrypt(
+        body.apiSecret,
+        env.DEPLOY_KMS_KEY_ID,
+      );
     }
 
     const deploymentBuild = this.deploymentBuildRepository.create({
       websiteUuid: body.websiteUuid,
     });
-
     await deploymentBuild.insert();
-
-    const website = (await this.storageMS.getWebsite(body.websiteUuid)).data;
 
     const parameters = {
       deploymentBuildId: deploymentBuild.id,
