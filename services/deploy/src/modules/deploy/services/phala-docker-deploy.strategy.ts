@@ -1,14 +1,16 @@
-import { x25519 } from '@noble/curves/ed25519';
 import {
   AppEnvironment,
   DeployInstanceDto,
+  DeploySecretDto,
   env,
   ResizeInstanceDto,
+  VirtualMachineDto,
 } from '@apillon/lib';
-import { PhalaDockerClient } from '../clients/phala-tee.client';
+import { PhalaCloudClient } from '../clients/phala-cloud.client';
 import {
   IBackendDeployStrategy,
   ICreateVMResponse,
+  IDeployDockerResult,
   IVMAttestationResponse,
   IVMStats,
 } from '../types';
@@ -16,39 +18,60 @@ import { Backend } from '../models/backend.model';
 import { DeployCodeException } from '../../../lib/exceptions';
 import { DeployErrorCode } from '../../../config/types';
 import axios from 'axios';
+import { getBackendStatus } from '../helpers/phala-statuses';
 
 export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
-  private client: PhalaDockerClient;
+  private client: PhalaCloudClient;
 
-  constructor(client: PhalaDockerClient) {
+  constructor(client: PhalaCloudClient) {
     this.client = client;
   }
 
   async deployDockerCompose(
-    backend_uuid: string,
     body: DeployInstanceDto,
-  ): Promise<ICreateVMResponse> {
-    const secrets = body.secrets;
-    const virtualMachine = body.virtualMachine;
+  ): Promise<IDeployDockerResult> {
     try {
       const pod = await this.client.getAvailablePods();
-      if (pod.nodes.length === 0) {
+      if (pod.nodes.length <= 0) {
         throw new DeployCodeException({
           status: 500,
           code: DeployErrorCode.DEPLOY_POD_NOT_FOUND,
           errorMessage: 'No available pods found.',
         });
       }
-      const podId = pod.nodes[0].teepod_id;
+
       const isProduction = env.APP_ENV === AppEnvironment.PROD;
-      const latestImage = pod.nodes[0].images
+      // NOTE: for now we have to use prod with kms disabled (when v0.5.x nodes
+      // shipped phala will also introduce new API for deployment & sdks)
+      const usableNodes = pod.nodes.filter(
+        (node) =>
+          node.name?.toLowerCase().includes('prod') &&
+          node.support_onchain_kms === false,
+      );
+      if (usableNodes.length <= 0) {
+        throw new DeployCodeException({
+          status: 500,
+          code: DeployErrorCode.DEPLOY_POD_NOT_FOUND,
+          errorMessage: `No usable nodes found.`,
+        });
+      }
+      const selectedNodeIndex = Math.floor(Math.random() * usableNodes.length);
+      const selectedNode = pod.nodes[selectedNodeIndex];
+      const podId = selectedNode.teepod_id;
+      // get image with latest version
+      const latestImage = selectedNode.images
         .filter((image: any) => image.is_dev === !isProduction)
         .reduce((latest: any, current: any) => {
           const currentVersion = parsePhalaImageVersion(current.version);
           const latestVersion = latest
             ? parsePhalaImageVersion(latest.version)
             : 0;
-          return currentVersion > latestVersion ? current : latest;
+          return currentVersion > latestVersion &&
+            // NOTE: for now we need to use version 3, later we'll switch to v5 when phala is ready
+            currentVersion > 300 &&
+            currentVersion < 400
+            ? current
+            : latest;
         }, null);
       const imageName = latestImage?.name;
       if (!imageName) {
@@ -58,44 +81,73 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
           errorMessage: 'No suitable image was found.',
         });
       }
-      const vmConfig = {
-        name: backend_uuid,
-        image: imageName,
-        teepod_id: podId,
-        compose_manifest: {
-          name: backend_uuid,
-          features: ['kms', 'tproxy-net'],
-          docker_compose_file: body.dockerCompose,
-        },
-        // specs
-        vcpu: virtualMachine.cpuCount,
-        memory: virtualMachine.memory,
-        disk_size: virtualMachine.diskSize,
-        advanced_features: {
-          tproxy: true,
-          kms: true,
-          public_sys_info: true,
-          public_logs: false,
-          // docker registry
-          docker_config: {
-            username: '',
-            password: '',
-            registry: null,
-          },
-          listed: false,
-        },
-      };
-      const withPubKey = await this.client.getPublicKey(vmConfig);
-      const encryptedEnv = await this.encryptEnvVariables(
-        secrets,
-        withPubKey.app_env_encrypt_pubkey,
+      console.log(
+        `Selected Phala image ${imageName} and version ${latestImage?.version}`,
       );
-      return await this.client.createCVM({
+
+      const vmConfig = this.getVmConfig(
+        body.name,
+        imageName,
+        podId,
+        body.dockerCompose,
+        body.virtualMachine,
+      );
+      const publicKey = await this.client.getPublicKey(vmConfig);
+      const encryptedEnv = await PhalaCloudClient.encryptEnvVariables(
+        body.secrets,
+        publicKey.app_env_encrypt_pubkey,
+      );
+      const result = await this.client.createCVM({
         ...vmConfig,
         encrypted_env: encryptedEnv,
-        app_env_encrypt_pubkey: withPubKey.app_env_encrypt_pubkey,
-        app_id_salt: withPubKey.app_id_salt,
+        app_env_encrypt_pubkey: publicKey.app_env_encrypt_pubkey,
+        app_id_salt: publicKey.app_id_salt,
       });
+      if (!result) {
+        throw new DeployCodeException({
+          status: 500,
+          code: DeployErrorCode.DEPLOY_DEPLOY_FAILED,
+          errorMessage: 'No data returned from deploy',
+        });
+      }
+      // TODO: vcpu as DTO?
+      // TODO: add dto ICreateVMResponse?
+      const appId = result.app_id;
+      const teepodName = result.teepod?.name;
+      const externalStatus = result.status;
+      const data = {
+        appId: appId,
+        id: result.id,
+        name: result.name,
+        status: externalStatus,
+        teepodId: result.teepod_id,
+        teepod: {
+          id: result.teepod?.id,
+          name: teepodName,
+        },
+        userId: result.user_id,
+        vmUuid: result.vm_uuid,
+        instanceId: result.instance_id,
+        appUrl: result.app_url,
+        baseImage: result.base_image,
+        vcpu: result.vcpu,
+        memory: result.memory,
+        diskSize: result.disk_size,
+        manifestVersion: result.manifest_version,
+        version: result.version,
+        runner: result.runner,
+        dockerComposeFile: result.docker_compose_file,
+        features: result.features,
+        createdAt: result.created_at,
+        encryptedEnvPubkey: result.encrypted_env_pubkey,
+        dashboardUrl: `https://cloud.phala.network/dashboard/cvms/app_${appId}`,
+      };
+      return {
+        backendStatus: getBackendStatus(externalStatus),
+        instanceId: appId,
+        url: `https://${appId}-80.dstack-${teepodName}.phala.network`,
+        data,
+      };
     } catch (error: unknown) {
       if (error instanceof DeployCodeException) {
         console.error(`Failed to deploy CVM: ${error.message}`);
@@ -135,6 +187,59 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
     }
   }
 
+  private getVmConfig(
+    instanceName: string,
+    imageName: string,
+    podId: number,
+    dockerCompose: string,
+    virtualMachine: VirtualMachineDto,
+  ) {
+    return {
+      name: instanceName,
+      image: imageName,
+      teepod_id: podId,
+      compose_manifest: {
+        name: instanceName,
+        features: ['kms', 'tproxy-net'],
+        docker_compose_file: dockerCompose,
+      },
+      // specs
+      vcpu: virtualMachine.cpuCount,
+      memory: virtualMachine.memory,
+      disk_size: virtualMachine.diskSize,
+      advanced_features: {
+        tproxy: true,
+        kms: true,
+        public_sys_info: true,
+        public_logs: false,
+        // docker registry
+        docker_config: {
+          username: '',
+          password: '',
+          registry: null,
+        },
+        listed: false,
+      },
+    };
+  }
+
+  async updateDockerCompose(backend: Backend, secrets: DeploySecretDto[]) {
+    const cvmDetails = await this.client.getCVMCompose(backend.instanceId);
+    const encryptedEnv = await PhalaCloudClient.encryptEnvVariables(
+      secrets,
+      cvmDetails.env_pubkey,
+    );
+
+    return this.client.updateCVM(backend.instanceId, {
+      compose_manifest: {
+        ...cvmDetails.compose_file,
+        // override Phala docker compose file with one from DB
+        docker_compose_file: backend.dockerCompose,
+      },
+      encrypted_env: encryptedEnv,
+    });
+  }
+
   async getInstanceDetails(backend: Backend) {
     return await this.client.getCVMDetails(backend.instanceId);
   }
@@ -147,10 +252,20 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
     return await this.client.startCVM(backend.instanceId);
   }
 
+  /**
+   * Shuts down instance gracefully.
+   * Equivalent to running command "sudo shutdown now" on instance.
+   * @param backend
+   */
   async shutdownInstance(backend: Backend): Promise<ICreateVMResponse> {
     return await this.client.shutdownCVM(backend.instanceId);
   }
 
+  /**
+   * Abruptly shuts down instance.
+   * Equivalent to plugging off power directly, without saving any data/state.
+   * @param backend
+   */
   async stopInstance(backend: Backend): Promise<ICreateVMResponse> {
     return await this.client.stopCVM(backend.instanceId);
   }
@@ -159,6 +274,10 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
     return await this.client.restartCVM(backend.instanceId);
   }
 
+  /**
+   * Stops instance and destroys storage.
+   * @param backend
+   */
   async destroyInstance(backend: Backend): Promise<void> {
     return await this.client.destroyCVM(backend.instanceId);
   }
@@ -193,65 +312,17 @@ export class PhalaDockerDeployStrategy implements IBackendDeployStrategy {
       });
     }
   }
-
-  //region HELPER
-  private async encryptEnvVariables(
-    envs: Record<string, any>[],
-    publicKeyHex: string,
-  ): Promise<string> {
-    const envsJson = JSON.stringify({ env: envs });
-    const privateKey = x25519.utils.randomPrivateKey();
-    const publicKey = x25519.getPublicKey(privateKey);
-    const remotePubkey = hexToUint8Array(publicKeyHex);
-    const shared = x25519.getSharedSecret(privateKey, remotePubkey);
-    const importedShared = await crypto.subtle.importKey(
-      'raw',
-      shared,
-      { name: 'AES-GCM', length: 256 },
-      true,
-      ['encrypt'],
-    );
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const encrypted = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
-      importedShared,
-      new TextEncoder().encode(envsJson),
-    );
-    const result = new Uint8Array(
-      publicKey.length + iv.length + encrypted.byteLength,
-    );
-    result.set(publicKey);
-    result.set(iv, publicKey.length);
-    result.set(new Uint8Array(encrypted), publicKey.length + iv.length);
-
-    return uint8ArrayToHex(result);
-  }
-
-  //endregion
 }
 
 /**
- * Converts a hexadecimal string to a Uint8Array.
+ * Parses and converts a version array into a numerical value representing the version.
  *
- * @param hex - The hexadecimal string to convert. May optionally begin with "0x".
- * @return The resulting Uint8Array converted from the hexadecimal string.
- */
-function hexToUint8Array(hex: string) {
-  hex = hex.startsWith('0x') ? hex.slice(2) : hex;
-  return new Uint8Array(hex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
-}
-
-/**
- * Converts a Uint8Array into a hexadecimal string representation.
+ * This function takes an array of numbers, where each number represents a part of a version (e.g., major, minor, patch: `[1, 5, 7]`),
+ * and calculates a single numerical value by assigning decreasing weights to each segment of the version.
  *
- * @param buffer - The Uint8Array to convert.
- * @return The hexadecimal string representation of the input buffer.
+ * @param versionArray - An array of numbers representing the individual parts of the version
+ *                                  (e.g., [major, minor, patch]).
+ * @returns A computed numeric value representing the version, with each part weighted appropriately.
  */
-function uint8ArrayToHex(buffer: Uint8Array): string {
-  return Array.from(buffer)
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
-}
-
 const parsePhalaImageVersion = (versionArray: number[]) =>
   versionArray.reduce((acc, num, idx) => acc + num * 10 ** (2 * (2 - idx)), 0);

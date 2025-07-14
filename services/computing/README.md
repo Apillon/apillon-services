@@ -77,9 +77,12 @@ ACURAST_IPFS_LAMBDA_URL: string;
 ACURAST_GATEWAY_URL: string;
 ```
 
-## Schrodinger's NFT service
+## Schrodinger's NFT service (DEPRECATED)
 
-The schrodinger's NFT service/tool is currently powered by the computing microservice and Phala. You can view a demo of the service and learn how it works at [https://phala-demo.apillon.io/](https://phala-demo.apillon.io/)
+The schrodinger's NFT service/tool was previously powered by the computing
+microservice and Phala. This functionality is now deprecated and will be removed
+in a future release. All API calls to this service will return a 410 Gone status
+code.
 
 ## Deployment
 

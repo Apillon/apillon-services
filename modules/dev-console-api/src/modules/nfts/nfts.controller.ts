@@ -8,7 +8,6 @@ import {
   DefaultUserRole,
   DeployCollectionDTO,
   MintNftDTO,
-  NestMintNftDTO,
   NFTCollectionQueryFilter,
   RoleGroup,
   SetCollectionBaseUriDTO,
@@ -103,7 +102,10 @@ export class NftsController {
     // multer is executed in global middleware for this endpoint, meaning
     // multi-part form data is converted to body and files keys of request
     // automatically (no need for file interceptor here)
-    const file = req.files.find((f) => f.fieldname === 'metadata');
+    const file =
+      req.files && Array.isArray(req.files)
+        ? req.files.find((f) => f.fieldname === 'metadata')
+        : null;
     if (!file) {
       throw new ValidationException({
         code: ValidatorErrorCode.DATA_NOT_PRESENT,
@@ -202,22 +204,6 @@ export class NftsController {
     @Body() body: MintNftDTO,
   ) {
     return await this.nftsService.mintNftTo(context, collectionUuid, body);
-  }
-
-  @Post('/collections/:collectionUuid/nest-mint')
-  @Permissions(
-    { role: DefaultUserRole.PROJECT_OWNER },
-    { role: DefaultUserRole.PROJECT_ADMIN },
-    { role: DefaultUserRole.PROJECT_USER },
-  )
-  @Validation({ dto: NestMintNftDTO })
-  @UseGuards(ValidationGuard, AuthGuard)
-  async nestMintNft(
-    @Ctx() context: DevConsoleApiContext,
-    @Param('collectionUuid') collectionUuid: string,
-    @Body() body: NestMintNftDTO,
-  ) {
-    return await this.nftsService.nestMintNftTo(context, collectionUuid, body);
   }
 
   @Post('collections/:collectionUuid/set-base-uri')

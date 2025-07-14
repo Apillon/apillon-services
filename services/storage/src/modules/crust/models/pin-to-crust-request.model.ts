@@ -293,4 +293,41 @@ export class PinToCrustRequest extends AdvancedSQLModel {
       AND status <> ${SqlModelStatus.DELETED};`,
     );
   }
+
+  public async skipRequests(ids: number[]): Promise<void> {
+    if (!ids.length) {
+      return;
+    }
+
+    const context = this.getContext();
+
+    await context.mysql.paramExecute(
+      `UPDATE \`${this.tableName}\`
+      SET pinningStatus = ${CrustPinningStatus.SKIPPED}
+      WHERE id IN (${ids.join(',')})
+      `,
+    );
+  }
+
+  public async unskipByProjectUuids(ids: string[]): Promise<void> {
+    if (!ids.length) {
+      return;
+    }
+
+    const context = this.getContext();
+
+    await context.mysql.paramExecute(
+      `UPDATE \`${this.tableName}\`
+        SET pinningStatus = ${CrustPinningStatus.PENDING},
+        numOfExecutions = 0,
+        renewalDate = NOW()
+        WHERE bucket_uuid IN (
+          SELECT bucket_uuid
+          FROM \`${DbTables.BUCKET}\`
+          WHERE project_uuid IN (${ids.map((id) => `'${id}'`).join(',')})
+        ) AND
+        pinningStatus = ${CrustPinningStatus.SKIPPED}
+      `,
+    );
+  }
 }

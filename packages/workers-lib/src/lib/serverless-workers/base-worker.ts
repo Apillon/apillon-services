@@ -3,16 +3,23 @@ import { LogOutput, ServerlessWorker, WorkerDefinition } from '.';
 import { writeWorkerLog } from '../logger';
 import { WorkerLogStatus } from '../../config/types';
 import { inspect } from 'util';
+
 export abstract class BaseWorker extends ServerlessWorker {
   protected context: Context;
   protected workerName: string;
   protected logPrefix: string;
+  private logger: Lmas;
 
-  public constructor(workerDefinition: WorkerDefinition, context: Context) {
+  public constructor(
+    workerDefinition: WorkerDefinition,
+    context: Context,
+    logger: Lmas = new Lmas(),
+  ) {
     super(workerDefinition);
     this.context = context;
     this.workerName = workerDefinition.workerName;
     this.logPrefix ||= `[${this.workerName}]`;
+    this.logger = logger;
   }
 
   protected async writeEventLog(
@@ -65,7 +72,7 @@ export abstract class BaseWorker extends ServerlessWorker {
         output,
       )
     ) {
-      await new Lmas().writeLog({
+      await this.logger.writeLog({
         logType: options.logType,
         message: options.message,
         location: this.workerName,

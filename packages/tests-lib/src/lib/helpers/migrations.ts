@@ -1,7 +1,7 @@
 import { Migration, MigrationConnection } from 'ts-mysql-migrate';
 import { ConnectionOptions, createPool } from 'mysql2';
 import { AppEnvironment, env } from '@apillon/lib';
-import { StageObject, StageName } from '../interfaces/stage.interface';
+import { StageName, StageObject } from '../interfaces/stage.interface';
 import * as fs from 'node:fs';
 
 export const SQL_CONFIGS: StageObject<ConnectionOptions> = {
@@ -102,6 +102,13 @@ export const SQL_CONFIGS: StageObject<ConnectionOptions> = {
     password: env.DEPLOY_MYSQL_PASSWORD_TEST,
     port: env.DEPLOY_MYSQL_PORT_TEST,
     user: env.DEPLOY_MYSQL_USER_TEST,
+  },
+  [StageName.SIMPLETS]: {
+    host: env.SIMPLETS_MYSQL_HOST_TEST,
+    database: env.SIMPLETS_MYSQL_DATABASE_TEST,
+    password: env.SIMPLETS_MYSQL_PASSWORD_TEST,
+    port: env.SIMPLETS_MYSQL_PORT_TEST,
+    user: env.SIMPLETS_MYSQL_USER_TEST,
   },
 };
 

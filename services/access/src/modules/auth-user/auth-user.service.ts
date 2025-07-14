@@ -15,6 +15,7 @@ import {
   CacheKeyPrefix,
   JwtExpireTime,
   invalidateCacheMatch,
+  LoginType,
 } from '@apillon/lib';
 import { ServiceContext } from '@apillon/service-lib';
 import { AmsErrorCode } from '../../config/types';
@@ -124,7 +125,23 @@ export class AuthUserService {
       event.email,
     );
 
-    if (!authUser.exists() || !authUser.verifyPassword(event.password)) {
+    if (
+      !authUser.exists() ||
+      (event.type !== LoginType.GOOGLE &&
+        !authUser.verifyPassword(event.password))
+    ) {
+      throw await new AmsCodeException({
+        status: 401,
+        code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
+      }).writeToMonitor({
+        logType: LogType.WARN,
+        context,
+        user_uuid: event?.user_uuid,
+        data: event,
+      });
+    }
+
+    if (event.type === LoginType.GOOGLE && !authUser.googleId) {
       throw await new AmsCodeException({
         status: 401,
         code: AmsErrorCode.USER_IS_NOT_AUTHENTICATED,
@@ -149,6 +166,7 @@ export class AuthUserService {
 
     return authUser.serialize(SerializeFor.SERVICE);
   }
+
   /**
    * Authenticates a user using their email and password.
    * @param event An object containing the user's email and password.

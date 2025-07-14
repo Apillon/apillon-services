@@ -1,8 +1,12 @@
 import {
+  Ams,
   CacheKeyPrefix,
   Context,
+  CreateOrUpdateNotificationDto,
   invalidateCacheKey,
   LogType,
+  Mailing,
+  NotificationType,
   PoolConnection,
   SerializeFor,
   ServiceName,
@@ -80,6 +84,10 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
       job.jobId,
     );
 
+    if (!job.account) {
+      return;
+    }
+
     job.publicKey = (
       await client.getJobPublicKeys(job.deployerAddress, job.account, job.jobId)
     )[0].secp256r1;
@@ -120,6 +128,17 @@ export class AcurastJobStatusWorker extends BaseSingleThreadWorker {
     await this.writeLogToDb(
       WorkerLogStatus.INFO,
       `Updating acurast job ${job.jobId} - account: ${job.account}, public key: ${job.publicKey}`,
+    );
+
+    const projectOwner = (
+      await new Ams(this.context).getProjectOwner(job.project_uuid)
+    ).data;
+
+    await new Mailing(this.context).createNotification(
+      new CreateOrUpdateNotificationDto({}, this.context).populate({
+        user_uuid: projectOwner?.user_uuid,
+        type: NotificationType.CLOUD_FUNCTION_DEPLOYED,
+      }),
     );
 
     // Set status of all other jobs to inactive

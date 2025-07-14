@@ -1,5 +1,9 @@
 import {
+  Ams,
+  CreateOrUpdateNotificationDto,
   LogType,
+  Mailing,
+  NotificationType,
   ServiceName,
   SqlModelStatus,
   env,
@@ -12,6 +16,7 @@ import {
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { DbTables } from '../config/types';
+import { OasisSignature } from '../modules/embedded-wallet/models/oasis-signature.model';
 
 /**
  * Worker process datahashes which are indexed (contract event) in BCS and sent to SQS
@@ -59,6 +64,34 @@ export class OasisContractEventWorker extends BaseQueueWorker {
       `,
         {},
       );
+
+      const signature = await new OasisSignature(
+        {},
+        this.context,
+      ).populateByDataHash(data.dataHash);
+
+      if (!signature.exists()) {
+        await this.writeEventLog(
+          {
+            logType: LogType.WARN,
+            message: `Oasis signature with dataHash ${data.dataHash} not found.`,
+            service: ServiceName.AUTHENTICATION_API,
+          },
+          LogOutput.SYS_ERROR,
+        );
+        continue;
+      } else {
+        const projectOwner = (
+          await new Ams(this.context).getProjectOwner(signature.project_uuid)
+        ).data;
+
+        await new Mailing(this.context).createNotification(
+          new CreateOrUpdateNotificationDto({}, this.context).populate({
+            type: NotificationType.EMBEDDED_WALLET_GENERATED,
+            user_uuid: projectOwner?.user_uuid,
+          }),
+        );
+      }
     }
   }
 }

@@ -57,6 +57,12 @@ For production, use separate users for runtime and migrations:
 - `<STAGE>_MYSQL_DEPLOY_USER`
 - `<STAGE>_MYSQL_DEPLOY_PASSWORD`
 
+### Lambda Setup
+
+As we are using `serverless deploy function` to only deploy functions that have changed, in case of a new function, you need to force a full deploy so new functions will be created before a deploy. To do this, set `FULL_DEPLOY` to `true` for the relevant CodeBuild project. Do not forget to set it back to `false` once the initial deploy has finished.
+
+This command is automatically run on every push to the `develop`, `stage`, and `master` environments.
+
 ### To-Do Summary
 
 - **AWS Setup**
@@ -68,6 +74,10 @@ For production, use separate users for runtime and migrations:
 
   - Add SQS configurations for main queue and DLQ in `bin/sqs`.
   - Update and run `bin/sqs/create-all.sh`.
+  
+- **AWS Lambda**
+  - If a new function has been added to the service's `serverless.yml` file, set `FULL_DEPLOY` to `true` to trigger a full deployment and create the new function.
+  - After the deployment is complete, revert the value of `FULL_DEPLOY` back to `false` to avoid unnecessary full deployments in the future.
 
 - **Database**
 

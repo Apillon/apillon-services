@@ -5,7 +5,6 @@ import {
   enumInclusionValidator,
   EvmChain,
   ModelBase,
-  NFTCollectionType,
   PopulateFrom,
   prop,
   SerializeFor,
@@ -27,23 +26,6 @@ import {
 } from '../../../../substrate';
 
 export class CreateCollectionDtoGenericBase extends ModelBase {
-  @prop({
-    parser: { resolver: integerParser() },
-    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
-    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [
-      {
-        resolver: presenceValidator(),
-        code: ValidatorErrorCode.NFT_COLLECTION_TYPE_NOT_PRESENT,
-      },
-      {
-        resolver: enumInclusionValidator(NFTCollectionType),
-        code: ValidatorErrorCode.NFT_COLLECTION_TYPE_NOT_VALID,
-      },
-    ],
-  })
-  public collectionType: NFTCollectionType;
-
   @prop({
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
@@ -103,7 +85,22 @@ export class CreateCollectionDtoGenericBase extends ModelBase {
     ],
   })
   public description: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public logoUrl: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+  })
+  public bannerUrl: string;
 }
+
 // Contains properties which are present for all collections
 class CreateCollectionDTOBase extends CreateCollectionDtoGenericBase {
   @prop({
@@ -196,7 +193,6 @@ class CreateCollectionDTOBase extends CreateCollectionDtoGenericBase {
     parser: { resolver: stringParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
   })
   public baseUri: string;
 
@@ -304,7 +300,6 @@ export class CreateCollectionDTO extends CreateCollectionDTOBase {
     parser: { resolver: booleanParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
     defaultValue: true,
   })
   public isAutoIncrement: boolean;
@@ -313,7 +308,6 @@ export class CreateCollectionDTO extends CreateCollectionDTOBase {
     parser: { resolver: integerParser() },
     populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
     serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
-    validators: [],
   })
   public chainType: ChainType;
 

@@ -2,13 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { ApillonApiContext } from '../../context';
 import {
   BaseProjectQueryFilter,
-  BaseQueryFilter,
   CreatePostDto,
   CreateSpaceDto,
   SocialMicroservice,
   SocialPostQueryFilter,
 } from '@apillon/lib';
 
+/** @deprecated This service is deprecated and should not be used. */
 @Injectable()
 export class SocialService {
   async listSpaces(context: ApillonApiContext, query: BaseProjectQueryFilter) {

@@ -1,4 +1,12 @@
-import { AppEnvironment, env } from '@apillon/lib';
+import {
+  AppEnvironment,
+  AWS_KMS,
+  EncryptionService,
+  env,
+  Lmas,
+  Scs,
+  SimpletsMicroservice,
+} from '@apillon/lib';
 import {
   ErrorHandler,
   InitializeContextAndFillUser,
@@ -9,6 +17,11 @@ import {
 import middy from '@middy/core';
 import type { Callback, Handler } from 'aws-lambda/handler';
 import { processEvent } from './main';
+import { BackendController } from './modules/deploy/backend.controller';
+import { DeployRepository } from './modules/deploy/repositores/deploy-repository';
+import { BackendStrategyHandler } from './modules/deploy/backendStrategy.handler';
+import { PhalaDockerDeployStrategy } from './modules/deploy/services/phala-docker-deploy.strategy';
+import { PhalaCloudClient } from './modules/deploy/clients/phala-cloud.client';
 
 /**
  * Handles AWS Lambda events and passes them to processEvent() for processing.
@@ -24,7 +37,36 @@ const lambdaHandler: Handler = async (
 ) => {
   logLambdaEvent(event);
 
-  return await processEvent(event, context.serviceContext);
+  const serviceContext = context.serviceContext;
+  const phalaDockerDeployStrategy = new PhalaDockerDeployStrategy(
+    new PhalaCloudClient(
+      env.DEPLOY_PHALA_CLOUD_API_URL,
+      env.DEPLOY_PHALA_CLOUD_API_KEY,
+    ),
+  );
+  const encryptionService = new EncryptionService(
+    new AWS_KMS(),
+    env.DEPLOY_KMS_KEY_ID,
+  );
+  const deployRepository = new DeployRepository(
+    serviceContext,
+    encryptionService,
+  );
+  const backendController = new BackendController(
+    serviceContext,
+    deployRepository,
+    new BackendStrategyHandler(
+      serviceContext,
+      encryptionService,
+      deployRepository,
+      phalaDockerDeployStrategy,
+      new SimpletsMicroservice(serviceContext),
+      new Scs(serviceContext),
+      new Lmas(),
+    ),
+    encryptionService,
+  );
+  return await processEvent(event, serviceContext, backendController);
 };
 
 /**

@@ -1,6 +1,6 @@
 {
   "name": "@apillon/url-shortener-api",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "Apillon url-shortener API",
   "author": "Apillon",
   "license": "GNU GPL V3",
@@ -17,9 +17,10 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "tsc": "tsc",
     "dev": "nodemon ./src/scripts/dev/run-server.ts",
-    "deploy:prod": "serverless deploy --stage production",
-    "deploy:staging": "serverless deploy --stage staging",
-    "deploy:dev": "serverless deploy --stage dev"
+    "deploy:prod": "node -r ts-node/register ../../scripts/lambda/deploy production",
+    "deploy:staging": "node -r ts-node/register ../../scripts/lambda/deploy staging",
+    "deploy:dev": "node -r ts-node/register ../../scripts/lambda/deploy dev",
+    "deploy:test": "node -r ts-node/register ../../scripts/lambda/deploy test"
   },
   "dependencies": {
     "@apillon/lib": "*"

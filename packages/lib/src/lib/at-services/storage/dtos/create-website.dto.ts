@@ -1,4 +1,4 @@
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import { presenceValidator } from '@rawmodel/validators';
 import {
   PopulateFrom,
@@ -89,4 +89,13 @@ export class CreateWebsiteDto extends ModelBase {
     validators: [],
   })
   public deploymentConfig?: CreateWebsiteDeploymentConfigDto;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.PROFILE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.PROFILE, SerializeFor.ADMIN],
+    validators: [],
+    defaultValue: false,
+  })
+  public isSimplet?: boolean;
 }

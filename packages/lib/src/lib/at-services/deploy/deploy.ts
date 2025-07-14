@@ -16,6 +16,7 @@ import { NftWebsiteDeployDto } from './dtos/nft-website-deploy.dto';
 import { WebsiteDeployDto } from '../storage/dtos/website-deploy.dto';
 import { CreateDeploymentConfigDto } from './dtos/create-deployment-config.dto';
 import { TriggerGithubDeployDto } from './dtos/trigger-github-deploy.dto';
+import { RedeployInstanceDto } from './dtos/redeploy-instance.dto';
 
 export class DeployMicroservice extends BaseService {
   lambdaFunctionName =
@@ -40,6 +41,13 @@ export class DeployMicroservice extends BaseService {
   public async deployDockerCompose(body: DeployInstanceDto) {
     return await this.emitEvent({
       eventName: DeployEventType.BE_DEPLOY_DOCKER_COMPOSE,
+      body,
+    });
+  }
+
+  public async redeployDockerCompose(body: RedeployInstanceDto) {
+    return await this.emitEvent({
+      eventName: DeployEventType.BE_REDEPLOY_DOCKER_COMPOSE,
       body,
     });
   }
@@ -82,6 +90,13 @@ export class DeployMicroservice extends BaseService {
   public async stopInstance(body: GenericDeployRequestDto) {
     return await this.emitEvent({
       eventName: DeployEventType.BE_STOP_INSTANCE,
+      body,
+    });
+  }
+
+  public async archiveInstance(body: GenericDeployRequestDto) {
+    return await this.emitEvent({
+      eventName: DeployEventType.BE_ARCHIVE_INSTANCE,
       body,
     });
   }

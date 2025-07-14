@@ -57,10 +57,10 @@ export class Notification extends AdvancedSQLModel {
   public message: string | null;
 
   /**
-   * Id of the user who the notification belongs to. Is null if the notification is public.
+   * Uuid of the user who the notification belongs to. Is null if the notification is public.
    */
   @prop({
-    parser: { resolver: integerParser() },
+    parser: { resolver: stringParser() },
     serializable: [
       SerializeFor.INSERT_DB,
       SerializeFor.PROFILE,
@@ -71,7 +71,7 @@ export class Notification extends AdvancedSQLModel {
     ],
     populatable: [PopulateFrom.ADMIN, PopulateFrom.PROFILE, PopulateFrom.DB],
   })
-  public userId: number | null;
+  public user_uuid: string | null;
 
   @prop({
     parser: { resolver: dateParser() },
@@ -100,7 +100,7 @@ export class Notification extends AdvancedSQLModel {
     const sqlQuery = {
       qSelect: `SELECT ${this.generateSelectFields('n', '', SerializeFor.SELECT_DB)}`,
       qFrom: `FROM \`${DbTables.NOTIFICATION}\` n
-                WHERE (@type IS NULL or n.type = @type) AND (n.userId = ${context.user.id} OR n.userId IS NULL)
+                WHERE (@type IS NULL or n.type = @type) AND (n.user_uuid = '${context.user.user_uuid}' OR n.user_uuid IS NULL)
                 AND (n.status = ${SqlModelStatus.ACTIVE})`,
       qFilter: `
                 ORDER BY ${filters.orderStr}
@@ -124,7 +124,7 @@ export class Notification extends AdvancedSQLModel {
       qSelect: `SELECT ${this.generateSelectFields('n', '', SerializeFor.SELECT_DB)}`,
       qFrom: `FROM \`${DbTables.NOTIFICATION}\` n
                 WHERE (@type IS NULL or n.type = @type) AND (n.status = ${SqlModelStatus.ACTIVE})
-                AND (@userId IS NULL OR n.userId = @userId)`,
+                AND (@user_uuid IS NULL OR n.user_uuid = @user_uuid)`,
       qFilter: `
                 ORDER BY ${filters.orderStr}
                 LIMIT ${filters.limit} OFFSET ${filters.offset};`,

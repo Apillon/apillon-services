@@ -135,6 +135,24 @@ export class SubstrateService {
 
       // If wallet balance is below minimum balance for sending a tx, throw an error
       const balanceData = await wallet.checkAndUpdateBalance(conn);
+      await new Lmas().writeLog({
+        logType: LogType.INFO,
+        message: `Checking if balance is below transaction threshold (${wallet.minTxBalance}>${wallet.currentBalance}=${balanceData.isBelowTransactionThreshold})`,
+        location: 'SubstrateService.createTransaction',
+        service: ServiceName.BLOCKCHAIN,
+        data: {
+          transaction: params.transaction,
+          chainType: ChainType.SUBSTRATE,
+          chain: params.chain,
+          address: params.fromAddress,
+          referenceTable: params.referenceTable,
+          referenceId: params.referenceId,
+          currentBalance: wallet.currentBalance,
+          minTxBalance: wallet.minTxBalance,
+          isBelowTransactionThreshold: balanceData.isBelowTransactionThreshold,
+        },
+      });
+
       if (balanceData.isBelowTransactionThreshold) {
         throw await new BlockchainCodeException({
           code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,

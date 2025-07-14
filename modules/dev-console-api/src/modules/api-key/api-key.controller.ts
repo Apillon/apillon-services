@@ -2,6 +2,7 @@ import {
   ApiKeyQueryFilterDto,
   ApiKeyRoleBaseDto,
   ApiKeyRoleDto,
+  BaseProjectQueryFilter,
   CreateApiKeyDto,
   DefaultUserRole,
   RoleGroup,
@@ -21,9 +22,9 @@ import {
 } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { AuthGuard } from '../../guards/auth.guard';
+import { ProjectModifyGuard } from '../../guards/project-modify.guard';
 import { ValidationGuard } from '../../guards/validation.guard';
 import { ApiKeyService } from './api-key.service';
-import { ProjectModifyGuard } from '../../guards/project-modify.guard';
 
 @Controller('api-keys')
 export class ApiKeyController {
@@ -137,5 +138,22 @@ export class ApiKeyController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return await this.apiKeyService.deleteApiKey(context, id);
+  }
+
+  @Get('quota-reached')
+  @Permissions({ role: DefaultUserRole.USER })
+  @Validation({
+    dto: BaseProjectQueryFilter,
+    validateFor: ValidateFor.QUERY,
+  })
+  @UseGuards(ValidationGuard, AuthGuard)
+  async isApiKeysQuotaReached(
+    @Ctx() context: DevConsoleApiContext,
+    @Query() query: BaseProjectQueryFilter,
+  ) {
+    return await this.apiKeyService.isApiKeysQuotaReached(
+      context,
+      query.project_uuid,
+    );
   }
 }

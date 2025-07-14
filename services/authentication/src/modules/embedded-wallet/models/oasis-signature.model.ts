@@ -212,4 +212,16 @@ export class OasisSignature extends ProjectAccessModel {
       ? this.populate(data[0], PopulateFrom.DB)
       : this.reset();
   }
+
+  public async populateByDataHash(dataHash: string) {
+    const data = await this.getContext().mysql.paramExecute(
+      `SELECT ${this.generateSelectFields()}
+      FROM \`${DbTables.OASIS_SIGNATURE}\`
+      WHERE dataHash LIKE '${dataHash}'`,
+    );
+
+    return data?.length
+      ? this.populate(data[0], PopulateFrom.DB)
+      : this.reset();
+  }
 }

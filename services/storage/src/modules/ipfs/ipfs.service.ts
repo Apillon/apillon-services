@@ -40,6 +40,7 @@ import { File } from '../storage/models/file.model';
 import { uploadItemsToIPFSRes } from './interfaces/upload-items-to-ipfs-res.interface';
 import { IpfsBandwidth } from './models/ipfs-bandwidth';
 import { IpfsCluster } from './models/ipfs-cluster.model';
+import { inspect } from 'util';
 
 export class IPFSService {
   //private client: IPFSHTTPClient;
@@ -286,9 +287,52 @@ export class IPFSService {
                 );
               });
             }
+          } else if (error.Message === 'file already exists') {
+            // Silently ignoring IPFS file already exists error
+            console.warn(
+              `File already exists on IPFS: ${fileUploadReq.fileName}. Skipping upload.`,
+            );
           } else {
+            const type = typeof error;
+            if (type === 'string') {
+              try {
+                const parsedError = JSON.parse(error);
+                console.log('Parsed error: ', parsedError);
+
+                if (parsedError.Message === 'file already exists') {
+                  // Silently ignoring IPFS file already exists error
+                  console.warn(
+                    `File already exists on IPFS: ${fileUploadReq.fileName}. Skipping upload after JSON parse.`,
+                  );
+                } else {
+                  throw error;
+                }
+              } catch (err) {
+                console.error('Error parsing string error message: ', error);
+
+                if (error.includes('file already exists')) {
+                  // Silently ignoring IPFS file already exists error
+                  console.warn(
+                    `File already exists on IPFS: ${fileUploadReq.fileName}. Skipping upload after string check.`,
+                  );
+                } else {
+                  throw error;
+                }
+              }
+            } else {
+              console.error('Error uploading file to IPFS: ');
+              console.error(error);
+              if (error.error?.Message === 'file already exists') {
+                // Silently ignoring IPFS file already exists error
+                console.warn(
+                  `File already exists on IPFS: ${fileUploadReq.fileName}. Skipping upload after error check.`,
+                );
+              } else {
+                throw error;
+              }
+            }
+
             //Something else does not work - maybe IPFS node. Throw error.
-            throw error;
           }
         }
       },

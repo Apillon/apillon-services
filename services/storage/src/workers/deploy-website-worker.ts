@@ -1,10 +1,15 @@
 import {
+  Ams,
   AppEnvironment,
   checkProjectSubscription,
   Context,
+  CreateOrUpdateNotificationDto,
   env,
   LogType,
+  Mailing,
+  NotificationType,
   refundCredit,
+  ResourceStatus,
   SerializeFor,
   ServiceName,
 } from '@apillon/lib';
@@ -12,6 +17,7 @@ import {
   BaseQueueWorker,
   LogOutput,
   QueueWorkerType,
+  sendToWorkerQueue,
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { v4 as uuidV4 } from 'uuid';
@@ -33,6 +39,7 @@ import { uploadItemsToIPFSRes } from '../modules/ipfs/interfaces/upload-items-to
 import { IPFSService } from '../modules/ipfs/ipfs.service';
 import { Ipns } from '../modules/ipns/models/ipns.model';
 import { File } from '../modules/storage/models/file.model';
+import { ProjectConfig } from '../modules/config/models/project-config.model';
 
 /**
  * Worker uploads files from source bucket to IPFS, acquired CID is published to website ipns record.
@@ -149,6 +156,7 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         if (
           !deploymentReviewed &&
           !website.nftCollectionUuid &&
+          !website.isSimplet &&
           env.SEND_WEBSITES_TO_REVIEW &&
           !(await checkProjectSubscription(this.context, website.project_uuid))
         ) {
@@ -230,6 +238,37 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         }
       }
 
+      if (website.isSimplet) {
+        if (
+          env.APP_ENV !== AppEnvironment.LOCAL_DEV &&
+          env.APP_ENV !== AppEnvironment.TEST
+        ) {
+          const ipfsCluster = await new ProjectConfig(
+            { project_uuid: website.project_uuid },
+            this.context,
+          ).getIpfsCluster();
+
+          const parameters = {
+            referenceTable: 'frontend',
+            referenceId: website.website_uuid,
+            resourceStatus: ResourceStatus.ONLINE,
+            data: await ipfsCluster.generateLink(
+              website.project_uuid,
+              targetBucket.IPNS ? targetBucket.IPNS : targetBucket.CID,
+              !!targetBucket.IPNS,
+            ),
+          };
+
+          await sendToWorkerQueue(
+            env.SIMPLETS_AWS_WORKER_SQS_URL,
+            'FrontendStatusWorker',
+            [parameters],
+            null,
+            null,
+          );
+        }
+      }
+
       const conn = await this.context.mysql.start();
 
       try {
@@ -308,6 +347,18 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         await targetBucket.update(SerializeFor.UPDATE_DB, conn);
 
         await this.context.mysql.commit(conn);
+
+        const projectOwner = (
+          await new Ams(this.context).getProjectOwner(website.project_uuid)
+        ).data;
+
+        await new Mailing(this.context).createNotification(
+          new CreateOrUpdateNotificationDto({}, this.context).populate({
+            type: NotificationType.WEBSITE_DEPLOYED,
+            user_uuid: projectOwner?.user_uuid,
+          }),
+        );
+
         //Clear bucket for upload
         try {
           if (
@@ -397,6 +448,28 @@ export class DeployWebsiteWorker extends BaseQueueWorker {
         'DeployWebsiteWorker.runExecutor',
         ServiceName.STORAGE,
       );
+
+      if (website.isSimplet) {
+        if (
+          env.APP_ENV !== AppEnvironment.LOCAL_DEV &&
+          env.APP_ENV !== AppEnvironment.TEST
+        ) {
+          const parameters = {
+            referenceTable: 'frontend',
+            referenceId: website.website_uuid,
+            resourceStatus: ResourceStatus.FAILED,
+            data: null,
+          };
+
+          await sendToWorkerQueue(
+            env.SIMPLETS_AWS_WORKER_SQS_URL,
+            'FrontendStatusWorker',
+            [parameters],
+            null,
+            null,
+          );
+        }
+      }
 
       if (
         env.APP_ENV == AppEnvironment.LOCAL_DEV ||

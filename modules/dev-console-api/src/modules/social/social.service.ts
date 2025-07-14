@@ -10,6 +10,7 @@ import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
 import { ServicesService } from '../services/services.service';
 
+/** @deprecated This service is deprecated and should not be used. */
 @Injectable()
 export class SocialService {
   constructor(private readonly serviceService: ServicesService) {}

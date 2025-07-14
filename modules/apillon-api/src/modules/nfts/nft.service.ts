@@ -3,7 +3,6 @@ import {
   BurnNftDto,
   ChainType,
   MintNftDTO,
-  NestMintNftDTO,
   NftsMicroservice,
   TransactionQueryFilter,
   TransferCollectionDTO,
@@ -81,19 +80,6 @@ export class NftService {
     });
 
     return (await new NftsMicroservice(context).mintNft(dto)).data;
-  }
-
-  async nestMintNft(
-    context: ApillonApiContext,
-    collection_uuid: string,
-    body: NestMintNftDTO,
-  ) {
-    const dto = new NestMintNftDTO().populate({
-      ...body.serialize(),
-      collection_uuid: collection_uuid,
-    });
-
-    return (await new NftsMicroservice(context).nestMintNft(dto)).data;
   }
 
   async transferCollectionOwnership(

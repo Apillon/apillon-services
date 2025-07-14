@@ -87,7 +87,7 @@ export class AcurastClient {
 
     writeLog(
       LogType.INFO,
-      `[Acurast] storedJobStatus response for jobId ${jobId}: ${jobStatus.toString()}`,
+      `[Acurast] storedJobStatus response for jobId ${jobId}: ${jobStatus}`,
     );
 
     return safeJsonParse(jobStatus.toString());
@@ -112,10 +112,10 @@ export class AcurastClient {
 
     writeLog(
       LogType.INFO,
-      `[Acurast] getAssignedProcessors response for jobId ${jobId}: ${processors.toString()}`,
+      `[Acurast] getAssignedProcessors response for jobId ${jobId}: ${processors?.toString()}`,
     );
 
-    return processors?.[0].args[1].toString();
+    return processors?.[0]?.args[1]?.toString();
   }
 
   /**

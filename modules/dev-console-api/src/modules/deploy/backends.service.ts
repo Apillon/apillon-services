@@ -2,6 +2,7 @@ import {
   BackendsQueryFilter,
   DeployMicroservice,
   GenericDeployRequestDto,
+  RedeployInstanceDto,
   ResizeInstanceDto,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
@@ -19,6 +20,14 @@ export class BackendsService {
 
   async listBackends(context: DevConsoleApiContext, body: BackendsQueryFilter) {
     return (await new DeployMicroservice(context).listBackends(body)).data;
+  }
+
+  async redeployInstance(
+    context: DevConsoleApiContext,
+    body: RedeployInstanceDto,
+  ) {
+    return (await new DeployMicroservice(context).redeployDockerCompose(body))
+      .data;
   }
 
   async getInstance(
