@@ -8,6 +8,8 @@ import {
   DeployedSimpletsQueryFilterDto,
   SimpletsQueryFilterDto,
 } from './dtos/simplets-query-filter.dto';
+import { SimpletRedeployDto } from './dtos/simplet-redeploy.dto';
+import { ResourceStatus } from '../deploy/types/resource-status.type';
 
 export class SimpletsMicroservice extends BaseService {
   lambdaFunctionName =
@@ -45,6 +47,13 @@ export class SimpletsMicroservice extends BaseService {
     });
   }
 
+  public async redeploySimplet(body: SimpletRedeployDto) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.SIMPLETS_REDEPLOY,
+      body,
+    });
+  }
+
   public async getSimplet(uuid: string) {
     return await this.emitEvent({
       eventName: SimpletsEventType.GET_SIMPLET,
@@ -54,12 +63,19 @@ export class SimpletsMicroservice extends BaseService {
 
   //#endregion
 
-  //#region ------------- SIMPLETS -------------
+  //#region ------------- DEPLOYED SIMPLETS -------------
 
   public async getDeployedSimplet(uuid: string) {
     return await this.emitEvent({
       eventName: SimpletsEventType.GET_DEPLOYED_SIMPLET,
       body: { uuid },
+    });
+  }
+
+  public async getDeployedSimpletByBackendUuid(backend_uuid: string) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.GET_DEPLOYED_SIMPLET_BY_BACKEND_UUID,
+      body: { uuid: backend_uuid },
     });
   }
 
@@ -70,5 +86,32 @@ export class SimpletsMicroservice extends BaseService {
     });
   }
 
+  public async deleteSimpletDeploy(simpletDeploy_uuid: string) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.ARCHIVE_SIMPLET_DEPLOY,
+      body: { uuid: simpletDeploy_uuid },
+    });
+  }
+
+  public async activateSimpletDeploy(simpletDeploy_uuid: string) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.ACTIVATE_SIMPLET_DEPLOY,
+      body: { uuid: simpletDeploy_uuid },
+    });
+  }
+
+  async isSimpletQuotaReached(projectUuid: string) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.IS_SIMPLET_QUOTA_REACHED,
+      body: { uuid: projectUuid },
+    });
+  }
+
   //#endregion
+  async updateBackendStatus(backend_uuid: string, status: ResourceStatus) {
+    return await this.emitEvent({
+      eventName: SimpletsEventType.UPDATE_BACKEND_STATUS,
+      body: { backend_uuid, status },
+    });
+  }
 }

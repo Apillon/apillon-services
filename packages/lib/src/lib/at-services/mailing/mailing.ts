@@ -88,6 +88,23 @@ export class Mailing extends BaseService {
   }
 
   public async createNotification(data: CreateOrUpdateNotificationDto) {
+    if (!data.user_uuid) {
+      console.warn(
+        `No user_uuid provided for notification creation for notification type ${data.type}`,
+      );
+      return true;
+    }
+
+    return await this.callService({
+      eventName: MailEventType.CREATE_NOTIFICATION,
+      data,
+    });
+  }
+
+  /**
+   * Creates a notification synchronously for admin use.
+   */
+  public async createNotificationAdmin(data: CreateOrUpdateNotificationDto) {
     return await this.callSyncService({
       eventName: MailEventType.CREATE_NOTIFICATION,
       data,

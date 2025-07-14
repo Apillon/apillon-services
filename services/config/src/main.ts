@@ -25,6 +25,7 @@ export async function processEvent(
     [ScsEventType.DELETE_OVERRIDE]: OverrideService.deleteOverride,
 
     [ScsEventType.ADD_CREDIT]: CreditService.addCredit,
+
     [ScsEventType.CONFIGURE_CREDIT]: CreditService.configureCredit,
     [ScsEventType.SPEND_CREDIT]: CreditService.spendCredit,
     [ScsEventType.REFUND_CREDIT]: CreditService.refundCredit,
@@ -51,6 +52,7 @@ export async function processEvent(
       SubscriptionService.getProjectsWithActiveSubscription,
     [ScsEventType.GET_SUBSCRIPTION_PACKAGES]:
       SubscriptionService.getSubscriptionPackages,
+    [ScsEventType.ADD_SUBSCRIPTION]: SubscriptionService.addSubscription,
 
     [ScsEventType.HANDLE_PAYMENT_WEBHOOK_DATA]:
       InvoiceService.handlePaymentWebhookData,

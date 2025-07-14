@@ -1,8 +1,12 @@
 import {
+  Ams,
   AppEnvironment,
   Context,
+  CreateOrUpdateNotificationDto,
   env,
   LogType,
+  Mailing,
+  NotificationType,
   refundCredit,
   ServiceName,
 } from '@apillon/lib';
@@ -95,6 +99,17 @@ export class DeployCollectionWorker extends BaseQueueWorker {
         //Deploy NFT contract
         await deployNFTCollectionContract(this.context, collection, conn);
         await this.context.mysql.commit(conn);
+
+        const projectOwner = (
+          await new Ams(this.context).getProjectOwner(collection.project_uuid)
+        ).data;
+
+        await new Mailing(this.context).createNotification(
+          new CreateOrUpdateNotificationDto({}, this.context).populate({
+            type: NotificationType.NFT_COLLECTION_DEPLOYED,
+            user_uuid: projectOwner?.user_uuid,
+          }),
+        );
       } catch (err) {
         await this.context.mysql.rollback(conn);
 

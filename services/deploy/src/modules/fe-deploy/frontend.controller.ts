@@ -1,7 +1,11 @@
 import {
+  Ams,
+  AWS_KMS,
   CreateDeploymentConfigDtoType,
   DeleteDeploymentConfigType,
   DeploymentBuildQueryFilter,
+  env,
+  GetDeployConfigByRepoIdType,
   GetDeploymentConfigType,
   GetEnvironmentVariablesType,
   GetProjectConfigType,
@@ -9,14 +13,12 @@ import {
   GithubUnlinkDtoType,
   ListReposType,
   NftWebsiteDeployDtoType,
+  RedeployWebsiteType,
   SetEnvironmentVariablesDtoType,
   StorageMicroservice,
   TriggerGithubDeployDtoType,
   UpdateDeploymentConfigDtoType,
   WebsiteDeployDtoType,
-  GetDeployConfigByRepoIdType,
-  env,
-  AWS_KMS,
 } from '@apillon/lib';
 import { DeployService } from './services/deploy.service';
 import { DeploymentConfigService } from './services/deployment-config.service';
@@ -27,7 +29,6 @@ import { DeploymentBuildRepository } from './repositories/deployment-build.repos
 import { GithubConfigRepository } from './repositories/github-config.repository';
 import { DeploymentConfigRepository } from './repositories/deployment-config.repository';
 import { GithubService } from './services/github.service';
-import { RedeployWebsiteType } from '@apillon/lib';
 import { DeployCodeException } from '../../lib/exceptions';
 import { DeployErrorCode } from '../../config/types';
 
@@ -55,13 +56,18 @@ export class FrontendController {
     } = FrontendController.initializeFrontendRepositories(context);
 
     this.githubService = new GithubService();
+
+    this.storageMicroservice = new StorageMicroservice(context);
+
+    const accessMS = new Ams(context);
+
     this.deployService = new DeployService(
       deploymentBuildRepository,
       deploymentConfigRepository,
       this.githubService,
+      this.storageMicroservice,
+      accessMS,
     );
-
-    this.storageMicroservice = new StorageMicroservice(context);
 
     this.githubConfigService = new GithubConfigService(
       this.githubService,
@@ -164,7 +170,8 @@ export class FrontendController {
       });
     }
 
-    if (website.nftCollectionUuid) {
+    if (website.nftCollectionUuid || website.isSimplet) {
+      // If the website is an NFT or Simplet, the github repo is publicly accessible so Github access token is not needed
       const kmsClient = new AWS_KMS();
       await this.deployService.triggerWebDeploy({
         websiteUuid: body.websiteUuid,
@@ -181,8 +188,6 @@ export class FrontendController {
           ),
         ),
       } as WebsiteDeployDtoType);
-    } else if (false) {
-      // TODO: Add support for simplets (differentiate between simplet and github)
     } else {
       await this.deployService.triggerGithubDeploy({
         configId: config.id,

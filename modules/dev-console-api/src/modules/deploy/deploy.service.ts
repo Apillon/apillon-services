@@ -2,6 +2,8 @@ import {
   Ams,
   ApiKeyRoleBaseDto,
   AttachedServiceType,
+  AuthenticationMicroservice,
+  CodeException,
   CreateApiKeyDto,
   CreateDeploymentConfigDto,
   CreateWebsiteDto,
@@ -10,6 +12,7 @@ import {
   DeploymentBuildQueryFilter,
   GithubLinkDto,
   GithubUnlinkDto,
+  HttpStatus,
   Lmas,
   LogType,
   NftWebsiteDeployDto,
@@ -17,12 +20,16 @@ import {
   ServiceName,
   SetEnvironmentVariablesDto,
   StorageMicroservice,
+  SystemErrorCode,
   UpdateDeploymentConfigDto,
   WebsiteSource,
 } from '@apillon/lib';
 import { Injectable } from '@nestjs/common';
 import { DevConsoleApiContext } from '../../context';
-import { GitHubWebhookPayload } from '../../config/types';
+import {
+  GitHubWebhookPayload,
+  ResourceNotFoundErrorCode,
+} from '../../config/types';
 import { DeployNftWebsiteDto } from './dtos/deploy-nft-website.dto';
 import { ServicesService } from '../services/services.service';
 
@@ -232,6 +239,24 @@ export class DeployService {
     const collection = (await nftsMS.getNftCollection(body.collectionUuid))
       .data;
 
+    let embeddedWalletUuid: string | undefined;
+    if (body.embeddedWallet) {
+      const authMS = new AuthenticationMicroservice(context);
+      const response = await authMS.getEmbeddedWalletIntegration(
+        body.embeddedWallet,
+      );
+
+      if (!response?.success) {
+        throw new CodeException({
+          code: ResourceNotFoundErrorCode.EMBEDDED_WALLET_INTEGRATION_NOT_FOUND,
+          status: HttpStatus.NOT_FOUND,
+          errorCodes: ResourceNotFoundErrorCode,
+        });
+      }
+
+      embeddedWalletUuid = body.embeddedWallet;
+    }
+
     const storageMS = new StorageMicroservice(context);
 
     let generatedApiKeyId: number;
@@ -279,6 +304,9 @@ export class DeployService {
           apiSecret: body.apiSecret,
           contractAddress: collection.contractAddress,
           chainId: collection.chain,
+          bannerUrl: collection.bannerUrl,
+          logoUrl: collection.logoUrl,
+          embeddedWalletUuid,
           type: body.type,
           new: true,
         }),

@@ -1,10 +1,9 @@
 import {
-  ChainType,
+  getChainName,
   SqlModelStatus,
   SubstrateChain,
   TransactionStatus,
 } from '@apillon/lib';
-import Keyring from '@polkadot/keyring';
 import { releaseStage, setupTest, Stage } from '../../../test/setup';
 import { Endpoint } from '../../common/models/endpoint';
 import { Wallet } from '../wallet/wallet.model';
@@ -14,7 +13,7 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import { SubsocialApi } from '@subsocial/api';
 import { IpfsContent } from '@subsocial/types/substrate/classes';
 import { Transaction } from '../../common/models/transaction';
-import { DbTables } from '../../config/types';
+import { BlockchainErrorCode, DbTables } from '../../config/types';
 import { BlockchainCodeException } from '../../lib/exceptions';
 import { getConfig } from '@apillon/tests-lib';
 
@@ -32,6 +31,17 @@ describe.only('Substrate service unit test', () => {
         ...config.kilt.wallet,
         chain: config.kilt.chain,
         chainType: config.kilt.chainType,
+      },
+      stage.context,
+    ).insert();
+
+    // create crust wallet
+    await new Wallet(
+      {
+        ...config.crust.wallet,
+        chain: config.crust.chain,
+        chainType: config.crust.chainType,
+        minTxBalance: '100000000000',
       },
       stage.context,
     ).insert();
@@ -133,7 +143,7 @@ describe.only('Substrate service unit test', () => {
     expect(submitted).toBeTruthy();
   });
 
-  test('Should fail sending a tx if balance below minTxBalance threshold', async () => {
+  test('Should fail sending KILT tx if balance below minTxBalance threshold', async () => {
     const { 0: kiltWallet } = await stage.context.mysql.paramExecute(
       `
       SELECT *
@@ -158,7 +168,48 @@ describe.only('Substrate service unit test', () => {
         },
         stage.context,
       );
-    }).rejects.toThrow(BlockchainCodeException);
+    }).rejects.toThrow(
+      new BlockchainCodeException({
+        code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
+        errorMessage: `Transaction can not be sent - balance below transaction minimum for wallet ${config.crust.wallet.address} and chain ${getChainName(config.crust.wallet.chainType, config.crust.wallet.chain)}`,
+        sourceFunction: 'SubstrateService.createTransaction',
+        status: 500,
+      }),
+    );
+  });
+  test('Should fail sending a CRUST tx if balance below minTxBalance threshold', async () => {
+    const { 0: crustWallet } = await stage.context.mysql.paramExecute(
+      `
+        SELECT *
+        FROM \`${DbTables.WALLET}\`
+        WHERE chain = ${SubstrateChain.CRUST}
+          AND minTxBalance IS NOT NULL
+          AND status = ${SqlModelStatus.ACTIVE}
+        LIMIT 1
+      `,
+    );
+    // At least minimum balance is required for Crust transactions
+    expect(crustWallet.minTxBalance).toBeDefined();
+
+    // Mock creating a transaction which should fail
+    await expect(async () => {
+      await SubstrateService.createTransaction(
+        {
+          params: {
+            transaction: '0x',
+            chain: SubstrateChain.CRUST,
+          },
+        },
+        stage.context,
+      );
+    }).rejects.toThrow(
+      new BlockchainCodeException({
+        code: BlockchainErrorCode.ERROR_GENERATING_TRANSACTION,
+        errorMessage: `Transaction can not be sent - balance below transaction minimum for wallet ${config.crust.wallet.address} and chain ${getChainName(config.crust.wallet.chainType, config.crust.wallet.chain)}`,
+        sourceFunction: 'SubstrateService.createTransaction',
+        status: 500,
+      }),
+    );
   });
 
   describe.only('Test create and transmit subsocial transactions', () => {

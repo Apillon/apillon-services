@@ -7,7 +7,6 @@ import {
   CollectionsQuotaReachedQueryFilter,
   DeployCollectionDTO,
   MintNftDTO,
-  NestMintNftDTO,
   NFTCollectionQueryFilter,
   NftsMicroservice,
   SetCollectionBaseUriDTO,
@@ -89,15 +88,6 @@ export class NftsService {
   ) {
     body.collection_uuid = collection_uuid;
     return (await new NftsMicroservice(context).mintNft(body)).data;
-  }
-
-  async nestMintNftTo(
-    context: DevConsoleApiContext,
-    collection_uuid: string,
-    body: NestMintNftDTO,
-  ) {
-    body.collection_uuid = collection_uuid;
-    return (await new NftsMicroservice(context).nestMintNft(body)).data;
   }
 
   async setNftCollectionBaseUri(

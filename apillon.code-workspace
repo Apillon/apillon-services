@@ -57,6 +57,10 @@
       "path": "services/deploy",
     },
     {
+      "name": "🌐@services_simplets [@apillon_simplets]",
+      "path": "services/simplets",
+    },
+    {
       "name": "😎@modules_dev-console-api",
       "path": "modules/dev-console-api",
     },
@@ -131,7 +135,7 @@
       "MOONBASE",
       "PHALA",
       "populatable",
-      "rawmodel"
+      "rawmodel",
     ],
     "files.exclude": {
       "**/.git": true,

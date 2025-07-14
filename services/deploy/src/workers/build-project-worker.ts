@@ -1,15 +1,21 @@
 import {
+  Ams,
+  AppEnvironment,
+  AttachedServiceType,
   AWS_KMS,
   Context,
+  DefaultApiKeyRole,
   DeploymentBuildStatus,
+  env,
   Lmas,
+  ResourceStatus,
   SerializeFor,
   ServiceName,
-  env,
 } from '@apillon/lib';
 import {
   BaseQueueWorker,
   QueueWorkerType,
+  sendToWorkerQueue,
   WorkerDefinition,
 } from '@apillon/workers-lib';
 import { spawn } from 'child_process';
@@ -133,12 +139,40 @@ function sanitizeToJsonString(str: string) {
   return result;
 }
 
+async function notifyFailureToSimpletsWorker(website: {
+  isSimplet: boolean;
+  website_uuid: string;
+}) {
+  if (website.isSimplet) {
+    if (
+      env.APP_ENV !== AppEnvironment.LOCAL_DEV &&
+      env.APP_ENV !== AppEnvironment.TEST
+    ) {
+      const parameters = {
+        referenceTable: 'frontend',
+        referenceId: website.website_uuid,
+        resourceStatus: ResourceStatus.FAILED,
+        data: null,
+      };
+
+      await sendToWorkerQueue(
+        env.SIMPLETS_AWS_WORKER_SQS_URL,
+        'FrontendStatusWorker',
+        [parameters],
+        null,
+        null,
+      );
+    }
+  }
+}
+
 export class BuildProjectWorker extends BaseQueueWorker {
   public constructor(
     workerDefinition: WorkerDefinition,
     context: Context,
     type: QueueWorkerType,
     private readonly githubService: GithubService,
+    private readonly accessMS: Ams,
   ) {
     super(workerDefinition, context, type, env.BUILDER_SQS_URL);
   }
@@ -167,7 +201,7 @@ export class BuildProjectWorker extends BaseQueueWorker {
 
     let url = data.url;
     let secret = data.apiSecret;
-
+    const kmsClient = new AWS_KMS();
     if (data.isTriggeredByWebhook) {
       const githubProjectConfig = await new GithubProjectConfig(
         {},
@@ -177,11 +211,12 @@ export class BuildProjectWorker extends BaseQueueWorker {
       if (!githubProjectConfig.exists()) {
         console.error('Github project config not found');
         await deploymentBuild.handleFailure('Github project config not found');
+        await notifyFailureToSimpletsWorker({
+          website_uuid: data.websiteUuid,
+          isSimplet: data.isSimplet,
+        });
         return;
       }
-
-      const kmsClient = new AWS_KMS();
-
       secret = await kmsClient.decrypt(data.apiSecret, env.DEPLOY_KMS_KEY_ID);
 
       const accessToken = githubProjectConfig.refresh_token
@@ -190,8 +225,38 @@ export class BuildProjectWorker extends BaseQueueWorker {
 
       url = url.replace('https://', `https://oauth2:${accessToken}@`);
     } else if (data.isRedeploy) {
-      const kmsClient = new AWS_KMS();
       secret = await kmsClient.decrypt(data.apiSecret, env.DEPLOY_KMS_KEY_ID);
+    }
+
+    // Check if API key & secret match
+    const apiKey = (
+      await this.accessMS.getApiKey({
+        apiKey: data.apiKey,
+        apiKeySecret: secret,
+      })
+    ).data;
+
+    // Due to use of apillon hosting deploy-website command, we need to ensure that the API key has the required role for hosting service
+
+    const requiredRole = DefaultApiKeyRole.KEY_EXECUTE;
+    const requiredService = AttachedServiceType.HOSTING;
+
+    if (
+      !apiKey.apiKeyRoles?.find(
+        ({
+          role_id,
+          serviceType_id,
+        }: {
+          role_id: number;
+          serviceType_id: AttachedServiceType;
+        }) => role_id === requiredRole && serviceType_id === requiredService,
+      )
+    ) {
+      console.log('API key does not have required role for build');
+      await deploymentBuild.handleFailure(
+        `Insufficient permissions - missing ${DefaultApiKeyRole[requiredRole]} permission for ${AttachedServiceType[requiredService]}`,
+      );
+      return;
     }
 
     let lastLog = '';
@@ -250,6 +315,10 @@ export class BuildProjectWorker extends BaseQueueWorker {
         console.log('Last log: ', lastLog);
         if (exitCode !== 0) {
           await deploymentBuild.handleFailure();
+          await notifyFailureToSimpletsWorker({
+            website_uuid: data.websiteUuid,
+            isSimplet: data.isSimplet,
+          });
           console.log(`Failure, child process exited with code ${exitCode}`);
           await new Lmas().sendMessageToSlack({
             message: `
@@ -271,6 +340,10 @@ export class BuildProjectWorker extends BaseQueueWorker {
             await deploymentBuild.handleSuccess();
           } catch (e) {
             await deploymentBuild.handleFailure();
+            await notifyFailureToSimpletsWorker({
+              website_uuid: data.websiteUuid,
+              isSimplet: data.isSimplet,
+            });
             await new Lmas().sendMessageToSlack({
               message: `
               Build failed for website ${data.websiteUuid}\n
@@ -288,6 +361,10 @@ export class BuildProjectWorker extends BaseQueueWorker {
       });
       child.on('error', async (errData) => {
         await deploymentBuild.handleFailure();
+        await notifyFailureToSimpletsWorker({
+          website_uuid: data.websiteUuid,
+          isSimplet: data.isSimplet,
+        });
         await new Lmas().sendMessageToSlack({
           message: `
               Build failed for website ${data.websiteUuid}\n

@@ -23,7 +23,6 @@ import {
   ServiceName,
   spendCreditAction,
   SpendCreditDto,
-  SqlModelStatus,
   WebsiteQueryFilter,
   WebsiteSource,
   WebsitesQuotaReachedQueryFilter,
@@ -38,6 +37,7 @@ import {
   StorageErrorCode,
   WebsiteDomainStatus,
 } from '../../config/types';
+import { checkDomainDns } from '../../lib/domains';
 import {
   StorageCodeException,
   StorageNotFoundException,
@@ -50,7 +50,6 @@ import { File } from '../storage/models/file.model';
 import { StorageService } from '../storage/storage.service';
 import { Deployment } from './models/deployment.model';
 import { Website } from './models/website.model';
-import { checkDomainDns } from '../../lib/domains';
 
 export class HostingService {
   //#region web page CRUD
@@ -281,7 +280,7 @@ export class HostingService {
     website.canModify(context);
 
     website.domain = null;
-    website.domainChangeDate = new Date();
+    // website.domainChangeDate = new Date();
 
     await website.update();
 
@@ -307,7 +306,7 @@ export class HostingService {
     }
     website.canModify(context);
 
-    if (website.source === WebsiteSource.GITHUB) {
+    if (website.source === WebsiteSource.GITHUB && !website.isSimplet) {
       await new DeployMicroservice(context).deleteDeploymentConfig(
         website.website_uuid,
       );
@@ -568,10 +567,8 @@ export class HostingService {
       const spendCredit: SpendCreditDto = new SpendCreditDto(
         {
           project_uuid: website.project_uuid,
-          product_id:
-            event.body.environment == DeploymentEnvironment.STAGING
-              ? ProductCode.HOSTING_DEPLOY_TO_STAGING
-              : ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
+          // As the product code for staging has been removed, we always use the production one
+          product_id: ProductCode.HOSTING_DEPLOY_TO_PRODUCTION,
           referenceTable: DbTables.DEPLOYMENT,
           referenceId: deployment.deployment_uuid,
           location: 'HostingService/deployWebsite',

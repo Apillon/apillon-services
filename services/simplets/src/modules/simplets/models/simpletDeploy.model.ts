@@ -1,3 +1,4 @@
+import { booleanParser, integerParser, stringParser } from '@rawmodel/parsers';
 import {
   ChainType,
   DeployedSimpletsQueryFilterDto,
@@ -7,17 +8,13 @@ import {
   PopulateFrom,
   presenceValidator,
   prop,
+  ResourceStatus,
   selectAndCountQuery,
   SerializeFor,
   SqlModelStatus,
   UuidSqlModel,
 } from '@apillon/lib';
-import {
-  DbTables,
-  ResourceStatus,
-  SimpletsErrorCode,
-} from '../../../config/types';
-import { integerParser, stringParser } from '@rawmodel/parsers';
+import { DbTables, SimpletsErrorCode } from '../../../config/types';
 
 export class SimpletDeploy extends UuidSqlModel {
   public readonly tableName = DbTables.SIMPLET_DEPLOY;
@@ -87,6 +84,7 @@ export class SimpletDeploy extends UuidSqlModel {
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
@@ -106,6 +104,7 @@ export class SimpletDeploy extends UuidSqlModel {
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
@@ -113,6 +112,21 @@ export class SimpletDeploy extends UuidSqlModel {
     ],
   })
   public description: string;
+
+  @prop({
+    parser: { resolver: booleanParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [
+      SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
+      SerializeFor.ADMIN,
+      SerializeFor.SERVICE,
+      SerializeFor.SELECT_DB,
+      SerializeFor.PROFILE,
+    ],
+    defaultValue: false,
+  })
+  public trialExpired: boolean;
 
   //region BACKEND
   @prop({
@@ -133,12 +147,13 @@ export class SimpletDeploy extends UuidSqlModel {
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
       SerializeFor.PROFILE,
     ],
-    defaultValue: ResourceStatus.CREATED,
+    defaultValue: ResourceStatus.REQUESTED,
   })
   public backendStatus: ResourceStatus;
 
@@ -147,6 +162,7 @@ export class SimpletDeploy extends UuidSqlModel {
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
@@ -154,6 +170,13 @@ export class SimpletDeploy extends UuidSqlModel {
     ],
   })
   public backendUrl: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.INSERT_DB],
+  })
+  public backendVariables: string;
   //endregion
 
   //region CONTRACT
@@ -180,7 +203,7 @@ export class SimpletDeploy extends UuidSqlModel {
       SerializeFor.SELECT_DB,
       SerializeFor.PROFILE,
     ],
-    defaultValue: ResourceStatus.CREATED,
+    defaultValue: ResourceStatus.REQUESTED,
   })
   public contractStatus: ResourceStatus;
 
@@ -194,7 +217,7 @@ export class SimpletDeploy extends UuidSqlModel {
     ],
     validators: [
       {
-        resolver: enumInclusionValidator(EvmChain, false),
+        resolver: enumInclusionValidator(EvmChain, true),
         code: SimpletsErrorCode.DATA_NOT_VALID,
       },
     ],
@@ -227,6 +250,21 @@ export class SimpletDeploy extends UuidSqlModel {
 
   //endregion
 
+  //region EMBEDDED WALLET
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB],
+    serializable: [
+      SerializeFor.ADMIN,
+      SerializeFor.INSERT_DB,
+      SerializeFor.PROFILE,
+    ],
+  })
+  public walletIntegration_uuid: string;
+
+  //endregion
+
   //region FRONTEND
 
   @prop({
@@ -245,23 +283,45 @@ export class SimpletDeploy extends UuidSqlModel {
     populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
     serializable: [
       SerializeFor.INSERT_DB,
+      SerializeFor.UPDATE_DB,
       SerializeFor.ADMIN,
       SerializeFor.SERVICE,
       SerializeFor.SELECT_DB,
       SerializeFor.PROFILE,
     ],
-    defaultValue: ResourceStatus.CREATED,
+    defaultValue: ResourceStatus.REQUESTED,
   })
   public frontendStatus: ResourceStatus;
 
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.INSERT_DB],
+  })
+  public frontendVariables: string;
+
   //endregion
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.INSERT_DB],
+  })
+  public apillonApiKey: string;
+
+  @prop({
+    parser: { resolver: stringParser() },
+    populatable: [PopulateFrom.DB, PopulateFrom.SERVICE, PopulateFrom.ADMIN],
+    serializable: [SerializeFor.INSERT_DB],
+  })
+  public apillonApiSecret: string;
 
   /***************************************************
    * Queries
    *****************************************************/
 
   public override async populateByUUID(uuid: string): Promise<this> {
-    return super.populateByUUID(uuid, 'simplet_uuid');
+    return super.populateByUUID(uuid, 'simpletDeploy_uuid');
   }
 
   public async getList(
@@ -295,7 +355,11 @@ export class SimpletDeploy extends UuidSqlModel {
         FROM \`${DbTables.SIMPLET_DEPLOY}\` c
         WHERE c.project_uuid = IFNULL(@project_uuid, c.project_uuid)
         AND (@search IS null OR c.name LIKE CONCAT('%', @search, '%'))
-        AND (@resourceStatus IS null OR c.resourceStatus = @resourceStatus)
+        AND (
+            (@backendStatus IS null OR c.backendStatus = @backendStatus)
+            OR (@frontendStatus IS null OR c.frontendStatus = @backendStatus)
+            OR (@contractStatus IS null OR c.contractStatus = @backendStatus)
+        )
         AND
             (
                 (@status IS null AND c.status NOT IN (${SqlModelStatus.DELETED}, ${SqlModelStatus.ARCHIVED}))
@@ -310,5 +374,29 @@ export class SimpletDeploy extends UuidSqlModel {
     };
 
     return await selectAndCountQuery(context.mysql, sqlQuery, params, 'c.id');
+  }
+
+  public async getActiveDeployedLongerThanDays(
+    days: number,
+  ): Promise<SimpletDeploy[]> {
+    const selectFields = this.generateSelectFields();
+    const sqlQuery = `
+      SELECT ${selectFields}
+      FROM \`${DbTables.SIMPLET_DEPLOY}\`
+      WHERE trialExpired = false
+        AND status = ${SqlModelStatus.ACTIVE}
+        AND createTime <= NOW() - INTERVAL ${days} DAY
+    `;
+
+    const data = await this.getContext().mysql.paramExecute(sqlQuery);
+
+    return data
+      ? data.map((simpletData) =>
+          new SimpletDeploy({}, this.getContext()).populate(
+            simpletData,
+            PopulateFrom.DB,
+          ),
+        )
+      : [];
   }
 }

@@ -1,13 +1,15 @@
 import {
-  AWS_KMS,
+  Ams,
   AppEnvironment,
+  AWS_KMS,
+  env,
   LogType,
   ModelValidationException,
   NftWebsiteDeployDto,
   NftWebsiteDeployDtoType,
+  StorageMicroservice,
   TriggerGithubDeployDtoType,
   WebsiteDeployDtoType,
-  env,
   writeLog,
 } from '@apillon/lib';
 import { BuildProjectWorkerInterface } from '../../../lib/interfaces/build-project-worker.interface';
@@ -24,6 +26,8 @@ export class DeployService {
     private readonly deploymentBuildRepository: DeploymentBuildRepository,
     private readonly deploymentConfigRepository: DeploymentConfigRepository,
     private readonly githubService: GithubService,
+    private readonly storageMS: StorageMicroservice,
+    private readonly accessMS: Ams,
   ) {}
 
   async triggerGithubDeploy(body: TriggerGithubDeployDtoType) {
@@ -34,11 +38,14 @@ export class DeployService {
 
     await deploymentBuild.insert();
 
+    const website = (await this.storageMS.getWebsite(body.websiteUuid)).data;
+
     const parameters = {
       ...body,
       deploymentBuildId: deploymentBuild.id,
       variables: [],
       isTriggeredByWebhook: true,
+      isSimplet: website.isSimplet,
     } as BuildProjectWorkerInterface;
 
     if (body.encryptedVariables) {
@@ -60,6 +67,7 @@ export class DeployService {
       await this.deploymentBuildRepository.executeBuildProjectWorkerLocally(
         parameters,
         this.githubService,
+        this.accessMS,
       );
     } else {
       await sendToWorkerQueue(
@@ -79,22 +87,26 @@ export class DeployService {
   }
 
   async triggerWebDeploy(body: NftWebsiteDeployDtoType | WebsiteDeployDtoType) {
+    console.info('Triggered web deploy: ', body);
     const isNftWebsiteDeploy = DeployService.isNftWebsiteDeployDto(body);
+    const website = (await this.storageMS.getWebsite(body.websiteUuid)).data;
 
+    const kmsClient = new AWS_KMS();
     if (isNftWebsiteDeploy && body.new) {
-      const kmsClient = new AWS_KMS();
-
       const websiteConfigParams = getNftWebsiteConfig(
         body.type,
         body.contractAddress,
         body.chainId,
+        body.logoUrl,
+        body.bannerUrl,
+        body.embeddedWalletUuid,
       );
       const deploymentConfig = this.deploymentConfigRepository.create({
         repoUrl: websiteConfigParams.url,
         repoName: 'Nft website',
         repoOwnerName: 'Apillon',
         hookId: 0,
-        branchName: 'master',
+        branchName: 'main',
         websiteUuid: body.websiteUuid,
         buildCommand: websiteConfigParams.buildCommand,
         buildDirectory: websiteConfigParams.buildDirectory,
@@ -115,14 +127,12 @@ export class DeployService {
       await deploymentConfig.insert();
     } else if (!isNftWebsiteDeploy && body.new) {
       const webBody = body as WebsiteDeployDtoType;
-      const kmsClient = new AWS_KMS();
-
       const deploymentConfig = this.deploymentConfigRepository.create({
         repoUrl: webBody.url,
         repoName: 'Web',
         repoOwnerName: 'Apillon',
         hookId: 0,
-        branchName: 'master',
+        branchName: 'main',
         websiteUuid: body.websiteUuid,
         buildCommand: webBody.buildCommand,
         buildDirectory: webBody.buildDirectory,
@@ -141,19 +151,33 @@ export class DeployService {
       await deploymentConfig.validateOrThrow(ModelValidationException);
 
       await deploymentConfig.insert();
+    } else if (website.isSimplet && !body.new) {
+      // WORKAROUND: when redeploying simplet we receive unencrypted secret
+      // but deploy service expects it encrypted
+      body.apiSecret = await kmsClient.encrypt(
+        body.apiSecret,
+        env.DEPLOY_KMS_KEY_ID,
+      );
     }
 
     const deploymentBuild = this.deploymentBuildRepository.create({
       websiteUuid: body.websiteUuid,
     });
-
     await deploymentBuild.insert();
 
     const parameters = {
       deploymentBuildId: deploymentBuild.id,
+      isSimplet: website.isSimplet,
       ...body,
       ...(isNftWebsiteDeploy && body.new
-        ? getNftWebsiteConfig(body.type, body.contractAddress, body.chainId)
+        ? getNftWebsiteConfig(
+            body.type,
+            body.contractAddress,
+            body.chainId,
+            body.logoUrl,
+            body.bannerUrl,
+            body.embeddedWalletUuid,
+          )
         : {}),
       isRedeploy: !body.new,
     } as BuildProjectWorkerInterface;
@@ -170,6 +194,7 @@ export class DeployService {
       await this.deploymentBuildRepository.executeBuildProjectWorkerLocally(
         parameters,
         this.githubService,
+        this.accessMS,
       );
     } else {
       await sendToWorkerQueue(
